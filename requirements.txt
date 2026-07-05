@@ -1,0 +1,74 @@
+"""
+FastAPI application entry point.
+
+Run locally with:
+    uvicorn app.main:app --reload
+
+See the bottom of this file / the project README for full instructions.
+"""
+
+from pathlib import Path
+
+from fastapi import Depends, FastAPI, Request
+from fastapi.templating import Jinja2Templates
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app import crud
+from app.config import get_settings
+from app.database import get_db, init_db
+
+settings = get_settings()
+
+app = FastAPI(title="Telegram Bot Admin Dashboard")
+
+# "templates" is expected to live at the project root, next to this app/ package.
+BASE_DIR = Path(__file__).resolve().parent.parent
+templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+
+
+@app.on_event("startup")
+async def on_startup() -> None:
+    """
+    Runs once when the app boots.
+
+    If AUTO_CREATE_TABLES=true (the default), this creates the `users` and
+    `logs` tables on your Render Postgres database if they don't exist yet
+    -- so you don't have to run a separate migration script before your
+    first deploy.
+    """
+    if settings.auto_create_tables:
+        await init_db()
+
+
+@app.get("/admin")
+async def admin_dashboard(request: Request, db: AsyncSession = Depends(get_db)):
+    """
+    Renders the admin dashboard with live analytics pulled from Postgres.
+
+    Template variables provided:
+      - total_users:        total rows in `users`
+      - active_users_24h:   distinct users active in `logs` in the last 24h
+      - mini_app_opens:     count of logs where action == "Opened Mini App"
+      - recent_logs:        10 most recent log rows (newest first)
+    """
+    total_users = await crud.get_total_users(db)
+    active_users_24h = await crud.get_active_users_24h(db)
+    mini_app_opens = await crud.get_mini_app_opens(db)
+    recent_logs = await crud.get_recent_logs(db, limit=10)
+
+    return templates.TemplateResponse(
+        "dashboard.html",
+        {
+            "request": request,  # required by Jinja2Templates
+            "total_users": total_users,
+            "active_users_24h": active_users_24h,
+            "mini_app_opens": mini_app_opens,
+            "recent_logs": recent_logs,
+        },
+    )
+
+
+@app.get("/health")
+async def health_check():
+    """Simple liveness endpoint, useful for Render's health checks."""
+    return {"status": "ok"}
