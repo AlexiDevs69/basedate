@@ -10,7 +10,7 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Log, User
+from models import Log, User
 
 
 async def get_total_users(db: AsyncSession) -> int:
