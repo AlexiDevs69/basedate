@@ -58,7 +58,7 @@ async def admin_dashboard(request: Request, db: AsyncSession = Depends(get_db)):
     recent_logs = await crud.get_recent_logs(db, limit=10)
 
     return templates.TemplateResponse(
-        "index.html",
+        "dashboard.html",
         {
             "request": request,  # required by Jinja2Templates
             "total_users": total_users,
