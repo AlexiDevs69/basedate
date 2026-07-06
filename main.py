@@ -198,6 +198,43 @@ async def profile_update(
     return RedirectResponse(url="/profile", status_code=303)
 
 
+@app.get("/settings")
+async def settings_view(request: Request, db: AsyncSession = Depends(get_db)):
+    """Shows bot settings: welcome message + maintenance-mode toggle."""
+    if not is_logged_in(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    bot_settings = await crud.get_settings(db)
+
+    return templates.TemplateResponse(
+        "settings.html",
+        {"request": request, "settings": bot_settings},
+    )
+
+
+@app.post("/settings")
+async def settings_update(
+    request: Request,
+    welcome_message: str = Form(""),
+    maintenance_message: str = Form(""),
+    # An unchecked checkbox simply isn't sent in the form body at all, so
+    # this has to be Optional -- its presence (any value) means "checked".
+    maintenance_mode: str | None = Form(None),
+    db: AsyncSession = Depends(get_db),
+):
+    """Saves bot settings, then redirects back to /settings."""
+    if not is_logged_in(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    await crud.update_settings(
+        db,
+        welcome_message=welcome_message.strip(),
+        maintenance_mode=maintenance_mode is not None,
+        maintenance_message=maintenance_message.strip(),
+    )
+    return RedirectResponse(url="/settings", status_code=303)
+
+
 @app.get("/health")
 async def health_check():
     """Simple liveness endpoint -- intentionally not behind login."""
