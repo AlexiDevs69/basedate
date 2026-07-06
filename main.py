@@ -162,6 +162,42 @@ async def logs_list(request: Request, page: int = 1, db: AsyncSession = Depends(
     )
 
 
+@app.get("/profile")
+async def profile_view(request: Request, db: AsyncSession = Depends(get_db)):
+    """Shows the admin profile: avatar/banner preview + an edit form."""
+    if not is_logged_in(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    username = request.session.get("username", "admin")
+    profile = await crud.get_profile(db, username=username)
+
+    return templates.TemplateResponse(
+        "profile.html",
+        {"request": request, "profile": profile},
+    )
+
+
+@app.post("/profile")
+async def profile_update(
+    request: Request,
+    avatar_url: str = Form(""),
+    banner_url: str = Form(""),
+    bio: str = Form(""),
+    db: AsyncSession = Depends(get_db),
+):
+    """Saves the new avatar_url / banner_url / bio, then redirects back to /profile."""
+    if not is_logged_in(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    await crud.update_profile(
+        db,
+        avatar_url=avatar_url.strip(),
+        banner_url=banner_url.strip(),
+        bio=bio.strip(),
+    )
+    return RedirectResponse(url="/profile", status_code=303)
+
+
 @app.get("/health")
 async def health_check():
     """Simple liveness endpoint -- intentionally not behind login."""
