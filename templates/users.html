@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AlexiHub // Users</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0b0b;
+      --bg-elevated: #111111;
+      --bg-header: #161616;
+      --border: #222222;
+      --border-hover: #333333;
+      --text-primary: #ffffff;
+      --text-secondary: #888888;
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --radius: 8px;
+      --transition: all 0.2s ease;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .app { display: flex; min-height: 100vh; }
+
+    .sidebar {
+      width: 260px;
+      border-right: 1px solid var(--border);
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      padding: 2rem 1.5rem;
+      position: fixed;
+      inset: 0 auto 0 0;
+      z-index: 100;
+      transition: var(--transition);
+    }
+
+    .brand {
+      font-family: var(--font-mono);
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 2.5rem;
+      user-select: none;
+    }
+
+    .nav { list-style: none; display: flex; flex-direction: column; gap: 0.25rem; flex: 1; }
+
+    .nav a {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.65rem 0.75rem;
+      border-radius: var(--radius);
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      border: 1px solid transparent;
+      transition: var(--transition);
+    }
+
+    .nav a:hover { color: var(--text-primary); background: rgba(255,255,255,0.03); border-color: var(--border-hover); }
+    .nav a.active { color: var(--text-primary); background: rgba(255,255,255,0.05); border-color: var(--border); }
+
+    .sidebar-footer { border-top: 1px solid var(--border); padding-top: 1rem; margin-top: 1rem; }
+    .sidebar-footer .user-row { display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; color: var(--text-secondary); }
+    .sidebar-footer a { color: var(--text-secondary); text-decoration: none; font-size: 0.8rem; font-weight: 600; transition: var(--transition); }
+    .sidebar-footer a:hover { color: var(--text-primary); }
+
+    .main { flex: 1; margin-left: 260px; padding: 2.5rem; max-width: 1400px; }
+
+    .page-header { margin-bottom: 2rem; display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
+    .page-header h1 { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; }
+    .page-header p { color: var(--text-secondary); margin-top: 0.25rem; }
+    .page-header .count { color: var(--text-secondary); font-size: 0.85rem; font-family: var(--font-mono); }
+
+    .table-wrap {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      overflow-x: auto;
+    }
+
+    .data-table { width: 100%; border-collapse: collapse; min-width: 600px; }
+    .data-table thead { background: var(--bg-header); }
+
+    .data-table th {
+      text-align: left;
+      padding: 1rem 1.25rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .data-table td { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); color: var(--text-primary); font-size: 0.875rem; }
+    .data-table tbody tr:last-child td { border-bottom: none; }
+    .data-table tbody tr { transition: var(--transition); }
+    .data-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+    .mono { font-family: var(--font-mono); color: var(--text-secondary); font-size: 0.85em; }
+
+    .pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 1.5rem; font-size: 0.85rem; color: var(--text-secondary); }
+    .pagination .links { display: flex; gap: 0.5rem; }
+    .pagination a {
+      color: var(--text-primary);
+      text-decoration: none;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.4rem 0.85rem;
+      transition: var(--transition);
+    }
+    .pagination a:hover { border-color: var(--border-hover); background: rgba(255,255,255,0.03); }
+    .pagination .disabled { opacity: 0.35; pointer-events: none; }
+
+    .menu-toggle {
+      display: none;
+      position: fixed;
+      top: 1rem;
+      left: 1rem;
+      z-index: 200;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius);
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.1rem;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); background: #000; }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-left: 0; padding: 1.5rem; padding-top: 4.5rem; }
+      .menu-toggle { display: flex; }
+    }
+  </style>
+</head>
+<body>
+  <button class="menu-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')" aria-label="Toggle menu">☰</button>
+
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">AlexiHub // Admin</div>
+      <nav style="flex: 1; display: flex; flex-direction: column;">
+        <ul class="nav">
+          <li><a href="/admin">Dashboard</a></li>
+          <li><a href="/users" class="active">Users List</a></li>
+          <li><a href="/logs">Logs</a></li>
+          <li><a href="#">Broadcast</a></li>
+          <li><a href="#">Settings</a></li>
+        </ul>
+        <div class="sidebar-footer">
+          <div class="user-row">
+            <span>{{ request.session.get("username", "admin") }}</span>
+            <a href="/logout">Log out</a>
+          </div>
+        </div>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <div class="page-header">
+        <div>
+          <h1>Users List</h1>
+          <p>All registered Telegram users</p>
+        </div>
+        <div class="count">{{ total }} total</div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>User ID</th>
+              <th>Username</th>
+              <th>Registered</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user in users %}
+            <tr>
+              <td class="mono">{{ user.user_id }}</td>
+              <td>{{ user.username or "—" }}</td>
+              <td class="mono">{{ user.created_at }}</td>
+            </tr>
+            {% else %}
+            <tr><td class="mono" colspan="3">No users yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pagination">
+        <span>Page {{ page }} of {{ total_pages }}</span>
+        <div class="links">
+          <a href="/users?page={{ page - 1 }}" class="{{ 'disabled' if page <= 1 else '' }}">← Prev</a>
+          <a href="/users?page={{ page + 1 }}" class="{{ 'disabled' if page >= total_pages else '' }}">Next →</a>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
