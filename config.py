@@ -13,11 +13,19 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     # Raw connection string as provided by Render (or any Postgres host).
-    # Example (Render default form): postgres://user:pass@host:5432/dbname
     database_url: str
 
     # If true, tables are created automatically on app startup.
     auto_create_tables: bool = True
+
+    # --- Admin login credentials ---
+    # Set these in Render's Environment tab. Do NOT hardcode real values here.
+    admin_username: str = "admin"
+    admin_password: str = "changeme"
+
+    # Used to cryptographically sign the session cookie. Set this to a long
+    # random string in production (e.g. `openssl rand -hex 32`).
+    secret_key: str = "insecure-dev-secret-change-me"
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -29,10 +37,6 @@ class Settings(BaseSettings):
     def async_database_url(self) -> str:
         """
         Return a connection string SQLAlchemy's async engine can use.
-
-        Render (and most providers) hand out URLs starting with "postgres://"
-        or "postgresql://". SQLAlchemy's asyncpg dialect requires the
-        "postgresql+asyncpg://" prefix, so we normalize it here.
         """
         url = self.database_url
         if url.startswith("postgres://"):
