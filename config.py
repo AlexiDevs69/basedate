@@ -27,6 +27,10 @@ class Settings(BaseSettings):
     # random string in production (e.g. `openssl rand -hex 32`).
     secret_key: str = "insecure-dev-secret-change-me"
 
+    # Same Telegram bot token used by the bot service -- needed so the
+    # dashboard can call Telegram's sendMessage API for broadcasts.
+    bot_token: str = ""
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
