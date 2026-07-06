@@ -118,6 +118,50 @@ async def admin_dashboard(request: Request, db: AsyncSession = Depends(get_db)):
     )
 
 
+@app.get("/users")
+async def users_list(request: Request, page: int = 1, db: AsyncSession = Depends(get_db)):
+    """Full, paginated list of every row in the users table."""
+    if not is_logged_in(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    page = max(page, 1)
+    users, total = await crud.get_users_page(db, page=page)
+    total_pages = max((total + crud.PAGE_SIZE - 1) // crud.PAGE_SIZE, 1)
+
+    return templates.TemplateResponse(
+        "users.html",
+        {
+            "request": request,
+            "users": users,
+            "page": page,
+            "total_pages": total_pages,
+            "total": total,
+        },
+    )
+
+
+@app.get("/logs")
+async def logs_list(request: Request, page: int = 1, db: AsyncSession = Depends(get_db)):
+    """Full, paginated list of every row in the logs table."""
+    if not is_logged_in(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    page = max(page, 1)
+    logs, total = await crud.get_logs_page(db, page=page)
+    total_pages = max((total + crud.PAGE_SIZE - 1) // crud.PAGE_SIZE, 1)
+
+    return templates.TemplateResponse(
+        "logs.html",
+        {
+            "request": request,
+            "logs": logs,
+            "page": page,
+            "total_pages": total_pages,
+            "total": total,
+        },
+    )
+
+
 @app.get("/health")
 async def health_check():
     """Simple liveness endpoint -- intentionally not behind login."""
