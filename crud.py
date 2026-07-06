@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models import AdminProfile, Log, User
+from models import AdminProfile, BotSettings, Log, User
 
 
 async def get_total_users(db: AsyncSession) -> int:
@@ -110,3 +110,40 @@ async def update_profile(
     await db.commit()
     await db.refresh(profile)
     return profile
+
+
+async def get_settings(db: AsyncSession) -> BotSettings:
+    """
+    Повертає єдиний рядок налаштувань (id=1), створюючи його з дефолтними
+    значеннями при першому зверненні (перший заход на /settings після
+    деплою цієї фічі).
+    """
+    result = await db.execute(select(BotSettings).where(BotSettings.id == 1))
+    settings_row = result.scalar_one_or_none()
+
+    if settings_row is None:
+        settings_row = BotSettings(id=1, maintenance_mode=False)
+        db.add(settings_row)
+        await db.commit()
+        await db.refresh(settings_row)
+
+    return settings_row
+
+
+async def update_settings(
+    db: AsyncSession,
+    welcome_message: str | None,
+    maintenance_mode: bool,
+    maintenance_message: str | None,
+) -> BotSettings:
+    """Оновлює налаштування бота (id=1)."""
+    result = await db.execute(select(BotSettings).where(BotSettings.id == 1))
+    settings_row = result.scalar_one()
+
+    settings_row.welcome_message = welcome_message or None
+    settings_row.maintenance_mode = maintenance_mode
+    settings_row.maintenance_message = maintenance_message or None
+
+    await db.commit()
+    await db.refresh(settings_row)
+    return settings_row
