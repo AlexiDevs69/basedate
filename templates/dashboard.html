@@ -122,6 +122,18 @@
       color: var(--text-primary);
     }
 
+    /* Username link in the footer: same look as plain text, not a blue link */
+    .profile-link {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+    .profile-link:hover {
+      color: var(--text-primary);
+      text-decoration: none;
+    }
+
     .main {
       flex: 1;
       margin-left: 260px;
@@ -322,7 +334,7 @@
         </ul>
         <div class="sidebar-footer">
           <div class="user-row">
-            <span>{{ request.session.get("username", "admin") }}</span>
+            <a href="/profile" class="profile-link">{{ request.session.get("username", "admin") }}</a>
             <a href="/logout">Log out</a>
           </div>
         </div>
