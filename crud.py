@@ -75,6 +75,26 @@ async def get_logs_page(db: AsyncSession, page: int = 1) -> tuple[list[Log], int
     return list(result.scalars().all()), total
 
 
+async def get_all_user_ids(db: AsyncSession) -> list[int]:
+    """Returns just the user_id column for every user -- used for broadcasting."""
+    result = await db.execute(select(User.user_id))
+    return [row[0] for row in result.all()]
+
+
+async def log_broadcast(
+    db: AsyncSession, admin_username: str, sent: int, failed: int, preview: str
+) -> None:
+    """Records a summary row in the logs table after a broadcast finishes."""
+    short_preview = preview[:80] + ("…" if len(preview) > 80 else "")
+    log = Log(
+        user_id=0,
+        username=admin_username,
+        action=f'Broadcast sent to {sent} (failed {failed}): "{short_preview}"',
+    )
+    db.add(log)
+    await db.commit()
+
+
 async def get_profile(db: AsyncSession, username: str) -> AdminProfile:
     """
     Повертає єдиний профіль (id=1), створюючи його з дефолтними
