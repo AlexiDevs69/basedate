@@ -1,11 +1,9 @@
 """
 Application configuration.
-
 Loads settings from environment variables (and a local .env file, if present)
 using pydantic-settings. Keeping this in one place means the rest of the app
 never touches os.environ directly.
 """
-
 from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -30,6 +28,13 @@ class Settings(BaseSettings):
     # Same Telegram bot token used by the bot service -- needed so the
     # dashboard can call Telegram's sendMessage API for broadcasts.
     bot_token: str = ""
+
+    # --- Spotify OAuth (powers the "Зараз слухаю" widget on /profile) ---
+    # Create an app at https://developer.spotify.com/dashboard and set its
+    # Redirect URI to match spotify_redirect_uri below exactly.
+    spotify_client_id: str = ""
+    spotify_client_secret: str = ""
+    spotify_redirect_uri: str = ""
 
     model_config = SettingsConfigDict(
         env_file=".env",
