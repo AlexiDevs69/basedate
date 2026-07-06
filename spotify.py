@@ -77,6 +77,7 @@ async def _refresh_access_token(db) -> str | None:
     """Uses the stored refresh_token to mint a new access_token."""
     refresh_token = await crud.get_spotify_refresh_token(db)
     if not refresh_token:
+        print("[spotify] no refresh_token stored in DB -- /spotify/login was never completed")
         return None
 
     async with httpx.AsyncClient(timeout=10) as client:
@@ -86,6 +87,9 @@ async def _refresh_access_token(db) -> str | None:
             headers=_basic_auth_header(),
         )
         if resp.status_code != 200:
+            # TEMPORARY: prints Spotify's exact error so we can see the real
+            # cause in Render's logs. Remove once this is working.
+            print(f"[spotify] refresh_token exchange failed: {resp.status_code} {resp.text}")
             return None
         payload = resp.json()
 
@@ -123,20 +127,26 @@ async def get_now_playing(db) -> dict | None:
 
     async with httpx.AsyncClient(timeout=10) as client:
         resp = await client.get(NOW_PLAYING_URL, headers=headers)
+        print(f"[spotify] currently-playing -> {resp.status_code}")
 
         if resp.status_code == 200 and resp.content:
             data = resp.json()
             item = data.get("item")
             if item and data.get("is_playing"):
                 return _format_track(item, live=True, progress_ms=data.get("progress_ms", 0))
+        elif resp.status_code not in (200, 204):
+            print(f"[spotify] currently-playing error body: {resp.text}")
 
         # Nothing playing right now (204 No Content, or is_playing=False) --
         # show the last played track instead of an empty widget.
         resp = await client.get(RECENTLY_PLAYED_URL, headers=headers, params={"limit": 1})
+        print(f"[spotify] recently-played -> {resp.status_code}")
         if resp.status_code == 200:
             items = resp.json().get("items", [])
             if items:
                 return _format_track(items[0]["track"], live=False, progress_ms=0)
+        else:
+            print(f"[spotify] recently-played error body: {resp.text}")
 
     return None
 
