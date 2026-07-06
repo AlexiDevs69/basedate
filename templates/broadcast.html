@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    (function () {
+      if (localStorage.getItem('alexihub-theme') === 'light') {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AlexiHub // Broadcast</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0b0b;
+      --bg-elevated: #111111;
+      --border: #222222;
+      --border-hover: #333333;
+      --text-primary: #ffffff;
+      --text-secondary: #888888;
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --radius: 8px;
+      --transition: all 0.2s ease;
+      --success: #10b981;
+      --error: #ef4444;
+      --tg-bubble: #182533;
+      --tg-bg: #0e1621;
+    }
+
+    [data-theme="light"] {
+      --bg: #ffffff;
+      --bg-elevated: #f7f7f7;
+      --border: #e3e3e3;
+      --border-hover: #cfcfcf;
+      --text-primary: #0b0b0b;
+      --text-secondary: #666666;
+      --tg-bubble: #ffffff;
+      --tg-bg: #e9ebf0;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .app { display: flex; min-height: 100vh; }
+
+    .sidebar {
+      width: 260px;
+      border-right: 1px solid var(--border);
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      padding: 2rem 1.5rem;
+      position: fixed;
+      inset: 0 auto 0 0;
+      z-index: 100;
+      transition: var(--transition);
+    }
+
+    .brand { font-family: var(--font-mono); font-size: 1.1rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 2.5rem; user-select: none; }
+    .nav { list-style: none; display: flex; flex-direction: column; gap: 0.25rem; flex: 1; }
+
+    .nav a {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.65rem 0.75rem; border-radius: var(--radius);
+      color: var(--text-secondary); text-decoration: none;
+      font-size: 0.9rem; font-weight: 500;
+      border: 1px solid transparent; transition: var(--transition);
+    }
+    .nav a:hover { color: var(--text-primary); background: rgba(128,128,128,0.08); border-color: var(--border-hover); }
+    .nav a.active { color: var(--text-primary); background: rgba(128,128,128,0.12); border-color: var(--border); }
+
+    .sidebar-footer { border-top: 1px solid var(--border); padding-top: 1rem; margin-top: 1rem; }
+    .sidebar-footer .user-row { display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; color: var(--text-secondary); }
+    .sidebar-footer a { color: var(--text-secondary); text-decoration: none; font-size: 0.8rem; font-weight: 600; transition: var(--transition); }
+    .sidebar-footer a:hover { color: var(--text-primary); }
+    .profile-link { color: var(--text-secondary); text-decoration: none; font-weight: 500; transition: var(--transition); }
+    .profile-link:hover { color: var(--text-primary); }
+
+    .main { flex: 1; margin-left: 260px; padding: 2.5rem; max-width: 1400px; }
+
+    .page-header { margin-bottom: 2rem; }
+    .page-header h1 { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; }
+    .page-header p { color: var(--text-secondary); margin-top: 0.25rem; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 2rem;
+      align-items: start;
+    }
+
+    .card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+    }
+
+    .field { margin-bottom: 1.25rem; }
+    .field label {
+      display: block; font-size: 0.75rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--text-secondary); margin-bottom: 0.5rem;
+    }
+    .field input, .field textarea, .field select {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.7rem 0.85rem;
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 0.9rem;
+      transition: var(--transition);
+      resize: vertical;
+    }
+    .field input:focus, .field textarea:focus, .field select:focus { outline: none; border-color: var(--border-hover); }
+    .field .hint { color: var(--text-secondary); font-size: 0.75rem; margin-top: 0.4rem; }
+
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+    .section-title {
+      font-size: 0.8rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--text-secondary); margin-bottom: 1rem;
+      margin-top: 0.5rem;
+    }
+
+    .submit-btn {
+      background: var(--text-primary);
+      color: var(--bg);
+      border: none;
+      border-radius: var(--radius);
+      padding: 0.75rem 1.4rem;
+      font-family: var(--font-sans);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .submit-btn:hover { opacity: 0.85; }
+
+    .test-btn {
+      background: transparent;
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.75rem 1.4rem;
+      font-family: var(--font-sans);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      margin-right: 0.75rem;
+    }
+    .test-btn:hover { border-color: var(--border-hover); background: rgba(128,128,128,0.08); }
+
+    .result-banner {
+      border-radius: var(--radius);
+      padding: 0.75rem 1rem;
+      font-size: 0.85rem;
+      margin-bottom: 1.5rem;
+    }
+    .result-banner.ok { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); color: var(--success); }
+    .result-banner.warn { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: var(--error); }
+
+    .preview-wrap {
+      background: var(--tg-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem 1rem;
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      position: sticky;
+      top: 2.5rem;
+    }
+
+    .preview-label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 1rem;
+      padding: 0 0.25rem;
+    }
+
+    .tg-bubble {
+      background: var(--tg-bubble);
+      color: var(--text-primary);
+      border-radius: 14px 14px 14px 4px;
+      padding: 0.6rem 0.8rem;
+      max-width: 90%;
+      font-size: 0.9rem;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      word-break: break-word;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+    }
+
+    .tg-bubble:empty::before {
+      content: "Тут з'явиться прев'ю повідомлення...";
+      color: var(--text-secondary);
+      font-style: italic;
+    }
+
+    .tg-bubble .tg-btn {
+      display: inline-block;
+      margin-top: 0.6rem;
+      background: rgba(128,128,128,0.12);
+      border: 1px solid rgba(128,128,128,0.25);
+      border-radius: 8px;
+      padding: 0.4rem 0.75rem;
+      font-size: 0.8rem;
+      color: #5b9dd6;
+      text-align: center;
+      width: 100%;
+    }
+
+    .menu-toggle {
+      display: none; position: fixed; top: 1rem; left: 1rem; z-index: 200;
+      background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text-primary);
+      width: 40px; height: 40px; border-radius: var(--radius);
+      align-items: center; justify-content: center; cursor: pointer; font-size: 1.1rem;
+    }
+
+    .theme-toggle {
+      position: fixed;
+      top: 1.25rem;
+      right: 1.5rem;
+      z-index: 300;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: var(--transition), transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .theme-toggle:hover { border-color: var(--border-hover); transform: scale(1.08) rotate(8deg); }
+    .theme-toggle:active { transform: scale(0.9); }
+
+    .theme-toggle .icon {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity 0.3s ease;
+    }
+
+    .theme-toggle .icon-sun { opacity: 1; transform: rotate(0deg) scale(1); }
+    .theme-toggle .icon-moon { opacity: 0; transform: rotate(-90deg) scale(0.4); }
+
+    [data-theme="light"] .theme-toggle .icon-sun { opacity: 0; transform: rotate(90deg) scale(0.4); }
+    [data-theme="light"] .theme-toggle .icon-moon { opacity: 1; transform: rotate(0deg) scale(1); }
+
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+      animation: none;
+      mix-blend-mode: normal;
+    }
+    ::view-transition-new(root) {
+      animation: theme-reveal 0.6s ease;
+    }
+    @keyframes theme-reveal {
+      from { clip-path: circle(0% at calc(100% - 2.5rem) 2.5rem); }
+      to { clip-path: circle(150% at calc(100% - 2.5rem) 2.5rem); }
+    }
+
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      .preview-wrap { position: static; }
+    }
+
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); background: #000; }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-left: 0; padding: 1.5rem; padding-top: 4.5rem; }
+      .menu-toggle { display: flex; }
+      .theme-toggle { top: 0.85rem; right: 0.85rem; width: 40px; height: 40px; }
+      .row-2 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <button id="theme-toggle" class="theme-toggle" onclick="toggleTheme()" aria-label="Перемкнути тему">
+    <svg class="icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+    <svg class="icon icon-moon" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+    </svg>
+  </button>
+
+  <button class="menu-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')" aria-label="Toggle menu">☰</button>
+
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">AlexiHub // Admin</div>
+      <nav style="flex: 1; display: flex; flex-direction: column;">
+        <ul class="nav">
+          <li><a href="/admin">Dashboard</a></li>
+          <li><a href="/users">Users List</a></li>
+          <li><a href="/logs">Logs</a></li>
+          <li><a href="/broadcast" class="active">Broadcast</a></li>
+          <li><a href="/settings">Settings</a></li>
+        </ul>
+        <div class="sidebar-footer">
+          <div class="user-row">
+            <a href="/profile" class="profile-link">{{ request.session.get("username", "admin") }}</a>
+            <a href="/logout">Log out</a>
+          </div>
+        </div>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <div class="page-header">
+        <h1>Розсилка</h1>
+        <p>Надіслати повідомлення всім зареєстрованим юзерам</p>
+      </div>
+
+      {% if bot_token_missing %}
+      <div class="result-banner warn">
+        ⚠ BOT_TOKEN не налаштований на цьому сервісі — розсилка не працюватиме, поки не додаш його в Environment.
+      </div>
+      {% endif %}
+
+      {% if result %}
+        {% if result.error %}
+        <div class="result-banner warn">{{ result.error }}</div>
+        {% elif result.was_test %}
+        <div class="result-banner ok">✓ Тестове повідомлення {{ 'надіслано' if result.sent else 'не вдалося надіслати — перевір Chat ID' }}.</div>
+        {% else %}
+        <div class="result-banner ok">✓ Розсилку завершено — надіслано {{ result.sent }}, помилок {{ result.failed }}.</div>
+        {% endif %}
+      {% endif %}
+
+      <div class="layout">
+        <form method="post" action="/broadcast" id="broadcastForm">
+          <div class="card">
+            <div class="field">
+              <label for="message">Повідомлення</label>
+              <textarea id="message" name="message" rows="6" required
+                        placeholder="Напиши текст оголошення..."></textarea>
+            </div>
+
+            <div class="row-2">
+              <div class="field">
+                <label for="parse_mode">Формат</label>
+                <select id="parse_mode" name="parse_mode">
+                  <option value="none">Звичайний текст</option>
+                  <option value="HTML">HTML (жирний/курсив/лінки)</option>
+                  <option value="Markdown">Markdown</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="test_chat_id">Тестовий Chat ID</label>
+                <input type="text" id="test_chat_id" name="test_chat_id" placeholder="напр. 1939982276">
+                <div class="hint">Заповни, щоб надіслати спершу тільки собі.</div>
+              </div>
+            </div>
+
+            <div class="section-title">Опціональна кнопка</div>
+            <div class="row-2">
+              <div class="field">
+                <label for="button_text">Текст кнопки</label>
+                <input type="text" id="button_text" name="button_text" placeholder="Відкрити застосунок">
+              </div>
+              <div class="field">
+                <label for="button_url">URL кнопки</label>
+                <input type="url" id="button_url" name="button_url" placeholder="https://t.me/yourbot">
+              </div>
+            </div>
+
+            <button type="button" class="test-btn" onclick="sendAsTest()">Надіслати тест</button>
+            <button type="submit" class="submit-btn" onclick="return confirmBroadcast()">Надіслати всім</button>
+          </div>
+        </form>
+
+        <div class="preview-wrap">
+          <div class="preview-label">Живе прев'ю</div>
+          <div class="tg-bubble" id="preview"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const messageEl = document.getElementById('message');
+    const buttonTextEl = document.getElementById('button_text');
+    const preview = document.getElementById('preview');
+    const testChatIdEl = document.getElementById('test_chat_id');
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function renderPreview() {
+      const text = messageEl.value;
+      const btnText = buttonTextEl.value.trim();
+      let html = escapeHtml(text);
+      if (btnText) {
+        html += `<div class="tg-btn">${escapeHtml(btnText)}</div>`;
+      }
+      preview.innerHTML = html;
+    }
+
+    messageEl.addEventListener('input', renderPreview);
+    buttonTextEl.addEventListener('input', renderPreview);
+    renderPreview();
+
+    function confirmBroadcast() {
+      if (testChatIdEl.value.trim()) {
+        return true;
+      }
+      return confirm('Це надішле повідомлення УСІМ зареєстрованим юзерам. Продовжити?');
+    }
+
+    function sendAsTest() {
+      if (!testChatIdEl.value.trim()) {
+        alert('Спочатку введи Тестовий Chat ID, щоб повідомлення пішло тільки тобі.');
+        testChatIdEl.focus();
+        return;
+      }
+      document.getElementById('broadcastForm').submit();
+    }
+
+    function toggleTheme() {
+      var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      var next = isLight ? 'dark' : 'light';
+
+      function apply() {
+        if (next === 'light') {
+          document.documentElement.setAttribute('data-theme', 'light');
+        } else {
+          document.documentElement.removeAttribute('data-theme');
+        }
+        localStorage.setItem('alexihub-theme', next);
+      }
+
+      if (document.startViewTransition) {
+        document.startViewTransition(apply);
+      } else {
+        apply();
+      }
+    }
+  </script>
+</body>
+</html>
