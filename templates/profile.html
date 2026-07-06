@@ -199,6 +199,116 @@
       margin-bottom: 1rem;
     }
 
+    /* --- Spotify "Зараз слухаю" widget --- */
+    .now-playing-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      margin-bottom: 2rem;
+      display: none; /* JS toggles this on once data arrives */
+      align-items: center;
+      gap: 1rem;
+    }
+    .now-playing-card.visible { display: flex; }
+
+    .now-playing-art {
+      width: 64px;
+      height: 64px;
+      border-radius: 6px;
+      background: var(--bg-header) center/cover no-repeat;
+      flex-shrink: 0;
+    }
+
+    .now-playing-info { flex: 1; min-width: 0; }
+
+    .now-playing-label {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #1db954;
+      margin-bottom: 0.3rem;
+    }
+
+    /* Little bouncing equalizer bars, Discord/Spotify-style */
+    .eq { display: flex; align-items: flex-end; gap: 2px; height: 10px; }
+    .eq span {
+      width: 3px;
+      background: #1db954;
+      border-radius: 1px;
+      animation: eq-bounce 0.9s ease-in-out infinite;
+    }
+    .eq span:nth-child(1) { animation-delay: 0s; }
+    .eq span:nth-child(2) { animation-delay: 0.2s; }
+    .eq span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes eq-bounce {
+      0%, 100% { height: 3px; }
+      50% { height: 10px; }
+    }
+    .now-playing-card:not(.is-live) .eq span { animation-play-state: paused; height: 3px; }
+
+    .now-playing-title {
+      font-weight: 600;
+      font-size: 0.9rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .now-playing-artists {
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 0.1rem;
+    }
+
+    .now-playing-progress {
+      margin-top: 0.5rem;
+      height: 3px;
+      border-radius: 2px;
+      background: var(--border);
+      overflow: hidden;
+    }
+    .now-playing-progress-bar {
+      height: 100%;
+      background: #1db954;
+      width: 0%;
+      transition: width 0.3s linear;
+    }
+
+    .spotify-connect-card {
+      background: var(--bg-elevated);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .spotify-connect-card p { color: var(--text-secondary); font-size: 0.85rem; }
+    .btn-spotify {
+      background: #1db954;
+      color: #06180d;
+      border: none;
+      border-radius: var(--radius);
+      padding: 0.6rem 1.1rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+    .btn-spotify:hover { opacity: 0.85; }
+
     .form-card {
       background: var(--bg-elevated);
       border: 1px solid var(--border);
@@ -358,8 +468,8 @@
           <li><a href="/admin">Dashboard</a></li>
           <li><a href="/users">Users List</a></li>
           <li><a href="/logs">Logs</a></li>
-          <li><a href="/broadcast">Broadcast</a></li>
-          <li><a href="/settings">Settings</a></li>
+          <li><a href="#">Broadcast</a></li>
+          <li><a href="#">Settings</a></li>
         </ul>
         <div class="sidebar-footer">
           <div class="user-row">
@@ -394,6 +504,28 @@
           </div>
         </div>
       </div>
+
+      {% if spotify_connected %}
+      <div id="now-playing-card" class="now-playing-card">
+        <div id="now-playing-art" class="now-playing-art"></div>
+        <div class="now-playing-info">
+          <div class="now-playing-label">
+            <span class="eq"><span></span><span></span><span></span></span>
+            <span id="now-playing-status">Зараз слухаю</span>
+          </div>
+          <div id="now-playing-title" class="now-playing-title">—</div>
+          <div id="now-playing-artists" class="now-playing-artists">—</div>
+          <div class="now-playing-progress">
+            <div id="now-playing-progress-bar" class="now-playing-progress-bar"></div>
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <div class="spotify-connect-card">
+        <p>Підключи Spotify, щоб у профілі показувалось, що ти зараз слухаєш.</p>
+        <a href="/spotify/login" class="btn-spotify">Підключити Spotify</a>
+      </div>
+      {% endif %}
 
       <div class="section-title">Редагувати профіль</div>
       <div class="form-card">
@@ -448,5 +580,79 @@
       }
     }
   </script>
+
+  {% if spotify_connected %}
+  <script>
+    // Опитує /api/now-playing раз на 15с і плавно оновлює віджет.
+    // Прогрес-бар додатково "домальовується" щосекунди між опитуваннями,
+    // щоб не виглядав застиглим -- це суто косметика на клієнті, жодних
+    // зайвих запитів до Spotify.
+    (function () {
+      var card = document.getElementById('now-playing-card');
+      var art = document.getElementById('now-playing-art');
+      var status = document.getElementById('now-playing-status');
+      var title = document.getElementById('now-playing-title');
+      var artists = document.getElementById('now-playing-artists');
+      var progressBar = document.getElementById('now-playing-progress-bar');
+
+      var currentProgressMs = 0;
+      var durationMs = 0;
+      var tickTimer = null;
+
+      function render(data) {
+        if (!data || data.connected === false || !data.title) {
+          card.classList.remove('visible');
+          return;
+        }
+
+        card.classList.add('visible');
+        card.classList.toggle('is-live', !!data.live);
+
+        art.style.backgroundImage = data.album_art ? "url('" + data.album_art + "')" : 'none';
+        title.textContent = data.title;
+        artists.textContent = data.artists || '';
+        status.textContent = data.live ? 'Зараз слухаю' : 'Востаннє слухав';
+
+        currentProgressMs = data.progress_ms || 0;
+        durationMs = data.duration_ms || 0;
+        updateProgressBar();
+
+        if (title.parentElement.parentElement.parentElement) {
+          var link = data.track_url;
+          card.onclick = link ? function () { window.open(link, '_blank'); } : null;
+          card.style.cursor = link ? 'pointer' : 'default';
+        }
+      }
+
+      function updateProgressBar() {
+        if (!durationMs) {
+          progressBar.style.width = '0%';
+          return;
+        }
+        var pct = Math.min(100, (currentProgressMs / durationMs) * 100);
+        progressBar.style.width = pct + '%';
+      }
+
+      function poll() {
+        fetch('/api/now-playing')
+          .then(function (r) { return r.json(); })
+          .then(render)
+          .catch(function () { /* тиха відмова -- просто ховаємо картку наступного разу */ });
+      }
+
+      poll();
+      setInterval(poll, 15000);
+
+      // Клієнтське "домальовування" прогрес-бару між опитуваннями.
+      clearInterval(tickTimer);
+      tickTimer = setInterval(function () {
+        if (card.classList.contains('is-live')) {
+          currentProgressMs += 1000;
+          updateProgressBar();
+        }
+      }, 1000);
+    })();
+  </script>
+  {% endif %}
 </body>
 </html>
