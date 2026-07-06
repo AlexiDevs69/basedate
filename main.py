@@ -8,6 +8,7 @@ On Render, the Start Command is:
     uvicorn main:app --host 0.0.0.0 --port $PORT
 """
 
+import asyncio
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, Form, Request
@@ -19,6 +20,7 @@ from starlette.middleware.sessions import SessionMiddleware
 import crud
 from config import get_settings
 from database import get_db, init_db
+from telegram import send_telegram_message
 
 settings = get_settings()
 
@@ -196,6 +198,97 @@ async def profile_update(
         bio=bio.strip(),
     )
     return RedirectResponse(url="/profile", status_code=303)
+
+
+@app.get("/broadcast")
+async def broadcast_form(request: Request):
+    """Показує форму розсилки з живим прев'ю повідомлення."""
+    if not is_logged_in(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    return templates.TemplateResponse(
+        "broadcast.html",
+        {
+            "request": request,
+            "result": None,
+            "bot_token_missing": not settings.bot_token,
+        },
+    )
+
+
+@app.post("/broadcast")
+async def broadcast_send(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    message: str = Form(...),
+    parse_mode: str = Form("none"),
+    button_text: str = Form(""),
+    button_url: str = Form(""),
+    test_chat_id: str = Form(""),
+):
+    """
+    Надсилає повідомлення або на один тестовий Chat ID (якщо вказаний),
+    або всім юзерам з таблиці users. Виконується синхронно в межах одного
+    запиту -- цілком нормально для невеликої/середньої кількості юзерів
+    на безкоштовному тарифі.
+    """
+    if not is_logged_in(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    if not settings.bot_token:
+        return templates.TemplateResponse(
+            "broadcast.html",
+            {
+                "request": request,
+                "result": {"error": "BOT_TOKEN не налаштований на цьому сервісі."},
+                "bot_token_missing": True,
+            },
+        )
+
+    resolved_parse_mode = None if parse_mode == "none" else parse_mode
+    btn_text = button_text.strip() or None
+    btn_url = button_url.strip() or None
+
+    # Тестовий режим: надсилаємо лише на один Chat ID, таблицю users не чіпаємо.
+    test_chat_id = test_chat_id.strip()
+    if test_chat_id:
+        try:
+            target_ids = [int(test_chat_id)]
+        except ValueError:
+            target_ids = []
+    else:
+        target_ids = await crud.get_all_user_ids(db)
+
+    sent, failed = 0, 0
+    for chat_id in target_ids:
+        ok, _err = await send_telegram_message(
+            settings.bot_token, chat_id, message,
+            parse_mode=resolved_parse_mode,
+            button_text=btn_text, button_url=btn_url,
+        )
+        if ok:
+            sent += 1
+        else:
+            failed += 1
+        await asyncio.sleep(0.05)  # запас проти рейт-лімітів Telegram
+
+    # Логуємо тільки реальні розсилки, не тестові -- щоб Logs лишався змістовним.
+    if not test_chat_id:
+        admin_username = request.session.get("username", settings.admin_username)
+        await crud.log_broadcast(db, admin_username, sent, failed, message)
+
+    return templates.TemplateResponse(
+        "broadcast.html",
+        {
+            "request": request,
+            "result": {
+                "sent": sent,
+                "failed": failed,
+                "was_test": bool(test_chat_id),
+            },
+            "bot_token_missing": False,
+        },
+    )
 
 
 @app.get("/settings")
