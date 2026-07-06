@@ -1,16 +1,14 @@
 """
 Query functions ("CRUD" layer) used by the dashboard routes.
-
 Keeping these separate from the route handlers makes main.py easier to read
 and makes the queries independently testable/reusable.
 """
-
 from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models import Log, User
+from models import AdminProfile, Log, User
 
 
 async def get_total_users(db: AsyncSession) -> int:
@@ -75,3 +73,40 @@ async def get_logs_page(db: AsyncSession, page: int = 1) -> tuple[list[Log], int
         select(Log).order_by(Log.timestamp.desc()).limit(PAGE_SIZE).offset(offset)
     )
     return list(result.scalars().all()), total
+
+
+async def get_profile(db: AsyncSession, username: str) -> AdminProfile:
+    """
+    Повертає єдиний профіль (id=1), створюючи його з дефолтними
+    значеннями при першому зверненні (перший заход на /profile
+    після деплою цієї фічі).
+    """
+    result = await db.execute(select(AdminProfile).where(AdminProfile.id == 1))
+    profile = result.scalar_one_or_none()
+
+    if profile is None:
+        profile = AdminProfile(id=1, username=username)
+        db.add(profile)
+        await db.commit()
+        await db.refresh(profile)
+
+    return profile
+
+
+async def update_profile(
+    db: AsyncSession,
+    avatar_url: str | None,
+    banner_url: str | None,
+    bio: str | None,
+) -> AdminProfile:
+    """Оновлює редаговані поля профілю (id=1). Пусті рядки перетворюються на None."""
+    result = await db.execute(select(AdminProfile).where(AdminProfile.id == 1))
+    profile = result.scalar_one()
+
+    profile.avatar_url = avatar_url or None
+    profile.banner_url = banner_url or None
+    profile.bio = bio or None
+
+    await db.commit()
+    await db.refresh(profile)
+    return profile
