@@ -18,10 +18,16 @@ admin_profile:
   - banner_url (String, nullable)
   - bio (Text, nullable)
   - updated_at (Timestamp)
+bot_settings:
+  - id (primary key, always 1 -- single settings row)
+  - welcome_message (Text, nullable)
+  - maintenance_mode (Boolean)
+  - maintenance_message (Text, nullable)
+  - updated_at (Timestamp)
 """
 from datetime import datetime, timezone
 
-from sqlalchemy import BigInteger, DateTime, Integer, String, Text
+from sqlalchemy import BigInteger, Boolean, DateTime, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database import Base
@@ -70,6 +76,26 @@ class AdminProfile(Base):
     avatar_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
     banner_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
     bio: Mapped[str | None] = mapped_column(Text, nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False
+    )
+
+
+class BotSettings(Base):
+    """
+    Загальні налаштування бота. Один рядок (id=1), як і admin_profile --
+    простий і дешевий спосіб зберігати конфіг без окремої key/value таблиці.
+
+    Сам бот (окремий процес/скрипт) читає цей рядок напряму з тієї ж
+    Postgres бази перед тим, як відповісти користувачу -- жодного HTTP
+    виклику до цього дашборду не потрібно.
+    """
+    __tablename__ = "bot_settings"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    welcome_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    maintenance_mode: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    maintenance_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False
     )
