@@ -24,15 +24,8 @@
       --transition: all 0.2s ease;
     }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    html, body {
-      height: 100%;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
 
     body {
       background-color: var(--bg);
@@ -44,13 +37,8 @@
       -moz-osx-font-smoothing: grayscale;
     }
 
-    /* App Shell */
-    .app {
-      display: flex;
-      min-height: 100vh;
-    }
+    .app { display: flex; min-height: 100vh; }
 
-    /* Sidebar */
     .sidebar {
       width: 260px;
       border-right: 1px solid var(--border);
@@ -79,6 +67,7 @@
       display: flex;
       flex-direction: column;
       gap: 0.25rem;
+      flex: 1;
     }
 
     .nav a {
@@ -107,7 +96,32 @@
       border-color: var(--border);
     }
 
-    /* Main Content */
+    .sidebar-footer {
+      border-top: 1px solid var(--border);
+      padding-top: 1rem;
+      margin-top: 1rem;
+    }
+
+    .sidebar-footer .user-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .sidebar-footer a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.8rem;
+      font-weight: 600;
+      transition: var(--transition);
+    }
+
+    .sidebar-footer a:hover {
+      color: var(--text-primary);
+    }
+
     .main {
       flex: 1;
       margin-left: 260px;
@@ -115,22 +129,10 @@
       max-width: 1400px;
     }
 
-    .page-header {
-      margin-bottom: 2rem;
-    }
+    .page-header { margin-bottom: 2rem; }
+    .page-header h1 { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; }
+    .page-header p { color: var(--text-secondary); margin-top: 0.25rem; }
 
-    .page-header h1 {
-      font-size: 1.5rem;
-      font-weight: 600;
-      letter-spacing: -0.02em;
-    }
-
-    .page-header p {
-      color: var(--text-secondary);
-      margin-top: 0.25rem;
-    }
-
-    /* Stats Grid */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -167,11 +169,7 @@
       color: var(--text-primary);
     }
 
-    .status-wrap {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-    }
+    .status-wrap { display: flex; align-items: center; gap: 0.6rem; }
 
     .status-dot {
       width: 8px;
@@ -197,16 +195,9 @@
       100% { transform: scale(2.2); opacity: 0; }
     }
 
-    .status-text {
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: var(--text-primary);
-    }
+    .status-text { font-size: 0.95rem; font-weight: 600; color: var(--text-primary); }
 
-    /* Sections */
-    .section {
-      margin-bottom: 2.5rem;
-    }
+    .section { margin-bottom: 2.5rem; }
 
     .section-title {
       font-size: 0.8rem;
@@ -217,7 +208,6 @@
       margin-bottom: 1rem;
     }
 
-    /* Chart Placeholder */
     .chart-box {
       background: var(--bg-elevated);
       border: 1px solid var(--border);
@@ -249,7 +239,6 @@
       font-size: 0.875rem;
     }
 
-    /* Table */
     .table-wrap {
       background: var(--bg-elevated);
       border: 1px solid var(--border);
@@ -258,15 +247,8 @@
       overflow-x: auto;
     }
 
-    .data-table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 600px;
-    }
-
-    .data-table thead {
-      background: var(--bg-header);
-    }
+    .data-table { width: 100%; border-collapse: collapse; min-width: 600px; }
+    .data-table thead { background: var(--bg-header); }
 
     .data-table th {
       text-align: left;
@@ -285,19 +267,11 @@
       border-bottom: 1px solid var(--border);
       color: var(--text-primary);
       font-size: 0.875rem;
- }
-
-    .data-table tbody tr:last-child td {
-      border-bottom: none;
     }
 
-    .data-table tbody tr {
-      transition: var(--transition);
-    }
-
-    .data-table tbody tr:hover {
-      background: rgba(255,255,255,0.02);
-    }
+    .data-table tbody tr:last-child td { border-bottom: none; }
+    .data-table tbody tr { transition: var(--transition); }
+    .data-table tbody tr:hover { background: rgba(255,255,255,0.02); }
 
     .mono {
       font-family: var(--font-mono);
@@ -305,7 +279,6 @@
       font-size: 0.85em;
     }
 
-    /* Mobile Menu */
     .menu-toggle {
       display: none;
       position: fixed;
@@ -324,30 +297,12 @@
       font-size: 1.1rem;
     }
 
-    /* Responsive */
     @media (max-width: 768px) {
-      .sidebar {
-        transform: translateX(-100%);
-        background: #000;
-      }
-
-      .sidebar.open {
-        transform: translateX(0);
-      }
-
-      .main {
-        margin-left: 0;
-        padding: 1.5rem;
-        padding-top: 4.5rem;
-      }
-
-      .menu-toggle {
-        display: flex;
-      }
-
-      .stats-grid {
-        grid-template-columns: 1fr;
-      }
+      .sidebar { transform: translateX(-100%); background: #000; }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-left: 0; padding: 1.5rem; padding-top: 4.5rem; }
+      .menu-toggle { display: flex; }
+      .stats-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -357,14 +312,20 @@
   <div class="app">
     <aside class="sidebar">
       <div class="brand">AlexiHub // Admin</div>
-      <nav>
+      <nav style="flex: 1; display: flex; flex-direction: column;">
         <ul class="nav">
-          <li><a href="#" class="active">Dashboard</a></li>
+          <li><a href="/admin" class="active">Dashboard</a></li>
           <li><a href="#">Users List</a></li>
           <li><a href="#">Logs</a></li>
           <li><a href="#">Broadcast</a></li>
           <li><a href="#">Settings</a></li>
         </ul>
+        <div class="sidebar-footer">
+          <div class="user-row">
+            <span>{{ request.session.get("username", "admin") }}</span>
+            <a href="/logout">Log out</a>
+          </div>
+        </div>
       </nav>
     </aside>
 
@@ -426,10 +387,7 @@
               </tr>
               {% else %}
               <tr>
-                <td class="mono">48239104</td>
-                <td>@sample_user</td>
-                <td>Started bot</td>
-                <td class="mono">2026-07-05 14:32:01</td>
+                <td class="mono" colspan="4">No activity yet.</td>
               </tr>
               {% endfor %}
             </tbody>
