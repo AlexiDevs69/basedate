@@ -24,6 +24,10 @@ bot_settings:
   - maintenance_mode (Boolean)
   - maintenance_message (Text, nullable)
   - updated_at (Timestamp)
+spotify_auth:
+  - id (primary key, always 1 -- single connected Spotify account)
+  - refresh_token (String, nullable)
+  - updated_at (Timestamp)
 """
 from datetime import datetime, timezone
 
@@ -96,6 +100,23 @@ class BotSettings(Base):
     welcome_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     maintenance_mode: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     maintenance_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False
+    )
+
+
+class SpotifyAuth(Base):
+    """
+    Зберігає лише refresh_token одного підключеного Spotify-акаунту
+    (id=1). access_token НЕ зберігається в базі взагалі -- він живе
+    короткий час (~1 год) і кешується просто в пам'яті процесу
+    (див. spotify.py), щоб не робити зайвих записів у базу на
+    безкоштовному хостингу.
+    """
+    __tablename__ = "spotify_auth"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    refresh_token: Mapped[str | None] = mapped_column(String(512), nullable=True)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False
     )
