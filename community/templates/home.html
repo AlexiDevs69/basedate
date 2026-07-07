@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AlexiHub // Community</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0b0b; --bg-elevated: #111111; --bg-header: #161616;
+      --border: #222222; --border-hover: #333333;
+      --text-primary: #ffffff; --text-secondary: #888888;
+      --font-sans: 'Inter', system-ui, sans-serif; --font-mono: 'JetBrains Mono', monospace;
+      --radius: 8px; --online: #10b981;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--bg); color: var(--text-primary); font-family: var(--font-sans); font-size: 14px; }
+
+    .layout { display: flex; min-height: 100vh; }
+
+    .topbar {
+      position: fixed; top: 0; left: 0; right: 0; height: 56px; z-index: 50;
+      background: var(--bg-header); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem;
+    }
+    .topbar .brand { font-weight: 700; font-size: 1rem; }
+    .topbar .me { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; color: var(--text-primary); }
+    .topbar .me-avatar {
+      width: 30px; height: 30px; border-radius: 50%; background: var(--bg-elevated) center/cover no-repeat;
+      display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-secondary);
+      flex-shrink: 0;
+    }
+    .topbar .logout { color: var(--text-secondary); text-decoration: none; font-size: 0.8rem; }
+    .topbar .logout:hover { color: var(--text-primary); }
+    .topbar-right { display: flex; align-items: center; gap: 1.25rem; }
+
+    .main {
+      flex: 1; margin-top: 56px; padding: 2.5rem; max-width: 760px;
+    }
+    .main h1 { font-size: 1.4rem; margin-bottom: 0.5rem; }
+    .main p.sub { color: var(--text-secondary); margin-bottom: 2rem; }
+
+    .placeholder-box {
+      background: var(--bg-elevated); border: 1px dashed var(--border); border-radius: var(--radius);
+      padding: 2.5rem; text-align: center; color: var(--text-secondary); font-size: 0.9rem;
+    }
+
+    .sidebar-right {
+      width: 260px; margin-top: 56px; border-left: 1px solid var(--border);
+      padding: 1.5rem 1.25rem; position: fixed; right: 0; top: 0; bottom: 0; overflow-y: auto;
+    }
+    .sidebar-right h2 {
+      font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-secondary);
+      margin-bottom: 1rem;
+    }
+    .member-row {
+      display: flex; align-items: center; gap: 0.6rem; padding: 0.4rem 0.4rem; border-radius: var(--radius);
+      text-decoration: none; color: var(--text-primary); margin-bottom: 0.15rem;
+    }
+    .member-row:hover { background: rgba(255,255,255,0.04); }
+    .member-avatar-wrap { position: relative; flex-shrink: 0; }
+    .member-avatar {
+      width: 32px; height: 32px; border-radius: 50%; background: var(--bg-elevated) center/cover no-repeat;
+      display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-secondary);
+    }
+    .online-dot {
+      position: absolute; bottom: -1px; right: -1px; width: 10px; height: 10px; border-radius: 50%;
+      background: var(--online); border: 2px solid var(--bg);
+    }
+    .member-name-row { display: flex; align-items: center; gap: 0.3rem; min-width: 0; }
+    .member-name { font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .verified-badge-sm {
+      width: 13px; height: 13px; flex-shrink: 0; border-radius: 50%; background: #1d9bf0;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .verified-badge-sm svg { width: 8px; height: 8px; }
+    .empty-note { color: #555; font-size: 0.8rem; }
+
+    @media (max-width: 900px) {
+      .sidebar-right { display: none; }
+      .main { max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">AlexiHub // Community</div>
+    <div class="topbar-right">
+      <a href="/community/profile/{{ account.username }}" class="me">
+        <span class="me-avatar" {% if account.avatar_url %}style="background-image: url('{{ account.avatar_url }}');"{% endif %}>
+          {% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}
+        </span>
+        {{ account.username }}
+      </a>
+      <a href="/community/logout" class="logout">Log out</a>
+    </div>
+  </div>
+
+  <div class="layout">
+    <main class="main">
+      <h1>Привіт, {{ account.username }} 👋</h1>
+      <p class="sub">Стрічка / пости — наступний крок. Поки що тут акаунт, профіль і список тих, хто зараз онлайн.</p>
+      <div class="placeholder-box">Стрічка з'явиться тут пізніше.</div>
+    </main>
+
+    <aside class="sidebar-right">
+      <h2>Онлайн — {{ online_members|length }}</h2>
+      {% for member in online_members %}
+      <a href="/community/profile/{{ member.username }}" class="member-row">
+        <span class="member-avatar-wrap">
+          <span class="member-avatar" {% if member.avatar_url %}style="background-image: url('{{ member.avatar_url }}');"{% endif %}>
+            {% if not member.avatar_url %}{{ member.username[:1]|upper }}{% endif %}
+          </span>
+          <span class="online-dot"></span>
+        </span>
+        <span class="member-name-row">
+          <span class="member-name">{{ member.username }}</span>
+          {% if member.is_verified %}
+          <span class="verified-badge-sm">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </span>
+          {% endif %}
+        </span>
+      </a>
+      {% else %}
+      <div class="empty-note">Поки що тут порожньо.</div>
+      {% endfor %}
+    </aside>
+  </div>
+</body>
+</html>
