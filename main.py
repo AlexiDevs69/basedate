@@ -354,6 +354,32 @@ async def settings_update(
     return RedirectResponse(url="/settings", status_code=303)
 
 
+@app.get("/admin/run-migration")
+async def run_migration(request: Request, db: AsyncSession = Depends(get_db)):
+    """
+    TEMPORARY, ONE-TIME USE. Adds the new admin_profile columns that
+    init_db()/create_all() can't add on its own (it only creates missing
+    tables, never alters existing ones). Visit this URL once, confirm the
+    {"status": "ok"} response, then delete this route and redeploy.
+    """
+    if not is_logged_in(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    from sqlalchemy import text
+
+    statements = [
+        "ALTER TABLE admin_profile ADD COLUMN IF NOT EXISTS is_verified BOOLEAN NOT NULL DEFAULT false",
+        "ALTER TABLE admin_profile ADD COLUMN IF NOT EXISTS role_label VARCHAR(64)",
+        "ALTER TABLE admin_profile ADD COLUMN IF NOT EXISTS role_color_start VARCHAR(16)",
+        "ALTER TABLE admin_profile ADD COLUMN IF NOT EXISTS role_color_end VARCHAR(16)",
+    ]
+    for stmt in statements:
+        await db.execute(text(stmt))
+    await db.commit()
+
+    return {"status": "ok", "applied": len(statements)}
+
+
 @app.get("/health")
 async def health_check():
     """Simple liveness endpoint -- intentionally not behind login."""
