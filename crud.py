@@ -118,6 +118,10 @@ async def update_profile(
     avatar_url: str | None,
     banner_url: str | None,
     bio: str | None,
+    is_verified: bool,
+    role_label: str | None,
+    role_color_start: str | None,
+    role_color_end: str | None,
 ) -> AdminProfile:
     """Оновлює редаговані поля профілю (id=1). Пусті рядки перетворюються на None."""
     result = await db.execute(select(AdminProfile).where(AdminProfile.id == 1))
@@ -126,6 +130,10 @@ async def update_profile(
     profile.avatar_url = avatar_url or None
     profile.banner_url = banner_url or None
     profile.bio = bio or None
+    profile.is_verified = is_verified
+    profile.role_label = role_label or None
+    profile.role_color_start = role_color_start or None
+    profile.role_color_end = role_color_end or None
 
     await db.commit()
     await db.refresh(profile)
