@@ -29,6 +29,10 @@ class Settings(BaseSettings):
     # dashboard can call Telegram's sendMessage API for broadcasts.
     bot_token: str = ""
 
+    # Bot's @username (no @), needed by the Telegram Login Widget on the
+    # community register/login pages -- it's public info, not a secret.
+    bot_username: str = ""
+
     # --- Last.fm (powers the "Зараз слухаю" widget on /profile) ---
     # Free API key from https://www.last.fm/api/account/create -- no
     # subscription needed. lastfm_username is whatever Last.fm account has
