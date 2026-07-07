@@ -189,6 +189,57 @@
 
     .profile-bio.empty { font-style: italic; color: #555; }
 
+    /* --- Verified checkmark + Discord-style gradient role tag --- */
+    .profile-name-row { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+
+    .verified-badge {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      background: #1d9bf0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .verified-badge svg { width: 11px; height: 11px; }
+
+    .role-tag {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.15rem 0.55rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: linear-gradient(90deg, var(--role-c1, #f5576c), var(--role-c2, #7367f0), var(--role-c1, #f5576c));
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+      animation: role-shimmer 3s linear infinite;
+      letter-spacing: 0.01em;
+    }
+    @keyframes role-shimmer {
+      to { background-position: 200% center; }
+    }
+
+    .color-inputs { display: flex; gap: 0.75rem; }
+    .color-inputs .color-field { display: flex; align-items: center; gap: 0.5rem; }
+    .color-inputs input[type="color"] {
+      width: 40px;
+      height: 34px;
+      padding: 2px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      cursor: pointer;
+    }
+
+    .checkbox-row { display: flex; align-items: center; gap: 0.6rem; }
+    .checkbox-row input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--text-primary); cursor: pointer; }
+    .checkbox-row label { margin-bottom: 0; cursor: pointer; }
+
     /* --- Last.fm "Зараз слухаю" widget --- */
     .now-playing-card {
       background: var(--bg-elevated);
@@ -472,7 +523,21 @@
           </div>
         </div>
         <div class="profile-body">
-          <div class="profile-name">{{ profile.username }}</div>
+          <div class="profile-name-row">
+            <span class="profile-name">{{ profile.username }}</span>
+            {% if profile.is_verified %}
+            <span class="verified-badge" title="Верифіковано">
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </span>
+            {% endif %}
+            {% if profile.role_label %}
+            <span class="role-tag" style="--role-c1: {{ profile.role_color_start or '#f5576c' }}; --role-c2: {{ profile.role_color_end or '#7367f0' }};">
+              {{ profile.role_label }}
+            </span>
+            {% endif %}
+          </div>
           <div class="profile-bio {{ 'empty' if not profile.bio else '' }}">
             {{ profile.bio if profile.bio else "Опис ще не додано." }}
           </div>
@@ -522,6 +587,36 @@
           <div class="form-group">
             <label for="bio">Опис</label>
             <textarea id="bio" name="bio" placeholder="Пару слів про себе...">{{ profile.bio or '' }}</textarea>
+          </div>
+
+          <div class="form-group">
+            <div class="checkbox-row">
+              <input type="checkbox" id="is_verified" name="is_verified" {{ 'checked' if profile.is_verified else '' }}>
+              <label for="is_verified">Верифікований (біла галочка поруч з ніком)</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="role_label">Роль / тег (як в Discord)</label>
+            <input type="text" id="role_label" name="role_label"
+                   value="{{ profile.role_label or '' }}"
+                   placeholder="любимка бламікса">
+            <div class="form-hint">Залиш пустим, щоб не показувати тег взагалі.</div>
+          </div>
+
+          <div class="form-group">
+            <label>Кольори градієнта тега</label>
+            <div class="color-inputs">
+              <div class="color-field">
+                <input type="color" name="role_color_start" value="{{ profile.role_color_start or '#f5576c' }}">
+                <span class="form-hint">початковий</span>
+              </div>
+              <div class="color-field">
+                <input type="color" name="role_color_end" value="{{ profile.role_color_end or '#7367f0' }}">
+                <span class="form-hint">кінцевий</span>
+              </div>
+            </div>
+            <div class="form-hint">Тег переливається між цими двома кольорами по колу.</div>
           </div>
 
           <div class="form-actions">
