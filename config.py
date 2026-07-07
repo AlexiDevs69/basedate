@@ -29,12 +29,12 @@ class Settings(BaseSettings):
     # dashboard can call Telegram's sendMessage API for broadcasts.
     bot_token: str = ""
 
-    # --- Spotify OAuth (powers the "Зараз слухаю" widget on /profile) ---
-    # Create an app at https://developer.spotify.com/dashboard and set its
-    # Redirect URI to match spotify_redirect_uri below exactly.
-    spotify_client_id: str = ""
-    spotify_client_secret: str = ""
-    spotify_redirect_uri: str = ""
+    # --- Last.fm (powers the "Зараз слухаю" widget on /profile) ---
+    # Free API key from https://www.last.fm/api/account/create -- no
+    # subscription needed. lastfm_username is whatever Last.fm account has
+    # Spotify scrobbling turned on (Spotify app -> Settings -> Apps -> Last.fm).
+    lastfm_api_key: str = ""
+    lastfm_username: str = ""
 
     model_config = SettingsConfigDict(
         env_file=".env",
