@@ -9,7 +9,6 @@ On Render, the Start Command is:
 """
 
 import asyncio
-import secrets
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, Form, Request
@@ -19,7 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.middleware.sessions import SessionMiddleware
 
 import crud
-import spotify
+import lastfm
 from config import get_settings
 from database import get_db, init_db
 from telegram import send_telegram_message
@@ -174,11 +173,13 @@ async def profile_view(request: Request, db: AsyncSession = Depends(get_db)):
 
     username = request.session.get("username", "admin")
     profile = await crud.get_profile(db, username=username)
-    spotify_connected = (await crud.get_spotify_refresh_token(db)) is not None
+    # No OAuth to check here -- Last.fm is "connected" simply if both
+    # config values are set, since it's just a public API key + username.
+    lastfm_connected = bool(settings.lastfm_api_key and settings.lastfm_username)
 
     return templates.TemplateResponse(
         "profile.html",
-        {"request": request, "profile": profile, "spotify_connected": spotify_connected},
+        {"request": request, "profile": profile, "lastfm_connected": lastfm_connected},
     )
 
 
@@ -203,46 +204,8 @@ async def profile_update(
     return RedirectResponse(url="/profile", status_code=303)
 
 
-@app.get("/spotify/login")
-async def spotify_login(request: Request):
-    """Kicks off the one-time OAuth flow -- redirects to Spotify's consent screen."""
-    if not is_logged_in(request):
-        return RedirectResponse(url="/login", status_code=303)
-
-    # A random state, checked on the way back in /spotify/callback, so a
-    # forged callback URL can't be used to plant someone else's tokens.
-    state = secrets.token_urlsafe(16)
-    request.session["spotify_oauth_state"] = state
-    return RedirectResponse(url=spotify.build_authorize_url(state), status_code=303)
-
-
-@app.get("/spotify/callback")
-async def spotify_callback(
-    request: Request,
-    code: str | None = None,
-    state: str | None = None,
-    error: str | None = None,
-    db: AsyncSession = Depends(get_db),
-):
-    """Spotify redirects the admin's browser back here after they approve access."""
-    if not is_logged_in(request):
-        return RedirectResponse(url="/login", status_code=303)
-
-    expected_state = request.session.pop("spotify_oauth_state", None)
-
-    if error or not code or state != expected_state:
-        # Denied, or something's off with the state -- just bounce back to
-        # /profile without connecting anything. Nothing destructive happens.
-        return RedirectResponse(url="/profile", status_code=303)
-
-    refresh_token = await spotify.exchange_code_for_tokens(code)
-    await crud.save_spotify_refresh_token(db, refresh_token)
-
-    return RedirectResponse(url="/profile", status_code=303)
-
-
 @app.get("/api/now-playing")
-async def api_now_playing(request: Request, db: AsyncSession = Depends(get_db)):
+async def api_now_playing(request: Request):
     """
     JSON endpoint the profile page polls every ~15s for the "currently
     listening" widget. Behind login like everything else here.
@@ -250,7 +213,7 @@ async def api_now_playing(request: Request, db: AsyncSession = Depends(get_db)):
     if not is_logged_in(request):
         return JSONResponse({"connected": False}, status_code=401)
 
-    track = await spotify.get_now_playing(db)
+    track = await lastfm.get_now_playing()
     return JSONResponse(track or {"connected": False})
 
 
