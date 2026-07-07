@@ -19,6 +19,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 import crud
 import lastfm
+from community.router import router as community_router
 from config import get_settings
 from database import get_db, init_db
 from telegram import send_telegram_message
@@ -33,6 +34,10 @@ app.add_middleware(SessionMiddleware, secret_key=settings.secret_key)
 
 BASE_DIR = Path(__file__).resolve().parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+
+# Everything under /community/* (registration, login, public profiles,
+# online members) lives in its own module -- see community/router.py.
+app.include_router(community_router)
 
 
 @app.on_event("startup")
