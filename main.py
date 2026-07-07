@@ -189,9 +189,14 @@ async def profile_update(
     avatar_url: str = Form(""),
     banner_url: str = Form(""),
     bio: str = Form(""),
+    role_label: str = Form(""),
+    role_color_start: str = Form(""),
+    role_color_end: str = Form(""),
+    # Unchecked checkbox isn't sent at all -- same trick as maintenance_mode.
+    is_verified: str | None = Form(None),
     db: AsyncSession = Depends(get_db),
 ):
-    """Saves the new avatar_url / banner_url / bio, then redirects back to /profile."""
+    """Saves the new avatar_url / banner_url / bio / role / verified flag, then redirects back to /profile."""
     if not is_logged_in(request):
         return RedirectResponse(url="/login", status_code=303)
 
@@ -200,6 +205,10 @@ async def profile_update(
         avatar_url=avatar_url.strip(),
         banner_url=banner_url.strip(),
         bio=bio.strip(),
+        is_verified=is_verified is not None,
+        role_label=role_label.strip(),
+        role_color_start=role_color_start.strip(),
+        role_color_end=role_color_end.strip(),
     )
     return RedirectResponse(url="/profile", status_code=303)
 
