@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models import AdminProfile, BotSettings, Log, SpotifyAuth, User
+from models import AdminProfile, BotSettings, Log, User
 
 
 async def get_total_users(db: AsyncSession) -> int:
@@ -167,28 +167,3 @@ async def update_settings(
     await db.commit()
     await db.refresh(settings_row)
     return settings_row
-
-
-async def get_spotify_refresh_token(db: AsyncSession) -> str | None:
-    """Returns the stored Spotify refresh_token, or None if never connected."""
-    result = await db.execute(select(SpotifyAuth).where(SpotifyAuth.id == 1))
-    row = result.scalar_one_or_none()
-    return row.refresh_token if row else None
-
-
-async def save_spotify_refresh_token(db: AsyncSession, refresh_token: str) -> None:
-    """
-    Upserts the single spotify_auth row (id=1). Called once right after the
-    OAuth callback, and again any time Spotify rotates the refresh_token
-    during a token refresh.
-    """
-    result = await db.execute(select(SpotifyAuth).where(SpotifyAuth.id == 1))
-    row = result.scalar_one_or_none()
-
-    if row is None:
-        row = SpotifyAuth(id=1, refresh_token=refresh_token)
-        db.add(row)
-    else:
-        row.refresh_token = refresh_token
-
-    await db.commit()
