@@ -189,17 +189,7 @@
 
     .profile-bio.empty { font-style: italic; color: #555; }
 
-    /* --- Edit form --- */
-    .section-title {
-      font-size: 0.8rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--text-secondary);
-      margin-bottom: 1rem;
-    }
-
-    /* --- Spotify "Зараз слухаю" widget --- */
+    /* --- Last.fm "Зараз слухаю" widget --- */
     .now-playing-card {
       background: var(--bg-elevated);
       border: 1px solid var(--border);
@@ -230,15 +220,15 @@
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.06em;
-      color: #1db954;
+      color: #d51007;
       margin-bottom: 0.3rem;
     }
 
-    /* Little bouncing equalizer bars, Discord/Spotify-style */
+    /* Little bouncing equalizer bars -- only animate while actually live */
     .eq { display: flex; align-items: flex-end; gap: 2px; height: 10px; }
     .eq span {
       width: 3px;
-      background: #1db954;
+      background: #d51007;
       border-radius: 1px;
       animation: eq-bounce 0.9s ease-in-out infinite;
     }
@@ -267,47 +257,31 @@
       margin-top: 0.1rem;
     }
 
-    .now-playing-progress {
-      margin-top: 0.5rem;
-      height: 3px;
-      border-radius: 2px;
-      background: var(--border);
-      overflow: hidden;
-    }
-    .now-playing-progress-bar {
-      height: 100%;
-      background: #1db954;
-      width: 0%;
-      transition: width 0.3s linear;
-    }
-
-    .spotify-connect-card {
+    .lastfm-note {
       background: var(--bg-elevated);
       border: 1px dashed var(--border);
       border-radius: var(--radius);
-      padding: 1.25rem;
+      padding: 1rem 1.25rem;
       margin-bottom: 2rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
-    .spotify-connect-card p { color: var(--text-secondary); font-size: 0.85rem; }
-    .btn-spotify {
-      background: #1db954;
-      color: #06180d;
-      border: none;
-      border-radius: var(--radius);
-      padding: 0.6rem 1.1rem;
+      color: var(--text-secondary);
       font-size: 0.85rem;
-      font-weight: 700;
-      cursor: pointer;
-      text-decoration: none;
-      transition: var(--transition);
-      white-space: nowrap;
     }
-    .btn-spotify:hover { opacity: 0.85; }
+    .lastfm-note code {
+      font-family: var(--font-mono);
+      background: var(--bg-header);
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+    }
+
+    /* --- Edit form --- */
+    .section-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+    }
 
     .form-card {
       background: var(--bg-elevated);
@@ -468,8 +442,8 @@
           <li><a href="/admin">Dashboard</a></li>
           <li><a href="/users">Users List</a></li>
           <li><a href="/logs">Logs</a></li>
-          <li><a href="#">Broadcast</a></li>
-          <li><a href="#">Settings</a></li>
+          <li><a href="/broadcast">Broadcast</a></li>
+          <li><a href="/settings">Settings</a></li>
         </ul>
         <div class="sidebar-footer">
           <div class="user-row">
@@ -505,7 +479,7 @@
         </div>
       </div>
 
-      {% if spotify_connected %}
+      {% if lastfm_connected %}
       <div id="now-playing-card" class="now-playing-card">
         <div id="now-playing-art" class="now-playing-art"></div>
         <div class="now-playing-info">
@@ -515,15 +489,14 @@
           </div>
           <div id="now-playing-title" class="now-playing-title">—</div>
           <div id="now-playing-artists" class="now-playing-artists">—</div>
-          <div class="now-playing-progress">
-            <div id="now-playing-progress-bar" class="now-playing-progress-bar"></div>
-          </div>
         </div>
       </div>
       {% else %}
-      <div class="spotify-connect-card">
-        <p>Підключи Spotify, щоб у профілі показувалось, що ти зараз слухаєш.</p>
-        <a href="/spotify/login" class="btn-spotify">Підключити Spotify</a>
+      <div class="lastfm-note">
+        Щоб тут з'явився блок "Зараз слухаю", додай <code>LASTFM_API_KEY</code> і
+        <code>LASTFM_USERNAME</code> в змінні середовища (безкоштовний ключ —
+        last.fm/api/account/create), і увімкни скроблінг Spotify → Last.fm
+        в налаштуваннях самого Spotify.
       </div>
       {% endif %}
 
@@ -581,23 +554,15 @@
     }
   </script>
 
-  {% if spotify_connected %}
+  {% if lastfm_connected %}
   <script>
-    // Опитує /api/now-playing раз на 15с і плавно оновлює віджет.
-    // Прогрес-бар додатково "домальовується" щосекунди між опитуваннями,
-    // щоб не виглядав застиглим -- це суто косметика на клієнті, жодних
-    // зайвих запитів до Spotify.
+    // Опитує /api/now-playing раз на 15с і оновлює віджет.
     (function () {
       var card = document.getElementById('now-playing-card');
       var art = document.getElementById('now-playing-art');
       var status = document.getElementById('now-playing-status');
       var title = document.getElementById('now-playing-title');
       var artists = document.getElementById('now-playing-artists');
-      var progressBar = document.getElementById('now-playing-progress-bar');
-
-      var currentProgressMs = 0;
-      var durationMs = 0;
-      var tickTimer = null;
 
       function render(data) {
         if (!data || data.connected === false || !data.title) {
@@ -613,44 +578,20 @@
         artists.textContent = data.artists || '';
         status.textContent = data.live ? 'Зараз слухаю' : 'Востаннє слухав';
 
-        currentProgressMs = data.progress_ms || 0;
-        durationMs = data.duration_ms || 0;
-        updateProgressBar();
-
-        if (title.parentElement.parentElement.parentElement) {
-          var link = data.track_url;
-          card.onclick = link ? function () { window.open(link, '_blank'); } : null;
-          card.style.cursor = link ? 'pointer' : 'default';
-        }
-      }
-
-      function updateProgressBar() {
-        if (!durationMs) {
-          progressBar.style.width = '0%';
-          return;
-        }
-        var pct = Math.min(100, (currentProgressMs / durationMs) * 100);
-        progressBar.style.width = pct + '%';
+        var link = data.track_url;
+        card.onclick = link ? function () { window.open(link, '_blank'); } : null;
+        card.style.cursor = link ? 'pointer' : 'default';
       }
 
       function poll() {
         fetch('/api/now-playing')
           .then(function (r) { return r.json(); })
           .then(render)
-          .catch(function () { /* тиха відмова -- просто ховаємо картку наступного разу */ });
+          .catch(function () { /* тиха відмова -- картка просто лишається схованою */ });
       }
 
       poll();
       setInterval(poll, 15000);
-
-      // Клієнтське "домальовування" прогрес-бару між опитуваннями.
-      clearInterval(tickTimer);
-      tickTimer = setInterval(function () {
-        if (card.classList.contains('is-live')) {
-          currentProgressMs += 1000;
-          updateProgressBar();
-        }
-      }, 1000);
     })();
   </script>
   {% endif %}
