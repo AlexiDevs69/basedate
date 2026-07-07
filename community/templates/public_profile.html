@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ profile.username }} // AlexiHub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0b0b; --bg-elevated: #111111; --bg-header: #161616;
+      --border: #222222; --border-hover: #333333;
+      --text-primary: #ffffff; --text-secondary: #888888;
+      --font-sans: 'Inter', system-ui, sans-serif; --font-mono: 'JetBrains Mono', monospace;
+      --radius: 8px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--bg); color: var(--text-primary); font-family: var(--font-sans); font-size: 14px; }
+
+    .topbar {
+      height: 56px; background: var(--bg-header); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 1.5rem;
+    }
+    .topbar a { color: var(--text-primary); text-decoration: none; font-weight: 700; }
+
+    .wrap { max-width: 640px; margin: 2.5rem auto; padding: 0 1.5rem; }
+
+    .profile-card { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .profile-banner {
+      height: 180px; width: 100%; background: var(--bg-header) center/cover no-repeat;
+      position: relative; display: flex; align-items: flex-end;
+    }
+    .profile-banner.no-banner {
+      background-image: linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px),
+                         linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    .profile-avatar-wrap { position: absolute; left: 1.5rem; bottom: -34px; }
+    .profile-avatar {
+      width: 88px; height: 88px; border-radius: 50%; border: 4px solid var(--bg-elevated);
+      background: var(--bg-header) center/cover no-repeat;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-mono); font-weight: 700; font-size: 1.7rem; color: var(--text-secondary);
+    }
+    .profile-body { padding: 2.75rem 1.75rem 1.75rem; }
+
+    .profile-name-row { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+    .profile-name { font-size: 1.2rem; font-weight: 700; }
+    .verified-badge {
+      width: 19px; height: 19px; flex-shrink: 0; border-radius: 50%; background: #1d9bf0;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .verified-badge svg { width: 11px; height: 11px; }
+    .role-tag {
+      display: inline-block; font-size: 0.72rem; font-weight: 700; padding: 0.15rem 0.55rem;
+      border-radius: 999px; border: 1px solid rgba(255,255,255,0.15);
+      background: linear-gradient(90deg, var(--role-c1, #f5576c), var(--role-c2, #7367f0), var(--role-c1, #f5576c));
+      background-size: 200% auto; -webkit-background-clip: text; background-clip: text; color: transparent;
+      -webkit-text-fill-color: transparent; animation: role-shimmer 3s linear infinite;
+    }
+    @keyframes role-shimmer { to { background-position: 200% center; } }
+
+    .profile-bio { margin-top: 0.6rem; color: var(--text-secondary); font-size: 0.9rem; white-space: pre-wrap; }
+    .profile-bio.empty { font-style: italic; color: #555; }
+
+    .edit-link {
+      display: inline-block; margin-top: 1.25rem; color: var(--text-primary); text-decoration: none;
+      border: 1px solid var(--border); border-radius: var(--radius); padding: 0.5rem 1rem; font-size: 0.85rem; font-weight: 600;
+    }
+    .edit-link:hover { border-color: var(--border-hover); }
+  </style>
+</head>
+<body>
+  <div class="topbar"><a href="/community">← AlexiHub // Community</a></div>
+
+  <div class="wrap">
+    <div class="profile-card">
+      <div class="profile-banner {{ '' if profile.banner_url else 'no-banner' }}"
+           {% if profile.banner_url %}style="background-image: url('{{ profile.banner_url }}');"{% endif %}>
+        <div class="profile-avatar-wrap">
+          <div class="profile-avatar" {% if profile.avatar_url %}style="background-image: url('{{ profile.avatar_url }}');"{% endif %}>
+            {% if not profile.avatar_url %}{{ profile.username[:1]|upper }}{% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="profile-body">
+        <div class="profile-name-row">
+          <span class="profile-name">{{ profile.username }}</span>
+          {% if profile.is_verified %}
+          <span class="verified-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </span>
+          {% endif %}
+          {% if profile.role_label %}
+          <span class="role-tag" style="--role-c1: {{ profile.role_color_start or '#f5576c' }}; --role-c2: {{ profile.role_color_end or '#7367f0' }};">
+            {{ profile.role_label }}
+          </span>
+          {% endif %}
+        </div>
+        <div class="profile-bio {{ 'empty' if not profile.bio else '' }}">
+          {{ profile.bio if profile.bio else "Опис ще не додано." }}
+        </div>
+
+        {% if is_own %}
+        <a href="/community/settings" class="edit-link">Редагувати профіль</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</body>
+</html>
