@@ -76,6 +76,14 @@ class AdminProfile(Base):
     avatar_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
     banner_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
     bio: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Discord-style extras: a white checkmark badge next to the name, and a
+    # small "role" tag with an animated two-color gradient (like Discord's
+    # Nitro "Gradient" role colors). All just plain columns -- no external
+    # service, the animation itself is pure CSS.
+    is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    role_label: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    role_color_start: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    role_color_end: Mapped[str | None] = mapped_column(String(16), nullable=True)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=False
     )
