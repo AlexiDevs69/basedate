@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Налаштування профілю</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0b0b; --bg-elevated: #111111; --bg-header: #161616;
+      --border: #222222; --border-hover: #333333;
+      --text-primary: #ffffff; --text-secondary: #888888;
+      --font-sans: 'Inter', system-ui, sans-serif; --radius: 8px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--bg); color: var(--text-primary); font-family: var(--font-sans); font-size: 14px; }
+
+    .topbar {
+      height: 56px; background: var(--bg-header); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 1.5rem;
+    }
+    .topbar a { color: var(--text-primary); text-decoration: none; font-weight: 700; }
+
+    .wrap { max-width: 480px; margin: 2.5rem auto; padding: 0 1.5rem; }
+    h1 { font-size: 1.2rem; margin-bottom: 1.25rem; }
+
+    .form-card { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; }
+    .form-group { margin-bottom: 1.1rem; }
+    .form-group:last-of-type { margin-bottom: 0; }
+    .form-group label { display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.35rem; font-weight: 600; }
+    .form-group input, .form-group textarea {
+      width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 0.6rem 0.75rem; color: var(--text-primary); font-family: var(--font-sans); font-size: 0.9rem;
+    }
+    .form-group textarea { resize: vertical; min-height: 80px; }
+    .form-group input:focus, .form-group textarea:focus { outline: none; border-color: var(--border-hover); }
+    .form-actions { margin-top: 1.4rem; }
+    .btn {
+      background: var(--text-primary); color: var(--bg); border: none; border-radius: var(--radius);
+      padding: 0.6rem 1.2rem; font-weight: 600; font-size: 0.85rem; cursor: pointer;
+    }
+    .btn:hover { opacity: 0.85; }
+    .note { font-size: 0.78rem; color: #555; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <div class="topbar"><a href="/community/profile/{{ account.username }}">← Назад до профілю</a></div>
+
+  <div class="wrap">
+    <h1>Налаштування профілю</h1>
+    <div class="form-card">
+      <form method="post" action="/community/settings">
+        <div class="form-group">
+          <label for="avatar_url">Посилання на аватарку</label>
+          <input type="text" id="avatar_url" name="avatar_url" value="{{ account.avatar_url or '' }}" placeholder="https://...">
+        </div>
+        <div class="form-group">
+          <label for="banner_url">Посилання на банер</label>
+          <input type="text" id="banner_url" name="banner_url" value="{{ account.banner_url or '' }}" placeholder="https://...">
+        </div>
+        <div class="form-group">
+          <label for="bio">Опис</label>
+          <textarea id="bio" name="bio" placeholder="Пару слів про себе...">{{ account.bio or '' }}</textarea>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn">Зберегти</button>
+        </div>
+      </form>
+    </div>
+    <div class="note">Значок верифікації та кольоровий тег ролі призначає адміністрація — сам їх встановити не можеш.</div>
+  </div>
+</body>
+</html>
