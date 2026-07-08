@@ -46,6 +46,18 @@
       padding: 2.5rem; text-align: center; color: var(--text-secondary); font-size: 0.9rem;
     }
 
+    .channel-list { display: flex; flex-direction: column; gap: 0.6rem; }
+    .channel-card {
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+      background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 1rem 1.25rem; text-decoration: none; color: var(--text-primary); transition: border-color 0.2s ease;
+    }
+    .channel-card:hover { border-color: var(--border-hover); }
+    .channel-card .hash { color: var(--text-secondary); font-family: var(--font-mono); font-weight: 700; }
+    .channel-name { font-weight: 600; }
+    .channel-desc { color: var(--text-secondary); font-size: 0.8rem; margin-top: 0.15rem; }
+    .channel-arrow { color: var(--text-secondary); }
+
     .sidebar-right {
       width: 260px; margin-top: 56px; border-left: 1px solid var(--border);
       padding: 1.5rem 1.25rem; position: fixed; right: 0; top: 0; bottom: 0; overflow-y: auto;
@@ -142,8 +154,21 @@
   <div class="layout">
     <main class="main">
       <h1>Привіт, {{ account.username }} 👋</h1>
-      <p class="sub">Стрічка / пости — наступний крок. Поки що тут акаунт, профіль і список тих, хто зараз онлайн.</p>
-      <div class="placeholder-box">Стрічка з'явиться тут пізніше.</div>
+      <p class="sub">Обери канал і пиши.</p>
+      <div class="channel-list">
+        {% for ch in channels %}
+        <a href="/community/channel/{{ ch.slug }}" class="channel-card">
+          <div style="display:flex; align-items:center; gap:0.75rem;">
+            <span class="hash">#</span>
+            <div>
+              <div class="channel-name">{{ ch.name }}</div>
+              {% if ch.description %}<div class="channel-desc">{{ ch.description }}</div>{% endif %}
+            </div>
+          </div>
+          <span class="channel-arrow">→</span>
+        </a>
+        {% endfor %}
+      </div>
     </main>
 
     <aside class="sidebar-right">
