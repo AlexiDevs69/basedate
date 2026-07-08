@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from community.models import Account, Friendship
+from community.models import Account, Channel, Comment, Friendship, Post, PostLike
 
 # A member counts as "online" if we've seen a request from them in the
 # last 3 minutes. Cheap to compute, no background job or websocket needed.
@@ -171,6 +171,16 @@ async def respond_friend_request(
     return friendship
 
 
+async def remove_friendship(db: AsyncSession, viewer_id: int, other_id: int) -> bool:
+    """Un-friending -- fully deletes the row so a future request starts fresh."""
+    friendship = await get_friendship_between(db, viewer_id, other_id)
+    if not friendship or friendship.status != "accepted":
+        return False
+    await db.delete(friendship)
+    await db.commit()
+    return True
+
+
 async def list_pending_requests_with_requester(db: AsyncSession, account_id: int) -> list[dict]:
     """Pending incoming requests, each paired with the requester's Account -- used for the bell dropdown."""
     result = await db.execute(
@@ -253,3 +263,122 @@ async def delete_account(db: AsyncSession, account_id: int) -> bool:
     await db.delete(account)
     await db.commit()
     return True
+
+
+# ============================================================================
+# Forum
+# ============================================================================
+
+DEFAULT_CHANNELS = [
+    ("general", "Загальне", "Про все на світі", 0),
+    ("help", "Допомога", "Питання і підтримка", 1),
+    ("offtopic", "Флуд", "Все, що не по темі", 2),
+]
+
+
+async def ensure_default_channels(db: AsyncSession) -> None:
+    """Idempotent -- only seeds channels the very first time the forum is used."""
+    result = await db.execute(select(Channel))
+    if result.scalars().first() is not None:
+        return
+    for slug, name, description, order in DEFAULT_CHANNELS:
+        db.add(Channel(slug=slug, name=name, description=description, sort_order=order))
+    await db.commit()
+
+
+async def list_channels(db: AsyncSession) -> list[Channel]:
+    result = await db.execute(select(Channel).order_by(Channel.sort_order))
+    return list(result.scalars().all())
+
+
+async def get_channel_by_slug(db: AsyncSession, slug: str) -> Channel | None:
+    result = await db.execute(select(Channel).where(Channel.slug == slug))
+    return result.scalar_one_or_none()
+
+
+async def create_post(
+    db: AsyncSession, channel_id: int, author_id: int, content: str, image_url: str | None = None
+) -> Post:
+    post = Post(channel_id=channel_id, author_id=author_id, content=content, image_url=image_url or None)
+    db.add(post)
+    await db.commit()
+    await db.refresh(post)
+    return post
+
+
+async def list_posts_for_channel(db: AsyncSession, channel_id: int, limit: int = 50) -> list[Post]:
+    result = await db.execute(
+        select(Post).where(Post.channel_id == channel_id).order_by(Post.created_at.desc()).limit(limit)
+    )
+    return list(result.scalars().all())
+
+
+async def toggle_like(db: AsyncSession, post_id: int, account_id: int) -> bool:
+    """Returns True if the post is now liked, False if the like was just removed."""
+    result = await db.execute(
+        select(PostLike).where(PostLike.post_id == post_id, PostLike.account_id == account_id)
+    )
+    like = result.scalar_one_or_none()
+    if like:
+        await db.delete(like)
+        await db.commit()
+        return False
+    db.add(PostLike(post_id=post_id, account_id=account_id))
+    await db.commit()
+    return True
+
+
+async def count_likes(db: AsyncSession, post_id: int) -> int:
+    result = await db.execute(select(func.count()).select_from(PostLike).where(PostLike.post_id == post_id))
+    return result.scalar_one()
+
+
+async def has_liked(db: AsyncSession, post_id: int, account_id: int) -> bool:
+    result = await db.execute(
+        select(PostLike).where(PostLike.post_id == post_id, PostLike.account_id == account_id)
+    )
+    return result.scalar_one_or_none() is not None
+
+
+async def add_comment(db: AsyncSession, post_id: int, author_id: int, content: str) -> Comment:
+    comment = Comment(post_id=post_id, author_id=author_id, content=content)
+    db.add(comment)
+    await db.commit()
+    await db.refresh(comment)
+    return comment
+
+
+async def list_comments_for_post(db: AsyncSession, post_id: int) -> list[Comment]:
+    result = await db.execute(
+        select(Comment).where(Comment.post_id == post_id).order_by(Comment.created_at.asc())
+    )
+    return list(result.scalars().all())
+
+
+async def get_channel_feed(db: AsyncSession, channel_id: int, viewer_id: int | None, limit: int = 50) -> list[dict]:
+    """
+    Assembles everything a channel page needs to render: each post bundled
+    with its author, like count/state, and its (flat) comments with their
+    authors. Simple sequential queries -- totally fine at this scale, and
+    much easier to read than a hand-joined mega-query.
+    """
+    posts = await list_posts_for_channel(db, channel_id, limit=limit)
+    feed = []
+    for post in posts:
+        author = await get_account_by_id(db, post.author_id)
+        like_count = await count_likes(db, post.id)
+        liked = await has_liked(db, post.id, viewer_id) if viewer_id else False
+
+        comments = []
+        for comment in await list_comments_for_post(db, post.id):
+            comment_author = await get_account_by_id(db, comment.author_id)
+            comments.append({"comment": comment, "author": comment_author})
+
+        feed.append({
+            "post": post,
+            "author": author,
+            "like_count": like_count,
+            "liked": liked,
+            "comments": comments,
+        })
+    return feed
