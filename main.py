@@ -19,6 +19,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 import crud
 import lastfm
+from community import crud as community_crud
 from community.router import router as community_router
 from config import get_settings
 from database import get_db, init_db
@@ -359,30 +360,66 @@ async def settings_update(
     return RedirectResponse(url="/settings", status_code=303)
 
 
-@app.get("/admin/run-migration")
-async def run_migration(request: Request, db: AsyncSession = Depends(get_db)):
-    """
-    TEMPORARY, ONE-TIME USE. Adds the new admin_profile columns that
-    init_db()/create_all() can't add on its own (it only creates missing
-    tables, never alters existing ones). Visit this URL once, confirm the
-    {"status": "ok"} response, then delete this route and redeploy.
-    """
+@app.get("/community-users")
+async def community_users_list(request: Request, page: int = 1, db: AsyncSession = Depends(get_db)):
+    """Adminka list of every registered community account -- verify/role/ban/delete from here."""
     if not is_logged_in(request):
         return RedirectResponse(url="/login", status_code=303)
 
-    from sqlalchemy import text
+    page = max(page, 1)
+    accounts, total = await community_crud.get_accounts_page(db, page=page)
+    total_pages = max((total + community_crud.PAGE_SIZE - 1) // community_crud.PAGE_SIZE, 1)
 
-    statements = [
-        "ALTER TABLE admin_profile ADD COLUMN IF NOT EXISTS is_verified BOOLEAN NOT NULL DEFAULT false",
-        "ALTER TABLE admin_profile ADD COLUMN IF NOT EXISTS role_label VARCHAR(64)",
-        "ALTER TABLE admin_profile ADD COLUMN IF NOT EXISTS role_color_start VARCHAR(16)",
-        "ALTER TABLE admin_profile ADD COLUMN IF NOT EXISTS role_color_end VARCHAR(16)",
-    ]
-    for stmt in statements:
-        await db.execute(text(stmt))
-    await db.commit()
+    return templates.TemplateResponse(
+        "community_users.html",
+        {"request": request, "accounts": accounts, "page": page, "total_pages": total_pages, "total": total},
+    )
 
-    return {"status": "ok", "applied": len(statements)}
+
+@app.get("/community-users/{account_id}/edit")
+async def community_user_edit_form(account_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    if not is_logged_in(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    account = await community_crud.get_account_by_id(db, account_id)
+    if not account:
+        return RedirectResponse(url="/community-users", status_code=303)
+
+    return templates.TemplateResponse("community_user_edit.html", {"request": request, "account": account})
+
+
+@app.post("/community-users/{account_id}/edit")
+async def community_user_edit_submit(
+    account_id: int,
+    request: Request,
+    role_label: str = Form(""),
+    role_color_start: str = Form(""),
+    role_color_end: str = Form(""),
+    is_verified: str | None = Form(None),
+    is_banned: str | None = Form(None),
+    db: AsyncSession = Depends(get_db),
+):
+    if not is_logged_in(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    await community_crud.update_account_moderation(
+        db, account_id,
+        is_verified=is_verified is not None,
+        role_label=role_label.strip(),
+        role_color_start=role_color_start.strip(),
+        role_color_end=role_color_end.strip(),
+        is_banned=is_banned is not None,
+    )
+    return RedirectResponse(url="/community-users", status_code=303)
+
+
+@app.post("/community-users/{account_id}/delete")
+async def community_user_delete(account_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    if not is_logged_in(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    await community_crud.delete_account(db, account_id)
+    return RedirectResponse(url="/community-users", status_code=303)
 
 
 @app.get("/health")
