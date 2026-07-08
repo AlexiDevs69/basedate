@@ -7,7 +7,7 @@ with the bot's users/logs tables or the admin's own admin_profile/bot_settings.
 """
 from datetime import datetime, timezone
 
-from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database import Base
@@ -80,3 +80,51 @@ class Friendship(Base):
     status: Mapped[str] = mapped_column(String(16), default="pending", nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
     responded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+# ============================================================================
+# Forum: Discord-style channels + Telegram-style flat posts + Reddit-style
+# likes and single-level comments.
+# ============================================================================
+
+class Channel(Base):
+    __tablename__ = "community_channels"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    slug: Mapped[str] = mapped_column(String(32), unique=True, index=True, nullable=False)
+    name: Mapped[str] = mapped_column(String(64), nullable=False)
+    description: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    sort_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
+
+class Post(Base):
+    __tablename__ = "community_posts"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    channel_id: Mapped[int] = mapped_column(Integer, ForeignKey("community_channels.id"), nullable=False, index=True)
+    author_id: Mapped[int] = mapped_column(Integer, ForeignKey("community_accounts.id"), nullable=False, index=True)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    image_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True, nullable=False)
+
+
+class Comment(Base):
+    """Single-level comments -- no nested replies, keeps the feed cheap to render."""
+    __tablename__ = "community_comments"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    post_id: Mapped[int] = mapped_column(Integer, ForeignKey("community_posts.id"), nullable=False, index=True)
+    author_id: Mapped[int] = mapped_column(Integer, ForeignKey("community_accounts.id"), nullable=False, index=True)
+    content: Mapped[str] = mapped_column(String(1000), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
+class PostLike(Base):
+    """One row per (account, post) -- toggled on/off, gives the Reddit-style like count."""
+    __tablename__ = "community_post_likes"
+    __table_args__ = (UniqueConstraint("post_id", "account_id", name="uq_community_post_like"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    post_id: Mapped[int] = mapped_column(Integer, ForeignKey("community_posts.id"), nullable=False, index=True)
+    account_id: Mapped[int] = mapped_column(Integer, ForeignKey("community_accounts.id"), nullable=False, index=True)
+
