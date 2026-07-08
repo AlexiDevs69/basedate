@@ -79,3 +79,4 @@ def log_out(request: Request) -> None:
 
 def get_logged_in_account_id(request: Request) -> int | None:
     return request.session.get(SESSION_KEY)
+
