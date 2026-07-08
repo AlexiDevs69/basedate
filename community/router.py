@@ -10,7 +10,7 @@ never collide with the admin dashboard's routes.
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, Form, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -232,3 +232,69 @@ async def settings_submit(
         avatar_url=avatar_url.strip(), banner_url=banner_url.strip(), bio=bio.strip(),
     )
     return RedirectResponse(url=f"/community/profile/{account.username}", status_code=303)
+
+
+# --- Friends (AJAX endpoints -- called from public_profile.html / home.html) ---
+
+@router.post("/api/friends/request/{username}")
+async def api_send_friend_request(username: str, request: Request, db: AsyncSession = Depends(get_db)):
+    viewer = await current_account(request, db)
+    if not viewer:
+        return JSONResponse({"error": "not_logged_in"}, status_code=401)
+
+    target = await crud.get_account_by_username(db, username)
+    if not target:
+        return JSONResponse({"error": "not_found"}, status_code=404)
+
+    await crud.send_friend_request(db, viewer.id, target.id)
+    status = await crud.friendship_status(db, viewer.id, target.id)
+    return JSONResponse({"status": status})
+
+
+@router.post("/api/friends/respond/{friendship_id}")
+async def api_respond_friend_request(friendship_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    viewer = await current_account(request, db)
+    if not viewer:
+        return JSONResponse({"error": "not_logged_in"}, status_code=401)
+
+    body = await request.json()
+    accept = bool(body.get("accept"))
+
+    friendship = await crud.respond_friend_request(db, friendship_id, viewer.id, accept)
+    if not friendship:
+        return JSONResponse({"error": "not_found"}, status_code=404)
+
+    return JSONResponse({"status": friendship.status})
+
+
+@router.get("/api/friend-status/{username}")
+async def api_friend_status(username: str, request: Request, db: AsyncSession = Depends(get_db)):
+    viewer = await current_account(request, db)
+    target = await crud.get_account_by_username(db, username)
+    if not viewer or not target:
+        return JSONResponse({"status": "none"})
+
+    friendship = await crud.get_friendship_between(db, viewer.id, target.id)
+    status = await crud.friendship_status(db, viewer.id, target.id)
+    return JSONResponse({"status": status, "friendship_id": friendship.id if friendship else None})
+
+
+@router.get("/api/notifications")
+async def api_notifications(request: Request, db: AsyncSession = Depends(get_db)):
+    """Polled every ~20s by the bell icon on home.html / public_profile.html."""
+    viewer = await current_account(request, db)
+    if not viewer:
+        return JSONResponse({"count": 0, "items": []})
+
+    pending = await crud.list_pending_requests_with_requester(db, viewer.id)
+    return JSONResponse({
+        "count": len(pending),
+        "items": [
+            {
+                "friendship_id": p["friendship_id"],
+                "username": p["requester"].username if p["requester"] else "?",
+                "avatar_url": p["requester"].avatar_url if p["requester"] else None,
+            }
+            for p in pending
+        ],
+    })
