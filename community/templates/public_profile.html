@@ -104,6 +104,17 @@
     .friend-btn:hover:not(:disabled) { opacity: 0.85; }
     .friend-btn.pending, .friend-btn.friends { background: var(--bg-header); color: var(--text-secondary); cursor: default; }
     .friend-btn.accept { background: #10b981; color: #06180d; }
+    .friend-btn.friends { cursor: pointer; border: 1px solid transparent; }
+    .friend-btn.friends:hover { background: rgba(239,68,68,0.12); color: #ef4444; border-color: rgba(239,68,68,0.4); }
+
+    .friends-section { margin-top: 1.75rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+    .friends-title { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-secondary); margin-bottom: 0.85rem; }
+    .friends-grid { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+    .friend-chip { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: var(--text-primary); background: var(--bg-header); border-radius: 999px; padding: 0.3rem 0.75rem 0.3rem 0.3rem; }
+    .friend-chip:hover { background: var(--border); }
+    .friend-chip-avatar { width: 24px; height: 24px; border-radius: 50%; background: var(--bg-elevated) center/cover no-repeat; flex-shrink: 0; }
+    .friend-chip-name { font-size: 0.8rem; }
+    .friends-empty { color: #555; font-size: 0.82rem; }
   </style>
 </head>
 <body>
@@ -159,22 +170,36 @@
         {% if is_own %}
         <a href="/community/settings" class="edit-link">Редагувати профіль</a>
         {% elif viewer %}
-        <button id="friend-btn" class="friend-btn" onclick="handleFriendClick()" disabled>...</button>
+        <button id="friend-btn" class="friend-btn" onclick="handleFriendClick()" disabled>Завантаження…</button>
         {% endif %}
+
+        <div class="friends-section">
+          <div class="friends-title">Друзі — {{ friends|length }}</div>
+          <div class="friends-grid">
+            {% for friend in friends %}
+            <a href="/community/profile/{{ friend.username }}" class="friend-chip">
+              <span class="friend-chip-avatar" {% if friend.avatar_url %}style="background-image: url('{{ friend.avatar_url }}');"{% endif %}></span>
+              <span class="friend-chip-name">{{ friend.username }}</span>
+            </a>
+            {% else %}
+            <div class="friends-empty">Поки що нема друзів.</div>
+            {% endfor %}
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
   {% if viewer and not is_own %}
   <script>
-    var targetUsername = {{ profile.username | tojson }};
+    var targetUsername = "{{ profile.username }}";
 
     function setFriendButton(status, friendshipId) {
       var btn = document.getElementById('friend-btn');
       if (!btn) return;
       btn.disabled = false;
       btn.dataset.friendshipId = friendshipId || '';
-      btn.dataset.status = status;І
+      btn.dataset.status = status;
 
       if (status === 'pending_sent') {
         btn.textContent = 'Запит надіслано';
@@ -186,7 +211,7 @@
       } else if (status === 'friends') {
         btn.textContent = 'У друзях ✓';
         btn.className = 'friend-btn friends';
-        btn.disabled = true;
+        btn.title = 'Натисни, щоб видалити з друзів';
       } else {
         btn.textContent = 'Додати в друзі';
         btn.className = 'friend-btn';
@@ -196,21 +221,32 @@
     function loadFriendStatus() {
       fetch('/community/api/friend-status/' + encodeURIComponent(targetUsername))
         .then(function (r) { return r.json(); })
-        .then(function (data) { setFriendButton(data.status, data.friendship_id); });
+        .then(function (data) { setFriendButton(data.status, data.friendship_id); })
+        .catch(function () { setFriendButton('none', null); });
     }
 
     function handleFriendClick() {
       var btn = document.getElementById('friend-btn');
-      if (btn.dataset.status === 'pending_received') {
+      var status = btn.dataset.status;
+
+      if (status === 'friends') {
+        if (!confirm('Видалити ' + targetUsername + ' з друзів?')) return;
+        fetch('/community/api/friends/remove/' + encodeURIComponent(targetUsername), { method: 'POST' })
+          .then(function () { location.reload(); });
+        return;
+      }
+
+      if (status === 'pending_received') {
         fetch('/community/api/friends/respond/' + btn.dataset.friendshipId, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ accept: true }),
-        }).then(loadFriendStatus);
-      } else {
-        fetch('/community/api/friends/request/' + encodeURIComponent(targetUsername), { method: 'POST' })
-          .then(loadFriendStatus);
+        }).then(function () { location.reload(); });
+        return;
       }
+
+      fetch('/community/api/friends/request/' + encodeURIComponent(targetUsername), { method: 'POST' })
+        .then(loadFriendStatus);
     }
 
     loadFriendStatus();
