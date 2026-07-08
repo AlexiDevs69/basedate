@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>#{{ channel.name }} // AlexiHub Community</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0b0b; --bg-elevated: #111111; --bg-header: #161616;
+      --border: #222222; --border-hover: #333333;
+      --text-primary: #ffffff; --text-secondary: #888888;
+      --font-sans: 'Inter', system-ui, sans-serif; --font-mono: 'JetBrains Mono', monospace;
+      --radius: 8px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--bg); color: var(--text-primary); font-family: var(--font-sans); font-size: 14px; }
+
+    .topbar {
+      position: fixed; top: 0; left: 0; right: 0; height: 56px; z-index: 50;
+      background: var(--bg-header); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem;
+    }
+    .topbar .brand { font-weight: 700; font-size: 1rem; text-decoration: none; color: var(--text-primary); }
+    .topbar-right { display: flex; align-items: center; gap: 1.25rem; }
+    .topbar .me { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; color: var(--text-primary); font-size: 0.85rem; }
+    .topbar .me-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--bg-elevated) center/cover no-repeat; flex-shrink: 0; }
+    .topbar .logout { color: var(--text-secondary); text-decoration: none; font-size: 0.8rem; }
+    .topbar .logout:hover { color: var(--text-primary); }
+
+    .tabs {
+      position: fixed; top: 56px; left: 0; right: 0; z-index: 40; background: var(--bg);
+      border-bottom: 1px solid var(--border); display: flex; gap: 0.4rem; padding: 0.75rem 1.5rem; overflow-x: auto;
+    }
+    .tab {
+      display: flex; align-items: center; gap: 0.3rem; text-decoration: none; color: var(--text-secondary);
+      font-size: 0.85rem; font-weight: 600; padding: 0.4rem 0.8rem; border-radius: 999px; border: 1px solid transparent; white-space: nowrap;
+    }
+    .tab:hover { color: var(--text-primary); background: rgba(255,255,255,0.04); }
+    .tab.active { color: var(--text-primary); background: var(--bg-elevated); border-color: var(--border); }
+
+    .main { max-width: 640px; margin: 0 auto; padding: 128px 1.5rem 2.5rem; }
+
+    .composer { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1rem; margin-bottom: 1.5rem; }
+    .composer textarea {
+      width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 0.6rem 0.75rem; color: var(--text-primary); font-family: var(--font-sans); font-size: 0.9rem; resize: vertical; min-height: 64px;
+    }
+    .composer input[type="text"] {
+      width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 0.5rem 0.75rem; color: var(--text-primary); font-family: var(--font-sans); font-size: 0.82rem; margin-top: 0.5rem;
+    }
+    .composer .hint { font-size: 0.72rem; color: #555; margin-top: 0.35rem; }
+    .composer button {
+      margin-top: 0.75rem; background: var(--text-primary); color: var(--bg); border: none; border-radius: var(--radius);
+      padding: 0.5rem 1.1rem; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+    }
+    .composer button:hover { opacity: 0.85; }
+
+    .post-card { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1rem; margin-bottom: 1rem; }
+    .post-author { display: flex; align-items: center; gap: 0.55rem; margin-bottom: 0.6rem; }
+    .post-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--bg-header) center/cover no-repeat; flex-shrink: 0; }
+    .post-name-row { display: flex; align-items: center; gap: 0.3rem; }
+    .post-name { font-weight: 600; font-size: 0.88rem; text-decoration: none; color: var(--text-primary); }
+    .post-time { color: var(--text-secondary); font-size: 0.75rem; }
+    .verified-dot { width: 12px; height: 12px; border-radius: 50%; background: #1d9bf0; display: inline-flex; align-items: center; justify-content: center; }
+    .verified-dot svg { width: 7px; height: 7px; }
+
+    .post-content { font-size: 0.92rem; white-space: pre-wrap; line-height: 1.5; }
+    .post-image { margin-top: 0.75rem; max-width: 100%; border-radius: 8px; display: block; }
+
+    .post-actions { display: flex; align-items: center; gap: 1rem; margin-top: 0.85rem; }
+    .like-btn {
+      display: flex; align-items: center; gap: 0.35rem; background: none; border: 1px solid var(--border);
+      border-radius: 999px; padding: 0.3rem 0.7rem; color: var(--text-secondary); cursor: pointer; font-size: 0.8rem; font-weight: 600;
+    }
+    .like-btn:hover { border-color: var(--border-hover); }
+    .like-btn.liked { color: #ef4444; border-color: rgba(239,68,68,0.4); background: rgba(239,68,68,0.08); }
+    .like-btn svg { width: 14px; height: 14px; }
+    .comment-count { color: var(--text-secondary); font-size: 0.8rem; }
+
+    .comments { margin-top: 0.85rem; border-top: 1px solid var(--border); padding-top: 0.75rem; display: flex; flex-direction: column; gap: 0.55rem; }
+    .comment-row { display: flex; align-items: flex-start; gap: 0.5rem; }
+    .comment-avatar { width: 24px; height: 24px; border-radius: 50%; background: var(--bg-header) center/cover no-repeat; flex-shrink: 0; }
+    .comment-body { font-size: 0.82rem; }
+    .comment-author { font-weight: 600; margin-right: 0.35rem; }
+    .comment-text { color: var(--text-secondary); }
+
+    .comment-form { display: flex; gap: 0.5rem; margin-top: 0.6rem; }
+    .comment-form input {
+      flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 999px;
+      padding: 0.4rem 0.9rem; color: var(--text-primary); font-family: var(--font-sans); font-size: 0.82rem;
+    }
+    .comment-form button {
+      background: var(--bg-header); color: var(--text-primary); border: 1px solid var(--border); border-radius: 999px;
+      padding: 0.4rem 0.9rem; font-size: 0.8rem; font-weight: 600; cursor: pointer;
+    }
+    .comment-form button:hover { border-color: var(--border-hover); }
+
+    .empty-feed { text-align: center; color: #555; font-size: 0.85rem; padding: 2rem 0; }
+
+    .notif-wrap { position: relative; }
+    .notif-bell { background: none; border: none; color: var(--text-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%; position: relative; }
+    .notif-bell:hover { background: rgba(255,255,255,0.06); }
+    .notif-badge { position: absolute; top: 2px; right: 2px; background: #ef4444; color: white; font-size: 0.65rem; font-weight: 700; border-radius: 999px; min-width: 16px; height: 16px; display: none; align-items: center; justify-content: center; padding: 0 3px; }
+    .notif-dropdown { position: absolute; top: 44px; right: 0; width: 280px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 8px 24px rgba(0,0,0,0.4); z-index: 400; overflow: hidden; display: none; }
+    .notif-header { padding: 0.75rem 1rem; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-secondary); border-bottom: 1px solid var(--border); }
+    .notif-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.6rem 1rem; border-bottom: 1px solid var(--border); }
+    .notif-item:last-child { border-bottom: none; }
+    .notif-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--bg-header) center/cover no-repeat; flex-shrink: 0; }
+    .notif-name { flex: 1; font-size: 0.85rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .notif-actions { display: flex; gap: 0.3rem; }
+    .notif-btn { border: none; border-radius: 6px; padding: 0.3rem 0.5rem; font-size: 0.72rem; font-weight: 700; cursor: pointer; }
+    .notif-btn.accept { background: #10b981; color: #06180d; }
+    .notif-btn.decline { background: var(--bg-header); color: var(--text-secondary); }
+    .notif-empty { padding: 1rem; text-align: center; color: #555; font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="/community" class="brand">AlexiHub // Community</a>
+    <div class="topbar-right">
+      <div class="notif-wrap">
+        <button id="notif-bell" class="notif-bell" onclick="toggleNotifDropdown()" aria-label="Сповіщення">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="19" height="19">
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+          <span id="notif-badge" class="notif-badge">0</span>
+        </button>
+        <div id="notif-dropdown" class="notif-dropdown">
+          <div class="notif-header">Запити в друзі</div>
+          <div id="notif-list"></div>
+        </div>
+      </div>
+      <a href="/community/profile/{{ account.username }}" class="me">
+        <span class="me-avatar" {% if account.avatar_url %}style="background-image: url('{{ account.avatar_url }}');"{% endif %}></span>
+        {{ account.username }}
+      </a>
+      <a href="/community/logout" class="logout">Log out</a>
+    </div>
+  </div>
+
+  <div class="tabs">
+    {% for ch in channels %}
+    <a href="/community/channel/{{ ch.slug }}" class="tab {{ 'active' if ch.slug == channel.slug else '' }}"># {{ ch.name }}</a>
+    {% endfor %}
+  </div>
+
+  <main class="main">
+    <div class="composer">
+      <form method="post" action="/community/channel/{{ channel.slug }}/post">
+        <textarea name="content" placeholder="Написати в #{{ channel.name }}..." required></textarea>
+        <input type="text" name="image_url" placeholder="Посилання на картинку (необов'язково)">
+        <div class="hint">Пряме посилання на зображення — покажеться під текстом.</div>
+        <button type="submit">Опублікувати</button>
+      </form>
+    </div>
+
+    {% for item in feed %}
+    <div class="post-card">
+      <div class="post-author">
+        <a href="/community/profile/{{ item.author.username }}">
+          <span class="post-avatar" {% if item.author and item.author.avatar_url %}style="background-image: url('{{ item.author.avatar_url }}');"{% endif %}></span>
+        </a>
+        <div>
+          <div class="post-name-row">
+            <a href="/community/profile/{{ item.author.username if item.author else '' }}" class="post-name">{{ item.author.username if item.author else 'видалений юзер' }}</a>
+            {% if item.author and item.author.is_verified %}
+            <span class="verified-dot">
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </span>
+            {% endif %}
+          </div>
+          <div class="post-time">{{ item.post.created_at }}</div>
+        </div>
+      </div>
+
+      <div class="post-content">{{ item.post.content }}</div>
+      {% if item.post.image_url %}<img class="post-image" src="{{ item.post.image_url }}" alt="">{% endif %}
+
+      <div class="post-actions">
+        <button class="like-btn {{ 'liked' if item.liked else '' }}" onclick="toggleLike({{ item.post.id }}, this)">
+          <svg viewBox="0 0 24 24" fill="{{ 'currentColor' if item.liked else 'none' }}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+          </svg>
+          <span class="like-count">{{ item.like_count }}</span>
+        </button>
+        <span class="comment-count">{{ item.comments|length }} коментар(ів)</span>
+      </div>
+
+      {% if item.comments %}
+      <div class="comments">
+        {% for c in item.comments %}
+        <div class="comment-row">
+          <span class="comment-avatar" {% if c.author and c.author.avatar_url %}style="background-image: url('{{ c.author.avatar_url }}');"{% endif %}></span>
+          <div class="comment-body">
+            <span class="comment-author">{{ c.author.username if c.author else '?' }}</span>
+            <span class="comment-text">{{ c.comment.content }}</span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <form class="comment-form" method="post" action="/community/channel/{{ channel.slug }}/post/{{ item.post.id }}/comment">
+        <input type="text" name="content" placeholder="Написати коментар..." required maxlength="1000">
+        <button type="submit">→</button>
+      </form>
+    </div>
+    {% else %}
+    <div class="empty-feed">Тут поки що порожньо — будь першим.</div>
+    {% endfor %}
+  </main>
+
+  <script>
+    function toggleLike(postId, btn) {
+      fetch('/community/api/posts/' + postId + '/like', { method: 'POST' })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          btn.classList.toggle('liked', data.liked);
+          btn.querySelector('.like-count').textContent = data.count;
+          btn.querySelector('svg').setAttribute('fill', data.liked ? 'currentColor' : 'none');
+        });
+    }
+
+    function toggleNotifDropdown() {
+      var dd = document.getElementById('notif-dropdown');
+      dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function renderNotifications(data) {
+      var badge = document.getElementById('notif-badge');
+      var list = document.getElementById('notif-list');
+      var count = data.count || 0;
+      badge.style.display = count > 0 ? 'flex' : 'none';
+      badge.textContent = count > 9 ? '9+' : count;
+
+      if (!data.items || !data.items.length) {
+        list.innerHTML = '<div class="notif-empty">Немає нових запитів</div>';
+        return;
+      }
+      list.innerHTML = data.items.map(function (item) {
+        var avatarStyle = item.avatar_url ? "background-image:url('" + item.avatar_url + "')" : '';
+        return (
+          '<div class="notif-item">' +
+            '<div class="notif-avatar" style="' + avatarStyle + '"></div>' +
+            '<div class="notif-name">' + item.username + '</div>' +
+            '<div class="notif-actions">' +
+              '<button class="notif-btn accept" onclick="respondFriend(' + item.friendship_id + ', true)">✓</button>' +
+              '<button class="notif-btn decline" onclick="respondFriend(' + item.friendship_id + ', false)">✕</button>' +
+            '</div>' +
+          '</div>'
+        );
+      }).join('');
+    }
+
+    function pollNotifications() {
+      fetch('/community/api/notifications')
+        .then(function (r) { return r.json(); })
+        .then(renderNotifications)
+        .catch(function () {});
+    }
+
+    function respondFriend(friendshipId, accept) {
+      fetch('/community/api/friends/respond/' + friendshipId, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ accept: accept }),
+      }).then(pollNotifications).catch(function () {});
+    }
+
+    pollNotifications();
+    setInterval(pollNotifications, 20000);
+
+    document.addEventListener('click', function (e) {
+      var wrap = document.querySelector('.notif-wrap');
+      if (wrap && !wrap.contains(e.target)) {
+        document.getElementById('notif-dropdown').style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>
