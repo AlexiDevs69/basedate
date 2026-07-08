@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    (function () {
+      if (localStorage.getItem('alexihub-theme') === 'light') {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AlexiHub // Edit {{ account.username }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0b0b; --bg-elevated: #111111; --bg-header: #161616;
+      --border: #222222; --border-hover: #333333;
+      --text-primary: #ffffff; --text-secondary: #888888;
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif; --font-mono: 'JetBrains Mono', monospace;
+      --radius: 8px; --transition: all 0.2s ease;
+    }
+    [data-theme="light"] {
+      --bg: #ffffff; --bg-elevated: #f7f7f7; --bg-header: #efefef;
+      --border: #e3e3e3; --border-hover: #cfcfcf; --text-primary: #0b0b0b; --text-secondary: #666666;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      background-color: var(--bg); color: var(--text-primary); font-family: var(--font-sans);
+      font-size: 14px; line-height: 1.5; transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    .app { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 260px; border-right: 1px solid var(--border); background: var(--bg);
+      display: flex; flex-direction: column; padding: 2rem 1.5rem;
+      position: fixed; inset: 0 auto 0 0; z-index: 100; transition: var(--transition);
+    }
+    .brand { font-family: var(--font-mono); font-size: 1.1rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 2.5rem; }
+    .nav { list-style: none; display: flex; flex-direction: column; gap: 0.25rem; flex: 1; }
+    .nav a {
+      display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 0.75rem; border-radius: var(--radius);
+      color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 500;
+      border: 1px solid transparent; transition: var(--transition);
+    }
+    .nav a:hover { color: var(--text-primary); background: rgba(255,255,255,0.03); border-color: var(--border-hover); }
+    .nav a.active { color: var(--text-primary); background: rgba(255,255,255,0.05); border-color: var(--border); }
+    .sidebar-footer { border-top: 1px solid var(--border); padding-top: 1rem; margin-top: 1rem; }
+    .sidebar-footer .user-row { display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; color: var(--text-secondary); }
+    .sidebar-footer a { color: var(--text-secondary); text-decoration: none; font-size: 0.8rem; font-weight: 600; }
+    .profile-link { color: var(--text-secondary); text-decoration: none; font-weight: 500; }
+    .profile-link:hover { color: var(--text-primary); }
+
+    .main { flex: 1; margin-left: 260px; padding: 2.5rem; max-width: 640px; }
+    .page-header { margin-bottom: 2rem; }
+    .page-header h1 { font-size: 1.4rem; font-weight: 600; }
+    .page-header p { color: var(--text-secondary); margin-top: 0.25rem; font-size: 0.85rem; }
+
+    .info-card {
+      background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.9rem;
+    }
+    .info-avatar {
+      width: 48px; height: 48px; border-radius: 50%; background: var(--bg-header) center/cover no-repeat;
+      display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 1.1rem; color: var(--text-secondary);
+      flex-shrink: 0;
+    }
+    .info-name { font-weight: 700; }
+    .info-sub { color: var(--text-secondary); font-size: 0.8rem; margin-top: 0.15rem; }
+
+    .form-card { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem; }
+    .form-group { margin-bottom: 1.1rem; }
+    .form-group:last-of-type { margin-bottom: 0; }
+    .form-group label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.4rem; }
+    .form-group input[type="text"] {
+      width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 0.6rem 0.75rem; color: var(--text-primary); font-family: var(--font-sans); font-size: 0.9rem;
+    }
+    .form-group input[type="text"]:focus { outline: none; border-color: var(--border-hover); }
+    .form-hint { font-size: 0.72rem; color: #555; margin-top: 0.3rem; }
+    .color-inputs { display: flex; gap: 0.75rem; }
+    .color-inputs .color-field { display: flex; align-items: center; gap: 0.5rem; }
+    .color-inputs input[type="color"] { width: 40px; height: 34px; padding: 2px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); cursor: pointer; }
+    .checkbox-row { display: flex; align-items: center; gap: 0.6rem; }
+    .checkbox-row input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--text-primary); cursor: pointer; }
+    .checkbox-row.danger-check input[type="checkbox"] { accent-color: #ef4444; }
+    .checkbox-row label { margin-bottom: 0; cursor: pointer; }
+
+    .form-actions { margin-top: 1.5rem; display: flex; gap: 0.75rem; }
+    .btn-save { background: var(--text-primary); color: var(--bg); border: none; border-radius: var(--radius); padding: 0.65rem 1.25rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+    .btn-save:hover { opacity: 0.85; }
+    .btn-cancel { color: var(--text-secondary); text-decoration: none; padding: 0.65rem 1rem; font-size: 0.85rem; }
+
+    .danger-zone { border: 1px solid rgba(239,68,68,0.3); border-radius: var(--radius); padding: 1.25rem; }
+    .danger-zone h2 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: #ef4444; margin-bottom: 0.75rem; }
+    .btn-delete { background: #ef4444; color: white; border: none; border-radius: var(--radius); padding: 0.55rem 1rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+    .btn-delete:hover { opacity: 0.85; }
+
+    .menu-toggle {
+      display: none; position: fixed; top: 1rem; left: 1rem; z-index: 200;
+      background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text-primary);
+      width: 40px; height: 40px; border-radius: var(--radius); align-items: center; justify-content: center; cursor: pointer; font-size: 1.1rem;
+    }
+    .theme-toggle {
+      position: fixed; top: 1.25rem; right: 1.5rem; z-index: 300; width: 44px; height: 44px; border-radius: 50%;
+      border: 1px solid var(--border); background: var(--bg-elevated); color: var(--text-primary);
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+      transition: var(--transition), transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .theme-toggle:hover { border-color: var(--border-hover); transform: scale(1.08) rotate(8deg); }
+    .theme-toggle .icon { position: absolute; width: 20px; height: 20px; transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55), opacity 0.3s ease; }
+    .theme-toggle .icon-sun { opacity: 1; transform: rotate(0deg) scale(1); }
+    .theme-toggle .icon-moon { opacity: 0; transform: rotate(-90deg) scale(0.4); }
+    [data-theme="light"] .theme-toggle .icon-sun { opacity: 0; transform: rotate(90deg) scale(0.4); }
+    [data-theme="light"] .theme-toggle .icon-moon { opacity: 1; transform: rotate(0deg) scale(1); }
+    ::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+    ::view-transition-new(root) { animation: theme-reveal 0.6s ease; }
+    @keyframes theme-reveal { from { clip-path: circle(0% at calc(100% - 2.5rem) 2.5rem); } to { clip-path: circle(150% at calc(100% - 2.5rem) 2.5rem); } }
+
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); background: #000; }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-left: 0; padding: 1.5rem; padding-top: 4.5rem; }
+      .menu-toggle { display: flex; }
+      .theme-toggle { top: 0.85rem; right: 0.85rem; width: 40px; height: 40px; }
+    }
+  </style>
+</head>
+<body>
+  <button id="theme-toggle" class="theme-toggle" onclick="toggleTheme()" aria-label="Перемкнути тему">
+    <svg class="icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+    <svg class="icon icon-moon" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+  </button>
+
+  <button class="menu-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')" aria-label="Toggle menu">☰</button>
+
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">AlexiHub // Admin</div>
+      <nav style="flex: 1; display: flex; flex-direction: column;">
+        <ul class="nav">
+          <li><a href="/admin">Dashboard</a></li>
+          <li><a href="/users">Users List</a></li>
+          <li><a href="/logs">Logs</a></li>
+          <li><a href="/community-users" class="active">Community</a></li>
+          <li><a href="/broadcast">Broadcast</a></li>
+          <li><a href="/settings">Settings</a></li>
+        </ul>
+        <div class="sidebar-footer">
+          <div class="user-row">
+            <a href="/profile" class="profile-link">{{ request.session.get("username", "admin") }}</a>
+            <a href="/logout">Log out</a>
+          </div>
+        </div>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <div class="page-header">
+        <h1>Редагувати {{ account.username }}</h1>
+        <p><a href="/community-users" style="color: var(--text-secondary);">← Назад до списку</a></p>
+      </div>
+
+      <div class="info-card">
+        <span class="info-avatar" {% if account.avatar_url %}style="background-image: url('{{ account.avatar_url }}');"{% endif %}>
+          {% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}
+        </span>
+        <div>
+          <div class="info-name">{{ account.username }}</div>
+          <div class="info-sub">{{ account.email or ('Telegram: @' + (account.telegram_username or account.telegram_id|string)) }} · реєстрація {{ account.created_at }}</div>
+        </div>
+      </div>
+
+      <form method="post" action="/community-users/{{ account.id }}/edit">
+        <div class="form-card">
+          <div class="form-group">
+            <div class="checkbox-row">
+              <input type="checkbox" id="is_verified" name="is_verified" {{ 'checked' if account.is_verified else '' }}>
+              <label for="is_verified">Верифікований (біла галочка)</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="role_label">Роль / тег</label>
+            <input type="text" id="role_label" name="role_label" value="{{ account.role_label or '' }}" placeholder="напр. Модератор">
+            <div class="form-hint">Залиш пустим, щоб не показувати тег.</div>
+          </div>
+
+          <div class="form-group">
+            <label>Кольори градієнта тега</label>
+            <div class="color-inputs">
+              <div class="color-field">
+                <input type="color" name="role_color_start" value="{{ account.role_color_start or '#f5576c' }}">
+                <span class="form-hint">початковий</span>
+              </div>
+              <div class="color-field">
+                <input type="color" name="role_color_end" value="{{ account.role_color_end or '#7367f0' }}">
+                <span class="form-hint">кінцевий</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="checkbox-row danger-check">
+              <input type="checkbox" id="is_banned" name="is_banned" {{ 'checked' if account.is_banned else '' }}>
+              <label for="is_banned">Заблокувати (не зможе увійти)</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-save">Зберегти</button>
+          <a href="/community-users" class="btn-cancel">Скасувати</a>
+        </div>
+      </form>
+
+      <div style="height: 1.5rem;"></div>
+
+      <div class="danger-zone">
+        <h2>Небезпечна зона</h2>
+        <form method="post" action="/community-users/{{ account.id }}/delete"
+              onsubmit="return confirm('Видалити акаунт {{ account.username }} НАЗАВЖДИ? Це не можна скасувати.');">
+          <button type="submit" class="btn-delete">Видалити акаунт назавжди</button>
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    function toggleTheme() {
+      var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      var next = isLight ? 'dark' : 'light';
+      function apply() {
+        if (next === 'light') { document.documentElement.setAttribute('data-theme', 'light'); }
+        else { document.documentElement.removeAttribute('data-theme'); }
+        localStorage.setItem('alexihub-theme', next);
+      }
+      if (document.startViewTransition) { document.startViewTransition(apply); } else { apply(); }
+    }
+  </script>
+</body>
+</html>
