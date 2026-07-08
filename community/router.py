@@ -176,12 +176,77 @@ async def community_home(request: Request, db: AsyncSession = Depends(get_db)):
         return RedirectResponse(url="/community/login", status_code=303)
 
     await crud.touch_last_seen(db, account.id)
+    await crud.ensure_default_channels(db)
+    channels = await crud.list_channels(db)
     online_members = await crud.list_online_accounts(db)
 
     return templates.TemplateResponse(
         "home.html",
-        {"request": request, "account": account, "online_members": online_members},
+        {"request": request, "account": account, "online_members": online_members, "channels": channels},
     )
+
+
+# --- Forum: channels, posts, likes, comments -------------------------------
+
+@router.get("/channel/{slug}")
+async def channel_view(slug: str, request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return RedirectResponse(url="/community/login", status_code=303)
+
+    await crud.touch_last_seen(db, account.id)
+    await crud.ensure_default_channels(db)
+    channel = await crud.get_channel_by_slug(db, slug)
+    if not channel:
+        return RedirectResponse(url="/community", status_code=303)
+
+    channels = await crud.list_channels(db)
+    feed = await crud.get_channel_feed(db, channel.id, viewer_id=account.id)
+
+    return templates.TemplateResponse(
+        "channel.html",
+        {"request": request, "account": account, "channels": channels, "channel": channel, "feed": feed},
+    )
+
+
+@router.post("/channel/{slug}/post")
+async def channel_post_submit(
+    slug: str, request: Request,
+    content: str = Form(...), image_url: str = Form(""),
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return RedirectResponse(url="/community/login", status_code=303)
+
+    channel = await crud.get_channel_by_slug(db, slug)
+    if channel and content.strip():
+        await crud.create_post(db, channel.id, account.id, content.strip(), image_url.strip())
+    return RedirectResponse(url=f"/community/channel/{slug}", status_code=303)
+
+
+@router.post("/channel/{slug}/post/{post_id}/comment")
+async def post_comment_submit(
+    slug: str, post_id: int, request: Request, content: str = Form(...), db: AsyncSession = Depends(get_db)
+):
+    account = await current_account(request, db)
+    if not account:
+        return RedirectResponse(url="/community/login", status_code=303)
+
+    if content.strip():
+        await crud.add_comment(db, post_id, account.id, content.strip())
+    return RedirectResponse(url=f"/community/channel/{slug}", status_code=303)
+
+
+@router.post("/api/posts/{post_id}/like")
+async def api_toggle_like(post_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"error": "not_logged_in"}, status_code=401)
+
+    liked = await crud.toggle_like(db, post_id, account.id)
+    count = await crud.count_likes(db, post_id)
+    return JSONResponse({"liked": liked, "count": count})
 
 
 # --- Public profiles ---------------------------------------------------------
@@ -196,6 +261,8 @@ async def public_profile(username: str, request: Request, db: AsyncSession = Dep
             "profile_not_found.html", {"request": request}, status_code=404
         )
 
+    friends = await crud.list_friends(db, profile_account.id)
+
     return templates.TemplateResponse(
         "public_profile.html",
         {
@@ -203,6 +270,7 @@ async def public_profile(username: str, request: Request, db: AsyncSession = Dep
             "profile": profile_account,
             "viewer": viewer,
             "is_own": bool(viewer and viewer.id == profile_account.id),
+            "friends": friends,
         },
     )
 
@@ -277,6 +345,21 @@ async def api_friend_status(username: str, request: Request, db: AsyncSession = 
     friendship = await crud.get_friendship_between(db, viewer.id, target.id)
     status = await crud.friendship_status(db, viewer.id, target.id)
     return JSONResponse({"status": status, "friendship_id": friendship.id if friendship else None})
+
+
+@router.post("/api/friends/remove/{username}")
+async def api_remove_friend(username: str, request: Request, db: AsyncSession = Depends(get_db)):
+    viewer = await current_account(request, db)
+    if not viewer:
+        return JSONResponse({"error": "not_logged_in"}, status_code=401)
+
+    target = await crud.get_account_by_username(db, username)
+    if not target:
+        return JSONResponse({"error": "not_found"}, status_code=404)
+
+    await crud.remove_friendship(db, viewer.id, target.id)
+    status = await crud.friendship_status(db, viewer.id, target.id)
+    return JSONResponse({"status": status})
 
 
 @router.get("/api/notifications")
