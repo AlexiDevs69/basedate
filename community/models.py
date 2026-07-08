@@ -7,7 +7,7 @@ with the bot's users/logs tables or the admin's own admin_profile/bot_settings.
 """
 from datetime import datetime, timezone
 
-from sqlalchemy import BigInteger, Boolean, DateTime, Integer, String, Text
+from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database import Base
@@ -58,3 +58,25 @@ class Account(Base):
     last_seen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
+class Friendship(Base):
+    """
+    A friend request/relationship between two accounts.
+
+    status progression: pending -> accepted (or declined). A declined row
+    is left in place rather than deleted, so a fresh request from either
+    side just resets it back to pending instead of creating duplicates.
+    """
+    __tablename__ = "community_friendships"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    requester_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("community_accounts.id"), nullable=False, index=True
+    )
+    addressee_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("community_accounts.id"), nullable=False, index=True
+    )
+    status: Mapped[str] = mapped_column(String(16), default="pending", nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+    responded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
