@@ -285,6 +285,7 @@ async def logout(request: Request):
 # --- Main page: online members list -----------------------------------------
 
 @router.get("")
+@router.get("/")
 async def community_home(request: Request, db: AsyncSession = Depends(get_db)):
     account = await current_account(request, db)
     if not account:
