@@ -200,6 +200,36 @@ class ServerMessage(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True, nullable=False)
 
 
+
+
+# ============================================================================
+# Direct messages: Discord-style one-on-one conversations.
+# ============================================================================
+
+class DirectThread(Base):
+    __tablename__ = "community_direct_threads"
+    __table_args__ = (UniqueConstraint("user_low_id", "user_high_id", name="uq_community_direct_thread_pair"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    # Pair is normalized: lower account id goes to user_low_id, higher to user_high_id.
+    user_low_id: Mapped[int] = mapped_column(Integer, ForeignKey("community_accounts.id"), nullable=False, index=True)
+    user_high_id: Mapped[int] = mapped_column(Integer, ForeignKey("community_accounts.id"), nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True, nullable=False)
+
+
+class DirectMessage(Base):
+    __tablename__ = "community_direct_messages"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    thread_id: Mapped[int] = mapped_column(Integer, ForeignKey("community_direct_threads.id"), nullable=False, index=True)
+    author_id: Mapped[int] = mapped_column(Integer, ForeignKey("community_accounts.id"), nullable=False, index=True)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    image_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True, nullable=False)
+    edited_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
 # ============================================================================
 # Gifts: admin-created catalog + issued gifts on public profiles.
 # ============================================================================
