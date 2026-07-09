@@ -8,7 +8,21 @@ from sqlalchemy import and_, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from community.models import Account, Channel, Comment, Friendship, Gift, GiftInstance, Post, PostLike
+from community.models import (
+    Account,
+    Channel,
+    Comment,
+    CommunityServer,
+    Friendship,
+    Gift,
+    GiftInstance,
+    Post,
+    PostLike,
+    ServerChannel,
+    ServerInvite,
+    ServerMember,
+    ServerMessage,
+)
 
 # A member counts as "online" if we've seen a request from them in the
 # last 3 minutes. Cheap to compute, no background job or websocket needed.
@@ -305,8 +319,25 @@ async def delete_account(db: AsyncSession, account_id: int) -> bool:
     if not account:
         return False
 
-    # Remove issued gifts first so the new gift foreign key never blocks
-    # deleting a community account from the admin panel.
+    # If the account owns servers, delete those servers and their content first.
+    owned_servers_result = await db.execute(
+        select(CommunityServer).where(CommunityServer.owner_id == account_id)
+    )
+    for server in owned_servers_result.scalars().all():
+        await delete_server(db, server.id)
+
+    # Server relations where this account is not the owner.
+    for model, clauses in [
+        (ServerMessage, [ServerMessage.author_id == account_id]),
+        (ServerInvite, [or_(ServerInvite.inviter_id == account_id, ServerInvite.invitee_id == account_id)]),
+        (ServerMember, [ServerMember.account_id == account_id]),
+    ]:
+        result = await db.execute(select(model).where(*clauses))
+        for row in result.scalars().all():
+            await db.delete(row)
+
+    # Remove issued gifts first so the gift foreign key never blocks deleting
+    # a community account from the admin panel.
     gift_instances_result = await db.execute(
         select(GiftInstance).where(GiftInstance.recipient_id == account_id)
     )
@@ -436,6 +467,250 @@ async def get_channel_feed(db: AsyncSession, channel_id: int, viewer_id: int | N
         })
     return feed
 
+
+# ============================================================================
+# User-created servers
+# ============================================================================
+
+async def list_servers_for_account(db: AsyncSession, account_id: int) -> list[CommunityServer]:
+    result = await db.execute(
+        select(CommunityServer)
+        .join(ServerMember, ServerMember.server_id == CommunityServer.id)
+        .where(ServerMember.account_id == account_id)
+        .order_by(CommunityServer.created_at.asc())
+    )
+    return list(result.scalars().all())
+
+
+async def get_server_by_id(db: AsyncSession, server_id: int) -> CommunityServer | None:
+    result = await db.execute(select(CommunityServer).where(CommunityServer.id == server_id))
+    return result.scalar_one_or_none()
+
+
+async def get_server_member(db: AsyncSession, server_id: int, account_id: int) -> ServerMember | None:
+    result = await db.execute(
+        select(ServerMember).where(ServerMember.server_id == server_id, ServerMember.account_id == account_id)
+    )
+    return result.scalar_one_or_none()
+
+
+async def is_server_member(db: AsyncSession, server_id: int, account_id: int) -> bool:
+    return await get_server_member(db, server_id, account_id) is not None
+
+
+async def can_manage_server(db: AsyncSession, server_id: int, account_id: int) -> bool:
+    member = await get_server_member(db, server_id, account_id)
+    return bool(member and member.role in {"owner", "admin"})
+
+
+async def create_server(
+    db: AsyncSession,
+    owner_id: int,
+    name: str,
+    icon_url: str | None = None,
+    description: str | None = None,
+) -> CommunityServer:
+    server = CommunityServer(
+        owner_id=owner_id,
+        name=name.strip()[:64],
+        icon_url=icon_url.strip() if icon_url else None,
+        description=description.strip()[:255] if description else None,
+    )
+    db.add(server)
+    await db.commit()
+    await db.refresh(server)
+
+    db.add(ServerMember(server_id=server.id, account_id=owner_id, role="owner"))
+    db.add(ServerChannel(server_id=server.id, name="general", description="Основний чат", sort_order=0))
+    await db.commit()
+    return server
+
+
+async def delete_server(db: AsyncSession, server_id: int) -> bool:
+    server = await get_server_by_id(db, server_id)
+    if not server:
+        return False
+
+    for model, column in [
+        (ServerMessage, ServerMessage.server_id),
+        (ServerInvite, ServerInvite.server_id),
+        (ServerMember, ServerMember.server_id),
+        (ServerChannel, ServerChannel.server_id),
+    ]:
+        result = await db.execute(select(model).where(column == server_id))
+        for row in result.scalars().all():
+            await db.delete(row)
+
+    await db.delete(server)
+    await db.commit()
+    return True
+
+
+async def list_server_channels(db: AsyncSession, server_id: int) -> list[ServerChannel]:
+    result = await db.execute(
+        select(ServerChannel).where(ServerChannel.server_id == server_id).order_by(ServerChannel.sort_order.asc(), ServerChannel.id.asc())
+    )
+    return list(result.scalars().all())
+
+
+async def get_server_channel(db: AsyncSession, server_id: int, channel_id: int) -> ServerChannel | None:
+    result = await db.execute(
+        select(ServerChannel).where(ServerChannel.server_id == server_id, ServerChannel.id == channel_id)
+    )
+    return result.scalar_one_or_none()
+
+
+async def create_server_channel(
+    db: AsyncSession,
+    server_id: int,
+    name: str,
+    description: str | None = None,
+) -> ServerChannel:
+    clean_name = name.strip().lower().replace(" ", "-")[:64]
+    if not clean_name:
+        clean_name = "new-channel"
+    count_result = await db.execute(select(func.count()).select_from(ServerChannel).where(ServerChannel.server_id == server_id))
+    order = int(count_result.scalar_one() or 0)
+    channel = ServerChannel(
+        server_id=server_id,
+        name=clean_name,
+        description=description.strip()[:255] if description else None,
+        sort_order=order,
+    )
+    db.add(channel)
+    await db.commit()
+    await db.refresh(channel)
+    return channel
+
+
+async def create_server_message(
+    db: AsyncSession,
+    server_id: int,
+    channel_id: int,
+    author_id: int,
+    content: str,
+    image_url: str | None = None,
+) -> ServerMessage:
+    message = ServerMessage(
+        server_id=server_id,
+        channel_id=channel_id,
+        author_id=author_id,
+        content=content.strip(),
+        image_url=image_url.strip() if image_url else None,
+    )
+    db.add(message)
+    await db.commit()
+    await db.refresh(message)
+    return message
+
+
+async def list_server_messages(db: AsyncSession, server_id: int, channel_id: int, limit: int = 80) -> list[ServerMessage]:
+    result = await db.execute(
+        select(ServerMessage)
+        .where(ServerMessage.server_id == server_id, ServerMessage.channel_id == channel_id)
+        .order_by(ServerMessage.created_at.desc())
+        .limit(limit)
+    )
+    return list(reversed(list(result.scalars().all())))
+
+
+async def get_server_feed(db: AsyncSession, server_id: int, channel_id: int, limit: int = 80) -> list[dict]:
+    messages = await list_server_messages(db, server_id, channel_id, limit=limit)
+    feed = []
+    for msg in messages:
+        author = await get_account_by_id(db, msg.author_id)
+        feed.append({"message": msg, "author": author})
+    return feed
+
+
+async def list_server_members(db: AsyncSession, server_id: int) -> list[dict]:
+    result = await db.execute(
+        select(ServerMember).where(ServerMember.server_id == server_id).order_by(ServerMember.role.asc(), ServerMember.joined_at.asc())
+    )
+    members = []
+    for member in result.scalars().all():
+        account = await get_account_by_id(db, member.account_id)
+        members.append({"member": member, "account": account})
+    return members
+
+
+async def invite_friend_to_server(
+    db: AsyncSession,
+    server_id: int,
+    inviter_id: int,
+    invitee_id: int,
+) -> ServerInvite | None:
+    if inviter_id == invitee_id:
+        return None
+    if not await is_server_member(db, server_id, inviter_id):
+        return None
+    if not await is_server_member(db, server_id, invitee_id):
+        # ok, target is not in server yet
+        pass
+    else:
+        return None
+
+    # Only friends can be invited, keeps random spam out.
+    if await friendship_status(db, inviter_id, invitee_id) != "friends":
+        return None
+
+    result = await db.execute(
+        select(ServerInvite).where(ServerInvite.server_id == server_id, ServerInvite.invitee_id == invitee_id)
+    )
+    existing = result.scalar_one_or_none()
+    if existing and existing.status == "pending":
+        return existing
+    if existing and existing.status in {"declined", "accepted"}:
+        existing.inviter_id = inviter_id
+        existing.status = "pending"
+        existing.responded_at = None
+        await db.commit()
+        await db.refresh(existing)
+        return existing
+
+    invite = ServerInvite(server_id=server_id, inviter_id=inviter_id, invitee_id=invitee_id, status="pending")
+    db.add(invite)
+    await db.commit()
+    await db.refresh(invite)
+    return invite
+
+
+async def list_pending_server_invites(db: AsyncSession, account_id: int) -> list[dict]:
+    result = await db.execute(
+        select(ServerInvite)
+        .where(ServerInvite.invitee_id == account_id, ServerInvite.status == "pending")
+        .order_by(ServerInvite.created_at.desc())
+    )
+    items = []
+    for invite in result.scalars().all():
+        server = await get_server_by_id(db, invite.server_id)
+        inviter = await get_account_by_id(db, invite.inviter_id)
+        items.append({"invite": invite, "server": server, "inviter": inviter})
+    return items
+
+
+async def respond_server_invite(
+    db: AsyncSession,
+    invite_id: int,
+    account_id: int,
+    accept: bool,
+) -> ServerInvite | None:
+    result = await db.execute(select(ServerInvite).where(ServerInvite.id == invite_id))
+    invite = result.scalar_one_or_none()
+    if not invite or invite.invitee_id != account_id or invite.status != "pending":
+        return None
+
+    invite.status = "accepted" if accept else "declined"
+    invite.responded_at = datetime.now(timezone.utc)
+
+    if accept and not await is_server_member(db, invite.server_id, account_id):
+        db.add(ServerMember(server_id=invite.server_id, account_id=account_id, role="member"))
+
+    await db.commit()
+    await db.refresh(invite)
+    return invite
+
+
 # ============================================================================
 # Gifts
 # ============================================================================
@@ -518,3 +793,4 @@ async def list_gifts_for_account(db: AsyncSession, account_id: int) -> list[Gift
         .order_by(GiftInstance.created_at.desc())
     )
     return list(result.scalars().all())
+
