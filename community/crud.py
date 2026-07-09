@@ -15,7 +15,7 @@ from community.models import Account, Channel, Comment, Friendship, Gift, GiftIn
 ONLINE_WINDOW = timedelta(minutes=3)
 
 VISUAL_NAME_EFFECTS = {"none", "gradient", "glow"}
-VISUAL_NAME_FONTS = {"default", "mono", "serif", "rounded", "cyber", "display"}
+VISUAL_NAME_FONTS = {"default", "mono", "serif", "rounded", "cyber", "display", "pixel", "bubble", "puffy", "block", "neon", "glitch", "graffiti", "spooky", "medieval", "roundfat"}
 
 
 def _normalize_name_effect(value: str | None) -> str | None:
@@ -518,4 +518,3 @@ async def list_gifts_for_account(db: AsyncSession, account_id: int) -> list[Gift
         .order_by(GiftInstance.created_at.desc())
     )
     return list(result.scalars().all())
-
