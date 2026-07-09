@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>#{{ channel.name }} // AlexiHub Community</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Baloo+2:wght@700&family=Bungee&family=Cinzel:wght@700&family=Creepster&family=Fredoka:wght@700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&family=Luckiest+Guy&family=Modak&family=Monoton&family=Press+Start+2P&family=Righteous&family=Rubik+Glitch&family=Unbounded:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Baloo+2:wght@700;800&family=Bangers&family=Bungee&family=Bungee+Shade&family=Cinzel+Decorative:wght@700&family=Creepster&family=Fredoka:wght@700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&family=Luckiest+Guy&family=Modak&family=Monoton&family=Pixelify+Sans:wght@700&family=Press+Start+2P&family=Righteous&family=Rubik+Glitch&family=Rubik+Wet+Paint&family=Unbounded:wght@700;800&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #0b0b0b; --bg-elevated: #111111; --bg-header: #161616;
@@ -101,58 +101,199 @@
     .empty-feed { text-align: center; color: #555; font-size: 0.85rem; padding: 2rem 0; }
 
 
+
+    /* --- Premium nickname styles --- */
     .visual-name {
+      --name-c1-safe: var(--name-c1, #ff4fd8);
+      --name-c2-safe: var(--name-c2, #55e7ff);
       font-weight: 800;
       color: var(--text-primary);
       display: inline-block;
       max-width: 100%;
-      line-height: 1.08;
+      line-height: 1.02;
       vertical-align: baseline;
+      isolation: isolate;
+      text-rendering: geometricPrecision;
+      -webkit-font-smoothing: antialiased;
+      filter: saturate(1.16) contrast(1.06);
+    }
+    .name-none {
+      color: var(--text-primary);
+      text-shadow: 0 1px 0 rgba(255,255,255,0.05), 0 2px 8px rgba(0,0,0,0.35);
     }
     .name-gradient {
-      background: linear-gradient(90deg, var(--name-c1, #f5576c), var(--name-c2, #7367f0), var(--name-c1, #f5576c));
-      background-size: 240% auto;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.08) 28%, rgba(255,255,255,0) 48%),
+        linear-gradient(92deg, var(--name-c1-safe) 0%, #ffffff 18%, var(--name-c2-safe) 42%, #b8fffb 62%, var(--name-c1-safe) 100%);
+      background-size: 100% 100%, 260% auto;
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
       -webkit-text-fill-color: transparent;
-      animation: name-shimmer 3s linear infinite;
-      filter: drop-shadow(0 0 7px color-mix(in srgb, var(--name-c1, #f5576c) 22%, transparent));
+      animation: name-shimmer 2.8s linear infinite;
+      -webkit-text-stroke: 0.25px rgba(255,255,255,0.18);
+      filter:
+        saturate(1.35)
+        contrast(1.1)
+        drop-shadow(0 0 5px color-mix(in srgb, var(--name-c1-safe) 42%, transparent))
+        drop-shadow(0 0 13px color-mix(in srgb, var(--name-c2-safe) 26%, transparent));
     }
     .name-glow {
-      color: var(--name-c1, #ffffff);
+      color: #fff;
+      -webkit-text-stroke: 0.35px color-mix(in srgb, var(--name-c1-safe) 55%, rgba(255,255,255,0.3));
       text-shadow:
-        0 0 6px color-mix(in srgb, var(--name-c1, #ffffff) 80%, transparent),
-        0 0 14px color-mix(in srgb, var(--name-c2, #7367f0) 65%, transparent),
-        0 0 26px color-mix(in srgb, var(--name-c2, #7367f0) 35%, transparent);
+        0 0 2px #fff,
+        0 0 8px color-mix(in srgb, var(--name-c1-safe) 95%, transparent),
+        0 0 18px color-mix(in srgb, var(--name-c2-safe) 75%, transparent),
+        0 0 32px color-mix(in srgb, var(--name-c2-safe) 35%, transparent);
+      filter: saturate(1.35) brightness(1.08);
     }
-    @keyframes name-shimmer { to { background-position: 240% center; } }
+    @keyframes name-shimmer { to { background-position: 100% 100%, 260% center; } }
 
-    .font-mono { font-family: var(--font-mono); }
-    .font-serif { font-family: Georgia, 'Times New Roman', serif; font-weight: 700; letter-spacing: -0.02em; }
+    .font-default { font-family: var(--font-sans); }
+    .font-mono { font-family: var(--font-mono); font-weight: 800; }
+    .font-serif { font-family: Georgia, 'Times New Roman', serif; font-weight: 800; letter-spacing: -0.02em; }
     .font-rounded { font-family: 'Fredoka', var(--font-sans); font-weight: 700; letter-spacing: 0.01em; }
-    .font-cyber { font-family: 'Righteous', var(--font-mono); font-weight: 400; letter-spacing: 0.035em; text-transform: lowercase; }
-    .font-display { font-family: 'Unbounded', var(--font-sans); font-weight: 700; letter-spacing: -0.045em; }
-    .font-pixel { font-family: 'Press Start 2P', var(--font-mono); font-weight: 400; font-size: 0.68em; letter-spacing: -0.08em; text-shadow: 1px 1px 0 rgba(0,0,0,0.65); }
-    .font-bubble { font-family: 'Luckiest Guy', var(--font-sans); font-weight: 400; letter-spacing: 0.035em; text-shadow: 0 2px 0 rgba(0,0,0,0.45); transform: translateY(0.04em); }
-    .font-puffy { font-family: 'Modak', var(--font-sans); font-weight: 400; font-size: 1.16em; letter-spacing: 0.01em; line-height: 0.92; text-shadow: 0 2px 0 rgba(0,0,0,0.35); }
-    .font-block { font-family: 'Bungee', var(--font-sans); font-weight: 400; letter-spacing: 0.01em; }
-    .font-neon { font-family: 'Monoton', var(--font-sans); font-weight: 400; letter-spacing: 0.04em; }
-    .font-glitch { font-family: 'Rubik Glitch', var(--font-sans); font-weight: 400; letter-spacing: 0.025em; }
-    .font-graffiti { font-family: 'Bangers', var(--font-sans); font-weight: 400; letter-spacing: 0.045em; }
-    .font-spooky { font-family: 'Creepster', var(--font-sans); font-weight: 400; letter-spacing: 0.04em; }
-    .font-medieval { font-family: 'Cinzel', Georgia, serif; font-weight: 700; letter-spacing: 0.02em; }
-    .font-roundfat { font-family: 'Baloo 2', var(--font-sans); font-weight: 700; letter-spacing: 0.005em; }
+    .font-cyber { font-family: 'Righteous', var(--font-mono); font-weight: 400; letter-spacing: 0.04em; text-transform: lowercase; }
+    .font-display { font-family: 'Unbounded', var(--font-sans); font-weight: 800; letter-spacing: -0.055em; }
+
+    .font-pixel {
+      font-family: 'Pixelify Sans', 'Press Start 2P', var(--font-mono);
+      font-weight: 700;
+      font-size: 1.02em;
+      letter-spacing: 0.015em;
+      text-shadow:
+        1px 1px 0 rgba(0,0,0,0.45),
+        0 0 10px color-mix(in srgb, var(--name-c2-safe) 28%, transparent);
+    }
+    .font-bubble {
+      font-family: 'Luckiest Guy', var(--font-sans);
+      font-weight: 400;
+      letter-spacing: 0.045em;
+      transform: translateY(0.04em) rotate(-0.5deg);
+      text-shadow:
+        0 2px 0 rgba(255,255,255,0.14),
+        0 3px 0 rgba(0,0,0,0.38),
+        0 0 16px color-mix(in srgb, var(--name-c1-safe) 30%, transparent);
+    }
+    .font-puffy {
+      font-family: 'Bagel Fat One', 'Modak', var(--font-sans);
+      font-weight: 400;
+      font-size: 1.13em;
+      letter-spacing: 0.012em;
+      line-height: 0.94;
+      text-shadow:
+        0 2px 0 rgba(255,255,255,0.16),
+        0 4px 0 rgba(0,0,0,0.32),
+        0 0 18px color-mix(in srgb, var(--name-c2-safe) 28%, transparent);
+    }
+    .font-block {
+      font-family: 'Bungee Shade', 'Bungee', var(--font-sans);
+      font-weight: 400;
+      letter-spacing: 0.018em;
+      filter: saturate(1.3) contrast(1.12);
+    }
+    .font-neon {
+      font-family: 'Monoton', var(--font-sans);
+      font-weight: 400;
+      letter-spacing: 0.045em;
+      text-shadow:
+        0 0 4px #fff,
+        0 0 12px color-mix(in srgb, var(--name-c1-safe) 92%, transparent),
+        0 0 24px color-mix(in srgb, var(--name-c2-safe) 58%, transparent);
+    }
+    .font-glitch {
+      font-family: 'Rubik Glitch', var(--font-sans);
+      font-weight: 400;
+      letter-spacing: 0.03em;
+      text-shadow:
+        1px 0 0 #ff2bd6,
+        -1px 0 0 #27f7ff,
+        0 0 13px rgba(255,255,255,0.22);
+    }
+    .font-graffiti {
+      font-family: 'Rubik Wet Paint', 'Bangers', var(--font-sans);
+      font-weight: 400;
+      letter-spacing: 0.035em;
+      text-shadow:
+        0 2px 0 rgba(0,0,0,0.35),
+        0 0 14px color-mix(in srgb, var(--name-c1-safe) 30%, transparent);
+    }
+    .font-spooky {
+      font-family: 'Creepster', var(--font-sans);
+      font-weight: 400;
+      letter-spacing: 0.045em;
+      text-shadow:
+        0 2px 0 rgba(0,0,0,0.45),
+        0 0 18px color-mix(in srgb, var(--name-c1-safe) 45%, transparent);
+    }
+    .font-medieval {
+      font-family: 'Cinzel Decorative', 'Cinzel', Georgia, serif;
+      font-weight: 700;
+      letter-spacing: 0.015em;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.12), 0 0 12px color-mix(in srgb, var(--name-c2-safe) 22%, transparent);
+    }
+    .font-roundfat {
+      font-family: 'Baloo 2', var(--font-sans);
+      font-weight: 800;
+      letter-spacing: 0.005em;
+      text-shadow: 0 2px 0 rgba(0,0,0,0.24), 0 0 12px color-mix(in srgb, var(--name-c1-safe) 24%, transparent);
+    }
 
     .post-name.font-pixel,
     .member-name.font-pixel,
     .comment-author.font-pixel,
-    .user-cell .font-pixel { font-size: 0.62em; }
-    .profile-name.font-pixel { font-size: 0.74em; }
+    .user-cell .font-pixel { font-size: 0.92em; }
+    .profile-name.font-pixel { font-size: 1.02em; }
     .post-name.font-puffy,
     .member-name.font-puffy,
     .comment-author.font-puffy,
-    .user-cell .font-puffy { font-size: 1.04em; }
+    .user-cell .font-puffy { font-size: 1.05em; }
+    .post-name.font-block,
+    .member-name.font-block,
+    .comment-author.font-block,
+    .user-cell .font-block { font-size: 0.94em; }
+
+    .form-section-title {
+      margin: 0.35rem 0 1rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .preview-card {
+      --preview-bg: none;
+      position: relative;
+      overflow: hidden;
+      margin-top: 0.2rem;
+      margin-bottom: 1.25rem;
+      padding: 1rem;
+      min-height: 78px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background-image:
+        radial-gradient(circle at 12% 0%, color-mix(in srgb, var(--name-c1-safe, #ff4fd8) 22%, transparent), transparent 34%),
+        linear-gradient(90deg, rgba(255,255,255,0.055), rgba(255,255,255,0.012)),
+        var(--preview-bg);
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 0.35rem;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 10px 30px rgba(0,0,0,0.18);
+    }
+    .preview-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, rgba(11,11,11,0.72), rgba(11,11,11,0.28));
+      pointer-events: none;
+    }
+    [data-theme="light"] .preview-card::before { background: linear-gradient(90deg, rgba(255,255,255,0.72), rgba(255,255,255,0.3)); }
+    .preview-card > * { position: relative; z-index: 1; }
+    .preview-card .visual-name { font-size: 1.35rem; }
 
     .post-card.has-card-bg { position: relative; overflow: hidden; }
     .post-card.has-card-bg::before {
