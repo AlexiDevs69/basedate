@@ -468,6 +468,20 @@
       }
 
       list.innerHTML = data.items.map(function (item) {
+        if (item.type === 'server_invite') {
+          var iconStyle = item.icon_url ? "background-image:url('" + item.icon_url + "')" : '';
+          return (
+            '<div class="notif-item">' +
+              '<div class="notif-avatar" style="' + iconStyle + '"></div>' +
+              '<div class="notif-name"><b>' + item.server_name + '</b><br><span style="color:#777;font-size:0.72rem;">від ' + item.inviter_username + '</span></div>' +
+              '<div class="notif-actions">' +
+                '<button class="notif-btn accept" onclick="respondServerInvite(' + item.invite_id + ', true)">✓</button>' +
+                '<button class="notif-btn decline" onclick="respondServerInvite(' + item.invite_id + ', false)">✕</button>' +
+              '</div>' +
+            '</div>'
+          );
+        }
+
         var avatarStyle = item.avatar_url ? "background-image:url('" + item.avatar_url + "')" : '';
         return (
           '<div class="notif-item">' +
@@ -494,9 +508,17 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ accept: accept }),
+      }).then(pollNotifications).catch(function () {});
+    }
+
+    function respondServerInvite(inviteId, accept) {
+      fetch('/community/api/server-invites/respond/' + inviteId, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accept: accept }),
       }).then(function () {
         pollNotifications();
-        if (typeof loadFriendStatus === 'function') loadFriendStatus();
+        if (accept) setTimeout(function () { window.location.reload(); }, 350);
       }).catch(function () {});
     }
 
