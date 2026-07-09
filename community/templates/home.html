@@ -486,6 +486,47 @@
       .quick a { width: 100% !important; justify-content: center !important; }
     }
 
+  
+
+/* === AlexiHub final Discord-like polish === */
+.action-toast{
+  position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(10px);
+  background:#23242b;border:1px solid #343640;color:#f4f4f5;border-radius:12px;
+  padding:10px 14px;font-weight:800;font-size:13px;box-shadow:0 18px 48px rgba(0,0,0,.45);
+  opacity:0;pointer-events:none;z-index:99999;transition:.18s ease;
+}
+.action-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.user-actions button.voice-control{position:relative;transition:background .16s ease,color .16s ease,transform .12s ease}
+.user-actions button.voice-control:active{transform:scale(.88)}
+.user-actions button.voice-control.off{background:rgba(242,63,66,.16)!important;color:#f23f42!important}
+.user-actions button.voice-control.off::after{
+  content:"";position:absolute;width:18px;height:2px;background:#f23f42;border-radius:99px;
+  transform:rotate(-42deg);box-shadow:0 0 0 2px rgba(242,63,66,.08)
+}
+.self-profile-backdrop{
+  position:fixed;inset:0;background:rgba(0,0,0,.68);backdrop-filter:blur(5px);
+  z-index:9000;display:none;align-items:center;justify-content:center;padding:22px;
+}
+.self-profile-backdrop.open{display:flex;animation:fadeIn .13s ease both}
+.self-profile-card{
+  width:min(430px,calc(100vw - 34px));border-radius:20px;overflow:hidden;background:#23242b;
+  border:1px solid #3a3c45;box-shadow:0 26px 90px rgba(0,0,0,.58);position:relative;
+}
+.self-profile-banner{height:118px;background:linear-gradient(135deg,#5865f2,#9b5cf6);background-size:cover;background-position:center}
+.self-profile-body{padding:0 18px 18px}
+.self-profile-avatar{width:92px;height:92px;border-radius:50%;background:#2b2d34 center/cover no-repeat;border:7px solid #23242b;margin-top:-46px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;position:relative}
+.self-profile-avatar .presence{right:2px!important;bottom:2px!important;width:18px!important;height:18px!important;border-width:4px!important;border-color:#23242b!important}
+.self-profile-name{font-size:24px;font-weight:900;margin-top:10px;letter-spacing:-.03em}
+.self-profile-sub{color:#a9adb8;margin-top:2px;font-size:13px}
+.self-profile-section{margin-top:16px;padding-top:14px;border-top:1px solid #353741}
+.self-status-grid{display:grid;gap:8px;margin-top:10px}
+.self-status-btn{min-height:46px;border:0;background:#2b2d34;color:#f4f4f5;border-radius:12px;padding:9px 11px;display:flex;align-items:center;gap:10px;cursor:pointer;text-align:left;transition:.14s ease}
+.self-status-btn:hover{background:#333640}
+.self-status-btn small{display:block;color:#9499a6;font-size:11px;margin-top:1px;font-weight:600}.self-status-btn b{font-size:13px}
+.self-profile-close{position:absolute;right:12px;top:12px;width:34px;height:34px;border:0;border-radius:10px;background:rgba(0,0,0,.28);color:#fff;font-size:22px;cursor:pointer}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@media(max-width:820px){.self-profile-backdrop{align-items:flex-end;padding:0}.self-profile-card{width:100%;border-radius:22px 22px 0 0;border-left:0;border-right:0;border-bottom:0}.action-toast{bottom:calc(16px + env(safe-area-inset-bottom));max-width:calc(100vw - 40px);text-align:center}}
+
   </style>
 </head>
 <body>
@@ -568,13 +609,13 @@
       {% set my_status = account.account_status or 'online' %}
       <div class="user-panel">
         <span class="avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}')"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}<span id="my-avatar-status" class="presence status-{{ my_status }}"></span></span>
-        <div class="user-info status-trigger" onclick="toggleStatusMenu(event)">
+        <div class="user-info status-trigger" onclick="openSelfProfile()">
           <b>{{ account.username }}</b>
           <span><i id="my-status-dot" class="status-dot status-{{ my_status }}"></i><span id="my-status-label">{{ {'online':'В мережі','idle':'Неактивний','dnd':'Не турбувати','invisible':'Невидимий'}.get(my_status, 'В мережі') }}</span></span>
         </div>
         <div class="user-actions">
-          <button title="Mute"><svg class="icon icon-sm"><use href="#i-mic"></use></svg></button>
-          <button title="Deafen"><svg class="icon icon-sm"><use href="#i-headphones"></use></svg></button>
+          <button class="voice-control" data-audio-kind="mic" title="Mute" onclick="toggleAudioControl(this,'mic')"><svg class="icon icon-sm"><use href="#i-mic"></use></svg></button>
+          <button class="voice-control" data-audio-kind="headphones" title="Deafen" onclick="toggleAudioControl(this,'headphones')"><svg class="icon icon-sm"><use href="#i-headphones"></use></svg></button>
           <button title="Settings" onclick="location.href='/community/settings'"><svg class="icon icon-sm"><use href="#i-settings"></use></svg></button>
         </div>
         <div id="status-menu" class="status-menu">
@@ -590,9 +631,9 @@
       <header class="topbar">
         <div class="top-title"><svg class="icon"><use href="#i-users"></use></svg> Друзі / ЛС</div>
         <div class="top-actions">
-          <button title="Inbox"><svg class="icon"><use href="#i-inbox"></use></svg></button>
-          <button title="Help"><svg class="icon"><use href="#i-help"></use></svg></button>
-          <button title="Search"><svg class="icon"><use href="#i-search"></use></svg></button>
+          <button title="Inbox" onclick="showActionToast('Вхідні скоро будуть окремою вкладкою')"><svg class="icon"><use href="#i-inbox"></use></svg></button>
+          <button title="Help" onclick="location.href='/community/channel/support'"><svg class="icon"><use href="#i-help"></use></svg></button>
+          <button title="Search" onclick="document.getElementById('dm-search')?.focus()"><svg class="icon"><use href="#i-search"></use></svg></button>
         </div>
       </header>
 
@@ -652,7 +693,7 @@
   }
   const statusLabels = { online: 'В мережі', idle: 'Неактивний', dnd: 'Не турбувати', invisible: 'Невидимий' };
   function applyLocalStatus(status) {
-    ['my-status-dot','my-avatar-status'].forEach(id => {
+    ['my-status-dot','my-avatar-status','modal-avatar-status'].forEach(id => {
       const el = document.getElementById(id);
       if (!el) return;
       el.classList.remove('status-online','status-idle','status-dnd','status-invisible');
@@ -675,6 +716,52 @@
     const menu = document.getElementById('status-menu');
     if (menu) menu.classList.remove('open');
   });
+
+
+function showActionToast(text){
+  const t=document.getElementById('action-toast'); if(!t) return;
+  t.textContent=text; t.classList.add('show'); clearTimeout(window.__toastTimer);
+  window.__toastTimer=setTimeout(()=>t.classList.remove('show'),1300);
+}
+function openSelfProfile(){const m=document.getElementById('self-profile-modal'); if(m)m.classList.add('open')}
+function closeSelfProfile(){const m=document.getElementById('self-profile-modal'); if(m)m.classList.remove('open')}
+function toggleAudioControl(btn,kind){
+  if(!btn) return; btn.classList.toggle('off');
+  const off=btn.classList.contains('off');
+  try{localStorage.setItem('alexihub-'+kind, off?'off':'on')}catch(e){}
+  showActionToast((kind==='mic'?'Мікрофон':'Навушники') + (off?' вимкнено':' увімкнено'));
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('[data-audio-kind]').forEach(btn=>{
+    const kind=btn.dataset.audioKind;
+    try{ if(localStorage.getItem('alexihub-'+kind)==='off') btn.classList.add('off'); }catch(e){}
+  });
+});
+
 </script>
+
+<div id="self-profile-modal" class="self-profile-backdrop" onclick="if(event.target===this)closeSelfProfile()">
+  <div class="self-profile-card">
+    <button class="self-profile-close" type="button" onclick="closeSelfProfile()">×</button>
+    <div class="self-profile-banner" {% if account.banner_url %}style="background-image:url('{{ account.banner_url }}')"{% endif %}></div>
+    <div class="self-profile-body">
+      <div class="self-profile-avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}')"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}<span id="modal-avatar-status" class="presence status-{{ my_status }}"></span></div>
+      <div class="self-profile-name">{{ account.username }}</div>
+      <div class="self-profile-sub">{{ account.bio or 'AlexiHub account' }}</div>
+      <div class="self-profile-section"><b>Статус</b>
+        <div class="self-status-grid">
+          <button class="self-status-btn" type="button" onclick="setPresenceStatus('online')"><i class="status-dot status-online"></i><span><b>В мережі</b><small>Тебе видно онлайн.</small></span></button>
+          <button class="self-status-btn" type="button" onclick="setPresenceStatus('idle')"><i class="status-dot status-idle"></i><span><b>Неактивний</b><small>Жовтий статус.</small></span></button>
+          <button class="self-status-btn" type="button" onclick="setPresenceStatus('dnd')"><i class="status-dot status-dnd"></i><span><b>Не турбувати</b><small>Не показувати сповіщення.</small></span></button>
+          <button class="self-status-btn" type="button" onclick="setPresenceStatus('invisible')"><i class="status-dot status-invisible"></i><span><b>Невидимий</b><small>Ти не будеш показуватись онлайн.</small></span></button>
+        </div>
+      </div>
+      <a class="btn" href="/community/settings">Редагувати профіль</a>
+    </div>
+  </div>
+</div>
+<div id="action-toast" class="action-toast"></div>
+
 </body>
 </html>
+
