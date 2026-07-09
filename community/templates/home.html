@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AlexiHub // Community</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Baloo+2:wght@700&family=Bungee&family=Cinzel:wght@700&family=Creepster&family=Fredoka:wght@700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&family=Luckiest+Guy&family=Modak&family=Monoton&family=Press+Start+2P&family=Righteous&family=Rubik+Glitch&family=Unbounded:wght@700&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #0b0b0b; --bg-elevated: #111111; --bg-header: #161616;
@@ -89,23 +89,59 @@
     .verified-badge-sm svg { width: 8px; height: 8px; }
     .empty-note { color: #555; font-size: 0.8rem; }
 
-    .visual-name { font-weight: 700; color: var(--text-primary); }
+
+    .visual-name {
+      font-weight: 800;
+      color: var(--text-primary);
+      display: inline-block;
+      max-width: 100%;
+      line-height: 1.08;
+      vertical-align: baseline;
+    }
     .name-gradient {
       background: linear-gradient(90deg, var(--name-c1, #f5576c), var(--name-c2, #7367f0), var(--name-c1, #f5576c));
-      background-size: 220% auto; -webkit-background-clip: text; background-clip: text;
-      color: transparent; -webkit-text-fill-color: transparent; animation: name-shimmer 3.2s linear infinite;
+      background-size: 240% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+      animation: name-shimmer 3s linear infinite;
+      filter: drop-shadow(0 0 7px color-mix(in srgb, var(--name-c1, #f5576c) 22%, transparent));
     }
     .name-glow {
       color: var(--name-c1, #ffffff);
-      text-shadow: 0 0 8px color-mix(in srgb, var(--name-c1, #ffffff) 70%, transparent),
-                   0 0 16px color-mix(in srgb, var(--name-c2, #7367f0) 55%, transparent);
+      text-shadow:
+        0 0 6px color-mix(in srgb, var(--name-c1, #ffffff) 80%, transparent),
+        0 0 14px color-mix(in srgb, var(--name-c2, #7367f0) 65%, transparent),
+        0 0 26px color-mix(in srgb, var(--name-c2, #7367f0) 35%, transparent);
     }
-    @keyframes name-shimmer { to { background-position: 220% center; } }
+    @keyframes name-shimmer { to { background-position: 240% center; } }
+
     .font-mono { font-family: var(--font-mono); }
-    .font-serif { font-family: Georgia, 'Times New Roman', serif; }
-    .font-rounded { font-family: var(--font-sans); letter-spacing: 0.025em; }
-    .font-cyber { font-family: var(--font-mono); letter-spacing: 0.03em; text-transform: lowercase; }
-    .font-display { font-family: var(--font-sans); font-weight: 800; letter-spacing: -0.035em; }
+    .font-serif { font-family: Georgia, 'Times New Roman', serif; font-weight: 700; letter-spacing: -0.02em; }
+    .font-rounded { font-family: 'Fredoka', var(--font-sans); font-weight: 700; letter-spacing: 0.01em; }
+    .font-cyber { font-family: 'Righteous', var(--font-mono); font-weight: 400; letter-spacing: 0.035em; text-transform: lowercase; }
+    .font-display { font-family: 'Unbounded', var(--font-sans); font-weight: 700; letter-spacing: -0.045em; }
+    .font-pixel { font-family: 'Press Start 2P', var(--font-mono); font-weight: 400; font-size: 0.68em; letter-spacing: -0.08em; text-shadow: 1px 1px 0 rgba(0,0,0,0.65); }
+    .font-bubble { font-family: 'Luckiest Guy', var(--font-sans); font-weight: 400; letter-spacing: 0.035em; text-shadow: 0 2px 0 rgba(0,0,0,0.45); transform: translateY(0.04em); }
+    .font-puffy { font-family: 'Modak', var(--font-sans); font-weight: 400; font-size: 1.16em; letter-spacing: 0.01em; line-height: 0.92; text-shadow: 0 2px 0 rgba(0,0,0,0.35); }
+    .font-block { font-family: 'Bungee', var(--font-sans); font-weight: 400; letter-spacing: 0.01em; }
+    .font-neon { font-family: 'Monoton', var(--font-sans); font-weight: 400; letter-spacing: 0.04em; }
+    .font-glitch { font-family: 'Rubik Glitch', var(--font-sans); font-weight: 400; letter-spacing: 0.025em; }
+    .font-graffiti { font-family: 'Bangers', var(--font-sans); font-weight: 400; letter-spacing: 0.045em; }
+    .font-spooky { font-family: 'Creepster', var(--font-sans); font-weight: 400; letter-spacing: 0.04em; }
+    .font-medieval { font-family: 'Cinzel', Georgia, serif; font-weight: 700; letter-spacing: 0.02em; }
+    .font-roundfat { font-family: 'Baloo 2', var(--font-sans); font-weight: 700; letter-spacing: 0.005em; }
+
+    .post-name.font-pixel,
+    .member-name.font-pixel,
+    .comment-author.font-pixel,
+    .user-cell .font-pixel { font-size: 0.62em; }
+    .profile-name.font-pixel { font-size: 0.74em; }
+    .post-name.font-puffy,
+    .member-name.font-puffy,
+    .comment-author.font-puffy,
+    .user-cell .font-puffy { font-size: 1.04em; }
 
     .member-row.has-card-bg { position: relative; overflow: hidden; }
     .member-row.has-card-bg::before {
