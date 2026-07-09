@@ -7,22 +7,129 @@ Mounted into the main app via `app.include_router(community_router)` in
 main.py -- everything here lives under the /community prefix so it can
 never collide with the admin dashboard's routes.
 """
+import asyncio
+import time
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, Form, Request
+from fastapi import APIRouter, Depends, Form, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from community import auth, crud
 from config import get_settings
-from database import get_db
+from database import AsyncSessionLocal, get_db
 
 settings = get_settings()
 router = APIRouter(prefix="/community", tags=["community"])
 
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+
+
+# --- Lightweight realtime layer --------------------------------------------
+# This is intentionally in-memory: typing state is NOT written to PostgreSQL.
+# DB is touched only when a real message is created/edited/deleted.
+class RealtimeChannelManager:
+    def __init__(self) -> None:
+        self.connections: dict[tuple[int, int], dict[int, set[WebSocket]]] = {}
+        self.typing: dict[tuple[int, int], dict[int, dict]] = {}
+        self.lock = asyncio.Lock()
+
+    async def connect(self, key: tuple[int, int], account_id: int, websocket: WebSocket) -> None:
+        await websocket.accept()
+        async with self.lock:
+            self.connections.setdefault(key, {}).setdefault(account_id, set()).add(websocket)
+
+    async def disconnect(self, key: tuple[int, int], account_id: int, websocket: WebSocket) -> None:
+        async with self.lock:
+            users = self.connections.get(key)
+            if users and account_id in users:
+                users[account_id].discard(websocket)
+                if not users[account_id]:
+                    users.pop(account_id, None)
+            if users == {}:
+                self.connections.pop(key, None)
+            if key in self.typing:
+                self.typing[key].pop(account_id, None)
+                if not self.typing[key]:
+                    self.typing.pop(key, None)
+        await self.broadcast_typing(key)
+
+    async def broadcast(self, key: tuple[int, int], payload: dict) -> None:
+        async with self.lock:
+            sockets = [ws for by_user in self.connections.get(key, {}).values() for ws in by_user]
+        dead: list[WebSocket] = []
+        for ws in sockets:
+            try:
+                await ws.send_json(payload)
+            except Exception:
+                dead.append(ws)
+        if dead:
+            async with self.lock:
+                users = self.connections.get(key, {})
+                for account_sockets in users.values():
+                    for ws in dead:
+                        account_sockets.discard(ws)
+
+    async def set_typing(self, key: tuple[int, int], account_id: int, profile: dict) -> None:
+        expires_at = time.monotonic() + 3.0
+        async with self.lock:
+            self.typing.setdefault(key, {})[account_id] = {**profile, "expires_at": expires_at}
+        await self.broadcast_typing(key)
+
+    async def clear_typing(self, key: tuple[int, int], account_id: int) -> None:
+        async with self.lock:
+            if key in self.typing:
+                self.typing[key].pop(account_id, None)
+                if not self.typing[key]:
+                    self.typing.pop(key, None)
+        await self.broadcast_typing(key)
+
+    async def broadcast_typing(self, key: tuple[int, int]) -> None:
+        now = time.monotonic()
+        async with self.lock:
+            typers_map = self.typing.get(key, {})
+            expired = [uid for uid, item in typers_map.items() if item.get("expires_at", 0) <= now]
+            for uid in expired:
+                typers_map.pop(uid, None)
+            if not typers_map and key in self.typing:
+                self.typing.pop(key, None)
+            users = [
+                {"id": uid, "username": item.get("username", "user")}
+                for uid, item in typers_map.items()
+            ]
+        await self.broadcast(key, {"type": "typing", "users": users})
+
+
+realtime_channels = RealtimeChannelManager()
+
+
+def _ws_account_id(websocket: WebSocket) -> int | None:
+    try:
+        account_id = auth.get_logged_in_account_id(websocket)  # works because WebSocket has .session too
+        return int(account_id) if account_id else None
+    except Exception:
+        session = getattr(websocket, "session", {}) or {}
+        for key in ("community_account_id", "account_id", "community_user_id"):
+            value = session.get(key)
+            if value:
+                return int(value)
+        return None
+
+
+def _account_payload(account) -> dict:
+    return {
+        "id": account.id,
+        "username": account.username,
+        "avatar_url": account.avatar_url,
+        "role_label": account.role_label,
+        "role_color_start": account.role_color_start or "#f5576c",
+        "role_color_end": account.role_color_end or "#7367f0",
+        "name_effect": account.name_effect or "none",
+        "name_font": account.name_font or "default",
+    }
+
 
 
 async def current_account(request: Request, db: AsyncSession):
@@ -187,11 +294,21 @@ async def community_home(request: Request, db: AsyncSession = Depends(get_db)):
     await crud.ensure_default_channels(db)
     channels = await crud.list_channels(db)
     online_members = await crud.list_online_accounts(db)
+    friends = await crud.list_friends(db, account.id)
+    dm_threads = await crud.list_dm_threads_for_account(db, account.id)
     rail = await server_rail_context(db, account.id)
 
     return templates.TemplateResponse(
         "home.html",
-        {"request": request, "account": account, "online_members": online_members, "channels": channels, **rail},
+        {
+            "request": request,
+            "account": account,
+            "online_members": online_members,
+            "channels": channels,
+            "friends": friends,
+            "dm_threads": dm_threads,
+            **rail,
+        },
     )
 
 
@@ -531,6 +648,297 @@ async def api_respond_server_invite(invite_id: int, request: Request, db: AsyncS
         return JSONResponse({"error": "not_found"}, status_code=404)
 
     return JSONResponse({"status": invite.status, "server_id": invite.server_id})
+
+
+
+
+@router.websocket("/ws/servers/{server_id}/channel/{channel_id}")
+async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: int):
+    """Realtime server channel: messages + typing indicator.
+
+    Optimized for the free PostgreSQL tier:
+    - typing is RAM-only and never touches the DB;
+    - no message polling loop;
+    - DB write happens only once when the user sends a real message.
+    """
+    account_id = _ws_account_id(websocket)
+    if not account_id:
+        await websocket.close(code=1008)
+        return
+
+    async with AsyncSessionLocal() as db:
+        account = await crud.get_account_by_id(db, account_id)
+        channel = await crud.get_server_channel(db, server_id, channel_id)
+        is_member = await crud.is_server_member(db, server_id, account_id)
+        if not account or not channel or not is_member:
+            await websocket.close(code=1008)
+            return
+        profile = _account_payload(account)
+
+    key = (server_id, channel_id)
+    await realtime_channels.connect(key, account_id, websocket)
+
+    try:
+        while True:
+            data = await websocket.receive_json()
+            event_type = data.get("type")
+
+            if event_type == "typing":
+                await realtime_channels.set_typing(key, account_id, profile)
+                continue
+
+            if event_type == "typing_stop":
+                await realtime_channels.clear_typing(key, account_id)
+                continue
+
+            if event_type != "message":
+                continue
+
+            content = (data.get("content") or "").strip()
+            image_url = (data.get("image_url") or "").strip()
+            if not content:
+                await realtime_channels.clear_typing(key, account_id)
+                continue
+            if len(content) > 4000:
+                content = content[:4000]
+            if len(image_url) > 512:
+                image_url = image_url[:512]
+
+            async with AsyncSessionLocal() as db:
+                if not await crud.is_server_member(db, server_id, account_id):
+                    await websocket.close(code=1008)
+                    return
+                channel = await crud.get_server_channel(db, server_id, channel_id)
+                if not channel:
+                    await websocket.close(code=1008)
+                    return
+                msg = await crud.create_server_message(db, server_id, channel_id, account_id, content, image_url)
+                created_at = msg.created_at.isoformat()
+
+            await realtime_channels.clear_typing(key, account_id)
+            await realtime_channels.broadcast(
+                key,
+                {
+                    "type": "message",
+                    "message": {
+                        "id": msg.id,
+                        "server_id": server_id,
+                        "channel_id": channel_id,
+                        "author_id": account_id,
+                        "content": content,
+                        "image_url": image_url or None,
+                        "created_at": created_at,
+                    },
+                    "author": profile,
+                },
+            )
+
+    except WebSocketDisconnect:
+        pass
+    except Exception:
+        # Keep the app alive even if one socket sends broken data.
+        try:
+            await websocket.close(code=1011)
+        except Exception:
+            pass
+    finally:
+        await realtime_channels.disconnect(key, account_id, websocket)
+
+
+# --- Direct messages ---------------------------------------------------------
+
+@router.get("/dm/{username}")
+async def dm_chat_view(username: str, request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return RedirectResponse(url="/community/login", status_code=303)
+
+    await crud.touch_last_seen(db, account.id)
+    await crud.ensure_default_channels(db)
+
+    other = await crud.get_account_by_username(db, username)
+    if not other or other.id == account.id:
+        return RedirectResponse(url="/community", status_code=303)
+
+    thread = await crud.get_or_create_dm_thread(db, account.id, other.id)
+    if not thread:
+        return RedirectResponse(url="/community", status_code=303)
+
+    channels = await crud.list_channels(db)
+    friends = await crud.list_friends(db, account.id)
+    dm_threads = await crud.list_dm_threads_for_account(db, account.id)
+    messages = await crud.list_dm_messages(db, thread.id)
+    rail = await server_rail_context(db, account.id)
+
+    return templates.TemplateResponse(
+        "dm_chat.html",
+        {
+            "request": request,
+            "account": account,
+            "other": other,
+            "thread": thread,
+            "messages": messages,
+            "channels": channels,
+            "friends": friends,
+            "dm_threads": dm_threads,
+            **rail,
+        },
+    )
+
+
+@router.post("/dm/{username}/message")
+async def dm_message_submit(
+    username: str,
+    request: Request,
+    content: str = Form(...),
+    image_url: str = Form(""),
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return RedirectResponse(url="/community/login", status_code=303)
+
+    other = await crud.get_account_by_username(db, username)
+    if not other or other.id == account.id:
+        return RedirectResponse(url="/community", status_code=303)
+
+    thread = await crud.get_or_create_dm_thread(db, account.id, other.id)
+    if thread and content.strip():
+        await crud.create_dm_message(db, thread.id, account.id, content.strip(), image_url.strip())
+    return RedirectResponse(url=f"/community/dm/{other.username}", status_code=303)
+
+
+@router.post("/dm/{username}/message/{message_id}/edit")
+async def dm_message_edit_submit(
+    username: str,
+    message_id: int,
+    request: Request,
+    content: str = Form(...),
+    image_url: str = Form(""),
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return RedirectResponse(url="/community/login", status_code=303)
+    other = await crud.get_account_by_username(db, username)
+    if not other:
+        return RedirectResponse(url="/community", status_code=303)
+    thread = await crud.get_dm_thread_between(db, account.id, other.id)
+    if not thread:
+        return RedirectResponse(url=f"/community/dm/{other.username}", status_code=303)
+    message = await crud.get_dm_message(db, thread.id, message_id)
+    if message and message.author_id == account.id and content.strip():
+        await crud.update_dm_message(db, message, content.strip(), image_url.strip())
+    return RedirectResponse(url=f"/community/dm/{other.username}#dm-message-{message_id}", status_code=303)
+
+
+@router.post("/dm/{username}/message/{message_id}/delete")
+async def dm_message_delete_submit(
+    username: str,
+    message_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return RedirectResponse(url="/community/login", status_code=303)
+    other = await crud.get_account_by_username(db, username)
+    if not other:
+        return RedirectResponse(url="/community", status_code=303)
+    thread = await crud.get_dm_thread_between(db, account.id, other.id)
+    if thread:
+        message = await crud.get_dm_message(db, thread.id, message_id)
+        if message and message.author_id == account.id:
+            await crud.delete_dm_message(db, message)
+    return RedirectResponse(url=f"/community/dm/{other.username}", status_code=303)
+
+
+
+@router.websocket("/ws/dm/{thread_id}")
+async def ws_dm_thread(websocket: WebSocket, thread_id: int):
+    """Realtime direct messages + typing indicator.
+
+    Optimized for a free PostgreSQL tier:
+    - typing is RAM-only and expires automatically;
+    - there is no polling loop;
+    - DB is touched only when a real message is sent.
+    """
+    account_id = _ws_account_id(websocket)
+    if not account_id:
+        await websocket.close(code=1008)
+        return
+
+    async with AsyncSessionLocal() as db:
+        account = await crud.get_account_by_id(db, account_id)
+        thread = await crud.get_dm_thread_by_id(db, thread_id)
+        if not account or not thread or account_id not in {thread.user_low_id, thread.user_high_id}:
+            await websocket.close(code=1008)
+            return
+        profile = _account_payload(account)
+
+    # Reuse the same lightweight manager. key (0, thread_id) cannot collide with real server_id.
+    key = (0, thread_id)
+    await realtime_channels.connect(key, account_id, websocket)
+
+    try:
+        while True:
+            data = await websocket.receive_json()
+            event_type = data.get("type")
+
+            if event_type == "typing":
+                await realtime_channels.set_typing(key, account_id, profile)
+                continue
+
+            if event_type == "typing_stop":
+                await realtime_channels.clear_typing(key, account_id)
+                continue
+
+            if event_type != "message":
+                continue
+
+            content = (data.get("content") or "").strip()
+            image_url = (data.get("image_url") or "").strip()
+            if not content:
+                await realtime_channels.clear_typing(key, account_id)
+                continue
+            if len(content) > 4000:
+                content = content[:4000]
+            if len(image_url) > 512:
+                image_url = image_url[:512]
+
+            async with AsyncSessionLocal() as db:
+                if not await crud.is_dm_participant(db, thread_id, account_id):
+                    await websocket.close(code=1008)
+                    return
+                msg = await crud.create_dm_message(db, thread_id, account_id, content, image_url)
+                created_at = msg.created_at.isoformat()
+
+            await realtime_channels.clear_typing(key, account_id)
+            await realtime_channels.broadcast(
+                key,
+                {
+                    "type": "message",
+                    "message": {
+                        "id": msg.id,
+                        "thread_id": thread_id,
+                        "author_id": account_id,
+                        "content": content,
+                        "image_url": image_url or None,
+                        "created_at": created_at,
+                    },
+                    "author": profile,
+                },
+            )
+
+    except WebSocketDisconnect:
+        pass
+    except Exception:
+        try:
+            await websocket.close(code=1011)
+        except Exception:
+            pass
+    finally:
+        await realtime_channels.disconnect(key, account_id, websocket)
 
 
 # --- Public profiles ---------------------------------------------------------
