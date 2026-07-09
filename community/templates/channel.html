@@ -17,8 +17,33 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: var(--bg); color: var(--text-primary); font-family: var(--font-sans); font-size: 14px; }
 
+    /* --- Discord-like server rail --- */
+    .server-rail {
+      position: fixed; left: 0; top: 0; bottom: 0; width: 72px; z-index: 80;
+      background: #070707; border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; align-items: center; gap: 0.65rem;
+      padding: 0.8rem 0.55rem; overflow-y: auto;
+    }
+    .server-dot {
+      width: 48px; height: 48px; border-radius: 50%; background: var(--bg-elevated); border: 1px solid var(--border);
+      color: var(--text-primary); text-decoration: none; display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-family: var(--font-mono); position: relative; flex-shrink: 0; overflow: hidden;
+      transition: border-radius .18s ease, background .18s ease, border-color .18s ease, transform .18s ease;
+    }
+    .server-dot:hover, .server-dot.active { border-radius: 16px; border-color: var(--border-hover); transform: translateY(-1px); }
+    .server-dot.active::before {
+      content: ''; position: absolute; left: -9px; top: 50%; transform: translateY(-50%);
+      width: 4px; height: 28px; border-radius: 999px; background: var(--text-primary);
+    }
+    .server-dot span { width: 100%; height: 100%; background: center/cover no-repeat; display: block; }
+    .server-dot.home-dot { background: linear-gradient(135deg, #181818, #101010); }
+    .server-dot.plus { color: #10b981; font-size: 1.7rem; font-family: var(--font-sans); }
+    .server-dot.plus:hover { background: #10b981; color: #06180d; }
+    .rail-sep { width: 32px; height: 1px; background: var(--border); flex-shrink: 0; }
+
+
     .topbar {
-      position: fixed; top: 0; left: 0; right: 0; height: 56px; z-index: 50;
+      position: fixed; top: 0; left: 72px; right: 0; height: 56px; z-index: 50;
       background: var(--bg-header); border-bottom: 1px solid var(--border);
       display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem;
     }
@@ -30,7 +55,7 @@
     .topbar .logout:hover { color: var(--text-primary); }
 
     .tabs {
-      position: fixed; top: 56px; left: 0; right: 0; z-index: 40; background: var(--bg);
+      position: fixed; top: 56px; left: 72px; right: 0; z-index: 40; background: var(--bg);
       border-bottom: 1px solid var(--border); display: flex; gap: 0.4rem; padding: 0.75rem 1.5rem; overflow-x: auto;
     }
     .tab {
@@ -287,6 +312,16 @@
   </style>
 </head>
 <body>
+  <aside class="server-rail">
+    <a href="/community" class="server-dot home-dot {{ 'active' if not active_server_id else '' }}" title="AlexiHub">A</a>
+    <div class="rail-sep"></div>
+    {% for srv in servers %}
+    <a href="/community/servers/{{ srv.id }}" class="server-dot {{ 'active' if active_server_id == srv.id else '' }}" title="{{ srv.name }}">
+      {% if srv.icon_url %}<span style="background-image:url('{{ srv.icon_url }}')"></span>{% else %}{{ srv.name[:1]|upper }}{% endif %}
+    </a>
+    {% endfor %}
+    <a href="/community/servers/new" class="server-dot plus" title="Створити сервер">+</a>
+  </aside>
   <div class="topbar">
     <a href="/community" class="brand">AlexiHub // Community</a>
     <div class="topbar-right">
@@ -403,6 +438,7 @@
       var badge = document.getElementById('notif-badge');
       var list = document.getElementById('notif-list');
       var count = data.count || 0;
+
       badge.style.display = count > 0 ? 'flex' : 'none';
       badge.textContent = count > 9 ? '9+' : count;
 
@@ -410,7 +446,22 @@
         list.innerHTML = '<div class="notif-empty">Немає нових запитів</div>';
         return;
       }
+
       list.innerHTML = data.items.map(function (item) {
+        if (item.type === 'server_invite') {
+          var iconStyle = item.icon_url ? "background-image:url('" + item.icon_url + "')" : '';
+          return (
+            '<div class="notif-item">' +
+              '<div class="notif-avatar" style="' + iconStyle + '"></div>' +
+              '<div class="notif-name"><b>' + item.server_name + '</b><br><span style="color:#777;font-size:0.72rem;">від ' + item.inviter_username + '</span></div>' +
+              '<div class="notif-actions">' +
+                '<button class="notif-btn accept" onclick="respondServerInvite(' + item.invite_id + ', true)">✓</button>' +
+                '<button class="notif-btn decline" onclick="respondServerInvite(' + item.invite_id + ', false)">✕</button>' +
+              '</div>' +
+            '</div>'
+          );
+        }
+
         var avatarStyle = item.avatar_url ? "background-image:url('" + item.avatar_url + "')" : '';
         return (
           '<div class="notif-item">' +
@@ -434,8 +485,21 @@
 
     function respondFriend(friendshipId, accept) {
       fetch('/community/api/friends/respond/' + friendshipId, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ accept: accept }),
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accept: accept }),
       }).then(pollNotifications).catch(function () {});
+    }
+
+    function respondServerInvite(inviteId, accept) {
+      fetch('/community/api/server-invites/respond/' + inviteId, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accept: accept }),
+      }).then(function () {
+        pollNotifications();
+        if (accept) setTimeout(function () { window.location.reload(); }, 350);
+      }).catch(function () {});
     }
 
     pollNotifications();
