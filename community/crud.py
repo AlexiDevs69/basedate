@@ -782,6 +782,165 @@ async def respond_server_invite(
     return invite
 
 
+
+
+# ============================================================================
+# Direct messages
+# ============================================================================
+
+def _normalize_dm_pair(a: int, b: int) -> tuple[int, int]:
+    return (a, b) if a < b else (b, a)
+
+
+async def get_dm_thread_between(db: AsyncSession, account_a_id: int, account_b_id: int) -> DirectThread | None:
+    low_id, high_id = _normalize_dm_pair(account_a_id, account_b_id)
+    result = await db.execute(
+        select(DirectThread).where(
+            DirectThread.user_low_id == low_id,
+            DirectThread.user_high_id == high_id,
+        )
+    )
+    return result.scalar_one_or_none()
+
+
+async def get_dm_thread_by_id(db: AsyncSession, thread_id: int) -> DirectThread | None:
+    result = await db.execute(select(DirectThread).where(DirectThread.id == thread_id))
+    return result.scalar_one_or_none()
+
+
+async def is_dm_participant(db: AsyncSession, thread_id: int, account_id: int) -> bool:
+    thread = await get_dm_thread_by_id(db, thread_id)
+    return bool(thread and account_id in {thread.user_low_id, thread.user_high_id})
+
+
+async def get_or_create_dm_thread(db: AsyncSession, account_a_id: int, account_b_id: int) -> DirectThread | None:
+    if account_a_id == account_b_id:
+        return None
+
+    account_a = await get_account_by_id(db, account_a_id)
+    account_b = await get_account_by_id(db, account_b_id)
+    if not account_a or not account_b:
+        return None
+
+    low_id, high_id = _normalize_dm_pair(account_a_id, account_b_id)
+    existing = await get_dm_thread_between(db, low_id, high_id)
+    if existing:
+        return existing
+
+    thread = DirectThread(user_low_id=low_id, user_high_id=high_id)
+    db.add(thread)
+    await db.commit()
+    await db.refresh(thread)
+    return thread
+
+
+async def create_dm_message(
+    db: AsyncSession,
+    thread_id: int,
+    author_id: int,
+    content: str,
+    image_url: str | None = None,
+) -> DirectMessage:
+    message = DirectMessage(
+        thread_id=thread_id,
+        author_id=author_id,
+        content=content.strip(),
+        image_url=image_url.strip() if image_url and image_url.strip() else None,
+    )
+    db.add(message)
+
+    thread = await get_dm_thread_by_id(db, thread_id)
+    if thread:
+        thread.updated_at = datetime.now(timezone.utc)
+
+    await db.commit()
+    await db.refresh(message)
+    return message
+
+
+async def list_dm_messages(db: AsyncSession, thread_id: int, limit: int = 80) -> list[dict]:
+    result = await db.execute(
+        select(DirectMessage)
+        .where(DirectMessage.thread_id == thread_id)
+        .order_by(DirectMessage.created_at.desc())
+        .limit(limit)
+    )
+    messages = list(reversed(list(result.scalars().all())))
+    feed: list[dict] = []
+    for message in messages:
+        author = await get_account_by_id(db, message.author_id)
+        feed.append({"message": message, "author": author})
+    return feed
+
+
+async def get_dm_message(db: AsyncSession, thread_id: int, message_id: int) -> DirectMessage | None:
+    result = await db.execute(
+        select(DirectMessage).where(
+            DirectMessage.id == message_id,
+            DirectMessage.thread_id == thread_id,
+        )
+    )
+    return result.scalar_one_or_none()
+
+
+async def update_dm_message(
+    db: AsyncSession,
+    message: DirectMessage,
+    content: str,
+    image_url: str | None = None,
+) -> DirectMessage:
+    message.content = content.strip()
+    message.image_url = image_url.strip() if image_url and image_url.strip() else None
+    message.edited_at = datetime.now(timezone.utc)
+
+    thread = await get_dm_thread_by_id(db, message.thread_id)
+    if thread:
+        thread.updated_at = datetime.now(timezone.utc)
+
+    await db.commit()
+    await db.refresh(message)
+    return message
+
+
+async def delete_dm_message(db: AsyncSession, message: DirectMessage) -> None:
+    thread_id = message.thread_id
+    await db.delete(message)
+    thread = await get_dm_thread_by_id(db, thread_id)
+    if thread:
+        thread.updated_at = datetime.now(timezone.utc)
+    await db.commit()
+
+
+async def _last_dm_message(db: AsyncSession, thread_id: int) -> DirectMessage | None:
+    result = await db.execute(
+        select(DirectMessage)
+        .where(DirectMessage.thread_id == thread_id)
+        .order_by(DirectMessage.created_at.desc())
+        .limit(1)
+    )
+    return result.scalar_one_or_none()
+
+
+async def list_dm_threads_for_account(db: AsyncSession, account_id: int, limit: int = 40) -> list[dict]:
+    result = await db.execute(
+        select(DirectThread)
+        .where(or_(DirectThread.user_low_id == account_id, DirectThread.user_high_id == account_id))
+        .order_by(DirectThread.updated_at.desc())
+        .limit(limit)
+    )
+    threads = list(result.scalars().all())
+
+    items: list[dict] = []
+    for thread in threads:
+        other_id = thread.user_high_id if thread.user_low_id == account_id else thread.user_low_id
+        other = await get_account_by_id(db, other_id)
+        if not other:
+            continue
+        last_message = await _last_dm_message(db, thread.id)
+        items.append({"thread": thread, "other": other, "last_message": last_message})
+    return items
+
+
 # ============================================================================
 # Gifts
 # ============================================================================
@@ -864,5 +1023,6 @@ async def list_gifts_for_account(db: AsyncSession, account_id: int) -> list[Gift
         .order_by(GiftInstance.created_at.desc())
     )
     return list(result.scalars().all())
+
 
 
