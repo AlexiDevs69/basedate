@@ -180,6 +180,31 @@
 .msg-avatar,.msg-name,.member-row,.account-panel,.user-panel .avatar,.user-panel .user-info,.top-title .avatar,.dm-start .avatar,.profile-card .big-avatar{cursor:pointer}
 @media(max-width:820px){.alex-profile-popover{width:min(330px,calc(100vw - 24px))}.alex-full-backdrop{align-items:flex-end;padding:0}.alex-full-card{width:100%;max-height:88vh;border-radius:22px 22px 0 0;grid-template-columns:1fr;overflow:auto}.alex-full-left{min-height:auto}.alex-full-left-inner{padding:104px 20px 20px}.alex-full-right{padding:18px 20px 22px}.alex-full-banner{height:126px}.alex-full-avatar{width:92px;height:92px}}
 
+
+
+/* === AlexiHub profile cards V3: force Discord-like mini profile first === */
+#mini-profile-popover{display:none!important;visibility:hidden!important;pointer-events:none!important}
+.ah-v3-mini{position:fixed;z-index:2147483000;width:306px;display:none;background:#23242b;border:1px solid rgba(255,255,255,.12);border-radius:16px;box-shadow:0 24px 90px rgba(0,0,0,.62);overflow:hidden;color:#f4f4f5;transform-origin:top left;font-family:Inter,system-ui,-apple-system,sans-serif}
+.ah-v3-mini.open{display:block;animation:ahv3pop .12s ease-out both}
+@keyframes ahv3pop{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+.ah-v3-banner{height:96px;background:linear-gradient(135deg,var(--ah-c1,#5865f2),var(--ah-c2,#9b5cf6));background-size:cover;background-position:center;position:relative;overflow:hidden}
+.ah-v3-banner:after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 78% 18%,rgba(255,255,255,.20),transparent 32%),linear-gradient(180deg,rgba(255,255,255,.02),rgba(0,0,0,.22))}
+.ah-v3-body{padding:0 14px 14px;position:relative;background:#23242b}
+.ah-v3-avatar{width:88px;height:88px;border-radius:50%;background:#111 center/cover no-repeat;border:6px solid #23242b;margin-top:-44px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:950;font-size:30px;position:relative;cursor:pointer;box-shadow:0 0 0 1px rgba(255,255,255,.08);padding:0;overflow:hidden}
+.ah-v3-avatar:hover{filter:brightness(1.08)}
+.ah-v3-status{position:absolute;right:2px;bottom:2px;width:19px;height:19px;border-radius:50%;border:4px solid #23242b;background:#23a55a}.ah-v3-status.idle{background:#f0b232}.ah-v3-status.dnd{background:#f23f42}.ah-v3-status.invisible,.ah-v3-status.offline{background:#80848e}
+.ah-v3-name{margin-top:10px;font-size:22px;line-height:1.06;font-weight:950;letter-spacing:-.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff}.ah-v3-handle{margin-top:3px;font-size:12px;color:#b5bac1;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ah-v3-role{margin-top:7px;display:inline-flex;max-width:100%;border-radius:7px;background:rgba(255,255,255,.08);padding:4px 7px;font-size:11px;font-weight:900;color:#d8dbe2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ah-v3-note{margin-top:10px;border-radius:10px;background:rgba(255,255,255,.055);padding:10px;color:#bfc3cc;font-size:12px;line-height:1.35}.ah-v3-note b{display:block;color:#fff;font-size:12px;margin-bottom:3px}
+.ah-v3-actions{display:flex;gap:7px;margin-top:10px}.ah-v3-actions a,.ah-v3-actions button{height:36px;min-width:0;flex:1;border:0;border-radius:8px;background:#5865f2;color:#fff;font-weight:950;font-size:12px;display:flex;align-items:center;justify-content:center;text-decoration:none;cursor:pointer}.ah-v3-actions button{background:#30323a}.ah-v3-actions a:hover,.ah-v3-actions button:hover{filter:brightness(1.08)}
+.ah-v3-status-menu{display:none;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.09);gap:6px}.ah-v3-mini.self .ah-v3-status-menu{display:grid}.ah-v3-status-btn{border:0;border-radius:9px;background:transparent;color:#f4f4f5;display:flex;align-items:center;gap:9px;text-align:left;padding:8px;cursor:pointer;font-weight:900}.ah-v3-status-btn:hover{background:rgba(255,255,255,.075)}.ah-v3-status-btn small{display:block;color:#9499a6;font-size:11px;font-weight:700;margin-top:1px}.ah-v3-dot{width:10px;height:10px;border-radius:50%;background:#23a55a;flex:0 0 auto}.ah-v3-dot.idle{background:#f0b232}.ah-v3-dot.dnd{background:#f23f42}.ah-v3-dot.invisible{background:#80848e}
+.ah-v3-overlay{position:fixed;inset:0;z-index:2147482900;display:none;background:rgba(0,0,0,.72);backdrop-filter:blur(5px);align-items:center;justify-content:center;padding:24px}.ah-v3-overlay.open{display:flex;animation:ahv3fade .13s ease both}@keyframes ahv3fade{from{opacity:0}to{opacity:1}}
+.ah-v3-full{width:min(820px,calc(100vw - 40px));max-height:min(790px,calc(100vh - 46px));overflow:hidden;border-radius:18px;background:#202127;border:1px solid rgba(255,255,255,.12);box-shadow:0 32px 110px rgba(0,0,0,.68);display:grid;grid-template-columns:330px 1fr;position:relative;color:#f4f4f5}
+.ah-v3-close{position:absolute;right:14px;top:14px;z-index:5;width:34px;height:34px;border:0;border-radius:10px;background:rgba(0,0,0,.35);color:#fff;font-size:22px;cursor:pointer}.ah-v3-close:hover{background:rgba(0,0,0,.5)}
+.ah-v3-full-left{position:relative;min-height:540px;background:#25263a;overflow:hidden}.ah-v3-full-left:before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,var(--ah-c1,#5865f2),var(--ah-c2,#9b5cf6));opacity:.47}.ah-v3-full-banner{height:150px;background:linear-gradient(135deg,var(--ah-c1,#5865f2),var(--ah-c2,#9b5cf6));background-size:cover;background-position:center;position:absolute;left:0;right:0;top:0}.ah-v3-full-left-inner{position:relative;z-index:2;padding:124px 24px 24px}.ah-v3-full-avatar{width:108px;height:108px;border-radius:50%;background:#111 center/cover no-repeat;border:7px solid #25263a;display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:950}.ah-v3-full-name{font-size:29px;font-weight:950;letter-spacing:-.04em;margin-top:16px}.ah-v3-full-handle{font-size:13px;color:#d8dbe2;margin-top:4px}.ah-v3-full-meta{margin-top:18px;color:#d8dbe2;font-size:13px;line-height:1.5}.ah-v3-full-right{padding:26px;overflow:auto;background:#202127}.ah-v3-full-right h3{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:#b5bac1;margin:0 0 10px}.ah-v3-widget{background:#2b2d34;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:14px;margin-bottom:12px}.ah-v3-widget-title{font-weight:950;margin-bottom:5px}.ah-v3-widget p{font-size:13px;color:#b5bac1;line-height:1.45;margin:0}
+.account-actions button,.account-actions a,.user-actions button,.user-actions a{width:28px!important;height:28px!important;border:0!important;border-radius:7px!important;background:transparent!important;color:#b5bac1!important;display:flex!important;align-items:center!important;justify-content:center!important;text-decoration:none!important;cursor:pointer!important;padding:0!important;font-size:0!important;line-height:0!important}.account-actions button:hover,.account-actions a:hover,.user-actions button:hover,.user-actions a:hover{background:#2e3038!important;color:#fff!important}.account-actions svg,.user-actions svg{width:17px!important;height:17px!important;display:block!important;fill:none!important;stroke:currentColor!important;stroke-width:2!important;stroke-linecap:round!important;stroke-linejoin:round!important}.account-actions .voice-control,.user-actions .voice-control{position:relative!important;transition:background .16s ease,color .16s ease,transform .12s ease!important}.account-actions .voice-control:active,.user-actions .voice-control:active{transform:scale(.88)!important}.account-actions .voice-control.off,.user-actions .voice-control.off{background:rgba(242,63,66,.16)!important;color:#f23f42!important}.account-actions .voice-control.off:after,.user-actions .voice-control.off:after{content:"";position:absolute;width:18px;height:2px;background:#f23f42;border-radius:99px;transform:rotate(-42deg);box-shadow:0 0 0 2px rgba(242,63,66,.08)}
+.member-row,.msg-avatar,.msg-name,.avatar,.visual-name,.account-panel,.user-panel,.dm-item,.profile-card,.profile-click,.mini-profile-trigger{cursor:pointer!important}
+@media(max-width:820px){.ah-v3-mini{width:min(330px,calc(100vw - 24px))}.ah-v3-overlay{align-items:flex-end;padding:0}.ah-v3-full{width:100%;max-height:88vh;border-radius:22px 22px 0 0;grid-template-columns:1fr;overflow:auto}.ah-v3-full-left{min-height:auto}.ah-v3-full-left-inner{padding:108px 20px 20px}.ah-v3-full-right{padding:18px 20px 22px}.ah-v3-full-banner{height:130px}.ah-v3-full-avatar{width:94px;height:94px}}
+
 </style>
 </head>
 <body>
@@ -298,6 +323,118 @@ document.addEventListener('DOMContentLoaded',()=>{
 </div>
 <div id="action-toast" class="action-toast"></div>
 
+
+<div id="ah-v3-mini" class="ah-v3-mini" aria-hidden="true">
+  <div id="ah-v3-banner" class="ah-v3-banner"></div>
+  <div class="ah-v3-body">
+    <button id="ah-v3-avatar" class="ah-v3-avatar" type="button"><span id="ah-v3-avatar-text"></span><span id="ah-v3-status" class="ah-v3-status offline"></span></button>
+    <div id="ah-v3-name" class="ah-v3-name">User</div>
+    <div id="ah-v3-handle" class="ah-v3-handle">@user</div>
+    <div id="ah-v3-role" class="ah-v3-role">member</div>
+    <div class="ah-v3-note"><b>Міні-профіль</b><span id="ah-v3-note-text">Натисни на аватарку, щоб відкрити повну картку.</span></div>
+    <div class="ah-v3-actions"><a id="ah-v3-message" href="#">Message</a><button id="ah-v3-open-full" type="button">Full profile</button></div>
+    <div class="ah-v3-status-menu">
+      <button class="ah-v3-status-btn" type="button" data-presence="online"><span class="ah-v3-dot"></span><span>В мережі<small>Показувати як онлайн</small></span></button>
+      <button class="ah-v3-status-btn" type="button" data-presence="idle"><span class="ah-v3-dot idle"></span><span>Неактивний<small>Жовтий статус</small></span></button>
+      <button class="ah-v3-status-btn" type="button" data-presence="dnd"><span class="ah-v3-dot dnd"></span><span>Не турбувати<small>Без зайвих пушів</small></span></button>
+      <button class="ah-v3-status-btn" type="button" data-presence="invisible"><span class="ah-v3-dot invisible"></span><span>Невидимий<small>Показувати як офлайн</small></span></button>
+    </div>
+  </div>
+</div>
+<div id="ah-v3-overlay" class="ah-v3-overlay" aria-hidden="true">
+  <div class="ah-v3-full">
+    <button class="ah-v3-close" type="button" id="ah-v3-close">×</button>
+    <div class="ah-v3-full-left">
+      <div id="ah-v3-full-banner" class="ah-v3-full-banner"></div>
+      <div class="ah-v3-full-left-inner">
+        <div id="ah-v3-full-avatar" class="ah-v3-full-avatar"><span id="ah-v3-full-avatar-text"></span></div>
+        <div id="ah-v3-full-name" class="ah-v3-full-name">User</div>
+        <div id="ah-v3-full-handle" class="ah-v3-full-handle">@user</div>
+        <div id="ah-v3-full-meta" class="ah-v3-full-meta">AlexiHub profile card.</div>
+      </div>
+    </div>
+    <div class="ah-v3-full-right">
+      <h3>Дошка</h3>
+      <div class="ah-v3-widget"><div class="ah-v3-widget-title">Про користувача</div><p id="ah-v3-full-about">Швидкий перегляд профілю поверх поточної сторінки.</p></div>
+      <div class="ah-v3-widget"><div class="ah-v3-widget-title">Дії</div><p><a id="ah-v3-full-message" href="#" style="color:#fff;text-decoration:none;font-weight:900;">Message</a> · <a id="ah-v3-full-open" href="#" style="color:#b5bac1;text-decoration:none;font-weight:900;">Open profile page</a></p></div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+(function(){
+  if(window.__alexProfileV3Ready) return; window.__alexProfileV3Ready=true;
+  const CURRENT_USER = "{{ account.username if account else '' }}";
+  const $=(s,r=document)=>r.querySelector(s);
+  function txt(el){return (el&&el.textContent||'').replace(/\s+/g,' ').trim()}
+  function bg(el){ if(!el)return''; let b=getComputedStyle(el).backgroundImage||''; let m=b.match(/url\(["']?([^"')]+)["']?\)/); return m?m[1]:''; }
+  function clean(s){return (s||'').replace(/^@/,'').replace(/\s*(online|live|connecting|reconnecting|офлайн|в мережі|не турбувати|неактивний)\s*$/i,'').trim();}
+  function safeUrl(v){return String(v||'').replace(/'/g,'%27')}
+  let active=null;
+  function selfAvatar(){return bg($('.account-panel .account-avatar'))||bg($('.user-panel .avatar'))||bg($('.me-avatar'))||''}
+  function selfName(){return clean(txt($('.account-panel .account-name'))||txt($('.user-panel .user-info b'))||CURRENT_USER||'user')}
+  function dataFrom(el){
+    let a=el.closest('a[href*="/community/profile/"]')||null;
+    let msg=el.closest('.msg,.message,.post-author,.comment-row')||null;
+    let mem=el.closest('.member-row')||null;
+    let panel=el.closest('.account-panel,.user-panel')||null;
+    let dm=el.closest('.dm-item')||null;
+    let name=el.dataset.miniUsername||el.dataset.username||'';
+    if(!name && a){ let mm=(a.getAttribute('href')||'').match(/\/community\/profile\/([^/?#]+)/); if(mm) name=decodeURIComponent(mm[1]); }
+    if(!name && msg) name=clean(txt($('.msg-name,.message-head .visual-name,.comment-author,.post-name',msg)));
+    if(!name && mem) name=clean(txt($('.member-name,.visual-name',mem)));
+    if(!name && dm) name=clean(txt($('.dm-name,.visual-name',dm)));
+    if(!name && panel) name=selfName();
+    if(!name) name=clean(txt(el))||selfName();
+    let avatar=el.dataset.miniAvatar||'';
+    if(!avatar && msg) avatar=bg($('.msg-avatar,.avatar,.post-avatar,.comment-avatar',msg));
+    if(!avatar && mem) avatar=bg($('.member-avatar,.avatar',mem));
+    if(!avatar && dm) avatar=bg($('.dm-avatar,.avatar',dm));
+    if(!avatar && panel) avatar=selfAvatar();
+    if(!avatar) avatar=bg(el)||bg(a);
+    let role=el.dataset.miniRole||'';
+    if(!role && mem) role=clean(txt($('.member-role,.role-pill',mem)));
+    if(!role && msg) role=clean(txt($('.role-pill,.badge',msg)));
+    if(!role) role='member';
+    let c1=el.dataset.miniC1||'#5865f2', c2=el.dataset.miniC2||'#9b5cf6';
+    let profile=el.dataset.miniProfile || (name?('/community/profile/'+encodeURIComponent(name)):'#');
+    let isSelf = clean(name).toLowerCase() === clean(selfName()).toLowerCase();
+    let status='offline';
+    let html=(el.outerHTML||'')+(mem?mem.outerHTML:'')+(panel?panel.outerHTML:'');
+    let st=html.match(/status-(online|idle|dnd|invisible|offline)/); if(st) status=st[1];
+    if(isSelf){ let d=$('#my-avatar-status,#modal-avatar-status'); if(d){ let cls=[...d.classList].find(x=>x.startsWith('status-')); if(cls) status=cls.replace('status-',''); } }
+    return {name:clean(name)||'user',avatar,role,c1,c2,profile,isSelf,status};
+  }
+  function setAvatar(el,textEl,url,name){ if(!el)return; el.style.backgroundImage=url?`url('${safeUrl(url)}')`:''; if(textEl) textEl.textContent=url?'':(name||'?').slice(0,1).toUpperCase(); }
+  function place(pop,e){ pop.classList.add('open'); let r=pop.getBoundingClientRect(); let x=e?e.clientX:90, y=e?e.clientY:window.innerHeight-80; pop.style.left=Math.min(Math.max(10,x+14),window.innerWidth-r.width-10)+'px'; pop.style.top=Math.min(Math.max(10,y-52),window.innerHeight-r.height-10)+'px'; }
+  function openMini(el,e){
+    active=dataFrom(el); let pop=$('#ah-v3-mini'); if(!pop)return;
+    pop.classList.toggle('self',!!active.isSelf); pop.style.setProperty('--ah-c1',active.c1); pop.style.setProperty('--ah-c2',active.c2);
+    setAvatar($('#ah-v3-avatar'),$('#ah-v3-avatar-text'),active.avatar,active.name); $('#ah-v3-name').textContent=active.name; $('#ah-v3-handle').textContent='@'+active.name; $('#ah-v3-role').textContent=active.role||'member'; $('#ah-v3-note-text').textContent=active.isSelf?'Звідси можна змінити статус. Натисни на аватарку для повної картки.':'Натисни на аватарку, щоб відкрити повну картку профілю.'; let st=$('#ah-v3-status'); if(st) st.className='ah-v3-status '+(active.status||'offline'); let msg=$('#ah-v3-message'); if(msg){msg.href=active.isSelf?'/community/settings':'/community/dm/'+encodeURIComponent(active.name); msg.textContent=active.isSelf?'Settings':'Message'} place(pop,e);
+  }
+  function closeMini(){let p=$('#ah-v3-mini'); if(p)p.classList.remove('open')}
+  function openFull(){ if(!active)return; let ov=$('#ah-v3-overlay'); if(!ov)return; ov.style.setProperty('--ah-c1',active.c1); ov.style.setProperty('--ah-c2',active.c2); setAvatar($('#ah-v3-full-avatar'),$('#ah-v3-full-avatar-text'),active.avatar,active.name); $('#ah-v3-full-name').textContent=active.name; $('#ah-v3-full-handle').textContent='@'+active.name; $('#ah-v3-full-meta').textContent=active.isSelf?'Твоя картка AlexiHub.':'Картка користувача AlexiHub.'; $('#ah-v3-full-about').textContent=active.isSelf?'Тут буде повний профіль, активність, ігри, інтеграції та нотатки.':'Швидкий перегляд профілю поверх поточної сторінки, без переходу зі сторінки.'; let msg=$('#ah-v3-full-message'); if(msg) msg.href=active.isSelf?'/community/settings':'/community/dm/'+encodeURIComponent(active.name); let op=$('#ah-v3-full-open'); if(op) op.href=active.profile; closeMini(); ov.classList.add('open'); }
+  function closeFull(){let ov=$('#ah-v3-overlay'); if(ov)ov.classList.remove('open')}
+  document.addEventListener('click',function(e){
+    if(e.target.closest('#ah-v3-mini,#ah-v3-overlay')) return;
+    const bad=e.target.closest('.account-actions,.user-actions,.top-actions,.msg-actions,.server-menu,.modal-backdrop,form,input,textarea,select,button');
+    if(bad) return;
+    const t=e.target.closest('[data-mini-username],.mini-profile-trigger,.profile-click,a[href*="/community/profile/"],.member-row,.msg-avatar,.msg-name,.dm-item,.account-panel,.user-panel');
+    if(!t){ closeMini(); return; }
+    e.preventDefault(); e.stopPropagation(); if(e.stopImmediatePropagation)e.stopImmediatePropagation(); openMini(t,e);
+  },true);
+  document.addEventListener('DOMContentLoaded',function(){
+    const av=$('#ah-v3-avatar'), full=$('#ah-v3-open-full'), close=$('#ah-v3-close'), overlay=$('#ah-v3-overlay');
+    if(av) av.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();openFull();});
+    if(full) full.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();openFull();});
+    if(close) close.addEventListener('click',function(e){e.preventDefault();closeFull();});
+    if(overlay) overlay.addEventListener('click',function(e){if(e.target===overlay)closeFull();});
+    document.querySelectorAll('.ah-v3-status-btn').forEach(btn=>btn.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();let s=btn.dataset.presence;if(typeof setPresenceStatus==='function')setPresenceStatus(s); if(active)active.status=s; let st=$('#ah-v3-status'); if(st)st.className='ah-v3-status '+s;}));
+  });
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeMini();closeFull();}});
+})();
+</script>
+
 </body>
 </html>
-
