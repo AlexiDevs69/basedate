@@ -33,6 +33,13 @@ ONLINE_WINDOW = timedelta(minutes=3)
 VISUAL_NAME_EFFECTS = {"none", "gradient", "glow"}
 VISUAL_NAME_FONTS = {"default", "mono", "serif", "rounded", "cyber", "display", "pixel", "bubble", "puffy", "block", "neon", "glitch", "graffiti", "spooky", "medieval", "roundfat"}
 
+PRESENCE_STATUSES = {"online", "idle", "dnd", "invisible"}
+
+
+def _normalize_presence_status(value: str | None) -> str:
+    status = (value or "online").strip().lower()
+    return status if status in PRESENCE_STATUSES else "online"
+
 
 def _normalize_name_effect(value: str | None) -> str | None:
     effect = (value or "none").strip().lower()
@@ -59,6 +66,8 @@ async def ensure_account_visual_columns(db: AsyncSession) -> None:
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS name_color_end VARCHAR(16)"))
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS name_font VARCHAR(32)"))
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS profile_card_bg_url VARCHAR(512)"))
+    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS account_status VARCHAR(16) DEFAULT 'online' NOT NULL"))
+    await db.execute(text("UPDATE community_accounts SET account_status = 'online' WHERE account_status IS NULL OR account_status = ''"))
     await db.commit()
 
 
@@ -109,14 +118,27 @@ async def touch_last_seen(db: AsyncSession, account_id: int) -> None:
     account = await get_account_by_id(db, account_id)
     if account:
         account.last_seen_at = datetime.now(timezone.utc)
+        if not getattr(account, "account_status", None):
+            account.account_status = "online"
         await db.commit()
+
+
+async def update_presence_status(db: AsyncSession, account_id: int, status: str | None) -> Account | None:
+    account = await get_account_by_id(db, account_id)
+    if not account:
+        return None
+    account.account_status = _normalize_presence_status(status)
+    account.last_seen_at = datetime.now(timezone.utc)
+    await db.commit()
+    await db.refresh(account)
+    return account
 
 
 async def list_online_accounts(db: AsyncSession, limit: int = 50) -> list[Account]:
     since = datetime.now(timezone.utc) - ONLINE_WINDOW
     result = await db.execute(
         select(Account)
-        .where(Account.last_seen_at >= since, Account.is_banned == False)  # noqa: E712
+        .where(Account.last_seen_at >= since, Account.is_banned == False, Account.account_status != "invisible")  # noqa: E712
         .order_by(Account.last_seen_at.desc())
         .limit(limit)
     )
