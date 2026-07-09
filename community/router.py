@@ -27,6 +27,14 @@ TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 
+@router.on_event("startup")
+async def community_schema_startup() -> None:
+    # create_all() does not add new columns to existing tables; this makes
+    # visual/profile/presence columns safe on Render without Alembic.
+    async with AsyncSessionLocal() as db:
+        await crud.ensure_account_visual_columns(db)
+
+
 # --- Lightweight realtime layer --------------------------------------------
 # This is intentionally in-memory: typing state is NOT written to PostgreSQL.
 # DB is touched only when a real message is created/edited/deleted.
@@ -128,6 +136,7 @@ def _account_payload(account) -> dict:
         "role_color_end": account.role_color_end or "#7367f0",
         "name_effect": account.name_effect or "none",
         "name_font": account.name_font or "default",
+        "account_status": account.account_status or "online",
     }
 
 
@@ -295,6 +304,7 @@ async def community_home(request: Request, db: AsyncSession = Depends(get_db)):
     await crud.ensure_default_channels(db)
     channels = await crud.list_channels(db)
     online_members = await crud.list_online_accounts(db)
+    online_ids = [m.id for m in online_members]
     friends = await crud.list_friends(db, account.id)
     dm_threads = await crud.list_dm_threads_for_account(db, account.id)
     rail = await server_rail_context(db, account.id)
@@ -305,6 +315,7 @@ async def community_home(request: Request, db: AsyncSession = Depends(get_db)):
             "request": request,
             "account": account,
             "online_members": online_members,
+            "online_ids": online_ids,
             "channels": channels,
             "friends": friends,
             "dm_threads": dm_threads,
@@ -766,6 +777,8 @@ async def dm_chat_view(username: str, request: Request, db: AsyncSession = Depen
         return RedirectResponse(url="/community", status_code=303)
 
     channels = await crud.list_channels(db)
+    online_members = await crud.list_online_accounts(db)
+    online_ids = [m.id for m in online_members]
     friends = await crud.list_friends(db, account.id)
     dm_threads = await crud.list_dm_threads_for_account(db, account.id)
     messages = await crud.list_dm_messages(db, thread.id)
@@ -779,6 +792,8 @@ async def dm_chat_view(username: str, request: Request, db: AsyncSession = Depen
             "other": other,
             "thread": thread,
             "messages": messages,
+            "online_members": online_members,
+            "online_ids": online_ids,
             "channels": channels,
             "friends": friends,
             "dm_threads": dm_threads,
@@ -940,6 +955,25 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
             pass
     finally:
         await realtime_channels.disconnect(key, account_id, websocket)
+
+
+@router.post("/presence/status")
+async def presence_status_update(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_authenticated"}, status_code=401)
+
+    status_value = "online"
+    try:
+        data = await request.json()
+        if isinstance(data, dict):
+            status_value = data.get("status") or status_value
+    except Exception:
+        form = await request.form()
+        status_value = form.get("status") or status_value
+
+    updated = await crud.update_presence_status(db, account.id, str(status_value))
+    return JSONResponse({"ok": True, "status": (updated.account_status if updated else "online")})
 
 
 # --- Public profiles ---------------------------------------------------------
