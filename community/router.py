@@ -262,6 +262,7 @@ async def public_profile(username: str, request: Request, db: AsyncSession = Dep
         )
 
     friends = await crud.list_friends(db, profile_account.id)
+    gifts = await crud.list_gifts_for_account(db, profile_account.id)
 
     return templates.TemplateResponse(
         "public_profile.html",
@@ -271,6 +272,7 @@ async def public_profile(username: str, request: Request, db: AsyncSession = Dep
             "viewer": viewer,
             "is_own": bool(viewer and viewer.id == profile_account.id),
             "friends": friends,
+            "gifts": gifts,
         },
     )
 
