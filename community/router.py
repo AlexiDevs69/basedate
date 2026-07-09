@@ -1091,3 +1091,4 @@ async def api_notifications(request: Request, db: AsyncSession = Depends(get_db)
         })
 
     return JSONResponse({"count": len(items), "items": items})
+
