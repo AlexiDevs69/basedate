@@ -148,13 +148,13 @@
         var(--name-c2-safe) 48%,
         var(--name-c1-safe) 100%
       );
-      background-size: 240% 100%;
-      background-position: 0% 50%;
+      background-size: 200% auto;
+      background-position: 0% center;
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
       -webkit-text-fill-color: transparent;
-      animation: role-name-flow 4.8s ease-in-out infinite alternate;
+      animation: role-shimmer 3s linear infinite;
       text-shadow: none;
       filter: saturate(1.22) brightness(1.06) contrast(1.02);
     }
@@ -166,13 +166,13 @@
         var(--name-c2-safe) 48%,
         var(--name-c1-safe) 100%
       );
-      background-size: 240% 100%;
-      background-position: 0% 50%;
+      background-size: 200% auto;
+      background-position: 0% center;
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
       -webkit-text-fill-color: transparent;
-      animation: role-name-flow 4.8s ease-in-out infinite alternate;
+      animation: role-shimmer 3s linear infinite;
       text-shadow: none;
       filter:
         saturate(1.24)
@@ -182,10 +182,7 @@
         drop-shadow(0 0 9px color-mix(in srgb, var(--name-c2-safe) 28%, transparent));
     }
 
-    @keyframes role-name-flow {
-      0% { background-position: 0% 50%; }
-      100% { background-position: 100% 50%; }
-    }
+    @keyframes role-shimmer { to { background-position: 200% center; } }
 
     @media (prefers-reduced-motion: reduce) {
       .name-gradient, .name-glow { animation: none; background-position: 50% 50%; }
