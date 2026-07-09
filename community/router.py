@@ -413,6 +413,48 @@ async def server_message_submit(
     return RedirectResponse(url=f"/community/servers/{server_id}/channel/{channel_id}", status_code=303)
 
 
+@router.post("/servers/{server_id}/channel/{channel_id}/message/{message_id}/edit")
+async def server_message_edit_submit(
+    server_id: int,
+    channel_id: int,
+    message_id: int,
+    request: Request,
+    content: str = Form(...),
+    image_url: str = Form(""),
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return RedirectResponse(url="/community/login", status_code=303)
+    if not await crud.is_server_member(db, server_id, account.id):
+        return RedirectResponse(url="/community", status_code=303)
+
+    message = await crud.get_server_message(db, server_id, channel_id, message_id)
+    if message and message.author_id == account.id and content.strip():
+        await crud.update_server_message(db, message, content.strip(), image_url.strip())
+    return RedirectResponse(url=f"/community/servers/{server_id}/channel/{channel_id}#message-{message_id}", status_code=303)
+
+
+@router.post("/servers/{server_id}/channel/{channel_id}/message/{message_id}/delete")
+async def server_message_delete_submit(
+    server_id: int,
+    channel_id: int,
+    message_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return RedirectResponse(url="/community/login", status_code=303)
+    if not await crud.is_server_member(db, server_id, account.id):
+        return RedirectResponse(url="/community", status_code=303)
+
+    message = await crud.get_server_message(db, server_id, channel_id, message_id)
+    if message and (message.author_id == account.id or await crud.can_manage_server(db, server_id, account.id)):
+        await crud.delete_server_message(db, message)
+    return RedirectResponse(url=f"/community/servers/{server_id}/channel/{channel_id}", status_code=303)
+
+
 @router.post("/servers/{server_id}/invite")
 async def server_invite_submit(
     server_id: int,
@@ -596,3 +638,4 @@ async def api_notifications(request: Request, db: AsyncSession = Depends(get_db)
         })
 
     return JSONResponse({"count": len(items), "items": items})
+
