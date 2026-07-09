@@ -8,7 +8,7 @@ with the bot's users/logs tables or the admin's own admin_profile/bot_settings.
 from datetime import datetime, timezone
 
 from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database import Base
 
@@ -127,4 +127,31 @@ class PostLike(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     post_id: Mapped[int] = mapped_column(Integer, ForeignKey("community_posts.id"), nullable=False, index=True)
     account_id: Mapped[int] = mapped_column(Integer, ForeignKey("community_accounts.id"), nullable=False, index=True)
+
+
+# ============================================================================
+# Gifts: admin-created catalog + issued gifts on public profiles.
+# ============================================================================
+
+class Gift(Base):
+    __tablename__ = "community_gifts"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String(64), nullable=False)
+    image_url: Mapped[str] = mapped_column(String(512), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
+class GiftInstance(Base):
+    __tablename__ = "community_gift_instances"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    gift_id: Mapped[int] = mapped_column(Integer, ForeignKey("community_gifts.id"), nullable=False, index=True)
+    recipient_id: Mapped[int] = mapped_column(Integer, ForeignKey("community_accounts.id"), nullable=False, index=True)
+    gifted_by: Mapped[str | None] = mapped_column(String(64), default="Адміністрація", nullable=True)
+    message: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+    gift: Mapped["Gift"] = relationship("Gift")
 
