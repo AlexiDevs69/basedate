@@ -88,16 +88,13 @@
     }
     .verified-badge-sm svg { width: 8px; height: 8px; }
     .empty-note { color: #555; font-size: 0.8rem; }
-
-
-
     /* --- Premium nickname styles: Discord-like smooth edition --- */
     .visual-name {
       --name-c1-safe: var(--name-c1, #ff4fd8);
       --name-c2-safe: var(--name-c2, #55e7ff);
-      --name-v1: color-mix(in srgb, var(--name-c1-safe) 84%, white 16%);
-      --name-v2: color-mix(in srgb, var(--name-c2-safe) 84%, white 16%);
-      --name-hi: color-mix(in srgb, white 82%, var(--name-c2-safe) 18%);
+      --name-v1: color-mix(in srgb, var(--name-c1-safe) 88%, white 12%);
+      --name-v2: color-mix(in srgb, var(--name-c2-safe) 88%, white 12%);
+      --name-hi: color-mix(in srgb, white 76%, var(--name-c2-safe) 24%);
       font-weight: 800;
       color: var(--text-primary);
       display: inline-block;
@@ -108,7 +105,7 @@
       text-rendering: geometricPrecision;
       -webkit-font-smoothing: antialiased;
       transform: translateZ(0);
-      will-change: background-position, filter;
+      will-change: background-position;
     }
 
     .name-none {
@@ -117,61 +114,70 @@
     }
 
     .name-gradient {
-      background-image: repeating-linear-gradient(
-        110deg,
+      background-image: linear-gradient(
+        90deg,
         var(--name-v1) 0%,
-        var(--name-hi) 9%,
-        var(--name-v2) 20%,
-        #ffffff 31%,
-        var(--name-v1) 42%,
-        var(--name-v2) 54%,
-        var(--name-hi) 66%,
-        var(--name-v1) 80%
+        var(--name-hi) 12.5%,
+        var(--name-v2) 25%,
+        var(--name-hi) 37.5%,
+        var(--name-v1) 50%,
+        var(--name-hi) 62.5%,
+        var(--name-v2) 75%,
+        var(--name-hi) 87.5%,
+        var(--name-v1) 100%
       );
-      background-size: 240% 100%;
-      background-position: 0% 50%;
+      background-size: 200% auto;
+      background-position: 0% center;
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
       -webkit-text-fill-color: transparent;
-      animation: discord-name-flow 5.2s linear infinite;
+      animation: discord-name-flow 4.6s linear infinite;
       text-shadow: none;
       filter:
-        saturate(1.42)
-        brightness(1.12)
-        contrast(1.04)
-        drop-shadow(0 0 3px color-mix(in srgb, var(--name-v1) 38%, transparent))
-        drop-shadow(0 0 9px color-mix(in srgb, var(--name-v2) 22%, transparent));
+        saturate(1.55)
+        brightness(1.15)
+        contrast(1.03)
+        drop-shadow(0 0 2px color-mix(in srgb, var(--name-v1) 28%, transparent))
+        drop-shadow(0 0 7px color-mix(in srgb, var(--name-v2) 22%, transparent));
     }
 
     .name-glow {
-      background-image: repeating-linear-gradient(
-        110deg,
-        #ffffff 0%,
-        var(--name-v1) 14%,
-        #ffffff 28%,
-        var(--name-v2) 42%,
-        #ffffff 56%,
-        var(--name-v1) 70%
+      background-image: linear-gradient(
+        90deg,
+        var(--name-v1) 0%,
+        #ffffff 12.5%,
+        var(--name-v2) 25%,
+        #ffffff 37.5%,
+        var(--name-v1) 50%,
+        #ffffff 62.5%,
+        var(--name-v2) 75%,
+        #ffffff 87.5%,
+        var(--name-v1) 100%
       );
-      background-size: 220% 100%;
-      background-position: 0% 50%;
+      background-size: 200% auto;
+      background-position: 0% center;
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
       -webkit-text-fill-color: transparent;
-      animation: discord-name-flow 6.4s linear infinite;
+      animation: discord-name-flow 5.4s linear infinite;
       filter:
-        saturate(1.38)
-        brightness(1.18)
-        drop-shadow(0 0 4px rgba(255,255,255,0.56))
-        drop-shadow(0 0 12px color-mix(in srgb, var(--name-v1) 55%, transparent))
-        drop-shadow(0 0 24px color-mix(in srgb, var(--name-v2) 34%, transparent));
+        saturate(1.5)
+        brightness(1.22)
+        contrast(1.04)
+        drop-shadow(0 0 3px rgba(255,255,255,0.42))
+        drop-shadow(0 0 10px color-mix(in srgb, var(--name-v1) 48%, transparent))
+        drop-shadow(0 0 18px color-mix(in srgb, var(--name-v2) 30%, transparent));
     }
 
     @keyframes discord-name-flow {
-      from { background-position: 0% 50%; }
-      to { background-position: -240% 50%; }
+      0% { background-position: 0% center; }
+      100% { background-position: 200% center; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .name-gradient, .name-glow { animation: none; background-position: 50% center; }
     }
 
     .font-default { font-family: var(--font-sans); }
