@@ -116,6 +116,32 @@
     .friend-chip-name { font-size: 0.8rem; }
     .friends-empty { color: #555; font-size: 0.82rem; }
 
+    .visual-name { font-weight: 700; color: var(--text-primary); }
+    .name-gradient {
+      background: linear-gradient(90deg, var(--name-c1, #f5576c), var(--name-c2, #7367f0), var(--name-c1, #f5576c));
+      background-size: 220% auto; -webkit-background-clip: text; background-clip: text;
+      color: transparent; -webkit-text-fill-color: transparent; animation: name-shimmer 3.2s linear infinite;
+    }
+    .name-glow {
+      color: var(--name-c1, #ffffff);
+      text-shadow: 0 0 8px color-mix(in srgb, var(--name-c1, #ffffff) 70%, transparent),
+                   0 0 16px color-mix(in srgb, var(--name-c2, #7367f0) 55%, transparent);
+    }
+    @keyframes name-shimmer { to { background-position: 220% center; } }
+    .font-mono { font-family: var(--font-mono); }
+    .font-serif { font-family: Georgia, 'Times New Roman', serif; }
+    .font-rounded { font-family: var(--font-sans); letter-spacing: 0.025em; }
+    .font-cyber { font-family: var(--font-mono); letter-spacing: 0.03em; text-transform: lowercase; }
+    .font-display { font-family: var(--font-sans); font-weight: 800; letter-spacing: -0.035em; }
+
+    .profile-card.has-card-bg { position: relative; }
+    .profile-card.has-card-bg::before {
+      content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background-image: linear-gradient(90deg, rgba(17,17,17,0.92), rgba(17,17,17,0.62)), var(--card-bg-image);
+      background-size: cover; background-position: center; opacity: 0.9;
+    }
+    .profile-card.has-card-bg > * { position: relative; z-index: 1; }
+
     .gifts-section { margin-top: 1.75rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
     .gifts-title { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-secondary); margin-bottom: 0.85rem; }
     .gifts-grid { display: flex; flex-wrap: wrap; gap: 0.75rem; }
@@ -149,7 +175,7 @@
   </div>
 
   <div class="wrap">
-    <div class="profile-card">
+    <div class="profile-card {{ 'has-card-bg' if profile.profile_card_bg_url else '' }}" {% if profile.profile_card_bg_url %}style="--card-bg-image: url('{{ profile.profile_card_bg_url }}');"{% endif %}>
       <div class="profile-banner {{ '' if profile.banner_url else 'no-banner' }}"
            {% if profile.banner_url %}style="background-image: url('{{ profile.banner_url }}');"{% endif %}>
         <div class="profile-avatar-wrap">
@@ -160,7 +186,7 @@
       </div>
       <div class="profile-body">
         <div class="profile-name-row">
-          <span class="profile-name">{{ profile.username }}</span>
+          <span class="profile-name visual-name name-{{ profile.name_effect or 'none' }} font-{{ profile.name_font or 'default' }}" style="--name-c1: {{ profile.name_color_start or profile.role_color_start or '#f5576c' }}; --name-c2: {{ profile.name_color_end or profile.role_color_end or '#7367f0' }};">{{ profile.username }}</span>
           {% if profile.is_verified %}
           <span class="verified-badge">
             <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
