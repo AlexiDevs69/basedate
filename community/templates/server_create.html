@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create server // AlexiHub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Baloo+2:wght@700;800&family=Bangers&family=Bungee&family=Bungee+Shade&family=Cinzel+Decorative:wght@700&family=Creepster&family=Fredoka:wght@700;800&family=Honk&family=Inter:wght@400;500;600;700;800&family=Jersey+10&family=JetBrains+Mono:wght@400;700&family=Lilita+One&family=Luckiest+Guy&family=Modak&family=Monoton&family=Pixelify+Sans:wght@700&family=Press+Start+2P&family=Righteous&family=Rubik+Glitch&family=Rubik+Iso&family=Rubik+Wet+Paint&family=Silkscreen:wght@700&family=Tilt+Prism&family=Titan+One&family=Unbounded:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+
+    :root {
+      --bg: #0b0b0b; --bg-elevated: #111111; --bg-header: #161616;
+      --border: #222222; --border-hover: #333333;
+      --text-primary: #ffffff; --text-secondary: #888888;
+      --font-sans: 'Inter', system-ui, sans-serif; --font-mono: 'JetBrains Mono', monospace;
+      --radius: 8px; --online: #10b981;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--bg); color: var(--text-primary); font-family: var(--font-sans); font-size: 14px; }
+
+    /* --- Discord-like server rail --- */
+    .server-rail {
+      position: fixed; left: 0; top: 0; bottom: 0; width: 72px; z-index: 80;
+      background: #070707; border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; align-items: center; gap: 0.65rem;
+      padding: 0.8rem 0.55rem; overflow-y: auto;
+    }
+    .server-dot {
+      width: 48px; height: 48px; border-radius: 50%; background: var(--bg-elevated); border: 1px solid var(--border);
+      color: var(--text-primary); text-decoration: none; display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-family: var(--font-mono); position: relative; flex-shrink: 0; overflow: hidden;
+      transition: border-radius .18s ease, background .18s ease, border-color .18s ease, transform .18s ease;
+    }
+    .server-dot:hover, .server-dot.active { border-radius: 16px; border-color: var(--border-hover); transform: translateY(-1px); }
+    .server-dot.active::before {
+      content: ''; position: absolute; left: -9px; top: 50%; transform: translateY(-50%);
+      width: 4px; height: 28px; border-radius: 999px; background: var(--text-primary);
+    }
+    .server-dot span { width: 100%; height: 100%; background: center/cover no-repeat; display: block; }
+    .server-dot.home-dot { background: linear-gradient(135deg, #181818, #101010); }
+    .server-dot.plus { color: #10b981; font-size: 1.7rem; font-family: var(--font-sans); }
+    .server-dot.plus:hover { background: #10b981; color: #06180d; }
+    .rail-sep { width: 32px; height: 1px; background: var(--border); flex-shrink: 0; }
+
+    .topbar { position: fixed; top: 0; left: 72px; right: 0; height: 56px; z-index: 50; background: var(--bg-header); border-bottom: 1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 1.5rem; }
+    .brand { font-weight:700; color:var(--text-primary); text-decoration:none; }
+    .topbar-right { display:flex; align-items:center; gap:1.25rem; }
+    .me { display:flex; align-items:center; gap:.6rem; text-decoration:none; color:var(--text-primary); font-size:.85rem; }
+    .me-avatar { width:28px; height:28px; border-radius:50%; background:var(--bg-elevated) center/cover no-repeat; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); color:var(--text-secondary); }
+    .logout { color:var(--text-secondary); text-decoration:none; font-size:.8rem; }
+    .logout:hover { color:var(--text-primary); }
+    .server-sidebar { position:fixed; left:72px; top:56px; bottom:0; width:240px; border-right:1px solid var(--border); background:var(--bg); padding:1rem; overflow-y:auto; }
+    .server-title { font-weight:800; font-size:1rem; margin-bottom:.25rem; }
+    .server-desc { color:var(--text-secondary); font-size:.8rem; margin-bottom:1rem; }
+    .sidebar-label { font-size:.72rem; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.06em; margin:1rem 0 .55rem; }
+    .chan-link { display:flex; align-items:center; gap:.4rem; padding:.48rem .6rem; border-radius:7px; color:var(--text-secondary); text-decoration:none; font-weight:650; margin-bottom:.15rem; }
+    .chan-link:hover, .chan-link.active { background:rgba(255,255,255,.05); color:var(--text-primary); }
+    .main { margin-left:312px; padding:82px 1.5rem 2.5rem; max-width:760px; }
+    .card { background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--radius); padding:1.1rem; margin-bottom:1rem; }
+    .card h1 { font-size:1.35rem; margin-bottom:.35rem; }
+    .card p { color:var(--text-secondary); }
+    .btn, button { background:var(--text-primary); color:var(--bg); border:none; border-radius:var(--radius); padding:.55rem 1rem; font-weight:750; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; }
+    .btn.secondary { background:var(--bg-header); color:var(--text-primary); border:1px solid var(--border); }
+    button:hover, .btn:hover { opacity:.86; }
+    input, textarea, select { width:100%; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:.62rem .75rem; color:var(--text-primary); font-family:var(--font-sans); }
+    textarea { resize:vertical; min-height:70px; }
+    label { display:block; font-size:.75rem; color:var(--text-secondary); font-weight:700; text-transform:uppercase; letter-spacing:.06em; margin:.8rem 0 .35rem; }
+    .composer textarea { min-height:70px; }
+    .message { display:flex; gap:.65rem; align-items:flex-start; padding:.7rem 0; border-bottom:1px solid rgba(255,255,255,.05); }
+    .message:last-child { border-bottom:none; }
+    .avatar { width:34px; height:34px; border-radius:50%; background:var(--bg-header) center/cover no-repeat; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); color:var(--text-secondary); }
+    .message-name-row { display:flex; align-items:center; gap:.35rem; }
+    .message-time { color:var(--text-secondary); font-size:.72rem; margin-top:.1rem; }
+    .message-content { white-space:pre-wrap; line-height:1.5; margin-top:.25rem; }
+    .message-image { margin-top:.6rem; max-width:100%; border-radius:8px; display:block; }
+    .member-mini { display:flex; align-items:center; gap:.5rem; color:var(--text-secondary); margin:.38rem 0; font-size:.85rem; }
+    .member-mini .avatar { width:24px; height:24px; font-size:.7rem; }
+    .empty-note { color:#555; font-size:.85rem; padding:.8rem 0; }
+    /* --- Premium nickname styles: role-gradient edition --- */
+    .visual-name {
+      --name-c1-safe: var(--name-c1, #f5576c);
+      --name-c2-safe: var(--name-c2, #7367f0);
+      font-weight: 800;
+      color: var(--text-primary);
+      display: inline-block;
+      max-width: 100%;
+      line-height: 1.03;
+      vertical-align: baseline;
+      isolation: isolate;
+      text-rendering: geometricPrecision;
+      -webkit-font-smoothing: antialiased;
+      backface-visibility: hidden;
+      transform: translateZ(0);
+      will-change: background-position;
+    }
+
+    .name-none {
+      color: var(--text-primary);
+      text-shadow: none;
+    }
+
+    .name-gradient {
+      background-image: linear-gradient(
+        90deg,
+        var(--name-c1-safe) 0%,
+        var(--name-c2-safe) 48%,
+        var(--name-c1-safe) 100%
+      );
+      background-size: 200% auto;
+      background-position: 0% center;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+      animation: role-shimmer 3s linear infinite;
+      text-shadow: none;
+      filter: saturate(1.22) brightness(1.06) contrast(1.02);
+    }
+
+    .name-glow {
+      background-image: linear-gradient(
+        90deg,
+        var(--name-c1-safe) 0%,
+        var(--name-c2-safe) 48%,
+        var(--name-c1-safe) 100%
+      );
+      background-size: 200% auto;
+      background-position: 0% center;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+      animation: role-shimmer 3s linear infinite;
+      text-shadow: none;
+      filter:
+        saturate(1.24)
+        brightness(1.08)
+        contrast(1.02)
+        drop-shadow(0 0 4px color-mix(in srgb, var(--name-c1-safe) 38%, transparent))
+        drop-shadow(0 0 9px color-mix(in srgb, var(--name-c2-safe) 28%, transparent));
+    }
+
+    @keyframes role-shimmer { to { background-position: 200% center; } }
+
+    @media (prefers-reduced-motion: reduce) {
+      .name-gradient, .name-glow { animation: none; background-position: 50% 50%; }
+    }
+
+    .font-default { font-family: var(--font-sans); }
+    .font-mono { font-family: var(--font-mono); font-weight: 800; }
+    .font-serif { font-family: Georgia, 'Times New Roman', serif; font-weight: 800; letter-spacing: -0.02em; }
+    .font-rounded { font-family: 'Fredoka', var(--font-sans); font-weight: 800; letter-spacing: 0.005em; }
+    .font-cyber { font-family: 'Righteous', var(--font-mono); font-weight: 400; letter-spacing: 0.035em; }
+    .font-display { font-family: 'Unbounded', var(--font-sans); font-weight: 800; letter-spacing: -0.055em; }
+
+    .font-pixel {
+      font-family: 'Press Start 2P', 'Silkscreen', 'Pixelify Sans', var(--font-mono);
+      font-weight: 700;
+      font-size: 0.72em;
+      letter-spacing: -0.025em;
+      line-height: 1.22;
+      image-rendering: pixelated;
+      filter: saturate(1.5) brightness(1.18) contrast(1.08);
+    }
+    .font-bubble {
+      font-family: 'Titan One', 'Luckiest Guy', var(--font-sans);
+      font-weight: 400;
+      letter-spacing: 0.025em;
+      transform: translateY(0.03em);
+      filter: saturate(1.46) brightness(1.12);
+    }
+    .font-puffy {
+      font-family: 'Bagel Fat One', 'Modak', var(--font-sans);
+      font-weight: 400;
+      font-size: 1.12em;
+      letter-spacing: 0.004em;
+      line-height: 0.95;
+      filter: saturate(1.42) brightness(1.12);
+    }
+    .font-block {
+      font-family: 'Bungee', 'Lilita One', var(--font-sans);
+      font-weight: 400;
+      letter-spacing: 0.012em;
+      filter: saturate(1.42) brightness(1.1) contrast(1.08);
+    }
+    .font-neon {
+      font-family: 'Monoton', 'Tilt Prism', var(--font-sans);
+      font-weight: 400;
+      letter-spacing: 0.04em;
+      filter: saturate(1.6) brightness(1.18)
+        drop-shadow(0 0 4px rgba(255,255,255,0.4))
+        drop-shadow(0 0 14px color-mix(in srgb, var(--name-v2) 35%, transparent));
+    }
+    .font-glitch {
+      font-family: 'Rubik Glitch', var(--font-sans);
+      font-weight: 400;
+      letter-spacing: 0.025em;
+      filter: saturate(1.45) brightness(1.12);
+      text-shadow: 1px 0 0 #ff2bd6, -1px 0 0 #27f7ff;
+    }
+    .font-graffiti {
+      font-family: 'Rubik Wet Paint', 'Bangers', var(--font-sans);
+      font-weight: 400;
+      letter-spacing: 0.032em;
+      filter: saturate(1.46) brightness(1.13);
+    }
+    .font-spooky {
+      font-family: 'Creepster', var(--font-sans);
+      font-weight: 400;
+      letter-spacing: 0.04em;
+      filter: saturate(1.38) brightness(1.08);
+    }
+    .font-medieval {
+      font-family: 'Cinzel Decorative', Georgia, serif;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      filter: saturate(1.32) brightness(1.08);
+    }
+    .font-roundfat {
+      font-family: 'Baloo 2', 'Fredoka', var(--font-sans);
+      font-weight: 800;
+      letter-spacing: 0.004em;
+      filter: saturate(1.32) brightness(1.1);
+    }
+
+    .post-name.font-pixel,
+    .member-name.font-pixel,
+    .comment-author.font-pixel,
+    .user-cell .font-pixel { font-size: 0.68em; }
+    .profile-name.font-pixel { font-size: 0.8em; }
+    .preview-card .font-pixel { font-size: 0.82em; }
+    .post-name.font-puffy,
+    .member-name.font-puffy,
+    .comment-author.font-puffy,
+    .user-cell .font-puffy { font-size: 1.04em; }
+    .post-name.font-block,
+    .member-name.font-block,
+    .comment-author.font-block,
+    .user-cell .font-block { font-size: 0.95em; }
+
+    .post-card.has-card-bg { position: relative; overflow: hidden; }
+    .post-card.has-card-bg::before {
+      content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background-image: linear-gradient(90deg, rgba(17,17,17,0.92), rgba(17,17,17,0.66)), var(--card-bg-image);
+      background-size: cover; background-position: center; opacity: 0.9;
+    }
+    .post-card.has-card-bg > * { position: relative; z-index: 1; }
+
+    .notif-wrap { position: relative; }
+    .notif-bell { background: none; border: none; color: var(--text-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%; position: relative; }
+    .notif-bell:hover { background: rgba(255,255,255,0.06); }
+    .notif-badge { position: absolute; top: 2px; right: 2px; background: #ef4444; color: white; font-size: 0.65rem; font-weight: 700; border-radius: 999px; min-width: 16px; height: 16px; display: none; align-items: center; justify-content: center; padding: 0 3px; }
+    .notif-dropdown { position: absolute; top: 44px; right: 0; width: 305px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 8px 24px rgba(0,0,0,0.4); z-index: 400; overflow: hidden; display: none; }
+    .notif-header { padding: 0.75rem 1rem; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-secondary); border-bottom: 1px solid var(--border); }
+    .notif-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.6rem 1rem; border-bottom: 1px solid var(--border); }
+    .notif-item:last-child { border-bottom: none; }
+    .notif-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--bg-header) center/cover no-repeat; flex-shrink: 0; }
+    .notif-name { flex: 1; font-size: 0.85rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .notif-actions { display: flex; gap: 0.3rem; }
+    .notif-btn { border: none; border-radius: 6px; padding: 0.3rem 0.5rem; font-size: 0.72rem; font-weight: 700; cursor: pointer; }
+    .notif-btn.accept { background: #10b981; color: #06180d; }
+    .notif-btn.decline { background: var(--bg-header); color: var(--text-secondary); }
+    .notif-empty { padding: 1rem; text-align: center; color: #555; font-size: 0.8rem; }
+    @media (max-width: 900px) { .server-sidebar { display:none; } .main { margin-left:72px; max-width:100%; } }
+
+  </style>
+</head>
+<body>
+  <aside class="server-rail">
+    <a href="/community" class="server-dot home-dot {{ 'active' if not active_server_id else '' }}" title="AlexiHub">A</a>
+    <div class="rail-sep"></div>
+    {% for srv in servers %}
+    <a href="/community/servers/{{ srv.id }}" class="server-dot {{ 'active' if active_server_id == srv.id else '' }}" title="{{ srv.name }}">
+      {% if srv.icon_url %}<span style="background-image:url('{{ srv.icon_url }}')"></span>{% else %}{{ srv.name[:1]|upper }}{% endif %}
+    </a>
+    {% endfor %}
+    <a href="/community/servers/new" class="server-dot plus" title="Створити сервер">+</a>
+  </aside>
+  <div class="topbar">
+    <a href="/community" class="brand">AlexiHub // Community</a>
+    <div class="topbar-right">
+      <div class="notif-wrap">
+        <button id="notif-bell" class="notif-bell" onclick="toggleNotifDropdown()" aria-label="Сповіщення">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+          <span id="notif-badge" class="notif-badge">0</span>
+        </button>
+        <div id="notif-dropdown" class="notif-dropdown"><div class="notif-header">Сповіщення</div><div id="notif-list"></div></div>
+      </div>
+      <a href="/community/profile/{{ account.username }}" class="me">
+        <span class="me-avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}');"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}</span>
+        <span class="visual-name name-{{ account.name_effect or 'none' }} font-{{ account.name_font or 'default' }}" style="--name-c1: {{ account.role_color_start or '#f5576c' }}; --name-c2: {{ account.role_color_end or '#7367f0' }};">{{ account.username }}</span>
+      </a>
+      <a href="/community/logout" class="logout">Log out</a>
+    </div>
+  </div>
+
+  <main class="main" style="margin-left:72px; max-width:680px;">
+    <div class="card">
+      <h1>Створити сервер</h1>
+      <p>Сервер буде приватним: бачать тільки ті, кого ти запросиш.</p>
+      {% if error %}<p style="color:#ef4444;margin-top:.75rem;">{{ error }}</p>{% endif %}
+      <form method="post" action="/community/servers/new" style="margin-top:1rem;">
+        <label>Назва сервера</label>
+        <input type="text" name="name" placeholder="Наприклад: My Squad" required maxlength="64">
+        <label>Icon URL</label>
+        <input type="text" name="icon_url" placeholder="Посилання на картинку, необовʼязково">
+        <label>Опис</label>
+        <textarea name="description" placeholder="Коротко про сервер"></textarea>
+        <button type="submit" style="margin-top:1rem;">Створити</button>
+      </form>
+    </div>
+  </main>
+  <script>
+    function toggleNotifDropdown() {
+      var dd = document.getElementById('notif-dropdown');
+      dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
+    }
+    function renderNotifications(data) {
+      var badge = document.getElementById('notif-badge');
+      var list = document.getElementById('notif-list');
+      var count = data.count || 0;
+
+      badge.style.display = count > 0 ? 'flex' : 'none';
+      badge.textContent = count > 9 ? '9+' : count;
+
+      if (!data.items || !data.items.length) {
+        list.innerHTML = '<div class="notif-empty">Немає нових запитів</div>';
+        return;
+      }
+
+      list.innerHTML = data.items.map(function (item) {
+        if (item.type === 'server_invite') {
+          var iconStyle = item.icon_url ? "background-image:url('" + item.icon_url + "')" : '';
+          return (
+            '<div class="notif-item">' +
+              '<div class="notif-avatar" style="' + iconStyle + '"></div>' +
+              '<div class="notif-name"><b>' + item.server_name + '</b><br><span style="color:#777;font-size:0.72rem;">від ' + item.inviter_username + '</span></div>' +
+              '<div class="notif-actions">' +
+                '<button class="notif-btn accept" onclick="respondServerInvite(' + item.invite_id + ', true)">✓</button>' +
+                '<button class="notif-btn decline" onclick="respondServerInvite(' + item.invite_id + ', false)">✕</button>' +
+              '</div>' +
+            '</div>'
+          );
+        }
+
+        var avatarStyle = item.avatar_url ? "background-image:url('" + item.avatar_url + "')" : '';
+        return (
+          '<div class="notif-item">' +
+            '<div class="notif-avatar" style="' + avatarStyle + '"></div>' +
+            '<div class="notif-name">' + item.username + '</div>' +
+            '<div class="notif-actions">' +
+              '<button class="notif-btn accept" onclick="respondFriend(' + item.friendship_id + ', true)">✓</button>' +
+              '<button class="notif-btn decline" onclick="respondFriend(' + item.friendship_id + ', false)">✕</button>' +
+            '</div>' +
+          '</div>'
+        );
+      }).join('');
+    }
+
+    function pollNotifications() {
+      fetch('/community/api/notifications')
+        .then(function (r) { return r.json(); })
+        .then(renderNotifications)
+        .catch(function () {});
+    }
+
+    function respondFriend(friendshipId, accept) {
+      fetch('/community/api/friends/respond/' + friendshipId, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accept: accept }),
+      }).then(pollNotifications).catch(function () {});
+    }
+
+    function respondServerInvite(inviteId, accept) {
+      fetch('/community/api/server-invites/respond/' + inviteId, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accept: accept }),
+      }).then(function () {
+        pollNotifications();
+        if (accept) setTimeout(function () { window.location.reload(); }, 350);
+      }).catch(function () {});
+    }
+
+    pollNotifications();
+    setInterval(pollNotifications, 20000);
+    document.addEventListener('click', function (e) {
+      var wrap = document.querySelector('.notif-wrap');
+      if (wrap && !wrap.contains(e.target)) document.getElementById('notif-dropdown').style.display = 'none';
+    });
+  </script>
+</body>
+</html>
