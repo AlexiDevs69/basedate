@@ -87,6 +87,29 @@
     .edit-cancel:hover { color:var(--text-primary); }
     .empty-chat { color:#666; text-align:center; padding:4rem 1rem; font-size:.9rem; }
 
+    .typing-indicator {
+      min-height: 21px;
+      color: #a1a1aa;
+      font-size: .78rem;
+      font-weight: 650;
+      padding: 0 .42rem .45rem;
+      opacity: 0;
+      transform: translateY(3px);
+      transition: opacity .14s ease, transform .14s ease;
+      pointer-events: none;
+    }
+    .typing-indicator.active { opacity: 1; transform: translateY(0); }
+    .typing-indicator b { color: #d9d9df; font-weight: 800; }
+    .typing-dots { display: inline-flex; gap: 2px; margin-left: 4px; vertical-align: middle; }
+    .typing-dots i { width: 3px; height: 3px; border-radius: 50%; background: currentColor; display: block; opacity: .55; animation: typingPulse 1.05s ease-in-out infinite; }
+    .typing-dots i:nth-child(2) { animation-delay: .14s; }
+    .typing-dots i:nth-child(3) { animation-delay: .28s; }
+    @keyframes typingPulse { 0%, 60%, 100% { transform: translateY(0); opacity: .35; } 30% { transform: translateY(-3px); opacity: 1; } }
+    .ws-status { color: var(--text-secondary); font-size: .72rem; font-weight: 800; display: flex; align-items: center; gap: .35rem; }
+    .ws-dot { width: 7px; height: 7px; border-radius: 50%; background: #71717a; box-shadow: 0 0 0 2px rgba(255,255,255,.04); }
+    .ws-status.live .ws-dot { background: #10b981; }
+    .ws-status.offline .ws-dot { background: #ef4444; }
+
     .composer-wrap { position: fixed; left: calc(var(--rail) + var(--sidebar)); right: var(--members); bottom: 0; z-index: 35; padding: .85rem 1.25rem 1.1rem; background: linear-gradient(to top, var(--bg) 74%, rgba(11,11,11,0)); }
     .composer-box { background:#181818; border:1px solid var(--border); border-radius:14px; padding:.55rem .65rem; box-shadow:0 10px 28px rgba(0,0,0,.34); }
     .composer-row { display:flex; align-items:flex-end; gap:.55rem; }
@@ -463,6 +486,7 @@
         <h1># {{ channel.name }}</h1>
         {% if channel.description %}<p>{{ channel.description }}</p>{% else %}<p>Живий чат сервера</p>{% endif %}
       </div>
+      <div id="ws-status" class="ws-status"><span class="ws-dot"></span><span id="ws-status-text">connecting</span></div>
     </div>
 
     <section id="messages" class="messages">
@@ -505,6 +529,7 @@
     </section>
 
     <form class="composer-wrap" method="post" action="/community/servers/{{ server.id }}/channel/{{ channel.id }}/message" id="composer-form">
+      <div id="typing-indicator" class="typing-indicator"></div>
       <div class="composer-box">
         <div class="composer-row">
           <textarea id="composer-textarea" class="composer-textarea" name="content" placeholder="Message #{{ channel.name }}" required></textarea>
@@ -623,17 +648,239 @@
 
     var textarea = document.getElementById('composer-textarea');
     var composerForm = document.getElementById('composer-form');
+    var imageInput = composerForm ? composerForm.querySelector('input[name="image_url"]') : null;
+    var typingEl = document.getElementById('typing-indicator');
+    var wsStatus = document.getElementById('ws-status');
+    var wsStatusText = document.getElementById('ws-status-text');
+    var myAccountId = {{ account.id }};
+    var socket = null;
+    var reconnectTimer = null;
+    var lastTypingAt = 0;
+    var typingStopTimer = null;
+    var typingHideTimer = null;
+
+    function setWsStatus(state, label) {
+      if (!wsStatus || !wsStatusText) return;
+      wsStatus.classList.remove('live', 'offline');
+      if (state) wsStatus.classList.add(state);
+      wsStatusText.textContent = label;
+    }
+
+    function wsUrl() {
+      var proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      return proto + '//' + window.location.host + '/community/ws/servers/{{ server.id }}/channel/{{ channel.id }}';
+    }
+
+    function escapeAttr(value) {
+      return String(value || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function formatMessageTime(value) {
+      try {
+        var d = new Date(value);
+        if (isNaN(d.getTime())) return '';
+        return d.toLocaleString('uk-UA', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      } catch (e) { return ''; }
+    }
+
+    function scrollIfNearBottom() {
+      if (!messagesEl) return false;
+      return messagesEl.scrollHeight - messagesEl.scrollTop - messagesEl.clientHeight < 180;
+    }
+
+    function buildAvatar(author) {
+      var avatar = document.createElement('a');
+      avatar.href = '/community/profile/' + encodeURIComponent(author.username || '');
+      avatar.className = 'avatar mini-profile-trigger profile-click';
+      avatar.dataset.miniUsername = author.username || 'user';
+      avatar.dataset.miniAvatar = author.avatar_url || '';
+      avatar.dataset.miniRole = author.role_label || 'member';
+      avatar.dataset.miniEffect = author.name_effect || 'none';
+      avatar.dataset.miniFont = author.name_font || 'default';
+      avatar.dataset.miniC1 = author.role_color_start || '#f5576c';
+      avatar.dataset.miniC2 = author.role_color_end || '#7367f0';
+      avatar.dataset.miniProfile = '/community/profile/' + (author.username || '');
+      if (author.avatar_url) avatar.style.backgroundImage = "url('" + String(author.avatar_url).replace(/'/g, "%27") + "')";
+      else avatar.textContent = (author.username || '?').slice(0, 1).toUpperCase();
+      return avatar;
+    }
+
+    function buildName(author) {
+      var name = document.createElement('a');
+      name.href = '/community/profile/' + encodeURIComponent(author.username || '');
+      name.className = 'visual-name mini-profile-trigger profile-click name-' + (author.name_effect || 'none') + ' font-' + (author.name_font || 'default');
+      name.dataset.miniUsername = author.username || 'user';
+      name.dataset.miniAvatar = author.avatar_url || '';
+      name.dataset.miniRole = author.role_label || 'member';
+      name.dataset.miniEffect = author.name_effect || 'none';
+      name.dataset.miniFont = author.name_font || 'default';
+      name.dataset.miniC1 = author.role_color_start || '#f5576c';
+      name.dataset.miniC2 = author.role_color_end || '#7367f0';
+      name.dataset.miniProfile = '/community/profile/' + (author.username || '');
+      name.style.setProperty('--name-c1', author.role_color_start || '#f5576c');
+      name.style.setProperty('--name-c2', author.role_color_end || '#7367f0');
+      name.style.textDecoration = 'none';
+      name.textContent = author.username || 'user';
+      return name;
+    }
+
+    function appendMessage(msg, author) {
+      if (!messagesEl || document.getElementById('message-' + msg.id)) return;
+      var shouldStick = scrollIfNearBottom();
+      var empty = messagesEl.querySelector('.empty-chat');
+      if (empty) empty.remove();
+
+      var article = document.createElement('article');
+      article.className = 'message';
+      article.id = 'message-' + msg.id;
+      article.appendChild(buildAvatar(author));
+
+      var body = document.createElement('div');
+      body.className = 'message-body';
+
+      var head = document.createElement('div');
+      head.className = 'message-head';
+      head.appendChild(buildName(author));
+      var time = document.createElement('span');
+      time.className = 'message-time';
+      time.textContent = formatMessageTime(msg.created_at);
+      head.appendChild(time);
+
+      var content = document.createElement('div');
+      content.className = 'message-content';
+      content.id = 'content-' + msg.id;
+      content.textContent = msg.content || '';
+
+      body.appendChild(head);
+      body.appendChild(content);
+
+      if (msg.image_url) {
+        var img = document.createElement('img');
+        img.className = 'message-image';
+        img.alt = '';
+        img.src = msg.image_url;
+        body.appendChild(img);
+      }
+
+      if (author.id === myAccountId) {
+        var editForm = document.createElement('form');
+        editForm.id = 'edit-form-' + msg.id;
+        editForm.className = 'edit-form';
+        editForm.method = 'post';
+        editForm.action = '/community/servers/{{ server.id }}/channel/{{ channel.id }}/message/' + msg.id + '/edit';
+        editForm.innerHTML = '<textarea name="content" required></textarea><input type="text" name="image_url" placeholder="Image URL, необовʼязково"><div class="edit-actions"><button type="submit" class="edit-save">Save</button><button type="button" class="edit-cancel" onclick="closeEdit(' + msg.id + ')">Cancel</button></div>';
+        editForm.querySelector('textarea').value = msg.content || '';
+        editForm.querySelector('input').value = msg.image_url || '';
+        body.appendChild(editForm);
+      }
+
+      article.appendChild(body);
+
+      if (author.id === myAccountId) {
+        var actions = document.createElement('div');
+        actions.className = 'message-actions';
+        actions.innerHTML = '<button type="button" class="mini-action" onclick="openEdit(' + msg.id + ')" title="Редагувати">✎</button><form method="post" action="/community/servers/{{ server.id }}/channel/{{ channel.id }}/message/' + msg.id + '/delete" onsubmit="return confirm(\'Видалити повідомлення?\');"><button type="submit" class="mini-action danger" title="Видалити">✕</button></form>';
+        article.appendChild(actions);
+      }
+
+      messagesEl.appendChild(article);
+      if (shouldStick) messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function renderTyping(users) {
+      if (!typingEl) return;
+      users = (users || []).filter(function (u) { return u.id !== myAccountId; });
+      if (!users.length) {
+        typingEl.classList.remove('active');
+        typingEl.innerHTML = '';
+        return;
+      }
+      var names = users.slice(0, 3).map(function (u) { return '<b>' + escapeAttr(u.username || 'user') + '</b>'; }).join(', ');
+      var suffix = users.length === 1 ? ' друкує' : ' друкують';
+      if (users.length > 3) names += ' та інші';
+      typingEl.innerHTML = names + suffix + '<span class="typing-dots"><i></i><i></i><i></i></span>';
+      typingEl.classList.add('active');
+      clearTimeout(typingHideTimer);
+      typingHideTimer = setTimeout(function () { typingEl.classList.remove('active'); typingEl.innerHTML = ''; }, 3600);
+    }
+
+    function connectRealtime() {
+      clearTimeout(reconnectTimer);
+      try { socket = new WebSocket(wsUrl()); } catch (e) { setWsStatus('offline', 'offline'); return; }
+      setWsStatus('', 'connecting');
+
+      socket.addEventListener('open', function () { setWsStatus('live', 'live'); });
+      socket.addEventListener('message', function (event) {
+        var data;
+        try { data = JSON.parse(event.data); } catch (e) { return; }
+        if (data.type === 'message') appendMessage(data.message, data.author || {});
+        if (data.type === 'typing') renderTyping(data.users || []);
+      });
+      socket.addEventListener('close', function () {
+        setWsStatus('offline', 'reconnecting');
+        reconnectTimer = setTimeout(connectRealtime, 1700);
+      });
+      socket.addEventListener('error', function () { setWsStatus('offline', 'offline'); });
+    }
+
+    function sendSocket(payload) {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify(payload));
+        return true;
+      }
+      return false;
+    }
+
+    function sendTypingPing() {
+      var now = Date.now();
+      if (now - lastTypingAt > 850) {
+        sendSocket({ type: 'typing' });
+        lastTypingAt = now;
+      }
+      clearTimeout(typingStopTimer);
+      typingStopTimer = setTimeout(function () { sendSocket({ type: 'typing_stop' }); }, 1200);
+    }
+
+    function sendCurrentMessage() {
+      if (!textarea || !composerForm) return;
+      var content = textarea.value.trim();
+      var imageUrl = imageInput ? imageInput.value.trim() : '';
+      if (!content) return;
+
+      var ok = sendSocket({ type: 'message', content: content, image_url: imageUrl });
+      if (!ok) {
+        HTMLFormElement.prototype.submit.call(composerForm);
+        return;
+      }
+      textarea.value = '';
+      textarea.style.height = 'auto';
+      if (imageInput) imageInput.value = '';
+      sendSocket({ type: 'typing_stop' });
+    }
+
+    connectRealtime();
+
+    if (composerForm) {
+      composerForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        sendCurrentMessage();
+      });
+    }
+
     if (textarea) {
       textarea.addEventListener('input', function () {
         textarea.style.height = 'auto';
         textarea.style.height = Math.min(textarea.scrollHeight, 170) + 'px';
+        if (textarea.value.trim()) sendTypingPing();
+        else sendSocket({ type: 'typing_stop' });
       });
       textarea.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' && !e.shiftKey) {
           e.preventDefault();
-          if (textarea.value.trim()) composerForm.submit();
+          sendCurrentMessage();
         }
       });
+      textarea.addEventListener('blur', function () { sendSocket({ type: 'typing_stop' }); });
     }
 
     function openEdit(id) {
