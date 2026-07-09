@@ -353,8 +353,11 @@ async def server_channel_create_submit(
     if not await crud.can_manage_server(db, server_id, account.id):
         return RedirectResponse(url=f"/community/servers/{server_id}", status_code=303)
 
+    new_channel = None
     if name.strip():
-        await crud.create_server_channel(db, server_id, name.strip(), description.strip())
+        new_channel = await crud.create_server_channel(db, server_id, name.strip(), description.strip())
+    if new_channel:
+        return RedirectResponse(url=f"/community/servers/{server_id}/channel/{new_channel.id}", status_code=303)
     return RedirectResponse(url=f"/community/servers/{server_id}", status_code=303)
 
 
@@ -374,8 +377,10 @@ async def server_channel_view(server_id: int, channel_id: int, request: Request,
 
     channels = await crud.list_server_channels(db, server_id)
     members = await crud.list_server_members(db, server_id)
+    friends = await crud.list_friends(db, account.id)
     feed = await crud.get_server_feed(db, server_id, channel_id)
     rail = await server_rail_context(db, account.id, active_server_id=server_id)
+    can_manage = await crud.can_manage_server(db, server_id, account.id)
 
     return templates.TemplateResponse(
         "server_channel.html",
@@ -386,6 +391,8 @@ async def server_channel_view(server_id: int, channel_id: int, request: Request,
             "channel": channel,
             "channels": channels,
             "members": members,
+            "friends": friends,
+            "can_manage": can_manage,
             "feed": feed,
             **rail,
         },
@@ -455,11 +462,47 @@ async def server_message_delete_submit(
     return RedirectResponse(url=f"/community/servers/{server_id}/channel/{channel_id}", status_code=303)
 
 
+@router.post("/servers/{server_id}/settings")
+async def server_settings_submit(
+    server_id: int,
+    request: Request,
+    name: str = Form(...),
+    icon_url: str = Form(""),
+    description: str = Form(""),
+    redirect_to: str = Form(""),
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return RedirectResponse(url="/community/login", status_code=303)
+    if not await crud.can_manage_server(db, server_id, account.id):
+        return RedirectResponse(url=f"/community/servers/{server_id}", status_code=303)
+
+    if name.strip():
+        await crud.update_server_settings(db, server_id, name.strip(), icon_url.strip(), description.strip())
+    safe_redirect = redirect_to if redirect_to.startswith("/community/") else f"/community/servers/{server_id}"
+    return RedirectResponse(url=safe_redirect, status_code=303)
+
+
+@router.post("/servers/{server_id}/leave")
+async def server_leave_submit(
+    server_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return RedirectResponse(url="/community/login", status_code=303)
+    await crud.leave_server(db, server_id, account.id)
+    return RedirectResponse(url="/community", status_code=303)
+
+
 @router.post("/servers/{server_id}/invite")
 async def server_invite_submit(
     server_id: int,
     request: Request,
     username: str = Form(...),
+    redirect_to: str = Form(""),
     db: AsyncSession = Depends(get_db),
 ):
     account = await current_account(request, db)
@@ -471,7 +514,8 @@ async def server_invite_submit(
     target = await crud.get_account_by_username(db, username.strip())
     if target:
         await crud.invite_friend_to_server(db, server_id, account.id, target.id)
-    return RedirectResponse(url=f"/community/servers/{server_id}", status_code=303)
+    safe_redirect = redirect_to if redirect_to.startswith("/community/") else f"/community/servers/{server_id}"
+    return RedirectResponse(url=safe_redirect, status_code=303)
 
 
 @router.post("/api/server-invites/respond/{invite_id}")
@@ -638,4 +682,5 @@ async def api_notifications(request: Request, db: AsyncSession = Depends(get_db)
         })
 
     return JSONResponse({"count": len(items), "items": items})
+
 
