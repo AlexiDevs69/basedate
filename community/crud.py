@@ -4,7 +4,7 @@ dashboard's crud.py so the two stay easy to reason about independently.
 """
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import and_, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -13,6 +13,38 @@ from community.models import Account, Channel, Comment, Friendship, Gift, GiftIn
 # A member counts as "online" if we've seen a request from them in the
 # last 3 minutes. Cheap to compute, no background job or websocket needed.
 ONLINE_WINDOW = timedelta(minutes=3)
+
+VISUAL_NAME_EFFECTS = {"none", "gradient", "glow"}
+VISUAL_NAME_FONTS = {"default", "mono", "serif", "rounded", "cyber", "display"}
+
+
+def _normalize_name_effect(value: str | None) -> str | None:
+    effect = (value or "none").strip().lower()
+    if effect not in VISUAL_NAME_EFFECTS or effect == "none":
+        return None
+    return effect
+
+
+def _normalize_name_font(value: str | None) -> str | None:
+    font = (value or "default").strip().lower()
+    if font not in VISUAL_NAME_FONTS or font == "default":
+        return None
+    return font
+
+
+async def ensure_account_visual_columns(db: AsyncSession) -> None:
+    """
+    create_all() creates only missing tables; it does not add new columns to
+    existing tables. This tiny idempotent helper safely upgrades the existing
+    community_accounts table on Render/PostgreSQL without Alembic migrations.
+    """
+    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS name_effect VARCHAR(32)"))
+    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS name_color_start VARCHAR(16)"))
+    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS name_color_end VARCHAR(16)"))
+    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS name_font VARCHAR(32)"))
+    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS profile_card_bg_url VARCHAR(512)"))
+    await db.commit()
+
 
 
 async def get_account_by_id(db: AsyncSession, account_id: int) -> Account | None:
@@ -241,6 +273,11 @@ async def update_account_moderation(
     role_color_start: str | None,
     role_color_end: str | None,
     is_banned: bool,
+    name_effect: str | None = None,
+    name_color_start: str | None = None,
+    name_color_end: str | None = None,
+    name_font: str | None = None,
+    profile_card_bg_url: str | None = None,
 ) -> Account | None:
     account = await get_account_by_id(db, account_id)
     if not account:
@@ -251,6 +288,12 @@ async def update_account_moderation(
     account.role_color_start = role_color_start or None
     account.role_color_end = role_color_end or None
     account.is_banned = is_banned
+
+    account.name_effect = _normalize_name_effect(name_effect)
+    account.name_color_start = name_color_start or None
+    account.name_color_end = name_color_end or None
+    account.name_font = _normalize_name_font(name_font)
+    account.profile_card_bg_url = profile_card_bg_url or None
 
     await db.commit()
     await db.refresh(account)
@@ -475,3 +518,4 @@ async def list_gifts_for_account(db: AsyncSession, account_id: int) -> list[Gift
         .order_by(GiftInstance.created_at.desc())
     )
     return list(result.scalars().all())
+
