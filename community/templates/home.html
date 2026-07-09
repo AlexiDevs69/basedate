@@ -3,488 +3,518 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AlexiHub // Community</title>
+  <title>AlexiHub // Direct Messages</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Baloo+2:wght@700;800&family=Bangers&family=Bungee&family=Bungee+Shade&family=Cinzel+Decorative:wght@700&family=Creepster&family=Fredoka:wght@700;800&family=Honk&family=Inter:wght@400;500;600;700;800&family=Jersey+10&family=JetBrains+Mono:wght@400;700&family=Lilita+One&family=Luckiest+Guy&family=Modak&family=Monoton&family=Pixelify+Sans:wght@700&family=Press+Start+2P&family=Righteous&family=Rubik+Glitch&family=Rubik+Iso&family=Rubik+Wet+Paint&family=Silkscreen:wght@700&family=Tilt+Prism&family=Titan+One&family=Unbounded:wght@700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&family=Press+Start+2P&family=Bungee&family=Luckiest+Guy&family=Fredoka:wght@700&family=Rubik+Glitch&family=Monoton&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0b0b0b; --bg-elevated: #111111; --bg-header: #161616;
-      --border: #222222; --border-hover: #333333;
-      --text-primary: #ffffff; --text-secondary: #888888;
-      --font-sans: 'Inter', system-ui, sans-serif; --font-mono: 'JetBrains Mono', monospace;
-      --radius: 8px; --online: #10b981;
+      --app: #0b0b0d;
+      --rail: #08080a;
+      --side: #111114;
+      --main: #18191d;
+      --panel: #202127;
+      --panel2: #26272e;
+      --hover: #2e3038;
+      --border: #2b2d34;
+      --text: #f4f4f5;
+      --muted: #9ca3af;
+      --muted2: #6b7280;
+      --accent: #5865f2;
+      --green: #23a55a;
+      --red: #ef4444;
+      --font: 'Inter', system-ui, sans-serif;
+      --mono: 'JetBrains Mono', monospace;
     }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: var(--bg); color: var(--text-primary); font-family: var(--font-sans); font-size: 14px; }
 
-    .layout { display: flex; min-height: 100vh; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      background: var(--app);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      overflow: hidden;
+    }
 
-    /* --- Discord-like server rail --- */
+    a { color: inherit; text-decoration: none; }
+    button, input, textarea { font: inherit; }
+
+    .app {
+      display: grid;
+      grid-template-columns: 72px 240px 1fr 300px;
+      height: 100vh;
+      min-width: 0;
+    }
+
+    .icon {
+      width: 20px;
+      height: 20px;
+      display: inline-block;
+      vertical-align: middle;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex: 0 0 auto;
+    }
+    .icon-sm { width: 16px; height: 16px; }
+    .icon-lg { width: 32px; height: 32px; }
+
+    /* server rail */
     .server-rail {
-      position: fixed; left: 0; top: 0; bottom: 0; width: 72px; z-index: 80;
-      background: #070707; border-right: 1px solid var(--border);
-      display: flex; flex-direction: column; align-items: center; gap: 0.65rem;
-      padding: 0.8rem 0.55rem; overflow-y: auto;
+      background: var(--rail);
+      padding: 12px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      overflow-y: auto;
+      border-right: 1px solid #111;
     }
     .server-dot {
-      width: 48px; height: 48px; border-radius: 50%; background: var(--bg-elevated); border: 1px solid var(--border);
-      color: var(--text-primary); text-decoration: none; display: flex; align-items: center; justify-content: center;
-      font-weight: 800; font-family: var(--font-mono); position: relative; flex-shrink: 0; overflow: hidden;
-      transition: border-radius .18s ease, background .18s ease, border-color .18s ease, transform .18s ease;
+      width: 48px;
+      height: 48px;
+      border-radius: 18px;
+      background: var(--panel);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 800;
+      position: relative;
+      transition: 0.16s ease;
+      background-size: cover;
+      background-position: center;
+      border: 0;
+      cursor: pointer;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
     }
-    .server-dot:hover, .server-dot.active { border-radius: 16px; border-color: var(--border-hover); transform: translateY(-1px); }
+    .server-dot:hover,
+    .server-dot.active {
+      border-radius: 14px;
+      background-color: var(--accent);
+    }
     .server-dot.active::before {
-      content: ''; position: absolute; left: -9px; top: 50%; transform: translateY(-50%);
-      width: 4px; height: 28px; border-radius: 999px; background: var(--text-primary);
+      content: "";
+      position: absolute;
+      left: -10px;
+      width: 4px;
+      height: 34px;
+      border-radius: 0 6px 6px 0;
+      background: #fff;
     }
-    .server-dot span { width: 100%; height: 100%; background: center/cover no-repeat; display: block; }
-    .server-dot.home-dot { background: linear-gradient(135deg, #181818, #101010); }
-    .server-dot.plus { color: #10b981; font-size: 1.7rem; font-family: var(--font-sans); }
-    .server-dot.plus:hover { background: #10b981; color: #06180d; }
-    .rail-sep { width: 32px; height: 1px; background: var(--border); flex-shrink: 0; }
+    .server-dot.home-dot { background: linear-gradient(135deg, #5865f2, #4752c4); }
+    .server-dot.plus { color: var(--green); }
+    .server-dot.plus:hover { background: var(--green); color: #fff; }
+    .server-sep { width: 32px; height: 2px; background: #24252b; border-radius: 9px; }
 
+    /* left dm sidebar */
+    .dm-sidebar {
+      background: var(--side);
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      border-right: 1px solid #111;
+    }
+    .search-wrap { padding: 12px 10px; border-bottom: 1px solid #1f2026; }
+    .search {
+      width: 100%;
+      height: 36px;
+      border: 0;
+      border-radius: 8px;
+      background: #08080a;
+      color: var(--text);
+      padding: 0 12px;
+      outline: none;
+      font-size: 13px;
+    }
+    .search::placeholder { color: var(--muted2); }
 
+    .nav { padding: 10px 8px; display: flex; flex-direction: column; gap: 2px; }
+    .nav-item {
+      height: 42px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--muted);
+      padding: 0 10px;
+      font-weight: 700;
+      transition: 0.14s ease;
+    }
+    .nav-item:hover,
+    .nav-item.active { background: var(--hover); color: var(--text); }
+    .nav-ico { width: 22px; display: flex; align-items: center; justify-content: center; color: var(--muted); }
+    .nav-item:hover .nav-ico,
+    .nav-item.active .nav-ico { color: var(--text); }
+
+    .section {
+      padding: 10px 12px 4px;
+      color: var(--muted2);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .section-action {
+      width: 22px;
+      height: 22px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .section-action:hover { color: var(--text); background: var(--hover); }
+
+    .dm-list { padding: 0 8px; overflow-y: auto; min-height: 0; flex: 1; }
+    .dm-row {
+      height: 44px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 8px;
+      color: var(--muted);
+      margin-bottom: 2px;
+      transition: 0.14s ease;
+    }
+    .dm-row:hover,
+    .dm-row.active { background: var(--hover); color: var(--text); }
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #2b2d34 center/cover no-repeat;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      flex: 0 0 auto;
+      position: relative;
+      color: var(--text);
+    }
+    .avatar .online {
+      position: absolute;
+      right: -1px;
+      bottom: -1px;
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: var(--green);
+      border: 2px solid var(--side);
+    }
+    .dm-meta { min-width: 0; flex: 1; }
+    .dm-name { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dm-snippet {
+      font-size: 12px;
+      color: var(--muted2);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 1px;
+    }
+    .empty-note { color: var(--muted2); font-size: 12px; padding: 6px 10px 12px; }
+
+    .user-panel {
+      height: 56px;
+      background: #17181d;
+      border-top: 1px solid #22242b;
+      display: flex;
+      align-items: center;
+      padding: 8px;
+      gap: 8px;
+    }
+    .user-panel .avatar { width: 36px; height: 36px; }
+    .user-info { min-width: 0; flex: 1; }
+    .user-info b { display: block; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-info span { display: flex; align-items: center; gap: 5px; color: var(--muted2); font-size: 11px; }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); display: inline-block; }
+    .user-actions { display: flex; gap: 4px; }
+    .user-actions button {
+      width: 28px;
+      height: 28px;
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .user-actions button:hover { background: var(--hover); color: var(--text); }
+
+    /* center */
+    .main { background: var(--main); display: flex; flex-direction: column; min-width: 0; }
     .topbar {
-      position: fixed; top: 0; left: 72px; right: 0; height: 56px; z-index: 50;
-      background: var(--bg-header); border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem;
+      height: 48px;
+      border-bottom: 1px solid #111318;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      box-shadow: 0 1px 0 rgba(0,0,0,.25);
+      flex: 0 0 auto;
     }
-    .topbar .brand { font-weight: 700; font-size: 1rem; }
-    .topbar .me { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; color: var(--text-primary); }
-    .topbar .me-avatar {
-      width: 30px; height: 30px; border-radius: 50%; background: var(--bg-elevated) center/cover no-repeat;
-      display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-secondary);
-      flex-shrink: 0;
+    .top-title { font-weight: 800; display: flex; align-items: center; gap: 10px; }
+    .top-title .icon { color: var(--muted); }
+    .top-actions { display: flex; align-items: center; gap: 10px; color: var(--muted); }
+    .top-actions button {
+      width: 32px;
+      height: 32px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    .topbar .logout { color: var(--text-secondary); text-decoration: none; font-size: 0.8rem; }
-    .topbar .logout:hover { color: var(--text-primary); }
-    .topbar-right { display: flex; align-items: center; gap: 1.25rem; }
+    .top-actions button:hover { color: var(--text); background: var(--hover); }
 
-    .main {
-      flex: 1; margin-top: 56px; margin-left: 72px; padding: 2.5rem; max-width: 760px;
+    .hero {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 40px;
     }
-    .main h1 { font-size: 1.4rem; margin-bottom: 0.5rem; }
-    .main p.sub { color: var(--text-secondary); margin-bottom: 2rem; }
-
-    .placeholder-box {
-      background: var(--bg-elevated); border: 1px dashed var(--border); border-radius: var(--radius);
-      padding: 2.5rem; text-align: center; color: var(--text-secondary); font-size: 0.9rem;
+    .hero-card { max-width: 560px; }
+    .hero-logo {
+      width: 92px;
+      height: 92px;
+      border-radius: 28px;
+      background: linear-gradient(135deg, #5865f2, #9b5cf6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 22px;
+      box-shadow: 0 20px 60px rgba(88,101,242,.22);
+      color: white;
     }
-
-    .channel-list { display: flex; flex-direction: column; gap: 0.6rem; }
-    .channel-card {
-      display: flex; align-items: center; justify-content: space-between; gap: 1rem;
-      background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius);
-      padding: 1rem 1.25rem; text-decoration: none; color: var(--text-primary); transition: border-color 0.2s ease;
-    }
-    .channel-card:hover { border-color: var(--border-hover); }
-    .channel-card .hash { color: var(--text-secondary); font-family: var(--font-mono); font-weight: 700; }
-    .channel-name { font-weight: 600; }
-    .channel-desc { color: var(--text-secondary); font-size: 0.8rem; margin-top: 0.15rem; }
-    .channel-arrow { color: var(--text-secondary); }
-
-    .sidebar-right {
-      width: 260px; margin-top: 56px; border-left: 1px solid var(--border);
-      padding: 1.5rem 1.25rem; position: fixed; right: 0; top: 0; bottom: 0; overflow-y: auto;
-    }
-    .sidebar-right h2 {
-      font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-secondary);
-      margin-bottom: 1rem;
-    }
-    .member-row {
-      display: flex; align-items: center; gap: 0.6rem; padding: 0.4rem 0.4rem; border-radius: var(--radius);
-      text-decoration: none; color: var(--text-primary); margin-bottom: 0.15rem;
-    }
-    .member-row:hover { background: rgba(255,255,255,0.04); }
-    .member-avatar-wrap { position: relative; flex-shrink: 0; }
-    .member-avatar {
-      width: 32px; height: 32px; border-radius: 50%; background: var(--bg-elevated) center/cover no-repeat;
-      display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-secondary);
-    }
-    .online-dot {
-      position: absolute; bottom: -1px; right: -1px; width: 10px; height: 10px; border-radius: 50%;
-      background: var(--online); border: 2px solid var(--bg);
-    }
-    .member-name-row { display: flex; align-items: center; gap: 0.3rem; min-width: 0; }
-    .member-name { font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .verified-badge-sm {
-      width: 13px; height: 13px; flex-shrink: 0; border-radius: 50%; background: #1d9bf0;
-      display: inline-flex; align-items: center; justify-content: center;
-    }
-    .verified-badge-sm svg { width: 8px; height: 8px; }
-    .empty-note { color: #555; font-size: 0.8rem; }
-    /* --- Premium nickname styles: role-gradient edition --- */
-    .visual-name {
-      --name-c1-safe: var(--name-c1, #f5576c);
-      --name-c2-safe: var(--name-c2, #7367f0);
+    .hero-logo .icon { width: 44px; height: 44px; stroke-width: 1.8; }
+    .hero h1 { font-size: 30px; margin-bottom: 10px; letter-spacing: -0.03em; }
+    .hero p { color: var(--muted); line-height: 1.55; }
+    .quick { display: flex; gap: 10px; justify-content: center; margin-top: 22px; flex-wrap: wrap; }
+    .quick a {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      border-radius: 10px;
       font-weight: 800;
-      color: var(--text-primary);
-      display: inline-block;
-      max-width: 100%;
-      line-height: 1.03;
-      vertical-align: baseline;
-      isolation: isolate;
-      text-rendering: geometricPrecision;
-      -webkit-font-smoothing: antialiased;
-      backface-visibility: hidden;
-      transform: translateZ(0);
-      will-change: background-position;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: 0.14s ease;
     }
+    .quick a:hover { background: var(--hover); }
 
-    .name-none {
-      color: var(--text-primary);
-      text-shadow: none;
+    /* right */
+    .right { background: var(--main); border-left: 1px solid #111318; padding: 18px; overflow-y: auto; }
+    .profile-card { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+    .banner { height: 76px; background: linear-gradient(135deg,#5865f2,#2dd4bf); }
+    .profile-body { padding: 0 16px 16px; }
+    .big-avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: #2b2d34 center/cover no-repeat;
+      border: 6px solid var(--panel);
+      margin-top: -36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: 900;
     }
-
-    .name-gradient {
-      background-image: linear-gradient(
-        90deg,
-        var(--name-c1-safe) 0%,
-        var(--name-c2-safe) 48%,
-        var(--name-c1-safe) 100%
-      );
-      background-size: 200% auto;
-      background-position: 0% center;
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      -webkit-text-fill-color: transparent;
-      animation: role-shimmer 3s linear infinite;
-      text-shadow: none;
-      filter: saturate(1.22) brightness(1.06) contrast(1.02);
-    }
-
-    .name-glow {
-      background-image: linear-gradient(
-        90deg,
-        var(--name-c1-safe) 0%,
-        var(--name-c2-safe) 48%,
-        var(--name-c1-safe) 100%
-      );
-      background-size: 200% auto;
-      background-position: 0% center;
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      -webkit-text-fill-color: transparent;
-      animation: role-shimmer 3s linear infinite;
-      text-shadow: none;
-      filter:
-        saturate(1.24)
-        brightness(1.08)
-        contrast(1.02)
-        drop-shadow(0 0 4px color-mix(in srgb, var(--name-c1-safe) 38%, transparent))
-        drop-shadow(0 0 9px color-mix(in srgb, var(--name-c2-safe) 28%, transparent));
-    }
-
-    @keyframes role-shimmer { to { background-position: 200% center; } }
-
-    @media (prefers-reduced-motion: reduce) {
-      .name-gradient, .name-glow { animation: none; background-position: 50% 50%; }
-    }
-
-    .font-default { font-family: var(--font-sans); }
-    .font-mono { font-family: var(--font-mono); font-weight: 800; }
-    .font-serif { font-family: Georgia, 'Times New Roman', serif; font-weight: 800; letter-spacing: -0.02em; }
-    .font-rounded { font-family: 'Fredoka', var(--font-sans); font-weight: 800; letter-spacing: 0.005em; }
-    .font-cyber { font-family: 'Righteous', var(--font-mono); font-weight: 400; letter-spacing: 0.035em; }
-    .font-display { font-family: 'Unbounded', var(--font-sans); font-weight: 800; letter-spacing: -0.055em; }
-
-    .font-pixel {
-      font-family: 'Press Start 2P', 'Silkscreen', 'Pixelify Sans', var(--font-mono);
-      font-weight: 700;
-      font-size: 0.72em;
-      letter-spacing: -0.025em;
-      line-height: 1.22;
-      image-rendering: pixelated;
-      filter: saturate(1.5) brightness(1.18) contrast(1.08);
-    }
-    .font-bubble {
-      font-family: 'Titan One', 'Luckiest Guy', var(--font-sans);
-      font-weight: 400;
-      letter-spacing: 0.025em;
-      transform: translateY(0.03em);
-      filter: saturate(1.46) brightness(1.12);
-    }
-    .font-puffy {
-      font-family: 'Bagel Fat One', 'Modak', var(--font-sans);
-      font-weight: 400;
-      font-size: 1.12em;
-      letter-spacing: 0.004em;
-      line-height: 0.95;
-      filter: saturate(1.42) brightness(1.12);
-    }
-    .font-block {
-      font-family: 'Bungee', 'Lilita One', var(--font-sans);
-      font-weight: 400;
-      letter-spacing: 0.012em;
-      filter: saturate(1.42) brightness(1.1) contrast(1.08);
-    }
-    .font-neon {
-      font-family: 'Monoton', 'Tilt Prism', var(--font-sans);
-      font-weight: 400;
-      letter-spacing: 0.04em;
-      filter: saturate(1.6) brightness(1.18)
-        drop-shadow(0 0 4px rgba(255,255,255,0.4))
-        drop-shadow(0 0 14px color-mix(in srgb, var(--name-v2) 35%, transparent));
-    }
-    .font-glitch {
-      font-family: 'Rubik Glitch', var(--font-sans);
-      font-weight: 400;
-      letter-spacing: 0.025em;
-      filter: saturate(1.45) brightness(1.12);
-      text-shadow: 1px 0 0 #ff2bd6, -1px 0 0 #27f7ff;
-    }
-    .font-graffiti {
-      font-family: 'Rubik Wet Paint', 'Bangers', var(--font-sans);
-      font-weight: 400;
-      letter-spacing: 0.032em;
-      filter: saturate(1.46) brightness(1.13);
-    }
-    .font-spooky {
-      font-family: 'Creepster', var(--font-sans);
-      font-weight: 400;
-      letter-spacing: 0.04em;
-      filter: saturate(1.38) brightness(1.08);
-    }
-    .font-medieval {
-      font-family: 'Cinzel Decorative', Georgia, serif;
-      font-weight: 700;
-      letter-spacing: 0.01em;
-      filter: saturate(1.32) brightness(1.08);
-    }
-    .font-roundfat {
-      font-family: 'Baloo 2', 'Fredoka', var(--font-sans);
+    .profile-body h2 { font-size: 20px; margin-top: 8px; }
+    .profile-body p { color: var(--muted); font-size: 13px; margin-top: 4px; line-height: 1.4; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--accent);
+      color: white;
       font-weight: 800;
-      letter-spacing: 0.004em;
-      filter: saturate(1.32) brightness(1.1);
+      padding: 9px 12px;
+      margin-top: 12px;
+      width: 100%;
     }
+    .online-list { display: flex; flex-direction: column; gap: 2px; }
 
-    .post-name.font-pixel,
-    .member-name.font-pixel,
-    .comment-author.font-pixel,
-    .user-cell .font-pixel { font-size: 0.68em; }
-    .profile-name.font-pixel { font-size: 0.8em; }
-    .preview-card .font-pixel { font-size: 0.82em; }
-    .post-name.font-puffy,
-    .member-name.font-puffy,
-    .comment-author.font-puffy,
-    .user-cell .font-puffy { font-size: 1.04em; }
-    .post-name.font-block,
-    .member-name.font-block,
-    .comment-author.font-block,
-    .user-cell .font-block { font-size: 0.95em; }
-
-    .member-row.has-card-bg { position: relative; overflow: hidden; }
-    .member-row.has-card-bg::before {
-      content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
-      background-image: linear-gradient(90deg, rgba(11,11,11,0.78), rgba(11,11,11,0.42)), var(--card-bg-image);
-      background-size: cover; background-position: center; opacity: 0.85;
+    @media (max-width: 1050px) {
+      .app { grid-template-columns: 72px 240px 1fr; }
+      .right { display: none; }
     }
-    .member-row.has-card-bg > * { position: relative; z-index: 1; }
-
-    /* --- Notification bell --- */
-    .notif-wrap { position: relative; }
-    .notif-bell {
-      background: none; border: none; color: var(--text-primary); cursor: pointer;
-      display: flex; align-items: center; justify-content: center; width: 34px; height: 34px;
-      border-radius: 50%; position: relative;
-    }
-    .notif-bell:hover { background: rgba(255,255,255,0.06); }
-    .notif-badge {
-      position: absolute; top: 2px; right: 2px; background: #ef4444; color: white;
-      font-size: 0.65rem; font-weight: 700; border-radius: 999px; min-width: 16px; height: 16px;
-      display: none; align-items: center; justify-content: center; padding: 0 3px;
-    }
-    .notif-dropdown {
-      position: absolute; top: 44px; right: 0; width: 280px; background: var(--bg-elevated);
-      border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-      z-index: 400; overflow: hidden; display: none;
-    }
-    .notif-header { padding: 0.75rem 1rem; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-secondary); border-bottom: 1px solid var(--border); }
-    .notif-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.6rem 1rem; border-bottom: 1px solid var(--border); }
-    .notif-item:last-child { border-bottom: none; }
-    .notif-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--bg-header) center/cover no-repeat; flex-shrink: 0; }
-    .notif-name { flex: 1; font-size: 0.85rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .notif-actions { display: flex; gap: 0.3rem; }
-    .notif-btn { border: none; border-radius: 6px; padding: 0.3rem 0.5rem; font-size: 0.72rem; font-weight: 700; cursor: pointer; }
-    .notif-btn.accept { background: #10b981; color: #06180d; }
-    .notif-btn.decline { background: var(--bg-header); color: var(--text-secondary); }
-    .notif-empty { padding: 1rem; text-align: center; color: #555; font-size: 0.8rem; }
-
-    @media (max-width: 900px) {
-      .sidebar-right { display: none; }
-      .main { max-width: 100%; }
+    @media (max-width: 760px) {
+      .app { grid-template-columns: 64px 1fr; }
+      .dm-sidebar { display: none; }
+      .right { display: none; }
     }
   </style>
 </head>
 <body>
-  <aside class="server-rail">
-    <a href="/community" class="server-dot home-dot {{ 'active' if not active_server_id else '' }}" title="AlexiHub">A</a>
-    <div class="rail-sep"></div>
-    {% for srv in servers %}
-    <a href="/community/servers/{{ srv.id }}" class="server-dot {{ 'active' if active_server_id == srv.id else '' }}" title="{{ srv.name }}">
-      {% if srv.icon_url %}<span style="background-image:url('{{ srv.icon_url }}')"></span>{% else %}{{ srv.name[:1]|upper }}{% endif %}
-    </a>
-    {% endfor %}
-    <a href="/community/servers/new" class="server-dot plus" title="Створити сервер">+</a>
-  </aside>
-  <div class="topbar">
-    <div class="brand">AlexiHub // Community</div>
-    <div class="topbar-right">
-      <div class="notif-wrap">
-        <button id="notif-bell" class="notif-bell" onclick="toggleNotifDropdown()" aria-label="Сповіщення">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="19" height="19">
-            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-          </svg>
-          <span id="notif-badge" class="notif-badge">0</span>
-        </button>
-        <div id="notif-dropdown" class="notif-dropdown">
-          <div class="notif-header">Запити в друзі</div>
-          <div id="notif-list"></div>
-        </div>
-      </div>
-      <a href="/community/profile/{{ account.username }}" class="me">
-        <span class="me-avatar" {% if account.avatar_url %}style="background-image: url('{{ account.avatar_url }}');"{% endif %}>
-          {% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}
-        </span>
-        <span class="visual-name name-{{ account.name_effect or 'none' }} font-{{ account.name_font or 'default' }}" style="--name-c1: {{ account.role_color_start or '#f5576c' }}; --name-c2: {{ account.role_color_end or '#7367f0' }};">{{ account.username }}</span>
-      </a>
-      <a href="/community/logout" class="logout">Log out</a>
-    </div>
-  </div>
+  <svg style="display:none" aria-hidden="true">
+    <symbol id="i-message" viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="i-hash" viewBox="0 0 24 24"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></symbol>
+    <symbol id="i-headphones" viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.4 1.08V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.08-.4H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .4-1.08V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 16 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.15.32.36.6.6 1 .26.25.64.4 1.08.4H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51.6z"/></symbol>
+    <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 1 1 5.82 1c-.6 1.2-1.9 1.6-2.4 2.5"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol>
+  </svg>
 
-  <div class="layout">
-    <main class="main">
-      <h1>Привіт, <span class="visual-name name-{{ account.name_effect or 'none' }} font-{{ account.name_font or 'default' }}" style="--name-c1: {{ account.role_color_start or '#f5576c' }}; --name-c2: {{ account.role_color_end or '#7367f0' }};">{{ account.username }}</span></h1>
-      <p class="sub">Обери канал і пиши.</p>
-      <div class="channel-list">
+  <div class="app">
+    <aside class="server-rail">
+      <a class="server-dot home-dot active" href="/community" title="Direct Messages"><svg class="icon"><use href="#i-message"></use></svg></a>
+      <div class="server-sep"></div>
+      {% for srv in servers %}
+      <a class="server-dot" href="/community/servers/{{ srv.id }}" title="{{ srv.name }}" {% if srv.icon_url %}style="background-image:url('{{ srv.icon_url }}')"{% endif %}>{% if not srv.icon_url %}{{ srv.name[:1]|upper }}{% endif %}</a>
+      {% endfor %}
+      <a class="server-dot plus" href="/community/servers/new" title="Create server"><svg class="icon"><use href="#i-plus"></use></svg></a>
+    </aside>
+
+    <aside class="dm-sidebar">
+      <div class="search-wrap">
+        <input class="search" id="dm-search" placeholder="Знайти або почати бесіду">
+      </div>
+
+      <nav class="nav">
+        <a class="nav-item active" href="/community">
+          <span class="nav-ico"><svg class="icon"><use href="#i-users"></use></svg></span>
+          Друзі / ЛС
+        </a>
         {% for ch in channels %}
-        <a href="/community/channel/{{ ch.slug }}" class="channel-card">
-          <div style="display:flex; align-items:center; gap:0.75rem;">
-            <span class="hash">#</span>
-            <div>
-              <div class="channel-name">{{ ch.name }}</div>
-              {% if ch.description %}<div class="channel-desc">{{ ch.description }}</div>{% endif %}
-            </div>
-          </div>
-          <span class="channel-arrow">→</span>
+        <a class="nav-item" href="/community/channel/{{ ch.slug }}">
+          <span class="nav-ico"><svg class="icon"><use href="#i-hash"></use></svg></span>
+          {{ ch.name }}
+        </a>
+        {% endfor %}
+      </nav>
+
+      <div class="section">
+        <span>Особисті повідомлення</span>
+        <span class="section-action" title="Новий діалог"><svg class="icon icon-sm"><use href="#i-plus"></use></svg></span>
+      </div>
+
+      <div class="dm-list" id="dm-list">
+        {% for item in dm_threads %}
+        {% set other = item.other %}
+        {% if other %}
+        <a class="dm-row" href="/community/dm/{{ other.username }}" data-name="{{ other.username|lower }}">
+          <span class="avatar" {% if other.avatar_url %}style="background-image:url('{{ other.avatar_url }}')"{% endif %}>
+            {% if not other.avatar_url %}{{ other.username[:1]|upper }}{% endif %}
+            <span class="online"></span>
+          </span>
+          <span class="dm-meta">
+            <span class="dm-name">{{ other.username }}</span>
+            <span class="dm-snippet">{% if item.last_message %}{{ item.last_message.content[:42] }}{% else %}Почати діалог{% endif %}</span>
+          </span>
+        </a>
+        {% endif %}
+        {% else %}
+        <div class="empty-note">Ще нема діалогів. Вибери друга нижче.</div>
+        {% endfor %}
+
+        <div class="section" style="padding-left:2px;padding-right:2px;">Друзі</div>
+        {% for f in friends %}
+        <a class="dm-row" href="/community/dm/{{ f.username }}" data-name="{{ f.username|lower }}">
+          <span class="avatar" {% if f.avatar_url %}style="background-image:url('{{ f.avatar_url }}')"{% endif %}>{% if not f.avatar_url %}{{ f.username[:1]|upper }}{% endif %}</span>
+          <span class="dm-meta">
+            <span class="dm-name">{{ f.username }}</span>
+            <span class="dm-snippet">Написати повідомлення</span>
+          </span>
         </a>
         {% endfor %}
       </div>
+
+      <div class="user-panel">
+        <span class="avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}')"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}</span>
+        <div class="user-info">
+          <b>{{ account.username }}</b>
+          <span><i class="status-dot"></i> online</span>
+        </div>
+        <div class="user-actions">
+          <button title="Mute"><svg class="icon icon-sm"><use href="#i-mic"></use></svg></button>
+          <button title="Deafen"><svg class="icon icon-sm"><use href="#i-headphones"></use></svg></button>
+          <button title="Settings" onclick="location.href='/community/settings'"><svg class="icon icon-sm"><use href="#i-settings"></use></svg></button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="top-title"><svg class="icon"><use href="#i-users"></use></svg> Друзі / ЛС</div>
+        <div class="top-actions">
+          <button title="Inbox"><svg class="icon"><use href="#i-inbox"></use></svg></button>
+          <button title="Help"><svg class="icon"><use href="#i-help"></use></svg></button>
+          <button title="Search"><svg class="icon"><use href="#i-search"></use></svg></button>
+        </div>
+      </header>
+
+      <section class="hero">
+        <div class="hero-card">
+          <div class="hero-logo"><svg class="icon"><use href="#i-message"></use></svg></div>
+          <h1>Особисті повідомлення AlexiHub</h1>
+          <p>Тут будуть твої діалоги. Вибери друга зліва або перейди в один із глобальних каналів.</p>
+          <div class="quick">
+            {% for ch in channels %}
+            <a href="/community/channel/{{ ch.slug }}"><svg class="icon icon-sm"><use href="#i-hash"></use></svg>{{ ch.name }}</a>
+            {% endfor %}
+          </div>
+        </div>
+      </section>
     </main>
 
-    <aside class="sidebar-right">
-      <h2>Онлайн — {{ online_members|length }}</h2>
-      {% for member in online_members %}
-      <a href="/community/profile/{{ member.username }}" class="member-row {{ 'has-card-bg' if member.profile_card_bg_url else '' }}" {% if member.profile_card_bg_url %}style="--card-bg-image: url('{{ member.profile_card_bg_url }}');"{% endif %}>
-        <span class="member-avatar-wrap">
-          <span class="member-avatar" {% if member.avatar_url %}style="background-image: url('{{ member.avatar_url }}');"{% endif %}>
-            {% if not member.avatar_url %}{{ member.username[:1]|upper }}{% endif %}
-          </span>
-          <span class="online-dot"></span>
-        </span>
-        <span class="member-name-row">
-          <span class="member-name visual-name name-{{ member.name_effect or 'none' }} font-{{ member.name_font or 'default' }}" style="--name-c1: {{ member.role_color_start or '#f5576c' }}; --name-c2: {{ member.role_color_end or '#7367f0' }};">{{ member.username }}</span>
-          {% if member.is_verified %}
-          <span class="verified-badge-sm">
-            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
-          </span>
-          {% endif %}
-        </span>
-      </a>
-      {% else %}
-      <div class="empty-note">Поки що тут порожньо.</div>
-      {% endfor %}
+    <aside class="right">
+      <div class="profile-card">
+        <div class="banner" {% if account.banner_url %}style="background-image:url('{{ account.banner_url }}');background-size:cover;background-position:center"{% endif %}></div>
+        <div class="profile-body">
+          <div class="big-avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}')"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}</div>
+          <h2>{{ account.username }}</h2>
+          <p>{{ account.bio or 'Твій профіль. Додай аватар, банер і опис у налаштуваннях.' }}</p>
+          <a class="btn" href="/community/settings"><svg class="icon icon-sm"><use href="#i-edit"></use></svg>Редагувати профіль</a>
+        </div>
+      </div>
+
+      <div class="section" style="margin-top:16px;padding-left:0;padding-right:0;">Онлайн — {{ online_members|length }}</div>
+      <div class="online-list">
+        {% for m in online_members[:10] %}
+        <a class="dm-row" href="/community/dm/{{ m.username }}">
+          <span class="avatar" {% if m.avatar_url %}style="background-image:url('{{ m.avatar_url }}')"{% endif %}>{% if not m.avatar_url %}{{ m.username[:1]|upper }}{% endif %}<span class="online"></span></span>
+          <span class="dm-meta"><span class="dm-name">{{ m.username }}</span><span class="dm-snippet">online</span></span>
+        </a>
+        {% endfor %}
+      </div>
     </aside>
   </div>
 
-  <script>
-    function toggleNotifDropdown() {
-      var dd = document.getElementById('notif-dropdown');
-      dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
-    }
-
-    function renderNotifications(data) {
-      var badge = document.getElementById('notif-badge');
-      var list = document.getElementById('notif-list');
-      var count = data.count || 0;
-
-      badge.style.display = count > 0 ? 'flex' : 'none';
-      badge.textContent = count > 9 ? '9+' : count;
-
-      if (!data.items || !data.items.length) {
-        list.innerHTML = '<div class="notif-empty">Немає нових запитів</div>';
-        return;
-      }
-
-      list.innerHTML = data.items.map(function (item) {
-        if (item.type === 'server_invite') {
-          var iconStyle = item.icon_url ? "background-image:url('" + item.icon_url + "')" : '';
-          return (
-            '<div class="notif-item">' +
-              '<div class="notif-avatar" style="' + iconStyle + '"></div>' +
-              '<div class="notif-name"><b>' + item.server_name + '</b><br><span style="color:#777;font-size:0.72rem;">від ' + item.inviter_username + '</span></div>' +
-              '<div class="notif-actions">' +
-                '<button class="notif-btn accept" onclick="respondServerInvite(' + item.invite_id + ', true)">✓</button>' +
-                '<button class="notif-btn decline" onclick="respondServerInvite(' + item.invite_id + ', false)">✕</button>' +
-              '</div>' +
-            '</div>'
-          );
-        }
-
-        var avatarStyle = item.avatar_url ? "background-image:url('" + item.avatar_url + "')" : '';
-        return (
-          '<div class="notif-item">' +
-            '<div class="notif-avatar" style="' + avatarStyle + '"></div>' +
-            '<div class="notif-name">' + item.username + '</div>' +
-            '<div class="notif-actions">' +
-              '<button class="notif-btn accept" onclick="respondFriend(' + item.friendship_id + ', true)">✓</button>' +
-              '<button class="notif-btn decline" onclick="respondFriend(' + item.friendship_id + ', false)">✕</button>' +
-            '</div>' +
-          '</div>'
-        );
-      }).join('');
-    }
-
-    function pollNotifications() {
-      fetch('/community/api/notifications')
-        .then(function (r) { return r.json(); })
-        .then(renderNotifications)
-        .catch(function () {});
-    }
-
-    function respondFriend(friendshipId, accept) {
-      fetch('/community/api/friends/respond/' + friendshipId, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accept: accept }),
-      }).then(pollNotifications).catch(function () {});
-    }
-
-    function respondServerInvite(inviteId, accept) {
-      fetch('/community/api/server-invites/respond/' + inviteId, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accept: accept }),
-      }).then(function () {
-        pollNotifications();
-        if (accept) setTimeout(function () { window.location.reload(); }, 350);
-      }).catch(function () {});
-    }
-
-    pollNotifications();
-    setInterval(pollNotifications, 20000);
-
-    document.addEventListener('click', function (e) {
-      var wrap = document.querySelector('.notif-wrap');
-      if (wrap && !wrap.contains(e.target)) {
-        document.getElementById('notif-dropdown').style.display = 'none';
-      }
+<script>
+  const search = document.getElementById('dm-search');
+  if (search) {
+    search.addEventListener('input', () => {
+      const q = search.value.trim().toLowerCase();
+      document.querySelectorAll('[data-name]').forEach(row => {
+        row.style.display = row.dataset.name.includes(q) ? 'flex' : 'none';
+      });
     });
-  </script>
+  }
+</script>
 </body>
 </html>
+
