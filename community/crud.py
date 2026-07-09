@@ -526,6 +526,41 @@ async def create_server(
     return server
 
 
+async def update_server_settings(
+    db: AsyncSession,
+    server_id: int,
+    name: str,
+    icon_url: str | None = None,
+    description: str | None = None,
+) -> CommunityServer | None:
+    server = await get_server_by_id(db, server_id)
+    if not server:
+        return None
+
+    clean_name = name.strip()[:64]
+    if clean_name:
+        server.name = clean_name
+    server.icon_url = icon_url.strip()[:512] if icon_url and icon_url.strip() else None
+    server.description = description.strip()[:255] if description and description.strip() else None
+    await db.commit()
+    await db.refresh(server)
+    return server
+
+
+async def leave_server(db: AsyncSession, server_id: int, account_id: int) -> bool:
+    member = await get_server_member(db, server_id, account_id)
+    if not member:
+        return False
+
+    server = await get_server_by_id(db, server_id)
+    if server and server.owner_id == account_id:
+        return False
+
+    await db.delete(member)
+    await db.commit()
+    return True
+
+
 async def delete_server(db: AsyncSession, server_id: int) -> bool:
     server = await get_server_by_id(db, server_id)
     if not server:
