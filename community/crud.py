@@ -13,6 +13,8 @@ from community.models import (
     Channel,
     Comment,
     CommunityServer,
+    DirectMessage,
+    DirectThread,
     Friendship,
     Gift,
     GiftInstance,
