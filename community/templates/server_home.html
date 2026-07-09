@@ -23,7 +23,7 @@
     .server-dot:hover, .server-dot.active { border-radius:16px; border-color:var(--border-hover); transform:translateY(-1px); }
     .server-dot.active::before { content:''; position:absolute; left:-9px; top:50%; transform:translateY(-50%); width:4px; height:28px; border-radius:999px; background:var(--text-primary); }
     .server-dot span { width:100%; height:100%; background:center/cover no-repeat; display:block; }
-    .server-dot.home-dot { background:linear-gradient(135deg,#181818,#101010); }
+    .server-dot.home-dot { background:linear-gradient(135deg,#5865f2,#4752c4); color:#fff; }
     .server-dot.plus { color:#10b981; font-size:1.7rem; font-family:var(--font-sans); }
     .server-dot.plus:hover { background:#10b981; color:#06180d; }
     .rail-sep { width:32px; height:1px; background:var(--border); flex-shrink:0; }
@@ -369,7 +369,7 @@
 </head>
 <body>
   <aside class="server-rail">
-    <a href="/community" class="server-dot home-dot {{ 'active' if not active_server_id else '' }}" title="AlexiHub">A</a>
+    <a href="/community" class="server-dot home-dot {{ 'active' if not active_server_id else '' }}" title="Direct Messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="21" height="21"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg></a>
     <div class="rail-sep"></div>
     {% for srv in servers %}
     <a href="/community/servers/{{ srv.id }}" class="server-dot {{ 'active' if active_server_id == srv.id else '' }}" title="{{ srv.name }}">
@@ -544,3 +544,4 @@
   </script>
 </body>
 </html>
+
