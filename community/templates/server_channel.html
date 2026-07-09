@@ -14,7 +14,7 @@
       --text-primary: #ffffff; --text-secondary: #888888;
       --font-sans: 'Inter', system-ui, sans-serif; --font-mono: 'JetBrains Mono', monospace;
       --radius: 8px; --online: #10b981;
-      --rail: 72px; --sidebar: 240px; --topbar: 56px;
+      --rail: 72px; --sidebar: 240px; --members: 252px; --topbar: 56px;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { height: 100%; overflow: hidden; }
@@ -58,7 +58,7 @@
     .avatar { width:34px; height:34px; border-radius:50%; background:var(--bg-header) center/cover no-repeat; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); color:var(--text-secondary); text-decoration:none; }
     .member-mini .avatar { width:24px; height:24px; font-size:.7rem; }
 
-    .chat-main { margin-left: calc(var(--rail) + var(--sidebar)); height: 100vh; padding-top: var(--topbar); display: flex; flex-direction: column; min-width: 0; }
+    .chat-main { margin-left: calc(var(--rail) + var(--sidebar)); margin-right: var(--members); height: 100vh; padding-top: var(--topbar); display: flex; flex-direction: column; min-width: 0; }
     .channel-header { height: 54px; flex: 0 0 auto; border-bottom: 1px solid var(--border); background: rgba(11,11,11,0.92); backdrop-filter: blur(10px); display:flex; align-items:center; justify-content:space-between; padding:0 1.4rem; }
     .channel-title { display:flex; align-items:baseline; gap:.65rem; min-width:0; }
     .channel-title h1 { font-size: 1rem; font-weight: 800; white-space: nowrap; }
@@ -87,7 +87,7 @@
     .edit-cancel:hover { color:var(--text-primary); }
     .empty-chat { color:#666; text-align:center; padding:4rem 1rem; font-size:.9rem; }
 
-    .composer-wrap { position: fixed; left: calc(var(--rail) + var(--sidebar)); right: 0; bottom: 0; z-index: 35; padding: .85rem 1.25rem 1.1rem; background: linear-gradient(to top, var(--bg) 74%, rgba(11,11,11,0)); }
+    .composer-wrap { position: fixed; left: calc(var(--rail) + var(--sidebar)); right: var(--members); bottom: 0; z-index: 35; padding: .85rem 1.25rem 1.1rem; background: linear-gradient(to top, var(--bg) 74%, rgba(11,11,11,0)); }
     .composer-box { background:#181818; border:1px solid var(--border); border-radius:14px; padding:.55rem .65rem; box-shadow:0 10px 28px rgba(0,0,0,.34); }
     .composer-row { display:flex; align-items:flex-end; gap:.55rem; }
     .composer-textarea { flex:1; width:100%; max-height:170px; min-height:42px; resize:none; border:none; outline:none; background:transparent; color:var(--text-primary); font-family:var(--font-sans); font-size:.95rem; line-height:1.35; padding:.64rem .4rem; }
@@ -97,6 +97,57 @@
     .composer-tools { display:flex; align-items:center; gap:.45rem; border-top:1px solid rgba(255,255,255,.06); padding-top:.5rem; margin-top:.35rem; }
     .image-input { flex:1; min-width:0; background:#101010; color:var(--text-primary); border:1px solid var(--border); border-radius:9px; padding:.5rem .65rem; font-family:var(--font-sans); }
     .tool-hint { color:var(--text-secondary); font-size:.72rem; white-space:nowrap; }
+
+
+    .members-sidebar {
+      position: fixed;
+      right: 0;
+      top: calc(var(--topbar) + 54px);
+      bottom: 0;
+      width: var(--members);
+      z-index: 24;
+      background: #0d0d0d;
+      border-left: 1px solid var(--border);
+      padding: 1rem 0.8rem;
+      overflow-y: auto;
+    }
+    .members-title {
+      font-size: .72rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      font-weight: 800;
+      padding: 0 .35rem;
+      margin-bottom: .65rem;
+    }
+    .member-row {
+      display: flex;
+      align-items: center;
+      gap: .62rem;
+      padding: .42rem .45rem;
+      border-radius: 8px;
+      color: var(--text-primary);
+      text-decoration: none;
+      min-width: 0;
+    }
+    .member-row:hover { background: rgba(255,255,255,.045); }
+    .member-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--bg-header) center/cover no-repeat;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: .78rem;
+      color: var(--text-secondary);
+    }
+    .member-info { min-width: 0; display: flex; flex-direction: column; gap: .08rem; }
+    .member-name { max-width: 164px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .member-role { color: #666; font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .045em; }
+    .empty-members { color: #666; font-size: .82rem; padding: .4rem .35rem; }
 
     /* --- Premium nickname styles: role-gradient edition --- */
     .visual-name {
@@ -277,6 +328,11 @@
     .notif-btn.decline { background: var(--bg-header); color: var(--text-secondary); }
     .notif-empty { padding: 1rem; text-align: center; color: #555; font-size: 0.8rem; }
 
+    @media (max-width: 1100px) {
+      .members-sidebar { display: none; }
+      .chat-main { margin-right: 0; }
+      .composer-wrap { right: 0; }
+    }
     @media (max-width: 900px) {
       .server-sidebar { display:none; }
       .chat-main { margin-left: var(--rail); }
@@ -323,15 +379,23 @@
     {% for ch in channels %}
     <a href="/community/servers/{{ server.id }}/channel/{{ ch.id }}" class="chan-link {{ 'active' if ch.id == channel.id else '' }}"># {{ ch.name }}</a>
     {% endfor %}
-    <div class="sidebar-label">Учасники — {{ members|length }}</div>
-    {% for item in members[:12] %}
+  </aside>
+
+  <aside class="members-sidebar">
+    <div class="members-title">Учасники — {{ members|length }}</div>
+    {% for item in members %}
       {% set m = item.account %}
       {% if m %}
-      <a href="/community/profile/{{ m.username }}" class="member-mini">
-        <span class="avatar" {% if m.avatar_url %}style="background-image:url('{{ m.avatar_url }}');"{% endif %}>{% if not m.avatar_url %}{{ m.username[:1]|upper }}{% endif %}</span>
-        <span class="visual-name name-{{ m.name_effect or 'none' }} font-{{ m.name_font or 'default' }}" style="--name-c1: {{ m.role_color_start or '#f5576c' }}; --name-c2: {{ m.role_color_end or '#7367f0' }};">{{ m.username }}</span>
+      <a href="/community/profile/{{ m.username }}" class="member-row">
+        <span class="member-avatar" {% if m.avatar_url %}style="background-image:url('{{ m.avatar_url }}');"{% endif %}>{% if not m.avatar_url %}{{ m.username[:1]|upper }}{% endif %}</span>
+        <span class="member-info">
+          <span class="visual-name member-name name-{{ m.name_effect or 'none' }} font-{{ m.name_font or 'default' }}" style="--name-c1: {{ m.role_color_start or '#f5576c' }}; --name-c2: {{ m.role_color_end or '#7367f0' }};">{{ m.username }}</span>
+          <span class="member-role">{{ item.role }}</span>
+        </span>
       </a>
       {% endif %}
+    {% else %}
+      <div class="empty-members">Немає учасників.</div>
     {% endfor %}
   </aside>
 
