@@ -33,6 +33,14 @@ async def current_account(request: Request, db: AsyncSession):
     return await crud.get_account_by_id(db, account_id)
 
 
+async def server_rail_context(db: AsyncSession, account_id: int, active_server_id: int | None = None) -> dict:
+    """Small shared context used by pages that show the Discord-style server rail."""
+    return {
+        "servers": await crud.list_servers_for_account(db, account_id),
+        "active_server_id": active_server_id,
+    }
+
+
 # --- Registration -----------------------------------------------------------
 
 @router.get("/register")
@@ -179,10 +187,11 @@ async def community_home(request: Request, db: AsyncSession = Depends(get_db)):
     await crud.ensure_default_channels(db)
     channels = await crud.list_channels(db)
     online_members = await crud.list_online_accounts(db)
+    rail = await server_rail_context(db, account.id)
 
     return templates.TemplateResponse(
         "home.html",
-        {"request": request, "account": account, "online_members": online_members, "channels": channels},
+        {"request": request, "account": account, "online_members": online_members, "channels": channels, **rail},
     )
 
 
@@ -202,10 +211,11 @@ async def channel_view(slug: str, request: Request, db: AsyncSession = Depends(g
 
     channels = await crud.list_channels(db)
     feed = await crud.get_channel_feed(db, channel.id, viewer_id=account.id)
+    rail = await server_rail_context(db, account.id)
 
     return templates.TemplateResponse(
         "channel.html",
-        {"request": request, "account": account, "channels": channels, "channel": channel, "feed": feed},
+        {"request": request, "account": account, "channels": channels, "channel": channel, "feed": feed, **rail},
     )
 
 
@@ -247,6 +257,194 @@ async def api_toggle_like(post_id: int, request: Request, db: AsyncSession = Dep
     liked = await crud.toggle_like(db, post_id, account.id)
     count = await crud.count_likes(db, post_id)
     return JSONResponse({"liked": liked, "count": count})
+
+
+
+# --- User servers: Discord-style private spaces -----------------------------
+
+@router.get("/servers/new")
+async def server_create_form(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return RedirectResponse(url="/community/login", status_code=303)
+    rail = await server_rail_context(db, account.id)
+    return templates.TemplateResponse(
+        "server_create.html",
+        {"request": request, "account": account, "error": None, **rail},
+    )
+
+
+@router.post("/servers/new")
+async def server_create_submit(
+    request: Request,
+    name: str = Form(...),
+    icon_url: str = Form(""),
+    description: str = Form(""),
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return RedirectResponse(url="/community/login", status_code=303)
+
+    clean_name = name.strip()
+    if len(clean_name) < 2:
+        rail = await server_rail_context(db, account.id)
+        return templates.TemplateResponse(
+            "server_create.html",
+            {"request": request, "account": account, "error": "Назва сервера мінімум 2 символи.", **rail},
+            status_code=400,
+        )
+
+    server = await crud.create_server(
+        db,
+        owner_id=account.id,
+        name=clean_name,
+        icon_url=icon_url.strip(),
+        description=description.strip(),
+    )
+    return RedirectResponse(url=f"/community/servers/{server.id}", status_code=303)
+
+
+@router.get("/servers/{server_id}")
+async def server_home(server_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return RedirectResponse(url="/community/login", status_code=303)
+    if not await crud.is_server_member(db, server_id, account.id):
+        return RedirectResponse(url="/community", status_code=303)
+
+    await crud.touch_last_seen(db, account.id)
+    server = await crud.get_server_by_id(db, server_id)
+    if not server:
+        return RedirectResponse(url="/community", status_code=303)
+
+    channels = await crud.list_server_channels(db, server.id)
+    members = await crud.list_server_members(db, server.id)
+    friends = await crud.list_friends(db, account.id)
+    rail = await server_rail_context(db, account.id, active_server_id=server.id)
+    can_manage = await crud.can_manage_server(db, server.id, account.id)
+
+    return templates.TemplateResponse(
+        "server_home.html",
+        {
+            "request": request,
+            "account": account,
+            "server": server,
+            "channels": channels,
+            "members": members,
+            "friends": friends,
+            "can_manage": can_manage,
+            **rail,
+        },
+    )
+
+
+@router.post("/servers/{server_id}/channels/create")
+async def server_channel_create_submit(
+    server_id: int,
+    request: Request,
+    name: str = Form(...),
+    description: str = Form(""),
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return RedirectResponse(url="/community/login", status_code=303)
+    if not await crud.can_manage_server(db, server_id, account.id):
+        return RedirectResponse(url=f"/community/servers/{server_id}", status_code=303)
+
+    if name.strip():
+        await crud.create_server_channel(db, server_id, name.strip(), description.strip())
+    return RedirectResponse(url=f"/community/servers/{server_id}", status_code=303)
+
+
+@router.get("/servers/{server_id}/channel/{channel_id}")
+async def server_channel_view(server_id: int, channel_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return RedirectResponse(url="/community/login", status_code=303)
+    if not await crud.is_server_member(db, server_id, account.id):
+        return RedirectResponse(url="/community", status_code=303)
+
+    await crud.touch_last_seen(db, account.id)
+    server = await crud.get_server_by_id(db, server_id)
+    channel = await crud.get_server_channel(db, server_id, channel_id)
+    if not server or not channel:
+        return RedirectResponse(url=f"/community/servers/{server_id}", status_code=303)
+
+    channels = await crud.list_server_channels(db, server_id)
+    members = await crud.list_server_members(db, server_id)
+    feed = await crud.get_server_feed(db, server_id, channel_id)
+    rail = await server_rail_context(db, account.id, active_server_id=server_id)
+
+    return templates.TemplateResponse(
+        "server_channel.html",
+        {
+            "request": request,
+            "account": account,
+            "server": server,
+            "channel": channel,
+            "channels": channels,
+            "members": members,
+            "feed": feed,
+            **rail,
+        },
+    )
+
+
+@router.post("/servers/{server_id}/channel/{channel_id}/message")
+async def server_message_submit(
+    server_id: int,
+    channel_id: int,
+    request: Request,
+    content: str = Form(...),
+    image_url: str = Form(""),
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return RedirectResponse(url="/community/login", status_code=303)
+    if not await crud.is_server_member(db, server_id, account.id):
+        return RedirectResponse(url="/community", status_code=303)
+
+    channel = await crud.get_server_channel(db, server_id, channel_id)
+    if channel and content.strip():
+        await crud.create_server_message(db, server_id, channel_id, account.id, content.strip(), image_url.strip())
+    return RedirectResponse(url=f"/community/servers/{server_id}/channel/{channel_id}", status_code=303)
+
+
+@router.post("/servers/{server_id}/invite")
+async def server_invite_submit(
+    server_id: int,
+    request: Request,
+    username: str = Form(...),
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return RedirectResponse(url="/community/login", status_code=303)
+    if not await crud.is_server_member(db, server_id, account.id):
+        return RedirectResponse(url="/community", status_code=303)
+
+    target = await crud.get_account_by_username(db, username.strip())
+    if target:
+        await crud.invite_friend_to_server(db, server_id, account.id, target.id)
+    return RedirectResponse(url=f"/community/servers/{server_id}", status_code=303)
+
+
+@router.post("/api/server-invites/respond/{invite_id}")
+async def api_respond_server_invite(invite_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    viewer = await current_account(request, db)
+    if not viewer:
+        return JSONResponse({"error": "not_logged_in"}, status_code=401)
+
+    body = await request.json()
+    accept = bool(body.get("accept"))
+    invite = await crud.respond_server_invite(db, invite_id, viewer.id, accept)
+    if not invite:
+        return JSONResponse({"error": "not_found"}, status_code=404)
+
+    return JSONResponse({"status": invite.status, "server_id": invite.server_id})
 
 
 # --- Public profiles ---------------------------------------------------------
@@ -366,20 +564,35 @@ async def api_remove_friend(username: str, request: Request, db: AsyncSession = 
 
 @router.get("/api/notifications")
 async def api_notifications(request: Request, db: AsyncSession = Depends(get_db)):
-    """Polled every ~20s by the bell icon on home.html / public_profile.html."""
+    """Polled by the bell icon. Includes friend requests + server invites."""
     viewer = await current_account(request, db)
     if not viewer:
         return JSONResponse({"count": 0, "items": []})
 
-    pending = await crud.list_pending_requests_with_requester(db, viewer.id)
-    return JSONResponse({
-        "count": len(pending),
-        "items": [
-            {
-                "friendship_id": p["friendship_id"],
-                "username": p["requester"].username if p["requester"] else "?",
-                "avatar_url": p["requester"].avatar_url if p["requester"] else None,
-            }
-            for p in pending
-        ],
-    })
+    friend_pending = await crud.list_pending_requests_with_requester(db, viewer.id)
+    server_pending = await crud.list_pending_server_invites(db, viewer.id)
+
+    items = []
+    for p in friend_pending:
+        requester = p["requester"]
+        items.append({
+            "type": "friend_request",
+            "friendship_id": p["friendship_id"],
+            "username": requester.username if requester else "?",
+            "avatar_url": requester.avatar_url if requester else None,
+        })
+
+    for p in server_pending:
+        invite = p["invite"]
+        server = p["server"]
+        inviter = p["inviter"]
+        items.append({
+            "type": "server_invite",
+            "invite_id": invite.id,
+            "server_id": invite.server_id,
+            "server_name": server.name if server else "Сервер",
+            "icon_url": server.icon_url if server else None,
+            "inviter_username": inviter.username if inviter else "?",
+        })
+
+    return JSONResponse({"count": len(items), "items": items})
