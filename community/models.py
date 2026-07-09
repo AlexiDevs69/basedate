@@ -65,6 +65,10 @@ class Account(Base):
     # means last_seen_at is within the last few minutes (see crud.py). ---
     last_seen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
+    # Manual presence status shown in the Discord-like user panel.
+    # Values: online, idle, dnd, invisible.
+    account_status: Mapped[str] = mapped_column(String(16), default="online", nullable=False)
+
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
 
 
