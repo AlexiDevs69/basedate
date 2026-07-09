@@ -3,24 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Channel // AlexiHub</title>
+  <title>#{{ channel.name }} // {{ server.name }}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Baloo+2:wght@700;800&family=Bangers&family=Bungee&family=Bungee+Shade&family=Cinzel+Decorative:wght@700&family=Creepster&family=Fredoka:wght@700;800&family=Honk&family=Inter:wght@400;500;600;700;800&family=Jersey+10&family=JetBrains+Mono:wght@400;700&family=Lilita+One&family=Luckiest+Guy&family=Modak&family=Monoton&family=Pixelify+Sans:wght@700&family=Press+Start+2P&family=Righteous&family=Rubik+Glitch&family=Rubik+Iso&family=Rubik+Wet+Paint&family=Silkscreen:wght@700&family=Tilt+Prism&family=Titan+One&family=Unbounded:wght@700;800&display=swap" rel="stylesheet">
   <style>
-
     :root {
       --bg: #0b0b0b; --bg-elevated: #111111; --bg-header: #161616;
       --border: #222222; --border-hover: #333333;
       --text-primary: #ffffff; --text-secondary: #888888;
       --font-sans: 'Inter', system-ui, sans-serif; --font-mono: 'JetBrains Mono', monospace;
       --radius: 8px; --online: #10b981;
+      --rail: 72px; --sidebar: 240px; --topbar: 56px;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; overflow: hidden; }
     body { background: var(--bg); color: var(--text-primary); font-family: var(--font-sans); font-size: 14px; }
 
-    /* --- Discord-like server rail --- */
     .server-rail {
-      position: fixed; left: 0; top: 0; bottom: 0; width: 72px; z-index: 80;
+      position: fixed; left: 0; top: 0; bottom: 0; width: var(--rail); z-index: 80;
       background: #070707; border-right: 1px solid var(--border);
       display: flex; flex-direction: column; align-items: center; gap: 0.65rem;
       padding: 0.8rem 0.55rem; overflow-y: auto;
@@ -32,50 +33,71 @@
       transition: border-radius .18s ease, background .18s ease, border-color .18s ease, transform .18s ease;
     }
     .server-dot:hover, .server-dot.active { border-radius: 16px; border-color: var(--border-hover); transform: translateY(-1px); }
-    .server-dot.active::before {
-      content: ''; position: absolute; left: -9px; top: 50%; transform: translateY(-50%);
-      width: 4px; height: 28px; border-radius: 999px; background: var(--text-primary);
-    }
+    .server-dot.active::before { content: ''; position: absolute; left: -9px; top: 50%; transform: translateY(-50%); width: 4px; height: 28px; border-radius: 999px; background: var(--text-primary); }
     .server-dot span { width: 100%; height: 100%; background: center/cover no-repeat; display: block; }
     .server-dot.home-dot { background: linear-gradient(135deg, #181818, #101010); }
     .server-dot.plus { color: #10b981; font-size: 1.7rem; font-family: var(--font-sans); }
     .server-dot.plus:hover { background: #10b981; color: #06180d; }
     .rail-sep { width: 32px; height: 1px; background: var(--border); flex-shrink: 0; }
 
-    .topbar { position: fixed; top: 0; left: 72px; right: 0; height: 56px; z-index: 50; background: var(--bg-header); border-bottom: 1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 1.5rem; }
+    .topbar { position: fixed; top: 0; left: var(--rail); right: 0; height: var(--topbar); z-index: 50; background: var(--bg-header); border-bottom: 1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 1.5rem; }
     .brand { font-weight:700; color:var(--text-primary); text-decoration:none; }
     .topbar-right { display:flex; align-items:center; gap:1.25rem; }
     .me { display:flex; align-items:center; gap:.6rem; text-decoration:none; color:var(--text-primary); font-size:.85rem; }
     .me-avatar { width:28px; height:28px; border-radius:50%; background:var(--bg-elevated) center/cover no-repeat; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); color:var(--text-secondary); }
     .logout { color:var(--text-secondary); text-decoration:none; font-size:.8rem; }
     .logout:hover { color:var(--text-primary); }
-    .server-sidebar { position:fixed; left:72px; top:56px; bottom:0; width:240px; border-right:1px solid var(--border); background:var(--bg); padding:1rem; overflow-y:auto; }
+
+    .server-sidebar { position:fixed; left:var(--rail); top:var(--topbar); bottom:0; width:var(--sidebar); border-right:1px solid var(--border); background:var(--bg); padding:1rem; overflow-y:auto; }
     .server-title { font-weight:800; font-size:1rem; margin-bottom:.25rem; }
     .server-desc { color:var(--text-secondary); font-size:.8rem; margin-bottom:1rem; }
     .sidebar-label { font-size:.72rem; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.06em; margin:1rem 0 .55rem; }
     .chan-link { display:flex; align-items:center; gap:.4rem; padding:.48rem .6rem; border-radius:7px; color:var(--text-secondary); text-decoration:none; font-weight:650; margin-bottom:.15rem; }
     .chan-link:hover, .chan-link.active { background:rgba(255,255,255,.05); color:var(--text-primary); }
-    .main { margin-left:312px; padding:82px 1.5rem 2.5rem; max-width:760px; }
-    .card { background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--radius); padding:1.1rem; margin-bottom:1rem; }
-    .card h1 { font-size:1.35rem; margin-bottom:.35rem; }
-    .card p { color:var(--text-secondary); }
-    .btn, button { background:var(--text-primary); color:var(--bg); border:none; border-radius:var(--radius); padding:.55rem 1rem; font-weight:750; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; justify-content:center; }
-    .btn.secondary { background:var(--bg-header); color:var(--text-primary); border:1px solid var(--border); }
-    button:hover, .btn:hover { opacity:.86; }
-    input, textarea, select { width:100%; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius); padding:.62rem .75rem; color:var(--text-primary); font-family:var(--font-sans); }
-    textarea { resize:vertical; min-height:70px; }
-    label { display:block; font-size:.75rem; color:var(--text-secondary); font-weight:700; text-transform:uppercase; letter-spacing:.06em; margin:.8rem 0 .35rem; }
-    .composer textarea { min-height:70px; }
-    .message { display:flex; gap:.65rem; align-items:flex-start; padding:.7rem 0; border-bottom:1px solid rgba(255,255,255,.05); }
-    .message:last-child { border-bottom:none; }
-    .avatar { width:34px; height:34px; border-radius:50%; background:var(--bg-header) center/cover no-repeat; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); color:var(--text-secondary); }
-    .message-name-row { display:flex; align-items:center; gap:.35rem; }
-    .message-time { color:var(--text-secondary); font-size:.72rem; margin-top:.1rem; }
-    .message-content { white-space:pre-wrap; line-height:1.5; margin-top:.25rem; }
-    .message-image { margin-top:.6rem; max-width:100%; border-radius:8px; display:block; }
-    .member-mini { display:flex; align-items:center; gap:.5rem; color:var(--text-secondary); margin:.38rem 0; font-size:.85rem; }
+    .member-mini { display:flex; align-items:center; gap:.5rem; color:var(--text-secondary); margin:.38rem 0; font-size:.85rem; text-decoration:none; }
+    .avatar { width:34px; height:34px; border-radius:50%; background:var(--bg-header) center/cover no-repeat; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); color:var(--text-secondary); text-decoration:none; }
     .member-mini .avatar { width:24px; height:24px; font-size:.7rem; }
-    .empty-note { color:#555; font-size:.85rem; padding:.8rem 0; }
+
+    .chat-main { margin-left: calc(var(--rail) + var(--sidebar)); height: 100vh; padding-top: var(--topbar); display: flex; flex-direction: column; min-width: 0; }
+    .channel-header { height: 54px; flex: 0 0 auto; border-bottom: 1px solid var(--border); background: rgba(11,11,11,0.92); backdrop-filter: blur(10px); display:flex; align-items:center; justify-content:space-between; padding:0 1.4rem; }
+    .channel-title { display:flex; align-items:baseline; gap:.65rem; min-width:0; }
+    .channel-title h1 { font-size: 1rem; font-weight: 800; white-space: nowrap; }
+    .channel-title p { color: var(--text-secondary); font-size: .82rem; white-space: nowrap; overflow:hidden; text-overflow: ellipsis; }
+
+    .messages { flex: 1 1 auto; overflow-y: auto; padding: 1.1rem 1.25rem 7.6rem; scroll-behavior: smooth; }
+    .message { position: relative; display: flex; gap: .78rem; align-items: flex-start; padding: .34rem .75rem .34rem .15rem; border-radius: 8px; }
+    .message:hover { background: rgba(255,255,255,.035); }
+    .message + .message { margin-top: .15rem; }
+    .message-body { min-width: 0; flex: 1; padding-top: .05rem; }
+    .message-head { display:flex; align-items: baseline; gap:.45rem; min-width:0; }
+    .message-time { color: var(--text-secondary); font-size:.72rem; white-space:nowrap; }
+    .message-content { white-space: pre-wrap; line-height: 1.48; margin-top:.12rem; color: #dcddde; word-break: break-word; }
+    .message-image { margin-top:.55rem; max-width:min(520px, 100%); border-radius:8px; display:block; border:1px solid var(--border); }
+    .message-actions { position:absolute; right:.55rem; top:-.45rem; display:none; align-items:center; gap:.25rem; padding:.18rem; background:#151515; border:1px solid var(--border); border-radius:8px; box-shadow:0 8px 20px rgba(0,0,0,.32); }
+    .message:hover .message-actions { display:flex; }
+    .mini-action { width:28px; height:26px; border:none; background:transparent; color:var(--text-secondary); border-radius:6px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:.78rem; padding:0; }
+    .mini-action:hover { color:var(--text-primary); background:rgba(255,255,255,.07); }
+    .mini-action.danger:hover { color:#ef4444; }
+    .edit-form { display:none; margin-top:.45rem; }
+    .edit-form textarea { width:100%; min-height:58px; max-height:180px; resize:vertical; background:#0d0d0d; color:var(--text-primary); border:1px solid var(--border-hover); border-radius:8px; padding:.65rem .75rem; font-family:var(--font-sans); }
+    .edit-form input { width:100%; margin-top:.45rem; background:#0d0d0d; color:var(--text-primary); border:1px solid var(--border); border-radius:8px; padding:.52rem .65rem; }
+    .edit-actions { display:flex; align-items:center; gap:.45rem; margin-top:.45rem; }
+    .edit-save { border:none; background:#5865f2; color:white; border-radius:7px; padding:.4rem .7rem; font-weight:800; cursor:pointer; }
+    .edit-cancel { border:none; background:transparent; color:var(--text-secondary); cursor:pointer; padding:.4rem .45rem; }
+    .edit-cancel:hover { color:var(--text-primary); }
+    .empty-chat { color:#666; text-align:center; padding:4rem 1rem; font-size:.9rem; }
+
+    .composer-wrap { position: fixed; left: calc(var(--rail) + var(--sidebar)); right: 0; bottom: 0; z-index: 35; padding: .85rem 1.25rem 1.1rem; background: linear-gradient(to top, var(--bg) 74%, rgba(11,11,11,0)); }
+    .composer-box { background:#181818; border:1px solid var(--border); border-radius:14px; padding:.55rem .65rem; box-shadow:0 10px 28px rgba(0,0,0,.34); }
+    .composer-row { display:flex; align-items:flex-end; gap:.55rem; }
+    .composer-textarea { flex:1; width:100%; max-height:170px; min-height:42px; resize:none; border:none; outline:none; background:transparent; color:var(--text-primary); font-family:var(--font-sans); font-size:.95rem; line-height:1.35; padding:.64rem .4rem; }
+    .composer-textarea::placeholder { color:#777; }
+    .send-btn { width:38px; height:38px; border:none; border-radius:11px; background:#5865f2; color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; padding:0; }
+    .send-btn:hover { filter:brightness(1.08); }
+    .composer-tools { display:flex; align-items:center; gap:.45rem; border-top:1px solid rgba(255,255,255,.06); padding-top:.5rem; margin-top:.35rem; }
+    .image-input { flex:1; min-width:0; background:#101010; color:var(--text-primary); border:1px solid var(--border); border-radius:9px; padding:.5rem .65rem; font-family:var(--font-sans); }
+    .tool-hint { color:var(--text-secondary); font-size:.72rem; white-space:nowrap; }
+
     /* --- Premium nickname styles: role-gradient edition --- */
     .visual-name {
       --name-c1-safe: var(--name-c1, #f5576c);
@@ -238,16 +260,9 @@
     .comment-author.font-block,
     .user-cell .font-block { font-size: 0.95em; }
 
-    .post-card.has-card-bg { position: relative; overflow: hidden; }
-    .post-card.has-card-bg::before {
-      content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
-      background-image: linear-gradient(90deg, rgba(17,17,17,0.92), rgba(17,17,17,0.66)), var(--card-bg-image);
-      background-size: cover; background-position: center; opacity: 0.9;
-    }
-    .post-card.has-card-bg > * { position: relative; z-index: 1; }
-
     .notif-wrap { position: relative; }
-    .notif-bell { background: none; border: none; color: var(--text-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%; position: relative; }
+    .notif-bell { background: none; border: none; color: var(--text-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%; position: relative; padding:0; line-height:1; }
+    .notif-bell svg { display:block; width:19px; height:19px; stroke:currentColor; flex-shrink:0; }
     .notif-bell:hover { background: rgba(255,255,255,0.06); }
     .notif-badge { position: absolute; top: 2px; right: 2px; background: #ef4444; color: white; font-size: 0.65rem; font-weight: 700; border-radius: 999px; min-width: 16px; height: 16px; display: none; align-items: center; justify-content: center; padding: 0 3px; }
     .notif-dropdown { position: absolute; top: 44px; right: 0; width: 305px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 8px 24px rgba(0,0,0,0.4); z-index: 400; overflow: hidden; display: none; }
@@ -261,8 +276,13 @@
     .notif-btn.accept { background: #10b981; color: #06180d; }
     .notif-btn.decline { background: var(--bg-header); color: var(--text-secondary); }
     .notif-empty { padding: 1rem; text-align: center; color: #555; font-size: 0.8rem; }
-    @media (max-width: 900px) { .server-sidebar { display:none; } .main { margin-left:72px; max-width:100%; } }
 
+    @media (max-width: 900px) {
+      .server-sidebar { display:none; }
+      .chat-main { margin-left: var(--rail); }
+      .composer-wrap { left: var(--rail); }
+      .channel-title p { display:none; }
+    }
   </style>
 </head>
 <body>
@@ -276,12 +296,13 @@
     {% endfor %}
     <a href="/community/servers/new" class="server-dot plus" title="Створити сервер">+</a>
   </aside>
+
   <div class="topbar">
     <a href="/community" class="brand">AlexiHub // Community</a>
     <div class="topbar-right">
       <div class="notif-wrap">
         <button id="notif-bell" class="notif-bell" onclick="toggleNotifDropdown()" aria-label="Сповіщення">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="19" height="19"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
           <span id="notif-badge" class="notif-badge">0</span>
         </button>
         <div id="notif-dropdown" class="notif-dropdown"><div class="notif-header">Сповіщення</div><div id="notif-list"></div></div>
@@ -297,16 +318,16 @@
   <aside class="server-sidebar">
     <div class="server-title">{{ server.name }}</div>
     {% if server.description %}<div class="server-desc">{{ server.description }}</div>{% endif %}
-    <a href="/community/servers/{{ server.id }}" class="chan-link {{ 'active' if not channel else '' }}">⌂ Огляд</a>
+    <a href="/community/servers/{{ server.id }}" class="chan-link">⌂ Огляд</a>
     <div class="sidebar-label">Канали</div>
     {% for ch in channels %}
-    <a href="/community/servers/{{ server.id }}/channel/{{ ch.id }}" class="chan-link {{ 'active' if channel and ch.id == channel.id else '' }}"># {{ ch.name }}</a>
+    <a href="/community/servers/{{ server.id }}/channel/{{ ch.id }}" class="chan-link {{ 'active' if ch.id == channel.id else '' }}"># {{ ch.name }}</a>
     {% endfor %}
     <div class="sidebar-label">Учасники — {{ members|length }}</div>
     {% for item in members[:12] %}
       {% set m = item.account %}
       {% if m %}
-      <a href="/community/profile/{{ m.username }}" class="member-mini" style="text-decoration:none;">
+      <a href="/community/profile/{{ m.username }}" class="member-mini">
         <span class="avatar" {% if m.avatar_url %}style="background-image:url('{{ m.avatar_url }}');"{% endif %}>{% if not m.avatar_url %}{{ m.username[:1]|upper }}{% endif %}</span>
         <span class="visual-name name-{{ m.name_effect or 'none' }} font-{{ m.name_font or 'default' }}" style="--name-c1: {{ m.role_color_start or '#f5576c' }}; --name-c2: {{ m.role_color_end or '#7367f0' }};">{{ m.username }}</span>
       </a>
@@ -314,39 +335,69 @@
     {% endfor %}
   </aside>
 
-  <main class="main">
-    <div class="card" style="padding:.85rem 1.1rem;">
-      <h1 style="font-size:1.05rem;"># {{ channel.name }}</h1>
-      {% if channel.description %}<p>{{ channel.description }}</p>{% endif %}
+  <main class="chat-main">
+    <div class="channel-header">
+      <div class="channel-title">
+        <h1># {{ channel.name }}</h1>
+        {% if channel.description %}<p>{{ channel.description }}</p>{% else %}<p>Живий чат сервера</p>{% endif %}
+      </div>
     </div>
 
-    <div class="card composer">
-      <form method="post" action="/community/servers/{{ server.id }}/channel/{{ channel.id }}/message">
-        <textarea name="content" placeholder="Написати в #{{ channel.name }}..." required></textarea>
-        <input type="text" name="image_url" placeholder="Посилання на картинку, необовʼязково" style="margin-top:.6rem;">
-        <button type="submit" style="margin-top:.75rem;">Надіслати</button>
-      </form>
-    </div>
-
-    <div class="card">
+    <section id="messages" class="messages">
       {% for item in feed %}
       {% set author = item.author %}
-      <div class="message">
+      {% set is_mine = author and author.id == account.id %}
+      <article class="message" id="message-{{ item.message.id }}">
         <a href="/community/profile/{{ author.username if author else '' }}" class="avatar" {% if author and author.avatar_url %}style="background-image:url('{{ author.avatar_url }}');"{% endif %}>{% if author and not author.avatar_url %}{{ author.username[:1]|upper }}{% endif %}</a>
-        <div style="min-width:0; flex:1;">
-          <div class="message-name-row">
+        <div class="message-body">
+          <div class="message-head">
             <a href="/community/profile/{{ author.username if author else '' }}" class="visual-name name-{{ author.name_effect if author and author.name_effect else 'none' }} font-{{ author.name_font if author and author.name_font else 'default' }}" style="--name-c1: {{ author.role_color_start if author and author.role_color_start else '#f5576c' }}; --name-c2: {{ author.role_color_end if author and author.role_color_end else '#7367f0' }}; text-decoration:none;">{{ author.username if author else 'видалений юзер' }}</a>
+            <span class="message-time">{{ item.message.created_at }}</span>
           </div>
-          <div class="message-time">{{ item.message.created_at }}</div>
-          <div class="message-content">{{ item.message.content }}</div>
+          <div class="message-content" id="content-{{ item.message.id }}">{{ item.message.content }}</div>
           {% if item.message.image_url %}<img src="{{ item.message.image_url }}" class="message-image" alt="">{% endif %}
+
+          {% if is_mine %}
+          <form id="edit-form-{{ item.message.id }}" class="edit-form" method="post" action="/community/servers/{{ server.id }}/channel/{{ channel.id }}/message/{{ item.message.id }}/edit">
+            <textarea name="content" required>{{ item.message.content }}</textarea>
+            <input type="text" name="image_url" value="{{ item.message.image_url or '' }}" placeholder="Image URL, необовʼязково">
+            <div class="edit-actions">
+              <button type="submit" class="edit-save">Save</button>
+              <button type="button" class="edit-cancel" onclick="closeEdit({{ item.message.id }})">Cancel</button>
+            </div>
+          </form>
+          {% endif %}
+        </div>
+        {% if is_mine %}
+        <div class="message-actions">
+          <button type="button" class="mini-action" onclick="openEdit({{ item.message.id }})" title="Редагувати">✎</button>
+          <form method="post" action="/community/servers/{{ server.id }}/channel/{{ channel.id }}/message/{{ item.message.id }}/delete" onsubmit="return confirm('Видалити повідомлення?');">
+            <button type="submit" class="mini-action danger" title="Видалити">✕</button>
+          </form>
+        </div>
+        {% endif %}
+      </article>
+      {% else %}
+      <div class="empty-chat">Тут ще тихо. Напиши перше повідомлення в #{{ channel.name }}.</div>
+      {% endfor %}
+    </section>
+
+    <form class="composer-wrap" method="post" action="/community/servers/{{ server.id }}/channel/{{ channel.id }}/message" id="composer-form">
+      <div class="composer-box">
+        <div class="composer-row">
+          <textarea id="composer-textarea" class="composer-textarea" name="content" placeholder="Message #{{ channel.name }}" required></textarea>
+          <button class="send-btn" type="submit" title="Надіслати">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M22 2 11 13"></path><path d="M22 2 15 22 11 13 2 9 22 2z"></path></svg>
+          </button>
+        </div>
+        <div class="composer-tools">
+          <input class="image-input" type="text" name="image_url" placeholder="Image URL, якщо треба">
+          <span class="tool-hint">Enter — send · Shift+Enter — newline</span>
         </div>
       </div>
-      {% else %}
-      <div class="empty-note">Тут ще нема повідомлень.</div>
-      {% endfor %}
-    </div>
+    </form>
   </main>
+
   <script>
     function toggleNotifDropdown() {
       var dd = document.getElementById('notif-dropdown');
@@ -426,6 +477,42 @@
       var wrap = document.querySelector('.notif-wrap');
       if (wrap && !wrap.contains(e.target)) document.getElementById('notif-dropdown').style.display = 'none';
     });
+
+
+    var messagesEl = document.getElementById('messages');
+    if (messagesEl) messagesEl.scrollTop = messagesEl.scrollHeight;
+
+    var textarea = document.getElementById('composer-textarea');
+    var composerForm = document.getElementById('composer-form');
+    if (textarea) {
+      textarea.addEventListener('input', function () {
+        textarea.style.height = 'auto';
+        textarea.style.height = Math.min(textarea.scrollHeight, 170) + 'px';
+      });
+      textarea.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          if (textarea.value.trim()) composerForm.submit();
+        }
+      });
+    }
+
+    function openEdit(id) {
+      var content = document.getElementById('content-' + id);
+      var form = document.getElementById('edit-form-' + id);
+      if (!form) return;
+      if (content) content.style.display = 'none';
+      form.style.display = 'block';
+      var area = form.querySelector('textarea');
+      if (area) { area.focus(); area.setSelectionRange(area.value.length, area.value.length); }
+    }
+
+    function closeEdit(id) {
+      var content = document.getElementById('content-' + id);
+      var form = document.getElementById('edit-form-' + id);
+      if (content) content.style.display = '';
+      if (form) form.style.display = 'none';
+    }
   </script>
 </body>
 </html>
