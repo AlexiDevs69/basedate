@@ -385,7 +385,11 @@ async def community_user_edit_form(account_id: int, request: Request, db: AsyncS
     if not account:
         return RedirectResponse(url="/community-users", status_code=303)
 
-    return templates.TemplateResponse("community_user_edit.html", {"request": request, "account": account})
+    gifts = await community_crud.list_gifts(db)
+    return templates.TemplateResponse(
+        "community_user_edit.html",
+        {"request": request, "account": account, "gifts": gifts},
+    )
 
 
 @app.post("/community-users/{account_id}/edit")
@@ -411,6 +415,71 @@ async def community_user_edit_submit(
         is_banned=is_banned is not None,
     )
     return RedirectResponse(url="/community-users", status_code=303)
+
+
+@app.get("/gifts")
+async def gifts_admin(request: Request, db: AsyncSession = Depends(get_db)):
+    if not is_logged_in(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    gifts = await community_crud.list_gifts(db)
+    return templates.TemplateResponse("gifts.html", {"request": request, "gifts": gifts, "error": None})
+
+
+@app.post("/gifts/create")
+async def gift_create(
+    request: Request,
+    name: str = Form(...),
+    image_url: str = Form(...),
+    description: str = Form(""),
+    db: AsyncSession = Depends(get_db),
+):
+    if not is_logged_in(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    name = name.strip()
+    image_url = image_url.strip()
+    if not name or not image_url:
+        gifts = await community_crud.list_gifts(db)
+        return templates.TemplateResponse(
+            "gifts.html",
+            {"request": request, "gifts": gifts, "error": "Назва і URL картинки обов'язкові."},
+            status_code=400,
+        )
+
+    await community_crud.create_gift(db, name=name, image_url=image_url, description=description.strip())
+    return RedirectResponse(url="/gifts", status_code=303)
+
+
+@app.post("/gifts/{gift_id}/delete")
+async def gift_delete(gift_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    if not is_logged_in(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    await community_crud.delete_gift(db, gift_id)
+    return RedirectResponse(url="/gifts", status_code=303)
+
+
+@app.post("/community-users/{account_id}/gift")
+async def community_user_gift(
+    account_id: int,
+    request: Request,
+    gift_id: int = Form(...),
+    gifted_by: str = Form("Адміністрація"),
+    message: str = Form(""),
+    db: AsyncSession = Depends(get_db),
+):
+    if not is_logged_in(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    await community_crud.give_gift_to_account(
+        db,
+        recipient_id=account_id,
+        gift_id=gift_id,
+        gifted_by=gifted_by.strip() or "Адміністрація",
+        message=message.strip(),
+    )
+    return RedirectResponse(url=f"/community-users/{account_id}/edit", status_code=303)
 
 
 @app.post("/community-users/{account_id}/delete")
