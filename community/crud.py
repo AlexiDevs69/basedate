@@ -604,6 +604,40 @@ async def create_server_message(
     return message
 
 
+async def get_server_message(
+    db: AsyncSession,
+    server_id: int,
+    channel_id: int,
+    message_id: int,
+) -> ServerMessage | None:
+    result = await db.execute(
+        select(ServerMessage).where(
+            ServerMessage.id == message_id,
+            ServerMessage.server_id == server_id,
+            ServerMessage.channel_id == channel_id,
+        )
+    )
+    return result.scalar_one_or_none()
+
+
+async def update_server_message(
+    db: AsyncSession,
+    message: ServerMessage,
+    content: str,
+    image_url: str | None = None,
+) -> ServerMessage:
+    message.content = content.strip()
+    message.image_url = image_url.strip() if image_url and image_url.strip() else None
+    await db.commit()
+    await db.refresh(message)
+    return message
+
+
+async def delete_server_message(db: AsyncSession, message: ServerMessage) -> None:
+    await db.delete(message)
+    await db.commit()
+
+
 async def list_server_messages(db: AsyncSession, server_id: int, channel_id: int, limit: int = 80) -> list[ServerMessage]:
     result = await db.execute(
         select(ServerMessage)
@@ -793,4 +827,5 @@ async def list_gifts_for_account(db: AsyncSession, account_id: int) -> list[Gift
         .order_by(GiftInstance.created_at.desc())
     )
     return list(result.scalars().all())
+
 
