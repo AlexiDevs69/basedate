@@ -22,7 +22,7 @@ import lastfm
 from community import crud as community_crud
 from community.router import router as community_router
 from config import get_settings
-from database import get_db, init_db
+from database import AsyncSessionLocal, get_db, init_db
 from telegram import send_telegram_message
 
 settings = get_settings()
@@ -45,6 +45,11 @@ app.include_router(community_router)
 async def on_startup() -> None:
     if settings.auto_create_tables:
         await init_db()
+
+    # create_all() will not add new columns to existing tables, so visual
+    # profile columns are upgraded with an idempotent ALTER TABLE helper.
+    async with AsyncSessionLocal() as db:
+        await community_crud.ensure_account_visual_columns(db)
 
 
 def is_logged_in(request: Request) -> bool:
@@ -401,6 +406,11 @@ async def community_user_edit_submit(
     role_color_end: str = Form(""),
     is_verified: str | None = Form(None),
     is_banned: str | None = Form(None),
+    name_effect: str = Form("none"),
+    name_color_start: str = Form(""),
+    name_color_end: str = Form(""),
+    name_font: str = Form("default"),
+    profile_card_bg_url: str = Form(""),
     db: AsyncSession = Depends(get_db),
 ):
     if not is_logged_in(request):
@@ -413,6 +423,11 @@ async def community_user_edit_submit(
         role_color_start=role_color_start.strip(),
         role_color_end=role_color_end.strip(),
         is_banned=is_banned is not None,
+        name_effect=name_effect.strip(),
+        name_color_start=name_color_start.strip(),
+        name_color_end=name_color_end.strip(),
+        name_font=name_font.strip(),
+        profile_card_bg_url=profile_card_bg_url.strip(),
     )
     return RedirectResponse(url="/community-users", status_code=303)
 
