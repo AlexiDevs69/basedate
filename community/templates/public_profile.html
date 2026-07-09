@@ -115,13 +115,10 @@
     .friend-chip-avatar { width: 24px; height: 24px; border-radius: 50%; background: var(--bg-elevated) center/cover no-repeat; flex-shrink: 0; }
     .friend-chip-name { font-size: 0.8rem; }
     .friends-empty { color: #555; font-size: 0.82rem; }
-    /* --- Premium nickname styles: Discord-like smooth edition --- */
+    /* --- Premium nickname styles: role-gradient edition --- */
     .visual-name {
-      --name-c1-safe: var(--name-c1, #ff4fd8);
-      --name-c2-safe: var(--name-c2, #55e7ff);
-      --name-v1: color-mix(in srgb, var(--name-c1-safe) 88%, white 12%);
-      --name-v2: color-mix(in srgb, var(--name-c2-safe) 88%, white 12%);
-      --name-hi: color-mix(in srgb, white 76%, var(--name-c2-safe) 24%);
+      --name-c1-safe: var(--name-c1, #f5576c);
+      --name-c2-safe: var(--name-c2, #7367f0);
       font-weight: 800;
       color: var(--text-primary);
       display: inline-block;
@@ -131,80 +128,64 @@
       isolation: isolate;
       text-rendering: geometricPrecision;
       -webkit-font-smoothing: antialiased;
+      backface-visibility: hidden;
       transform: translateZ(0);
       will-change: background-position;
     }
 
     .name-none {
       color: var(--text-primary);
-      text-shadow: 0 1px 0 rgba(255,255,255,0.06);
+      text-shadow: none;
     }
 
     .name-gradient {
       background-image: linear-gradient(
         90deg,
-        var(--name-v1) 0%,
-        var(--name-hi) 12.5%,
-        var(--name-v2) 25%,
-        var(--name-hi) 37.5%,
-        var(--name-v1) 50%,
-        var(--name-hi) 62.5%,
-        var(--name-v2) 75%,
-        var(--name-hi) 87.5%,
-        var(--name-v1) 100%
+        var(--name-c1-safe) 0%,
+        var(--name-c2-safe) 48%,
+        var(--name-c1-safe) 100%
       );
-      background-size: 200% auto;
-      background-position: 0% center;
+      background-size: 240% 100%;
+      background-position: 0% 50%;
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
       -webkit-text-fill-color: transparent;
-      animation: discord-name-flow 4.6s linear infinite;
+      animation: role-name-flow 4.8s ease-in-out infinite alternate;
       text-shadow: none;
-      filter:
-        saturate(1.55)
-        brightness(1.15)
-        contrast(1.03)
-        drop-shadow(0 0 2px color-mix(in srgb, var(--name-v1) 28%, transparent))
-        drop-shadow(0 0 7px color-mix(in srgb, var(--name-v2) 22%, transparent));
+      filter: saturate(1.22) brightness(1.06) contrast(1.02);
     }
 
     .name-glow {
       background-image: linear-gradient(
         90deg,
-        var(--name-v1) 0%,
-        #ffffff 12.5%,
-        var(--name-v2) 25%,
-        #ffffff 37.5%,
-        var(--name-v1) 50%,
-        #ffffff 62.5%,
-        var(--name-v2) 75%,
-        #ffffff 87.5%,
-        var(--name-v1) 100%
+        var(--name-c1-safe) 0%,
+        var(--name-c2-safe) 48%,
+        var(--name-c1-safe) 100%
       );
-      background-size: 200% auto;
-      background-position: 0% center;
+      background-size: 240% 100%;
+      background-position: 0% 50%;
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
       -webkit-text-fill-color: transparent;
-      animation: discord-name-flow 5.4s linear infinite;
+      animation: role-name-flow 4.8s ease-in-out infinite alternate;
+      text-shadow: none;
       filter:
-        saturate(1.5)
-        brightness(1.22)
-        contrast(1.04)
-        drop-shadow(0 0 3px rgba(255,255,255,0.42))
-        drop-shadow(0 0 10px color-mix(in srgb, var(--name-v1) 48%, transparent))
-        drop-shadow(0 0 18px color-mix(in srgb, var(--name-v2) 30%, transparent));
+        saturate(1.24)
+        brightness(1.08)
+        contrast(1.02)
+        drop-shadow(0 0 4px color-mix(in srgb, var(--name-c1-safe) 38%, transparent))
+        drop-shadow(0 0 9px color-mix(in srgb, var(--name-c2-safe) 28%, transparent));
     }
 
-    @keyframes discord-name-flow {
-      0% { background-position: 0% center; }
-      100% { background-position: 200% center; }
+    @keyframes role-name-flow {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 100% 50%; }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .name-gradient, .name-glow { animation: none; background-position: 50% center; }
+      .name-gradient, .name-glow { animation: none; background-position: 50% 50%; }
     }
 
     .font-default { font-family: var(--font-sans); }
@@ -351,7 +332,7 @@
       </div>
       <div class="profile-body">
         <div class="profile-name-row">
-          <span class="profile-name visual-name name-{{ profile.name_effect or 'none' }} font-{{ profile.name_font or 'default' }}" style="--name-c1: {{ profile.name_color_start or profile.role_color_start or '#f5576c' }}; --name-c2: {{ profile.name_color_end or profile.role_color_end or '#7367f0' }};">{{ profile.username }}</span>
+          <span class="profile-name visual-name name-{{ profile.name_effect or 'none' }} font-{{ profile.name_font or 'default' }}" style="--name-c1: {{ profile.role_color_start or '#f5576c' }}; --name-c2: {{ profile.role_color_end or '#7367f0' }};">{{ profile.username }}</span>
           {% if profile.is_verified %}
           <span class="verified-badge">
             <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
