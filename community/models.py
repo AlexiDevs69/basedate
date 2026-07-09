@@ -50,6 +50,14 @@ class Account(Base):
     role_color_start: Mapped[str | None] = mapped_column(String(16), nullable=True)
     role_color_end: Mapped[str | None] = mapped_column(String(16), nullable=True)
 
+    # --- Visual identity -- Discord/Nitro-style nickname effects and card backgrounds. ---
+    # Existing columns are added idempotently on startup by community_crud.ensure_account_visual_columns().
+    name_effect: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    name_color_start: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    name_color_end: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    name_font: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    profile_card_bg_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
+
     # --- Moderation -- managed from the admin dashboard (next step). ---
     is_banned: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
