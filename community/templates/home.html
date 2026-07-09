@@ -89,6 +89,32 @@
     .verified-badge-sm svg { width: 8px; height: 8px; }
     .empty-note { color: #555; font-size: 0.8rem; }
 
+    .visual-name { font-weight: 700; color: var(--text-primary); }
+    .name-gradient {
+      background: linear-gradient(90deg, var(--name-c1, #f5576c), var(--name-c2, #7367f0), var(--name-c1, #f5576c));
+      background-size: 220% auto; -webkit-background-clip: text; background-clip: text;
+      color: transparent; -webkit-text-fill-color: transparent; animation: name-shimmer 3.2s linear infinite;
+    }
+    .name-glow {
+      color: var(--name-c1, #ffffff);
+      text-shadow: 0 0 8px color-mix(in srgb, var(--name-c1, #ffffff) 70%, transparent),
+                   0 0 16px color-mix(in srgb, var(--name-c2, #7367f0) 55%, transparent);
+    }
+    @keyframes name-shimmer { to { background-position: 220% center; } }
+    .font-mono { font-family: var(--font-mono); }
+    .font-serif { font-family: Georgia, 'Times New Roman', serif; }
+    .font-rounded { font-family: var(--font-sans); letter-spacing: 0.025em; }
+    .font-cyber { font-family: var(--font-mono); letter-spacing: 0.03em; text-transform: lowercase; }
+    .font-display { font-family: var(--font-sans); font-weight: 800; letter-spacing: -0.035em; }
+
+    .member-row.has-card-bg { position: relative; overflow: hidden; }
+    .member-row.has-card-bg::before {
+      content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background-image: linear-gradient(90deg, rgba(11,11,11,0.78), rgba(11,11,11,0.42)), var(--card-bg-image);
+      background-size: cover; background-position: center; opacity: 0.85;
+    }
+    .member-row.has-card-bg > * { position: relative; z-index: 1; }
+
     /* --- Notification bell --- */
     .notif-wrap { position: relative; }
     .notif-bell {
@@ -145,7 +171,7 @@
         <span class="me-avatar" {% if account.avatar_url %}style="background-image: url('{{ account.avatar_url }}');"{% endif %}>
           {% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}
         </span>
-        {{ account.username }}
+        <span class="visual-name name-{{ account.name_effect or 'none' }} font-{{ account.name_font or 'default' }}" style="--name-c1: {{ account.name_color_start or account.role_color_start or '#f5576c' }}; --name-c2: {{ account.name_color_end or account.role_color_end or '#7367f0' }};">{{ account.username }}</span>
       </a>
       <a href="/community/logout" class="logout">Log out</a>
     </div>
@@ -153,7 +179,7 @@
 
   <div class="layout">
     <main class="main">
-      <h1>Привіт, {{ account.username }} 👋</h1>
+      <h1>Привіт, <span class="visual-name name-{{ account.name_effect or 'none' }} font-{{ account.name_font or 'default' }}" style="--name-c1: {{ account.name_color_start or account.role_color_start or '#f5576c' }}; --name-c2: {{ account.name_color_end or account.role_color_end or '#7367f0' }};">{{ account.username }}</span></h1>
       <p class="sub">Обери канал і пиши.</p>
       <div class="channel-list">
         {% for ch in channels %}
@@ -174,7 +200,7 @@
     <aside class="sidebar-right">
       <h2>Онлайн — {{ online_members|length }}</h2>
       {% for member in online_members %}
-      <a href="/community/profile/{{ member.username }}" class="member-row">
+      <a href="/community/profile/{{ member.username }}" class="member-row {{ 'has-card-bg' if member.profile_card_bg_url else '' }}" {% if member.profile_card_bg_url %}style="--card-bg-image: url('{{ member.profile_card_bg_url }}');"{% endif %}>
         <span class="member-avatar-wrap">
           <span class="member-avatar" {% if member.avatar_url %}style="background-image: url('{{ member.avatar_url }}');"{% endif %}>
             {% if not member.avatar_url %}{{ member.username[:1]|upper }}{% endif %}
@@ -182,7 +208,7 @@
           <span class="online-dot"></span>
         </span>
         <span class="member-name-row">
-          <span class="member-name">{{ member.username }}</span>
+          <span class="member-name visual-name name-{{ member.name_effect or 'none' }} font-{{ member.name_font or 'default' }}" style="--name-c1: {{ member.name_color_start or member.role_color_start or '#f5576c' }}; --name-c2: {{ member.name_color_end or member.role_color_end or '#7367f0' }};">{{ member.username }}</span>
           {% if member.is_verified %}
           <span class="verified-badge-sm">
             <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
