@@ -42,8 +42,8 @@
     .chan-link:hover, .chan-link.active { background:rgba(255,255,255,.05); color:var(--text-primary); }
     .sidebar-label-row { display:flex; align-items:center; justify-content:space-between; gap:.5rem; margin:1rem 0 .55rem; }
     .sidebar-label-row .sidebar-label { margin:0; }
-    .sidebar-plus { width:22px; height:22px; border:1px solid transparent; border-radius:6px; background:transparent; color:var(--text-secondary); cursor:pointer; font-size:1.1rem; line-height:1; display:flex; align-items:center; justify-content:center; }
-    .sidebar-plus:hover { color:var(--text-primary); background:rgba(255,255,255,.06); border-color:var(--border); }
+    .sidebar-plus { width:22px; height:22px; border:1px solid transparent; border-radius:6px; background:transparent !important; color:var(--text-secondary) !important; cursor:pointer; font-size:1.1rem; line-height:1; display:flex; align-items:center; justify-content:center; flex:0 0 auto; padding:0; }
+    .sidebar-plus:hover { color:var(--text-primary) !important; background:rgba(255,255,255,.06) !important; border-color:var(--border); }
     .mini-channel-form { display:none; margin:.35rem 0 .65rem; padding:.55rem; border:1px solid var(--border); border-radius:10px; background:#0f0f0f; }
     .mini-channel-form.open { display:block; }
     .mini-channel-form input { height:34px; margin-bottom:.4rem; font-size:.78rem; padding:.45rem .55rem; border-radius:8px; }
@@ -544,4 +544,5 @@
   </script>
 </body>
 </html>
+
 
