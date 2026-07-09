@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ profile.username }} // AlexiHub</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Baloo+2:wght@700;800&family=Bangers&family=Bungee&family=Bungee+Shade&family=Cinzel+Decorative:wght@700&family=Creepster&family=Fredoka:wght@700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&family=Luckiest+Guy&family=Modak&family=Monoton&family=Pixelify+Sans:wght@700&family=Press+Start+2P&family=Righteous&family=Rubik+Glitch&family=Rubik+Wet+Paint&family=Unbounded:wght@700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Baloo+2:wght@700;800&family=Bangers&family=Bungee&family=Bungee+Shade&family=Cinzel+Decorative:wght@700&family=Creepster&family=Fredoka:wght@700;800&family=Honk&family=Inter:wght@400;500;600;700;800&family=Jersey+10&family=JetBrains+Mono:wght@400;700&family=Lilita+One&family=Luckiest+Guy&family=Modak&family=Monoton&family=Pixelify+Sans:wght@700&family=Press+Start+2P&family=Righteous&family=Rubik+Glitch&family=Rubik+Iso&family=Rubik+Wet+Paint&family=Silkscreen:wght@700&family=Tilt+Prism&family=Titan+One&family=Unbounded:wght@700;800&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #0b0b0b; --bg-elevated: #111111; --bg-header: #161616;
@@ -118,198 +118,180 @@
 
 
 
-    /* --- Premium nickname styles --- */
+    /* --- Premium nickname styles: Discord-like smooth edition --- */
     .visual-name {
       --name-c1-safe: var(--name-c1, #ff4fd8);
       --name-c2-safe: var(--name-c2, #55e7ff);
+      --name-v1: color-mix(in srgb, var(--name-c1-safe) 84%, white 16%);
+      --name-v2: color-mix(in srgb, var(--name-c2-safe) 84%, white 16%);
+      --name-hi: color-mix(in srgb, white 82%, var(--name-c2-safe) 18%);
       font-weight: 800;
       color: var(--text-primary);
       display: inline-block;
       max-width: 100%;
-      line-height: 1.02;
+      line-height: 1.03;
       vertical-align: baseline;
       isolation: isolate;
       text-rendering: geometricPrecision;
       -webkit-font-smoothing: antialiased;
-      filter: saturate(1.16) contrast(1.06);
+      transform: translateZ(0);
+      will-change: background-position, filter;
     }
+
     .name-none {
       color: var(--text-primary);
-      text-shadow: 0 1px 0 rgba(255,255,255,0.05), 0 2px 8px rgba(0,0,0,0.35);
+      text-shadow: 0 1px 0 rgba(255,255,255,0.06);
     }
+
     .name-gradient {
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.08) 28%, rgba(255,255,255,0) 48%),
-        linear-gradient(92deg, var(--name-c1-safe) 0%, #ffffff 18%, var(--name-c2-safe) 42%, #b8fffb 62%, var(--name-c1-safe) 100%);
-      background-size: 100% 100%, 260% auto;
+      background-image: repeating-linear-gradient(
+        110deg,
+        var(--name-v1) 0%,
+        var(--name-hi) 9%,
+        var(--name-v2) 20%,
+        #ffffff 31%,
+        var(--name-v1) 42%,
+        var(--name-v2) 54%,
+        var(--name-hi) 66%,
+        var(--name-v1) 80%
+      );
+      background-size: 240% 100%;
+      background-position: 0% 50%;
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
       -webkit-text-fill-color: transparent;
-      animation: name-shimmer 2.8s linear infinite;
-      -webkit-text-stroke: 0.25px rgba(255,255,255,0.18);
+      animation: discord-name-flow 5.2s linear infinite;
+      text-shadow: none;
       filter:
-        saturate(1.35)
-        contrast(1.1)
-        drop-shadow(0 0 5px color-mix(in srgb, var(--name-c1-safe) 42%, transparent))
-        drop-shadow(0 0 13px color-mix(in srgb, var(--name-c2-safe) 26%, transparent));
+        saturate(1.42)
+        brightness(1.12)
+        contrast(1.04)
+        drop-shadow(0 0 3px color-mix(in srgb, var(--name-v1) 38%, transparent))
+        drop-shadow(0 0 9px color-mix(in srgb, var(--name-v2) 22%, transparent));
     }
+
     .name-glow {
-      color: #fff;
-      -webkit-text-stroke: 0.35px color-mix(in srgb, var(--name-c1-safe) 55%, rgba(255,255,255,0.3));
-      text-shadow:
-        0 0 2px #fff,
-        0 0 8px color-mix(in srgb, var(--name-c1-safe) 95%, transparent),
-        0 0 18px color-mix(in srgb, var(--name-c2-safe) 75%, transparent),
-        0 0 32px color-mix(in srgb, var(--name-c2-safe) 35%, transparent);
-      filter: saturate(1.35) brightness(1.08);
+      background-image: repeating-linear-gradient(
+        110deg,
+        #ffffff 0%,
+        var(--name-v1) 14%,
+        #ffffff 28%,
+        var(--name-v2) 42%,
+        #ffffff 56%,
+        var(--name-v1) 70%
+      );
+      background-size: 220% 100%;
+      background-position: 0% 50%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+      animation: discord-name-flow 6.4s linear infinite;
+      filter:
+        saturate(1.38)
+        brightness(1.18)
+        drop-shadow(0 0 4px rgba(255,255,255,0.56))
+        drop-shadow(0 0 12px color-mix(in srgb, var(--name-v1) 55%, transparent))
+        drop-shadow(0 0 24px color-mix(in srgb, var(--name-v2) 34%, transparent));
     }
-    @keyframes name-shimmer { to { background-position: 100% 100%, 260% center; } }
+
+    @keyframes discord-name-flow {
+      from { background-position: 0% 50%; }
+      to { background-position: -240% 50%; }
+    }
 
     .font-default { font-family: var(--font-sans); }
     .font-mono { font-family: var(--font-mono); font-weight: 800; }
     .font-serif { font-family: Georgia, 'Times New Roman', serif; font-weight: 800; letter-spacing: -0.02em; }
-    .font-rounded { font-family: 'Fredoka', var(--font-sans); font-weight: 700; letter-spacing: 0.01em; }
-    .font-cyber { font-family: 'Righteous', var(--font-mono); font-weight: 400; letter-spacing: 0.04em; text-transform: lowercase; }
+    .font-rounded { font-family: 'Fredoka', var(--font-sans); font-weight: 800; letter-spacing: 0.005em; }
+    .font-cyber { font-family: 'Righteous', var(--font-mono); font-weight: 400; letter-spacing: 0.035em; }
     .font-display { font-family: 'Unbounded', var(--font-sans); font-weight: 800; letter-spacing: -0.055em; }
 
     .font-pixel {
-      font-family: 'Pixelify Sans', 'Press Start 2P', var(--font-mono);
+      font-family: 'Press Start 2P', 'Silkscreen', 'Pixelify Sans', var(--font-mono);
       font-weight: 700;
-      font-size: 1.02em;
-      letter-spacing: 0.015em;
-      text-shadow:
-        1px 1px 0 rgba(0,0,0,0.45),
-        0 0 10px color-mix(in srgb, var(--name-c2-safe) 28%, transparent);
+      font-size: 0.72em;
+      letter-spacing: -0.025em;
+      line-height: 1.22;
+      image-rendering: pixelated;
+      filter: saturate(1.5) brightness(1.18) contrast(1.08);
     }
     .font-bubble {
-      font-family: 'Luckiest Guy', var(--font-sans);
+      font-family: 'Titan One', 'Luckiest Guy', var(--font-sans);
       font-weight: 400;
-      letter-spacing: 0.045em;
-      transform: translateY(0.04em) rotate(-0.5deg);
-      text-shadow:
-        0 2px 0 rgba(255,255,255,0.14),
-        0 3px 0 rgba(0,0,0,0.38),
-        0 0 16px color-mix(in srgb, var(--name-c1-safe) 30%, transparent);
+      letter-spacing: 0.025em;
+      transform: translateY(0.03em);
+      filter: saturate(1.46) brightness(1.12);
     }
     .font-puffy {
       font-family: 'Bagel Fat One', 'Modak', var(--font-sans);
       font-weight: 400;
-      font-size: 1.13em;
-      letter-spacing: 0.012em;
-      line-height: 0.94;
-      text-shadow:
-        0 2px 0 rgba(255,255,255,0.16),
-        0 4px 0 rgba(0,0,0,0.32),
-        0 0 18px color-mix(in srgb, var(--name-c2-safe) 28%, transparent);
+      font-size: 1.12em;
+      letter-spacing: 0.004em;
+      line-height: 0.95;
+      filter: saturate(1.42) brightness(1.12);
     }
     .font-block {
-      font-family: 'Bungee Shade', 'Bungee', var(--font-sans);
+      font-family: 'Bungee', 'Lilita One', var(--font-sans);
       font-weight: 400;
-      letter-spacing: 0.018em;
-      filter: saturate(1.3) contrast(1.12);
+      letter-spacing: 0.012em;
+      filter: saturate(1.42) brightness(1.1) contrast(1.08);
     }
     .font-neon {
-      font-family: 'Monoton', var(--font-sans);
+      font-family: 'Monoton', 'Tilt Prism', var(--font-sans);
       font-weight: 400;
-      letter-spacing: 0.045em;
-      text-shadow:
-        0 0 4px #fff,
-        0 0 12px color-mix(in srgb, var(--name-c1-safe) 92%, transparent),
-        0 0 24px color-mix(in srgb, var(--name-c2-safe) 58%, transparent);
+      letter-spacing: 0.04em;
+      filter: saturate(1.6) brightness(1.18)
+        drop-shadow(0 0 4px rgba(255,255,255,0.4))
+        drop-shadow(0 0 14px color-mix(in srgb, var(--name-v2) 35%, transparent));
     }
     .font-glitch {
       font-family: 'Rubik Glitch', var(--font-sans);
       font-weight: 400;
-      letter-spacing: 0.03em;
-      text-shadow:
-        1px 0 0 #ff2bd6,
-        -1px 0 0 #27f7ff,
-        0 0 13px rgba(255,255,255,0.22);
+      letter-spacing: 0.025em;
+      filter: saturate(1.45) brightness(1.12);
+      text-shadow: 1px 0 0 #ff2bd6, -1px 0 0 #27f7ff;
     }
     .font-graffiti {
       font-family: 'Rubik Wet Paint', 'Bangers', var(--font-sans);
       font-weight: 400;
-      letter-spacing: 0.035em;
-      text-shadow:
-        0 2px 0 rgba(0,0,0,0.35),
-        0 0 14px color-mix(in srgb, var(--name-c1-safe) 30%, transparent);
+      letter-spacing: 0.032em;
+      filter: saturate(1.46) brightness(1.13);
     }
     .font-spooky {
       font-family: 'Creepster', var(--font-sans);
       font-weight: 400;
-      letter-spacing: 0.045em;
-      text-shadow:
-        0 2px 0 rgba(0,0,0,0.45),
-        0 0 18px color-mix(in srgb, var(--name-c1-safe) 45%, transparent);
+      letter-spacing: 0.04em;
+      filter: saturate(1.38) brightness(1.08);
     }
     .font-medieval {
-      font-family: 'Cinzel Decorative', 'Cinzel', Georgia, serif;
+      font-family: 'Cinzel Decorative', Georgia, serif;
       font-weight: 700;
-      letter-spacing: 0.015em;
-      text-shadow: 0 1px 0 rgba(255,255,255,0.12), 0 0 12px color-mix(in srgb, var(--name-c2-safe) 22%, transparent);
+      letter-spacing: 0.01em;
+      filter: saturate(1.32) brightness(1.08);
     }
     .font-roundfat {
-      font-family: 'Baloo 2', var(--font-sans);
+      font-family: 'Baloo 2', 'Fredoka', var(--font-sans);
       font-weight: 800;
-      letter-spacing: 0.005em;
-      text-shadow: 0 2px 0 rgba(0,0,0,0.24), 0 0 12px color-mix(in srgb, var(--name-c1-safe) 24%, transparent);
+      letter-spacing: 0.004em;
+      filter: saturate(1.32) brightness(1.1);
     }
 
     .post-name.font-pixel,
     .member-name.font-pixel,
     .comment-author.font-pixel,
-    .user-cell .font-pixel { font-size: 0.92em; }
-    .profile-name.font-pixel { font-size: 1.02em; }
+    .user-cell .font-pixel { font-size: 0.68em; }
+    .profile-name.font-pixel { font-size: 0.8em; }
+    .preview-card .font-pixel { font-size: 0.82em; }
     .post-name.font-puffy,
     .member-name.font-puffy,
     .comment-author.font-puffy,
-    .user-cell .font-puffy { font-size: 1.05em; }
+    .user-cell .font-puffy { font-size: 1.04em; }
     .post-name.font-block,
     .member-name.font-block,
     .comment-author.font-block,
-    .user-cell .font-block { font-size: 0.94em; }
-
-    .form-section-title {
-      margin: 0.35rem 0 1rem;
-      font-size: 0.72rem;
-      font-weight: 700;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-    .preview-card {
-      --preview-bg: none;
-      position: relative;
-      overflow: hidden;
-      margin-top: 0.2rem;
-      margin-bottom: 1.25rem;
-      padding: 1rem;
-      min-height: 78px;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      background-image:
-        radial-gradient(circle at 12% 0%, color-mix(in srgb, var(--name-c1-safe, #ff4fd8) 22%, transparent), transparent 34%),
-        linear-gradient(90deg, rgba(255,255,255,0.055), rgba(255,255,255,0.012)),
-        var(--preview-bg);
-      background-size: cover;
-      background-position: center;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 0.35rem;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 10px 30px rgba(0,0,0,0.18);
-    }
-    .preview-card::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(90deg, rgba(11,11,11,0.72), rgba(11,11,11,0.28));
-      pointer-events: none;
-    }
-    [data-theme="light"] .preview-card::before { background: linear-gradient(90deg, rgba(255,255,255,0.72), rgba(255,255,255,0.3)); }
-    .preview-card > * { position: relative; z-index: 1; }
-    .preview-card .visual-name { font-size: 1.35rem; }
+    .user-cell .font-block { font-size: 0.95em; }
 
     .profile-card.has-card-bg { position: relative; }
     .profile-card.has-card-bg::before {
