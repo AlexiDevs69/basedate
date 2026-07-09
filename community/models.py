@@ -137,6 +137,69 @@ class PostLike(Base):
     account_id: Mapped[int] = mapped_column(Integer, ForeignKey("community_accounts.id"), nullable=False, index=True)
 
 
+
+# ============================================================================
+# User-created servers: Discord-style server rail + private server channels.
+# ============================================================================
+
+class CommunityServer(Base):
+    __tablename__ = "community_servers"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String(64), nullable=False)
+    icon_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    description: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    owner_id: Mapped[int] = mapped_column(Integer, ForeignKey("community_accounts.id"), nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
+class ServerMember(Base):
+    __tablename__ = "community_server_members"
+    __table_args__ = (UniqueConstraint("server_id", "account_id", name="uq_community_server_member"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    server_id: Mapped[int] = mapped_column(Integer, ForeignKey("community_servers.id"), nullable=False, index=True)
+    account_id: Mapped[int] = mapped_column(Integer, ForeignKey("community_accounts.id"), nullable=False, index=True)
+    role: Mapped[str] = mapped_column(String(16), default="member", nullable=False)
+    joined_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
+class ServerChannel(Base):
+    __tablename__ = "community_server_channels"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    server_id: Mapped[int] = mapped_column(Integer, ForeignKey("community_servers.id"), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(64), nullable=False)
+    description: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    sort_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
+class ServerInvite(Base):
+    __tablename__ = "community_server_invites"
+    __table_args__ = (UniqueConstraint("server_id", "invitee_id", name="uq_community_server_invite"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    server_id: Mapped[int] = mapped_column(Integer, ForeignKey("community_servers.id"), nullable=False, index=True)
+    inviter_id: Mapped[int] = mapped_column(Integer, ForeignKey("community_accounts.id"), nullable=False, index=True)
+    invitee_id: Mapped[int] = mapped_column(Integer, ForeignKey("community_accounts.id"), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(16), default="pending", nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+    responded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class ServerMessage(Base):
+    __tablename__ = "community_server_messages"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    server_id: Mapped[int] = mapped_column(Integer, ForeignKey("community_servers.id"), nullable=False, index=True)
+    channel_id: Mapped[int] = mapped_column(Integer, ForeignKey("community_server_channels.id"), nullable=False, index=True)
+    author_id: Mapped[int] = mapped_column(Integer, ForeignKey("community_accounts.id"), nullable=False, index=True)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    image_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True, nullable=False)
+
+
 # ============================================================================
 # Gifts: admin-created catalog + issued gifts on public profiles.
 # ============================================================================
