@@ -100,6 +100,32 @@
 
     .empty-feed { text-align: center; color: #555; font-size: 0.85rem; padding: 2rem 0; }
 
+    .visual-name { font-weight: 700; color: var(--text-primary); }
+    .name-gradient {
+      background: linear-gradient(90deg, var(--name-c1, #f5576c), var(--name-c2, #7367f0), var(--name-c1, #f5576c));
+      background-size: 220% auto; -webkit-background-clip: text; background-clip: text;
+      color: transparent; -webkit-text-fill-color: transparent; animation: name-shimmer 3.2s linear infinite;
+    }
+    .name-glow {
+      color: var(--name-c1, #ffffff);
+      text-shadow: 0 0 8px color-mix(in srgb, var(--name-c1, #ffffff) 70%, transparent),
+                   0 0 16px color-mix(in srgb, var(--name-c2, #7367f0) 55%, transparent);
+    }
+    @keyframes name-shimmer { to { background-position: 220% center; } }
+    .font-mono { font-family: var(--font-mono); }
+    .font-serif { font-family: Georgia, 'Times New Roman', serif; }
+    .font-rounded { font-family: var(--font-sans); letter-spacing: 0.025em; }
+    .font-cyber { font-family: var(--font-mono); letter-spacing: 0.03em; text-transform: lowercase; }
+    .font-display { font-family: var(--font-sans); font-weight: 800; letter-spacing: -0.035em; }
+
+    .post-card.has-card-bg { position: relative; overflow: hidden; }
+    .post-card.has-card-bg::before {
+      content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background-image: linear-gradient(90deg, rgba(17,17,17,0.92), rgba(17,17,17,0.66)), var(--card-bg-image);
+      background-size: cover; background-position: center; opacity: 0.9;
+    }
+    .post-card.has-card-bg > * { position: relative; z-index: 1; }
+
     .notif-wrap { position: relative; }
     .notif-bell { background: none; border: none; color: var(--text-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%; position: relative; }
     .notif-bell:hover { background: rgba(255,255,255,0.06); }
@@ -136,7 +162,7 @@
       </div>
       <a href="/community/profile/{{ account.username }}" class="me">
         <span class="me-avatar" {% if account.avatar_url %}style="background-image: url('{{ account.avatar_url }}');"{% endif %}></span>
-        {{ account.username }}
+        <span class="visual-name name-{{ account.name_effect or 'none' }} font-{{ account.name_font or 'default' }}" style="--name-c1: {{ account.name_color_start or account.role_color_start or '#f5576c' }}; --name-c2: {{ account.name_color_end or account.role_color_end or '#7367f0' }};">{{ account.username }}</span>
       </a>
       <a href="/community/logout" class="logout">Log out</a>
     </div>
@@ -159,14 +185,14 @@
     </div>
 
     {% for item in feed %}
-    <div class="post-card">
+    <div class="post-card {{ 'has-card-bg' if item.author and item.author.profile_card_bg_url else '' }}" {% if item.author and item.author.profile_card_bg_url %}style="--card-bg-image: url('{{ item.author.profile_card_bg_url }}');"{% endif %}>
       <div class="post-author">
         <a href="/community/profile/{{ item.author.username }}">
           <span class="post-avatar" {% if item.author and item.author.avatar_url %}style="background-image: url('{{ item.author.avatar_url }}');"{% endif %}></span>
         </a>
         <div>
           <div class="post-name-row">
-            <a href="/community/profile/{{ item.author.username if item.author else '' }}" class="post-name">{{ item.author.username if item.author else 'видалений юзер' }}</a>
+            <a href="/community/profile/{{ item.author.username if item.author else '' }}" class="post-name visual-name name-{{ item.author.name_effect if item.author and item.author.name_effect else 'none' }} font-{{ item.author.name_font if item.author and item.author.name_font else 'default' }}" style="--name-c1: {{ item.author.name_color_start if item.author and item.author.name_color_start else (item.author.role_color_start if item.author and item.author.role_color_start else '#f5576c') }}; --name-c2: {{ item.author.name_color_end if item.author and item.author.name_color_end else (item.author.role_color_end if item.author and item.author.role_color_end else '#7367f0') }};">{{ item.author.username if item.author else 'видалений юзер' }}</a>
             {% if item.author and item.author.is_verified %}
             <span class="verified-dot">
               <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -196,7 +222,7 @@
         <div class="comment-row">
           <span class="comment-avatar" {% if c.author and c.author.avatar_url %}style="background-image: url('{{ c.author.avatar_url }}');"{% endif %}></span>
           <div class="comment-body">
-            <span class="comment-author">{{ c.author.username if c.author else '?' }}</span>
+            <span class="comment-author visual-name name-{{ c.author.name_effect if c.author and c.author.name_effect else 'none' }} font-{{ c.author.name_font if c.author and c.author.name_font else 'default' }}" style="--name-c1: {{ c.author.name_color_start if c.author and c.author.name_color_start else (c.author.role_color_start if c.author and c.author.role_color_start else '#f5576c') }}; --name-c2: {{ c.author.name_color_end if c.author and c.author.name_color_end else (c.author.role_color_end if c.author and c.author.role_color_end else '#7367f0') }};">{{ c.author.username if c.author else '?' }}</span>
             <span class="comment-text">{{ c.comment.content }}</span>
           </div>
         </div>
