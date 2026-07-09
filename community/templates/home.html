@@ -22,6 +22,8 @@
       --accent: #5865f2;
       --green: #23a55a;
       --red: #ef4444;
+      --yellow: #f0b232;
+      --gray: #80848e;
       --font: 'Inter', system-ui, sans-serif;
       --mono: 'JetBrains Mono', monospace;
     }
@@ -199,6 +201,7 @@
       position: relative;
       color: var(--text);
     }
+    .avatar .presence,
     .avatar .online {
       position: absolute;
       right: -1px;
@@ -211,14 +214,7 @@
     }
     .dm-meta { min-width: 0; flex: 1; }
     .dm-name { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .dm-snippet {
-      font-size: 12px;
-      color: var(--muted2);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      margin-top: 1px;
-    }
+    .dm-snippet { display: none; }
     .empty-note { color: var(--muted2); font-size: 12px; padding: 6px 10px 12px; }
 
     .user-panel {
@@ -234,7 +230,44 @@
     .user-info { min-width: 0; flex: 1; }
     .user-info b { display: block; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .user-info span { display: flex; align-items: center; gap: 5px; color: var(--muted2); font-size: 11px; }
-    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); display: inline-block; }
+    .status-dot, .presence { width: 9px; height: 9px; border-radius: 50%; background: var(--green); display: inline-block; }
+    .status-online { background: var(--green) !important; }
+    .status-idle { background: var(--yellow) !important; }
+    .status-dnd { background: var(--red) !important; }
+    .status-invisible { background: var(--gray) !important; }
+    .status-menu {
+      position: absolute;
+      left: 10px;
+      bottom: 62px;
+      width: 220px;
+      background: #24252b;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 8px;
+      box-shadow: 0 18px 40px rgba(0,0,0,.42);
+      display: none;
+      z-index: 50;
+    }
+    .status-menu.open { display: block; }
+    .status-menu button {
+      width: 100%;
+      min-height: 42px;
+      border: 0;
+      background: transparent;
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 9px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      text-align: left;
+    }
+    .status-menu button:hover { background: var(--hover); }
+    .status-menu small { display:block; color: var(--muted2); font-size: 11px; margin-top: 1px; }
+    .user-panel { position: relative; }
+    .user-panel .status-trigger { cursor: pointer; border-radius: 7px; padding: 2px 4px; margin-left: -4px; }
+    .user-panel .status-trigger:hover { background: var(--hover); }
     .user-actions { display: flex; gap: 4px; }
     .user-actions button {
       width: 28px;
@@ -416,15 +449,14 @@
         {% for item in dm_threads %}
         {% set other = item.other %}
         {% if other %}
+        {% set other_status = other.account_status or 'online' %}
+        {% set other_visible = other.id in online_ids and other_status != 'invisible' %}
         <a class="dm-row" href="/community/dm/{{ other.username }}" data-name="{{ other.username|lower }}">
           <span class="avatar" {% if other.avatar_url %}style="background-image:url('{{ other.avatar_url }}')"{% endif %}>
             {% if not other.avatar_url %}{{ other.username[:1]|upper }}{% endif %}
-            <span class="online"></span>
+            {% if other_visible %}<span class="presence status-{{ other_status }}"></span>{% endif %}
           </span>
-          <span class="dm-meta">
-            <span class="dm-name">{{ other.username }}</span>
-            <span class="dm-snippet">{% if item.last_message %}{{ item.last_message.content[:42] }}{% else %}Почати діалог{% endif %}</span>
-          </span>
+          <span class="dm-meta"><span class="dm-name">{{ other.username }}</span></span>
         </a>
         {% endif %}
         {% else %}
@@ -433,26 +465,32 @@
 
         <div class="section" style="padding-left:2px;padding-right:2px;">Друзі</div>
         {% for f in friends %}
+        {% set f_status = f.account_status or 'online' %}
+        {% set f_visible = f.id in online_ids and f_status != 'invisible' %}
         <a class="dm-row" href="/community/dm/{{ f.username }}" data-name="{{ f.username|lower }}">
-          <span class="avatar" {% if f.avatar_url %}style="background-image:url('{{ f.avatar_url }}')"{% endif %}>{% if not f.avatar_url %}{{ f.username[:1]|upper }}{% endif %}</span>
-          <span class="dm-meta">
-            <span class="dm-name">{{ f.username }}</span>
-            <span class="dm-snippet">Написати повідомлення</span>
-          </span>
+          <span class="avatar" {% if f.avatar_url %}style="background-image:url('{{ f.avatar_url }}')"{% endif %}>{% if not f.avatar_url %}{{ f.username[:1]|upper }}{% endif %}{% if f_visible %}<span class="presence status-{{ f_status }}"></span>{% endif %}</span>
+          <span class="dm-meta"><span class="dm-name">{{ f.username }}</span></span>
         </a>
         {% endfor %}
       </div>
 
+      {% set my_status = account.account_status or 'online' %}
       <div class="user-panel">
-        <span class="avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}')"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}</span>
-        <div class="user-info">
+        <span class="avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}')"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}<span id="my-avatar-status" class="presence status-{{ my_status }}"></span></span>
+        <div class="user-info status-trigger" onclick="toggleStatusMenu(event)">
           <b>{{ account.username }}</b>
-          <span><i class="status-dot"></i> online</span>
+          <span><i id="my-status-dot" class="status-dot status-{{ my_status }}"></i><span id="my-status-label">{{ {'online':'В мережі','idle':'Неактивний','dnd':'Не турбувати','invisible':'Невидимий'}.get(my_status, 'В мережі') }}</span></span>
         </div>
         <div class="user-actions">
           <button title="Mute"><svg class="icon icon-sm"><use href="#i-mic"></use></svg></button>
           <button title="Deafen"><svg class="icon icon-sm"><use href="#i-headphones"></use></svg></button>
           <button title="Settings" onclick="location.href='/community/settings'"><svg class="icon icon-sm"><use href="#i-settings"></use></svg></button>
+        </div>
+        <div id="status-menu" class="status-menu">
+          <button onclick="setPresenceStatus('online')"><i class="status-dot status-online"></i><span><b>В мережі</b><small>Тебе видно онлайн.</small></span></button>
+          <button onclick="setPresenceStatus('idle')"><i class="status-dot status-idle"></i><span><b>Неактивний</b><small>Жовтий статус.</small></span></button>
+          <button onclick="setPresenceStatus('dnd')"><i class="status-dot status-dnd"></i><span><b>Не турбувати</b><small>Червоний статус.</small></span></button>
+          <button onclick="setPresenceStatus('invisible')"><i class="status-dot status-invisible"></i><span><b>Невидимий</b><small>Не показувати онлайн.</small></span></button>
         </div>
       </div>
     </aside>
@@ -495,9 +533,10 @@
       <div class="section" style="margin-top:16px;padding-left:0;padding-right:0;">Онлайн — {{ online_members|length }}</div>
       <div class="online-list">
         {% for m in online_members[:10] %}
+        {% set m_status = m.account_status or 'online' %}
         <a class="dm-row" href="/community/dm/{{ m.username }}">
-          <span class="avatar" {% if m.avatar_url %}style="background-image:url('{{ m.avatar_url }}')"{% endif %}>{% if not m.avatar_url %}{{ m.username[:1]|upper }}{% endif %}<span class="online"></span></span>
-          <span class="dm-meta"><span class="dm-name">{{ m.username }}</span><span class="dm-snippet">online</span></span>
+          <span class="avatar" {% if m.avatar_url %}style="background-image:url('{{ m.avatar_url }}')"{% endif %}>{% if not m.avatar_url %}{{ m.username[:1]|upper }}{% endif %}<span class="presence status-{{ m_status }}"></span></span>
+          <span class="dm-meta"><span class="dm-name">{{ m.username }}</span></span>
         </a>
         {% endfor %}
       </div>
@@ -514,6 +553,37 @@
       });
     });
   }
+
+  function toggleStatusMenu(event) {
+    event.stopPropagation();
+    const menu = document.getElementById('status-menu');
+    if (menu) menu.classList.toggle('open');
+  }
+  const statusLabels = { online: 'В мережі', idle: 'Неактивний', dnd: 'Не турбувати', invisible: 'Невидимий' };
+  function applyLocalStatus(status) {
+    ['my-status-dot','my-avatar-status'].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.remove('status-online','status-idle','status-dnd','status-invisible');
+      el.classList.add('status-' + status);
+    });
+    const label = document.getElementById('my-status-label');
+    if (label) label.textContent = statusLabels[status] || statusLabels.online;
+    const menu = document.getElementById('status-menu');
+    if (menu) menu.classList.remove('open');
+  }
+  function setPresenceStatus(status) {
+    applyLocalStatus(status);
+    fetch('/community/presence/status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    }).catch(() => {});
+  }
+  document.addEventListener('click', () => {
+    const menu = document.getElementById('status-menu');
+    if (menu) menu.classList.remove('open');
+  });
 </script>
 </body>
 </html>
