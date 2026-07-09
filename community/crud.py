@@ -6,8 +6,9 @@ from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
-from community.models import Account, Channel, Comment, Friendship, Post, PostLike
+from community.models import Account, Channel, Comment, Friendship, Gift, GiftInstance, Post, PostLike
 
 # A member counts as "online" if we've seen a request from them in the
 # last 3 minutes. Cheap to compute, no background job or websocket needed.
@@ -260,6 +261,15 @@ async def delete_account(db: AsyncSession, account_id: int) -> bool:
     account = await get_account_by_id(db, account_id)
     if not account:
         return False
+
+    # Remove issued gifts first so the new gift foreign key never blocks
+    # deleting a community account from the admin panel.
+    gift_instances_result = await db.execute(
+        select(GiftInstance).where(GiftInstance.recipient_id == account_id)
+    )
+    for gift_instance in gift_instances_result.scalars().all():
+        await db.delete(gift_instance)
+
     await db.delete(account)
     await db.commit()
     return True
@@ -382,3 +392,86 @@ async def get_channel_feed(db: AsyncSession, channel_id: int, viewer_id: int | N
             "comments": comments,
         })
     return feed
+
+# ============================================================================
+# Gifts
+# ============================================================================
+
+async def list_gifts(db: AsyncSession) -> list[Gift]:
+    result = await db.execute(select(Gift).order_by(Gift.created_at.desc()))
+    return list(result.scalars().all())
+
+
+async def get_gift_by_id(db: AsyncSession, gift_id: int) -> Gift | None:
+    result = await db.execute(select(Gift).where(Gift.id == gift_id))
+    return result.scalar_one_or_none()
+
+
+async def create_gift(
+    db: AsyncSession,
+    name: str,
+    image_url: str,
+    description: str | None = None,
+) -> Gift:
+    gift = Gift(
+        name=name.strip(),
+        image_url=image_url.strip(),
+        description=description.strip() if description else None,
+    )
+    db.add(gift)
+    await db.commit()
+    await db.refresh(gift)
+    return gift
+
+
+async def delete_gift(db: AsyncSession, gift_id: int) -> bool:
+    gift = await get_gift_by_id(db, gift_id)
+    if not gift:
+        return False
+
+    # First remove issued copies of this gift so PostgreSQL foreign keys
+    # do not block deleting the catalog item.
+    instances_result = await db.execute(
+        select(GiftInstance).where(GiftInstance.gift_id == gift_id)
+    )
+    for instance in instances_result.scalars().all():
+        await db.delete(instance)
+
+    await db.delete(gift)
+    await db.commit()
+    return True
+
+
+async def give_gift_to_account(
+    db: AsyncSession,
+    recipient_id: int,
+    gift_id: int,
+    gifted_by: str | None = "Адміністрація",
+    message: str | None = None,
+) -> GiftInstance | None:
+    recipient = await get_account_by_id(db, recipient_id)
+    gift = await get_gift_by_id(db, gift_id)
+
+    if not recipient or not gift:
+        return None
+
+    gift_instance = GiftInstance(
+        gift_id=gift_id,
+        recipient_id=recipient_id,
+        gifted_by=gifted_by.strip() if gifted_by else "Адміністрація",
+        message=message.strip() if message else None,
+    )
+    db.add(gift_instance)
+    await db.commit()
+    await db.refresh(gift_instance)
+    return gift_instance
+
+
+async def list_gifts_for_account(db: AsyncSession, account_id: int) -> list[GiftInstance]:
+    result = await db.execute(
+        select(GiftInstance)
+        .options(selectinload(GiftInstance.gift))
+        .where(GiftInstance.recipient_id == account_id)
+        .order_by(GiftInstance.created_at.desc())
+    )
+    return list(result.scalars().all())
