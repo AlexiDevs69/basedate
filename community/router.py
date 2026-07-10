@@ -826,6 +826,37 @@ async def server_message_delete_submit(
     return RedirectResponse(url=f"/community/servers/{server_id}/channel/{channel_id}", status_code=303)
 
 
+
+@router.get("/servers/{server_id}/settings")
+async def server_settings_page(
+    server_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return RedirectResponse(url="/community/login", status_code=303)
+    if not await crud.is_server_member(db, server_id, account.id):
+        return RedirectResponse(url="/community", status_code=303)
+    if not await crud.can_manage_server(db, server_id, account.id):
+        return RedirectResponse(url=f"/community/servers/{server_id}", status_code=303)
+
+    server = await crud.get_server_by_id(db, server_id)
+    if not server:
+        return RedirectResponse(url="/community", status_code=303)
+    members = await crud.list_server_members(db, server_id)
+    rail = await server_rail_context(db, account.id, active_server_id=server_id)
+    return templates.TemplateResponse(
+        "server_settings.html",
+        {
+            "request": request,
+            "account": account,
+            "server": server,
+            "members_count": len(members),
+            **rail,
+        },
+    )
+
 @router.post("/servers/{server_id}/settings")
 async def server_settings_submit(
     server_id: int,
