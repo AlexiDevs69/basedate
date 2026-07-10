@@ -3,368 +3,398 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ server.name }} // AlexiHub</title>
+  <title>AlexiHub // Direct Messages</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Baloo+2:wght@700;800&family=Bangers&family=Bungee&family=Bungee+Shade&family=Cinzel+Decorative:wght@700&family=Creepster&family=Fredoka:wght@700;800&family=Honk&family=Inter:wght@400;500;600;700;800&family=Jersey+10&family=JetBrains+Mono:wght@400;700&family=Lilita+One&family=Luckiest+Guy&family=Modak&family=Monoton&family=Pixelify+Sans:wght@700&family=Press+Start+2P&family=Righteous&family=Rubik+Glitch&family=Rubik+Iso&family=Rubik+Wet+Paint&family=Silkscreen:wght@700&family=Tilt+Prism&family=Titan+One&family=Unbounded:wght@700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&family=Press+Start+2P&family=Bungee&family=Luckiest+Guy&family=Fredoka:wght@700&family=Rubik+Glitch&family=Monoton&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0b0b0b; --bg-elevated: #111111; --bg-header: #161616;
-      --border: #222222; --border-hover: #333333;
-      --text-primary: #ffffff; --text-secondary: #888888;
-      --font-sans: 'Inter', system-ui, sans-serif; --font-mono: 'JetBrains Mono', monospace;
-      --radius: 8px; --online: #10b981; --rail:72px; --sidebar:240px; --members:252px; --topbar:56px;
+      --app: #0b0b0d;
+      --rail: #08080a;
+      --side: #111114;
+      --main: #18191d;
+      --panel: #202127;
+      --panel2: #26272e;
+      --hover: #2e3038;
+      --border: #2b2d34;
+      --text: #f4f4f5;
+      --muted: #9ca3af;
+      --muted2: #6b7280;
+      --accent: #5865f2;
+      --green: #23a55a;
+      --red: #ef4444;
+      --yellow: #f0b232;
+      --gray: #80848e;
+      --font: 'Inter', system-ui, sans-serif;
+      --mono: 'JetBrains Mono', monospace;
     }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { min-height:100%; }
-    body { background: var(--bg); color: var(--text-primary); font-family: var(--font-sans); font-size: 14px; }
-    .server-rail { position:fixed; left:0; top:0; bottom:0; width:var(--rail); z-index:80; background:#070707; border-right:1px solid var(--border); display:flex; flex-direction:column; align-items:center; gap:.65rem; padding:.8rem .55rem; overflow-y:auto; }
-    .server-dot { width:48px; height:48px; border-radius:50%; background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-primary); text-decoration:none; display:flex; align-items:center; justify-content:center; font-weight:800; font-family:var(--font-mono); position:relative; flex-shrink:0; overflow:hidden; transition:border-radius .18s ease, background .18s ease, border-color .18s ease, transform .18s ease; }
-    .server-dot:hover, .server-dot.active { border-radius:16px; border-color:var(--border-hover); transform:translateY(-1px); }
-    .server-dot.active::before { content:''; position:absolute; left:-9px; top:50%; transform:translateY(-50%); width:4px; height:28px; border-radius:999px; background:var(--text-primary); }
-    .server-dot span { width:100%; height:100%; background:center/cover no-repeat; display:block; }
-    .server-dot.home-dot { background:linear-gradient(135deg,#5865f2,#4752c4); color:#fff; }
-    .server-dot.plus { color:#10b981; font-size:1.7rem; font-family:var(--font-sans); }
-    .server-dot.plus:hover { background:#10b981; color:#06180d; }
-    .rail-sep { width:32px; height:1px; background:var(--border); flex-shrink:0; }
-    .topbar { position:fixed; top:0; left:var(--rail); right:0; height:var(--topbar); z-index:50; background:var(--bg-header); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 1.5rem; }
-    .brand { font-weight:700; color:var(--text-primary); text-decoration:none; }
-    .topbar-right { display:flex; align-items:center; gap:1.25rem; }
-    .me { display:flex; align-items:center; gap:.6rem; text-decoration:none; color:var(--text-primary); font-size:.85rem; }
-    .me-avatar { width:28px; height:28px; border-radius:50%; background:var(--bg-elevated) center/cover no-repeat; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); color:var(--text-secondary); }
-    .logout { color:var(--text-secondary); text-decoration:none; font-size:.8rem; }
-    .logout:hover { color:var(--text-primary); }
-    .server-sidebar { position:fixed; left:var(--rail); top:var(--topbar); bottom:0; width:var(--sidebar); border-right:1px solid var(--border); background:var(--bg); padding:1rem; overflow-y:auto; }
-    .server-title { font-weight:800; font-size:1rem; margin-bottom:.25rem; }
-    .server-desc { color:var(--text-secondary); font-size:.8rem; margin-bottom:1rem; }
-    .sidebar-label { font-size:.72rem; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.06em; margin:1rem 0 .55rem; }
-    .chan-link { display:flex; align-items:center; gap:.4rem; padding:.48rem .6rem; border-radius:7px; color:var(--text-secondary); text-decoration:none; font-weight:650; margin-bottom:.15rem; }
-    .chan-link:hover, .chan-link.active { background:rgba(255,255,255,.05); color:var(--text-primary); }
-    .sidebar-label-row { display:flex; align-items:center; justify-content:space-between; gap:.5rem; margin:1rem 0 .55rem; }
-    .sidebar-label-row .sidebar-label { margin:0; }
-    .sidebar-plus { width:22px; height:22px; border:1px solid transparent; border-radius:6px; background:transparent !important; color:var(--text-secondary) !important; cursor:pointer; font-size:1.1rem; line-height:1; display:flex; align-items:center; justify-content:center; flex:0 0 auto; padding:0; }
-    .sidebar-plus:hover { color:var(--text-primary) !important; background:rgba(255,255,255,.06) !important; border-color:var(--border); }
-    .mini-channel-form { display:none; margin:.35rem 0 .65rem; padding:.55rem; border:1px solid var(--border); border-radius:10px; background:#0f0f0f; }
-    .mini-channel-form.open { display:block; }
-    .mini-channel-form input { height:34px; margin-bottom:.4rem; font-size:.78rem; padding:.45rem .55rem; border-radius:8px; }
-    .mini-channel-actions { display:flex; gap:.35rem; }
-    .mini-channel-actions button { flex:1; height:30px; border:none; border-radius:7px; font-size:.72rem; font-weight:800; cursor:pointer; }
-    .mini-channel-actions .save { background:#5865f2; color:white; }
-    .mini-channel-actions .cancel { background:#181818; color:var(--text-secondary); border:1px solid var(--border); }
 
-    .avatar { width:34px; height:34px; border-radius:50%; background:var(--bg-header) center/cover no-repeat; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); color:var(--text-secondary); text-decoration:none; }
-    .member-mini { display:flex; align-items:center; gap:.5rem; color:var(--text-secondary); margin:.38rem 0; font-size:.85rem; text-decoration:none; }
-    .member-mini .avatar { width:24px; height:24px; font-size:.7rem; }
-    .main { margin-left:calc(var(--rail) + var(--sidebar)); margin-right:var(--members); min-height:100vh; padding:calc(var(--topbar) + 1.5rem) 1.5rem 2.5rem; max-width:none; }
-    .hero { border:1px solid var(--border); border-radius:18px; background:linear-gradient(135deg, rgba(88,101,242,.20), rgba(17,17,17,.92)); padding:1.35rem; margin-bottom:1rem; overflow:hidden; position:relative; }
-    .hero h1 { font-size:1.65rem; margin-bottom:.35rem; letter-spacing:-.03em; }
-    .hero p { color:var(--text-secondary); max-width:720px; line-height:1.5; }
-    .grid { display:grid; grid-template-columns:1fr; gap:1rem; align-items:start; max-width: 760px; }
-    .panel { background:var(--bg-elevated); border:1px solid var(--border); border-radius:14px; padding:1rem; }
-    .panel-title { font-size:.78rem; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.06em; font-weight:800; margin-bottom:.75rem; }
-    .channel-card { display:flex; align-items:center; justify-content:space-between; gap:.8rem; padding:.78rem .85rem; border-radius:10px; text-decoration:none; color:var(--text-primary); border:1px solid transparent; }
-    .channel-card:hover { background:rgba(255,255,255,.04); border-color:var(--border); }
-    .channel-card strong { font-size:.94rem; }
-    .channel-card span { color:var(--text-secondary); font-size:.78rem; display:block; margin-top:.12rem; }
-    .btn { border:none; background:#5865f2; color:white; border-radius:10px; padding:.58rem .8rem; font-weight:800; cursor:pointer; text-decoration:none; display:inline-flex; justify-content:center; align-items:center; }
-    .btn.secondary { background:#181818; color:var(--text-primary); border:1px solid var(--border); }
-    input { width:100%; background:#0d0d0d; border:1px solid var(--border); border-radius:10px; padding:.65rem .75rem; color:var(--text-primary); font-family:var(--font-sans); }
-    label { display:block; font-size:.73rem; color:var(--text-secondary); font-weight:800; text-transform:uppercase; letter-spacing:.06em; margin:.75rem 0 .35rem; }
-    .inline-form { display:flex; gap:.5rem; align-items:center; }
-    .empty-note { color:#666; font-size:.85rem; padding:.7rem 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      background: var(--app);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      overflow: hidden;
+    }
 
-    .members-sidebar {
-      position: fixed;
-      right: 0;
-      top: var(--topbar);
-      bottom: 0;
-      width: var(--members);
-      z-index: 24;
-      background: #0d0d0d;
-      border-left: 1px solid var(--border);
-      padding: 1rem 0.8rem;
-      overflow-y: auto;
-    }
-    .members-title {
-      font-size: .72rem;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      font-weight: 800;
-      padding: 0 .35rem;
-      margin-bottom: .65rem;
-    }
-    .member-row {
-      display: flex;
-      align-items: center;
-      gap: .62rem;
-      padding: .42rem .45rem;
-      border-radius: 8px;
-      color: var(--text-primary);
-      text-decoration: none;
+    a { color: inherit; text-decoration: none; }
+    button, input, textarea { font: inherit; }
+
+    .app {
+      display: grid;
+      grid-template-columns: 72px 240px 1fr 300px;
+      height: 100vh;
       min-width: 0;
     }
-    .member-row:hover { background: rgba(255,255,255,.045); }
-    .member-avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: var(--bg-header) center/cover no-repeat;
-      flex-shrink: 0;
+
+    .icon {
+      width: 20px;
+      height: 20px;
+      display: inline-block;
+      vertical-align: middle;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex: 0 0 auto;
+    }
+    .icon-sm { width: 16px; height: 16px; }
+    .icon-lg { width: 32px; height: 32px; }
+
+    /* server rail */
+    .server-rail {
+      background: var(--rail);
+      padding: 12px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      overflow-y: auto;
+      border-right: 1px solid #111;
+    }
+    .server-dot {
+      width: 48px;
+      height: 48px;
+      border-radius: 18px;
+      background: var(--panel);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: var(--font-mono);
-      font-size: .78rem;
-      color: var(--text-secondary);
-    }
-    .member-info { min-width: 0; display: flex; flex-direction: column; gap: .08rem; }
-    .member-name { max-width: 164px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .member-role { color: #666; font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .045em; }
-    .empty-members { color: #666; font-size: .82rem; padding: .4rem .35rem; }
-
-    /* --- Premium nickname styles: role-gradient edition --- */
-    .visual-name {
-      --name-c1-safe: var(--name-c1, #f5576c);
-      --name-c2-safe: var(--name-c2, #7367f0);
+      color: #fff;
       font-weight: 800;
-      color: var(--text-primary);
-      display: inline-block;
-      max-width: 100%;
-      line-height: 1.03;
-      vertical-align: baseline;
-      isolation: isolate;
-      text-rendering: geometricPrecision;
-      -webkit-font-smoothing: antialiased;
-      backface-visibility: hidden;
-      transform: translateZ(0);
-      will-change: background-position;
+      position: relative;
+      transition: 0.16s ease;
+      background-size: cover;
+      background-position: center;
+      border: 0;
+      cursor: pointer;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
     }
-
-    .name-none {
-      color: var(--text-primary);
-      text-shadow: none;
+    .server-dot:hover,
+    .server-dot.active {
+      border-radius: 14px;
+      background-color: var(--accent);
     }
-
-    .name-gradient {
-      background-image: linear-gradient(
-        90deg,
-        var(--name-c1-safe) 0%,
-        var(--name-c2-safe) 48%,
-        var(--name-c1-safe) 100%
-      );
-      background-size: 200% auto;
-      background-position: 0% center;
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      -webkit-text-fill-color: transparent;
-      animation: role-shimmer 3s linear infinite;
-      text-shadow: none;
-      filter: saturate(1.22) brightness(1.06) contrast(1.02);
+    .server-dot.active::before {
+      content: "";
+      position: absolute;
+      left: -10px;
+      width: 4px;
+      height: 34px;
+      border-radius: 0 6px 6px 0;
+      background: #fff;
     }
+    .server-dot.home-dot { background: linear-gradient(135deg, #5865f2, #4752c4); }
+    .server-dot.plus { color: var(--green); }
+    .server-dot.plus:hover { background: var(--green); color: #fff; }
+    .server-sep { width: 32px; height: 2px; background: #24252b; border-radius: 9px; }
 
-    .name-glow {
-      background-image: linear-gradient(
-        90deg,
-        var(--name-c1-safe) 0%,
-        var(--name-c2-safe) 48%,
-        var(--name-c1-safe) 100%
-      );
-      background-size: 200% auto;
-      background-position: 0% center;
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      -webkit-text-fill-color: transparent;
-      animation: role-shimmer 3s linear infinite;
-      text-shadow: none;
-      filter:
-        saturate(1.24)
-        brightness(1.08)
-        contrast(1.02)
-        drop-shadow(0 0 4px color-mix(in srgb, var(--name-c1-safe) 38%, transparent))
-        drop-shadow(0 0 9px color-mix(in srgb, var(--name-c2-safe) 28%, transparent));
+    /* left dm sidebar */
+    .dm-sidebar {
+      background: var(--side);
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      border-right: 1px solid #111;
     }
-
-    @keyframes role-shimmer { to { background-position: 200% center; } }
-
-    @media (prefers-reduced-motion: reduce) {
-      .name-gradient, .name-glow { animation: none; background-position: 50% 50%; }
+    .search-wrap { padding: 12px 10px; border-bottom: 1px solid #1f2026; }
+    .search {
+      width: 100%;
+      height: 36px;
+      border: 0;
+      border-radius: 8px;
+      background: #08080a;
+      color: var(--text);
+      padding: 0 12px;
+      outline: none;
+      font-size: 13px;
     }
+    .search::placeholder { color: var(--muted2); }
 
-    .font-default { font-family: var(--font-sans); }
-    .font-mono { font-family: var(--font-mono); font-weight: 800; }
-    .font-serif { font-family: Georgia, 'Times New Roman', serif; font-weight: 800; letter-spacing: -0.02em; }
-    .font-rounded { font-family: 'Fredoka', var(--font-sans); font-weight: 800; letter-spacing: 0.005em; }
-    .font-cyber { font-family: 'Righteous', var(--font-mono); font-weight: 400; letter-spacing: 0.035em; }
-    .font-display { font-family: 'Unbounded', var(--font-sans); font-weight: 800; letter-spacing: -0.055em; }
-
-    .font-pixel {
-      font-family: 'Press Start 2P', 'Silkscreen', 'Pixelify Sans', var(--font-mono);
+    .nav { padding: 10px 8px; display: flex; flex-direction: column; gap: 2px; }
+    .nav-item {
+      height: 42px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--muted);
+      padding: 0 10px;
       font-weight: 700;
-      font-size: 0.72em;
-      letter-spacing: -0.025em;
-      line-height: 1.22;
-      image-rendering: pixelated;
-      filter: saturate(1.5) brightness(1.18) contrast(1.08);
+      transition: 0.14s ease;
     }
-    .font-bubble {
-      font-family: 'Titan One', 'Luckiest Guy', var(--font-sans);
-      font-weight: 400;
-      letter-spacing: 0.025em;
-      transform: translateY(0.03em);
-      filter: saturate(1.46) brightness(1.12);
-    }
-    .font-puffy {
-      font-family: 'Bagel Fat One', 'Modak', var(--font-sans);
-      font-weight: 400;
-      font-size: 1.12em;
-      letter-spacing: 0.004em;
-      line-height: 0.95;
-      filter: saturate(1.42) brightness(1.12);
-    }
-    .font-block {
-      font-family: 'Bungee', 'Lilita One', var(--font-sans);
-      font-weight: 400;
-      letter-spacing: 0.012em;
-      filter: saturate(1.42) brightness(1.1) contrast(1.08);
-    }
-    .font-neon {
-      font-family: 'Monoton', 'Tilt Prism', var(--font-sans);
-      font-weight: 400;
-      letter-spacing: 0.04em;
-      filter: saturate(1.6) brightness(1.18)
-        drop-shadow(0 0 4px rgba(255,255,255,0.4))
-        drop-shadow(0 0 14px color-mix(in srgb, var(--name-v2) 35%, transparent));
-    }
-    .font-glitch {
-      font-family: 'Rubik Glitch', var(--font-sans);
-      font-weight: 400;
-      letter-spacing: 0.025em;
-      filter: saturate(1.45) brightness(1.12);
-      text-shadow: 1px 0 0 #ff2bd6, -1px 0 0 #27f7ff;
-    }
-    .font-graffiti {
-      font-family: 'Rubik Wet Paint', 'Bangers', var(--font-sans);
-      font-weight: 400;
-      letter-spacing: 0.032em;
-      filter: saturate(1.46) brightness(1.13);
-    }
-    .font-spooky {
-      font-family: 'Creepster', var(--font-sans);
-      font-weight: 400;
-      letter-spacing: 0.04em;
-      filter: saturate(1.38) brightness(1.08);
-    }
-    .font-medieval {
-      font-family: 'Cinzel Decorative', Georgia, serif;
-      font-weight: 700;
-      letter-spacing: 0.01em;
-      filter: saturate(1.32) brightness(1.08);
-    }
-    .font-roundfat {
-      font-family: 'Baloo 2', 'Fredoka', var(--font-sans);
+    .nav-item:hover,
+    .nav-item.active { background: var(--hover); color: var(--text); }
+    .nav-ico { width: 22px; display: flex; align-items: center; justify-content: center; color: var(--muted); }
+    .nav-item:hover .nav-ico,
+    .nav-item.active .nav-ico { color: var(--text); }
+
+    .section {
+      padding: 10px 12px 4px;
+      color: var(--muted2);
+      font-size: 11px;
       font-weight: 800;
-      letter-spacing: 0.004em;
-      filter: saturate(1.32) brightness(1.1);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
+    .section-action {
+      width: 22px;
+      height: 22px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .section-action:hover { color: var(--text); background: var(--hover); }
 
-    .post-name.font-pixel,
-    .member-name.font-pixel,
-    .comment-author.font-pixel,
-    .user-cell .font-pixel { font-size: 0.68em; }
-    .profile-name.font-pixel { font-size: 0.8em; }
-    .preview-card .font-pixel { font-size: 0.82em; }
-    .post-name.font-puffy,
-    .member-name.font-puffy,
-    .comment-author.font-puffy,
-    .user-cell .font-puffy { font-size: 1.04em; }
-    .post-name.font-block,
-    .member-name.font-block,
-    .comment-author.font-block,
-    .user-cell .font-block { font-size: 0.95em; }
-    .notif-wrap { position: relative; }
-    .notif-bell { background:none; border:none; color:var(--text-primary); cursor:pointer; display:flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:50%; position:relative; padding:0; line-height:1; }
-    .notif-bell svg { display:block; width:19px; height:19px; stroke:currentColor; flex-shrink:0; }
-    .notif-bell:hover { background:rgba(255,255,255,.06); }
-    .notif-badge { position:absolute; top:2px; right:2px; background:#ef4444; color:white; font-size:.65rem; font-weight:700; border-radius:999px; min-width:16px; height:16px; display:none; align-items:center; justify-content:center; padding:0 3px; }
-    .notif-dropdown { position:absolute; top:44px; right:0; width:305px; background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--radius); box-shadow:0 8px 24px rgba(0,0,0,.4); z-index:400; overflow:hidden; display:none; }
-    .notif-header { padding:.75rem 1rem; font-size:.72rem; font-weight:700; text-transform:uppercase; color:var(--text-secondary); border-bottom:1px solid var(--border); }
-    .notif-item { display:flex; align-items:center; gap:.6rem; padding:.6rem 1rem; border-bottom:1px solid var(--border); }
-    .notif-item:last-child { border-bottom:none; }
-    .notif-avatar { width:30px; height:30px; border-radius:50%; background:var(--bg-header) center/cover no-repeat; flex-shrink:0; }
-    .notif-name { flex:1; font-size:.85rem; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .notif-actions { display:flex; gap:.3rem; }
-    .notif-btn { border:none; border-radius:6px; padding:.3rem .5rem; font-size:.72rem; font-weight:700; cursor:pointer; }
-    .notif-btn.accept { background:#10b981; color:#06180d; }
-    .notif-btn.decline { background:var(--bg-header); color:var(--text-secondary); }
-    .notif-empty { padding:1rem; text-align:center; color:#555; font-size:.8rem; }
+    .dm-list { padding: 0 8px; overflow-y: auto; min-height: 0; flex: 1; }
+    .dm-row {
+      height: 44px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 8px;
+      color: var(--muted);
+      margin-bottom: 2px;
+      transition: 0.14s ease;
+    }
+    .dm-row:hover,
+    .dm-row.active { background: var(--hover); color: var(--text); }
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #2b2d34 center/cover no-repeat;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      flex: 0 0 auto;
+      position: relative;
+      color: var(--text);
+    }
+    .avatar .presence,
+    .avatar .online {
+      position: absolute;
+      right: -1px;
+      bottom: -1px;
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: var(--green);
+      border: 2px solid var(--side);
+    }
+    .dm-meta { min-width: 0; flex: 1; }
+    .dm-name { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dm-snippet { display: none; }
+    .empty-note { color: var(--muted2); font-size: 12px; padding: 6px 10px 12px; }
 
+    .user-panel {
+      height: 56px;
+      background: #17181d;
+      border-top: 1px solid #22242b;
+      display: flex;
+      align-items: center;
+      padding: 8px;
+      gap: 8px;
+    }
+    .user-panel .avatar { width: 36px; height: 36px; }
+    .user-info { min-width: 0; flex: 1; }
+    .user-info b { display: block; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-info span { display: flex; align-items: center; gap: 5px; color: var(--muted2); font-size: 11px; }
+    .status-dot, .presence { width: 9px; height: 9px; border-radius: 50%; background: var(--green); display: inline-block; }
+    .status-online { background: var(--green) !important; }
+    .status-idle { background: var(--yellow) !important; }
+    .status-dnd { background: var(--red) !important; }
+    .status-invisible { background: var(--gray) !important; }
+    .status-menu {
+      position: absolute;
+      left: 10px;
+      bottom: 62px;
+      width: 220px;
+      background: #24252b;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 8px;
+      box-shadow: 0 18px 40px rgba(0,0,0,.42);
+      display: none;
+      z-index: 50;
+    }
+    .status-menu.open { display: block; }
+    .status-menu button {
+      width: 100%;
+      min-height: 42px;
+      border: 0;
+      background: transparent;
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 9px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      text-align: left;
+    }
+    .status-menu button:hover { background: var(--hover); }
+    .status-menu small { display:block; color: var(--muted2); font-size: 11px; margin-top: 1px; }
+    .user-panel { position: relative; }
+    .user-panel .status-trigger { cursor: pointer; border-radius: 7px; padding: 2px 4px; margin-left: -4px; }
+    .user-panel .status-trigger:hover { background: var(--hover); }
+    .user-actions { display: flex; gap: 4px; }
+    .user-actions button {
+      width: 28px;
+      height: 28px;
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .user-actions button:hover { background: var(--hover); color: var(--text); }
 
-    /* --- Discord-like final polish --- */
-    .server-sidebar { padding: 0 !important; overflow: visible !important; display: flex !important; flex-direction: column !important; background: #0f0f10 !important; }
-    .server-head { position: relative; flex: 0 0 auto; height: 52px; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 .65rem; background: #101012; z-index: 90; }
-    .server-head-btn { width: 100%; height: 38px; border: none; border-radius: 8px; background: transparent; color: var(--text-primary); display: flex; align-items: center; justify-content: space-between; gap: .7rem; padding: 0 .55rem; font-family: var(--font-sans); font-size: .98rem; font-weight: 900; cursor: pointer; text-align: left; }
-    .server-head-btn:hover { background: rgba(255,255,255,.055); }
-    .server-head-btn span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .server-arrow { color: var(--text-secondary); transition: transform .16s ease, color .16s ease; flex-shrink: 0; }
-    .server-head-btn.open .server-arrow { transform: rotate(180deg); color: var(--text-primary); }
-    .server-menu { position: absolute; top: 48px; left: .55rem; right: .55rem; display: none; padding: .45rem; border-radius: 12px; background: #1d1d20; border: 1px solid #303036; box-shadow: 0 18px 50px rgba(0,0,0,.48); z-index: 260; transform-origin: top center; }
-    .server-menu.open { display: block; animation: menuPop .12s ease-out; }
-    @keyframes menuPop { from { opacity: 0; transform: translateY(-6px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
-    .menu-item, .menu-form button { width: 100%; height: 38px; border: none; background: transparent; color: #e5e5e9; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; gap: .7rem; padding: 0 .65rem; font-family: var(--font-sans); font-size: .86rem; font-weight: 800; cursor: pointer; text-decoration: none; }
-    .menu-item:hover, .menu-form button:hover { background: rgba(255,255,255,.075); color: #fff; }
-    .menu-form.danger button { color: #ff6b6b; }
-    .menu-form.danger button:hover { background: rgba(239,68,68,.12); color: #ff8585; }
-    .menu-ico { color: var(--text-secondary); font-weight: 900; font-size: .95rem; }
-    .menu-divider { height: 1px; background: rgba(255,255,255,.08); margin: .42rem .35rem; }
-    .sidebar-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: .82rem .75rem; }
-    .account-panel { flex: 0 0 auto; height: 58px; background: #18181a; border-top: 1px solid var(--border); display: flex; align-items: center; gap: .62rem; padding: .5rem .58rem; cursor: pointer; position: relative; z-index: 80; }
-    .account-panel:hover { background: #202024; }
-    .account-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-header) center/cover no-repeat; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); color: var(--text-secondary); font-weight: 800; }
-    .account-meta { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: .03rem; }
-    .account-name { max-width: 122px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .account-status { color: #a1a1aa; font-size: .69rem; font-weight: 700; }
-    .account-actions { display: flex; align-items: center; gap: .25rem; }
-    .account-actions a { width: 27px; height: 27px; border-radius: 7px; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); text-decoration: none; font-size: .82rem; }
-    .account-actions a:hover { background: rgba(255,255,255,.08); color: var(--text-primary); }
-    .modal-backdrop { position: fixed; inset: 0; z-index: 700; background: rgba(0,0,0,.62); display: none; align-items: center; justify-content: center; padding: 1.4rem; backdrop-filter: blur(4px); }
-    .modal-backdrop.open { display: flex; }
-    .modal-card { width: min(520px, 100%); max-height: 86vh; overflow: auto; background: #1b1b1f; border: 1px solid #303036; border-radius: 16px; box-shadow: 0 24px 70px rgba(0,0,0,.55); padding: 1rem; }
-    .modal-head { display: flex; align-items: center; justify-content: space-between; gap: .8rem; margin-bottom: .85rem; }
-    .modal-head h2 { font-size: 1rem; letter-spacing: -.02em; }
-    .modal-close { width: 32px; height: 32px; border: none; border-radius: 8px; background: transparent; color: var(--text-secondary); cursor: pointer; font-size: 1.2rem; }
-    .modal-close:hover { background: rgba(255,255,255,.07); color: var(--text-primary); }
-    .modal-card label { display: block; margin: .7rem 0 .3rem; color: var(--text-secondary); font-size: .72rem; font-weight: 900; text-transform: uppercase; letter-spacing: .06em; }
-    .modal-card input, .modal-card textarea { width: 100%; background: #111114; color: var(--text-primary); border: 1px solid var(--border); border-radius: 10px; padding: .68rem .76rem; font-family: var(--font-sans); outline: none; }
-    .modal-card textarea { resize: vertical; min-height: 84px; }
-    .modal-card input:focus, .modal-card textarea:focus { border-color: #5865f2; }
-    .modal-actions { display: flex; justify-content: flex-end; gap: .55rem; margin-top: .9rem; }
-    .modal-btn { border: none; border-radius: 10px; padding: .62rem .9rem; font-weight: 900; cursor: pointer; background: #5865f2; color: white; }
-    .modal-btn.secondary { background: #26262b; color: var(--text-primary); border: 1px solid var(--border); }
-    .friends-list { display: flex; flex-direction: column; gap: .4rem; max-height: 300px; overflow: auto; margin-top: .55rem; }
-    .friend-invite-row { display: flex; align-items: center; gap: .65rem; background: #151518; border: 1px solid var(--border); border-radius: 12px; padding: .5rem; }
-    .friend-invite-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--bg-header) center/cover no-repeat; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); color: var(--text-secondary); flex-shrink: 0; }
-    .friend-invite-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 850; }
-    .friend-invite-row button { border: none; background: #5865f2; color: white; border-radius: 9px; padding: .48rem .7rem; font-weight: 900; cursor: pointer; }
-    .manual-invite { border-top: 1px solid rgba(255,255,255,.08); margin-top: .8rem; padding-top: .75rem; }
-    .mini-profile-popover { position: fixed; z-index: 900; width: 282px; display: none; background: #232329; border: 1px solid #34343b; border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,.58); overflow: hidden; }
-    .mini-profile-popover.open { display: block; animation: menuPop .12s ease-out; }
-    .mini-banner { height: 74px; background: linear-gradient(135deg, var(--mini-c1, #5865f2), var(--mini-c2, #eb459e)); }
-    .mini-profile-body { padding: 0 .9rem .9rem; position: relative; }
-    .mini-avatar { width: 78px; height: 78px; border-radius: 50%; background: #111 center/cover no-repeat; border: 6px solid #232329; margin-top: -39px; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-family: var(--font-mono); font-weight: 900; font-size: 1.2rem; }
-    .mini-name { display: block; font-size: 1.08rem; margin-top: .35rem; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .mini-role-line { color: #b9b9c2; font-size: .8rem; font-weight: 700; margin-top: .12rem; }
-    .mini-note { margin-top: .65rem; background: rgba(255,255,255,.055); border-radius: 10px; padding: .65rem; color: #d6d6dc; font-size: .78rem; line-height: 1.35; }
-    .mini-profile-actions { display: flex; gap: .45rem; margin-top: .7rem; }
-    .mini-profile-actions a { flex: 1; text-align: center; text-decoration: none; color: white; background: #5865f2; border-radius: 9px; padding: .52rem .65rem; font-size: .78rem; font-weight: 900; }
-    .mini-profile-actions a.secondary { background: #151518; color: var(--text-primary); border: 1px solid var(--border); }
-    .profile-click { cursor: pointer; }
+    /* center */
+    .main { background: var(--main); display: flex; flex-direction: column; min-width: 0; }
+    .topbar {
+      height: 48px;
+      border-bottom: 1px solid #111318;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      box-shadow: 0 1px 0 rgba(0,0,0,.25);
+      flex: 0 0 auto;
+    }
+    .top-title { font-weight: 800; display: flex; align-items: center; gap: 10px; }
+    .top-title .icon { color: var(--muted); }
+    .top-actions { display: flex; align-items: center; gap: 10px; color: var(--muted); }
+    .top-actions button {
+      width: 32px;
+      height: 32px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .top-actions button:hover { color: var(--text); background: var(--hover); }
 
+    .hero {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 40px;
+    }
+    .hero-card { max-width: 560px; }
+    .hero-logo {
+      width: 92px;
+      height: 92px;
+      border-radius: 28px;
+      background: linear-gradient(135deg, #5865f2, #9b5cf6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 22px;
+      box-shadow: 0 20px 60px rgba(88,101,242,.22);
+      color: white;
+    }
+    .hero-logo .icon { width: 44px; height: 44px; stroke-width: 1.8; }
+    .hero h1 { font-size: 30px; margin-bottom: 10px; letter-spacing: -0.03em; }
+    .hero p { color: var(--muted); line-height: 1.55; }
+    .quick { display: flex; gap: 10px; justify-content: center; margin-top: 22px; flex-wrap: wrap; }
+    .quick a {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: 0.14s ease;
+    }
+    .quick a:hover { background: var(--hover); }
 
-    @media (max-width:1100px) { .members-sidebar { display:none; } .main { margin-right:0; } }
-    @media (max-width:900px) { .server-sidebar { display:none; } .main { margin-left:var(--rail); } .grid { grid-template-columns:1fr; } }
+    /* right */
+    .right { background: var(--main); border-left: 1px solid #111318; padding: 18px; overflow-y: auto; }
+    .profile-card { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+    .banner { height: 76px; background: linear-gradient(135deg,#5865f2,#2dd4bf); }
+    .profile-body { padding: 0 16px 16px; }
+    .big-avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: #2b2d34 center/cover no-repeat;
+      border: 6px solid var(--panel);
+      margin-top: -36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: 900;
+    }
+    .profile-body h2 { font-size: 20px; margin-top: 8px; }
+    .profile-body p { color: var(--muted); font-size: 13px; margin-top: 4px; line-height: 1.4; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--accent);
+      color: white;
+      font-weight: 800;
+      padding: 9px 12px;
+      margin-top: 12px;
+      width: 100%;
+    }
+    .online-list { display: flex; flex-direction: column; gap: 2px; }
+
+    @media (max-width: 1050px) {
+      .app { grid-template-columns: 72px 240px 1fr; }
+      .right { display: none; }
+    }
+    @media (max-width: 760px) {
+      .app { grid-template-columns: 64px 1fr; }
+      .dm-sidebar { display: none; }
+      .right { display: none; }
+    }
   
 
     /* === AlexiHub mobile responsive polish === */
@@ -408,69 +438,55 @@
     }
 
     @media (max-width: 820px) {
-      :root { --rail: 64px; }
-      html, body { overflow: hidden !important; }
-      .topbar { display: none !important; }
-      .server-rail { left: 0 !important; top: 0 !important; bottom: 0 !important; z-index: 120 !important; }
-      .members-sidebar,
-      .main { display: none !important; }
-      .server-sidebar {
-        display: flex !important;
-        position: fixed !important;
-        left: 64px !important;
-        top: 0 !important;
-        bottom: 0 !important;
-        width: calc(100vw - 64px) !important;
+      body { overflow: hidden !important; }
+      .app {
+        grid-template-columns: 64px minmax(0, 1fr) !important;
+        width: 100vw !important;
         height: 100dvh !important;
-        border-right: 0 !important;
+        min-height: 100dvh !important;
+        overflow: hidden !important;
+      }
+      .dm-sidebar,
+      .right { display: none !important; }
+      .main {
+        min-width: 0 !important;
+        width: 100% !important;
+        height: 100dvh !important;
+        overflow: hidden !important;
+      }
+      .topbar {
+        height: 58px !important;
+        padding: 0 14px !important;
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 30 !important;
+        background: rgba(24,25,29,.96) !important;
+        backdrop-filter: blur(14px) !important;
+      }
+      .top-title { font-size: 20px !important; gap: 10px !important; min-width: 0 !important; }
+      .top-title .icon { width: 22px !important; height: 22px !important; }
+      .top-actions { gap: 8px !important; flex-shrink: 0 !important; }
+      .top-actions button { width: 38px !important; height: 38px !important; border-radius: 12px !important; }
+      .hero {
+        height: calc(100dvh - 58px) !important;
         overflow-y: auto !important;
-        overflow-x: hidden !important;
-        z-index: 40 !important;
-      }
-      .server-head { height: 64px !important; padding: 0 12px !important; }
-      .server-head-btn { height: 44px !important; font-size: 1.08rem !important; border-radius: 13px !important; }
-      .server-menu { top: 58px !important; left: 10px !important; right: 10px !important; }
-      .sidebar-scroll {
-        overflow-y: auto !important;
-        padding: 14px 14px calc(84px + env(safe-area-inset-bottom)) !important;
-      }
-      .sidebar-label-row { margin-top: 18px !important; }
-      .sidebar-label { font-size: 12px !important; }
-      .chan-link {
-        min-height: 44px !important;
-        font-size: 18px !important;
-        border-radius: 12px !important;
-        padding: 0 12px !important;
-      }
-      .sidebar-plus {
-        width: 36px !important;
-        height: 36px !important;
-        border-radius: 11px !important;
-        display: inline-flex !important;
+        padding: 24px 18px calc(34px + env(safe-area-inset-bottom)) !important;
         align-items: center !important;
-        justify-content: center !important;
-        color: #9ca3af !important;
-        background: transparent !important;
       }
-      .sidebar-plus:hover { background: rgba(255,255,255,.08) !important; color: #fff !important; }
-      .account-panel {
-        position: fixed !important;
-        left: 72px !important;
-        right: 8px !important;
-        bottom: calc(8px + env(safe-area-inset-bottom)) !important;
-        border-radius: 20px !important;
-        z-index: 150 !important;
-        box-shadow: 0 18px 44px rgba(0,0,0,.42) !important;
-      }
+      .hero-card { max-width: 100% !important; }
+      .hero-logo { width: 88px !important; height: 88px !important; border-radius: 28px !important; }
+      .hero h1 { font-size: clamp(30px, 9vw, 48px) !important; line-height: 1.08 !important; }
+      .hero p { font-size: 16px !important; line-height: 1.45 !important; }
+      .quick { gap: 10px !important; margin-top: 24px !important; }
+      .quick a { min-height: 48px !important; padding: 12px 16px !important; border-radius: 14px !important; font-size: 16px !important; }
+    }
+    @media (max-width: 430px) {
+      .hero h1 { font-size: 30px !important; }
+      .hero p { font-size: 15px !important; }
+      .quick a { width: 100% !important; justify-content: center !important; }
     }
 
   
-
-/* === Server pages unified to DM visual language === */
-:root{--bg:#18191d!important;--bg-elevated:#202127!important;--bg-header:#111114!important;--border:#2b2d34!important;--border-hover:#3a3c45!important;--text-secondary:#9ca3af!important;--rail:72px;--sidebar:240px;--members:300px;--topbar:48px;}
-body{background:#18191d!important;overflow:hidden!important}.server-rail{background:#08080a!important;border-right:1px solid #111!important;padding:12px 10px!important;gap:10px!important}.server-dot{width:48px!important;height:48px!important;border-radius:18px!important;border:0!important;background:#202127!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.04)!important}.server-dot:hover,.server-dot.active{border-radius:14px!important;background-color:#5865f2!important;transform:none!important}.server-dot.plus{color:#23a55a!important}.server-dot.plus:hover{background:#23a55a!important;color:#fff!important}.topbar{height:48px!important;background:#18191d!important;border-bottom:1px solid #111318!important;left:calc(var(--rail) + var(--sidebar))!important;padding:0 14px!important}.brand{font-weight:800!important}.server-sidebar{top:0!important;background:#111114!important;border-right:1px solid #111!important;padding:0!important;display:flex!important;flex-direction:column!important}.server-head{height:48px!important;border-bottom:1px solid #1f2026!important;display:flex!important;align-items:center!important;padding:0 10px!important;flex:0 0 auto!important}.server-head-btn{height:36px!important;border-radius:8px!important}.sidebar-scroll{padding:10px 8px!important;overflow-y:auto!important;min-height:0!important;flex:1!important}.server-desc{padding:0 8px!important}.chan-link{min-height:36px!important;border-radius:8px!important;padding:.45rem .65rem!important;color:#9ca3af!important;font-weight:750!important}.chan-link:hover,.chan-link.active{background:#2e3038!important;color:#f4f4f5!important}.sidebar-label,.members-title{color:#6b7280!important;font-size:11px!important}.sidebar-plus{background:transparent!important;color:#9ca3af!important;border:0!important}.sidebar-plus:hover{background:#2e3038!important;color:#fff!important}.main{background:#18191d!important;margin-left:calc(var(--rail) + var(--sidebar))!important;margin-right:var(--members)!important;padding-top:48px!important}.members-sidebar{top:48px!important;background:#18191d!important;border-left:1px solid #111318!important;width:var(--members)!important}.member-row:hover{background:#2e3038!important}.account-panel{background:#17181d!important;border-top:1px solid #22242b!important}.mini-profile-popover.open{box-shadow:0 0 0 9999px rgba(0,0,0,.68),0 26px 90px rgba(0,0,0,.58)!important;border-color:#3a3c45!important}
-@media(max-width:820px){.topbar{left:64px!important;right:0!important}.server-sidebar{left:64px!important;width:calc(100vw - 64px)!important}.main{margin-left:64px!important;margin-right:0!important}.members-sidebar{display:none!important}}
-
 
 /* === AlexiHub final Discord-like polish === */
 .action-toast{
@@ -567,6 +583,185 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
 @media(max-width:860px){.ah-settings-shell{width:100vw;height:100vh;border-radius:0;border:0;grid-template-columns:1fr}.ah-settings-sidebar{display:none}.ah-settings-main{height:100vh}.ah-settings-top{padding:0 18px}.ah-settings-page{padding:32px 18px 80px}.ah-settings-row{grid-template-columns:1fr;gap:7px}.ah-settings-value{text-align:left}.ah-settings-formline{grid-template-columns:1fr}.ah-settings-btn{width:max-content}}
 
 
+
+/* Discord-like friends home */
+.friend-shell{
+  min-height:0;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  background:#18191d;
+}
+.friend-topbar{
+  height:48px;
+  border-bottom:1px solid #111214;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:0 18px;
+  background:#1a1b20;
+  flex:0 0 auto;
+}
+.friend-title{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  font-weight:900;
+  color:#f2f3f5;
+  padding-right:10px;
+  border-right:1px solid #303238;
+  white-space:nowrap;
+}
+.friend-tabs{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  min-width:0;
+  overflow:auto;
+}
+.friend-tab{
+  border:0;
+  border-radius:7px;
+  background:transparent;
+  color:#b5bac1;
+  height:32px;
+  padding:0 12px;
+  font-weight:800;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.friend-tab:hover{background:#2b2d31;color:#fff;}
+.friend-tab.active{background:#3a3c43;color:#fff;}
+.friend-tab.add{background:#5865f2;color:#fff;}
+.friend-tab.add:hover{background:#4752c4;}
+.friend-content{
+  min-height:0;
+  flex:1;
+  overflow:auto;
+  padding:18px 22px 26px;
+}
+.friend-page{display:none;max-width:1000px;margin:0 auto;}
+.friend-page.active{display:block;}
+.friend-banner{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  background:#111214;
+  border:1px solid #2b2d34;
+  border-radius:8px;
+  padding:12px 14px;
+  color:#f2f3f5;
+  margin-bottom:16px;
+}
+.friend-banner svg{color:#b5bac1;}
+.friend-banner a{color:#60a5fa;font-weight:800;}
+.friend-searchline{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  height:40px;
+  border:1px solid #303238;
+  background:#111214;
+  border-radius:8px;
+  padding:0 12px;
+  margin-bottom:18px;
+}
+.friend-searchline input{
+  flex:1;
+  min-width:0;
+  background:transparent;
+  border:0;
+  outline:0;
+  color:#f2f3f5;
+}
+.friend-count{
+  color:#f2f3f5;
+  font-weight:900;
+  font-size:13px;
+  margin:10px 0 8px;
+}
+.friend-list{display:flex;flex-direction:column;border-top:1px solid #2b2d34;}
+.friend-row{
+  min-height:62px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  border-bottom:1px solid #26272e;
+  padding:8px 2px;
+  color:#b5bac1;
+}
+.friend-row:hover{background:rgba(255,255,255,.025);}
+.friend-row .avatar{width:36px;height:36px;}
+.friend-main{min-width:0;flex:1;}
+.friend-main b{display:block;color:#fff;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.friend-main span{display:block;color:#9ca3af;font-size:12px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.friend-actions{display:flex;align-items:center;gap:8px;}
+.friend-icon-btn{
+  width:34px;height:34px;border:0;border-radius:50%;background:#2b2d31;color:#b5bac1;
+  display:inline-flex;align-items:center;justify-content:center;cursor:pointer;
+}
+.friend-icon-btn:hover{background:#3a3c43;color:#fff;}
+.friend-icon-btn.danger:hover{background:rgba(242,63,66,.16);color:#ff7070;}
+.friend-empty{
+  min-height:240px;
+  display:grid;
+  place-items:center;
+  text-align:center;
+  color:#9ca3af;
+}
+.friend-empty h2{color:#f2f3f5;margin-bottom:8px;}
+.add-friend-box{max-width:980px;}
+.add-friend-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:18px;}
+.add-friend-head h1{font-size:22px;margin:0 0 6px;color:#fff;}
+.add-friend-head p{margin:0;color:#b5bac1;line-height:1.45;}
+.add-mascot{width:76px;height:64px;border-radius:18px;background:linear-gradient(135deg,#5865f2,#8b5cf6);display:grid;place-items:center;color:#fff;box-shadow:0 14px 50px rgba(88,101,242,.25);}
+.friend-add-form{
+  border:1px solid #303238;
+  border-radius:12px;
+  background:#111214;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px;
+}
+.friend-add-form input{flex:1;min-width:0;background:transparent;border:0;outline:0;color:#fff;padding:0 4px;}
+.friend-add-form button,.explore-card button,.friend-small-btn{
+  border:0;border-radius:7px;background:#5865f2;color:#fff;font-weight:900;padding:10px 14px;cursor:pointer;
+}
+.friend-add-form button:disabled{opacity:.55;cursor:not-allowed;}
+.friend-add-msg{margin-top:10px;font-size:13px;color:#9ca3af;min-height:18px;}
+.friend-add-msg.ok{color:#23a55a}.friend-add-msg.err{color:#ff6b6b}
+.explore-card{
+  margin-top:28px;max-width:560px;border:1px solid #303238;border-radius:10px;background:#1f2026;padding:15px;display:flex;align-items:center;justify-content:space-between;gap:14px;
+}
+.explore-card b{display:block;color:#fff}.explore-card span{display:block;color:#b5bac1;font-size:13px;margin-top:3px;}
+.pending-groups{display:grid;gap:22px;}
+.active-contact-card{
+  border:1px solid #303238;
+  border-radius:14px;
+  background:#1f2026;
+  overflow:hidden;
+  margin-bottom:12px;
+}
+.active-contact-top{display:flex;align-items:center;gap:10px;padding:12px;background:#2b2d31;}
+.active-contact-top .avatar{width:38px;height:38px;}
+.active-contact-title{min-width:0;}
+.active-contact-title b{display:block;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.active-contact-title span{display:block;color:#9ca3af;font-size:12px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.active-contact-bottom{display:flex;align-items:center;justify-content:space-between;padding:11px 12px;color:#b5bac1;font-size:12px;}
+.active-game-icon{width:34px;height:34px;border-radius:8px;background:#3a3c43;display:grid;place-items:center;color:#fff;font-weight:900;}
+.friend-mobile-title{display:none;}
+@media (max-width: 900px){
+  .friend-topbar{gap:8px;padding:0 10px;overflow:auto;}
+  .friend-title{font-size:0;padding-right:6px}.friend-title .icon{width:22px;height:22px;}
+  .friend-tab{padding:0 10px;}
+  .friend-content{padding:14px;}
+  .add-mascot{display:none;}
+  .friend-add-form{flex-direction:column;align-items:stretch;}
+  .friend-add-form input{height:36px;}
+}
+
+  
 
 /* === Avatar/status persistence + Discord badge placement fix === */
 .ah-v3-avatar,
@@ -774,68 +969,6 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
   opacity: 1 !important;
 }
 
-
-
-/* === SERVER DISCORD FINISH: topbar + member status polish === */
-.discord-channel-topbar{
-  position:fixed!important;
-  top:0!important;
-  left:calc(var(--rail) + var(--sidebar))!important;
-  right:0!important;
-  height:48px!important;
-  z-index:55!important;
-  background:#18191d!important;
-  border-bottom:1px solid #111318!important;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:space-between!important;
-  padding:0 10px 0 14px!important;
-  gap:12px!important;
-}
-.discord-title-left{display:flex;align-items:center;gap:8px;min-width:0;height:100%;}
-.discord-hash{font-size:24px;line-height:1;color:#8e949f;font-weight:800;transform:translateY(-1px);}
-.discord-channel-name{font-size:15px;font-weight:900;color:#f4f4f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:270px;}
-.discord-channel-topic{font-size:13px;color:#9ca3af;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:360px;padding-left:8px;border-left:1px solid #2b2d34;}
-.discord-channel-tools{display:flex;align-items:center;gap:8px;min-width:0;flex:0 0 auto;}
-.discord-tool-btn{width:32px;height:32px;border:0;border-radius:8px;background:transparent;color:#9ca3af;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .13s ease,color .13s ease,transform .08s ease;}
-.discord-tool-btn:hover{background:#2e3038;color:#f4f4f5;}
-.discord-tool-btn:active{transform:scale(.92);}
-.discord-tool-btn svg{width:18px;height:18px;display:block;}
-.discord-search{height:28px;min-width:190px;width:230px;background:#0f1014;border:1px solid #24262e;border-radius:8px;display:flex;align-items:center;gap:6px;padding:0 8px;color:#8e949f;}
-.discord-search svg{width:15px;height:15px;flex:0 0 auto;}
-.discord-search input{width:100%;height:100%;border:0;outline:0;background:transparent;color:#d8dbe2;font:inherit;font-size:13px;min-width:0;}
-.discord-search input::placeholder{color:#7d838f;}
-.discord-live-pill{display:flex;align-items:center;gap:6px;color:#9ca3af;font-size:12px;font-weight:850;margin-left:2px;}
-.discord-live-pill i{width:8px;height:8px;border-radius:50%;background:#23a55a;box-shadow:0 0 0 2px rgba(35,165,90,.10);}
-.chat-main,.main{padding-top:48px!important;}
-.chat-main .channel-header{display:none!important;}
-.members-sidebar{top:48px!important;background:#18191d!important;border-left:1px solid #111318!important;}
-.members-title{font-size:12px!important;color:#7d838f!important;text-transform:none!important;letter-spacing:.01em!important;font-weight:900!important;margin:10px 0 8px!important;padding:0 8px!important;}
-.member-row{min-height:36px!important;padding:5px 7px!important;border-radius:8px!important;gap:8px!important;position:relative!important;}
-.member-row:hover{background:#2e3038!important;}
-.member-avatar-wrap{position:relative;width:32px;height:32px;flex:0 0 auto;display:block;}
-.member-avatar-wrap .member-avatar{width:32px!important;height:32px!important;display:flex!important;}
-.member-presence{position:absolute;right:-2px;bottom:-2px;width:12px;height:12px;border-radius:50%;border:3px solid #18191d;background:#80848e;box-sizing:border-box;}
-.member-presence.status-online{background:#23a55a!important;}
-.member-presence.status-idle{background:#f0b232!important;}
-.member-presence.status-dnd{background:#f23f42!important;}
-.member-presence.status-invisible,.member-presence.status-offline{background:#80848e!important;}
-.member-row:hover .member-presence{border-color:#2e3038;}
-.member-info{gap:0!important;}
-.member-name{font-size:13px!important;line-height:18px!important;}
-.member-role{font-size:11px!important;line-height:14px!important;color:#8e949f!important;text-transform:none!important;letter-spacing:0!important;font-weight:650!important;}
-.message{padding:2px 18px!important;margin:0!important;border-radius:0!important;}
-.message:hover{background:#2e3038!important;}
-.message-head{gap:7px!important;}
-.message-time{font-size:11px!important;color:#8e949f!important;}
-.message-content{line-height:1.35!important;}
-.composer-card,.composer{background:#24262d!important;border:1px solid #30323a!important;border-radius:10px!important;}
-.discord-channel-tools{margin-left:auto!important;justify-content:flex-end!important}.discord-search{width:250px!important;min-width:220px!important}
-@media(max-width:1100px){.discord-channel-topbar{right:0!important}.discord-search{width:180px;min-width:160px}.members-sidebar{display:none!important}.main,.chat-main{margin-right:0!important}}
-@media(max-width:820px){.discord-channel-topbar{left:64px!important;right:0!important;height:56px!important}.discord-channel-topic,.discord-live-pill{display:none!important}.discord-search{display:none!important}.discord-channel-name{max-width:calc(100vw - 260px)}.discord-tool-btn{width:30px;height:30px}.chat-main,.main{padding-top:56px!important}}
-
-.discord-tool-btn.pin-btn svg{transform:none!important;width:18px!important;height:18px!important;display:block!important;}
-.discord-tool-btn.pin-btn{transform:none!important;}
 </style>
 
 
@@ -874,194 +1007,329 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
 .ah-v3-mini .ah-v3-body{
   background:linear-gradient(180deg,color-mix(in srgb,var(--ah-banner-soft) 24%,#23242b),#23242b 34%)!important;
 }
-.discord-tool-btn.pin-btn svg{transform:none!important;width:18px!important;height:18px!important;display:block!important;}
-.discord-tool-btn.pin-btn{transform:none!important;}
 </style>
 
 
-<style id="server-pin-everywhere-fix">
-.discord-tool-btn{display:inline-flex!important;align-items:center!important;justify-content:center!important;line-height:1!important;vertical-align:middle!important;}
-.discord-tool-btn svg{width:19px!important;height:19px!important;display:block!important;stroke-width:2.15!important;}
-.discord-tool-btn[title*="Pin"],.discord-tool-btn[title*="Закреп"]{transform:none!important;}
-.discord-tool-btn.pin-btn svg{transform:none!important;width:18px!important;height:18px!important;display:block!important;}
-.discord-tool-btn.pin-btn{transform:none!important;}
+<style id="ah-mini-profile-button-badge-final-fix">
+/* Final home/DM list mini-profile fix: centered edit button + Discord-like outside status badge */
+.ah-v3-actions{align-items:stretch!important;}
+.ah-v3-actions a,.ah-v3-actions button{
+  min-height:38px!important;height:38px!important;line-height:1.08!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  text-align:center!important;padding:0 8px!important;white-space:normal!important;
+}
+.ah-v3-actions #ah-v3-message{font-size:11px!important;letter-spacing:-.01em!important;}
+.ah-v3-avatar,#ah-v3-avatar{overflow:visible!important;}
+#ah-v3-status,.ah-v3-avatar > .ah-v3-status{
+  right:-8px!important;bottom:9px!important;transform:translate(50%,50%)!important;
+  width:19px!important;height:19px!important;border:4px solid #23242b!important;z-index:20!important;
+}
+@media(max-width:820px){#ah-v3-status,.ah-v3-avatar > .ah-v3-status{right:-6px!important;bottom:8px!important;}}
 </style>
 </head>
 <body>
-  <aside class="server-rail">
-    <a href="/community" class="server-dot home-dot {{ 'active' if not active_server_id else '' }}" title="Direct Messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="21" height="21"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg></a>
-    <div class="rail-sep"></div>
-    {% for srv in servers %}
-    <a href="/community/servers/{{ srv.id }}" class="server-dot {{ 'active' if active_server_id == srv.id else '' }}" title="{{ srv.name }}">
-      {% if srv.icon_url %}<span style="background-image:url('{{ srv.icon_url }}')"></span>{% else %}{{ srv.name[:1]|upper }}{% endif %}
-    </a>
-    {% endfor %}
-    <a href="/community/servers/new" class="server-dot plus" title="Створити сервер">+</a>
-  </aside>
-  <div class="topbar discord-channel-topbar">
-    <div class="discord-title-left">
-      <span class="discord-hash">⌂</span>
-      <span class="discord-channel-name">{{ server.name }}</span>
-      <span class="discord-channel-topic">Огляд сервера</span>
-    </div>
-    <div class="discord-channel-tools">
-      <button class="discord-tool-btn" type="button" onclick="showActionToast && showActionToast('Стрічка сервера поки заглушка')" title="Threads"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h10"/></svg></button>
-      <button class="discord-tool-btn" type="button" onclick="showActionToast && showActionToast('Mute сервера поки заглушка')" title="Mute server"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="m22 9-6 6"/><path d="m16 9 6 6"/></svg></button>
-      <button class="discord-tool-btn pin-btn" type="button" onclick="showActionToast && showActionToast('Закріплені повідомлення поки заглушка')" title="Pinned messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3l5 5-6 6v4l-2 2-3.5-3.5L5 21l-2-2 4.5-4.5L4 11l2-2h4z"/></svg></button>
-      <button class="discord-tool-btn" type="button" onclick="openModal && openModal('invite-modal')" title="Invite People"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></button>
-      <label class="discord-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><input type="search" placeholder="Искать «{{ server.name }}»"></label>
-      <button class="discord-tool-btn" type="button" onclick="showActionToast && showActionToast('Inbox поки заглушка')" title="Inbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></button>
-      <button class="discord-tool-btn" type="button" onclick="showActionToast && showActionToast('Help поки заглушка')" title="Help"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 1 1 5.83 1c0 2-3 2-3 4"/><path d="M12 17h.01"/></svg></button>
-    </div>    </div>
+  <svg style="display:none" aria-hidden="true">
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+    <symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></symbol>
+    <symbol id="i-message" viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="i-hash" viewBox="0 0 24 24"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></symbol>
+    <symbol id="i-headphones" viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.4 1.08V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.08-.4H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .4-1.08V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 16 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.15.32.36.6.6 1 .26.25.64.4 1.08.4H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51.6z"/></symbol>
+    <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 1 1 5.82 1c-.6 1.2-1.9 1.6-2.4 2.5"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol>
+  </svg>
+
+  <div class="app">
+    <aside class="server-rail">
+      <a class="server-dot home-dot active" href="/community" title="Direct Messages"><svg class="icon"><use href="#i-message"></use></svg></a>
+      <div class="server-sep"></div>
+      {% for srv in servers %}
+      <a class="server-dot" href="/community/servers/{{ srv.id }}" title="{{ srv.name }}" {% if srv.icon_url %}style="background-image:url('{{ srv.icon_url }}')"{% endif %}>{% if not srv.icon_url %}{{ srv.name[:1]|upper }}{% endif %}</a>
+      {% endfor %}
+      <a class="server-dot plus" href="/community/servers/new" title="Create server"><svg class="icon"><use href="#i-plus"></use></svg></a>
+    </aside>
+
+    <aside class="dm-sidebar">
+      <div class="search-wrap">
+        <input class="search" id="dm-search" placeholder="Знайти або почати бесіду">
+      </div>
+
+      <nav class="nav">
+        <a class="nav-item active" href="/community">
+          <span class="nav-ico"><svg class="icon"><use href="#i-users"></use></svg></span>
+          Друзі / ЛС
+        </a>
+        {% for ch in channels %}
+        <a class="nav-item" href="/community/channel/{{ ch.slug }}">
+          <span class="nav-ico"><svg class="icon"><use href="#i-hash"></use></svg></span>
+          {{ ch.name }}
+        </a>
+        {% endfor %}
+      </nav>
+
+      <div class="section">
+        <span>Особисті повідомлення</span>
+        <span class="section-action" title="Новий діалог"><svg class="icon icon-sm"><use href="#i-plus"></use></svg></span>
+      </div>
+
+      <div class="dm-list" id="dm-list">
+        {% for item in dm_threads %}
+        {% set other = item.other %}
+        {% if other %}
+        {% set other_status = other.account_status or 'online' %}
+        {% set other_visible = other.id in online_ids and other_status != 'invisible' %}
+        <a class="dm-row mini-profile-trigger" href="/community/dm/{{ other.username }}" data-name="{{ other.username|lower }}" data-mini-username="{{ other.username }}" data-mini-avatar="{{ other.avatar_url or '' }}" data-mini-banner="{{ other.banner_url or '' }}" data-mini-role="{{ other.role_label or 'member' }}" data-mini-c1="{{ other.role_color_start or '#5865f2' }}" data-mini-c2="{{ other.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ other.username }}" data-mini-bio="{{ other.bio or '' }}">
+          <span class="avatar" {% if other.avatar_url %}style="background-image:url('{{ other.avatar_url }}')"{% endif %}>
+            {% if not other.avatar_url %}{{ other.username[:1]|upper }}{% endif %}
+            {% if other_visible %}<span class="presence status-{{ other_status }}"></span>{% endif %}
+          </span>
+          <span class="dm-meta"><span class="dm-name">{{ other.username }}</span></span>
+        </a>
+        {% endif %}
+        {% else %}
+        <div class="empty-note">Ще нема діалогів. Вибери друга нижче.</div>
+        {% endfor %}
+
+        <div class="section" style="padding-left:2px;padding-right:2px;">Друзі</div>
+        {% for f in friends %}
+        {% set f_status = f.account_status or 'online' %}
+        {% set f_visible = f.id in online_ids and f_status != 'invisible' %}
+        <a class="dm-row mini-profile-trigger" href="/community/dm/{{ f.username }}" data-name="{{ f.username|lower }}" data-mini-username="{{ f.username }}" data-mini-avatar="{{ f.avatar_url or '' }}" data-mini-banner="{{ f.banner_url or '' }}" data-mini-role="{{ f.role_label or 'member' }}" data-mini-c1="{{ f.role_color_start or '#5865f2' }}" data-mini-c2="{{ f.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ f.username }}" data-mini-bio="{{ f.bio or '' }}">
+          <span class="avatar" {% if f.avatar_url %}style="background-image:url('{{ f.avatar_url }}')"{% endif %}>{% if not f.avatar_url %}{{ f.username[:1]|upper }}{% endif %}{% if f_visible %}<span class="presence status-{{ f_status }}"></span>{% endif %}</span>
+          <span class="dm-meta"><span class="dm-name">{{ f.username }}</span></span>
+        </a>
+        {% endfor %}
+      </div>
+
+      {% set my_status = account.account_status or 'online' %}
+      <div class="user-panel mini-profile-trigger" data-mini-username="{{ account.username }}" data-mini-avatar="{{ account.avatar_url or '' }}" data-mini-banner="{{ account.banner_url or '' }}" data-mini-status="{{ account.account_status or 'online' }}" data-mini-role="{{ account.role_label or 'online' }}" data-mini-c1="{{ account.role_color_start or '#5865f2' }}" data-mini-c2="{{ account.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ account.username }}" data-mini-bio="{{ account.bio or '' }}">
+        <span class="avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}')"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}<span id="my-avatar-status" class="presence status-{{ my_status }}"></span></span>
+        <div class="user-info status-trigger" onclick="openSelfProfile()">
+          <b>{{ account.username }}</b>
+          <span><i id="my-status-dot" class="status-dot status-{{ my_status }}"></i><span id="my-status-label">{{ {'online':'В мережі','idle':'Неактивний','dnd':'Не турбувати','invisible':'Невидимий'}.get(my_status, 'В мережі') }}</span></span><small class="account-username">@{{ account.username }}</small>
+        </div>
+        <div class="user-actions">
+          <button class="voice-control" data-audio-kind="mic" title="Mute" onclick="toggleAudioControl(this,'mic')"><svg class="icon icon-sm"><use href="#i-mic"></use></svg></button>
+          <button class="voice-control" data-audio-kind="headphones" title="Deafen" onclick="toggleAudioControl(this,'headphones')"><svg class="icon icon-sm"><use href="#i-headphones"></use></svg></button>
+          <button title="Settings" onclick="openUserSettings()"><svg class="icon icon-sm"><use href="#i-settings"></use></svg></button>
+        </div>
+        <div id="status-menu" class="status-menu">
+          <button onclick="setPresenceStatus('online')"><i class="status-dot status-online"></i><span><b>В мережі</b><small>Тебе видно онлайн.</small></span></button>
+          <button onclick="setPresenceStatus('idle')"><i class="status-dot status-idle"></i><span><b>Неактивний</b><small>Жовтий статус.</small></span></button>
+          <button onclick="setPresenceStatus('dnd')"><i class="status-dot status-dnd"></i><span><b>Не турбувати</b><small>Червоний статус.</small></span></button>
+          <button onclick="setPresenceStatus('invisible')"><i class="status-dot status-invisible"></i><span><b>Невидимий</b><small>Не показувати онлайн.</small></span></button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main friend-shell">
+      <header class="friend-topbar">
+        <div class="friend-title"><svg class="icon"><use href="#i-users"></use></svg><span>Друзі</span></div>
+        <div class="friend-tabs" role="tablist">
+          <button class="friend-tab active" data-friend-tab="online" onclick="showFriendTab('online')">В сети</button>
+          <button class="friend-tab" data-friend-tab="all" onclick="showFriendTab('all')">Все</button>
+          <button class="friend-tab" data-friend-tab="pending" onclick="showFriendTab('pending')">Ожидание{% if pending_incoming or pending_outgoing %} • {{ pending_incoming|length + pending_outgoing|length }}{% endif %}</button>
+          <button class="friend-tab add" data-friend-tab="add" onclick="showFriendTab('add')">Добавить в друзья</button>
+        </div>
+        <div class="top-actions" style="margin-left:auto;">
+          <button title="Inbox" onclick="showActionToast('Входящие пока будут здесь заглушкой')"><svg class="icon"><use href="#i-inbox"></use></svg></button>
+          <button title="Help" onclick="location.href='/community/channel/support'"><svg class="icon"><use href="#i-help"></use></svg></button>
+          <button title="Search" onclick="document.getElementById('friend-search')?.focus()"><svg class="icon"><use href="#i-search"></use></svg></button>
+        </div>
+      </header>
+
+      <div class="friend-content">
+        <section class="friend-page active" data-friend-page="online">
+          <div class="friend-banner">
+            <svg class="icon icon-sm"><use href="#i-help"></use></svg>
+            <span>Ищете пользователей, которых вы заблокировали или игнорируете? <a href="#" onclick="showActionToast('Настройки блокировок будут позже');return false;">Перейти в настройки</a></span>
+            <button class="friend-icon-btn" style="margin-left:auto;width:28px;height:28px;" onclick="this.closest('.friend-banner').remove()"><svg class="icon icon-sm"><use href="#i-close"></use></svg></button>
+          </div>
+          <label class="friend-searchline">
+            <svg class="icon icon-sm"><use href="#i-search"></use></svg>
+            <input id="friend-search" placeholder="Поиск" oninput="filterFriendRows(this.value)">
+          </label>
+          {% set online_friend_count = namespace(value=0) %}
+          {% for f in friends %}{% set f_status = f.account_status or 'online' %}{% if f.id in online_ids and f_status != 'invisible' %}{% set online_friend_count.value = online_friend_count.value + 1 %}{% endif %}{% endfor %}
+          <div class="friend-count">В сети — {{ online_friend_count.value }}</div>
+          <div class="friend-list">
+            {% for f in friends %}
+            {% set f_status = f.account_status or 'online' %}
+            {% set f_visible = f.id in online_ids and f_status != 'invisible' %}
+            {% if f_visible %}
+            <div class="friend-row mini-profile-trigger" data-name="{{ f.username|lower }}" data-mini-username="{{ f.username }}" data-mini-avatar="{{ f.avatar_url or '' }}" data-mini-banner="{{ f.banner_url or '' }}" data-mini-role="{{ f.role_label or 'member' }}" data-mini-c1="{{ f.role_color_start or '#5865f2' }}" data-mini-c2="{{ f.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ f.username }}" data-mini-bio="{{ f.bio or '' }}">
+              <span class="avatar" {% if f.avatar_url %}style="background-image:url('{{ f.avatar_url }}')"{% endif %}>{% if not f.avatar_url %}{{ f.username[:1]|upper }}{% endif %}<span class="presence status-{{ f_status }}"></span></span>
+              <span class="friend-main"><b>{{ f.username }}</b><span>{{ {'online':'В сети','idle':'Неактивен','dnd':'Не беспокоить','invisible':'Не в сети'}.get(f_status, 'В сети') }}</span></span>
+              <span class="friend-actions"><a class="friend-icon-btn" href="/community/dm/{{ f.username }}" title="Сообщение"><svg class="icon icon-sm"><use href="#i-message"></use></svg></a><button class="friend-icon-btn" onclick="showActionToast('Меню друга будет позже')"><svg class="icon icon-sm"><use href="#i-more"></use></svg></button></span>
+            </div>
+            {% endif %}
+            {% endfor %}
+            {% if online_friend_count.value == 0 %}<div class="friend-empty"><div><h2>Сейчас друзей онлайн нет</h2><p>Когда кто-то будет в сети, он появится здесь.</p></div></div>{% endif %}
+          </div>
+        </section>
+
+        <section class="friend-page" data-friend-page="all">
+          <label class="friend-searchline">
+            <svg class="icon icon-sm"><use href="#i-search"></use></svg>
+            <input placeholder="Поиск" oninput="filterFriendRows(this.value)">
+          </label>
+          <div class="friend-count">Все друзья — {{ friends|length }}</div>
+          <div class="friend-list">
+            {% for f in friends %}
+            {% set f_status = f.account_status or 'online' %}
+            {% set f_visible = f.id in online_ids and f_status != 'invisible' %}
+            <div class="friend-row mini-profile-trigger" data-name="{{ f.username|lower }}" data-mini-username="{{ f.username }}" data-mini-avatar="{{ f.avatar_url or '' }}" data-mini-banner="{{ f.banner_url or '' }}" data-mini-role="{{ f.role_label or 'member' }}" data-mini-c1="{{ f.role_color_start or '#5865f2' }}" data-mini-c2="{{ f.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ f.username }}" data-mini-bio="{{ f.bio or '' }}">
+              <span class="avatar" {% if f.avatar_url %}style="background-image:url('{{ f.avatar_url }}')"{% endif %}>{% if not f.avatar_url %}{{ f.username[:1]|upper }}{% endif %}{% if f_visible %}<span class="presence status-{{ f_status }}"></span>{% endif %}</span>
+              <span class="friend-main"><b>{{ f.username }}</b><span>{% if f_visible %}{{ {'online':'В сети','idle':'Неактивен','dnd':'Не беспокоить','invisible':'Не в сети'}.get(f_status, 'В сети') }}{% else %}Не в сети{% endif %}</span></span>
+              <span class="friend-actions"><a class="friend-icon-btn" href="/community/dm/{{ f.username }}" title="Сообщение"><svg class="icon icon-sm"><use href="#i-message"></use></svg></a><button class="friend-icon-btn" onclick="showActionToast('Меню друга будет позже')"><svg class="icon icon-sm"><use href="#i-more"></use></svg></button></span>
+            </div>
+            {% else %}<div class="friend-empty"><div><h2>Список друзей пуст</h2><p>Добавь первого друга через вкладку “Добавить в друзья”.</p></div></div>{% endfor %}
+          </div>
+        </section>
+
+        <section class="friend-page" data-friend-page="pending">
+          <div class="friend-banner">
+            <svg class="icon icon-sm"><use href="#i-help"></use></svg>
+            <span>Здесь входящие и отправленные заявки в друзья.</span>
+          </div>
+          <label class="friend-searchline">
+            <svg class="icon icon-sm"><use href="#i-search"></use></svg>
+            <input placeholder="Поиск" oninput="filterFriendRows(this.value)">
+          </label>
+          <div class="pending-groups">
+            <div>
+              <div class="friend-count">Входящие ({{ pending_incoming|length }})</div>
+              <div class="friend-list">
+                {% for p in pending_incoming %}
+                {% set u = p.requester %}
+                {% if u %}
+                <div class="friend-row" data-name="{{ u.username|lower }}">
+                  <span class="avatar" {% if u.avatar_url %}style="background-image:url('{{ u.avatar_url }}')"{% endif %}>{% if not u.avatar_url %}{{ u.username[:1]|upper }}{% endif %}</span>
+                  <span class="friend-main"><b>{{ u.username }}</b><span>Хочет добавить тебя в друзья</span></span>
+                  <span class="friend-actions"><button class="friend-icon-btn" onclick="respondFriendRequest({{ p.friendship_id }}, true, this)" title="Принять"><svg class="icon icon-sm"><use href="#i-check"></use></svg></button><button class="friend-icon-btn danger" onclick="respondFriendRequest({{ p.friendship_id }}, false, this)" title="Отклонить"><svg class="icon icon-sm"><use href="#i-close"></use></svg></button></span>
+                </div>
+                {% endif %}
+                {% else %}<div class="friend-empty" style="min-height:110px;"><div><p>Входящих заявок нет.</p></div></div>{% endfor %}
+              </div>
+            </div>
+            <div>
+              <div class="friend-count">Отправлено ({{ pending_outgoing|length }})</div>
+              <div class="friend-list">
+                {% for p in pending_outgoing %}
+                {% set u = p.addressee %}
+                {% if u %}
+                <div class="friend-row" data-name="{{ u.username|lower }}">
+                  <span class="avatar" {% if u.avatar_url %}style="background-image:url('{{ u.avatar_url }}')"{% endif %}>{% if not u.avatar_url %}{{ u.username[:1]|upper }}{% endif %}</span>
+                  <span class="friend-main"><b>{{ u.username }}</b><span>Заявка отправлена</span></span>
+                  <span class="friend-actions"><button class="friend-icon-btn danger" onclick="cancelFriendRequest({{ p.friendship_id }}, this)" title="Отменить"><svg class="icon icon-sm"><use href="#i-close"></use></svg></button></span>
+                </div>
+                {% endif %}
+                {% else %}<div class="friend-empty" style="min-height:110px;"><div><p>Отправленных заявок нет.</p></div></div>{% endfor %}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="friend-page" data-friend-page="add">
+          <div class="add-friend-box">
+            <div class="add-friend-head">
+              <div><h1>Добавить в друзья</h1><p>Можно добавить друга по имени пользователя AlexiHub. Введи точный username і натисни кнопку.</p></div>
+              <div class="add-mascot"><svg class="icon icon-lg"><use href="#i-users"></use></svg></div>
+            </div>
+            <form class="friend-add-form" onsubmit="sendFriendRequestFromHome(event)">
+              <input id="add-friend-username" autocomplete="off" placeholder="Введите имя пользователя">
+              <button id="add-friend-btn" type="submit">Отправить запрос дружбы</button>
+            </form>
+            <div id="add-friend-msg" class="friend-add-msg"></div>
+            <div class="explore-card">
+              <div><b>Исследуйте доступные серверы</b><span>Нет знакомых? Заходи в открытые серверы, общайся и добавляй людей.</span></div>
+              <button type="button" onclick="showActionToast('Каталог серверов будет позже')">Открыть</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <aside class="right">
+      <div class="section" style="padding-left:0;padding-right:0;font-size:16px;color:#fff;text-transform:none;letter-spacing:0;">Активные контакты</div>
+      {% set shown_active = namespace(value=0) %}
+      {% for f in friends %}
+      {% set f_status = f.account_status or 'online' %}
+      {% if f.id in online_ids and f_status != 'invisible' and shown_active.value < 4 %}
+      {% set shown_active.value = shown_active.value + 1 %}
+      <div class="active-contact-card">
+        <div class="active-contact-top">
+          <span class="avatar" {% if f.avatar_url %}style="background-image:url('{{ f.avatar_url }}')"{% endif %}>{% if not f.avatar_url %}{{ f.username[:1]|upper }}{% endif %}<span class="presence status-{{ f_status }}"></span></span>
+          <span class="active-contact-title"><b>{{ f.username }}</b><span>{{ {'online':'В сети','idle':'Неактивен','dnd':'Не беспокоить','invisible':'Не в сети'}.get(f_status, 'В сети') }}</span></span>
+        </div>
+        <div class="active-contact-bottom"><span>Активен сейчас</span><span class="active-game-icon">A</span></div>
+      </div>
+      {% endif %}
+      {% endfor %}
+      {% if shown_active.value == 0 %}
+      <div class="active-contact-card"><div class="active-contact-top"><span class="active-contact-title"><b>Пока тихо</b><span>Активные друзья появятся здесь.</span></span></div></div>
+      {% endif %}
+    </aside>
+
   </div>
 
-  <aside class="server-sidebar">
-    <div class="server-head"><button id="server-head-btn" type="button" class="server-head-btn" onclick="toggleServerMenu(event)"><span>{{ server.name }}</span><span class="server-arrow">⌄</span></button><div id="server-menu" class="server-menu"><button type="button" class="menu-item" onclick="openModal('invite-modal')"><span>Invite People</span><span class="menu-ico">👥</span></button>{% if can_manage %}<button type="button" class="menu-item" onclick="openModal('settings-modal')"><span>Server Settings</span><span class="menu-ico">⚙</span></button><button type="button" class="menu-item" onclick="openModal('channel-modal')"><span>Create Channel</span><span class="menu-ico">＋</span></button>{% endif %}<div class="menu-divider"></div><button id="copy-server-id-btn" type="button" class="menu-item" onclick="copyServerId('{{ server.id }}')"><span>Copy Server ID</span><span class="menu-ico">ID</span></button>{% if not can_manage %}<form class="menu-form danger" method="post" action="/community/servers/{{ server.id }}/leave" onsubmit="return confirm('Покинути сервер {{ server.name }}?');"><button type="submit"><span>Leave Server</span><span class="menu-ico">⎋</span></button></form>{% endif %}</div></div>
-    <div class="sidebar-scroll">{% if server.description %}<div class="server-desc">{{ server.description }}</div>{% endif %}<a href="/community/servers/{{ server.id }}" class="chan-link active">⌂ Огляд</a><div class="sidebar-label-row"><div class="sidebar-label">Канали</div>{% if can_manage %}<button type="button" class="sidebar-plus" onclick="openModal('channel-modal')" title="Створити канал">+</button>{% endif %}</div>{% for ch in channels %}<a href="/community/servers/{{ server.id }}/channel/{{ ch.id }}" class="chan-link "># {{ ch.name }}</a>{% endfor %}</div>
-    <div class="account-panel mini-profile-trigger" data-mini-username="{{ account.username|e }}" data-mini-avatar="{{ account.avatar_url or '' }}" data-mini-banner="{{ account.banner_url or '' }}" data-mini-status="{{ account.account_status or 'online' }}" data-mini-role="{{ account.role_label or 'online' }}" data-mini-effect="{{ account.name_effect or 'none' }}" data-mini-font="{{ account.name_font or 'default' }}" data-mini-c1="{{ account.role_color_start or '#f5576c' }}" data-mini-c2="{{ account.role_color_end or '#7367f0' }}" data-mini-profile="/community/profile/{{ account.username }}" data-mini-bio="{{ account.bio or '' }}"><span class="account-avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}');"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}</span><span class="account-meta"><span class="visual-name account-name name-{{ account.name_effect or 'none' }} font-{{ account.name_font or 'default' }}" style="--name-c1: {{ account.role_color_start or '#f5576c' }}; --name-c2: {{ account.role_color_end or '#7367f0' }};">{{ account.username }}</span><span class="account-status">{{ {'online':'В мережі','idle':'Неактивний','dnd':'Не турбувати','invisible':'Невидимий'}.get(account.account_status or 'online', 'В мережі') }}</span><small class="account-username">@{{ account.username }}</small></span><span class="account-actions"><button class="voice-control" data-audio-kind="mic" type="button" onclick="event.stopPropagation();toggleAudioControl(this,'mic')" title="Mute"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button><button class="voice-control" data-audio-kind="headphones" type="button" onclick="event.stopPropagation();toggleAudioControl(this,'headphones')" title="Deafen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg></button><button type="button" onclick="event.stopPropagation();openUserSettings()" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.4 1.08V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.08-.4H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6A1.65 1.65 0 0 0 10.4 3V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 16 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.15.32.36.6.6 1 .26.25.64.4 1.08.4H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51.6z"/></svg></button></span></div>
-  </aside>
-  <aside class="members-sidebar">
-    <div class="members-title">Учасники — {{ members|length }}</div>
-    {% for item in members %}
-      {% set m = item.account %}
-      {% if m %}
-      <a href="/community/profile/{{ m.username }}" class="member-row mini-profile-trigger profile-click" data-account-id="{{ m.id }}" data-mini-username="{{ m.username|e }}" data-mini-avatar="{{ m.avatar_url or '' }}" data-mini-banner="{{ m.banner_url or '' }}" data-mini-status="{{ account.account_status if m.id == account.id else (m.account_status or 'offline') }}" data-mini-role="{{ m.role_label or item.role }}" data-mini-effect="{{ m.name_effect or 'none' }}" data-mini-font="{{ m.name_font or 'default' }}" data-mini-c1="{{ m.role_color_start or '#f5576c' }}" data-mini-c2="{{ m.role_color_end or '#7367f0' }}" data-mini-profile="/community/profile/{{ m.username }}" data-mini-bio="{{ m.bio or '' }}">
-        <span class="member-avatar-wrap"><span class="member-avatar" {% if m.avatar_url %}style="background-image:url('{{ m.avatar_url }}');"{% endif %}>{% if not m.avatar_url %}{{ m.username[:1]|upper }}{% endif %}</span><span class="member-presence status-{{ account.account_status if m.id == account.id else (m.account_status or 'offline') }}"></span></span>
-        <span class="member-info">
-          <span class="visual-name member-name name-{{ m.name_effect or 'none' }} font-{{ m.name_font or 'default' }}" style="--name-c1: {{ m.role_color_start or '#f5576c' }}; --name-c2: {{ m.role_color_end or '#7367f0' }};">{{ m.username }}</span>
-          <span class="member-role">{{ item.role }}</span>
-        </span>
-      </a>
-      {% endif %}
-    {% else %}
-      <div class="empty-members">Немає учасників.</div>
-    {% endfor %}
-  </aside>
-
-  <main class="main">
-    <section class="hero">
-      <h1>{{ server.name }}</h1>
-      <p>{{ server.description or 'Сервер готовий. Вибери канал зліва і починай спілкування як у нормальному чаті, не як в листах.' }}</p>
-    </section>
-    <div class="grid">
-      <section class="panel">
-        <div class="panel-title">Канали</div>
-        {% for ch in channels %}
-        <a class="channel-card" href="/community/servers/{{ server.id }}/channel/{{ ch.id }}">
-          <div><strong># {{ ch.name }}</strong>{% if ch.description %}<span>{{ ch.description }}</span>{% else %}<span>Відкрити чат</span>{% endif %}</div>
-          <b>→</b>
-        </a>
-        {% else %}<div class="empty-note">Немає каналів.</div>{% endfor %}
-      </section>
-    </div>
-  </main>
-
-
-  <div id="invite-modal" class="modal-backdrop"><div class="modal-card"><div class="modal-head"><h2>Invite people to {{ server.name }}</h2><button class="modal-close" type="button" onclick="closeModal('invite-modal')">×</button></div>{% if friends %}<div class="friends-list">{% for friend in friends %}<form class="friend-invite-row" method="post" action="/community/servers/{{ server.id }}/invite"><input type="hidden" name="username" value="{{ friend.username }}"><input type="hidden" name="redirect_to" value="{{ request.url.path }}"><span class="friend-invite-avatar" {% if friend.avatar_url %}style="background-image:url('{{ friend.avatar_url }}');"{% endif %}>{% if not friend.avatar_url %}{{ friend.username[:1]|upper }}{% endif %}</span><span class="friend-invite-name">{{ friend.username }}</span><button type="submit">Invite</button></form>{% endfor %}</div>{% else %}<div class="empty-note">У тебе ще нема друзів для швидкого інвайту.</div>{% endif %}<form class="manual-invite" method="post" action="/community/servers/{{ server.id }}/invite"><input type="hidden" name="redirect_to" value="{{ request.url.path }}"><label>Invite by username</label><input name="username" placeholder="username" required><div class="modal-actions"><button class="modal-btn secondary" type="button" onclick="closeModal('invite-modal')">Cancel</button><button class="modal-btn" type="submit">Send invite</button></div></form></div></div>
-  {% if can_manage %}<div id="settings-modal" class="modal-backdrop"><form class="modal-card" method="post" action="/community/servers/{{ server.id }}/settings"><input type="hidden" name="redirect_to" value="{{ request.url.path }}"><div class="modal-head"><h2>Server Settings</h2><button class="modal-close" type="button" onclick="closeModal('settings-modal')">×</button></div><label>Server name</label><input name="name" value="{{ server.name }}" required maxlength="64"><label>Icon URL</label><input name="icon_url" value="{{ server.icon_url or '' }}" placeholder="https://..."><label>Description</label><textarea name="description" maxlength="255" placeholder="Опис сервера">{{ server.description or '' }}</textarea><div class="modal-actions"><button class="modal-btn secondary" type="button" onclick="closeModal('settings-modal')">Cancel</button><button class="modal-btn" type="submit">Save changes</button></div></form></div><div id="channel-modal" class="modal-backdrop"><form class="modal-card" method="post" action="/community/servers/{{ server.id }}/channels/create"><div class="modal-head"><h2>Create Channel</h2><button class="modal-close" type="button" onclick="closeModal('channel-modal')">×</button></div><label>Channel name</label><input name="name" placeholder="general-chat" required><label>Description</label><input name="description" placeholder="необовʼязково"><div class="modal-actions"><button class="modal-btn secondary" type="button" onclick="closeModal('channel-modal')">Cancel</button><button class="modal-btn" type="submit">Create</button></div></form></div>{% endif %}
-  <div id="mini-profile-popover" class="mini-profile-popover"><div class="mini-banner"></div><div class="mini-profile-body"><div id="mini-avatar" class="mini-avatar"></div><span id="mini-name" class="visual-name mini-name name-none font-default"></span><div id="mini-role" class="mini-role-line"></div><div class="mini-note">Міні-профіль. Натисни Open profile, якщо треба повна сторінка.</div><div class="mini-profile-actions"><a id="mini-open-profile" href="#">Open profile</a><a id="mini-message-link" href="#" class="secondary">Message</a></div></div></div>
-
-  <script>
-
-    function toggleServerMenu(e) { if (e) e.stopPropagation(); var btn = document.getElementById('server-head-btn'); var menu = document.getElementById('server-menu'); if (!menu || !btn) return; var open = !menu.classList.contains('open'); menu.classList.toggle('open', open); btn.classList.toggle('open', open); }
-    function closeServerMenu() { var btn = document.getElementById('server-head-btn'); var menu = document.getElementById('server-menu'); if (menu) menu.classList.remove('open'); if (btn) btn.classList.remove('open'); }
-    function openModal(id) { closeServerMenu(); var modal = document.getElementById(id); if (modal) modal.classList.add('open'); }
-    function closeModal(id) { var modal = document.getElementById(id); if (modal) modal.classList.remove('open'); }
-    function copyServerId(serverId) { closeServerMenu(); if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(String(serverId)).catch(function(){}); var btn = document.getElementById('copy-server-id-btn'); if (btn) { var old = btn.innerHTML; btn.innerHTML = '<span>Copied</span><span class="menu-ico">✓</span>'; setTimeout(function(){ btn.innerHTML = old; }, 1100); } }
-    function showMiniProfile(trigger, event) { if (event) { event.preventDefault(); event.stopPropagation(); } var card = document.getElementById('mini-profile-popover'); if (!card || !trigger) return; var username = trigger.dataset.miniUsername || 'user'; var avatar = trigger.dataset.miniAvatar || ''; var role = trigger.dataset.miniRole || 'member'; var profile = trigger.dataset.miniProfile || ('/community/profile/' + username); var effect = trigger.dataset.miniEffect || 'none'; var font = trigger.dataset.miniFont || 'default'; var c1 = trigger.dataset.miniC1 || '#5865f2'; var c2 = trigger.dataset.miniC2 || '#eb459e'; card.style.setProperty('--mini-c1', c1); card.style.setProperty('--mini-c2', c2); var avatarEl = document.getElementById('mini-avatar'); var nameEl = document.getElementById('mini-name'); var roleEl = document.getElementById('mini-role'); var openEl = document.getElementById('mini-open-profile'); var msgEl = document.getElementById('mini-message-link'); if (avatarEl) { avatarEl.textContent = avatar ? '' : username.slice(0,1).toUpperCase(); avatarEl.style.backgroundImage = avatar ? "url('" + avatar.replace(/'/g, "%27") + "')" : ''; } if (nameEl) { nameEl.className = 'visual-name mini-name name-' + effect + ' font-' + font; nameEl.style.setProperty('--name-c1', c1); nameEl.style.setProperty('--name-c2', c2); nameEl.textContent = username; } if (roleEl) roleEl.textContent = role; if (openEl) openEl.href = profile; if (msgEl) msgEl.href = profile; var x = event ? event.clientX : window.innerWidth / 2; var y = event ? event.clientY : window.innerHeight / 2; card.classList.add('open'); var rect = card.getBoundingClientRect(); x = Math.min(Math.max(12, x + 14), window.innerWidth - rect.width - 12); y = Math.min(Math.max(12, y - 34), window.innerHeight - rect.height - 12); card.style.left = x + 'px'; card.style.top = y + 'px'; }
-    function closeMiniProfile() { var card = document.getElementById('mini-profile-popover'); if (card) card.classList.remove('open'); }
-    document.addEventListener('click', function(e) { var profileTrigger = e.target.closest('.mini-profile-trigger'); if (profileTrigger) { showMiniProfile(profileTrigger, e); return; } if (!e.target.closest('#mini-profile-popover')) closeMiniProfile(); if (!e.target.closest('.server-head')) closeServerMenu(); if (e.target.classList && e.target.classList.contains('modal-backdrop')) e.target.classList.remove('open'); });
-    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { closeMiniProfile(); closeServerMenu(); document.querySelectorAll('.modal-backdrop.open').forEach(function(m){ m.classList.remove('open'); }); } });
-
-    function toggleChannelCreate(force) {
-      var form = document.getElementById('sidebar-channel-create');
-      if (!form) return;
-      if (force === false) form.classList.remove('open');
-      else form.classList.toggle('open');
-      var input = form.querySelector('input[name="name"]');
-      if (form.classList.contains('open') && input) setTimeout(function(){ input.focus(); }, 60);
-    }
-
-    function toggleNotifDropdown() {
-      var dd = document.getElementById('notif-dropdown');
-      dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
-    }
-    function renderNotifications(data) {
-      var badge = document.getElementById('notif-badge');
-      var list = document.getElementById('notif-list');
-      var count = data.count || 0;
-
-      badge.style.display = count > 0 ? 'flex' : 'none';
-      badge.textContent = count > 9 ? '9+' : count;
-
-      if (!data.items || !data.items.length) {
-        list.innerHTML = '<div class="notif-empty">Немає нових запитів</div>';
-        return;
-      }
-
-      list.innerHTML = data.items.map(function (item) {
-        if (item.type === 'server_invite') {
-          var iconStyle = item.icon_url ? "background-image:url('" + item.icon_url + "')" : '';
-          return (
-            '<div class="notif-item">' +
-              '<div class="notif-avatar" style="' + iconStyle + '"></div>' +
-              '<div class="notif-name"><b>' + item.server_name + '</b><br><span style="color:#777;font-size:0.72rem;">від ' + item.inviter_username + '</span></div>' +
-              '<div class="notif-actions">' +
-                '<button class="notif-btn accept" onclick="respondServerInvite(' + item.invite_id + ', true)">✓</button>' +
-                '<button class="notif-btn decline" onclick="respondServerInvite(' + item.invite_id + ', false)">✕</button>' +
-              '</div>' +
-            '</div>'
-          );
-        }
-
-        var avatarStyle = item.avatar_url ? "background-image:url('" + item.avatar_url + "')" : '';
-        return (
-          '<div class="notif-item">' +
-            '<div class="notif-avatar" style="' + avatarStyle + '"></div>' +
-            '<div class="notif-name">' + item.username + '</div>' +
-            '<div class="notif-actions">' +
-              '<button class="notif-btn accept" onclick="respondFriend(' + item.friendship_id + ', true)">✓</button>' +
-              '<button class="notif-btn decline" onclick="respondFriend(' + item.friendship_id + ', false)">✕</button>' +
-            '</div>' +
-          '</div>'
-        );
-      }).join('');
-    }
-
-    function pollNotifications() {
-      fetch('/community/api/notifications')
-        .then(function (r) { return r.json(); })
-        .then(renderNotifications)
-        .catch(function () {});
-    }
-
-    function respondFriend(friendshipId, accept) {
-      fetch('/community/api/friends/respond/' + friendshipId, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accept: accept }),
-      }).then(pollNotifications).catch(function () {});
-    }
-
-    function respondServerInvite(inviteId, accept) {
-      fetch('/community/api/server-invites/respond/' + inviteId, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accept: accept }),
-      }).then(function () {
-        pollNotifications();
-        if (accept) setTimeout(function () { window.location.reload(); }, 350);
-      }).catch(function () {});
-    }
-
-    pollNotifications();
-    setInterval(pollNotifications, 20000);
-    document.addEventListener('click', function (e) {
-      var wrap = document.querySelector('.notif-wrap');
-      if (wrap && !wrap.contains(e.target)) document.getElementById('notif-dropdown').style.display = 'none';
+<script>
+  const search = document.getElementById('dm-search');
+  if (search) {
+    search.addEventListener('input', () => {
+      const q = search.value.trim().toLowerCase();
+      document.querySelectorAll('[data-name]').forEach(row => {
+        row.style.display = row.dataset.name.includes(q) ? 'flex' : 'none';
+      });
     });
+  }
 
-  
+  function toggleStatusMenu(event) {
+    event.stopPropagation();
+    const menu = document.getElementById('status-menu');
+    if (menu) menu.classList.toggle('open');
+  }
+  const statusLabels = { online: 'В мережі', idle: 'Неактивний', dnd: 'Не турбувати', invisible: 'Невидимий' };
+  function applyLocalStatus(status) {
+    ['my-status-dot','my-avatar-status','modal-avatar-status'].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.remove('status-online','status-idle','status-dnd','status-invisible');
+      el.classList.add('status-' + status);
+    });
+    const label = document.getElementById('my-status-label');
+    if (label) label.textContent = statusLabels[status] || statusLabels.online;
+    document.querySelectorAll('.account-panel[data-mini-username], .user-panel[data-mini-username]').forEach(p => {
+      const n = (p.dataset.miniUsername || '').toLowerCase();
+      const me = ('{{ account.username }}' || '').toLowerCase();
+      if (!n || n === me) {
+        p.dataset.miniStatus = status;
+        const small = p.querySelector('.account-status');
+        if (small) small.textContent = statusLabels[status] || statusLabels.online;
+      }
+    });
+    const menu = document.getElementById('status-menu');
+    if (menu) menu.classList.remove('open');
+  }
+  function setPresenceStatus(status) {
+    applyLocalStatus(status);
+    fetch('/community/presence/status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    }).catch(() => {});
+  }
+  document.addEventListener('click', () => {
+    const menu = document.getElementById('status-menu');
+    if (menu) menu.classList.remove('open');
+  });
+
 
 function showActionToast(text){
   const t=document.getElementById('action-toast'); if(!t) return;
@@ -1083,10 +1351,30 @@ document.addEventListener('DOMContentLoaded',()=>{
   });
 });
 
-// make server mini-profile message button open DM
-(function(){const old=window.showMiniProfile; if(typeof old==='function'){window.showMiniProfile=function(trigger,event){old(trigger,event); const msg=document.getElementById('mini-message-link'); const name=trigger&&trigger.dataset?trigger.dataset.miniUsername:''; if(msg&&name) msg.href='/community/dm/'+encodeURIComponent(name);};}})();
-
 </script>
+
+<div id="self-profile-modal" class="self-profile-backdrop" onclick="if(event.target===this)closeSelfProfile()">
+  <div class="self-profile-card">
+    <button class="self-profile-close" type="button" onclick="closeSelfProfile()">×</button>
+    <div class="self-profile-banner" {% if account.banner_url %}style="background-image:url('{{ account.banner_url }}')"{% endif %}></div>
+    <div class="self-profile-body">
+      <div class="self-profile-avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}')"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}<span id="modal-avatar-status" class="presence status-{{ my_status }}"></span></div>
+      <div class="self-profile-name">{{ account.username }}</div>
+      <div class="self-profile-sub">{{ account.bio or 'AlexiHub account' }}</div>
+      <div class="self-profile-section"><b>Статус</b>
+        <div class="self-status-grid">
+          <button class="self-status-btn" type="button" onclick="setPresenceStatus('online')"><i class="status-dot status-online"></i><span><b>В мережі</b><small>Тебе видно онлайн.</small></span></button>
+          <button class="self-status-btn" type="button" onclick="setPresenceStatus('idle')"><i class="status-dot status-idle"></i><span><b>Неактивний</b><small>Жовтий статус.</small></span></button>
+          <button class="self-status-btn" type="button" onclick="setPresenceStatus('dnd')"><i class="status-dot status-dnd"></i><span><b>Не турбувати</b><small>Не показувати сповіщення.</small></span></button>
+          <button class="self-status-btn" type="button" onclick="setPresenceStatus('invisible')"><i class="status-dot status-invisible"></i><span><b>Невидимий</b><small>Ти не будеш показуватись онлайн.</small></span></button>
+        </div>
+      </div>
+      <button class="btn" type="button" onclick="openUserSettings('profile')">Редагувати профіль</button>
+    </div>
+  </div>
+</div>
+<div id="action-toast" class="action-toast"></div>
+
 
 <div id="ah-v3-mini" class="ah-v3-mini" aria-hidden="true">
   <div id="ah-v3-banner" class="ah-v3-banner"></div>
@@ -1252,20 +1540,13 @@ document.addEventListener('DOMContentLoaded',()=>{
   <symbol id="i-code" viewBox="0 0 24 24"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="i-user" viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="7" r="4" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
-  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 20h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
-  <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="9" cy="7" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
-  <symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
-  <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.4 1.08V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.08-.4H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .4-1.08V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 16 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.15.32.36.6.6 1 .26.25.64.4 1.08.4H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51.6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
-  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" fill="none" stroke="currentColor" stroke-width="2"/><path d="m21 21-4.35-4.35" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
 </svg>
 
 
 
 <style id="ah-profile-editor-css">
 .ah-profile-edit-layout{display:grid;grid-template-columns:330px 1fr;gap:24px;align-items:start}.ah-profile-live-card{background:#23242b;border:1px solid #353741;border-radius:18px;overflow:hidden;min-height:460px;box-shadow:0 18px 50px rgba(0,0,0,.25)}.ah-profile-live-banner{height:122px;background:linear-gradient(135deg,#5865f2,#9b5cf6);background-size:cover;background-position:center;display:block;position:relative;cursor:pointer}.ah-profile-change-badge{position:absolute;right:12px;top:12px;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.18);border-radius:999px;color:#fff;font-size:12px;font-weight:850;padding:7px 10px;opacity:0;transform:translateY(-4px);transition:.16s ease}.ah-profile-live-banner:hover .ah-profile-change-badge{opacity:1;transform:translateY(0)}.ah-profile-live-body{padding:0 18px 20px}.ah-profile-live-avatar{width:94px;height:94px;border-radius:50%;background:#2b2d31 center/cover no-repeat;border:7px solid #23242b;margin-top:-47px;display:grid;place-items:center;position:relative;cursor:pointer;color:#fff;font-size:28px;font-weight:950}.ah-profile-live-avatar b{position:absolute;right:-2px;bottom:6px;width:30px;height:30px;border-radius:50%;background:#5865f2;display:grid;place-items:center;font-size:14px;border:4px solid #23242b}.ah-profile-live-name{margin-top:10px;font-size:25px;font-weight:950;letter-spacing:-.04em;color:#fff}.ah-profile-live-handle{color:#b5bac1;font-size:13px;font-weight:750;margin-top:1px}.ah-profile-live-bio{margin-top:22px;min-height:76px;border-top:1px solid rgba(255,255,255,.09);padding-top:16px;color:#dbdee1;line-height:1.45;font-size:13px;white-space:pre-wrap}.ah-profile-live-note{margin-top:18px;color:#8b919d;font-size:12px;font-style:italic}.ah-profile-edit-panel{display:grid;gap:14px}.ah-hidden-file{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}.ah-upload-row{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#2b2d31;border:1px solid #353741;border-radius:12px;padding:14px 16px}.ah-upload-row b{display:block;color:#fff;font-size:14px}.ah-upload-row span{display:block;color:#9ca3af;font-size:12px;margin-top:2px}.ah-upload-row label.ah-settings-btn{display:inline-flex;align-items:center;justify-content:center;margin:0;white-space:nowrap}.ah-url-fallback{background:#202126;border:1px solid #33363d;border-radius:12px;padding:12px}.ah-url-fallback summary{cursor:pointer;color:#b5bac1;font-weight:850}.ah-url-fallback .ah-settings-formline{margin-top:12px}.ah-settings-formline.wide{grid-template-columns:1fr}.ah-profile-savebar{display:flex;align-items:center;gap:10px;justify-content:flex-end;margin-top:4px}.ah-settings-nav[data-settings-tab="profile"]{position:relative}.ah-settings-nav[data-settings-tab="profile"]::after{content:'NEW';margin-left:auto;font-size:10px;background:#5865f2;color:#fff;border-radius:999px;padding:2px 6px;font-weight:950}@media(max-width:820px){.ah-profile-edit-layout{grid-template-columns:1fr}.ah-profile-live-card{min-height:auto}.ah-profile-savebar{justify-content:stretch}.ah-profile-savebar .ah-settings-btn{flex:1}.ah-settings-formline{grid-template-columns:1fr!important;gap:7px}.ah-settings-row{grid-template-columns:1fr!important;gap:8px}.ah-settings-value{text-align:left}}
-.discord-tool-btn.pin-btn svg{transform:none!important;width:18px!important;height:18px!important;display:block!important;}
-.discord-tool-btn.pin-btn{transform:none!important;}
 </style>
 
 <div id="ah-user-settings" class="ah-settings-backdrop" onclick="if(event.target===this)closeUserSettings()" aria-hidden="true">
@@ -1462,6 +1743,56 @@ document.addEventListener('DOMContentLoaded',()=>{
 </script>
 
 
+<script>
+(function(){
+  window.showFriendTab = function(tab){
+    document.querySelectorAll('[data-friend-tab]').forEach(b=>b.classList.toggle('active', b.dataset.friendTab===tab));
+    document.querySelectorAll('[data-friend-page]').forEach(p=>p.classList.toggle('active', p.dataset.friendPage===tab));
+    setTimeout(()=>document.querySelector('[data-friend-page="'+tab+'"] input')?.focus(), 20);
+  };
+  window.filterFriendRows = function(value){
+    const q=(value||'').trim().toLowerCase();
+    document.querySelectorAll('.friend-page.active [data-name]').forEach(row=>{
+      row.style.display = !q || (row.dataset.name||'').includes(q) ? 'flex' : 'none';
+    });
+  };
+  window.sendFriendRequestFromHome = async function(e){
+    e.preventDefault();
+    const input=document.getElementById('add-friend-username');
+    const btn=document.getElementById('add-friend-btn');
+    const msg=document.getElementById('add-friend-msg');
+    const username=(input?.value||'').trim();
+    if(!username){ if(msg){msg.className='friend-add-msg err';msg.textContent='Введи username.';} return; }
+    if(btn) btn.disabled=true;
+    try{
+      const res=await fetch('/community/api/friends/request/'+encodeURIComponent(username),{method:'POST'});
+      const data=await res.json().catch(()=>({}));
+      if(!res.ok) throw new Error(data.error || 'Не удалось отправить заявку.');
+      if(msg){msg.className='friend-add-msg ok';msg.textContent='Заявка отправлена. Статус: '+(data.status||'pending_sent');}
+      if(input) input.value='';
+    }catch(err){ if(msg){msg.className='friend-add-msg err';msg.textContent=err.message || 'Ошибка отправки.';} }
+    finally{ if(btn) btn.disabled=false; }
+  };
+  window.respondFriendRequest = async function(id, accept, el){
+    try{
+      const res=await fetch('/community/api/friends/respond/'+id,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({accept:!!accept})});
+      if(!res.ok) throw new Error('request failed');
+      el?.closest('.friend-row')?.remove();
+      if(typeof showActionToast==='function') showActionToast(accept?'Заявка принята':'Заявка отклонена');
+    }catch(e){ if(typeof showActionToast==='function') showActionToast('Не удалось обработать заявку'); }
+  };
+  window.cancelFriendRequest = async function(id, el){
+    try{
+      const res=await fetch('/community/api/friends/cancel/'+id,{method:'POST'});
+      if(!res.ok) throw new Error('request failed');
+      el?.closest('.friend-row')?.remove();
+      if(typeof showActionToast==='function') showActionToast('Заявка отменена');
+    }catch(e){ if(typeof showActionToast==='function') showActionToast('Не удалось отменить заявку'); }
+  };
+})();
+</script>
+
+
 
 <script id="ah-presence-server-save-fix">
 (function(){
@@ -1523,43 +1854,6 @@ document.addEventListener('DOMContentLoaded',()=>{
     const el=e.target;
     if(el && el.name==='banner_file' && el.files && el.files[0]) setPreviewBanner(URL.createObjectURL(el.files[0]));
   });
-})();
-</script>
-
-
-<script id="ah-live-member-status-fix">
-(function(){
-  if(window.__ahLiveMemberStatusFix) return; window.__ahLiveMemberStatusFix=true;
-  const oldApply = window.applyLocalStatus;
-  const statusLabels = { online:'В мережі', idle:'Неактивний', dnd:'Не турбувати', invisible:'Невидимий' };
-  function normalizeStatus(s){ return ['online','idle','dnd','invisible'].includes(s) ? s : 'online'; }
-  function updateOwnMemberStatus(status){
-    status = normalizeStatus(status);
-    const mine = (window.CURRENT_USER || '{{ account.username if account else "" }}' || '').toLowerCase();
-    document.querySelectorAll('[data-mini-username]').forEach(el=>{
-      const n=(el.dataset.miniUsername||'').toLowerCase();
-      if(!mine || n!==mine) return;
-      el.dataset.miniStatus = status;
-      const dot = el.querySelector('.member-presence,.account-avatar-status,.self-status-dot,.ah-v3-status');
-      if(dot){
-        dot.classList.remove('status-online','status-idle','status-dnd','status-invisible','status-offline','online','idle','dnd','invisible','offline');
-        dot.classList.add('status-'+status);
-        dot.classList.add(status);
-      }
-    });
-    document.querySelectorAll('.account-panel[data-mini-username], .user-panel[data-mini-username]').forEach(panel=>{
-      const n=(panel.dataset.miniUsername||'').toLowerCase();
-      if(mine && n && n!==mine) return;
-      panel.dataset.miniStatus=status;
-      const label=panel.querySelector('.account-status,.user-status,#my-status-label');
-      if(label) label.textContent=statusLabels[status] || statusLabels.online;
-    });
-  }
-  window.applyLocalStatus = function(status){
-    if(typeof oldApply === 'function') oldApply(status);
-    updateOwnMemberStatus(status);
-  };
-  window.__ahUpdateOwnMemberStatus = updateOwnMemberStatus;
 })();
 </script>
 
