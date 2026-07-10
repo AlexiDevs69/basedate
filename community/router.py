@@ -165,7 +165,7 @@ class RealtimeChannelManager:
         await websocket.accept()
         async with self.lock:
             self.connections.setdefault(key, {}).setdefault(account_id, set()).add(websocket)
-        await self.broadcast(key, {
+        await self.broadcast_presence_for_scope(key, {
             "type": "presence",
             "account_id": account_id,
             "online": True,
@@ -173,7 +173,7 @@ class RealtimeChannelManager:
             "username": (profile or {}).get("username", ""),
         })
 
-    async def disconnect(self, key: tuple[int, int], account_id: int, websocket: WebSocket) -> None:
+    async def disconnect(self, key: tuple[int, int], account_id: int, websocket: WebSocket, profile: dict | None = None) -> None:
         async with self.lock:
             users = self.connections.get(key)
             if users and account_id in users:
@@ -188,12 +188,30 @@ class RealtimeChannelManager:
                 if not self.typing[key]:
                     self.typing.pop(key, None)
         await self.broadcast_typing(key)
-        await self.broadcast(key, {
+        await self.broadcast_presence_for_scope(key, {
             "type": "presence",
             "account_id": account_id,
             "online": still_online,
-            "status": "online" if still_online else "offline",
+            "status": ((profile or {}).get("account_status", "online") if still_online else "offline"),
+            "username": (profile or {}).get("username", ""),
         })
+
+    async def broadcast_presence_for_scope(self, key: tuple[int, int], payload: dict) -> None:
+        # Server presence must update every open channel of the same server,
+        # not only the current channel. DM presence stays limited to the DM thread.
+        if key[0] == 0:
+            await self.broadcast(key, payload)
+            return
+        async with self.lock:
+            keys = [k for k in self.connections.keys() if k[0] == key[0]]
+        for k in keys:
+            await self.broadcast(k, payload)
+
+    async def broadcast_presence_everywhere(self, payload: dict) -> None:
+        async with self.lock:
+            keys = list(self.connections.keys())
+        for k in keys:
+            await self.broadcast(k, payload)
 
     async def broadcast(self, key: tuple[int, int], payload: dict) -> None:
         async with self.lock:
@@ -849,6 +867,9 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
             data = await websocket.receive_json()
             event_type = data.get("type")
 
+            if event_type in {"leave", "disconnect", "close"}:
+                break
+
             if event_type == "typing":
                 await realtime_channels.set_typing(key, account_id, profile)
                 continue
@@ -908,7 +929,7 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
         except Exception:
             pass
     finally:
-        await realtime_channels.disconnect(key, account_id, websocket)
+        await realtime_channels.disconnect(key, account_id, websocket, profile)
 
 
 # --- Direct messages ---------------------------------------------------------
@@ -1055,6 +1076,9 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
             data = await websocket.receive_json()
             event_type = data.get("type")
 
+            if event_type in {"leave", "disconnect", "close"}:
+                break
+
             if event_type == "typing":
                 await realtime_channels.set_typing(key, account_id, profile)
                 continue
@@ -1108,7 +1132,7 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
         except Exception:
             pass
     finally:
-        await realtime_channels.disconnect(key, account_id, websocket)
+        await realtime_channels.disconnect(key, account_id, websocket, profile)
 
 
 @router.post("/presence/status")
@@ -1127,7 +1151,15 @@ async def presence_status_update(request: Request, db: AsyncSession = Depends(ge
         status_value = form.get("status") or status_value
 
     updated = await crud.update_presence_status(db, account.id, str(status_value))
-    return JSONResponse({"ok": True, "status": (updated.account_status if updated else "online")})
+    final_status = updated.account_status if updated else "online"
+    await realtime_channels.broadcast_presence_everywhere({
+        "type": "presence",
+        "account_id": account.id,
+        "online": final_status != "invisible",
+        "status": final_status if final_status != "invisible" else "offline",
+        "username": account.username,
+    })
+    return JSONResponse({"ok": True, "status": final_status})
 
 
 # --- Public profiles ---------------------------------------------------------
