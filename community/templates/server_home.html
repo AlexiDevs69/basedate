@@ -781,7 +781,7 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
   position:fixed!important;
   top:0!important;
   left:calc(var(--rail) + var(--sidebar))!important;
-  right:var(--members)!important;
+  right:0!important;
   height:48px!important;
   z-index:55!important;
   background:#18191d!important;
@@ -830,6 +830,7 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
 .message-time{font-size:11px!important;color:#8e949f!important;}
 .message-content{line-height:1.35!important;}
 .composer-card,.composer{background:#24262d!important;border:1px solid #30323a!important;border-radius:10px!important;}
+.discord-channel-tools{margin-left:auto!important;justify-content:flex-end!important}.discord-search{width:250px!important;min-width:220px!important}
 @media(max-width:1100px){.discord-channel-topbar{right:0!important}.discord-search{width:180px;min-width:160px}.members-sidebar{display:none!important}.main,.chat-main{margin-right:0!important}}
 @media(max-width:820px){.discord-channel-topbar{left:64px!important;right:0!important;height:56px!important}.discord-channel-topic,.discord-live-pill{display:none!important}.discord-search{display:none!important}.discord-channel-name{max-width:calc(100vw - 260px)}.discord-tool-btn{width:30px;height:30px}.chat-main,.main{padding-top:56px!important}}
 
@@ -910,8 +911,8 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
     {% for item in members %}
       {% set m = item.account %}
       {% if m %}
-      <a href="/community/profile/{{ m.username }}" class="member-row mini-profile-trigger profile-click" data-mini-username="{{ m.username|e }}" data-mini-avatar="{{ m.avatar_url or '' }}" data-mini-banner="{{ m.banner_url or '' }}" data-mini-status="{{ m.account_status or 'offline' }}" data-mini-role="{{ m.role_label or item.role }}" data-mini-effect="{{ m.name_effect or 'none' }}" data-mini-font="{{ m.name_font or 'default' }}" data-mini-c1="{{ m.role_color_start or '#f5576c' }}" data-mini-c2="{{ m.role_color_end or '#7367f0' }}" data-mini-profile="/community/profile/{{ m.username }}" data-mini-bio="{{ m.bio or '' }}">
-        <span class="member-avatar-wrap"><span class="member-avatar" {% if m.avatar_url %}style="background-image:url('{{ m.avatar_url }}');"{% endif %}>{% if not m.avatar_url %}{{ m.username[:1]|upper }}{% endif %}</span><span class="member-presence status-{{ m.account_status or 'offline' }}"></span></span>
+      <a href="/community/profile/{{ m.username }}" class="member-row mini-profile-trigger profile-click" data-mini-username="{{ m.username|e }}" data-mini-avatar="{{ m.avatar_url or '' }}" data-mini-banner="{{ m.banner_url or '' }}" data-mini-status="{{ account.account_status if m.id == account.id else (m.account_status or 'offline') }}" data-mini-role="{{ m.role_label or item.role }}" data-mini-effect="{{ m.name_effect or 'none' }}" data-mini-font="{{ m.name_font or 'default' }}" data-mini-c1="{{ m.role_color_start or '#f5576c' }}" data-mini-c2="{{ m.role_color_end or '#7367f0' }}" data-mini-profile="/community/profile/{{ m.username }}" data-mini-bio="{{ m.bio or '' }}">
+        <span class="member-avatar-wrap"><span class="member-avatar" {% if m.avatar_url %}style="background-image:url('{{ m.avatar_url }}');"{% endif %}>{% if not m.avatar_url %}{{ m.username[:1]|upper }}{% endif %}</span><span class="member-presence status-{{ account.account_status if m.id == account.id else (m.account_status or 'offline') }}"></span></span>
         <span class="member-info">
           <span class="visual-name member-name name-{{ m.name_effect or 'none' }} font-{{ m.name_font or 'default' }}" style="--name-c1: {{ m.role_color_start or '#f5576c' }}; --name-c2: {{ m.role_color_end or '#7367f0' }};">{{ m.username }}</span>
           <span class="member-role">{{ item.role }}</span>
@@ -1506,6 +1507,43 @@ document.addEventListener('DOMContentLoaded',()=>{
     const el=e.target;
     if(el && el.name==='banner_file' && el.files && el.files[0]) setPreviewBanner(URL.createObjectURL(el.files[0]));
   });
+})();
+</script>
+
+
+<script id="ah-live-member-status-fix">
+(function(){
+  if(window.__ahLiveMemberStatusFix) return; window.__ahLiveMemberStatusFix=true;
+  const oldApply = window.applyLocalStatus;
+  const statusLabels = { online:'В мережі', idle:'Неактивний', dnd:'Не турбувати', invisible:'Невидимий' };
+  function normalizeStatus(s){ return ['online','idle','dnd','invisible'].includes(s) ? s : 'online'; }
+  function updateOwnMemberStatus(status){
+    status = normalizeStatus(status);
+    const mine = (window.CURRENT_USER || '{{ account.username if account else "" }}' || '').toLowerCase();
+    document.querySelectorAll('[data-mini-username]').forEach(el=>{
+      const n=(el.dataset.miniUsername||'').toLowerCase();
+      if(!mine || n!==mine) return;
+      el.dataset.miniStatus = status;
+      const dot = el.querySelector('.member-presence,.account-avatar-status,.self-status-dot,.ah-v3-status');
+      if(dot){
+        dot.classList.remove('status-online','status-idle','status-dnd','status-invisible','status-offline','online','idle','dnd','invisible','offline');
+        dot.classList.add('status-'+status);
+        dot.classList.add(status);
+      }
+    });
+    document.querySelectorAll('.account-panel[data-mini-username], .user-panel[data-mini-username]').forEach(panel=>{
+      const n=(panel.dataset.miniUsername||'').toLowerCase();
+      if(mine && n && n!==mine) return;
+      panel.dataset.miniStatus=status;
+      const label=panel.querySelector('.account-status,.user-status,#my-status-label');
+      if(label) label.textContent=statusLabels[status] || statusLabels.online;
+    });
+  }
+  window.applyLocalStatus = function(status){
+    if(typeof oldApply === 'function') oldApply(status);
+    updateOwnMemberStatus(status);
+  };
+  window.__ahUpdateOwnMemberStatus = updateOwnMemberStatus;
 })();
 </script>
 
