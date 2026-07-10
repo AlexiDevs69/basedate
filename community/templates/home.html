@@ -1113,7 +1113,7 @@
         {% if other %}
         {% set other_status = other.account_status or 'online' %}
         {% set other_visible = other.id in online_ids and other_status != 'invisible' %}
-        <a class="dm-row mini-profile-trigger" href="/community/dm/{{ other.username }}" data-name="{{ other.username|lower }}" data-mini-username="{{ other.username }}" data-mini-avatar="{{ other.avatar_url or '' }}" data-mini-banner="{{ other.banner_url or '' }}" data-mini-role="{{ other.role_label or 'member' }}" data-mini-c1="{{ other.role_color_start or '#5865f2' }}" data-mini-c2="{{ other.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ other.username }}" data-mini-bio="{{ other.bio or '' }}">
+        <a class="dm-row" href="/community/dm/{{ other.username }}" data-name="{{ other.username|lower }}" data-mini-username="{{ other.username }}" data-mini-avatar="{{ other.avatar_url or '' }}" data-mini-banner="{{ other.banner_url or '' }}" data-mini-role="{{ other.role_label or 'member' }}" data-mini-c1="{{ other.role_color_start or '#5865f2' }}" data-mini-c2="{{ other.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ other.username }}" data-mini-bio="{{ other.bio or '' }}">
           <span class="avatar" {% if other.avatar_url %}style="background-image:url('{{ other.avatar_url }}')"{% endif %}>
             {% if not other.avatar_url %}{{ other.username[:1]|upper }}{% endif %}
             {% if other_visible %}<span class="presence status-{{ other_status }}"></span>{% endif %}
@@ -1123,16 +1123,6 @@
         {% endif %}
         {% else %}
         <div class="empty-note">Ще нема діалогів. Вибери друга нижче.</div>
-        {% endfor %}
-
-        <div class="section" style="padding-left:2px;padding-right:2px;">Друзі</div>
-        {% for f in friends %}
-        {% set f_status = f.account_status or 'online' %}
-        {% set f_visible = f.id in online_ids and f_status != 'invisible' %}
-        <a class="dm-row mini-profile-trigger" href="/community/dm/{{ f.username }}" data-name="{{ f.username|lower }}" data-mini-username="{{ f.username }}" data-mini-avatar="{{ f.avatar_url or '' }}" data-mini-banner="{{ f.banner_url or '' }}" data-mini-role="{{ f.role_label or 'member' }}" data-mini-c1="{{ f.role_color_start or '#5865f2' }}" data-mini-c2="{{ f.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ f.username }}" data-mini-bio="{{ f.bio or '' }}">
-          <span class="avatar" {% if f.avatar_url %}style="background-image:url('{{ f.avatar_url }}')"{% endif %}>{% if not f.avatar_url %}{{ f.username[:1]|upper }}{% endif %}{% if f_visible %}<span class="presence status-{{ f_status }}"></span>{% endif %}</span>
-          <span class="dm-meta"><span class="dm-name">{{ f.username }}</span></span>
-        </a>
         {% endfor %}
       </div>
 
