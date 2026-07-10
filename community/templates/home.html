@@ -1535,6 +1535,12 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(e.target.closest('#ah-v3-mini,#ah-v3-overlay')) return;
     const bad=e.target.closest('.account-actions,.user-actions,.top-actions,.msg-actions,.server-menu,.modal-backdrop,form,input,textarea,select,button');
     if(bad) return;
+
+    // In the left DM sidebar, clicking a person must open the chat directly,
+    // not the mini-profile. Let the normal <a href="/community/dm/..."> navigation work.
+    const sidebarDmLink = e.target.closest('.dm-list a.dm-row[href*="/community/dm/"], .dm-list a.dm-item[href*="/community/dm/"], .dm-sidebar a[href*="/community/dm/"]');
+    if (sidebarDmLink) { closeMini(); return; }
+
     const t=e.target.closest('[data-mini-username],.mini-profile-trigger,.profile-click,a[href*="/community/profile/"],.member-row,.msg-avatar,.msg-name,.dm-item,.account-panel,.user-panel');
     if(!t){ closeMini(); return; }
     e.preventDefault(); e.stopPropagation(); if(e.stopImmediatePropagation)e.stopImmediatePropagation(); openMini(t,e);
