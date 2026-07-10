@@ -376,6 +376,8 @@ async def community_home(request: Request, db: AsyncSession = Depends(get_db)):
     online_ids = [m.id for m in online_members]
     friends = await crud.list_friends(db, account.id)
     dm_threads = await crud.list_dm_threads_for_account(db, account.id)
+    pending_incoming = await crud.list_pending_requests_with_requester(db, account.id)
+    pending_outgoing = await crud.list_pending_sent_with_addressee(db, account.id)
     rail = await server_rail_context(db, account.id)
 
     return templates.TemplateResponse(
@@ -388,6 +390,8 @@ async def community_home(request: Request, db: AsyncSession = Depends(get_db)):
             "channels": channels,
             "friends": friends,
             "dm_threads": dm_threads,
+            "pending_incoming": pending_incoming,
+            "pending_outgoing": pending_outgoing,
             **rail,
         },
     )
@@ -1167,6 +1171,19 @@ async def api_remove_friend(username: str, request: Request, db: AsyncSession = 
     await crud.remove_friendship(db, viewer.id, target.id)
     status = await crud.friendship_status(db, viewer.id, target.id)
     return JSONResponse({"status": status})
+
+
+
+@router.post("/api/friends/cancel/{friendship_id}")
+async def api_cancel_friend_request(friendship_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    viewer = await current_account(request, db)
+    if not viewer:
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+
+    ok = await crud.cancel_pending_friend_request(db, friendship_id, viewer.id)
+    if not ok:
+        return JSONResponse({"error": "request not found"}, status_code=404)
+    return JSONResponse({"status": "cancelled"})
 
 
 @router.get("/api/notifications")
