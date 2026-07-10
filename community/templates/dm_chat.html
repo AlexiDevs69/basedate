@@ -893,7 +893,38 @@
       <div class="composer-wrap"><div id="typing" class="typing"></div><form id="dm-form" method="post" action="/community/dm/{{ other.username }}/message"><input id="dm-file-input" type="file" accept="image/*" style="display:none"><input id="image_url" name="image_url" type="hidden" value=""><div class="dm-composer-shell"><div id="dm-plus-menu" class="dm-plus-menu"><button type="button" onclick="chooseDmImage()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="M9 15h6"/></svg><span>Отправить файл</span></button><button type="button" onclick="showActionToast && showActionToast('Опросы в ЛС позже')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M8 17V9"/><path d="M12 19V3"/><path d="M16 15v-4"/><path d="M20 17V7"/></svg><span>Создать опрос</span></button><button type="button" onclick="showActionToast && showActionToast('Приложения позже')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Использовать приложения</span></button></div><div id="dm-attachment-preview" class="attachment-preview"></div><div class="composer"><button class="dm-plus-btn" id="dm-plus-btn" type="button" onclick="toggleDmPlus(event)" title="Добавить">+</button><textarea id="content" name="content" placeholder="Написати @{{ other.username }}" rows="1"></textarea><button type="submit">→</button></div></div></form></div>
     </main>
 
-    <aside class="right"><div class="profile-card"><div class="banner" {% if other.banner_url %}style="background-image:url('{{ other.banner_url }}');background-size:cover;background-position:center"{% endif %}></div><div class="profile-body"><div class="big-avatar" {% if other.avatar_url %}style="background-image:url('{{ other.avatar_url }}')"{% endif %}>{% if not other.avatar_url %}{{ other.username[:1]|upper }}{% endif %}</div><h2>{{ other.username }}</h2><div class="profile-status">{% if other_visible %}<i class="status-dot status-{{ other_status }}"></i>{{ {'online':'В мережі','idle':'Неактивний','dnd':'Не турбувати','invisible':'Невидимий'}.get(other_status, 'В мережі') }}{% else %}<i class="status-dot status-invisible"></i>Не в мережі{% endif %}</div><p>{{ other.bio or 'Користувач AlexiHub.' }}</p><a class="btn" href="/community/profile/{{ other.username }}">Повний профіль</a></div></div></aside>
+    <aside class="right">
+      <div class="profile-card mini-profile-trigger"
+           data-mini-username="{{ other.username }}"
+           data-mini-avatar="{{ other.avatar_url or '' }}"
+           data-mini-banner="{{ other.banner_url or '' }}"
+           data-mini-status="{{ other_status if other_visible else 'offline' }}"
+           data-mini-role="{{ other.role_label or 'member' }}"
+           data-mini-c1="{{ other.role_color_start or '#5865f2' }}"
+           data-mini-c2="{{ other.role_color_end or '#9b5cf6' }}"
+           data-mini-profile="/community/profile/{{ other.username }}"
+           data-mini-bio="{{ other.bio or '' }}">
+        <div class="banner" {% if other.banner_url %}style="background-image:url('{{ other.banner_url }}');background-size:cover;background-position:center"{% endif %}></div>
+        <div class="profile-body">
+          <div class="big-avatar" {% if other.avatar_url %}style="background-image:url('{{ other.avatar_url }}')"{% endif %}>{% if not other.avatar_url %}{{ other.username[:1]|upper }}{% endif %}</div>
+          <h2>{{ other.username }}</h2>
+          <div class="profile-status">{% if other_visible %}<i class="status-dot status-{{ other_status }}"></i>{{ {'online':'В мережі','idle':'Неактивний','dnd':'Не турбувати','invisible':'Невидимий'}.get(other_status, 'В мережі') }}{% else %}<i class="status-dot status-invisible"></i>Не в мережі{% endif %}</div>
+          <p>{{ other.bio or 'Користувач AlexiHub.' }}</p>
+          <a class="btn dm-right-full-profile"
+             href="/community/profile/{{ other.username }}"
+             data-mini-open-full="1"
+             data-mini-username="{{ other.username }}"
+             data-mini-avatar="{{ other.avatar_url or '' }}"
+             data-mini-banner="{{ other.banner_url or '' }}"
+             data-mini-status="{{ other_status if other_visible else 'offline' }}"
+             data-mini-role="{{ other.role_label or 'member' }}"
+             data-mini-c1="{{ other.role_color_start or '#5865f2' }}"
+             data-mini-c2="{{ other.role_color_end or '#9b5cf6' }}"
+             data-mini-profile="/community/profile/{{ other.username }}"
+             data-mini-bio="{{ other.bio or '' }}">Повний профіль</a>
+        </div>
+      </div>
+    </aside>
   </div>
 
 
@@ -1132,7 +1163,13 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(bad) return;
     const t=e.target.closest('[data-mini-username],.mini-profile-trigger,.profile-click,a[href*="/community/profile/"],.member-row,.msg-avatar,.msg-name,.dm-item,.account-panel,.user-panel');
     if(!t){ closeMini(); return; }
-    e.preventDefault(); e.stopPropagation(); if(e.stopImmediatePropagation)e.stopImmediatePropagation(); openMini(t,e);
+    e.preventDefault(); e.stopPropagation(); if(e.stopImmediatePropagation)e.stopImmediatePropagation();
+    if(t.matches('[data-mini-open-full]') || t.closest('[data-mini-open-full]')){
+      active=dataFrom(t.closest('[data-mini-open-full]') || t);
+      openFull();
+      return;
+    }
+    openMini(t,e);
   },true);
   document.addEventListener('DOMContentLoaded',function(){
     const av=$('#ah-v3-avatar'), full=$('#ah-v3-open-full'), close=$('#ah-v3-close'), overlay=$('#ah-v3-overlay');
