@@ -761,7 +761,55 @@
   .friend-add-form input{height:36px;}
 }
 
-  </style>
+  
+
+/* === Avatar/status persistence + Discord badge placement fix === */
+.ah-v3-avatar,
+.alex-mini-avatar-btn,
+.self-profile-avatar,
+.ah-profile-live-avatar,
+.alex-full-avatar,
+.ah-v3-full-avatar {
+  overflow: visible !important;
+}
+.ah-v3-status,
+.alex-mini-status,
+.self-profile-avatar .presence,
+.ah-v3-full-avatar .presence,
+.alex-full-avatar .presence {
+  position: absolute !important;
+  right: -2px !important;
+  bottom: 5px !important;
+  width: 18px !important;
+  height: 18px !important;
+  border-radius: 50% !important;
+  border: 4px solid #23242b !important;
+  box-sizing: border-box !important;
+  z-index: 5 !important;
+  transform: translate(28%, 28%) !important;
+}
+.ah-v3-mini .ah-v3-status { border-color: #23242b !important; }
+.ah-v3-status.online,
+.alex-mini-status.status-online,
+.status-online { background: #23a55a !important; }
+.ah-v3-status.idle,
+.alex-mini-status.status-idle,
+.status-idle { background: #f0b232 !important; }
+.ah-v3-status.dnd,
+.alex-mini-status.status-dnd,
+.status-dnd { background: #f23f42 !important; }
+.ah-v3-status.invisible,
+.ah-v3-status.offline,
+.alex-mini-status.status-invisible,
+.alex-mini-status.status-offline,
+.status-invisible,
+.status-offline { background: #80848e !important; }
+.account-panel[data-mini-status="online"] .account-status { color:#23a55a !important; }
+.account-panel[data-mini-status="idle"] .account-status { color:#f0b232 !important; }
+.account-panel[data-mini-status="dnd"] .account-status { color:#f23f42 !important; }
+.account-panel[data-mini-status="invisible"] .account-status { color:#80848e !important; }
+
+</style>
 </head>
 <body>
   <svg style="display:none" aria-hidden="true">
@@ -844,7 +892,7 @@
       </div>
 
       {% set my_status = account.account_status or 'online' %}
-      <div class="user-panel mini-profile-trigger" data-mini-username="{{ account.username }}" data-mini-avatar="{{ account.avatar_url or '' }}" data-mini-role="{{ account.role_label or 'online' }}" data-mini-c1="{{ account.role_color_start or '#5865f2' }}" data-mini-c2="{{ account.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ account.username }}" data-mini-bio="{{ account.bio or '' }}">
+      <div class="user-panel mini-profile-trigger" data-mini-username="{{ account.username }}" data-mini-avatar="{{ account.avatar_url or '' }}" data-mini-status="{{ account.account_status or 'online' }}" data-mini-role="{{ account.role_label or 'online' }}" data-mini-c1="{{ account.role_color_start or '#5865f2' }}" data-mini-c2="{{ account.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ account.username }}" data-mini-bio="{{ account.bio or '' }}">
         <span class="avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}')"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}<span id="my-avatar-status" class="presence status-{{ my_status }}"></span></span>
         <div class="user-info status-trigger" onclick="openSelfProfile()">
           <b>{{ account.username }}</b>
@@ -1041,6 +1089,15 @@
     });
     const label = document.getElementById('my-status-label');
     if (label) label.textContent = statusLabels[status] || statusLabels.online;
+    document.querySelectorAll('.account-panel[data-mini-username], .user-panel[data-mini-username]').forEach(p => {
+      const n = (p.dataset.miniUsername || '').toLowerCase();
+      const me = ('{{ account.username }}' || '').toLowerCase();
+      if (!n || n === me) {
+        p.dataset.miniStatus = status;
+        const small = p.querySelector('.account-status');
+        if (small) small.textContent = statusLabels[status] || statusLabels.online;
+      }
+    });
     const menu = document.getElementById('status-menu');
     if (menu) menu.classList.remove('open');
   }
@@ -1190,9 +1247,9 @@ document.addEventListener('DOMContentLoaded',()=>{
       if(/Ваш вайб|Додай опис/i.test(bio)) bio='';
     }
     let isSelf = clean(name).toLowerCase() === clean(selfName()).toLowerCase();
-    let status='offline';
+    let status=(el.dataset && el.dataset.miniStatus) || ((el.closest && el.closest('[data-mini-status]')) ? el.closest('[data-mini-status]').dataset.miniStatus : '') || 'offline';
     let html=(el.outerHTML||'')+(mem?mem.outerHTML:'')+(panel?panel.outerHTML:'');
-    let st=html.match(/status-(online|idle|dnd|invisible|offline)/); if(st) status=st[1];
+    let st=html.match(/status-(online|idle|dnd|invisible|offline)/); if(st && (!status || status==='offline')) status=st[1];
     if(isSelf){ let d=$('#my-avatar-status,#modal-avatar-status'); if(d){ let cls=[...d.classList].find(x=>x.startsWith('status-')); if(cls) status=cls.replace('status-',''); } }
     return {name:clean(name)||'user',avatar,role,c1,c2,profile,isSelf,status,bio};
   }
