@@ -205,6 +205,7 @@ def _account_payload(account) -> dict:
         "name_effect": account.name_effect or "none",
         "name_font": account.name_font or "default",
         "account_status": account.account_status or "online",
+        "bio": account.bio or "",
     }
 
 
