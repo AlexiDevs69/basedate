@@ -20,6 +20,7 @@ import httpx
 from fastapi import APIRouter, Depends, File, Form, Request, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from community import auth, crud
@@ -43,6 +44,50 @@ def _safe_next_url(next_url: str | None, fallback: str = "/community") -> str:
     if target.startswith("/community") and not target.startswith("//"):
         return target
     return fallback
+
+
+SERVER_BANNER_FALLBACK = "linear-gradient(135deg,#111,#555)"
+ALLOWED_SERVER_BANNERS = {
+    "linear-gradient(135deg,#111,#555)",
+    "linear-gradient(135deg,#ff2e9f,#ff6ad5)",
+    "linear-gradient(135deg,#ff2222,#ff6b5f)",
+    "linear-gradient(135deg,#ff7a18,#ffbd4a)",
+    "linear-gradient(135deg,#ffe259,#ffa751)",
+    "linear-gradient(135deg,#7f35bd,#c471ed)",
+    "linear-gradient(135deg,#20c6ff,#4facfe)",
+    "linear-gradient(135deg,#43e97b,#38f9d7)",
+    "linear-gradient(135deg,#3a7d0f,#7ed957)",
+    "linear-gradient(135deg,#222,#aaa)",
+}
+
+
+def _clean_server_banner(value: str | None) -> str:
+    clean = (value or "").strip()
+    return clean if clean in ALLOWED_SERVER_BANNERS else SERVER_BANNER_FALLBACK
+
+
+async def _ensure_server_visual_columns(db: AsyncSession) -> None:
+    # Safe Render migration: create_all does not add columns to old tables.
+    await db.execute(text("ALTER TABLE community_servers ADD COLUMN IF NOT EXISTS banner_color VARCHAR(255)"))
+    await db.commit()
+
+
+async def _get_server_banner_color(db: AsyncSession, server_id: int) -> str:
+    await _ensure_server_visual_columns(db)
+    result = await db.execute(
+        text("SELECT banner_color FROM community_servers WHERE id = :server_id"),
+        {"server_id": server_id},
+    )
+    return _clean_server_banner(result.scalar_one_or_none())
+
+
+async def _set_server_banner_color(db: AsyncSession, server_id: int, banner_color: str) -> None:
+    await _ensure_server_visual_columns(db)
+    await db.execute(
+        text("UPDATE community_servers SET banner_color = :banner_color WHERE id = :server_id"),
+        {"server_id": server_id, "banner_color": _clean_server_banner(banner_color)},
+    )
+    await db.commit()
 
 
 async def _read_profile_upload(upload: UploadFile | None) -> tuple[bytes, str] | None:
@@ -144,6 +189,7 @@ async def community_schema_startup() -> None:
     # visual/profile/presence columns safe on Render without Alembic.
     async with AsyncSessionLocal() as db:
         await crud.ensure_account_visual_columns(db)
+        await _ensure_server_visual_columns(db)
 
 
 # --- Lightweight realtime layer --------------------------------------------
@@ -845,6 +891,7 @@ async def server_settings_page(
     if not server:
         return RedirectResponse(url="/community", status_code=303)
     members = await crud.list_server_members(db, server_id)
+    banner_color = await _get_server_banner_color(db, server_id)
     rail = await server_rail_context(db, account.id, active_server_id=server_id)
     return templates.TemplateResponse(
         "server_settings.html",
@@ -853,6 +900,7 @@ async def server_settings_page(
             "account": account,
             "server": server,
             "members_count": len(members),
+            "banner_color": banner_color,
             **rail,
         },
     )
@@ -864,6 +912,7 @@ async def server_settings_submit(
     name: str = Form(...),
     icon_url: str = Form(""),
     description: str = Form(""),
+    banner_color: str = Form(""),
     redirect_to: str = Form(""),
     db: AsyncSession = Depends(get_db),
 ):
@@ -875,6 +924,7 @@ async def server_settings_submit(
 
     if name.strip():
         await crud.update_server_settings(db, server_id, name.strip(), icon_url.strip(), description.strip())
+        await _set_server_banner_color(db, server_id, banner_color)
     safe_redirect = redirect_to if redirect_to.startswith("/community/") else f"/community/servers/{server_id}"
     return RedirectResponse(url=safe_redirect, status_code=303)
 
