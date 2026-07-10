@@ -120,7 +120,7 @@
           <div class="form-section">
             <div class="field"><label>Описание</label><textarea id="server-description" name="description" maxlength="255" placeholder="Розкажіть миру про цей сервер.">{{ server.description or '' }}</textarea></div>
           </div>
-          <div class="save-bar"><small>Є незбережені зміни?</small><div style="display:flex;gap:8px"><a class="gray-btn" href="/community/servers/{{ server.id }}">Скасувати</a><button class="blue-btn" type="submit">Зберегти</button></div></div>
+          <div class="save-bar"><small>Є незбережені зміни?</small><div style="display:flex;gap:8px"><button id="cancel-changes-btn" class="gray-btn" type="button">Скасувати</button><button class="blue-btn" type="submit">Зберегти</button></div></div>
         </section>
         <aside class="preview-card">
           <div id="preview-banner" class="preview-banner" style="background:{{ banner_color or 'linear-gradient(135deg,#111,#555)' }}"></div>
@@ -145,18 +145,36 @@
     const previewIcon=document.getElementById('preview-icon');
     const toast=document.getElementById('toast');
     const saveBar=document.querySelector('.save-bar');
+    const cancelBtn=document.getElementById('cancel-changes-btn');
     let isSubmitting=false;
+    const initialState={
+      name:nameInput?.value||'',
+      desc:descInput?.value||'',
+      banner:bannerInput?.value||'linear-gradient(135deg,#111,#555)',
+      icon:iconUrl?.value||''
+    };
 
     function showToast(t){toast.textContent=t; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'),1600)}
     function initials(v){return (v||'S').trim().slice(0,2).toUpperCase()||'S'}
     function markDirty(){ if(!isSubmitting) saveBar?.classList.add('dirty'); }
+    function hideDirty(){ saveBar?.classList.remove('dirty'); }
     function setBanner(bg){
       if(!bg) return;
       previewBanner.style.background=bg;
       if(bannerInput) bannerInput.value=bg;
+      document.querySelectorAll('.banner-choice').forEach(b=>b.classList.toggle('active', b.dataset.bg===bg));
+    }
+    function clearIconPreview(){
+      iconPreview.style.backgroundImage='';
+      previewIcon.style.backgroundImage='';
+      iconPreview.classList.remove('has-image');
+      previewIcon.classList.remove('has-image');
+      const v=initials(nameInput?.value||initialState.name);
+      iconPreview.textContent=v;
+      previewIcon.textContent=v;
     }
     function setIconPreview(url){
-      if(!url) return;
+      if(!url){ clearIconPreview(); return; }
       iconPreview.style.backgroundImage=`url('${url}')`;
       previewIcon.style.backgroundImage=`url('${url}')`;
       iconPreview.classList.add('has-image');
@@ -164,9 +182,22 @@
       iconPreview.textContent='';
       previewIcon.textContent='';
     }
+    function resetChanges(){
+      if(nameInput) nameInput.value=initialState.name;
+      if(descInput) descInput.value=initialState.desc;
+      if(bannerInput) bannerInput.value=initialState.banner;
+      if(iconUrl) iconUrl.value=initialState.icon;
+      if(fileInput) fileInput.value='';
+      previewName.textContent=initialState.name||'Server';
+      previewDesc.textContent=initialState.desc||'Опис сервера буде показаний тут.';
+      setBanner(initialState.banner);
+      setIconPreview(initialState.icon);
+      hideDirty();
+      showToast('Зміни скасовано');
+    }
 
-    setBanner(bannerInput?.value || 'linear-gradient(135deg,#111,#555)');
-    if(iconUrl?.value) setIconPreview(iconUrl.value);
+    setBanner(initialState.banner);
+    setIconPreview(initialState.icon);
 
     nameInput?.addEventListener('input',()=>{
       previewName.textContent=nameInput.value||'Server';
@@ -202,6 +233,7 @@
     document.querySelectorAll('input, textarea').forEach(el=>{
       if(el.type !== 'hidden' && el.type !== 'file') el.addEventListener('change', markDirty);
     });
+    cancelBtn?.addEventListener('click', resetChanges);
     form?.addEventListener('submit',()=>{isSubmitting=true; saveBar?.classList.remove('dirty');});
     window.addEventListener('keydown',e=>{if(e.key==='Escape') location.href='/community/servers/{{ server.id }}';});
   </script>
