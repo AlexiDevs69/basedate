@@ -1029,6 +1029,12 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
 
 </style>
 
+
+<style id="server-pin-everywhere-fix">
+.discord-tool-btn{display:inline-flex!important;align-items:center!important;justify-content:center!important;line-height:1!important;vertical-align:middle!important;}
+.discord-tool-btn svg{width:19px!important;height:19px!important;display:block!important;stroke-width:2.15!important;}
+.discord-tool-btn[title*="Pin"],.discord-tool-btn[title*="Закреп"]{transform:none!important;}
+</style>
 </head>
 <body>
   <aside class="server-rail">
@@ -1069,7 +1075,7 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
     {% for item in members %}
       {% set m = item.account %}
       {% if m %}
-      <a href="/community/profile/{{ m.username }}" class="member-row mini-profile-trigger profile-click" data-mini-username="{{ m.username|e }}" data-mini-avatar="{{ m.avatar_url or '' }}" data-mini-banner="{{ m.banner_url or '' }}" data-mini-status="{{ account.account_status if m.id == account.id else (m.account_status or 'offline') }}" data-mini-role="{{ m.role_label or item.role }}" data-mini-effect="{{ m.name_effect or 'none' }}" data-mini-font="{{ m.name_font or 'default' }}" data-mini-c1="{{ m.role_color_start or '#f5576c' }}" data-mini-c2="{{ m.role_color_end or '#7367f0' }}" data-mini-profile="/community/profile/{{ m.username }}" data-mini-bio="{{ m.bio or '' }}">
+      <a href="/community/profile/{{ m.username }}" class="member-row mini-profile-trigger profile-click" data-account-id="{{ m.id }}" data-mini-username="{{ m.username|e }}" data-mini-avatar="{{ m.avatar_url or '' }}" data-mini-banner="{{ m.banner_url or '' }}" data-mini-status="{{ account.account_status if m.id == account.id else (m.account_status or 'offline') }}" data-mini-role="{{ m.role_label or item.role }}" data-mini-effect="{{ m.name_effect or 'none' }}" data-mini-font="{{ m.name_font or 'default' }}" data-mini-c1="{{ m.role_color_start or '#f5576c' }}" data-mini-c2="{{ m.role_color_end or '#7367f0' }}" data-mini-profile="/community/profile/{{ m.username }}" data-mini-bio="{{ m.bio or '' }}">
         <span class="member-avatar-wrap"><span class="member-avatar" {% if m.avatar_url %}style="background-image:url('{{ m.avatar_url }}');"{% endif %}>{% if not m.avatar_url %}{{ m.username[:1]|upper }}{% endif %}</span><span class="member-presence status-{{ account.account_status if m.id == account.id else (m.account_status or 'offline') }}"></span></span>
         <span class="member-info">
           <span class="visual-name member-name name-{{ m.name_effect or 'none' }} font-{{ m.name_font or 'default' }}" style="--name-c1: {{ m.role_color_start or '#f5576c' }}; --name-c2: {{ m.role_color_end or '#7367f0' }};">{{ m.username }}</span>
@@ -1615,6 +1621,23 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
       typingHideTimer = setTimeout(function () { typingEl.classList.remove('active'); typingEl.innerHTML = ''; }, 3600);
     }
 
+    function updateMemberPresence(accountId, status, online) {
+      var normalized = online === false ? 'offline' : (status || 'online');
+      if (normalized === 'invisible') normalized = 'offline';
+      document.querySelectorAll('.member-row').forEach(function(row) {
+        var rid = row.getAttribute('data-account-id') || row.dataset.accountId || '';
+        var rname = row.dataset.miniUsername || '';
+        if (String(rid) !== String(accountId)) return;
+        row.dataset.miniStatus = normalized;
+        var dot = row.querySelector('.member-presence');
+        if (dot) {
+          dot.classList.remove('status-online','status-idle','status-dnd','status-invisible','status-offline','online','idle','dnd','invisible','offline');
+          dot.classList.add('status-' + normalized);
+          dot.classList.add(normalized);
+        }
+      });
+    }
+
     function connectRealtime() {
       clearTimeout(reconnectTimer);
       try { socket = new WebSocket(wsUrl()); } catch (e) { setWsStatus('offline', 'offline'); return; }
@@ -1626,6 +1649,7 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
         try { data = JSON.parse(event.data); } catch (e) { return; }
         if (data.type === 'message') appendMessage(data.message, data.author || {});
         if (data.type === 'typing') renderTyping(data.users || []);
+        if (data.type === 'presence') updateMemberPresence(data.account_id, data.status, data.online);
       });
       socket.addEventListener('close', function () {
         setWsStatus('offline', 'reconnecting');
