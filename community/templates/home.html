@@ -638,7 +638,7 @@
         {% if other %}
         {% set other_status = other.account_status or 'online' %}
         {% set other_visible = other.id in online_ids and other_status != 'invisible' %}
-        <a class="dm-row" href="/community/dm/{{ other.username }}" data-name="{{ other.username|lower }}">
+        <a class="dm-row mini-profile-trigger" href="/community/dm/{{ other.username }}" data-name="{{ other.username|lower }}" data-mini-username="{{ other.username }}" data-mini-avatar="{{ other.avatar_url or '' }}" data-mini-role="{{ other.role_label or 'member' }}" data-mini-c1="{{ other.role_color_start or '#5865f2' }}" data-mini-c2="{{ other.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ other.username }}" data-mini-bio="{{ other.bio or '' }}">
           <span class="avatar" {% if other.avatar_url %}style="background-image:url('{{ other.avatar_url }}')"{% endif %}>
             {% if not other.avatar_url %}{{ other.username[:1]|upper }}{% endif %}
             {% if other_visible %}<span class="presence status-{{ other_status }}"></span>{% endif %}
@@ -654,7 +654,7 @@
         {% for f in friends %}
         {% set f_status = f.account_status or 'online' %}
         {% set f_visible = f.id in online_ids and f_status != 'invisible' %}
-        <a class="dm-row" href="/community/dm/{{ f.username }}" data-name="{{ f.username|lower }}">
+        <a class="dm-row mini-profile-trigger" href="/community/dm/{{ f.username }}" data-name="{{ f.username|lower }}" data-mini-username="{{ f.username }}" data-mini-avatar="{{ f.avatar_url or '' }}" data-mini-role="{{ f.role_label or 'member' }}" data-mini-c1="{{ f.role_color_start or '#5865f2' }}" data-mini-c2="{{ f.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ f.username }}" data-mini-bio="{{ f.bio or '' }}">
           <span class="avatar" {% if f.avatar_url %}style="background-image:url('{{ f.avatar_url }}')"{% endif %}>{% if not f.avatar_url %}{{ f.username[:1]|upper }}{% endif %}{% if f_visible %}<span class="presence status-{{ f_status }}"></span>{% endif %}</span>
           <span class="dm-meta"><span class="dm-name">{{ f.username }}</span></span>
         </a>
@@ -662,7 +662,7 @@
       </div>
 
       {% set my_status = account.account_status or 'online' %}
-      <div class="user-panel">
+      <div class="user-panel mini-profile-trigger" data-mini-username="{{ account.username }}" data-mini-avatar="{{ account.avatar_url or '' }}" data-mini-role="{{ account.role_label or 'online' }}" data-mini-c1="{{ account.role_color_start or '#5865f2' }}" data-mini-c2="{{ account.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ account.username }}" data-mini-bio="{{ account.bio or '' }}">
         <span class="avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}')"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}<span id="my-avatar-status" class="presence status-{{ my_status }}"></span></span>
         <div class="user-info status-trigger" onclick="openSelfProfile()">
           <b>{{ account.username }}</b>
@@ -893,22 +893,33 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(!role) role='member';
     let c1=el.dataset.miniC1||'#5865f2', c2=el.dataset.miniC2||'#9b5cf6';
     let profile=el.dataset.miniProfile || (name?('/community/profile/'+encodeURIComponent(name)):'#');
+    let bioCarrier = el.closest('[data-mini-bio]');
+    let bio = (el.dataset.miniBio || (bioCarrier && bioCarrier.dataset ? bioCarrier.dataset.miniBio : '') || '').trim();
+    if(!bio && msg) { let bioEl = msg.querySelector('[data-mini-bio]'); if(bioEl) bio = (bioEl.dataset.miniBio || '').trim(); }
+    if(!bio && mem) bio = (mem.dataset.miniBio || '').trim();
+    if(!bio && dm) bio = (dm.dataset.miniBio || '').trim();
+    if(!bio && panel){
+      const bi = document.getElementById('ah-profile-bio-input');
+      const bp = document.getElementById('ah-profile-bio-preview');
+      bio = ((bi && bi.value) || (bp && bp.textContent) || '').trim();
+      if(/Ваш вайб|Додай опис/i.test(bio)) bio='';
+    }
     let isSelf = clean(name).toLowerCase() === clean(selfName()).toLowerCase();
     let status='offline';
     let html=(el.outerHTML||'')+(mem?mem.outerHTML:'')+(panel?panel.outerHTML:'');
     let st=html.match(/status-(online|idle|dnd|invisible|offline)/); if(st) status=st[1];
     if(isSelf){ let d=$('#my-avatar-status,#modal-avatar-status'); if(d){ let cls=[...d.classList].find(x=>x.startsWith('status-')); if(cls) status=cls.replace('status-',''); } }
-    return {name:clean(name)||'user',avatar,role,c1,c2,profile,isSelf,status};
+    return {name:clean(name)||'user',avatar,role,c1,c2,profile,isSelf,status,bio};
   }
   function setAvatar(el,textEl,url,name){ if(!el)return; el.style.backgroundImage=url?`url('${safeUrl(url)}')`:''; if(textEl) textEl.textContent=url?'':(name||'?').slice(0,1).toUpperCase(); }
   function place(pop,e){ pop.classList.add('open'); let r=pop.getBoundingClientRect(); let x=e?e.clientX:90, y=e?e.clientY:window.innerHeight-80; pop.style.left=Math.min(Math.max(10,x+14),window.innerWidth-r.width-10)+'px'; pop.style.top=Math.min(Math.max(10,y-52),window.innerHeight-r.height-10)+'px'; }
   function openMini(el,e){
     active=dataFrom(el); let pop=$('#ah-v3-mini'); if(!pop)return;
     pop.classList.toggle('self',!!active.isSelf); pop.style.setProperty('--ah-c1',active.c1); pop.style.setProperty('--ah-c2',active.c2);
-    setAvatar($('#ah-v3-avatar'),$('#ah-v3-avatar-text'),active.avatar,active.name); $('#ah-v3-name').textContent=active.name; $('#ah-v3-handle').textContent='@'+active.name; $('#ah-v3-role').textContent=active.role||'member'; $('#ah-v3-note-text').textContent=active.isSelf?'Звідси можна змінити статус. Натисни на аватарку для повної картки.':'Натисни на аватарку, щоб відкрити повну картку профілю.'; let st=$('#ah-v3-status'); if(st) st.className='ah-v3-status '+(active.status||'offline'); let msg=$('#ah-v3-message'); if(msg){msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; msg.textContent=active.isSelf?'Редактировать профиль':'Message'} place(pop,e);
+    setAvatar($('#ah-v3-avatar'),$('#ah-v3-avatar-text'),active.avatar,active.name); $('#ah-v3-name').textContent=active.name; $('#ah-v3-handle').textContent='@'+active.name; $('#ah-v3-role').textContent=active.role||'member'; const bioText=(active.bio||'').trim(); const noteTitle=$('#ah-v3-mini .ah-v3-note b'); if(noteTitle) noteTitle.textContent=bioText?'Опис профілю':'Міні-профіль'; $('#ah-v3-note-text').textContent=bioText || (active.isSelf?'Звідси можна змінити статус. Натисни на аватарку для повної картки.':'Натисни на аватарку, щоб відкрити повну картку профілю.'); let st=$('#ah-v3-status'); if(st) st.className='ah-v3-status '+(active.status||'offline'); let msg=$('#ah-v3-message'); if(msg){msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; msg.textContent=active.isSelf?'Редактировать профиль':'Message'} place(pop,e);
   }
   function closeMini(){let p=$('#ah-v3-mini'); if(p)p.classList.remove('open')}
-  function openFull(){ if(!active)return; let ov=$('#ah-v3-overlay'); if(!ov)return; ov.style.setProperty('--ah-c1',active.c1); ov.style.setProperty('--ah-c2',active.c2); setAvatar($('#ah-v3-full-avatar'),$('#ah-v3-full-avatar-text'),active.avatar,active.name); $('#ah-v3-full-name').textContent=active.name; $('#ah-v3-full-handle').textContent='@'+active.name; $('#ah-v3-full-meta').textContent=active.isSelf?'Твоя картка AlexiHub.':'Картка користувача AlexiHub.'; $('#ah-v3-full-about').textContent=active.isSelf?'Тут буде повний профіль, активність, ігри, інтеграції та нотатки.':'Швидкий перегляд профілю поверх поточної сторінки, без переходу зі сторінки.'; let msg=$('#ah-v3-full-message'); if(msg){ msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; } let op=$('#ah-v3-full-open'); if(op) op.href=active.profile; closeMini(); ov.classList.add('open'); }
+  function openFull(){ if(!active)return; let ov=$('#ah-v3-overlay'); if(!ov)return; ov.style.setProperty('--ah-c1',active.c1); ov.style.setProperty('--ah-c2',active.c2); setAvatar($('#ah-v3-full-avatar'),$('#ah-v3-full-avatar-text'),active.avatar,active.name); $('#ah-v3-full-name').textContent=active.name; $('#ah-v3-full-handle').textContent='@'+active.name; $('#ah-v3-full-meta').textContent=active.isSelf?'Твоя картка AlexiHub.':'Картка користувача AlexiHub.'; $('#ah-v3-full-about').textContent=(active.bio||'').trim() || (active.isSelf?'Тут буде повний профіль, активність, ігри, інтеграції та нотатки.':'Швидкий перегляд профілю поверх поточної сторінки, без переходу зі сторінки.'); let msg=$('#ah-v3-full-message'); if(msg){ msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; } let op=$('#ah-v3-full-open'); if(op) op.href=active.profile; closeMini(); ov.classList.add('open'); }
   function closeFull(){let ov=$('#ah-v3-overlay'); if(ov)ov.classList.remove('open')}
   document.addEventListener('click',function(e){
     if(e.target.closest('#ah-v3-mini,#ah-v3-overlay')) return;
@@ -1122,6 +1133,10 @@ document.addEventListener('DOMContentLoaded',()=>{
     }
   });
   window.openProfileSettings = function(){
+    const mini=document.getElementById('ah-v3-mini'); if(mini) mini.classList.remove('open');
+    const full=document.getElementById('ah-v3-overlay'); if(full) full.classList.remove('open');
+    const oldMini=document.getElementById('mini-profile-popover'); if(oldMini) oldMini.classList.remove('open');
+    const self=document.getElementById('self-profile-modal'); if(self) self.classList.remove('open');
     if(typeof openUserSettings==='function') openUserSettings();
     if(typeof showSettingsTab==='function') showSettingsTab('profile');
   };
