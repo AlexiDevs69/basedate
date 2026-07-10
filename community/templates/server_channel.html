@@ -1333,10 +1333,10 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
       {% set author = item.author %}
       {% set is_mine = author and author.id == account.id %}
       <article class="message" id="message-{{ item.message.id }}" data-message-id="{{ item.message.id }}" data-message-content="{{ item.message.content|e }}" data-message-author="{{ author.username if author else 'видалений юзер' }}" data-message-avatar="{{ author.avatar_url if author and author.avatar_url else '' }}" data-message-delete-url="/community/servers/{{ server.id }}/channel/{{ channel.id }}/message/{{ item.message.id }}/delete" data-message-editable="{{ '1' if is_mine else '0' }}">
-        <a href="/community/profile/{{ author.username if author else '' }}" class="avatar mini-profile-trigger profile-click" data-mini-username="{{ author.username if author else 'видалений юзер' }}" data-mini-avatar="{{ author.avatar_url if author and author.avatar_url else '' }}" data-mini-banner="{{ author.banner_url if author and author.banner_url else '' }}" data-mini-role="{{ author.role_label if author and author.role_label else 'member' }}" data-mini-effect="{{ author.name_effect if author and author.name_effect else 'none' }}" data-mini-font="{{ author.name_font if author and author.name_font else 'default' }}" data-mini-c1="{{ author.role_color_start if author and author.role_color_start else '#f5576c' }}" data-mini-c2="{{ author.role_color_end if author and author.role_color_end else '#7367f0' }}" data-mini-profile="/community/profile/{{ author.username if author else '' }}" data-mini-bio="{{ author.bio if author and author.bio else '' }}" {% if author and author.avatar_url %}style="background-image:url('{{ author.avatar_url }}');"{% endif %}>{% if author and not author.avatar_url %}{{ author.username[:1]|upper }}{% endif %}</a>
+        <a href="/community/profile/{{ author.username if author else '' }}" class="avatar mini-profile-trigger profile-click" data-mini-username="{{ author.username if author else 'видалений юзер' }}" data-mini-avatar="{{ author.avatar_url if author and author.avatar_url else '' }}" data-mini-status="{{ account.account_status if author and author.id == account.id else (author.account_status if author and author.account_status else 'offline') }}" data-mini-banner="{{ author.banner_url if author and author.banner_url else '' }}" data-mini-role="{{ author.role_label if author and author.role_label else 'member' }}" data-mini-effect="{{ author.name_effect if author and author.name_effect else 'none' }}" data-mini-font="{{ author.name_font if author and author.name_font else 'default' }}" data-mini-c1="{{ author.role_color_start if author and author.role_color_start else '#f5576c' }}" data-mini-c2="{{ author.role_color_end if author and author.role_color_end else '#7367f0' }}" data-mini-profile="/community/profile/{{ author.username if author else '' }}" data-mini-bio="{{ author.bio if author and author.bio else '' }}" {% if author and author.avatar_url %}style="background-image:url('{{ author.avatar_url }}');"{% endif %}>{% if author and not author.avatar_url %}{{ author.username[:1]|upper }}{% endif %}</a>
         <div class="message-body">
           <div class="message-head">
-            <a href="/community/profile/{{ author.username if author else '' }}" class="visual-name mini-profile-trigger profile-click name-{{ author.name_effect if author and author.name_effect else 'none' }} font-{{ author.name_font if author and author.name_font else 'default' }}" data-mini-username="{{ author.username if author else 'видалений юзер' }}" data-mini-avatar="{{ author.avatar_url if author and author.avatar_url else '' }}" data-mini-banner="{{ author.banner_url if author and author.banner_url else '' }}" data-mini-role="{{ author.role_label if author and author.role_label else 'member' }}" data-mini-effect="{{ author.name_effect if author and author.name_effect else 'none' }}" data-mini-font="{{ author.name_font if author and author.name_font else 'default' }}" data-mini-c1="{{ author.role_color_start if author and author.role_color_start else '#f5576c' }}" data-mini-c2="{{ author.role_color_end if author and author.role_color_end else '#7367f0' }}" data-mini-profile="/community/profile/{{ author.username if author else '' }}" data-mini-bio="{{ author.bio if author and author.bio else '' }}" style="--name-c1: {{ author.role_color_start if author and author.role_color_start else '#f5576c' }}; --name-c2: {{ author.role_color_end if author and author.role_color_end else '#7367f0' }}; text-decoration:none;">{{ author.username if author else 'видалений юзер' }}</a>
+            <a href="/community/profile/{{ author.username if author else '' }}" class="visual-name mini-profile-trigger profile-click name-{{ author.name_effect if author and author.name_effect else 'none' }} font-{{ author.name_font if author and author.name_font else 'default' }}" data-mini-username="{{ author.username if author else 'видалений юзер' }}" data-mini-avatar="{{ author.avatar_url if author and author.avatar_url else '' }}" data-mini-status="{{ account.account_status if author and author.id == account.id else (author.account_status if author and author.account_status else 'offline') }}" data-mini-banner="{{ author.banner_url if author and author.banner_url else '' }}" data-mini-role="{{ author.role_label if author and author.role_label else 'member' }}" data-mini-effect="{{ author.name_effect if author and author.name_effect else 'none' }}" data-mini-font="{{ author.name_font if author and author.name_font else 'default' }}" data-mini-c1="{{ author.role_color_start if author and author.role_color_start else '#f5576c' }}" data-mini-c2="{{ author.role_color_end if author and author.role_color_end else '#7367f0' }}" data-mini-profile="/community/profile/{{ author.username if author else '' }}" data-mini-bio="{{ author.bio if author and author.bio else '' }}" style="--name-c1: {{ author.role_color_start if author and author.role_color_start else '#f5576c' }}; --name-c2: {{ author.role_color_end if author and author.role_color_end else '#7367f0' }}; text-decoration:none;">{{ author.username if author else 'видалений юзер' }}</a>
             <span class="message-time">{{ item.message.created_at }}</span>
           </div>
           <div class="message-content" id="content-{{ item.message.id }}">{{ item.message.content }}</div>
@@ -1734,6 +1734,7 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
       avatar.className = 'avatar mini-profile-trigger profile-click';
       avatar.dataset.miniUsername = author.username || 'user';
       avatar.dataset.miniAvatar = author.avatar_url || '';
+      avatar.dataset.miniStatus = author.account_status || author.status || ((author.id === myAccountId) ? '{{ account.account_status or 'online' }}' : 'offline');
       avatar.dataset.miniRole = author.role_label || 'member';
       avatar.dataset.miniEffect = author.name_effect || 'none';
       avatar.dataset.miniFont = author.name_font || 'default';
@@ -1752,6 +1753,7 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
       name.className = 'visual-name mini-profile-trigger profile-click name-' + (author.name_effect || 'none') + ' font-' + (author.name_font || 'default');
       name.dataset.miniUsername = author.username || 'user';
       name.dataset.miniAvatar = author.avatar_url || '';
+      name.dataset.miniStatus = author.account_status || author.status || ((author.id === myAccountId) ? '{{ account.account_status or 'online' }}' : 'offline');
       name.dataset.miniRole = author.role_label || 'member';
       name.dataset.miniEffect = author.name_effect || 'none';
       name.dataset.miniFont = author.name_font || 'default';
@@ -1865,6 +1867,13 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
           dot.classList.remove('status-online','status-idle','status-dnd','status-invisible','status-offline','online','idle','dnd','invisible','offline');
           dot.classList.add('status-' + normalized);
           dot.classList.add(normalized);
+        }
+        if (rname) {
+          document.querySelectorAll('[data-mini-username]').forEach(function(el){
+            if ((el.dataset.miniUsername || '').toLowerCase() === String(rname).toLowerCase()) {
+              el.dataset.miniStatus = normalized;
+            }
+          });
         }
       });
     }
@@ -2099,6 +2108,13 @@ document.addEventListener('DOMContentLoaded',()=>{
     }
     let isSelf = clean(name).toLowerCase() === clean(selfName()).toLowerCase();
     let status=(el.dataset && el.dataset.miniStatus) || ((el.closest && el.closest('[data-mini-status]')) ? el.closest('[data-mini-status]').dataset.miniStatus : '') || 'offline';
+    if((!status || status==='offline') && name){
+      document.querySelectorAll('.member-row[data-mini-username]').forEach(function(row){
+        if((row.dataset.miniUsername||'').toLowerCase() === clean(name).toLowerCase() && row.dataset.miniStatus){
+          status = row.dataset.miniStatus;
+        }
+      });
+    }
     let html=(el.outerHTML||'')+(mem?mem.outerHTML:'')+(panel?panel.outerHTML:'');
     let st=html.match(/status-(online|idle|dnd|invisible|offline)/); if(st && (!status || status==='offline')) status=st[1];
     if(isSelf){ let d=$('#my-avatar-status,#modal-avatar-status'); if(d){ let cls=[...d.classList].find(x=>x.startsWith('status-')); if(cls) status=cls.replace('status-',''); } }
