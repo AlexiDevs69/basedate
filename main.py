@@ -13,6 +13,7 @@ from pathlib import Path
 
 from fastapi import Depends, FastAPI, Form, Request
 from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.middleware.sessions import SessionMiddleware
@@ -22,7 +23,7 @@ import lastfm
 from community import crud as community_crud
 from community.router import router as community_router
 from config import get_settings
-from database import AsyncSessionLocal, get_db, init_db
+from database import get_db, init_db
 from telegram import send_telegram_message
 
 settings = get_settings()
@@ -36,6 +37,13 @@ app.add_middleware(SessionMiddleware, secret_key=settings.secret_key)
 BASE_DIR = Path(__file__).resolve().parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
+# User-uploaded profile media. On Render's free web service filesystem this is
+# local/ephemeral; if IMGUR_CLIENT_ID is set, community/router.py will store
+# profile images on Imgur instead and only keep the returned URL in PostgreSQL.
+STATIC_DIR = BASE_DIR / "static"
+(STATIC_DIR / "uploads" / "profiles").mkdir(parents=True, exist_ok=True)
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
 # Everything under /community/* (registration, login, public profiles,
 # online members) lives in its own module -- see community/router.py.
 app.include_router(community_router)
@@ -45,11 +53,6 @@ app.include_router(community_router)
 async def on_startup() -> None:
     if settings.auto_create_tables:
         await init_db()
-
-    # create_all() will not add new columns to existing tables, so visual
-    # profile columns are upgraded with an idempotent ALTER TABLE helper.
-    async with AsyncSessionLocal() as db:
-        await community_crud.ensure_account_visual_columns(db)
 
 
 def is_logged_in(request: Request) -> bool:
@@ -406,11 +409,6 @@ async def community_user_edit_submit(
     role_color_end: str = Form(""),
     is_verified: str | None = Form(None),
     is_banned: str | None = Form(None),
-    name_effect: str = Form("none"),
-    name_color_start: str = Form(""),
-    name_color_end: str = Form(""),
-    name_font: str = Form("default"),
-    profile_card_bg_url: str = Form(""),
     db: AsyncSession = Depends(get_db),
 ):
     if not is_logged_in(request):
@@ -423,11 +421,6 @@ async def community_user_edit_submit(
         role_color_start=role_color_start.strip(),
         role_color_end=role_color_end.strip(),
         is_banned=is_banned is not None,
-        name_effect=name_effect.strip(),
-        name_color_start=name_color_start.strip(),
-        name_color_end=name_color_end.strip(),
-        name_font=name_font.strip(),
-        profile_card_bg_url=profile_card_bg_url.strip(),
     )
     return RedirectResponse(url="/community-users", status_code=303)
 
