@@ -571,7 +571,14 @@ async def server_create_form(request: Request, db: AsyncSession = Depends(get_db
     rail = await server_rail_context(db, account.id)
     return templates.TemplateResponse(
         "server_create.html",
-        {"request": request, "account": account, "error": None, **rail},
+        {
+            "request": request,
+            "account": account,
+            "error": None,
+            "join_error": None,
+            "mode": "create",
+            **rail,
+        },
     )
 
 
@@ -592,7 +599,14 @@ async def server_create_submit(
         rail = await server_rail_context(db, account.id)
         return templates.TemplateResponse(
             "server_create.html",
-            {"request": request, "account": account, "error": "Назва сервера мінімум 2 символи.", **rail},
+            {
+                "request": request,
+                "account": account,
+                "error": "Назва сервера мінімум 2 символи.",
+                "join_error": None,
+                "mode": "setup",
+                **rail,
+            },
             status_code=400,
         )
 
@@ -603,6 +617,55 @@ async def server_create_submit(
         icon_url=icon_url.strip(),
         description=description.strip(),
     )
+    return RedirectResponse(url=f"/community/servers/{server.id}", status_code=303)
+
+
+@router.post("/servers/join")
+async def server_join_submit(
+    request: Request,
+    invite: str = Form(...),
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return RedirectResponse(url="/community/login", status_code=303)
+
+    raw_invite = (invite or "").strip()
+    # MVP invite parser: accepts raw server id, /community/servers/123,
+    # full site URL, or discord-like links ending in a numeric code.
+    match = re.search(r"(?:servers/)?(\d+)(?:\D*$|$)", raw_invite)
+    if not match:
+        rail = await server_rail_context(db, account.id)
+        return templates.TemplateResponse(
+            "server_create.html",
+            {
+                "request": request,
+                "account": account,
+                "error": None,
+                "join_error": "Встав нормальне запрошення або ID сервера. Для MVP працює ID сервера або лінк виду /community/servers/1.",
+                "mode": "join",
+                **rail,
+            },
+            status_code=400,
+        )
+
+    server_id = int(match.group(1))
+    server = await crud.join_server_by_id(db, server_id=server_id, account_id=account.id)
+    if not server:
+        rail = await server_rail_context(db, account.id)
+        return templates.TemplateResponse(
+            "server_create.html",
+            {
+                "request": request,
+                "account": account,
+                "error": None,
+                "join_error": "Сервер не знайдено або запрошення недійсне.",
+                "mode": "join",
+                **rail,
+            },
+            status_code=404,
+        )
+
     return RedirectResponse(url=f"/community/servers/{server.id}", status_code=303)
 
 
