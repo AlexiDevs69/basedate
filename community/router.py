@@ -116,8 +116,6 @@ async def _upload_to_imgur(data: bytes, content_type: str) -> str | None:
     return None
 
 
-def _save_profile_upload_local
-
 def _save_profile_upload_local(data: bytes, content_type: str, account_id: int, kind: str) -> str:
     PROFILE_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     ext = ALLOWED_IMAGE_TYPES.get(content_type, ".png")
