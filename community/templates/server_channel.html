@@ -758,6 +758,84 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
   }
 }
 
+
+
+/* AlexiHub: final Discord-style account panel two-line hover
+   Top line (display name) stays visible. Bottom line swaps status -> @username. */
+.user-panel .user-info,
+.account-panel .account-meta {
+  position: relative !important;
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+  height: 34px !important;
+  overflow: hidden !important;
+  display: block !important;
+  padding: 0 !important;
+}
+.user-panel .user-info > b,
+.account-panel .account-meta > .account-name {
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: 1px !important;
+  display: block !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  transform: none !important;
+  opacity: 1 !important;
+  pointer-events: none !important;
+  line-height: 15px !important;
+}
+.user-panel .user-info > span,
+.account-panel .account-meta > .account-status,
+.user-panel .user-info > .account-username,
+.account-panel .account-meta > .account-username {
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: 18px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: 11px !important;
+  font-weight: 750 !important;
+  line-height: 13px !important;
+  color: #b5bac1 !important;
+  transition: transform .22s cubic-bezier(.2,.9,.2,1), opacity .18s ease !important;
+  will-change: transform, opacity !important;
+}
+.user-panel .user-info > span,
+.account-panel .account-meta > .account-status {
+  transform: translateY(0) !important;
+  opacity: 1 !important;
+}
+.user-panel .user-info > .account-username,
+.account-panel .account-meta > .account-username {
+  transform: translateY(15px) !important;
+  opacity: 0 !important;
+}
+.user-panel:hover .user-info > span,
+.account-panel:hover .account-meta > .account-status {
+  transform: translateY(-14px) !important;
+  opacity: 0 !important;
+}
+.user-panel:hover .user-info > .account-username,
+.account-panel:hover .account-meta > .account-username {
+  transform: translateY(0) !important;
+  opacity: 1 !important;
+}
+.user-panel:hover .user-info > b,
+.account-panel:hover .account-meta > .account-name {
+  transform: none !important;
+  opacity: 1 !important;
+}
+
 </style>
 </head>
 <body>
@@ -793,7 +871,7 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
   <aside class="server-sidebar">
     <div class="server-head"><button id="server-head-btn" type="button" class="server-head-btn" onclick="toggleServerMenu(event)"><span>{{ server.name }}</span><span class="server-arrow">⌄</span></button><div id="server-menu" class="server-menu"><button type="button" class="menu-item" onclick="openModal('invite-modal')"><span>Invite People</span><span class="menu-ico">👥</span></button>{% if can_manage %}<button type="button" class="menu-item" onclick="openModal('settings-modal')"><span>Server Settings</span><span class="menu-ico">⚙</span></button><button type="button" class="menu-item" onclick="openModal('channel-modal')"><span>Create Channel</span><span class="menu-ico">＋</span></button>{% endif %}<div class="menu-divider"></div><button id="copy-server-id-btn" type="button" class="menu-item" onclick="copyServerId('{{ server.id }}')"><span>Copy Server ID</span><span class="menu-ico">ID</span></button>{% if not can_manage %}<form class="menu-form danger" method="post" action="/community/servers/{{ server.id }}/leave" onsubmit="return confirm('Покинути сервер {{ server.name }}?');"><button type="submit"><span>Leave Server</span><span class="menu-ico">⎋</span></button></form>{% endif %}</div></div>
     <div class="sidebar-scroll">{% if server.description %}<div class="server-desc">{{ server.description }}</div>{% endif %}<a href="/community/servers/{{ server.id }}" class="chan-link">⌂ Огляд</a><div class="sidebar-label-row"><div class="sidebar-label">Канали</div>{% if can_manage %}<button type="button" class="sidebar-plus" onclick="openModal('channel-modal')" title="Створити канал">+</button>{% endif %}</div>{% for ch in channels %}<a href="/community/servers/{{ server.id }}/channel/{{ ch.id }}" class="chan-link {{ 'active' if ch.id == channel.id else '' }}"># {{ ch.name }}</a>{% endfor %}</div>
-    <div class="account-panel mini-profile-trigger" data-mini-username="{{ account.username|e }}" data-mini-avatar="{{ account.avatar_url or '' }}" data-mini-status="{{ account.account_status or 'online' }}" data-mini-role="{{ account.role_label or 'online' }}" data-mini-effect="{{ account.name_effect or 'none' }}" data-mini-font="{{ account.name_font or 'default' }}" data-mini-c1="{{ account.role_color_start or '#f5576c' }}" data-mini-c2="{{ account.role_color_end or '#7367f0' }}" data-mini-profile="/community/profile/{{ account.username }}" data-mini-bio="{{ account.bio or '' }}"><span class="account-avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}');"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}</span><span class="account-meta"><span class="visual-name account-name name-{{ account.name_effect or 'none' }} font-{{ account.name_font or 'default' }}" style="--name-c1: {{ account.role_color_start or '#f5576c' }}; --name-c2: {{ account.role_color_end or '#7367f0' }};">{{ account.username }}</span><span class="account-status">{{ {'online':'В мережі','idle':'Неактивний','dnd':'Не турбувати','invisible':'Невидимий'}.get(account.account_status or 'online', 'В мережі') }}</span></span><span class="account-actions"><button class="voice-control" data-audio-kind="mic" type="button" onclick="event.stopPropagation();toggleAudioControl(this,'mic')" title="Mute"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button><button class="voice-control" data-audio-kind="headphones" type="button" onclick="event.stopPropagation();toggleAudioControl(this,'headphones')" title="Deafen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg></button><button type="button" onclick="event.stopPropagation();openUserSettings()" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.4 1.08V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.08-.4H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6A1.65 1.65 0 0 0 10.4 3V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 16 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.15.32.36.6.6 1 .26.25.64.4 1.08.4H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51.6z"/></svg></button></span></div>
+    <div class="account-panel mini-profile-trigger" data-mini-username="{{ account.username|e }}" data-mini-avatar="{{ account.avatar_url or '' }}" data-mini-status="{{ account.account_status or 'online' }}" data-mini-role="{{ account.role_label or 'online' }}" data-mini-effect="{{ account.name_effect or 'none' }}" data-mini-font="{{ account.name_font or 'default' }}" data-mini-c1="{{ account.role_color_start or '#f5576c' }}" data-mini-c2="{{ account.role_color_end or '#7367f0' }}" data-mini-profile="/community/profile/{{ account.username }}" data-mini-bio="{{ account.bio or '' }}"><span class="account-avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}');"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}</span><span class="account-meta"><span class="visual-name account-name name-{{ account.name_effect or 'none' }} font-{{ account.name_font or 'default' }}" style="--name-c1: {{ account.role_color_start or '#f5576c' }}; --name-c2: {{ account.role_color_end or '#7367f0' }};">{{ account.username }}</span><span class="account-status">{{ {'online':'В мережі','idle':'Неактивний','dnd':'Не турбувати','invisible':'Невидимий'}.get(account.account_status or 'online', 'В мережі') }}</span><small class="account-username">@{{ account.username }}</small></span><span class="account-actions"><button class="voice-control" data-audio-kind="mic" type="button" onclick="event.stopPropagation();toggleAudioControl(this,'mic')" title="Mute"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button><button class="voice-control" data-audio-kind="headphones" type="button" onclick="event.stopPropagation();toggleAudioControl(this,'headphones')" title="Deafen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg></button><button type="button" onclick="event.stopPropagation();openUserSettings()" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.4 1.08V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.08-.4H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6A1.65 1.65 0 0 0 10.4 3V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 16 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.15.32.36.6.6 1 .26.25.64.4 1.08.4H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51.6z"/></svg></button></span></div>
   </aside>
   <aside class="members-sidebar">
     <div class="members-title">Учасники — {{ members|length }}</div>
