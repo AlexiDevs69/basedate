@@ -8,10 +8,15 @@ main.py -- everything here lives under the /community prefix so it can
 never collide with the admin dashboard's routes.
 """
 import asyncio
+import os
+import re
 import time
+import uuid
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, Form, Request, WebSocket, WebSocketDisconnect
+import httpx
+
+from fastapi import APIRouter, Depends, File, Form, Request, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -25,6 +30,69 @@ router = APIRouter(prefix="/community", tags=["community"])
 
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
+PROFILE_UPLOAD_DIR = ROOT_DIR / "static" / "uploads" / "profiles"
+ALLOWED_IMAGE_TYPES = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp", "image/gif": ".gif"}
+MAX_PROFILE_IMAGE_BYTES = 5 * 1024 * 1024
+
+
+def _safe_next_url(next_url: str | None, fallback: str = "/community") -> str:
+    target = (next_url or "").strip()
+    if target.startswith("/community") and not target.startswith("//"):
+        return target
+    return fallback
+
+
+async def _read_profile_upload(upload: UploadFile | None) -> tuple[bytes, str] | None:
+    if upload is None or not getattr(upload, "filename", None):
+        return None
+    content_type = (upload.content_type or "").split(";")[0].strip().lower()
+    if content_type not in ALLOWED_IMAGE_TYPES:
+        return None
+    data = await upload.read()
+    if not data or len(data) > MAX_PROFILE_IMAGE_BYTES:
+        return None
+    return data, content_type
+
+
+async def _upload_to_imgur(data: bytes, content_type: str) -> str | None:
+    client_id = os.getenv("IMGUR_CLIENT_ID", "").strip()
+    if not client_id:
+        return None
+    try:
+        async with httpx.AsyncClient(timeout=20.0) as client:
+            resp = await client.post(
+                "https://api.imgur.com/3/image",
+                headers={"Authorization": f"Client-ID {client_id}"},
+                files={"image": ("profile" + ALLOWED_IMAGE_TYPES.get(content_type, ".png"), data, content_type)},
+            )
+        payload = resp.json() if resp.headers.get("content-type", "").startswith("application/json") else {}
+        if resp.status_code < 300 and payload.get("success") and payload.get("data", {}).get("link"):
+            return payload["data"]["link"]
+    except Exception:
+        return None
+    return None
+
+
+def _save_profile_upload_local(data: bytes, content_type: str, account_id: int, kind: str) -> str:
+    PROFILE_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    ext = ALLOWED_IMAGE_TYPES.get(content_type, ".png")
+    filename = f"{account_id}_{kind}_{uuid.uuid4().hex[:18]}{ext}"
+    path = PROFILE_UPLOAD_DIR / filename
+    path.write_bytes(data)
+    return f"/static/uploads/profiles/{filename}"
+
+
+async def _profile_image_url_from_form(upload: UploadFile | None, url_value: str, account_id: int, kind: str) -> str:
+    prepared = await _read_profile_upload(upload)
+    if prepared:
+        data, content_type = prepared
+        external_url = await _upload_to_imgur(data, content_type)
+        if external_url:
+            return external_url
+        return _save_profile_upload_local(data, content_type, account_id, kind)
+    return (url_value or "").strip()
 
 
 @router.on_event("startup")
@@ -1018,17 +1086,26 @@ async def settings_submit(
     avatar_url: str = Form(""),
     banner_url: str = Form(""),
     bio: str = Form(""),
+    next_url: str = Form(""),
+    avatar_file: UploadFile | None = File(None),
+    banner_file: UploadFile | None = File(None),
     db: AsyncSession = Depends(get_db),
 ):
     account = await current_account(request, db)
     if not account:
         return RedirectResponse(url="/community/login", status_code=303)
 
+    avatar_final = await _profile_image_url_from_form(avatar_file, avatar_url, account.id, "avatar")
+    banner_final = await _profile_image_url_from_form(banner_file, banner_url, account.id, "banner")
+
     await crud.update_own_profile(
         db, account.id,
-        avatar_url=avatar_url.strip(), banner_url=banner_url.strip(), bio=bio.strip(),
+        avatar_url=avatar_final,
+        banner_url=banner_final,
+        bio=bio.strip(),
     )
-    return RedirectResponse(url=f"/community/profile/{account.username}", status_code=303)
+    target = _safe_next_url(next_url, "/community")
+    return RedirectResponse(url=target, status_code=303)
 
 
 # --- Friends (AJAX endpoints -- called from public_profile.html / home.html) ---
@@ -1125,4 +1202,3 @@ async def api_notifications(request: Request, db: AsyncSession = Depends(get_db)
         })
 
     return JSONResponse({"count": len(items), "items": items})
-
