@@ -905,10 +905,10 @@ document.addEventListener('DOMContentLoaded',()=>{
   function openMini(el,e){
     active=dataFrom(el); let pop=$('#ah-v3-mini'); if(!pop)return;
     pop.classList.toggle('self',!!active.isSelf); pop.style.setProperty('--ah-c1',active.c1); pop.style.setProperty('--ah-c2',active.c2);
-    setAvatar($('#ah-v3-avatar'),$('#ah-v3-avatar-text'),active.avatar,active.name); $('#ah-v3-name').textContent=active.name; $('#ah-v3-handle').textContent='@'+active.name; $('#ah-v3-role').textContent=active.role||'member'; $('#ah-v3-note-text').textContent=active.isSelf?'Звідси можна змінити статус. Натисни на аватарку для повної картки.':'Натисни на аватарку, щоб відкрити повну картку профілю.'; let st=$('#ah-v3-status'); if(st) st.className='ah-v3-status '+(active.status||'offline'); let msg=$('#ah-v3-message'); if(msg){msg.href=active.isSelf?'/community/settings':'/community/dm/'+encodeURIComponent(active.name); msg.textContent=active.isSelf?'Settings':'Message'} place(pop,e);
+    setAvatar($('#ah-v3-avatar'),$('#ah-v3-avatar-text'),active.avatar,active.name); $('#ah-v3-name').textContent=active.name; $('#ah-v3-handle').textContent='@'+active.name; $('#ah-v3-role').textContent=active.role||'member'; $('#ah-v3-note-text').textContent=active.isSelf?'Звідси можна змінити статус. Натисни на аватарку для повної картки.':'Натисни на аватарку, щоб відкрити повну картку профілю.'; let st=$('#ah-v3-status'); if(st) st.className='ah-v3-status '+(active.status||'offline'); let msg=$('#ah-v3-message'); if(msg){msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; msg.textContent=active.isSelf?'Редактировать профиль':'Message'} place(pop,e);
   }
   function closeMini(){let p=$('#ah-v3-mini'); if(p)p.classList.remove('open')}
-  function openFull(){ if(!active)return; let ov=$('#ah-v3-overlay'); if(!ov)return; ov.style.setProperty('--ah-c1',active.c1); ov.style.setProperty('--ah-c2',active.c2); setAvatar($('#ah-v3-full-avatar'),$('#ah-v3-full-avatar-text'),active.avatar,active.name); $('#ah-v3-full-name').textContent=active.name; $('#ah-v3-full-handle').textContent='@'+active.name; $('#ah-v3-full-meta').textContent=active.isSelf?'Твоя картка AlexiHub.':'Картка користувача AlexiHub.'; $('#ah-v3-full-about').textContent=active.isSelf?'Тут буде повний профіль, активність, ігри, інтеграції та нотатки.':'Швидкий перегляд профілю поверх поточної сторінки, без переходу зі сторінки.'; let msg=$('#ah-v3-full-message'); if(msg) msg.href=active.isSelf?'/community/settings':'/community/dm/'+encodeURIComponent(active.name); let op=$('#ah-v3-full-open'); if(op) op.href=active.profile; closeMini(); ov.classList.add('open'); }
+  function openFull(){ if(!active)return; let ov=$('#ah-v3-overlay'); if(!ov)return; ov.style.setProperty('--ah-c1',active.c1); ov.style.setProperty('--ah-c2',active.c2); setAvatar($('#ah-v3-full-avatar'),$('#ah-v3-full-avatar-text'),active.avatar,active.name); $('#ah-v3-full-name').textContent=active.name; $('#ah-v3-full-handle').textContent='@'+active.name; $('#ah-v3-full-meta').textContent=active.isSelf?'Твоя картка AlexiHub.':'Картка користувача AlexiHub.'; $('#ah-v3-full-about').textContent=active.isSelf?'Тут буде повний профіль, активність, ігри, інтеграції та нотатки.':'Швидкий перегляд профілю поверх поточної сторінки, без переходу зі сторінки.'; let msg=$('#ah-v3-full-message'); if(msg){ msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; } let op=$('#ah-v3-full-open'); if(op) op.href=active.profile; closeMini(); ov.classList.add('open'); }
   function closeFull(){let ov=$('#ah-v3-overlay'); if(ov)ov.classList.remove('open')}
   document.addEventListener('click',function(e){
     if(e.target.closest('#ah-v3-mini,#ah-v3-overlay')) return;
@@ -941,6 +941,11 @@ document.addEventListener('DOMContentLoaded',()=>{
   <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
 </svg>
 
+
+
+<style id="ah-profile-editor-css">
+.ah-profile-edit-layout{display:grid;grid-template-columns:330px 1fr;gap:24px;align-items:start}.ah-profile-live-card{background:#23242b;border:1px solid #353741;border-radius:18px;overflow:hidden;min-height:460px;box-shadow:0 18px 50px rgba(0,0,0,.25)}.ah-profile-live-banner{height:122px;background:linear-gradient(135deg,#5865f2,#9b5cf6);background-size:cover;background-position:center;display:block;position:relative;cursor:pointer}.ah-profile-change-badge{position:absolute;right:12px;top:12px;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.18);border-radius:999px;color:#fff;font-size:12px;font-weight:850;padding:7px 10px;opacity:0;transform:translateY(-4px);transition:.16s ease}.ah-profile-live-banner:hover .ah-profile-change-badge{opacity:1;transform:translateY(0)}.ah-profile-live-body{padding:0 18px 20px}.ah-profile-live-avatar{width:94px;height:94px;border-radius:50%;background:#2b2d31 center/cover no-repeat;border:7px solid #23242b;margin-top:-47px;display:grid;place-items:center;position:relative;cursor:pointer;color:#fff;font-size:28px;font-weight:950}.ah-profile-live-avatar b{position:absolute;right:-2px;bottom:6px;width:30px;height:30px;border-radius:50%;background:#5865f2;display:grid;place-items:center;font-size:14px;border:4px solid #23242b}.ah-profile-live-name{margin-top:10px;font-size:25px;font-weight:950;letter-spacing:-.04em;color:#fff}.ah-profile-live-handle{color:#b5bac1;font-size:13px;font-weight:750;margin-top:1px}.ah-profile-live-bio{margin-top:22px;min-height:76px;border-top:1px solid rgba(255,255,255,.09);padding-top:16px;color:#dbdee1;line-height:1.45;font-size:13px;white-space:pre-wrap}.ah-profile-live-note{margin-top:18px;color:#8b919d;font-size:12px;font-style:italic}.ah-profile-edit-panel{display:grid;gap:14px}.ah-hidden-file{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}.ah-upload-row{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#2b2d31;border:1px solid #353741;border-radius:12px;padding:14px 16px}.ah-upload-row b{display:block;color:#fff;font-size:14px}.ah-upload-row span{display:block;color:#9ca3af;font-size:12px;margin-top:2px}.ah-upload-row label.ah-settings-btn{display:inline-flex;align-items:center;justify-content:center;margin:0;white-space:nowrap}.ah-url-fallback{background:#202126;border:1px solid #33363d;border-radius:12px;padding:12px}.ah-url-fallback summary{cursor:pointer;color:#b5bac1;font-weight:850}.ah-url-fallback .ah-settings-formline{margin-top:12px}.ah-settings-formline.wide{grid-template-columns:1fr}.ah-profile-savebar{display:flex;align-items:center;gap:10px;justify-content:flex-end;margin-top:4px}.ah-settings-nav[data-settings-tab="profile"]{position:relative}.ah-settings-nav[data-settings-tab="profile"]::after{content:'NEW';margin-left:auto;font-size:10px;background:#5865f2;color:#fff;border-radius:999px;padding:2px 6px;font-weight:950}@media(max-width:820px){.ah-profile-edit-layout{grid-template-columns:1fr}.ah-profile-live-card{min-height:auto}.ah-profile-savebar{justify-content:stretch}.ah-profile-savebar .ah-settings-btn{flex:1}.ah-settings-formline{grid-template-columns:1fr!important;gap:7px}.ah-settings-row{grid-template-columns:1fr!important;gap:8px}.ah-settings-value{text-align:left}}
+</style>
 
 <div id="ah-user-settings" class="ah-settings-backdrop" onclick="if(event.target===this)closeUserSettings()" aria-hidden="true">
   <div class="ah-settings-shell" role="dialog" aria-modal="true" aria-label="User settings">
@@ -992,12 +997,51 @@ document.addEventListener('DOMContentLoaded',()=>{
       </section>
       <section class="ah-settings-page" data-settings-page="profile">
         <h1>Профіль</h1>
-        <form class="ah-settings-form" method="post" action="/community/settings">
-          <div class="ah-settings-card"><h3>Редагування профілю</h3><p>Це робоча форма: після Save дані підуть у твій існуючий endpoint /community/settings.</p></div>
-          <div class="ah-settings-formline"><label>Avatar URL</label><input class="ah-settings-input" name="avatar_url" value="{{ account.avatar_url or '' }}" placeholder="https://..."></div>
-          <div class="ah-settings-formline"><label>Banner URL</label><input class="ah-settings-input" name="banner_url" value="{{ account.banner_url or '' }}" placeholder="https://..."></div>
-          <div class="ah-settings-formline"><label>Bio</label><textarea class="ah-settings-textarea" name="bio" placeholder="Про себе...">{{ account.bio or '' }}</textarea></div>
-          <div class="ah-settings-formline"><span></span><button class="ah-settings-btn primary" type="submit">Save changes</button></div>
+        <form id="ah-profile-edit-form" class="ah-settings-form ah-discord-profile-form" method="post" action="/community/settings" enctype="multipart/form-data">
+          <input type="hidden" name="next_url" value="{{ request.url.path }}">
+
+          <div class="ah-profile-edit-layout">
+            <div class="ah-profile-live-card">
+              <label class="ah-profile-live-banner" id="ah-profile-preview-banner" for="ah-banner-file" {% if account.banner_url %}style="background-image:url('{{ account.banner_url }}')"{% endif %}>
+                <span class="ah-profile-change-badge">Змінити банер</span>
+              </label>
+              <div class="ah-profile-live-body">
+                <label class="ah-profile-live-avatar" id="ah-profile-preview-avatar" for="ah-avatar-file" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}')"{% endif %}>
+                  {% if not account.avatar_url %}<span>{{ account.username[:1]|upper }}</span>{% endif %}
+                  <b>✎</b>
+                </label>
+                <div class="ah-profile-live-name">{{ account.username }}</div>
+                <div class="ah-profile-live-handle">@{{ account.username }}</div>
+                <div class="ah-profile-live-bio" id="ah-profile-bio-preview">{{ account.bio or 'Ваш вайб у пʼяти словах. Додай опис профілю, щоб міні-картка виглядала живо.' }}</div>
+                <div class="ah-profile-live-note">Клік по аватарці або банеру відкриває вибір файлу з пристрою.</div>
+              </div>
+            </div>
+
+            <div class="ah-profile-edit-panel">
+              <div class="ah-settings-card"><h3>Редагування профілю</h3><p>Тут тепер міняється аватарка, банер і опис профілю. Старий окремий редактор більше не потрібний.</p></div>
+
+              <input id="ah-avatar-file" class="ah-hidden-file" type="file" name="avatar_file" accept="image/png,image/jpeg,image/webp,image/gif">
+              <input id="ah-banner-file" class="ah-hidden-file" type="file" name="banner_file" accept="image/png,image/jpeg,image/webp,image/gif">
+
+              <div class="ah-upload-row">
+                <div><b>Аватар</b><span>PNG/JPG/WebP/GIF до 5 MB</span></div>
+                <label class="ah-settings-btn" for="ah-avatar-file">Завантажити</label>
+              </div>
+              <div class="ah-upload-row">
+                <div><b>Банер</b><span>Картинка для фону профілю</span></div>
+                <label class="ah-settings-btn" for="ah-banner-file">Завантажити</label>
+              </div>
+
+              <details class="ah-url-fallback">
+                <summary>Або вставити URL вручну</summary>
+                <div class="ah-settings-formline"><label>Avatar URL</label><input class="ah-settings-input" name="avatar_url" value="{{ account.avatar_url or '' }}" placeholder="https://..."></div>
+                <div class="ah-settings-formline"><label>Banner URL</label><input class="ah-settings-input" name="banner_url" value="{{ account.banner_url or '' }}" placeholder="https://..."></div>
+              </details>
+
+              <div class="ah-settings-formline wide"><label>Опис</label><textarea id="ah-profile-bio-input" class="ah-settings-textarea" name="bio" maxlength="280" placeholder="Розкажи трохи про себе...">{{ account.bio or '' }}</textarea></div>
+              <div class="ah-profile-savebar"><button class="ah-settings-btn primary" type="submit">Зберегти зміни</button><button class="ah-settings-btn" type="button" onclick="closeUserSettings()">Скасувати</button></div>
+            </div>
+          </div>
         </form>
       </section>
       <section class="ah-settings-page" data-settings-page="security"><h1>Пароль и безопасность</h1><div class="ah-settings-placeholder">Поки заглушка. Тут потім можна зробити зміну паролю, 2FA, активні сесії.</div></section>
@@ -1052,6 +1096,43 @@ document.addEventListener('DOMContentLoaded',()=>{
     t.classList.remove('show'); void t.offsetWidth; t.classList.add('show');
   };
   document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeUserSettings(); });
+})();
+</script>
+
+
+<script id="ah-profile-editor-js">
+(function(){
+  function $(s,r){return (r||document).querySelector(s)}
+  function previewFile(input, targetSel, clearText){
+    if(!input || !input.files || !input.files[0]) return;
+    const f=input.files[0];
+    if(!f.type || !f.type.startsWith('image/')) return;
+    const url=URL.createObjectURL(f);
+    const target=$(targetSel);
+    if(target){ target.style.backgroundImage="url('"+url+"')"; const span=target.querySelector('span'); if(span && clearText) span.textContent=''; }
+  }
+  document.addEventListener('change',function(e){
+    if(e.target && e.target.id==='ah-avatar-file') previewFile(e.target,'#ah-profile-preview-avatar',true);
+    if(e.target && e.target.id==='ah-banner-file') previewFile(e.target,'#ah-profile-preview-banner',false);
+  });
+  document.addEventListener('input',function(e){
+    if(e.target && e.target.id==='ah-profile-bio-input'){
+      const p=$('#ah-profile-bio-preview');
+      if(p) p.textContent=e.target.value.trim() || 'Ваш вайб у пʼяти словах. Додай опис профілю, щоб міні-картка виглядала живо.';
+    }
+  });
+  window.openProfileSettings = function(){
+    if(typeof openUserSettings==='function') openUserSettings();
+    if(typeof showSettingsTab==='function') showSettingsTab('profile');
+  };
+  document.addEventListener('click',function(e){
+    const selfEdit=e.target.closest('[data-open-profile-settings], #ah-self-edit-profile');
+    if(selfEdit){ e.preventDefault(); e.stopPropagation(); window.openProfileSettings(); }
+    const msg=e.target.closest('#ah-v3-message,#ah-v3-full-message');
+    if(msg && msg.dataset && msg.dataset.self==='1'){
+      e.preventDefault(); e.stopPropagation(); window.openProfileSettings();
+    }
+  },true);
 })();
 </script>
 
