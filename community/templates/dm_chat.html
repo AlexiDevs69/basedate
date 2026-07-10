@@ -611,7 +611,7 @@
 </style>
 
 <style id="ah-server-create-overlay-css">
-/* AlexiHub: Discord-like server create/join modal opened over the current page */
+/* AlexiHub: Discord-like server create/join modal opened over current page, multi-step flow */
 .ah-server-modal-backdrop{
   position:fixed;
   inset:0;
@@ -629,51 +629,54 @@
 .ah-server-modal-backdrop.open{display:flex;animation:ahServerModalFade .14s ease both;}
 @keyframes ahServerModalFade{from{opacity:0}to{opacity:1}}
 .ah-server-modal{
-  width:min(450px,calc(100vw - 34px));
+  width:min(452px,calc(100vw - 34px));
   max-height:min(720px,calc(100vh - 42px));
   overflow:hidden;
   background:#313338;
   border:1px solid rgba(255,255,255,.12);
   border-radius:16px;
-  box-shadow:0 28px 95px rgba(0,0,0,.68);
+  box-shadow:0 28px 110px rgba(0,0,0,.68);
   position:relative;
-  transform:translateY(8px) scale(.985);
-  animation:ahServerModalPop .16s cubic-bezier(.2,.9,.2,1) both;
 }
-@keyframes ahServerModalPop{to{transform:translateY(0) scale(1)}}
 .ah-server-modal-close{
   position:absolute;
   right:14px;
   top:14px;
-  width:34px;
-  height:34px;
+  z-index:4;
+  width:32px;
+  height:32px;
   border:0;
   border-radius:50%;
   background:transparent;
   color:#b5bac1;
+  cursor:pointer;
   display:grid;
   place-items:center;
-  cursor:pointer;
-  z-index:4;
   transition:background .13s ease,color .13s ease,transform .08s ease;
 }
-.ah-server-modal-close:hover{background:#3f4149;color:#fff;}
-.ah-server-modal-close:active{transform:scale(.92)}
-.ah-server-modal-close svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;}
-.ah-server-modal-view{display:none;padding:26px 26px 14px;max-height:min(720px,calc(100vh - 42px));overflow-y:auto;}
-.ah-server-modal-view.active{display:block;}
+.ah-server-modal-close:hover{background:#3a3c43;color:#fff;}
+.ah-server-modal-close:active{transform:scale(.93)}
+.ah-server-modal-close svg{width:20px;height:20px;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round;}
+.ah-server-modal-view{
+  display:none;
+  padding:24px 26px 14px;
+  max-height:min(720px,calc(100vh - 42px));
+  overflow-y:auto;
+}
+.ah-server-modal-view.active{display:block;animation:ahServerSlide .13s ease both;}
+@keyframes ahServerSlide{from{opacity:0;transform:translateX(10px)}to{opacity:1;transform:translateX(0)}}
 .ah-server-title{
-  margin:0 42px 8px;
+  margin:0 36px 10px;
   text-align:center;
   font-size:24px;
   line-height:1.12;
-  font-weight:950;
   letter-spacing:-.035em;
+  font-weight:950;
   color:#fff;
 }
 .ah-server-desc{
   margin:0 auto 22px;
-  max-width:340px;
+  max-width:344px;
   text-align:center;
   color:#dbdee1;
   font-size:14px;
@@ -690,8 +693,8 @@
   color:#f2f3f5;
   display:flex;
   align-items:center;
-  gap:14px;
-  padding:0 14px;
+  gap:12px;
+  padding:0 12px;
   cursor:pointer;
   text-align:left;
   transition:background .13s ease,border-color .13s ease,transform .08s ease;
@@ -699,29 +702,29 @@
 .ah-server-card:hover{background:#42444d;border-color:#565963;}
 .ah-server-card:active{transform:scale(.992)}
 .ah-server-card-icon{
-  width:32px;
-  height:32px;
-  border-radius:10px;
+  width:28px;
+  height:28px;
+  border-radius:9px;
   display:grid;
   place-items:center;
   background:#2b2d31;
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);
-  flex:0 0 auto;
+  flex:0 0 28px;
   color:#fff;
   overflow:hidden;
 }
 .ah-server-card-icon svg{
-  width:20px;
-  height:20px;
+  width:17px;
+  height:17px;
   fill:none;
   stroke:currentColor;
-  stroke-width:2.15;
+  stroke-width:2.25;
   stroke-linecap:round;
   stroke-linejoin:round;
   display:block;
 }
-.ah-server-card-icon.custom{background:linear-gradient(135deg,#5b6cff,#7c3aed);}
-.ah-server-card-icon.games{background:linear-gradient(135deg,#5865f2,#2dd4bf);}
+.ah-server-card-icon.custom{background:linear-gradient(135deg,#43b581,#2dd4bf);}
+.ah-server-card-icon.games{background:linear-gradient(135deg,#5865f2,#7c3aed);}
 .ah-server-card-icon.friends{background:linear-gradient(135deg,#eb459e,#f472b6);}
 .ah-server-card-icon.study{background:linear-gradient(135deg,#f59e0b,#ef4444);}
 .ah-server-card-icon.school{background:linear-gradient(135deg,#3b82f6,#22c55e);}
@@ -759,6 +762,8 @@
 .ah-server-back-btn{background:transparent;color:#b5bac1;min-height:36px;padding:0 8px;}
 .ah-server-back-btn:hover{color:#fff;background:#3a3c43;}
 .ah-server-secondary-btn:active,.ah-server-primary-btn:active,.ah-server-back-btn:active{transform:scale(.98)}
+.ah-server-purpose-note{margin:12px 0 0;color:#b5bac1;font-size:12px;line-height:1.4;}
+.ah-server-purpose-note button{border:0;background:transparent;color:#60a5fa;font:inherit;font-weight:800;cursor:pointer;padding:0;}
 .ah-server-form{display:grid;gap:14px;margin-top:16px;}
 .ah-server-field label{display:block;margin:0 0 7px;font-size:12px;text-transform:uppercase;letter-spacing:.04em;font-weight:950;color:#b5bac1;}
 .ah-server-input,.ah-server-textarea{
@@ -774,7 +779,7 @@
 .ah-server-input:focus,.ah-server-textarea:focus{border-color:#5865f2;}
 .ah-server-textarea{min-height:76px;resize:vertical;}
 .ah-server-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:6px;}
-.ah-server-actions .ah-server-primary-btn{min-width:154px;}
+.ah-server-actions .ah-server-primary-btn{min-width:112px;}
 .ah-server-tip{
   margin-top:13px;
   border-radius:10px;
@@ -787,6 +792,36 @@
 }
 .ah-server-samples{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
 .ah-server-samples code{background:#3a3c43;border-radius:5px;padding:5px 7px;color:#f2f3f5;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;}
+.ah-server-upload-wrap{display:flex;justify-content:center;margin:22px 0 14px;}
+.ah-server-upload{
+  width:92px;
+  height:92px;
+  border-radius:50%;
+  border:2px dashed #b5bac1;
+  background:#2b2d31 center/cover no-repeat;
+  color:#dbdee1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  gap:3px;
+  font-size:10px;
+  font-weight:950;
+  text-transform:uppercase;
+  position:relative;
+  cursor:pointer;
+  transition:border-color .14s ease,filter .14s ease,transform .08s ease;
+}
+.ah-server-upload:hover{border-color:#fff;filter:brightness(1.08)}
+.ah-server-upload:active{transform:scale(.98)}
+.ah-server-upload svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2.2;}
+.ah-server-upload-plus{position:absolute;right:3px;top:3px;width:24px;height:24px;border-radius:50%;background:#5865f2;color:#fff;display:grid;place-items:center;font-size:18px;line-height:1;border:3px solid #313338;}
+.ah-server-upload input{display:none;}
+.ah-server-upload.has-image{border-style:solid;color:transparent;}
+.ah-server-upload.has-image svg,.ah-server-upload.has-image span:not(.ah-server-upload-plus){display:none;}
+.ah-server-upload-status{min-height:16px;text-align:center;color:#b5bac1;font-size:12px;margin-top:-4px;}
+.ah-server-upload-status.ok{color:#23a55a}.ah-server-upload-status.err{color:#ff7070}
+.ah-server-legal{font-size:11px;color:#969ba4;line-height:1.35;margin-top:2px}.ah-server-legal a{color:#60a5fa;font-weight:800;}
 @media(max-width:520px){
   .ah-server-modal-backdrop{padding:0;align-items:flex-end;}
   .ah-server-modal{width:100%;max-height:92vh;border-radius:18px 18px 0 0;border-left:0;border-right:0;border-bottom:0;}
@@ -1434,56 +1469,100 @@ document.addEventListener('DOMContentLoaded',()=>{
     </button>
 
     <section class="ah-server-modal-view active" data-ah-server-view="create">
-      <h2 id="ah-server-create-title" class="ah-server-title">Створіть свій сервер</h2>
-      <p class="ah-server-desc">Ваш сервер — це місце, де ви можете тусоватися зі своїми друзями. Створіть сервер і починайте спілкуватися.</p>
+      <h2 id="ah-server-create-title" class="ah-server-title">Создайте свой сервер</h2>
+      <p class="ah-server-desc">Ваш сервер — это место, где вы можете тусоваться со своими друзьями. Создайте сервер и начните общаться.</p>
 
       <div class="ah-server-card-list">
-        <button type="button" class="ah-server-card" data-template="custom"><span class="ah-server-card-icon custom" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="3"/><path d="M8 13l2.4-2.4a1.4 1.4 0 0 1 2 0L16 14"/><path d="M14.5 12.5 16 11l4 4"/><circle cx="8.5" cy="9" r="1"/></svg></span><span>Свій шаблон</span><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
-        <div class="ah-server-modal-label">Почніть із шаблона</div>
-        <button type="button" class="ah-server-card" data-template="games"><span class="ah-server-card-icon games" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 13h4m-2-2v4"/><path d="M16 12.5h.01M18.5 14.5h.01"/><path d="M8 8h8a5 5 0 0 1 4.8 3.6l.8 3A3 3 0 0 1 18.7 18h-.4a3 3 0 0 1-2.4-1.2L15 15.5H9l-.9 1.3A3 3 0 0 1 5.7 18h-.4a3 3 0 0 1-2.9-3.8l.8-2.6A5 5 0 0 1 8 8Z"/></svg></span><span>Ігри</span><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
-        <button type="button" class="ah-server-card" data-template="friends"><span class="ah-server-card-icon friends" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M16 20v-1.5A3.5 3.5 0 0 0 12.5 15h-5A3.5 3.5 0 0 0 4 18.5V20"/><circle cx="10" cy="8" r="4"/><path d="M19 8v6"/><path d="M22 11h-6"/></svg></span><span>Друзі</span><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
-        <button type="button" class="ah-server-card" data-template="study"><span class="ah-server-card-icon study" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 7V5.8A2.8 2.8 0 0 1 10.8 3h2.4A2.8 2.8 0 0 1 16 5.8V7"/><rect x="5" y="7" width="14" height="14" rx="3"/><path d="M8 12h8"/><path d="M8 16h5"/><path d="M5 12h2"/><path d="M17 12h2"/></svg></span><span>Навчальна група</span><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
-        <button type="button" class="ah-server-card" data-template="school"><span class="ah-server-card-icon school" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 3H20v18H6.5A2.5 2.5 0 0 1 4 18.5v-13A2.5 2.5 0 0 1 6.5 3Z"/><path d="M9 7h7"/><path d="M9 11h5"/></svg></span><span>Шкільний клуб</span><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+        <button type="button" class="ah-server-card" data-template="custom" data-default-name="Сервер">
+          <span class="ah-server-card-icon custom" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7.5A3.5 3.5 0 0 1 7.5 4h9A3.5 3.5 0 0 1 20 7.5v9a3.5 3.5 0 0 1-3.5 3.5h-9A3.5 3.5 0 0 1 4 16.5z"/><path d="M8 13l2.3-2.3a1.4 1.4 0 0 1 2 0L16 14"/><circle cx="8.8" cy="8.8" r="1"/></svg></span>
+          <span>Свой шаблон</span><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+        <div class="ah-server-modal-label">Начните с шаблона</div>
+        <button type="button" class="ah-server-card" data-template="games" data-default-name="Gaming Server">
+          <span class="ah-server-card-icon games" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 13h4m-2-2v4"/><path d="M16 12.5h.01M18.5 14.5h.01"/><path d="M8 8h8a5 5 0 0 1 4.8 3.6l.8 3A3 3 0 0 1 18.7 18h-.4a3 3 0 0 1-2.4-1.2L15 15.5H9l-.9 1.3A3 3 0 0 1 5.7 18h-.4a3 3 0 0 1-2.9-3.8l.8-2.6A5 5 0 0 1 8 8Z"/></svg></span>
+          <span>Игры</span><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+        <button type="button" class="ah-server-card" data-template="friends" data-default-name="Сервер друзей">
+          <span class="ah-server-card-icon friends" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M16 20v-1.5A3.5 3.5 0 0 0 12.5 15h-5A3.5 3.5 0 0 0 4 18.5V20"/><circle cx="10" cy="8" r="4"/><path d="M19 8v6"/><path d="M22 11h-6"/></svg></span>
+          <span>Друзья</span><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+        <button type="button" class="ah-server-card" data-template="study" data-default-name="Учебная группа">
+          <span class="ah-server-card-icon study" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 3H20v18H6.5A2.5 2.5 0 0 1 4 18.5v-13A2.5 2.5 0 0 1 6.5 3Z"/><path d="M9 7h7"/><path d="M9 11h5"/></svg></span>
+          <span>Учебная группа</span><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+        <button type="button" class="ah-server-card" data-template="school" data-default-name="Школьный клуб">
+          <span class="ah-server-card-icon school" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 5l9 5.5-9 5.5-9-5.5Z"/><path d="M7 13v4c1.4 1 3.1 1.5 5 1.5s3.6-.5 5-1.5v-4"/><path d="M21 11v5"/></svg></span>
+          <span>Школьный клуб</span><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
       </div>
 
       <div class="ah-server-join-box">
-        <h3>У вас уже є запрошення?</h3>
-        <button type="button" class="ah-server-secondary-btn" data-ah-server-join-open>Приєднатися до сервера</button>
+        <h3>У вас уже есть приглашение?</h3>
+        <button type="button" class="ah-server-secondary-btn" data-ah-server-join-open>Присоединиться к серверу</button>
+      </div>
+    </section>
+
+    <section class="ah-server-modal-view" data-ah-server-view="purpose">
+      <h2 class="ah-server-title">Расскажите нам о вашем сервере</h2>
+      <p class="ah-server-desc">Чтобы мы смогли помочь вам с настройкой, скажите, для кого предназначен ваш сервер: для друзей или большого сообщества?</p>
+      <div class="ah-server-card-list">
+        <button type="button" class="ah-server-card" data-purpose="friends">
+          <span class="ah-server-card-icon friends" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M16 20v-1.5A3.5 3.5 0 0 0 12.5 15h-5A3.5 3.5 0 0 0 4 18.5V20"/><circle cx="10" cy="8" r="4"/><path d="M19 8v6"/><path d="M22 11h-6"/></svg></span>
+          <span>Для меня и друзей</span><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+        <button type="button" class="ah-server-card" data-purpose="community">
+          <span class="ah-server-card-icon custom" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9"/><path d="M3.6 9h16.8"/><path d="M3.6 15h12.8"/><path d="M12 3c2 2.2 3 5.2 3 9 0 1.8-.2 3.4-.7 4.8"/><path d="M12 3c-2 2.2-3 5.2-3 9s1 6.8 3 9"/></svg></span>
+          <span>Для клуба или сообщества</span><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+      </div>
+      <p class="ah-server-purpose-note">Затрудняетесь ответить? Вы можете пока <button type="button" data-purpose="skip">пропустить этот вопрос</button>.</p>
+      <div class="ah-server-actions" style="margin-top:32px">
+        <button type="button" class="ah-server-back-btn" data-ah-server-back>Назад</button>
       </div>
     </section>
 
     <section class="ah-server-modal-view" data-ah-server-view="setup">
-      <h2 class="ah-server-title">Налаштуйте сервер</h2>
-      <p class="ah-server-desc">Дайте серверу назву. Потім зможеш змінити іконку, опис і запросити друзів.</p>
+      <h2 class="ah-server-title">Персонализируйте свой сервер</h2>
+      <p class="ah-server-desc">Персонализируйте свой новый сервер, выбрав ему название и значок. Их можно будет изменить в любой момент.</p>
       <form class="ah-server-form" method="post" action="/community/servers/new">
         <input type="hidden" name="description" id="ah-server-template-desc" value="">
-        <input type="hidden" name="icon_url" value="">
-        <div class="ah-server-field">
-          <label for="ah-server-name-input">Назва сервера</label>
-          <input id="ah-server-name-input" class="ah-server-input" name="name" type="text" placeholder="Мій сервер" minlength="2" required autocomplete="off">
+        <input type="hidden" name="icon_url" id="ah-server-icon-url" value="">
+        <div class="ah-server-upload-wrap">
+          <label class="ah-server-upload" id="ah-server-upload-label" title="Загрузить иконку сервера">
+            <input id="ah-server-icon-file" type="file" accept="image/*">
+            <span class="ah-server-upload-plus">+</span>
+            <svg viewBox="0 0 24 24"><path d="M4 16.5V18a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1.5"/><path d="M12 15V4"/><path d="m7 9 5-5 5 5"/></svg>
+            <span>Upload</span>
+          </label>
         </div>
+        <div id="ah-server-upload-status" class="ah-server-upload-status"></div>
+        <div class="ah-server-field">
+          <label for="ah-server-name-input">Название сервера <span style="color:#ef4444">*</span></label>
+          <input id="ah-server-name-input" class="ah-server-input" name="name" type="text" placeholder="Сервер" minlength="2" required autocomplete="off">
+        </div>
+        <div class="ah-server-legal">Создавая сервер, вы соглашаетесь с <a href="#" onclick="return false">Правилами Сообщества</a> AlexiHub.</div>
         <div class="ah-server-actions">
           <button type="button" class="ah-server-back-btn" data-ah-server-back>Назад</button>
-          <button type="submit" class="ah-server-primary-btn">Створити сервер</button>
+          <button type="submit" class="ah-server-primary-btn">Создать</button>
         </div>
       </form>
     </section>
 
     <section class="ah-server-modal-view" data-ah-server-view="join">
-      <h2 class="ah-server-title">Приєднатися до сервера</h2>
-      <p class="ah-server-desc">Введіть запрошення, щоб приєднатися до існуючого сервера.</p>
+      <h2 class="ah-server-title">Присоединиться к серверу</h2>
+      <p class="ah-server-desc">Введите приглашение, чтобы присоединиться к существующему серверу.</p>
       <form class="ah-server-form" method="post" action="/community/servers/join">
         <div class="ah-server-field">
-          <label for="ah-server-join-input">Силка-запрошення або ID сервера</label>
-          <input id="ah-server-join-input" class="ah-server-input" name="invite" type="text" placeholder="/community/servers/1" required autocomplete="off">
+          <label for="ah-server-join-input">Ссылка-приглашение <span style="color:#ef4444">*</span></label>
+          <input id="ah-server-join-input" class="ah-server-input" name="invite" type="text" placeholder="https://discord.gg/hTKzmak" required autocomplete="off">
         </div>
         <div class="ah-server-tip">
-          Запрошення можуть виглядати так:
-          <div class="ah-server-samples"><code>1</code><code>/community/servers/1</code><code>https://.../community/servers/1</code></div>
+          <b style="color:#fff">Приглашения должны выглядеть так:</b>
+          <div class="ah-server-samples"><code>hTKzmak</code><code>https://discord.gg/hTKzmak</code><code>/community/servers/1</code></div>
         </div>
         <div class="ah-server-actions">
           <button type="button" class="ah-server-back-btn" data-ah-server-back>Назад</button>
-          <button type="submit" class="ah-server-primary-btn">Приєднатися</button>
+          <button type="submit" class="ah-server-primary-btn">Присоединиться к серверу</button>
         </div>
       </form>
     </section>
@@ -1491,97 +1570,135 @@ document.addEventListener('DOMContentLoaded',()=>{
 </div>
 <script id="ah-server-create-overlay-js">
 (function(){
-  if (window.__alexServerCreateOverlayReady) return;
-  window.__alexServerCreateOverlayReady = true;
+  if(window.__ahServerCreateOverlayV4) return;
+  window.__ahServerCreateOverlayV4 = true;
 
   var modal = document.getElementById('ah-server-create-modal');
-  if (!modal) return;
-  var lastFocus = null;
-  var names = {
-    custom: 'Мій сервер',
-    games: 'Gaming hub',
-    friends: 'Сервер друзів',
-    study: 'Навчальна група',
-    school: 'Шкільний клуб'
-  };
-  var descriptions = {
-    custom: '',
-    games: 'Сервер для ігор.',
-    friends: 'Місце для друзів.',
-    study: 'Навчальний сервер.',
-    school: 'Шкільний клуб.'
-  };
+  if(!modal) return;
+  var selectedTemplate = 'custom';
+  var selectedTemplateLabel = 'Свой шаблон';
+  var selectedDefaultName = 'Сервер';
+  var selectedPurpose = '';
 
+  function allViews(){ return modal.querySelectorAll('[data-ah-server-view]'); }
   function showView(name){
-    modal.querySelectorAll('[data-ah-server-view]').forEach(function(view){
+    allViews().forEach(function(view){
       view.classList.toggle('active', view.getAttribute('data-ah-server-view') === name);
     });
     setTimeout(function(){
       var input = name === 'join' ? document.getElementById('ah-server-join-input') : (name === 'setup' ? document.getElementById('ah-server-name-input') : null);
-      if (input) input.focus();
-    }, 80);
+      if(input) input.focus();
+    }, 40);
   }
-
-  window.openAlexServerCreateModal = function(){
-    lastFocus = document.activeElement;
+  function openModal(){
     modal.classList.add('open');
     modal.setAttribute('aria-hidden','false');
-    document.body.style.overflow = 'hidden';
     showView('create');
-  };
-  window.closeAlexServerCreateModal = function(){
+  }
+  function closeModal(){
     modal.classList.remove('open');
     modal.setAttribute('aria-hidden','true');
-    document.body.style.overflow = '';
-    if (lastFocus && typeof lastFocus.focus === 'function') {
-      try { lastFocus.focus(); } catch(e) {}
-    }
-  };
+  }
+  function composeDesc(){
+    var bits = [];
+    if(selectedTemplateLabel) bits.push('Шаблон: ' + selectedTemplateLabel);
+    if(selectedPurpose) bits.push('Тип: ' + selectedPurpose);
+    return bits.join(' | ');
+  }
+  function prepareSetup(){
+    var nameInput = document.getElementById('ah-server-name-input');
+    var descInput = document.getElementById('ah-server-template-desc');
+    var suggested = selectedDefaultName || 'Сервер';
+    try {
+      var display = {{ (account.display_name or account.username)|tojson if account is defined and account else '""' }};
+      if((selectedTemplate === 'friends' || selectedPurpose === 'Для меня и друзей') && display){
+        suggested = 'Сервер ' + display;
+      }
+    } catch(e) {}
+    if(nameInput && (!nameInput.value || nameInput.value === 'Сервер')) nameInput.value = suggested;
+    if(descInput) descInput.value = composeDesc();
+  }
 
   document.addEventListener('click', function(e){
     var createLink = e.target.closest && e.target.closest('a[href="/community/servers/new"], a[href="/community/servers/create"], a.server-dot.plus[href*="/community/servers/new"]');
-    if (createLink) {
+    if(createLink){
       e.preventDefault();
-      e.stopPropagation();
-      window.openAlexServerCreateModal();
+      openModal();
       return;
     }
-
-    if (e.target === modal || (e.target.closest && e.target.closest('[data-ah-server-close]'))) {
+    if(!modal.classList.contains('open')) return;
+    if(e.target === modal || (e.target.closest && e.target.closest('[data-ah-server-close]'))){
       e.preventDefault();
-      window.closeAlexServerCreateModal();
+      closeModal();
       return;
     }
-
     var templateBtn = e.target.closest && e.target.closest('[data-template]');
-    if (templateBtn && modal.contains(templateBtn)) {
-      var key = templateBtn.getAttribute('data-template') || 'custom';
-      var nameInput = document.getElementById('ah-server-name-input');
-      var descInput = document.getElementById('ah-server-template-desc');
-      if (nameInput) nameInput.value = names[key] || 'Мій сервер';
-      if (descInput) descInput.value = descriptions[key] || '';
+    if(templateBtn){
+      selectedTemplate = templateBtn.getAttribute('data-template') || 'custom';
+      selectedTemplateLabel = (templateBtn.querySelector('span:nth-child(2)') || {}).textContent || 'Свой шаблон';
+      selectedDefaultName = templateBtn.getAttribute('data-default-name') || 'Сервер';
+      showView('purpose');
+      return;
+    }
+    var purposeBtn = e.target.closest && e.target.closest('[data-purpose]');
+    if(purposeBtn){
+      var p = purposeBtn.getAttribute('data-purpose');
+      selectedPurpose = p === 'community' ? 'Для клуба или сообщества' : (p === 'friends' ? 'Для меня и друзей' : 'Не указано');
+      prepareSetup();
       showView('setup');
       return;
     }
-
-    if (e.target.closest && e.target.closest('[data-ah-server-join-open]')) {
+    if(e.target.closest && e.target.closest('[data-ah-server-join-open]')){
       e.preventDefault();
       showView('join');
       return;
     }
-
-    if (e.target.closest && e.target.closest('[data-ah-server-back]')) {
+    if(e.target.closest && e.target.closest('[data-ah-server-back]')){
       e.preventDefault();
-      showView('create');
+      var active = modal.querySelector('[data-ah-server-view].active');
+      var activeName = active ? active.getAttribute('data-ah-server-view') : 'create';
+      if(activeName === 'setup') showView('purpose');
+      else showView('create');
       return;
     }
   }, true);
 
   document.addEventListener('keydown', function(e){
-    if (e.key === 'Escape' && modal.classList.contains('open')) {
-      window.closeAlexServerCreateModal();
-    }
+    if(e.key === 'Escape' && modal.classList.contains('open')) closeModal();
   });
+
+  var fileInput = document.getElementById('ah-server-icon-file');
+  var uploadLabel = document.getElementById('ah-server-upload-label');
+  var uploadStatus = document.getElementById('ah-server-upload-status');
+  var iconUrlInput = document.getElementById('ah-server-icon-url');
+  if(fileInput && uploadLabel){
+    fileInput.addEventListener('change', async function(){
+      var file = fileInput.files && fileInput.files[0];
+      if(!file) return;
+      if(!file.type || !file.type.startsWith('image/')){
+        if(uploadStatus){uploadStatus.textContent='Потрібна картинка.';uploadStatus.className='ah-server-upload-status err';}
+        return;
+      }
+      var localUrl = URL.createObjectURL(file);
+      uploadLabel.style.backgroundImage = 'url("' + localUrl + '")';
+      uploadLabel.classList.add('has-image');
+      if(uploadStatus){uploadStatus.textContent='Завантажую іконку...';uploadStatus.className='ah-server-upload-status';}
+      try{
+        var fd = new FormData();
+        fd.append('file', file);
+        var res = await fetch('/community/api/upload-image', {method:'POST', body:fd, credentials:'same-origin'});
+        var data = await res.json();
+        if(data && data.ok && data.url){
+          if(iconUrlInput) iconUrlInput.value = data.url;
+          if(uploadStatus){uploadStatus.textContent='Іконку завантажено.';uploadStatus.className='ah-server-upload-status ok';}
+        } else {
+          throw new Error((data && data.error) || 'upload_failed');
+        }
+      }catch(err){
+        if(uploadStatus){uploadStatus.textContent='Не вдалось завантажити. Сервер створиться без іконки.';uploadStatus.className='ah-server-upload-status err';}
+      }
+    });
+  }
 })();
 </script>
 
