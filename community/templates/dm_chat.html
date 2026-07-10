@@ -342,6 +342,84 @@
   }
 }
 
+
+
+/* AlexiHub: final Discord-style account panel two-line hover
+   Top line (display name) stays visible. Bottom line swaps status -> @username. */
+.user-panel .user-info,
+.account-panel .account-meta {
+  position: relative !important;
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+  height: 34px !important;
+  overflow: hidden !important;
+  display: block !important;
+  padding: 0 !important;
+}
+.user-panel .user-info > b,
+.account-panel .account-meta > .account-name {
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: 1px !important;
+  display: block !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  transform: none !important;
+  opacity: 1 !important;
+  pointer-events: none !important;
+  line-height: 15px !important;
+}
+.user-panel .user-info > span,
+.account-panel .account-meta > .account-status,
+.user-panel .user-info > .account-username,
+.account-panel .account-meta > .account-username {
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: 18px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: 11px !important;
+  font-weight: 750 !important;
+  line-height: 13px !important;
+  color: #b5bac1 !important;
+  transition: transform .22s cubic-bezier(.2,.9,.2,1), opacity .18s ease !important;
+  will-change: transform, opacity !important;
+}
+.user-panel .user-info > span,
+.account-panel .account-meta > .account-status {
+  transform: translateY(0) !important;
+  opacity: 1 !important;
+}
+.user-panel .user-info > .account-username,
+.account-panel .account-meta > .account-username {
+  transform: translateY(15px) !important;
+  opacity: 0 !important;
+}
+.user-panel:hover .user-info > span,
+.account-panel:hover .account-meta > .account-status {
+  transform: translateY(-14px) !important;
+  opacity: 0 !important;
+}
+.user-panel:hover .user-info > .account-username,
+.account-panel:hover .account-meta > .account-username {
+  transform: translateY(0) !important;
+  opacity: 1 !important;
+}
+.user-panel:hover .user-info > b,
+.account-panel:hover .account-meta > .account-name {
+  transform: none !important;
+  opacity: 1 !important;
+}
+
 </style>
 </head>
 <body>
@@ -391,7 +469,7 @@
       </div>
       <div class="user-panel mini-profile-trigger" data-mini-username="{{ account.username }}" data-mini-avatar="{{ account.avatar_url or '' }}" data-mini-status="{{ account.account_status or 'online' }}" data-mini-role="{{ account.role_label or 'online' }}" data-mini-c1="{{ account.role_color_start or '#5865f2' }}" data-mini-c2="{{ account.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ account.username }}" data-mini-bio="{{ account.bio or '' }}">
         <span class="avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}')"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}<span id="my-avatar-status" class="presence status-{{ my_status }}"></span></span>
-        <div class="user-info status-trigger" onclick="openSelfProfile()"><b>{{ account.username }}</b><span><i id="my-status-dot" class="status-dot status-{{ my_status }}"></i><span id="my-status-label">{{ {'online':'В мережі','idle':'Неактивний','dnd':'Не турбувати','invisible':'Невидимий'}.get(my_status, 'В мережі') }}</span></span></div>
+        <div class="user-info status-trigger" onclick="openSelfProfile()"><b>{{ account.username }}</b><span><i id="my-status-dot" class="status-dot status-{{ my_status }}"></i><span id="my-status-label">{{ {'online':'В мережі','idle':'Неактивний','dnd':'Не турбувати','invisible':'Невидимий'}.get(my_status, 'В мережі') }}</span></span><small class="account-username">@{{ account.username }}</small></div>
         <div class="user-actions"><button class="voice-control" data-audio-kind="mic" title="Mute" onclick="toggleAudioControl(this,'mic')"><svg class="icon icon-sm"><use href="#i-mic"></use></svg></button><button class="voice-control" data-audio-kind="headphones" title="Deafen" onclick="toggleAudioControl(this,'headphones')"><svg class="icon icon-sm"><use href="#i-headphones"></use></svg></button><button onclick="openUserSettings()" title="Settings"><svg class="icon icon-sm"><use href="#i-settings"></use></svg></button></div>
         <div id="status-menu" class="status-menu"><button onclick="setPresenceStatus('online')"><i class="status-dot status-online"></i><span><b>В мережі</b><small>Тебе видно онлайн.</small></span></button><button onclick="setPresenceStatus('idle')"><i class="status-dot status-idle"></i><span><b>Неактивний</b><small>Жовтий статус.</small></span></button><button onclick="setPresenceStatus('dnd')"><i class="status-dot status-dnd"></i><span><b>Не турбувати</b><small>Червоний статус.</small></span></button><button onclick="setPresenceStatus('invisible')"><i class="status-dot status-invisible"></i><span><b>Невидимий</b><small>Не показувати онлайн.</small></span></button></div>
       </div>
