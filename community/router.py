@@ -242,6 +242,7 @@ def _account_payload(account) -> dict:
         "id": account.id,
         "username": account.username,
         "avatar_url": account.avatar_url,
+        "banner_url": account.banner_url,
         "role_label": account.role_label,
         "role_color_start": account.role_color_start or "#f5576c",
         "role_color_end": account.role_color_end or "#7367f0",
