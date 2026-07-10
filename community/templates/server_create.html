@@ -8,122 +8,527 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root{
-      --rail:#08080a; --side:#111214; --main:#18191d; --modal:#2b2d31; --modal2:#313338;
-      --hover:#3a3c43; --border:#42444d; --border-soft:#343640;
-      --text:#f2f3f5; --muted:#b5bac1; --muted2:#8b919d;
-      --accent:#5865f2; --green:#23a55a; --red:#f23f42;
-      --font:'Inter',system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+      --rail:#08080a;
+      --side:#111214;
+      --main:#18191d;
+      --modal:#313338;
+      --modal-soft:#2b2d31;
+      --card:#3a3c43;
+      --card-hover:#42444d;
+      --border:#454851;
+      --border-soft:#3a3d45;
+      --text:#f2f3f5;
+      --muted:#b5bac1;
+      --muted2:#8b919d;
+      --accent:#5865f2;
+      --accent-hover:#4752c4;
+      --green:#23a55a;
+      --red:#f23f42;
+      --shadow:0 28px 95px rgba(0,0,0,.62);
+      --font:'Inter',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
     }
+
     *{box-sizing:border-box;margin:0;padding:0}
     html,body{height:100%}
-    body{font-family:var(--font);background:var(--main);color:var(--text);overflow:hidden;font-size:14px}
-    a{color:inherit;text-decoration:none}button,input,textarea{font:inherit}
-    .app{display:grid;grid-template-columns:72px 240px 1fr 300px;height:100vh;filter:brightness(.55);pointer-events:none;user-select:none}
-    .rail{background:var(--rail);border-right:1px solid #111;display:flex;flex-direction:column;align-items:center;gap:10px;padding:12px 10px;overflow:auto}
-    .dot{width:48px;height:48px;border-radius:18px;background:#202127;color:#fff;display:grid;place-items:center;font-weight:900;position:relative;background-size:cover;background-position:center;border:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.05)}
-    .dot.home{background:linear-gradient(135deg,#5865f2,#4752c4)}
-    .dot.plus{background:#202127;color:#23a55a;font-size:30px;border-radius:16px}
-    .dot.plus:before{content:"";position:absolute;left:-10px;width:4px;height:34px;border-radius:0 6px 6px 0;background:#fff}
-    .sep{width:32px;height:2px;border-radius:99px;background:#24252b}
-    .side{background:var(--side);border-right:1px solid #111;display:flex;flex-direction:column;min-width:0}
-    .search{padding:12px 10px;border-bottom:1px solid #1f2026}.search input{width:100%;height:36px;border:0;border-radius:8px;background:#08080a;color:var(--text);padding:0 12px;outline:0}
-    .nav{padding:10px 8px}.nav-row{height:42px;border-radius:8px;display:flex;align-items:center;gap:12px;padding:0 10px;color:var(--muted);font-weight:800}.nav-row.active{background:var(--hover);color:#fff}.nav-row svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-    .section{font-size:11px;font-weight:900;color:#8790a1;text-transform:uppercase;letter-spacing:.06em;padding:10px 12px 4px;display:flex;justify-content:space-between}
-    .dm{height:44px;margin:0 8px 2px;border-radius:8px;display:flex;align-items:center;gap:10px;padding:0 8px;color:var(--muted);font-weight:700}.dm.active{background:var(--hover);color:#fff}.avatar{width:32px;height:32px;border-radius:50%;background:#2b2d34 center/cover no-repeat;display:grid;place-items:center;font-weight:900;position:relative;flex:0 0 auto}.avatar:after{content:"";position:absolute;right:-1px;bottom:-1px;width:11px;height:11px;border-radius:50%;background:#23a55a;border:2px solid var(--side)}
-    .account{margin-top:auto;height:56px;background:#17181d;border-top:1px solid #22242b;display:flex;align-items:center;gap:8px;padding:8px}.account .avatar{width:36px;height:36px}.account b{display:block;font-size:13px}.account span{font-size:11px;color:#b5bac1}
-    .main{background:#18191d;display:flex;flex-direction:column;min-width:0}.top{height:48px;border-bottom:1px solid #111318;display:flex;align-items:center;justify-content:space-between;padding:0 16px}.top b{display:flex;gap:10px;align-items:center}.top svg{width:20px;height:20px;stroke:#b5bac1;fill:none;stroke-width:2}.hero{flex:1;display:grid;place-items:center;text-align:center;color:var(--muted)}.hero h1{font-size:30px;color:#fff;margin-bottom:8px}.right{background:#18191d;border-left:1px solid #111318;padding:18px}.right-card{height:92px;border-radius:14px;background:#202127;border:1px solid #303238;margin-bottom:12px}
-    .shade{position:fixed;inset:0;background:rgba(0,0,0,.68);backdrop-filter:blur(2px);z-index:10;display:flex;align-items:center;justify-content:center;padding:20px}
-    .modal{width:440px;max-width:calc(100vw - 28px);max-height:min(780px,calc(100vh - 28px));background:var(--modal);border:1px solid var(--border);border-radius:16px;box-shadow:0 28px 90px rgba(0,0,0,.62);position:relative;overflow:hidden;display:flex;flex-direction:column}
-    .close{position:absolute;right:14px;top:14px;width:32px;height:32px;border:0;border-radius:50%;background:transparent;color:#b5bac1;display:grid;place-items:center;cursor:pointer;z-index:5}.close:hover{background:var(--hover);color:#fff}.close svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-    .view{display:none;padding:24px 24px 14px;overflow:auto}.view.active{display:block}.modal h1{font-size:24px;line-height:1.12;text-align:center;font-weight:900;letter-spacing:-.02em;margin:0 34px 10px}.modal p.lead{text-align:center;color:#fff;line-height:1.35;margin:0 10px 22px;font-weight:600}.choice-list{display:grid;gap:10px}.choice{width:100%;height:56px;border:1px solid var(--border);border-radius:8px;background:#34363d;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 14px;cursor:pointer;font-weight:850;text-align:left;transition:.12s ease}.choice:hover{background:#3a3c43;border-color:#545760}.choice-left{display:flex;align-items:center;gap:12px;min-width:0}.choice-ico{width:28px;height:28px;border-radius:9px;background:#24262d;display:grid;place-items:center;font-size:18px;flex:0 0 auto}.choice .arrow{width:20px;height:20px;stroke:#8b919d;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.label{font-size:12px;font-weight:900;color:#fff;text-transform:uppercase;margin:16px 0 8px}.bottom-box{margin:16px -24px -14px;padding:16px 24px 14px;border-top:1px solid #393b43;text-align:center;background:#2b2d31}.bottom-box h2{font-size:18px;margin-bottom:10px}.gray-btn,.primary-btn,.link-btn{height:44px;border:0;border-radius:8px;font-weight:900;cursor:pointer}.gray-btn{width:100%;background:#4e5058;color:#fff}.gray-btn:hover{background:#5b5d66}.primary-btn{background:#5865f2;color:#fff;padding:0 18px}.primary-btn:hover{background:#4752c4}.link-btn{background:transparent;color:#c9cdfb;padding:0 6px}.link-btn:hover{text-decoration:underline}.setup-head{display:flex;align-items:center;gap:12px;margin-bottom:18px}.back{width:32px;height:32px;border:0;border-radius:50%;background:transparent;color:#b5bac1;display:grid;place-items:center;cursor:pointer}.back:hover{background:#3a3c43;color:#fff}.back svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2}.setup-head h1{text-align:left;margin:0;font-size:22px}.form-grid{display:grid;gap:13px}.field label{display:block;font-size:12px;text-transform:uppercase;color:#b5bac1;font-weight:900;margin-bottom:7px}.field input,.field textarea{width:100%;border:1px solid #1e1f24;background:#1e1f24;color:#fff;border-radius:8px;padding:12px;outline:0}.field textarea{min-height:76px;resize:vertical}.field input:focus,.field textarea:focus{border-color:#5865f2}.icon-picker{display:flex;align-items:center;gap:12px}.server-preview{width:76px;height:76px;border-radius:50%;background:#313338 center/cover no-repeat;display:grid;place-items:center;font-size:28px;font-weight:900;border:1px solid #454851;flex:0 0 auto}.hint{font-size:12px;color:#9ca3af;line-height:1.35;margin-top:5px}.error{border:1px solid rgba(242,63,66,.45);background:rgba(242,63,66,.1);color:#ffb4b4;border-radius:8px;padding:10px 12px;font-size:13px;font-weight:750;margin-bottom:12px}.join-examples{font-size:13px;color:#b5bac1;margin-top:12px}.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.chip{background:#42444d;border-radius:5px;padding:4px 7px;color:#fff;font-size:12px}.discover{margin-top:14px;border-radius:8px;background:#202127;padding:12px;display:flex;align-items:center;justify-content:space-between;gap:10px}.discover-left{display:flex;gap:10px;align-items:center}.discover-icon{width:34px;height:34px;border-radius:50%;background:#23a55a;display:grid;place-items:center}.discover b{display:block}.discover span{display:block;color:#b5bac1;font-size:12px;margin-top:2px}.footer-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:22px}.submit-row{display:flex;justify-content:flex-end;margin-top:18px}.step-title{text-align:center;font-weight:950;font-size:20px;margin-bottom:4px}.muted{text-align:center;color:#b5bac1;font-size:13px;line-height:1.4;margin-bottom:18px}@media(max-width:760px){.app{grid-template-columns:64px 1fr}.side,.right{display:none}.shade{align-items:flex-end;padding:0}.modal{width:100%;max-width:100%;border-radius:18px 18px 0 0;max-height:92vh;border-left:0;border-right:0;border-bottom:0}.view{padding:24px 18px 14px}.bottom-box{margin-left:-18px;margin-right:-18px;padding-left:18px;padding-right:18px}}
+    body{
+      font-family:var(--font);
+      background:var(--main);
+      color:var(--text);
+      overflow:hidden;
+      font-size:14px;
+    }
+    a{color:inherit;text-decoration:none}
+    button,input,textarea{font:inherit}
+    svg{display:block}
+
+    /* Fake app behind modal, so /servers/new feels like Discord opened a modal over the current UI */
+    .app-bg{
+      display:grid;
+      grid-template-columns:72px 240px 1fr 300px;
+      height:100vh;
+      min-width:0;
+      filter:brightness(.52) saturate(.86);
+      transform:scale(1.002);
+      pointer-events:none;
+      user-select:none;
+    }
+    .rail{
+      background:var(--rail);
+      border-right:1px solid #111;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:10px;
+      padding:12px 10px;
+      overflow:auto;
+    }
+    .server-dot{
+      width:48px;height:48px;border-radius:18px;
+      background:#202127 center/cover no-repeat;
+      display:grid;place-items:center;
+      color:#fff;font-weight:900;
+      position:relative;
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.05);
+    }
+    .server-dot.home{background:linear-gradient(135deg,#5865f2,#4752c4)}
+    .server-dot.plus{
+      color:#23a55a;
+      font-size:30px;
+      border-radius:16px;
+      background:#202127;
+    }
+    .server-dot.plus:before{
+      content:"";
+      position:absolute;
+      left:-10px;
+      width:4px;
+      height:34px;
+      border-radius:0 6px 6px 0;
+      background:#fff;
+    }
+    .rail-sep{width:32px;height:2px;border-radius:99px;background:#24252b}
+
+    .side{
+      background:var(--side);
+      border-right:1px solid #111;
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+    }
+    .side-search{padding:12px 10px;border-bottom:1px solid #1f2026}
+    .side-search input{
+      width:100%;height:36px;border:0;border-radius:8px;
+      background:#08080a;color:var(--text);
+      padding:0 12px;outline:0;
+    }
+    .nav{padding:10px 8px;display:grid;gap:2px}
+    .nav-row{
+      height:42px;border-radius:8px;
+      display:flex;align-items:center;gap:12px;
+      padding:0 10px;color:var(--muted);font-weight:800;
+    }
+    .nav-row.active{background:#2e3038;color:#fff}
+    .nav-row svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .section-title{
+      font-size:11px;font-weight:900;color:#8790a1;text-transform:uppercase;letter-spacing:.06em;
+      padding:10px 12px 4px;display:flex;justify-content:space-between;
+    }
+    .dm-row{
+      height:44px;margin:0 8px 2px;border-radius:8px;
+      display:flex;align-items:center;gap:10px;padding:0 8px;
+      color:var(--muted);font-weight:750;
+    }
+    .dm-row.active{background:#2e3038;color:#fff}
+    .avatar{
+      width:32px;height:32px;border-radius:50%;background:#2b2d34 center/cover no-repeat;
+      display:grid;place-items:center;font-weight:900;position:relative;flex:0 0 auto;
+    }
+    .avatar:after{
+      content:"";position:absolute;right:-1px;bottom:-1px;
+      width:11px;height:11px;border-radius:50%;background:#23a55a;border:2px solid var(--side);
+    }
+    .account{
+      margin-top:auto;height:56px;background:#17181d;border-top:1px solid #22242b;
+      display:flex;align-items:center;gap:8px;padding:8px;
+    }
+    .account .avatar{width:36px;height:36px}
+    .account b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
+    .account span{display:block;font-size:11px;color:#b5bac1;margin-top:2px}
+
+    .main{
+      background:#18191d;
+      display:flex;
+      flex-direction:column;
+      min-width:0;
+    }
+    .topbar{
+      height:48px;border-bottom:1px solid #111318;
+      display:flex;align-items:center;justify-content:space-between;
+      padding:0 16px;background:#1a1b20;
+    }
+    .topbar b{display:flex;align-items:center;gap:10px}
+    .topbar svg{width:20px;height:20px;fill:none;stroke:#b5bac1;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .fake-center{
+      flex:1;display:grid;place-items:center;text-align:center;color:var(--muted);
+      background:radial-gradient(circle at 50% 35%,rgba(88,101,242,.08),transparent 38%),#18191d;
+    }
+    .fake-center h1{font-size:30px;color:#fff;margin-bottom:8px;letter-spacing:-.03em}
+
+    .right{
+      background:#18191d;border-left:1px solid #111318;padding:18px;
+    }
+    .right-card{height:92px;border-radius:14px;background:#202127;border:1px solid #303238;margin-bottom:12px}
+
+    /* Backdrop */
+    .modal-backdrop{
+      position:fixed;
+      inset:0;
+      z-index:100;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+      background:rgba(0,0,0,.66);
+      backdrop-filter:blur(4px);
+      -webkit-backdrop-filter:blur(4px);
+      animation:fadeIn .14s ease both;
+    }
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+    .modal{
+      width:440px;
+      max-width:calc(100vw - 28px);
+      max-height:min(780px,calc(100vh - 28px));
+      background:var(--modal);
+      border:1px solid var(--border);
+      border-radius:16px;
+      box-shadow:var(--shadow);
+      position:relative;
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      animation:popIn .16s cubic-bezier(.2,.9,.2,1) both;
+    }
+    @keyframes popIn{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+    .close-btn{
+      position:absolute;
+      right:14px;
+      top:14px;
+      width:32px;height:32px;
+      border:0;border-radius:50%;
+      background:transparent;color:#b5bac1;
+      display:grid;place-items:center;
+      cursor:pointer;
+      z-index:5;
+      transition:.12s ease;
+    }
+    .close-btn:hover{background:var(--card);color:#fff}
+    .close-btn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+    .modal-view{
+      display:none;
+      padding:26px 24px 14px;
+      overflow:auto;
+    }
+    .modal-view.active{display:block}
+    .modal h1{
+      font-size:24px;
+      line-height:1.12;
+      text-align:center;
+      font-weight:900;
+      letter-spacing:-.02em;
+      margin:0 34px 10px;
+      color:#fff;
+    }
+    .modal .lead{
+      text-align:center;
+      color:#f2f3f5;
+      line-height:1.35;
+      margin:0 10px 22px;
+      font-weight:600;
+    }
+
+    .choice-list{display:grid;gap:10px}
+    .choice-card{
+      width:100%;
+      min-height:56px;
+      border:1px solid var(--border);
+      border-radius:9px;
+      background:#34363d;
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:0 14px;
+      cursor:pointer;
+      font-weight:850;
+      text-align:left;
+      transition:background .12s ease,border-color .12s ease,transform .12s ease;
+    }
+    .choice-card:hover{
+      background:var(--card-hover);
+      border-color:#545760;
+      transform:translateY(-1px);
+    }
+    .choice-left{display:flex;align-items:center;gap:12px;min-width:0}
+    .choice-icon{
+      width:30px;height:30px;border-radius:10px;
+      background:#24262d;
+      color:#d8dbe2;
+      display:grid;place-items:center;
+      flex:0 0 auto;
+    }
+    .choice-icon svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .choice-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .chevron{width:20px;height:20px;fill:none;stroke:#8b919d;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
+    .label{
+      font-size:12px;
+      font-weight:900;
+      color:#fff;
+      text-transform:uppercase;
+      margin:16px 0 8px;
+    }
+
+    .join-block{
+      margin:16px -24px -14px;
+      padding:16px 24px 14px;
+      border-top:1px solid #393b43;
+      text-align:center;
+      background:#2b2d31;
+    }
+    .join-block h2{font-size:18px;margin-bottom:10px;color:#fff}
+    .gray-btn,.primary-btn,.link-btn{
+      height:44px;
+      border:0;
+      border-radius:8px;
+      font-weight:900;
+      cursor:pointer;
+      transition:.12s ease;
+    }
+    .gray-btn{width:100%;background:#4e5058;color:#fff}
+    .gray-btn:hover{background:#5b5d66}
+    .primary-btn{background:var(--accent);color:#fff;padding:0 18px}
+    .primary-btn:hover{background:var(--accent-hover)}
+    .link-btn{background:transparent;color:#c9cdfb;padding:0 6px}
+    .link-btn:hover{text-decoration:underline}
+
+    .setup-head{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+    .back-btn{
+      width:32px;height:32px;
+      border:0;border-radius:50%;
+      background:transparent;color:#b5bac1;
+      display:grid;place-items:center;
+      cursor:pointer;
+    }
+    .back-btn:hover{background:#3a3c43;color:#fff}
+    .back-btn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .setup-head h1{text-align:left;margin:0;font-size:22px}
+    .muted{text-align:center;color:#b5bac1;font-size:13px;line-height:1.4;margin-bottom:18px}
+    .form-grid{display:grid;gap:13px}
+    .field label{
+      display:block;
+      font-size:12px;
+      text-transform:uppercase;
+      color:#b5bac1;
+      font-weight:900;
+      margin-bottom:7px;
+    }
+    .field input,.field textarea{
+      width:100%;
+      border:1px solid #1e1f24;
+      background:#1e1f24;
+      color:#fff;
+      border-radius:8px;
+      padding:12px;
+      outline:0;
+    }
+    .field textarea{min-height:76px;resize:vertical}
+    .field input:focus,.field textarea:focus{border-color:#5865f2}
+    .server-icon-row{display:flex;align-items:center;gap:12px}
+    .server-preview{
+      width:76px;height:76px;border-radius:50%;
+      background:#313338 center/cover no-repeat;
+      display:grid;place-items:center;
+      font-size:28px;font-weight:900;
+      border:1px solid #454851;
+      flex:0 0 auto;
+    }
+    .hint{font-size:12px;color:#9ca3af;line-height:1.35;margin-top:5px}
+    .error{
+      border:1px solid rgba(242,63,66,.45);
+      background:rgba(242,63,66,.1);
+      color:#ffb4b4;
+      border-radius:8px;
+      padding:10px 12px;
+      font-size:13px;
+      font-weight:750;
+      margin-bottom:12px;
+    }
+    .submit-row{display:flex;justify-content:flex-end;margin-top:18px}
+
+    .join-examples{font-size:13px;color:#b5bac1;margin-top:12px}
+    .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+    .chip{background:#42444d;border-radius:5px;padding:4px 7px;color:#fff;font-size:12px}
+    .discover{
+      margin-top:14px;
+      border-radius:8px;
+      background:#202127;
+      padding:12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      transition:.12s ease;
+    }
+    .discover:hover{background:#24262d}
+    .discover-left{display:flex;gap:10px;align-items:center;text-align:left}
+    .discover-icon{width:34px;height:34px;border-radius:50%;background:#23a55a;display:grid;place-items:center;color:#fff;flex:0 0 auto}
+    .discover-icon svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .discover b{display:block;color:#fff}
+    .discover span{display:block;color:#b5bac1;font-size:12px;margin-top:2px}
+    .footer-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:22px}
+
+    @media(max-width:760px){
+      .app-bg{grid-template-columns:64px 1fr}
+      .side,.right{display:none}
+      .modal-backdrop{align-items:flex-end;padding:0}
+      .modal{width:100%;max-width:100%;border-radius:18px 18px 0 0;max-height:92vh;border-left:0;border-right:0;border-bottom:0}
+      .modal-view{padding:24px 18px 14px}
+      .join-block{margin-left:-18px;margin-right:-18px;padding-left:18px;padding-right:18px}
+    }
   </style>
 </head>
 <body>
-  <div class="app" aria-hidden="true">
+  <div class="app-bg" aria-hidden="true">
     <aside class="rail">
-      <a class="dot home" href="/community"> <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg></a>
-      <div class="sep"></div>
+      <a class="server-dot home" href="/community">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg>
+      </a>
+      <div class="rail-sep"></div>
       {% for s in servers %}
-      <a class="dot" href="/community/servers/{{ s.id }}" title="{{ s.name }}" {% if s.icon_url %}style="background-image:url('{{ s.icon_url }}')"{% endif %}>{% if not s.icon_url %}{{ s.name[:1]|upper }}{% endif %}</a>
+      <a class="server-dot" href="/community/servers/{{ s.id }}" title="{{ s.name }}" {% if s.icon_url %}style="background-image:url('{{ s.icon_url }}')"{% endif %}>{% if not s.icon_url %}{{ s.name[:1]|upper }}{% endif %}</a>
       {% endfor %}
-      <a class="dot plus" href="/community/servers/new">+</a>
+      <a class="server-dot plus" href="/community/servers/new">+</a>
     </aside>
+
     <aside class="side">
-      <div class="search"><input placeholder="Знайти або почати бесіду"></div>
-      <div class="nav"><div class="nav-row active"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>Друзі / ЛС</div></div>
-      <div class="section">Особисті повідомлення <span>+</span></div>
-      <div class="dm active"><div class="avatar">A</div><span>AlexiHub</span></div>
-      <div class="dm"><div class="avatar">S</div><span>server_bot</span></div>
-      <div class="account"><div class="avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}')"{% endif %}>{% if not account.avatar_url %}{{ account.display_name[:1]|upper }}{% endif %}</div><div><b>{{ account.display_name }}</b><span>{{ account.username }}</span></div></div>
+      <div class="side-search"><input placeholder="Знайти або почати бесіду"></div>
+      <div class="nav">
+        <div class="nav-row active">
+          <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>
+          Друзі / ЛС
+        </div>
+      </div>
+      <div class="section-title">Особисті повідомлення <span>+</span></div>
+      <div class="dm-row active"><div class="avatar">A</div><span>AlexiHub</span></div>
+      <div class="dm-row"><div class="avatar">S</div><span>server_bot</span></div>
+      <div class="account">
+        <div class="avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}')"{% endif %}>{% if not account.avatar_url %}{{ account.display_name[:1]|upper }}{% endif %}</div>
+        <div><b>{{ account.display_name }}</b><span>{{ account.username }}</span></div>
+      </div>
     </aside>
-    <main class="main"><div class="top"><b><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Друзі</b><div></div></div><section class="hero"><div><h1>Створи новий сервер</h1><p>Тут буде фон сторінки, як у Discord.</p></div></section></main>
-    <aside class="right"><div class="right-card"></div><div class="right-card"></div><div class="right-card"></div></aside>
+
+    <main class="main">
+      <div class="topbar">
+        <b><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Друзі</b>
+        <div></div>
+      </div>
+      <section class="fake-center">
+        <div>
+          <h1>Створи новий сервер</h1>
+          <p>Меню відкривається поверх сторінки, як у Discord.</p>
+        </div>
+      </section>
+    </main>
+
+    <aside class="right">
+      <div class="right-card"></div>
+      <div class="right-card"></div>
+      <div class="right-card"></div>
+    </aside>
   </div>
 
-  <div class="shade">
-    <section class="modal" role="dialog" aria-modal="true">
-      <a class="close" href="/community" title="Закрити"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></a>
+  <div class="modal-backdrop" id="serverModalBackdrop">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="createTitle" id="serverModal">
+      <a class="close-btn" href="/community" title="Закрити" aria-label="Закрити">
+        <svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </a>
 
-      <div class="view" id="view-start">
-        <h1>Создайте свой сервер</h1>
-        <p class="lead">Ваш сервер — это место, где вы можете тусоваться со своими друзьями. Создайте сервер и начните общаться.</p>
+      <div class="modal-view" id="view-start">
+        <h1 id="createTitle">Створіть свій сервер</h1>
+        <p class="lead">Ваш сервер — це місце, де ви можете тусуватися зі своїми друзями. Створіть сервер і почніть спілкуватися.</p>
+
         <div class="choice-list">
-          <button class="choice js-setup" data-template="Свой сервер"><span class="choice-left"><span class="choice-ico">🧑‍💻</span><span>Свой шаблон</span></span><svg class="arrow" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+          <button class="choice-card js-setup" type="button" data-template="Сервер {{ account.display_name }}">
+            <span class="choice-left">
+              <span class="choice-icon"><svg viewBox="0 0 24 24"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/></svg></span>
+              <span class="choice-name">Свій шаблон</span>
+            </span>
+            <svg class="chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
         </div>
-        <div class="label">Начните с шаблона</div>
+
+        <div class="label">Почніть із шаблону</div>
         <div class="choice-list">
-          <button class="choice js-setup" data-template="Игровой сервер"><span class="choice-left"><span class="choice-ico">🎮</span><span>Игры</span></span><svg class="arrow" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
-          <button class="choice js-setup" data-template="Сервер друзей"><span class="choice-left"><span class="choice-ico">💖</span><span>Друзья</span></span><svg class="arrow" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
-          <button class="choice js-setup" data-template="Учебная группа"><span class="choice-left"><span class="choice-ico">🎒</span><span>Учебная группа</span></span><svg class="arrow" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
-          <button class="choice js-setup" data-template="Школьный клуб"><span class="choice-left"><span class="choice-ico">📘</span><span>Школьный клуб</span></span><svg class="arrow" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+          <button class="choice-card js-setup" type="button" data-template="Ігровий сервер">
+            <span class="choice-left"><span class="choice-icon"><svg viewBox="0 0 24 24"><path d="M6 12h4m-2-2v4"/><path d="M15 13h.01M18 11h.01"/><path d="M17.5 7h-11A4.5 4.5 0 0 0 2 11.5v1A4.5 4.5 0 0 0 6.5 17h11A4.5 4.5 0 0 0 22 12.5v-1A4.5 4.5 0 0 0 17.5 7Z"/></svg></span><span class="choice-name">Ігри</span></span>
+            <svg class="chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <button class="choice-card js-setup" type="button" data-template="Сервер друзів">
+            <span class="choice-left"><span class="choice-icon"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="choice-name">Друзі</span></span>
+            <svg class="chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <button class="choice-card js-setup" type="button" data-template="Навчальна група">
+            <span class="choice-left"><span class="choice-icon"><svg viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/><path d="M22 10v6"/></svg></span><span class="choice-name">Навчальна група</span></span>
+            <svg class="chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <button class="choice-card js-setup" type="button" data-template="Шкільний клуб">
+            <span class="choice-left"><span class="choice-icon"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M4 4v15.5A2.5 2.5 0 0 0 6.5 22H20V4Z"/><path d="M8 8h8"/><path d="M8 12h6"/></svg></span><span class="choice-name">Шкільний клуб</span></span>
+            <svg class="chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
         </div>
-        <div class="bottom-box">
-          <h2>У вас уже есть приглашение?</h2>
-          <button class="gray-btn" type="button" data-view="join">Присоединиться к серверу</button>
+
+        <div class="join-block">
+          <h2>У вас уже є запрошення?</h2>
+          <button class="gray-btn" type="button" data-view="join">Приєднатися до сервера</button>
         </div>
       </div>
 
-      <div class="view" id="view-setup">
-        <div class="setup-head"><button class="back" type="button" data-view="start"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button><h1>Настройте сервер</h1></div>
-        <p class="muted">Дайте серверу название и, если хочешь, поставь иконку. Канал <b>#general</b> создастся автоматически.</p>
+      <div class="modal-view" id="view-setup">
+        <div class="setup-head">
+          <button class="back-btn" type="button" data-view="start" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+          <h1>Налаштуйте сервер</h1>
+        </div>
+        <p class="muted">Дайте серверу назву і, якщо хочеш, постав іконку. Канал <b>#general</b> створиться автоматично.</p>
         {% if error %}<div class="error">{{ error }}</div>{% endif %}
         <form method="post" action="/community/servers/new" class="form-grid">
-          <div class="icon-picker">
+          <div class="server-icon-row">
             <div class="server-preview" id="serverPreview">A</div>
             <div class="field" style="flex:1">
-              <label>Иконка сервера</label>
-              <input name="icon_url" id="iconUrl" placeholder="URL картинки, можно оставить пустым">
-              <div class="hint">Поки тут URL. Завантаження з пристрою можна додати окремо через той самий Cloudinary upload.</div>
+              <label>Іконка сервера</label>
+              <input name="icon_url" id="iconUrl" placeholder="URL картинки, можна залишити пустим">
+              <div class="hint">Поки тут URL. Пізніше можна підключити upload через Cloudinary так само, як аватарки.</div>
             </div>
           </div>
           <div class="field">
-            <label>Название сервера</label>
-            <input name="name" id="serverName" required maxlength="64" value="{{ account.display_name }}'s server" autocomplete="off">
+            <label>Назва сервера</label>
+            <input name="name" id="serverName" required maxlength="64" value="Сервер {{ account.display_name }}" autocomplete="off">
           </div>
           <div class="field">
-            <label>Описание</label>
+            <label>Опис</label>
             <textarea name="description" maxlength="255" placeholder="Про що цей сервер?"></textarea>
           </div>
-          <div class="submit-row"><button class="primary-btn" type="submit">Создать сервер</button></div>
+          <div class="submit-row"><button class="primary-btn" type="submit">Створити сервер</button></div>
         </form>
       </div>
 
-      <div class="view" id="view-join">
-        <div class="setup-head"><button class="back" type="button" data-view="start"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button><h1>Присоединиться к серверу</h1></div>
-        <p class="muted">Введите приглашение, чтобы присоединиться к существующему серверу.</p>
+      <div class="modal-view" id="view-join">
+        <div class="setup-head">
+          <button class="back-btn" type="button" data-view="start" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+          <h1>Приєднатися до сервера</h1>
+        </div>
+        <p class="muted">Введіть запрошення, щоб приєднатися до існуючого сервера.</p>
         {% if join_error %}<div class="error">{{ join_error }}</div>{% endif %}
         <form method="post" action="/community/servers/join" class="form-grid">
           <div class="field">
-            <label>Ссылка-приглашение *</label>
+            <label>Посилання-запрошення *</label>
             <input name="invite" required autofocus placeholder="https://basedate.onrender.com/community/servers/1">
           </div>
-          <div class="join-examples">Приглашения можуть виглядати так:</div>
+          <div class="join-examples">Запрошення можуть виглядати так:</div>
           <div class="chips"><span class="chip">1</span><span class="chip">/community/servers/1</span><span class="chip">https://basedate.onrender.com/community/servers/1</span></div>
           <div class="discover">
-            <div class="discover-left"><div class="discover-icon">🌍</div><div><b>Нет приглашения?</b><span>Пізніше можна зробити discovery сторінку серверів.</span></div></div>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#b5bac1" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+            <div class="discover-left">
+              <div class="discover-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-5"/></svg></div>
+              <div><b>Немає запрошення?</b><span>Пізніше можна зробити сторінку пошуку відкритих серверів.</span></div>
+            </div>
+            <svg class="chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
           </div>
-          <div class="footer-actions"><button class="link-btn" type="button" data-view="start">Назад</button><button class="primary-btn" type="submit">Присоединиться к серверу</button></div>
+          <div class="footer-actions">
+            <button class="link-btn" type="button" data-view="start">Назад</button>
+            <button class="primary-btn" type="submit">Приєднатися до сервера</button>
+          </div>
         </form>
       </div>
     </section>
@@ -131,14 +536,31 @@
 
   <script>
     const initialMode = {{ (mode or 'create')|tojson }};
+    const backdrop = document.getElementById('serverModalBackdrop');
+    const modal = document.getElementById('serverModal');
+
+    function closeModal(){
+      window.location.href = '/community';
+    }
+
     function showView(name){
-      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.modal-view').forEach(v => v.classList.remove('active'));
       const target = document.getElementById('view-' + name);
       if (target) target.classList.add('active');
     }
+
+    backdrop.addEventListener('click', (event) => {
+      if (!modal.contains(event.target)) closeModal();
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') closeModal();
+    });
+
     document.querySelectorAll('[data-view]').forEach(btn => {
       btn.addEventListener('click', () => showView(btn.dataset.view));
     });
+
     document.querySelectorAll('.js-setup').forEach(btn => {
       btn.addEventListener('click', () => {
         const input = document.getElementById('serverName');
@@ -147,15 +569,18 @@
         setTimeout(() => input && input.focus(), 80);
       });
     });
+
     const nameInput = document.getElementById('serverName');
     const iconInput = document.getElementById('iconUrl');
     const preview = document.getElementById('serverPreview');
+
     if (nameInput) {
       nameInput.addEventListener('input', () => {
         nameInput.dataset.touched = '1';
         if (preview && !iconInput.value.trim()) preview.textContent = (nameInput.value.trim()[0] || 'A').toUpperCase();
       });
     }
+
     if (iconInput) {
       iconInput.addEventListener('input', () => {
         const url = iconInput.value.trim();
@@ -169,6 +594,7 @@
         }
       });
     }
+
     if (initialMode === 'join') showView('join');
     else if (initialMode === 'setup') showView('setup');
     else showView('start');
