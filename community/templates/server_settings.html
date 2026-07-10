@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Налаштування сервера — {{ server.name }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#1e1f24;--left:#15161a;--panel:#2b2d31;--panel2:#313338;--line:#34363d;--muted:#b5bac1;--muted2:#8b909b;--text:#f2f3f5;--accent:#5865f2;--danger:#f23f42;--green:#23a55a;--font:'Inter',system-ui,-apple-system,sans-serif;}
+    *{box-sizing:border-box;margin:0;padding:0} body{min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;overflow:hidden} a{color:inherit;text-decoration:none} button,input,textarea{font:inherit}
+    .settings-app{height:100vh;display:grid;grid-template-columns:minmax(240px,32vw) minmax(0,1fr);}
+    .settings-sidebar{background:var(--left);display:flex;justify-content:flex-end;border-right:1px solid #101114;overflow:auto;padding:34px 20px 40px;}
+    .side-inner{width:260px}.side-kicker{font-size:11px;text-transform:uppercase;color:#8b909b;font-weight:900;letter-spacing:.06em;margin:0 0 8px 10px}.side-item{height:36px;border-radius:5px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 10px;color:#b5bac1;font-weight:700;margin-bottom:2px;cursor:pointer}.side-item:hover{background:#2b2d31;color:#fff}.side-item.active{background:#3a3c43;color:#fff}.side-item.danger{color:#ff7777}.side-sep{height:1px;background:#2b2d34;margin:12px 10px 14px}.external{opacity:.7}
+    .settings-main{position:relative;overflow:auto;padding:56px 112px 80px 44px}.settings-close{position:fixed;right:48px;top:56px;display:flex;flex-direction:column;align-items:center;gap:7px;color:#b5bac1;font-size:12px;font-weight:800}.close-btn{width:38px;height:38px;border-radius:50%;border:2px solid #6b7280;background:transparent;color:#d1d5db;display:grid;place-items:center;cursor:pointer}.close-btn:hover{background:#2b2d31;color:#fff}.close-btn svg{width:20px;height:20px;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}.content{max-width:980px;display:grid;grid-template-columns:minmax(0,620px) 300px;gap:42px;align-items:start}.settings-title{font-size:22px;font-weight:900;margin-bottom:8px}.settings-desc{color:#d1d5db;font-size:13px;line-height:1.45;margin-bottom:28px}.form-section{border-bottom:1px solid var(--line);padding-bottom:28px;margin-bottom:28px}.field{display:grid;gap:8px;margin-bottom:18px}.field label,.section-title{font-weight:900;color:#fff}.field input,.field textarea{width:100%;background:#111214;border:1px solid #3b3d45;border-radius:6px;color:#fff;outline:none;padding:11px 12px}.field input:focus,.field textarea:focus{border-color:var(--accent)}.field textarea{min-height:88px;resize:vertical}.hint{color:#9ca3af;font-size:13px;line-height:1.45}.blue-btn{border:0;border-radius:6px;background:var(--accent);color:#fff;font-weight:900;padding:10px 14px;cursor:pointer}.blue-btn:hover{background:#4752c4}.gray-btn{border:0;border-radius:6px;background:#4e5058;color:#fff;font-weight:900;padding:10px 14px;cursor:pointer}.gray-btn:hover{background:#5b5d66}.danger-link{color:#ff7777;font-weight:900}.icon-row{display:flex;align-items:center;gap:16px;margin-top:12px}.server-icon-preview{width:74px;height:74px;border-radius:24px;background:#111 center/cover no-repeat;display:grid;place-items:center;font-size:22px;font-weight:950;border:1px solid rgba(255,255,255,.08);overflow:hidden}.server-icon-preview.has-image{font-size:0}.banner-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:14px}.banner-choice{height:58px;border:0;border-radius:8px;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);position:relative}.banner-choice.active{outline:2px solid var(--accent);outline-offset:2px}.feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.feature-input{height:38px;background:#111214;border:1px solid #3b3d45;border-radius:6px;color:#fff;padding:0 10px}.save-bar{position:sticky;bottom:0;margin-top:24px;background:#111214;border:1px solid #2b2d34;border-radius:10px;padding:10px;display:flex;align-items:center;justify-content:space-between;gap:14px;box-shadow:0 18px 60px rgba(0,0,0,.35)}.save-bar small{color:#b5bac1}.preview-card{position:sticky;top:60px;background:#2b2d31;border:1px solid #3b3d45;border-radius:14px;overflow:hidden;box-shadow:0 18px 50px rgba(0,0,0,.22)}.preview-banner{height:98px;background:linear-gradient(135deg,#111,#555)}.preview-body{padding:0 14px 14px}.preview-icon{width:70px;height:70px;border-radius:20px;background:#111 center/cover no-repeat;border:6px solid #2b2d31;margin-top:-34px;display:grid;place-items:center;font-weight:950;font-size:18px}.preview-name{font-weight:950;margin-top:10px;font-size:16px}.preview-meta{color:#b5bac1;font-size:12px;margin-top:3px}.preview-desc{color:#b5bac1;font-size:12px;line-height:1.35;margin-top:12px}.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(12px);opacity:0;background:#111214;border:1px solid #3b3d45;color:#fff;border-radius:12px;padding:11px 14px;font-weight:850;transition:.18s ease;pointer-events:none}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    @media(max-width:900px){body{overflow:auto}.settings-app{height:auto;min-height:100vh;grid-template-columns:1fr}.settings-sidebar{display:none}.settings-main{padding:28px 18px 90px}.settings-close{right:18px;top:18px}.settings-close span{display:none}.content{grid-template-columns:1fr}.preview-card{position:static}.save-bar{position:fixed;left:12px;right:12px;bottom:12px}.banner-grid{grid-template-columns:repeat(2,1fr)}.feature-grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="settings-app">
+    <aside class="settings-sidebar">
+      <div class="side-inner">
+        <div class="side-kicker">{{ server.name }}</div>
+        <div class="side-item active">Профіль сервера</div>
+        <div class="side-item">Тег сервера</div>
+        <div class="side-item">Тема сервера <span style="font-size:10px;background:#f23f42;color:white;border-radius:99px;padding:2px 5px">НОВОЕ</span></div>
+        <div class="side-item">Вовлечённость</div>
+        <div class="side-item">Бонусы буста</div>
+        <div class="side-sep"></div>
+        <div class="side-kicker">Реакции</div>
+        <div class="side-item">Эмодзи</div><div class="side-item">Стикеры</div><div class="side-item">Звуковая панель</div>
+        <div class="side-sep"></div>
+        <div class="side-kicker">Люди</div>
+        <div class="side-item">Участники <span class="external">↗</span></div><div class="side-item">Роли</div><div class="side-item">Приглашения</div><div class="side-item">Доступ</div>
+        <div class="side-sep"></div>
+        <div class="side-kicker">Приложения</div><div class="side-item">Интеграция</div><div class="side-item">Каталог приложений <span class="external">↗</span></div>
+        <div class="side-sep"></div>
+        <div class="side-kicker">Модерация</div><div class="side-item">Настройка безопасности</div><div class="side-item">Журнал аудита</div><div class="side-item">Баны</div>
+        <div class="side-sep"></div><div class="side-item">Шаблон сервера</div><div class="side-item danger">Удалить сервер <span>🗑</span></div>
+      </div>
+    </aside>
+    <main class="settings-main">
+      <a class="settings-close" href="/community/servers/{{ server.id }}"><button class="close-btn" type="button" aria-label="Закрити"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button><span>ESC</span></a>
+      <form id="server-settings-form" class="content" method="post" action="/community/servers/{{ server.id }}/settings">
+        <input type="hidden" name="redirect_to" value="{{ request.url.path }}">
+        <input id="server-icon-url" type="hidden" name="icon_url" value="{{ server.icon_url or '' }}">
+        <section>
+          <h1 class="settings-title">Профіль сервера</h1>
+          <p class="settings-desc">Налаштуй відображення сервера в запрошеннях, списку серверів і повідомленнях. Іконку можна завантажити прямо з пристрою.</p>
+          <div class="form-section">
+            <div class="field"><label>Имя</label><input id="server-name" name="name" value="{{ server.name }}" required maxlength="64"></div>
+          </div>
+          <div class="form-section">
+            <div class="section-title">Значок</div>
+            <p class="hint">Рекомендується квадратне зображення мінімум 512×512.</p>
+            <div class="icon-row">
+              <div id="server-icon-preview" class="server-icon-preview {% if server.icon_url %}has-image{% endif %}" style="{% if server.icon_url %}background-image:url('{{ server.icon_url }}'){% endif %}">{{ (server.name or 'S')[:2] }}</div>
+              <div><button id="server-icon-btn" class="blue-btn" type="button">Змінити значок сервера</button><input id="server-icon-file" type="file" accept="image/*" hidden><p id="upload-hint" class="hint" style="margin-top:8px">Файл піде через Cloudinary/local upload endpoint, у базу пишеться тільки URL.</p></div>
+            </div>
+          </div>
+          <div class="form-section">
+            <div class="section-title">Баннер</div>
+            <div class="banner-grid" id="banner-grid">
+              <button type="button" class="banner-choice active" data-bg="linear-gradient(135deg,#111,#555)" style="background:linear-gradient(135deg,#111,#555)"></button>
+              <button type="button" class="banner-choice" data-bg="linear-gradient(135deg,#ff2e9f,#ff6ad5)" style="background:linear-gradient(135deg,#ff2e9f,#ff6ad5)"></button>
+              <button type="button" class="banner-choice" data-bg="linear-gradient(135deg,#ff2222,#ff6b5f)" style="background:linear-gradient(135deg,#ff2222,#ff6b5f)"></button>
+              <button type="button" class="banner-choice" data-bg="linear-gradient(135deg,#ff7a18,#ffbd4a)" style="background:linear-gradient(135deg,#ff7a18,#ffbd4a)"></button>
+              <button type="button" class="banner-choice" data-bg="linear-gradient(135deg,#ffe259,#ffa751)" style="background:linear-gradient(135deg,#ffe259,#ffa751)"></button>
+              <button type="button" class="banner-choice" data-bg="linear-gradient(135deg,#7f35bd,#c471ed)" style="background:linear-gradient(135deg,#7f35bd,#c471ed)"></button>
+              <button type="button" class="banner-choice" data-bg="linear-gradient(135deg,#20c6ff,#4facfe)" style="background:linear-gradient(135deg,#20c6ff,#4facfe)"></button>
+              <button type="button" class="banner-choice" data-bg="linear-gradient(135deg,#43e97b,#38f9d7)" style="background:linear-gradient(135deg,#43e97b,#38f9d7)"></button>
+              <button type="button" class="banner-choice" data-bg="linear-gradient(135deg,#3a7d0f,#7ed957)" style="background:linear-gradient(135deg,#3a7d0f,#7ed957)"></button>
+              <button type="button" class="banner-choice" data-bg="linear-gradient(135deg,#222,#aaa)" style="background:linear-gradient(135deg,#222,#aaa)"></button>
+            </div>
+            <p class="hint" style="margin-top:10px">Поки банер — тільки preview-колір, без нової колонки в базі. Іконка сервера зберігається реально.</p>
+          </div>
+          <div class="form-section">
+            <div class="section-title">Особенности</div>
+            <p class="hint">Додай до 5 інтересів сервера. Поки це декоративний блок.</p>
+            <div class="feature-grid"><input class="feature-input" placeholder="🙂"><input class="feature-input" placeholder="🎮"><input class="feature-input" placeholder="🎧"><input class="feature-input" placeholder="💬"><input class="feature-input" placeholder="⚡"></div>
+          </div>
+          <div class="form-section">
+            <div class="field"><label>Описание</label><textarea id="server-description" name="description" maxlength="255" placeholder="Розкажіть миру про цей сервер.">{{ server.description or '' }}</textarea></div>
+          </div>
+          <div class="save-bar"><small>Є незбережені зміни?</small><div style="display:flex;gap:8px"><a class="gray-btn" href="/community/servers/{{ server.id }}">Скасувати</a><button class="blue-btn" type="submit">Зберегти</button></div></div>
+        </section>
+        <aside class="preview-card">
+          <div id="preview-banner" class="preview-banner"></div>
+          <div class="preview-body"><div id="preview-icon" class="preview-icon" style="{% if server.icon_url %}background-image:url('{{ server.icon_url }}'){% endif %}">{{ (server.name or 'S')[:2] }}</div><div id="preview-name" class="preview-name">{{ server.name }}</div><div class="preview-meta"><span style="color:#23a55a">●</span> 1 в сети · {{ members_count }} учасників</div><div id="preview-desc" class="preview-desc">{{ server.description or 'Опис сервера буде показаний тут.' }}</div></div>
+        </aside>
+      </form>
+    </main>
+  </div>
+  <div id="toast" class="toast">Готово</div>
+  <script>
+    const nameInput=document.getElementById('server-name'); const descInput=document.getElementById('server-description'); const previewName=document.getElementById('preview-name'); const previewDesc=document.getElementById('preview-desc'); const iconBtn=document.getElementById('server-icon-btn'); const fileInput=document.getElementById('server-icon-file'); const iconUrl=document.getElementById('server-icon-url'); const iconPreview=document.getElementById('server-icon-preview'); const previewIcon=document.getElementById('preview-icon'); const toast=document.getElementById('toast');
+    function showToast(t){toast.textContent=t; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'),1600)}
+    function initials(v){return (v||'S').trim().slice(0,2).toUpperCase()||'S'}
+    nameInput?.addEventListener('input',()=>{previewName.textContent=nameInput.value||'Server'; if(!iconUrl.value){iconPreview.textContent=initials(nameInput.value); previewIcon.textContent=initials(nameInput.value)}});
+    descInput?.addEventListener('input',()=>{previewDesc.textContent=descInput.value||'Опис сервера буде показаний тут.'});
+    document.querySelectorAll('.banner-choice').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.banner-choice').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); document.getElementById('preview-banner').style.background=btn.dataset.bg;}));
+    iconBtn?.addEventListener('click',()=>fileInput.click());
+    fileInput?.addEventListener('change',async()=>{const file=fileInput.files&&fileInput.files[0]; if(!file)return; const local=URL.createObjectURL(file); iconPreview.style.backgroundImage=`url('${local}')`; previewIcon.style.backgroundImage=`url('${local}')`; iconPreview.classList.add('has-image'); previewIcon.textContent=''; iconPreview.textContent=''; const fd=new FormData(); fd.append('file',file); iconBtn.disabled=true; iconBtn.textContent='Завантаження...'; try{const r=await fetch('/community/api/upload-image',{method:'POST',body:fd}); const j=await r.json(); if(j&&j.ok&&j.url){iconUrl.value=j.url; iconPreview.style.backgroundImage=`url('${j.url}')`; previewIcon.style.backgroundImage=`url('${j.url}')`; showToast('Іконку завантажено');}else{showToast('Не вдалося завантажити');}}catch(e){showToast('Помилка upload');}finally{iconBtn.disabled=false; iconBtn.textContent='Змінити значок сервера';}});
+    window.addEventListener('keydown',e=>{if(e.key==='Escape') location.href='/community/servers/{{ server.id }}';});
+  </script>
+</body>
+</html>
