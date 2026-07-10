@@ -271,6 +271,34 @@ async def list_pending_requests_with_requester(db: AsyncSession, account_id: int
     return items
 
 
+
+async def list_pending_sent_with_addressee(db: AsyncSession, account_id: int) -> list[dict]:
+    """Pending outgoing requests, each paired with the addressee Account -- used on the friends page."""
+    result = await db.execute(
+        select(Friendship)
+        .where(Friendship.requester_id == account_id, Friendship.status == "pending")
+        .order_by(Friendship.created_at.desc())
+    )
+    pending = list(result.scalars().all())
+
+    items = []
+    for fr in pending:
+        addressee = await get_account_by_id(db, fr.addressee_id)
+        items.append({"friendship_id": fr.id, "addressee": addressee, "created_at": fr.created_at})
+    return items
+
+
+async def cancel_pending_friend_request(db: AsyncSession, friendship_id: int, requester_id: int) -> bool:
+    """Requester can cancel an outgoing pending friend request."""
+    result = await db.execute(select(Friendship).where(Friendship.id == friendship_id))
+    friendship = result.scalar_one_or_none()
+    if not friendship or friendship.requester_id != requester_id or friendship.status != "pending":
+        return False
+    await db.delete(friendship)
+    await db.commit()
+    return True
+
+
 async def list_friends(db: AsyncSession, account_id: int) -> list[Account]:
     result = await db.execute(
         select(Friendship).where(
