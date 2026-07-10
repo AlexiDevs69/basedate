@@ -1759,6 +1759,11 @@ document.addEventListener('DOMContentLoaded',()=>{
   function closeFull(){let ov=$('#ah-v3-overlay'); if(ov)ov.classList.remove('open')}
   document.addEventListener('click',function(e){
     if(e.target.closest('#ah-v3-mini,#ah-v3-overlay')) return;
+    // Direct message buttons must navigate to chat, not open mini-profile.
+    // This is needed because the whole friend row is a mini-profile trigger.
+    const directDmButton = e.target.closest('a.friend-icon-btn[href*="/community/dm/"], .friend-actions a[href*="/community/dm/"]');
+    if (directDmButton) { closeMini(); return; }
+
     const bad=e.target.closest('.account-actions,.user-actions,.top-actions,.msg-actions,.server-menu,.modal-backdrop,form,input,textarea,select,button');
     if(bad) return;
 
