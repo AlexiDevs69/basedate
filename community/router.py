@@ -155,10 +155,23 @@ class RealtimeChannelManager:
         self.typing: dict[tuple[int, int], dict[int, dict]] = {}
         self.lock = asyncio.Lock()
 
-    async def connect(self, key: tuple[int, int], account_id: int, websocket: WebSocket) -> None:
+    def _account_connection_count_unlocked(self, account_id: int) -> int:
+        total = 0
+        for users in self.connections.values():
+            total += len(users.get(account_id, set()))
+        return total
+
+    async def connect(self, key: tuple[int, int], account_id: int, websocket: WebSocket, profile: dict | None = None) -> None:
         await websocket.accept()
         async with self.lock:
             self.connections.setdefault(key, {}).setdefault(account_id, set()).add(websocket)
+        await self.broadcast(key, {
+            "type": "presence",
+            "account_id": account_id,
+            "online": True,
+            "status": (profile or {}).get("account_status", "online"),
+            "username": (profile or {}).get("username", ""),
+        })
 
     async def disconnect(self, key: tuple[int, int], account_id: int, websocket: WebSocket) -> None:
         async with self.lock:
@@ -169,11 +182,18 @@ class RealtimeChannelManager:
                     users.pop(account_id, None)
             if users == {}:
                 self.connections.pop(key, None)
+            still_online = self._account_connection_count_unlocked(account_id) > 0
             if key in self.typing:
                 self.typing[key].pop(account_id, None)
                 if not self.typing[key]:
                     self.typing.pop(key, None)
         await self.broadcast_typing(key)
+        await self.broadcast(key, {
+            "type": "presence",
+            "account_id": account_id,
+            "online": still_online,
+            "status": "online" if still_online else "offline",
+        })
 
     async def broadcast(self, key: tuple[int, int], payload: dict) -> None:
         async with self.lock:
@@ -822,7 +842,7 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
         profile = _account_payload(account)
 
     key = (server_id, channel_id)
-    await realtime_channels.connect(key, account_id, websocket)
+    await realtime_channels.connect(key, account_id, websocket, profile)
 
     try:
         while True:
@@ -1028,7 +1048,7 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
 
     # Reuse the same lightweight manager. key (0, thread_id) cannot collide with real server_id.
     key = (0, thread_id)
-    await realtime_channels.connect(key, account_id, websocket)
+    await realtime_channels.connect(key, account_id, websocket, profile)
 
     try:
         while True:
