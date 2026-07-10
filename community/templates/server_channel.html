@@ -621,6 +621,13 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
 .member-row,.msg-avatar,.msg-name,.avatar,.visual-name,.account-panel,.user-panel,.dm-item,.profile-card,.profile-click,.mini-profile-trigger{cursor:pointer!important}
 @media(max-width:820px){.ah-v3-mini{width:min(330px,calc(100vw - 24px))}.ah-v3-overlay{align-items:flex-end;padding:0}.ah-v3-full{width:100%;max-height:88vh;border-radius:22px 22px 0 0;grid-template-columns:1fr;overflow:auto}.ah-v3-full-left{min-height:auto}.ah-v3-full-left-inner{padding:108px 20px 20px}.ah-v3-full-right{padding:18px 20px 22px}.ah-v3-full-banner{height:130px}.ah-v3-full-avatar{width:94px;height:94px}}
 
+
+
+/* === AlexiHub Discord-like User Settings Modal === */
+.ah-settings-backdrop{position:fixed;inset:0;z-index:26000;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.72);backdrop-filter:blur(3px);color:#f2f3f5;font-family:var(--font-sans,Inter,system-ui,sans-serif)}
+.ah-settings-backdrop.open{display:flex;animation:ahFade .14s ease both}.ah-settings-shell{width:min(1180px,calc(100vw - 64px));height:min(760px,calc(100vh - 72px));background:#1e1f24;border:1px solid #313338;border-radius:18px;box-shadow:0 30px 100px rgba(0,0,0,.65);display:grid;grid-template-columns:260px 1fr;overflow:hidden;position:relative}.ah-settings-sidebar{background:#191a1f;border-right:1px solid #2d2f36;padding:18px 12px;overflow:auto}.ah-settings-me{display:flex;align-items:center;gap:10px;padding:0 8px 14px;border-bottom:1px solid #2b2d33;margin-bottom:12px}.ah-settings-avatar{width:42px;height:42px;border-radius:50%;background:#2b2d31 center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-weight:900;border:2px solid #111214;position:relative;flex:0 0 auto}.ah-settings-me strong{display:block;font-size:14px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}.ah-settings-me span{display:block;font-size:12px;color:#9ca3af;margin-top:2px}.ah-settings-search{height:36px;width:100%;border:1px solid #3b3d45;background:#111214;border-radius:8px;color:#dbdee1;padding:0 12px;margin:0 0 12px;outline:none}.ah-settings-search:focus{border-color:#5865f2}.ah-settings-group{margin:14px 0}.ah-settings-label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#7d828c;font-weight:800;padding:0 8px 7px}.ah-settings-nav{width:100%;height:34px;border:0;border-radius:7px;background:transparent;color:#b5bac1;padding:0 9px;display:flex;align-items:center;gap:10px;text-align:left;font-weight:650;font-size:14px;cursor:pointer}.ah-settings-nav svg{width:18px;height:18px;flex:0 0 auto;color:#aeb3bd}.ah-settings-nav:hover{background:#2b2d31;color:#f2f3f5}.ah-settings-nav.active{background:#3a3c43;color:#fff}.ah-settings-nav.danger{color:#ff7b7b}.ah-settings-nav.danger:hover{background:rgba(242,63,66,.12);color:#ff8f8f}.ah-settings-divider{height:1px;background:#2b2d33;margin:12px 8px}.ah-settings-version{font-size:10px;color:#5f6570;padding:12px 8px 4px;line-height:1.4}.ah-settings-main{overflow:auto;padding:0 0 42px;background:#1e1f24}.ah-settings-top{height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;border-bottom:1px solid transparent;position:sticky;top:0;background:rgba(30,31,36,.94);backdrop-filter:blur(8px);z-index:2}.ah-settings-top h2{font-size:15px;margin:0;font-weight:900}.ah-settings-close{width:34px;height:34px;border-radius:50%;border:1px solid #4a4d55;background:transparent;color:#b5bac1;font-size:22px;line-height:1;cursor:pointer}.ah-settings-close:hover{background:#2b2d31;color:#fff}.ah-settings-page{display:none;max-width:760px;margin:0 auto;padding:58px 28px}.ah-settings-page.active{display:block}.ah-settings-page h1{font-size:25px;line-height:1.15;margin:0 0 34px;color:#fff;letter-spacing:-.03em}.ah-settings-section{padding:0 0 28px;margin:0 0 28px;border-bottom:1px solid #303238}.ah-settings-row{display:grid;grid-template-columns:220px 1fr auto;gap:16px;align-items:center;min-height:56px}.ah-settings-row+.ah-settings-row{margin-top:6px}.ah-settings-row label,.ah-settings-row .label{font-size:14px;font-weight:900;color:#f2f3f5}.ah-settings-value{color:#dbdee1;font-weight:700;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ah-settings-muted{color:#9ca3af;font-size:13px;line-height:1.45}.ah-settings-btn{border:0;border-radius:7px;background:#4e5058;color:#fff;font-weight:850;padding:10px 14px;cursor:pointer}.ah-settings-btn:hover{background:#5b5d66}.ah-settings-btn.primary{background:#5865f2}.ah-settings-btn.primary:hover{background:#4752c4}.ah-settings-btn.danger{background:#da373c}.ah-settings-btn.danger:hover{background:#a12828}.ah-settings-input,.ah-settings-textarea{width:100%;background:#111214;border:1px solid #3b3d45;border-radius:8px;color:#f2f3f5;padding:10px 12px;outline:none;font:inherit}.ah-settings-input:focus,.ah-settings-textarea:focus{border-color:#5865f2}.ah-settings-textarea{min-height:86px;resize:vertical}.ah-settings-form{display:grid;gap:14px}.ah-settings-formline{display:grid;grid-template-columns:160px 1fr;gap:16px;align-items:center}.ah-settings-card{background:#2b2d31;border:1px solid #353741;border-radius:14px;padding:16px}.ah-settings-card h3{margin:0 0 6px;font-size:16px}.ah-settings-card p{margin:0;color:#aeb3bd;font-size:13px;line-height:1.45}.ah-settings-action-list{display:grid;gap:10px}.ah-settings-action{display:flex;align-items:center;justify-content:space-between;gap:18px;background:#2b2d31;border:1px solid #353741;border-radius:12px;padding:14px 16px}.ah-settings-action b{display:block;font-size:14px}.ah-settings-action span{display:block;color:#9ca3af;font-size:12px;margin-top:2px}.ah-settings-good{display:flex;gap:13px;background:rgba(35,165,90,.1);border-radius:12px;padding:15px;border:1px solid rgba(35,165,90,.18)}.ah-settings-good .dot{width:32px;height:32px;border-radius:10px;background:#23a55a;display:flex;align-items:center;justify-content:center;font-weight:900}.ah-settings-placeholder{height:260px;border:1px dashed #3f424b;border-radius:14px;display:grid;place-items:center;color:#8b919d;text-align:center;padding:20px;background:#202126}.ah-settings-tabtitle{font-size:22px;font-weight:900;margin-bottom:8px}.ah-settings-toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);opacity:0;z-index:27000;background:#111214;border:1px solid #3b3d45;border-radius:12px;color:#fff;padding:12px 16px;font-weight:800;box-shadow:0 18px 60px rgba(0,0,0,.45);pointer-events:none}.ah-settings-toast.show{animation:ahToast 1.8s ease both}@keyframes ahFade{from{opacity:0}to{opacity:1}}@keyframes ahToast{0%{opacity:0;transform:translateX(-50%) translateY(20px)}12%,82%{opacity:1;transform:translateX(-50%) translateY(0)}100%{opacity:0;transform:translateX(-50%) translateY(20px)}}
+@media(max-width:860px){.ah-settings-shell{width:100vw;height:100vh;border-radius:0;border:0;grid-template-columns:1fr}.ah-settings-sidebar{display:none}.ah-settings-main{height:100vh}.ah-settings-top{padding:0 18px}.ah-settings-page{padding:32px 18px 80px}.ah-settings-row{grid-template-columns:1fr;gap:7px}.ah-settings-value{text-align:left}.ah-settings-formline{grid-template-columns:1fr}.ah-settings-btn{width:max-content}}
+
 </style>
 </head>
 <body>
@@ -656,7 +663,7 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
   <aside class="server-sidebar">
     <div class="server-head"><button id="server-head-btn" type="button" class="server-head-btn" onclick="toggleServerMenu(event)"><span>{{ server.name }}</span><span class="server-arrow">⌄</span></button><div id="server-menu" class="server-menu"><button type="button" class="menu-item" onclick="openModal('invite-modal')"><span>Invite People</span><span class="menu-ico">👥</span></button>{% if can_manage %}<button type="button" class="menu-item" onclick="openModal('settings-modal')"><span>Server Settings</span><span class="menu-ico">⚙</span></button><button type="button" class="menu-item" onclick="openModal('channel-modal')"><span>Create Channel</span><span class="menu-ico">＋</span></button>{% endif %}<div class="menu-divider"></div><button id="copy-server-id-btn" type="button" class="menu-item" onclick="copyServerId('{{ server.id }}')"><span>Copy Server ID</span><span class="menu-ico">ID</span></button>{% if not can_manage %}<form class="menu-form danger" method="post" action="/community/servers/{{ server.id }}/leave" onsubmit="return confirm('Покинути сервер {{ server.name }}?');"><button type="submit"><span>Leave Server</span><span class="menu-ico">⎋</span></button></form>{% endif %}</div></div>
     <div class="sidebar-scroll">{% if server.description %}<div class="server-desc">{{ server.description }}</div>{% endif %}<a href="/community/servers/{{ server.id }}" class="chan-link">⌂ Огляд</a><div class="sidebar-label-row"><div class="sidebar-label">Канали</div>{% if can_manage %}<button type="button" class="sidebar-plus" onclick="openModal('channel-modal')" title="Створити канал">+</button>{% endif %}</div>{% for ch in channels %}<a href="/community/servers/{{ server.id }}/channel/{{ ch.id }}" class="chan-link {{ 'active' if ch.id == channel.id else '' }}"># {{ ch.name }}</a>{% endfor %}</div>
-    <div class="account-panel mini-profile-trigger" data-mini-username="{{ account.username|e }}" data-mini-avatar="{{ account.avatar_url or '' }}" data-mini-role="{{ account.role_label or 'online' }}" data-mini-effect="{{ account.name_effect or 'none' }}" data-mini-font="{{ account.name_font or 'default' }}" data-mini-c1="{{ account.role_color_start or '#f5576c' }}" data-mini-c2="{{ account.role_color_end or '#7367f0' }}" data-mini-profile="/community/profile/{{ account.username }}"><span class="account-avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}');"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}</span><span class="account-meta"><span class="visual-name account-name name-{{ account.name_effect or 'none' }} font-{{ account.name_font or 'default' }}" style="--name-c1: {{ account.role_color_start or '#f5576c' }}; --name-c2: {{ account.role_color_end or '#7367f0' }};">{{ account.username }}</span><span class="account-status">online</span></span><span class="account-actions"><button class="voice-control" data-audio-kind="mic" type="button" onclick="event.stopPropagation();toggleAudioControl(this,'mic')" title="Mute"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button><button class="voice-control" data-audio-kind="headphones" type="button" onclick="event.stopPropagation();toggleAudioControl(this,'headphones')" title="Deafen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg></button><a href="/community/settings" onclick="event.stopPropagation()" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.4 1.08V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.08-.4H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6A1.65 1.65 0 0 0 10.4 3V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 16 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.15.32.36.6.6 1 .26.25.64.4 1.08.4H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51.6z"/></svg></a></span></div>
+    <div class="account-panel mini-profile-trigger" data-mini-username="{{ account.username|e }}" data-mini-avatar="{{ account.avatar_url or '' }}" data-mini-role="{{ account.role_label or 'online' }}" data-mini-effect="{{ account.name_effect or 'none' }}" data-mini-font="{{ account.name_font or 'default' }}" data-mini-c1="{{ account.role_color_start or '#f5576c' }}" data-mini-c2="{{ account.role_color_end or '#7367f0' }}" data-mini-profile="/community/profile/{{ account.username }}"><span class="account-avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}');"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}</span><span class="account-meta"><span class="visual-name account-name name-{{ account.name_effect or 'none' }} font-{{ account.name_font or 'default' }}" style="--name-c1: {{ account.role_color_start or '#f5576c' }}; --name-c2: {{ account.role_color_end or '#7367f0' }};">{{ account.username }}</span><span class="account-status">online</span></span><span class="account-actions"><button class="voice-control" data-audio-kind="mic" type="button" onclick="event.stopPropagation();toggleAudioControl(this,'mic')" title="Mute"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button><button class="voice-control" data-audio-kind="headphones" type="button" onclick="event.stopPropagation();toggleAudioControl(this,'headphones')" title="Deafen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg></button><button type="button" onclick="event.stopPropagation();openUserSettings()" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.4 1.08V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.08-.4H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6A1.65 1.65 0 0 0 10.4 3V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 16 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.15.32.36.6.6 1 .26.25.64.4 1.08.4H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51.6z"/></svg></button></span></div>
   </aside>
   <aside class="members-sidebar">
     <div class="members-title">Учасники — {{ members|length }}</div>
@@ -1231,6 +1238,136 @@ document.addEventListener('DOMContentLoaded',()=>{
     document.querySelectorAll('.ah-v3-status-btn').forEach(btn=>btn.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();let s=btn.dataset.presence;if(typeof setPresenceStatus==='function')setPresenceStatus(s); if(active)active.status=s; let st=$('#ah-v3-status'); if(st)st.className='ah-v3-status '+s;}));
   });
   document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeMini();closeFull();}});
+})();
+</script>
+
+
+<svg width="0" height="0" style="position:absolute;visibility:hidden" aria-hidden="true">
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="i-server" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="6" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="4" y="14" width="16" height="6" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 7h.01M8 17h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></symbol>
+  <symbol id="i-gift" viewBox="0 0 24 24"><path d="M20 12v10H4V12M2 7h20v5H2zM12 22V7M12 7H7.5A2.5 2.5 0 1 1 10 4.5C10 6 12 7 12 7zm0 0h4.5A2.5 2.5 0 1 0 14 4.5C14 6 12 7 12 7z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-code" viewBox="0 0 24 24"><path d="m16 18 6-6-6-6M8 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="7" r="4" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 20h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="9" cy="7" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.4 1.08V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.08-.4H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .4-1.08V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 16 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.15.32.36.6.6 1 .26.25.64.4 1.08.4H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51.6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" fill="none" stroke="currentColor" stroke-width="2"/><path d="m21 21-4.35-4.35" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+</svg>
+
+
+<div id="ah-user-settings" class="ah-settings-backdrop" onclick="if(event.target===this)closeUserSettings()" aria-hidden="true">
+  <div class="ah-settings-shell" role="dialog" aria-modal="true" aria-label="User settings">
+    <aside class="ah-settings-sidebar">
+      <div class="ah-settings-me">
+        <div class="ah-settings-avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}')"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}</div>
+        <div><strong>{{ account.username }}</strong><span>Редагувати профіль</span></div>
+      </div>
+      <input class="ah-settings-search" placeholder="Пошук" oninput="ahSettingsFilter(this.value)">
+      <div class="ah-settings-group">
+        <button class="ah-settings-nav active" data-settings-tab="account" onclick="showSettingsTab('account')"><svg><use href="#i-user"></use></svg>Учётная запись</button>
+        <button class="ah-settings-nav" data-settings-tab="profile" onclick="showSettingsTab('profile')"><svg><use href="#i-edit"></use></svg>Профіль</button>
+        <button class="ah-settings-nav" data-settings-tab="security" onclick="showSettingsTab('security')"><svg><use href="#i-shield"></use></svg>Пароль и безопасность</button>
+        <button class="ah-settings-nav" data-settings-tab="privacy" onclick="showSettingsTab('privacy')"><svg><use href="#i-users"></use></svg>Данные и конфиденциальность</button>
+      </div>
+      <div class="ah-settings-group">
+        <div class="ah-settings-label">Взаимодействие</div>
+        <button class="ah-settings-nav" data-settings-tab="voice" onclick="showSettingsTab('voice')"><svg><use href="#i-mic"></use></svg>Голос и видео</button>
+        <button class="ah-settings-nav" data-settings-tab="appearance" onclick="showSettingsTab('appearance')"><svg><use href="#i-settings"></use></svg>Внешний вид</button>
+        <button class="ah-settings-nav" data-settings-tab="notifications" onclick="showSettingsTab('notifications')"><svg><use href="#i-bell"></use></svg>Уведомления</button>
+        <button class="ah-settings-nav" data-settings-tab="language" onclick="showSettingsTab('language')"><svg><use href="#i-search"></use></svg>Язык и время</button>
+      </div>
+      <div class="ah-settings-group">
+        <div class="ah-settings-label">AlexiHub</div>
+        <button class="ah-settings-nav" data-settings-tab="servers" onclick="showSettingsTab('servers')"><svg><use href="#i-server"></use></svg>Серверы</button>
+        <button class="ah-settings-nav" data-settings-tab="gifts" onclick="showSettingsTab('gifts')"><svg><use href="#i-gift"></use></svg>Подарки</button>
+        <button class="ah-settings-nav" data-settings-tab="developer" onclick="showSettingsTab('developer')"><svg><use href="#i-code"></use></svg>Разработчик</button>
+      </div>
+      <div class="ah-settings-divider"></div>
+      <a class="ah-settings-nav danger" href="/community/logout"><svg><use href="#i-logout"></use></svg>Выйти</a>
+      <div class="ah-settings-version">AlexiHub desktop settings panel<br>stable 1.0.0</div>
+    </aside>
+    <main class="ah-settings-main">
+      <div class="ah-settings-top"><h2 id="ah-settings-heading">Учётная запись</h2><button class="ah-settings-close" onclick="closeUserSettings()" type="button">×</button></div>
+      <section class="ah-settings-page active" data-settings-page="account">
+        <h1>Информация об учётной записи</h1>
+        <div class="ah-settings-section">
+          <div class="ah-settings-row"><div class="label">Имя пользователя</div><div class="ah-settings-value">{{ account.username }}</div><button class="ah-settings-btn" type="button" onclick="showSettingsTab('profile')">Изменить</button></div>
+          <div class="ah-settings-row"><div class="label">Электронная почта</div><div class="ah-settings-value">{{ account.email or 'Не указана' }}</div><button class="ah-settings-btn" type="button" onclick="settingsToast('Пока заглушка: изменение email добавим отдельным патчем')">Изменить</button></div>
+          <div class="ah-settings-row"><div class="label">Публичный профиль</div><div class="ah-settings-value">/community/profile/{{ account.username }}</div><a class="ah-settings-btn" style="text-decoration:none" href="/community/profile/{{ account.username }}">Открыть</a></div>
+        </div>
+        <h1>Пароль и безопасность</h1>
+        <div class="ah-settings-section ah-settings-action-list">
+          <div class="ah-settings-action"><div><b>Пароль</b><span>Зміна паролю поки заглушка.</span></div><button class="ah-settings-btn" type="button" onclick="settingsToast('Зміну паролю зробимо пізніше')">Изменить</button></div>
+          <div class="ah-settings-action"><div><b>Активные сессии</b><span>Поточна сесія у браузері.</span></div><button class="ah-settings-btn" type="button" onclick="settingsToast('Список сесій поки заглушка')">Открыть</button></div>
+        </div>
+        <h1>Репутация учётной записи</h1>
+        <div class="ah-settings-good"><div class="dot">✓</div><div><b>У твоєї учётки нормальна репутація</b><p class="ah-settings-muted">Якщо будуть мут/бан/скарги — цей блок потім можна зробити реальним.</p></div></div>
+      </section>
+      <section class="ah-settings-page" data-settings-page="profile">
+        <h1>Профіль</h1>
+        <form class="ah-settings-form" method="post" action="/community/settings">
+          <div class="ah-settings-card"><h3>Редагування профілю</h3><p>Це робоча форма: після Save дані підуть у твій існуючий endpoint /community/settings.</p></div>
+          <div class="ah-settings-formline"><label>Avatar URL</label><input class="ah-settings-input" name="avatar_url" value="{{ account.avatar_url or '' }}" placeholder="https://..."></div>
+          <div class="ah-settings-formline"><label>Banner URL</label><input class="ah-settings-input" name="banner_url" value="{{ account.banner_url or '' }}" placeholder="https://..."></div>
+          <div class="ah-settings-formline"><label>Bio</label><textarea class="ah-settings-textarea" name="bio" placeholder="Про себе...">{{ account.bio or '' }}</textarea></div>
+          <div class="ah-settings-formline"><span></span><button class="ah-settings-btn primary" type="submit">Save changes</button></div>
+        </form>
+      </section>
+      <section class="ah-settings-page" data-settings-page="security"><h1>Пароль и безопасность</h1><div class="ah-settings-placeholder">Поки заглушка. Тут потім можна зробити зміну паролю, 2FA, активні сесії.</div></section>
+      <section class="ah-settings-page" data-settings-page="privacy"><h1>Данные и конфиденциальность</h1><div class="ah-settings-placeholder">Поки заглушка. Тут будуть приватність, заблоковані користувачі, хто може писати в ЛС.</div></section>
+      <section class="ah-settings-page" data-settings-page="voice"><h1>Голос и видео</h1><div class="ah-settings-placeholder">Поки заглушка під майбутні voice-фічі: мікрофон, камера, echo test.</div></section>
+      <section class="ah-settings-page" data-settings-page="appearance"><h1>Внешний вид</h1><div class="ah-settings-placeholder">Поки заглушка. Тут можна буде вибирати тему, щільність UI, анімації.</div></section>
+      <section class="ah-settings-page" data-settings-page="notifications"><h1>Уведомления</h1><div class="ah-settings-placeholder">Поки заглушка. Тут будуть звуки, desktop notifications, mute servers.</div></section>
+      <section class="ah-settings-page" data-settings-page="language"><h1>Язык и время</h1><div class="ah-settings-placeholder">Поки заглушка. Тут будуть мова, часовий пояс, формат дати.</div></section>
+      <section class="ah-settings-page" data-settings-page="servers"><h1>Серверы</h1><div class="ah-settings-placeholder">Поки заглушка. Тут можна буде керувати своїми серверами.</div></section>
+      <section class="ah-settings-page" data-settings-page="gifts"><h1>Подарки</h1><div class="ah-settings-placeholder">Поки заглушка. Тут потім можна показати отримані gifts.</div></section>
+      <section class="ah-settings-page" data-settings-page="developer"><h1>Разработчик</h1><div class="ah-settings-placeholder">Поки заглушка. Тут можна буде додати API/debug info.</div></section>
+    </main>
+  </div>
+</div>
+<div id="ah-settings-toast" class="ah-settings-toast"></div>
+
+
+<script>
+(function(){
+  window.openUserSettings = function(tab){
+    var m=document.getElementById('ah-user-settings');
+    if(!m) return;
+    m.classList.add('open');
+    m.setAttribute('aria-hidden','false');
+    showSettingsTab(tab || 'account');
+  };
+  window.closeUserSettings = function(){
+    var m=document.getElementById('ah-user-settings');
+    if(!m) return;
+    m.classList.remove('open');
+    m.setAttribute('aria-hidden','true');
+  };
+  window.showSettingsTab = function(tab){
+    tab = tab || 'account';
+    document.querySelectorAll('[data-settings-tab]').forEach(function(b){b.classList.toggle('active', b.dataset.settingsTab===tab)});
+    document.querySelectorAll('[data-settings-page]').forEach(function(p){p.classList.toggle('active', p.dataset.settingsPage===tab)});
+    var active=document.querySelector('[data-settings-tab="'+tab+'"]');
+    var h=document.getElementById('ah-settings-heading');
+    if(active && h) h.textContent=active.textContent.trim();
+  };
+  window.ahSettingsFilter = function(value){
+    value=(value||'').trim().toLowerCase();
+    document.querySelectorAll('[data-settings-tab]').forEach(function(btn){
+      var ok=!value || btn.textContent.toLowerCase().includes(value);
+      btn.style.display=ok?'flex':'none';
+    });
+  };
+  window.settingsToast = function(text){
+    var t=document.getElementById('ah-settings-toast');
+    if(!t) return;
+    t.textContent=text || 'Поки заглушка';
+    t.classList.remove('show'); void t.offsetWidth; t.classList.add('show');
+  };
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeUserSettings(); });
 })();
 </script>
 
