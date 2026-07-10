@@ -553,6 +553,24 @@ async def is_server_member(db: AsyncSession, server_id: int, account_id: int) ->
     return await get_server_member(db, server_id, account_id) is not None
 
 
+async def join_server_by_id(db: AsyncSession, server_id: int, account_id: int) -> CommunityServer | None:
+    """Join a server by numeric invite/server id. Used by the Discord-like join modal.
+
+    This keeps the DB load tiny: one server lookup, one membership lookup,
+    and one insert only when the user is not already a member.
+    """
+    server = await get_server_by_id(db, server_id)
+    if not server:
+        return None
+
+    existing = await get_server_member(db, server_id, account_id)
+    if not existing:
+        db.add(ServerMember(server_id=server_id, account_id=account_id, role="member"))
+        await db.commit()
+
+    return server
+
+
 async def can_manage_server(db: AsyncSession, server_id: int, account_id: int) -> bool:
     member = await get_server_member(db, server_id, account_id)
     return bool(member and member.role in {"owner", "admin"})
