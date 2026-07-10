@@ -886,6 +886,177 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
 .discord-tool-btn.pin-btn svg{transform:none!important;width:18px!important;height:18px!important;display:block!important;}
 .discord-tool-btn.pin-btn{transform:none!important;}
 </style>
+
+<style id="ah-server-create-overlay-css">
+/* AlexiHub: Discord-like server create/join modal opened over the current page */
+.ah-server-modal-backdrop{
+  position:fixed;
+  inset:0;
+  z-index:2147482500;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  background:rgba(0,0,0,.72);
+  backdrop-filter:blur(7px);
+  -webkit-backdrop-filter:blur(7px);
+  color:#f2f3f5;
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+.ah-server-modal-backdrop.open{display:flex;animation:ahServerModalFade .14s ease both;}
+@keyframes ahServerModalFade{from{opacity:0}to{opacity:1}}
+.ah-server-modal{
+  width:min(450px,calc(100vw - 34px));
+  max-height:min(720px,calc(100vh - 42px));
+  overflow:hidden;
+  background:#313338;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:16px;
+  box-shadow:0 28px 95px rgba(0,0,0,.68);
+  position:relative;
+  transform:translateY(8px) scale(.985);
+  animation:ahServerModalPop .16s cubic-bezier(.2,.9,.2,1) both;
+}
+@keyframes ahServerModalPop{to{transform:translateY(0) scale(1)}}
+.ah-server-modal-close{
+  position:absolute;
+  right:14px;
+  top:14px;
+  width:34px;
+  height:34px;
+  border:0;
+  border-radius:50%;
+  background:transparent;
+  color:#b5bac1;
+  display:grid;
+  place-items:center;
+  cursor:pointer;
+  z-index:4;
+  transition:background .13s ease,color .13s ease,transform .08s ease;
+}
+.ah-server-modal-close:hover{background:#3f4149;color:#fff;}
+.ah-server-modal-close:active{transform:scale(.92)}
+.ah-server-modal-close svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;}
+.ah-server-modal-view{display:none;padding:26px 26px 14px;max-height:min(720px,calc(100vh - 42px));overflow-y:auto;}
+.ah-server-modal-view.active{display:block;}
+.ah-server-title{
+  margin:0 42px 8px;
+  text-align:center;
+  font-size:24px;
+  line-height:1.12;
+  font-weight:950;
+  letter-spacing:-.035em;
+  color:#fff;
+}
+.ah-server-desc{
+  margin:0 auto 22px;
+  max-width:340px;
+  text-align:center;
+  color:#dbdee1;
+  font-size:14px;
+  line-height:1.35;
+  font-weight:650;
+}
+.ah-server-card-list{display:grid;gap:8px;margin-top:8px;}
+.ah-server-card{
+  width:100%;
+  min-height:54px;
+  border:1px solid #464850;
+  border-radius:9px;
+  background:#3a3c43;
+  color:#f2f3f5;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:0 14px;
+  cursor:pointer;
+  text-align:left;
+  transition:background .13s ease,border-color .13s ease,transform .08s ease;
+}
+.ah-server-card:hover{background:#42444d;border-color:#565963;}
+.ah-server-card:active{transform:scale(.992)}
+.ah-server-card-icon{
+  width:28px;
+  height:28px;
+  border-radius:9px;
+  display:grid;
+  place-items:center;
+  background:#2b2d31;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.07);
+  flex:0 0 auto;
+  font-size:16px;
+}
+.ah-server-card span{font-weight:900;flex:1;min-width:0;}
+.ah-server-card svg{width:18px;height:18px;fill:none;stroke:#b5bac1;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto;}
+.ah-server-modal-label{
+  margin:16px 0 8px;
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  color:#f2f3f5;
+  font-weight:950;
+}
+.ah-server-join-box{
+  margin:18px -26px -14px;
+  padding:18px 26px 20px;
+  background:#2b2d31;
+  border-top:1px solid #3a3c43;
+  text-align:center;
+}
+.ah-server-join-box h3{margin:0 0 10px;font-size:18px;line-height:1.15;font-weight:950;}
+.ah-server-secondary-btn,.ah-server-primary-btn,.ah-server-back-btn{
+  border:0;
+  border-radius:8px;
+  min-height:42px;
+  padding:0 14px;
+  font-weight:950;
+  cursor:pointer;
+  transition:background .13s ease,filter .13s ease,transform .08s ease;
+}
+.ah-server-secondary-btn{width:100%;background:#4e5058;color:#fff;}
+.ah-server-secondary-btn:hover{background:#5c5f68;}
+.ah-server-primary-btn{background:#5865f2;color:#fff;}
+.ah-server-primary-btn:hover{background:#4752c4;}
+.ah-server-back-btn{background:transparent;color:#b5bac1;min-height:36px;padding:0 8px;}
+.ah-server-back-btn:hover{color:#fff;background:#3a3c43;}
+.ah-server-secondary-btn:active,.ah-server-primary-btn:active,.ah-server-back-btn:active{transform:scale(.98)}
+.ah-server-form{display:grid;gap:14px;margin-top:16px;}
+.ah-server-field label{display:block;margin:0 0 7px;font-size:12px;text-transform:uppercase;letter-spacing:.04em;font-weight:950;color:#b5bac1;}
+.ah-server-input,.ah-server-textarea{
+  width:100%;
+  border:1px solid #1e1f22;
+  border-radius:8px;
+  background:#1e1f22;
+  color:#f2f3f5;
+  outline:0;
+  padding:11px 12px;
+  font:inherit;
+}
+.ah-server-input:focus,.ah-server-textarea:focus{border-color:#5865f2;}
+.ah-server-textarea{min-height:76px;resize:vertical;}
+.ah-server-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:6px;}
+.ah-server-actions .ah-server-primary-btn{min-width:154px;}
+.ah-server-tip{
+  margin-top:13px;
+  border-radius:10px;
+  background:#25262c;
+  border:1px solid #3a3c43;
+  padding:12px;
+  color:#b5bac1;
+  font-size:12px;
+  line-height:1.38;
+}
+.ah-server-samples{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+.ah-server-samples code{background:#3a3c43;border-radius:5px;padding:5px 7px;color:#f2f3f5;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;}
+@media(max-width:520px){
+  .ah-server-modal-backdrop{padding:0;align-items:flex-end;}
+  .ah-server-modal{width:100%;max-height:92vh;border-radius:18px 18px 0 0;border-left:0;border-right:0;border-bottom:0;}
+  .ah-server-modal-view{max-height:92vh;padding:24px 18px 12px;}
+  .ah-server-title{font-size:22px;margin-left:38px;margin-right:38px;}
+  .ah-server-join-box{margin-left:-18px;margin-right:-18px;margin-bottom:-12px;padding-left:18px;padding-right:18px;}
+}
+</style>
+
 </head>
 <body>
   <aside class="server-rail">
@@ -1560,6 +1731,165 @@ document.addEventListener('DOMContentLoaded',()=>{
     updateOwnMemberStatus(status);
   };
   window.__ahUpdateOwnMemberStatus = updateOwnMemberStatus;
+})();
+</script>
+
+
+<div id="ah-server-create-modal" class="ah-server-modal-backdrop" aria-hidden="true">
+  <div class="ah-server-modal" role="dialog" aria-modal="true" aria-labelledby="ah-server-create-title">
+    <button type="button" class="ah-server-modal-close" data-ah-server-close aria-label="Закрити">
+      <svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+
+    <section class="ah-server-modal-view active" data-ah-server-view="create">
+      <h2 id="ah-server-create-title" class="ah-server-title">Створіть свій сервер</h2>
+      <p class="ah-server-desc">Ваш сервер — це місце, де ви можете тусоватися зі своїми друзями. Створіть сервер і починайте спілкуватися.</p>
+
+      <div class="ah-server-card-list">
+        <button type="button" class="ah-server-card" data-template="custom"><span class="ah-server-card-icon">🖼️</span><span>Свій шаблон</span><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+        <div class="ah-server-modal-label">Почніть із шаблона</div>
+        <button type="button" class="ah-server-card" data-template="games"><span class="ah-server-card-icon">🎮</span><span>Ігри</span><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+        <button type="button" class="ah-server-card" data-template="friends"><span class="ah-server-card-icon">💖</span><span>Друзі</span><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+        <button type="button" class="ah-server-card" data-template="study"><span class="ah-server-card-icon">🎒</span><span>Навчальна група</span><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+        <button type="button" class="ah-server-card" data-template="school"><span class="ah-server-card-icon">📚</span><span>Шкільний клуб</span><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+      </div>
+
+      <div class="ah-server-join-box">
+        <h3>У вас уже є запрошення?</h3>
+        <button type="button" class="ah-server-secondary-btn" data-ah-server-join-open>Приєднатися до сервера</button>
+      </div>
+    </section>
+
+    <section class="ah-server-modal-view" data-ah-server-view="setup">
+      <h2 class="ah-server-title">Налаштуйте сервер</h2>
+      <p class="ah-server-desc">Дайте серверу назву. Потім зможеш змінити іконку, опис і запросити друзів.</p>
+      <form class="ah-server-form" method="post" action="/community/servers/new">
+        <input type="hidden" name="description" id="ah-server-template-desc" value="">
+        <input type="hidden" name="icon_url" value="">
+        <div class="ah-server-field">
+          <label for="ah-server-name-input">Назва сервера</label>
+          <input id="ah-server-name-input" class="ah-server-input" name="name" type="text" placeholder="Мій сервер" minlength="2" required autocomplete="off">
+        </div>
+        <div class="ah-server-actions">
+          <button type="button" class="ah-server-back-btn" data-ah-server-back>Назад</button>
+          <button type="submit" class="ah-server-primary-btn">Створити сервер</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="ah-server-modal-view" data-ah-server-view="join">
+      <h2 class="ah-server-title">Приєднатися до сервера</h2>
+      <p class="ah-server-desc">Введіть запрошення, щоб приєднатися до існуючого сервера.</p>
+      <form class="ah-server-form" method="post" action="/community/servers/join">
+        <div class="ah-server-field">
+          <label for="ah-server-join-input">Силка-запрошення або ID сервера</label>
+          <input id="ah-server-join-input" class="ah-server-input" name="invite" type="text" placeholder="/community/servers/1" required autocomplete="off">
+        </div>
+        <div class="ah-server-tip">
+          Запрошення можуть виглядати так:
+          <div class="ah-server-samples"><code>1</code><code>/community/servers/1</code><code>https://.../community/servers/1</code></div>
+        </div>
+        <div class="ah-server-actions">
+          <button type="button" class="ah-server-back-btn" data-ah-server-back>Назад</button>
+          <button type="submit" class="ah-server-primary-btn">Приєднатися</button>
+        </div>
+      </form>
+    </section>
+  </div>
+</div>
+<script id="ah-server-create-overlay-js">
+(function(){
+  if (window.__alexServerCreateOverlayReady) return;
+  window.__alexServerCreateOverlayReady = true;
+
+  var modal = document.getElementById('ah-server-create-modal');
+  if (!modal) return;
+  var lastFocus = null;
+  var names = {
+    custom: 'Мій сервер',
+    games: 'Gaming hub',
+    friends: 'Сервер друзів',
+    study: 'Навчальна група',
+    school: 'Шкільний клуб'
+  };
+  var descriptions = {
+    custom: '',
+    games: 'Сервер для ігор.',
+    friends: 'Місце для друзів.',
+    study: 'Навчальний сервер.',
+    school: 'Шкільний клуб.'
+  };
+
+  function showView(name){
+    modal.querySelectorAll('[data-ah-server-view]').forEach(function(view){
+      view.classList.toggle('active', view.getAttribute('data-ah-server-view') === name);
+    });
+    setTimeout(function(){
+      var input = name === 'join' ? document.getElementById('ah-server-join-input') : (name === 'setup' ? document.getElementById('ah-server-name-input') : null);
+      if (input) input.focus();
+    }, 80);
+  }
+
+  window.openAlexServerCreateModal = function(){
+    lastFocus = document.activeElement;
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden','false');
+    document.body.style.overflow = 'hidden';
+    showView('create');
+  };
+  window.closeAlexServerCreateModal = function(){
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden','true');
+    document.body.style.overflow = '';
+    if (lastFocus && typeof lastFocus.focus === 'function') {
+      try { lastFocus.focus(); } catch(e) {}
+    }
+  };
+
+  document.addEventListener('click', function(e){
+    var createLink = e.target.closest && e.target.closest('a[href="/community/servers/new"], a[href="/community/servers/create"], a.server-dot.plus[href*="/community/servers/new"]');
+    if (createLink) {
+      e.preventDefault();
+      e.stopPropagation();
+      window.openAlexServerCreateModal();
+      return;
+    }
+
+    if (e.target === modal || (e.target.closest && e.target.closest('[data-ah-server-close]'))) {
+      e.preventDefault();
+      window.closeAlexServerCreateModal();
+      return;
+    }
+
+    var templateBtn = e.target.closest && e.target.closest('[data-template]');
+    if (templateBtn && modal.contains(templateBtn)) {
+      var key = templateBtn.getAttribute('data-template') || 'custom';
+      var nameInput = document.getElementById('ah-server-name-input');
+      var descInput = document.getElementById('ah-server-template-desc');
+      if (nameInput) nameInput.value = names[key] || 'Мій сервер';
+      if (descInput) descInput.value = descriptions[key] || '';
+      showView('setup');
+      return;
+    }
+
+    if (e.target.closest && e.target.closest('[data-ah-server-join-open]')) {
+      e.preventDefault();
+      showView('join');
+      return;
+    }
+
+    if (e.target.closest && e.target.closest('[data-ah-server-back]')) {
+      e.preventDefault();
+      showView('create');
+      return;
+    }
+  }, true);
+
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && modal.classList.contains('open')) {
+      window.closeAlexServerCreateModal();
+    }
+  });
 })();
 </script>
 
