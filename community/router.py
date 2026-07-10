@@ -8,6 +8,7 @@ main.py -- everything here lives under the /community prefix so it can
 never collide with the admin dashboard's routes.
 """
 import asyncio
+import hashlib
 import os
 import re
 import time
@@ -56,7 +57,47 @@ async def _read_profile_upload(upload: UploadFile | None) -> tuple[bytes, str] |
     return data, content_type
 
 
+async def _upload_to_cloudinary(data: bytes, content_type: str) -> str | None:
+    cloud_name = os.getenv("CLOUDINARY_CLOUD_NAME", "").strip()
+    api_key = os.getenv("CLOUDINARY_API_KEY", "").strip()
+    api_secret = os.getenv("CLOUDINARY_API_SECRET", "").strip()
+    folder = os.getenv("CLOUDINARY_FOLDER", "alexihub/profiles").strip() or "alexihub/profiles"
+    if not (cloud_name and api_key and api_secret):
+        return None
+
+    # Signed Cloudinary upload without adding a new Python dependency.
+    # Only the final URL is stored in PostgreSQL; the image bytes never go into the DB.
+    timestamp = str(int(time.time()))
+    params_to_sign = {"folder": folder, "timestamp": timestamp}
+    signature_base = "&".join(f"{k}={v}" for k, v in sorted(params_to_sign.items())) + api_secret
+    signature = hashlib.sha1(signature_base.encode("utf-8")).hexdigest()
+
+    ext = ALLOWED_IMAGE_TYPES.get(content_type, ".png")
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.post(
+                f"https://api.cloudinary.com/v1_1/{cloud_name}/image/upload",
+                data={
+                    "api_key": api_key,
+                    "timestamp": timestamp,
+                    "folder": folder,
+                    "signature": signature,
+                },
+                files={"file": (f"profile{ext}", data, content_type)},
+            )
+        payload = resp.json() if resp.headers.get("content-type", "").startswith("application/json") else {}
+        if resp.status_code < 300 and payload.get("secure_url"):
+            return payload["secure_url"]
+        if resp.status_code < 300 and payload.get("url"):
+            return payload["url"]
+        print("Cloudinary upload failed:", resp.status_code, payload)
+    except Exception as exc:
+        print("Cloudinary upload error:", repr(exc))
+    return None
+
+
 async def _upload_to_imgur(data: bytes, content_type: str) -> str | None:
+    # Legacy fallback. Cloudinary is preferred.
     client_id = os.getenv("IMGUR_CLIENT_ID", "").strip()
     if not client_id:
         return None
@@ -75,6 +116,8 @@ async def _upload_to_imgur(data: bytes, content_type: str) -> str | None:
     return None
 
 
+def _save_profile_upload_local
+
 def _save_profile_upload_local(data: bytes, content_type: str, account_id: int, kind: str) -> str:
     PROFILE_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     ext = ALLOWED_IMAGE_TYPES.get(content_type, ".png")
@@ -88,7 +131,9 @@ async def _profile_image_url_from_form(upload: UploadFile | None, url_value: str
     prepared = await _read_profile_upload(upload)
     if prepared:
         data, content_type = prepared
-        external_url = await _upload_to_imgur(data, content_type)
+        external_url = await _upload_to_cloudinary(data, content_type)
+        if not external_url:
+            external_url = await _upload_to_imgur(data, content_type)
         if external_url:
             return external_url
         return _save_profile_upload_local(data, content_type, account_id, kind)
