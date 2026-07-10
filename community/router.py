@@ -262,6 +262,23 @@ async def current_account(request: Request, db: AsyncSession):
     return await crud.get_account_by_id(db, account_id)
 
 
+@router.post("/api/upload-image")
+async def api_upload_image(request: Request, file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_authenticated"}, status_code=401)
+    prepared = await _read_profile_upload(file)
+    if prepared is None:
+        return JSONResponse({"ok": False, "error": "bad_file"}, status_code=400)
+    data, content_type = prepared
+    url = await _upload_to_cloudinary(data, content_type)
+    if not url:
+        url = await _upload_to_imgur(data, content_type)
+    if not url:
+        url = _save_profile_upload_local(data, content_type, account.id, "chat")
+    return JSONResponse({"ok": True, "url": url})
+
+
 async def server_rail_context(db: AsyncSession, account_id: int, active_server_id: int | None = None) -> dict:
     """Small shared context used by pages that show the Discord-style server rail."""
     return {
@@ -650,7 +667,7 @@ async def server_message_submit(
     server_id: int,
     channel_id: int,
     request: Request,
-    content: str = Form(...),
+    content: str = Form(""),
     image_url: str = Form(""),
     db: AsyncSession = Depends(get_db),
 ):
@@ -661,7 +678,7 @@ async def server_message_submit(
         return RedirectResponse(url="/community", status_code=303)
 
     channel = await crud.get_server_channel(db, server_id, channel_id)
-    if channel and content.strip():
+    if channel and (content.strip() or image_url.strip()):
         await crud.create_server_message(db, server_id, channel_id, account.id, content.strip(), image_url.strip())
     return RedirectResponse(url=f"/community/servers/{server_id}/channel/{channel_id}", status_code=303)
 
@@ -672,7 +689,7 @@ async def server_message_edit_submit(
     channel_id: int,
     message_id: int,
     request: Request,
-    content: str = Form(...),
+    content: str = Form(""),
     image_url: str = Form(""),
     db: AsyncSession = Depends(get_db),
 ):
@@ -825,7 +842,7 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
 
             content = (data.get("content") or "").strip()
             image_url = (data.get("image_url") or "").strip()
-            if not content:
+            if not content and not image_url:
                 await realtime_channels.clear_typing(key, account_id)
                 continue
             if len(content) > 4000:
@@ -923,7 +940,7 @@ async def dm_chat_view(username: str, request: Request, db: AsyncSession = Depen
 async def dm_message_submit(
     username: str,
     request: Request,
-    content: str = Form(...),
+    content: str = Form(""),
     image_url: str = Form(""),
     db: AsyncSession = Depends(get_db),
 ):
@@ -946,7 +963,7 @@ async def dm_message_edit_submit(
     username: str,
     message_id: int,
     request: Request,
-    content: str = Form(...),
+    content: str = Form(""),
     image_url: str = Form(""),
     db: AsyncSession = Depends(get_db),
 ):
@@ -1031,7 +1048,7 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
 
             content = (data.get("content") or "").strip()
             image_url = (data.get("image_url") or "").strip()
-            if not content:
+            if not content and not image_url:
                 await realtime_channels.clear_typing(key, account_id)
                 continue
             if len(content) > 4000:
