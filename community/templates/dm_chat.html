@@ -421,6 +421,45 @@
 }
 
 </style>
+
+
+<style id="ah-banner-status-fix-css">
+/* banner + status final polish */
+.ah-v3-actions a,
+.ah-v3-actions button{
+  line-height:1.05!important;
+  text-align:center!important;
+  padding:0 8px!important;
+  white-space:normal!important;
+}
+.ah-v3-banner.has-image,
+.ah-v3-full-banner.has-image{
+  background-size:cover!important;
+  background-position:center!important;
+}
+.ah-v3-banner.has-image::after,
+.ah-v3-full-banner.has-image::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(180deg,rgba(0,0,0,.02),rgba(0,0,0,.32));
+  pointer-events:none;
+}
+.ah-v3-full-left{
+  --ah-banner-soft: var(--ah-c1,#5865f2);
+}
+.ah-v3-full-left::before{
+  background:linear-gradient(180deg,var(--ah-banner-soft),rgba(36,38,58,.96) 54%,#24263a 100%)!important;
+  opacity:.62!important;
+}
+.ah-v3-mini{
+  --ah-banner-soft: var(--ah-c1,#5865f2);
+}
+.ah-v3-mini .ah-v3-body{
+  background:linear-gradient(180deg,color-mix(in srgb,var(--ah-banner-soft) 24%,#23242b),#23242b 34%)!important;
+}
+</style>
+
 </head>
 <body>
   <svg style="display:none" aria-hidden="true">
@@ -464,10 +503,10 @@
         {% endif %}{% endfor %}
         <div class="section" style="padding-left:2px;padding-right:2px;">Друзі</div>
         {% for f in friends %}{% set f_status = f.account_status or 'online' %}{% set f_visible = f.id in online_ids and f_status != 'invisible' %}
-        <a class="dm-row mini-profile-trigger" href="/community/dm/{{ f.username }}" data-name="{{ f.username|lower }}" data-mini-username="{{ f.username }}" data-mini-avatar="{{ f.avatar_url or '' }}" data-mini-role="{{ f.role_label or 'member' }}" data-mini-c1="{{ f.role_color_start or '#5865f2' }}" data-mini-c2="{{ f.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ f.username }}" data-mini-bio="{{ f.bio or '' }}"><span class="avatar" {% if f.avatar_url %}style="background-image:url('{{ f.avatar_url }}')"{% endif %}>{% if not f.avatar_url %}{{ f.username[:1]|upper }}{% endif %}{% if f_visible %}<span class="presence status-{{ f_status }}"></span>{% endif %}</span><span class="dm-meta"><span class="dm-name">{{ f.username }}</span></span></a>
+        <a class="dm-row mini-profile-trigger" href="/community/dm/{{ f.username }}" data-name="{{ f.username|lower }}" data-mini-username="{{ f.username }}" data-mini-avatar="{{ f.avatar_url or '' }}" data-mini-banner="{{ f.banner_url or '' }}" data-mini-role="{{ f.role_label or 'member' }}" data-mini-c1="{{ f.role_color_start or '#5865f2' }}" data-mini-c2="{{ f.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ f.username }}" data-mini-bio="{{ f.bio or '' }}"><span class="avatar" {% if f.avatar_url %}style="background-image:url('{{ f.avatar_url }}')"{% endif %}>{% if not f.avatar_url %}{{ f.username[:1]|upper }}{% endif %}{% if f_visible %}<span class="presence status-{{ f_status }}"></span>{% endif %}</span><span class="dm-meta"><span class="dm-name">{{ f.username }}</span></span></a>
         {% endfor %}
       </div>
-      <div class="user-panel mini-profile-trigger" data-mini-username="{{ account.username }}" data-mini-avatar="{{ account.avatar_url or '' }}" data-mini-status="{{ account.account_status or 'online' }}" data-mini-role="{{ account.role_label or 'online' }}" data-mini-c1="{{ account.role_color_start or '#5865f2' }}" data-mini-c2="{{ account.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ account.username }}" data-mini-bio="{{ account.bio or '' }}">
+      <div class="user-panel mini-profile-trigger" data-mini-username="{{ account.username }}" data-mini-avatar="{{ account.avatar_url or '' }}" data-mini-banner="{{ account.banner_url or '' }}" data-mini-status="{{ account.account_status or 'online' }}" data-mini-role="{{ account.role_label or 'online' }}" data-mini-c1="{{ account.role_color_start or '#5865f2' }}" data-mini-c2="{{ account.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ account.username }}" data-mini-bio="{{ account.bio or '' }}">
         <span class="avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}')"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}<span id="my-avatar-status" class="presence status-{{ my_status }}"></span></span>
         <div class="user-info status-trigger" onclick="openSelfProfile()"><b>{{ account.username }}</b><span><i id="my-status-dot" class="status-dot status-{{ my_status }}"></i><span id="my-status-label">{{ {'online':'В мережі','idle':'Неактивний','dnd':'Не турбувати','invisible':'Невидимий'}.get(my_status, 'В мережі') }}</span></span><small class="account-username">@{{ account.username }}</small></div>
         <div class="user-actions"><button class="voice-control" data-audio-kind="mic" title="Mute" onclick="toggleAudioControl(this,'mic')"><svg class="icon icon-sm"><use href="#i-mic"></use></svg></button><button class="voice-control" data-audio-kind="headphones" title="Deafen" onclick="toggleAudioControl(this,'headphones')"><svg class="icon icon-sm"><use href="#i-headphones"></use></svg></button><button onclick="openUserSettings()" title="Settings"><svg class="icon icon-sm"><use href="#i-settings"></use></svg></button></div>
@@ -491,7 +530,7 @@
   </div>
 
 <script>
-const currentUser={id:{{ account.id }},username:"{{ account.username }}"};const messagesEl=document.getElementById('messages');const form=document.getElementById('dm-form');const input=document.getElementById('content');const imageInput=document.getElementById('image_url');const typingEl=document.getElementById('typing');const live=document.getElementById('live-status');function scrollBottom(){messagesEl.scrollTop=messagesEl.scrollHeight}scrollBottom();function escapeHtml(s){return (s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}function messageHtml(msg,author){const own=author.id===currentUser.id;const av=author.avatar_url?`style="background-image:url('${escapeHtml(author.avatar_url)}')"`:'';const first=author.avatar_url?'':escapeHtml(author.username.slice(0,1).toUpperCase());const img=msg.image_url?`<img class="msg-img" src="${escapeHtml(msg.image_url)}" alt="">`:'';const role=author.role_label||'member';const c1=author.role_color_start||'#5865f2';const c2=author.role_color_end||'#9b5cf6';const bio=author.bio||'';const actions=own?`<div class="msg-actions"><button onclick="editMessage(${msg.id})">✎</button><form method="post" action="/community/dm/{{ other.username }}/message/${msg.id}/delete"><button type="submit">×</button></form></div>`:'';return `<div class="msg" id="dm-message-${msg.id}" data-id="${msg.id}" data-own="${own?'1':'0'}"><span class="msg-avatar mini-profile-trigger" data-mini-username="${escapeHtml(author.username)}" data-mini-avatar="${escapeHtml(author.avatar_url||'')}" data-mini-role="${escapeHtml(role)}" data-mini-c1="${escapeHtml(c1)}" data-mini-c2="${escapeHtml(c2)}" data-mini-profile="/community/profile/${encodeURIComponent(author.username)}" data-mini-bio="${escapeHtml(bio)}" ${av}>${first}</span><div class="msg-body"><div class="msg-head"><span class="msg-name mini-profile-trigger" data-mini-username="${escapeHtml(author.username)}" data-mini-avatar="${escapeHtml(author.avatar_url||'')}" data-mini-role="${escapeHtml(role)}" data-mini-c1="${escapeHtml(c1)}" data-mini-c2="${escapeHtml(c2)}" data-mini-profile="/community/profile/${encodeURIComponent(author.username)}" data-mini-bio="${escapeHtml(bio)}">${escapeHtml(author.username)}</span><span class="msg-time">${escapeHtml(msg.created_at||'')}</span></div><div class="msg-text">${escapeHtml(msg.content)}</div>${img}</div>${actions}</div>`}let ws=null,typingTimer=null,stopTimer=null;function connect(){const proto=location.protocol==='https:'?'wss':'ws';ws=new WebSocket(`${proto}://${location.host}/community/ws/dm/{{ thread.id }}`);ws.onopen=()=>{live.textContent='live';live.style.color='var(--green)'};ws.onclose=()=>{live.textContent='reconnecting...';live.style.color='#f59e0b';setTimeout(connect,1500)};ws.onerror=()=>{try{ws.close()}catch(e){}};ws.onmessage=(ev)=>{const data=JSON.parse(ev.data);if(data.type==='message'){messagesEl.insertAdjacentHTML('beforeend',messageHtml(data.message,data.author));scrollBottom()}if(data.type==='typing'){const users=(data.users||[]).filter(u=>u.id!==currentUser.id);typingEl.textContent=users.length?users.map(u=>u.username).join(', ')+' друкує...':''}}}connect();input.addEventListener('input',()=>{input.style.height='auto';input.style.height=Math.min(input.scrollHeight,160)+'px';if(ws&&ws.readyState===1){clearTimeout(typingTimer);clearTimeout(stopTimer);ws.send(JSON.stringify({type:'typing'}));stopTimer=setTimeout(()=>ws.send(JSON.stringify({type:'typing_stop'})),1400)}});form.addEventListener('submit',(e)=>{if(ws&&ws.readyState===1){e.preventDefault();const content=input.value.trim();const image_url=imageInput.value.trim();if(!content)return;ws.send(JSON.stringify({type:'message',content,image_url}));input.value='';imageInput.value='';input.style.height='auto';document.getElementById('image-line').classList.remove('open')} });input.addEventListener('keydown',(e)=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();form.requestSubmit()}});function toggleImage(){document.getElementById('image-line').classList.toggle('open');}function editMessage(id){const el=document.querySelector(`#dm-message-${id} .msg-text`);if(!el)return;const next=prompt('Редагувати повідомлення:',el.textContent);if(next===null)return;const f=document.createElement('form');f.method='post';f.action=`/community/dm/{{ other.username }}/message/${id}/edit`;f.innerHTML=`<input name="content" value="${escapeHtml(next)}">`;document.body.appendChild(f);f.submit()}const search=document.getElementById('dm-search');if(search)search.addEventListener('input',()=>{const q=search.value.trim().toLowerCase();document.querySelectorAll('[data-name]').forEach(r=>r.style.display=r.dataset.name.includes(q)?'flex':'none')});const msgSearch=document.getElementById('message-search');if(msgSearch)msgSearch.addEventListener('input',()=>{const q=msgSearch.value.trim().toLowerCase();document.querySelectorAll('.msg').forEach(m=>m.style.display=m.textContent.toLowerCase().includes(q)?'flex':'none')});function toggleStatusMenu(event){event.stopPropagation();const menu=document.getElementById('status-menu');if(menu)menu.classList.toggle('open')}const statusLabels={online:'В мережі',idle:'Неактивний',dnd:'Не турбувати',invisible:'Невидимий'};function applyLocalStatus(status){['my-status-dot','my-avatar-status','modal-avatar-status'].forEach(id=>{const el=document.getElementById(id);if(!el)return;el.classList.remove('status-online','status-idle','status-dnd','status-invisible');el.classList.add('status-'+status)});const label=document.getElementById('my-status-label');if(label)label.textContent=statusLabels[status]||statusLabels.online;const menu=document.getElementById('status-menu');if(menu)menu.classList.remove('open')}function setPresenceStatus(status){applyLocalStatus(status);fetch('/community/presence/status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})}).catch(()=>{})}document.addEventListener('click',()=>{const menu=document.getElementById('status-menu');if(menu)menu.classList.remove('open')});
+const currentUser={id:{{ account.id }},username:"{{ account.username }}"};const messagesEl=document.getElementById('messages');const form=document.getElementById('dm-form');const input=document.getElementById('content');const imageInput=document.getElementById('image_url');const typingEl=document.getElementById('typing');const live=document.getElementById('live-status');function scrollBottom(){messagesEl.scrollTop=messagesEl.scrollHeight}scrollBottom();function escapeHtml(s){return (s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}function messageHtml(msg,author){const own=author.id===currentUser.id;const av=author.avatar_url?`style="background-image:url('${escapeHtml(author.avatar_url)}')"`:'';const first=author.avatar_url?'':escapeHtml(author.username.slice(0,1).toUpperCase());const img=msg.image_url?`<img class="msg-img" src="${escapeHtml(msg.image_url)}" alt="">`:'';const role=author.role_label||'member';const c1=author.role_color_start||'#5865f2';const c2=author.role_color_end||'#9b5cf6';const bio=author.bio||'';const actions=own?`<div class="msg-actions"><button onclick="editMessage(${msg.id})">✎</button><form method="post" action="/community/dm/{{ other.username }}/message/${msg.id}/delete"><button type="submit">×</button></form></div>`:'';return `<div class="msg" id="dm-message-${msg.id}" data-id="${msg.id}" data-own="${own?'1':'0'}"><span class="msg-avatar mini-profile-trigger" data-mini-username="${escapeHtml(author.username)}" data-mini-avatar="${escapeHtml(author.avatar_url||'')}" data-mini-banner="${escapeHtml(author.banner_url||'')}" data-mini-role="${escapeHtml(role)}" data-mini-c1="${escapeHtml(c1)}" data-mini-c2="${escapeHtml(c2)}" data-mini-profile="/community/profile/${encodeURIComponent(author.username)}" data-mini-bio="${escapeHtml(bio)}" ${av}>${first}</span><div class="msg-body"><div class="msg-head"><span class="msg-name mini-profile-trigger" data-mini-username="${escapeHtml(author.username)}" data-mini-avatar="${escapeHtml(author.avatar_url||'')}" data-mini-banner="${escapeHtml(author.banner_url||'')}" data-mini-role="${escapeHtml(role)}" data-mini-c1="${escapeHtml(c1)}" data-mini-c2="${escapeHtml(c2)}" data-mini-profile="/community/profile/${encodeURIComponent(author.username)}" data-mini-bio="${escapeHtml(bio)}">${escapeHtml(author.username)}</span><span class="msg-time">${escapeHtml(msg.created_at||'')}</span></div><div class="msg-text">${escapeHtml(msg.content)}</div>${img}</div>${actions}</div>`}let ws=null,typingTimer=null,stopTimer=null;function connect(){const proto=location.protocol==='https:'?'wss':'ws';ws=new WebSocket(`${proto}://${location.host}/community/ws/dm/{{ thread.id }}`);ws.onopen=()=>{live.textContent='live';live.style.color='var(--green)'};ws.onclose=()=>{live.textContent='reconnecting...';live.style.color='#f59e0b';setTimeout(connect,1500)};ws.onerror=()=>{try{ws.close()}catch(e){}};ws.onmessage=(ev)=>{const data=JSON.parse(ev.data);if(data.type==='message'){messagesEl.insertAdjacentHTML('beforeend',messageHtml(data.message,data.author));scrollBottom()}if(data.type==='typing'){const users=(data.users||[]).filter(u=>u.id!==currentUser.id);typingEl.textContent=users.length?users.map(u=>u.username).join(', ')+' друкує...':''}}}connect();input.addEventListener('input',()=>{input.style.height='auto';input.style.height=Math.min(input.scrollHeight,160)+'px';if(ws&&ws.readyState===1){clearTimeout(typingTimer);clearTimeout(stopTimer);ws.send(JSON.stringify({type:'typing'}));stopTimer=setTimeout(()=>ws.send(JSON.stringify({type:'typing_stop'})),1400)}});form.addEventListener('submit',(e)=>{if(ws&&ws.readyState===1){e.preventDefault();const content=input.value.trim();const image_url=imageInput.value.trim();if(!content)return;ws.send(JSON.stringify({type:'message',content,image_url}));input.value='';imageInput.value='';input.style.height='auto';document.getElementById('image-line').classList.remove('open')} });input.addEventListener('keydown',(e)=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();form.requestSubmit()}});function toggleImage(){document.getElementById('image-line').classList.toggle('open');}function editMessage(id){const el=document.querySelector(`#dm-message-${id} .msg-text`);if(!el)return;const next=prompt('Редагувати повідомлення:',el.textContent);if(next===null)return;const f=document.createElement('form');f.method='post';f.action=`/community/dm/{{ other.username }}/message/${id}/edit`;f.innerHTML=`<input name="content" value="${escapeHtml(next)}">`;document.body.appendChild(f);f.submit()}const search=document.getElementById('dm-search');if(search)search.addEventListener('input',()=>{const q=search.value.trim().toLowerCase();document.querySelectorAll('[data-name]').forEach(r=>r.style.display=r.dataset.name.includes(q)?'flex':'none')});const msgSearch=document.getElementById('message-search');if(msgSearch)msgSearch.addEventListener('input',()=>{const q=msgSearch.value.trim().toLowerCase();document.querySelectorAll('.msg').forEach(m=>m.style.display=m.textContent.toLowerCase().includes(q)?'flex':'none')});function toggleStatusMenu(event){event.stopPropagation();const menu=document.getElementById('status-menu');if(menu)menu.classList.toggle('open')}const statusLabels={online:'В мережі',idle:'Неактивний',dnd:'Не турбувати',invisible:'Невидимий'};function applyLocalStatus(status){['my-status-dot','my-avatar-status','modal-avatar-status'].forEach(id=>{const el=document.getElementById(id);if(!el)return;el.classList.remove('status-online','status-idle','status-dnd','status-invisible');el.classList.add('status-'+status)});const label=document.getElementById('my-status-label');if(label)label.textContent=statusLabels[status]||statusLabels.online;const menu=document.getElementById('status-menu');if(menu)menu.classList.remove('open')}function setPresenceStatus(status){applyLocalStatus(status);fetch('/community/presence/status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})}).catch(()=>{})}document.addEventListener('click',()=>{const menu=document.getElementById('status-menu');if(menu)menu.classList.remove('open')});
 
 
 function showActionToast(text){
@@ -608,6 +647,15 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(!avatar && dm) avatar=bg($('.dm-avatar,.avatar',dm));
     if(!avatar && panel) avatar=selfAvatar();
     if(!avatar) avatar=bg(el)||bg(a);
+    let banner=el.dataset.miniBanner||'';
+    if(!banner && msg){ let be = msg.querySelector('[data-mini-banner]'); if(be) banner = be.dataset.miniBanner || ''; }
+    if(!banner && mem) banner = mem.dataset.miniBanner || '';
+    if(!banner && dm) banner = dm.dataset.miniBanner || '';
+    if(!banner && panel) banner = panel.dataset.miniBanner || '{{ account.banner_url or "" }}';
+    if(!banner){
+      let bEl = el.closest('[data-mini-banner]');
+      if(bEl && bEl.dataset) banner = bEl.dataset.miniBanner || '';
+    }
     let role=el.dataset.miniRole||'';
     if(!role && mem) role=clean(txt($('.member-role,.role-pill',mem)));
     if(!role && msg) role=clean(txt($('.role-pill,.badge',msg)));
@@ -630,17 +678,41 @@ document.addEventListener('DOMContentLoaded',()=>{
     let html=(el.outerHTML||'')+(mem?mem.outerHTML:'')+(panel?panel.outerHTML:'');
     let st=html.match(/status-(online|idle|dnd|invisible|offline)/); if(st && (!status || status==='offline')) status=st[1];
     if(isSelf){ let d=$('#my-avatar-status,#modal-avatar-status'); if(d){ let cls=[...d.classList].find(x=>x.startsWith('status-')); if(cls) status=cls.replace('status-',''); } }
-    return {name:clean(name)||'user',avatar,role,c1,c2,profile,isSelf,status,bio};
+    return {name:clean(name)||'user',avatar,banner,role,c1,c2,profile,isSelf,status,bio};
   }
   function setAvatar(el,textEl,url,name){ if(!el)return; el.style.backgroundImage=url?`url('${safeUrl(url)}')`:''; if(textEl) textEl.textContent=url?'':(name||'?').slice(0,1).toUpperCase(); }
+  function tintFromBanner(url,target){
+    if(!target || !url) return;
+    try{
+      const img=new Image(); img.crossOrigin='anonymous';
+      img.onload=function(){
+        try{
+          const c=document.createElement('canvas'); c.width=1; c.height=1;
+          const ctx=c.getContext('2d',{willReadFrequently:true}); ctx.drawImage(img,0,0,1,1);
+          const d=ctx.getImageData(0,0,1,1).data;
+          target.style.setProperty('--ah-banner-soft', `rgb(${d[0]}, ${d[1]}, ${d[2]})`);
+        }catch(e){}
+      };
+      img.src=url;
+    }catch(e){}
+  }
+  function setBanner(el,url,c1,c2){
+    if(!el)return;
+    el.classList.toggle('has-image',!!url);
+    el.style.backgroundImage = url ? `url('${safeUrl(url)}')` : `linear-gradient(135deg,${c1||'#5865f2'},${c2||'#9b5cf6'})`;
+    const fullLeft = el.closest('.ah-v3-full-left') || document.querySelector('.ah-v3-full-left');
+    const mini = el.closest('.ah-v3-mini');
+    if(url){ tintFromBanner(url, fullLeft||mini); tintFromBanner(url, mini); }
+    else { if(fullLeft) fullLeft.style.setProperty('--ah-banner-soft', c1||'#5865f2'); if(mini) mini.style.setProperty('--ah-banner-soft', c1||'#5865f2'); }
+  }
   function place(pop,e){ pop.classList.add('open'); let r=pop.getBoundingClientRect(); let x=e?e.clientX:90, y=e?e.clientY:window.innerHeight-80; pop.style.left=Math.min(Math.max(10,x+14),window.innerWidth-r.width-10)+'px'; pop.style.top=Math.min(Math.max(10,y-52),window.innerHeight-r.height-10)+'px'; }
   function openMini(el,e){
     active=dataFrom(el); let pop=$('#ah-v3-mini'); if(!pop)return;
-    pop.classList.toggle('self',!!active.isSelf); pop.style.setProperty('--ah-c1',active.c1); pop.style.setProperty('--ah-c2',active.c2);
+    pop.classList.toggle('self',!!active.isSelf); pop.style.setProperty('--ah-c1',active.c1); pop.style.setProperty('--ah-c2',active.c2); setBanner($('#ah-v3-banner'), active.banner, active.c1, active.c2);
     setAvatar($('#ah-v3-avatar'),$('#ah-v3-avatar-text'),active.avatar,active.name); $('#ah-v3-name').textContent=active.name; $('#ah-v3-handle').textContent='@'+active.name; $('#ah-v3-role').textContent=active.role||'member'; const bioText=(active.bio||'').trim(); const noteTitle=$('#ah-v3-mini .ah-v3-note b'); if(noteTitle) noteTitle.textContent=bioText?'Опис профілю':'Міні-профіль'; $('#ah-v3-note-text').textContent=bioText || (active.isSelf?'Звідси можна змінити статус. Натисни на аватарку для повної картки.':'Натисни на аватарку, щоб відкрити повну картку профілю.'); let st=$('#ah-v3-status'); if(st) st.className='ah-v3-status '+(active.status||'offline'); let msg=$('#ah-v3-message'); if(msg){msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; msg.textContent=active.isSelf?'Редактировать профиль':'Message'} place(pop,e);
   }
   function closeMini(){let p=$('#ah-v3-mini'); if(p)p.classList.remove('open')}
-  function openFull(){ if(!active)return; let ov=$('#ah-v3-overlay'); if(!ov)return; ov.style.setProperty('--ah-c1',active.c1); ov.style.setProperty('--ah-c2',active.c2); setAvatar($('#ah-v3-full-avatar'),$('#ah-v3-full-avatar-text'),active.avatar,active.name); $('#ah-v3-full-name').textContent=active.name; $('#ah-v3-full-handle').textContent='@'+active.name; $('#ah-v3-full-meta').textContent=active.isSelf?'Твоя картка AlexiHub.':'Картка користувача AlexiHub.'; $('#ah-v3-full-about').textContent=(active.bio||'').trim() || (active.isSelf?'Тут буде повний профіль, активність, ігри, інтеграції та нотатки.':'Швидкий перегляд профілю поверх поточної сторінки, без переходу зі сторінки.'); let msg=$('#ah-v3-full-message'); if(msg){ msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; } let op=$('#ah-v3-full-open'); if(op) op.href=active.profile; closeMini(); ov.classList.add('open'); }
+  function openFull(){ if(!active)return; let ov=$('#ah-v3-overlay'); if(!ov)return; ov.style.setProperty('--ah-c1',active.c1); ov.style.setProperty('--ah-c2',active.c2); setBanner($('#ah-v3-full-banner'), active.banner, active.c1, active.c2); setAvatar($('#ah-v3-full-avatar'),$('#ah-v3-full-avatar-text'),active.avatar,active.name); $('#ah-v3-full-name').textContent=active.name; $('#ah-v3-full-handle').textContent='@'+active.name; $('#ah-v3-full-meta').textContent=active.isSelf?'Твоя картка AlexiHub.':'Картка користувача AlexiHub.'; $('#ah-v3-full-about').textContent=(active.bio||'').trim() || (active.isSelf?'Тут буде повний профіль, активність, ігри, інтеграції та нотатки.':'Швидкий перегляд профілю поверх поточної сторінки, без переходу зі сторінки.'); let msg=$('#ah-v3-full-message'); if(msg){ msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; } let op=$('#ah-v3-full-open'); if(op) op.href=active.profile; closeMini(); ov.classList.add('open'); }
   function closeFull(){let ov=$('#ah-v3-overlay'); if(ov)ov.classList.remove('open')}
   document.addEventListener('click',function(e){
     if(e.target.closest('#ah-v3-mini,#ah-v3-overlay')) return;
@@ -870,6 +942,71 @@ document.addEventListener('DOMContentLoaded',()=>{
       e.preventDefault(); e.stopPropagation(); window.openProfileSettings();
     }
   },true);
+})();
+</script>
+
+
+
+<script id="ah-presence-server-save-fix">
+(function(){
+  if(window.__ahPresenceSaveFix) return; window.__ahPresenceSaveFix = true;
+  const statusLabels = { online:'В мережі', idle:'Неактивний', dnd:'Не турбувати', invisible:'Невидимий' };
+  function normalizeStatus(s){ return ['online','idle','dnd','invisible'].includes(s) ? s : 'online'; }
+  window.applyLocalStatus = window.applyLocalStatus || function(status){
+    status = normalizeStatus(status);
+    document.querySelectorAll('#my-status-dot,#my-avatar-status,#modal-avatar-status,.account-avatar-status,.self-status-dot').forEach(el=>{
+      el.classList.remove('status-online','status-idle','status-dnd','status-invisible','online','idle','dnd','invisible','offline');
+      el.classList.add('status-' + status);
+      el.classList.add(status);
+    });
+    document.querySelectorAll('.account-panel[data-mini-username], .user-panel[data-mini-username]').forEach(panel=>{
+      panel.dataset.miniStatus = status;
+      const label = panel.querySelector('.account-status,.user-status,#my-status-label');
+      if(label) label.textContent = statusLabels[status] || statusLabels.online;
+    });
+    const mine = (window.CURRENT_USER || '{{ account.username if account else "" }}' || '').toLowerCase();
+    document.querySelectorAll('[data-mini-username]').forEach(el=>{
+      const n=(el.dataset.miniUsername||'').toLowerCase();
+      if(n && mine && n===mine) el.dataset.miniStatus = status;
+    });
+    const menu=document.getElementById('status-menu'); if(menu) menu.classList.remove('open');
+  };
+  window.setPresenceStatus = window.setPresenceStatus || function(status){
+    status = normalizeStatus(status);
+    window.applyLocalStatus(status);
+    try{
+      fetch('/community/presence/status', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({status})
+      }).then(r=>r.ok?r.json():null).then(data=>{
+        if(data && data.status) window.applyLocalStatus(data.status);
+      }).catch(()=>{});
+    }catch(e){}
+  };
+})();
+</script>
+
+
+<script id="ah-banner-live-sync-fix">
+(function(){
+  if(window.__ahBannerLiveSyncFix) return; window.__ahBannerLiveSyncFix=true;
+  function setPreviewBanner(url){
+    document.querySelectorAll('#ah-profile-preview-banner,.self-profile-banner').forEach(el=>{
+      if(!el) return;
+      el.style.backgroundImage = url ? `url('${String(url).replace(/'/g,'%27')}')` : '';
+      el.style.backgroundSize='cover'; el.style.backgroundPosition='center';
+    });
+    document.querySelectorAll('.account-panel[data-mini-username],.user-panel[data-mini-username]').forEach(p=>{ if(p.dataset) p.dataset.miniBanner=url||''; });
+  }
+  document.addEventListener('input',e=>{
+    const el=e.target;
+    if(el && el.name==='banner_url') setPreviewBanner(el.value.trim());
+  });
+  document.addEventListener('change',e=>{
+    const el=e.target;
+    if(el && el.name==='banner_file' && el.files && el.files[0]) setPreviewBanner(URL.createObjectURL(el.files[0]));
+  });
 })();
 </script>
 
