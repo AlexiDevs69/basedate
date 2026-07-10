@@ -1450,8 +1450,10 @@
                 {% for p in pending_incoming %}
                 {% set u = p.requester %}
                 {% if u %}
-                <div class="friend-row" data-name="{{ u.username|lower }}">
-                  <span class="avatar" {% if u.avatar_url %}style="background-image:url('{{ u.avatar_url }}')"{% endif %}>{% if not u.avatar_url %}{{ u.username[:1]|upper }}{% endif %}</span>
+                {% set u_status = u.account_status or 'online' %}
+                {% set u_visible = u.id in online_ids and u_status != 'invisible' %}
+                <div class="friend-row mini-profile-trigger" data-name="{{ u.username|lower }}" data-mini-username="{{ u.username }}" data-mini-avatar="{{ u.avatar_url or '' }}" data-mini-banner="{{ u.banner_url or '' }}" data-mini-status="{{ u_status if u_visible else 'offline' }}" data-mini-role="{{ u.role_label or 'member' }}" data-mini-c1="{{ u.role_color_start or '#5865f2' }}" data-mini-c2="{{ u.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ u.username }}" data-mini-bio="{{ u.bio or '' }}">
+                  <span class="avatar" {% if u.avatar_url %}style="background-image:url('{{ u.avatar_url }}')"{% endif %}>{% if not u.avatar_url %}{{ u.username[:1]|upper }}{% endif %}{% if u_visible %}<span class="presence status-{{ u_status }}"></span>{% endif %}</span>
                   <span class="friend-main"><b>{{ u.username }}</b><span>Хочет добавить тебя в друзья</span></span>
                   <span class="friend-actions"><button class="friend-icon-btn" onclick="respondFriendRequest({{ p.friendship_id }}, true, this)" title="Принять"><svg class="icon icon-sm"><use href="#i-check"></use></svg></button><button class="friend-icon-btn danger" onclick="respondFriendRequest({{ p.friendship_id }}, false, this)" title="Отклонить"><svg class="icon icon-sm"><use href="#i-close"></use></svg></button></span>
                 </div>
@@ -1465,8 +1467,10 @@
                 {% for p in pending_outgoing %}
                 {% set u = p.addressee %}
                 {% if u %}
-                <div class="friend-row" data-name="{{ u.username|lower }}">
-                  <span class="avatar" {% if u.avatar_url %}style="background-image:url('{{ u.avatar_url }}')"{% endif %}>{% if not u.avatar_url %}{{ u.username[:1]|upper }}{% endif %}</span>
+                {% set u_status = u.account_status or 'online' %}
+                {% set u_visible = u.id in online_ids and u_status != 'invisible' %}
+                <div class="friend-row mini-profile-trigger" data-name="{{ u.username|lower }}" data-mini-username="{{ u.username }}" data-mini-avatar="{{ u.avatar_url or '' }}" data-mini-banner="{{ u.banner_url or '' }}" data-mini-status="{{ u_status if u_visible else 'offline' }}" data-mini-role="{{ u.role_label or 'member' }}" data-mini-c1="{{ u.role_color_start or '#5865f2' }}" data-mini-c2="{{ u.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ u.username }}" data-mini-bio="{{ u.bio or '' }}">
+                  <span class="avatar" {% if u.avatar_url %}style="background-image:url('{{ u.avatar_url }}')"{% endif %}>{% if not u.avatar_url %}{{ u.username[:1]|upper }}{% endif %}{% if u_visible %}<span class="presence status-{{ u_status }}"></span>{% endif %}</span>
                   <span class="friend-main"><b>{{ u.username }}</b><span>Заявка отправлена</span></span>
                   <span class="friend-actions"><button class="friend-icon-btn danger" onclick="cancelFriendRequest({{ p.friendship_id }}, this)" title="Отменить"><svg class="icon icon-sm"><use href="#i-close"></use></svg></button></span>
                 </div>
