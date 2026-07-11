@@ -93,6 +93,8 @@
     .edit-save { display:none; }
     .edit-cancel { border:none; background:transparent; color:#00a8fc; cursor:pointer; padding:0 .12rem; font:inherit; font-weight:800; }
     .edit-cancel:hover { text-decoration:underline; color:#37b7ff; }
+    .message-edited { color:#8e949f; font-size:.72em; font-weight:650; margin-left:.32rem; white-space:nowrap; }
+    .message-edited.hidden { display:none; }
     .empty-chat { color:#666; text-align:center; padding:4rem 1rem; font-size:.9rem; }
 
     .typing-indicator {
@@ -1405,14 +1407,14 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
       {% for item in feed %}
       {% set author = item.author %}
       {% set is_mine = author and author.id == account.id %}
-      <article class="message" id="message-{{ item.message.id }}" data-message-id="{{ item.message.id }}" data-message-content="{{ item.message.content|e }}" data-message-author="{{ author.username if author else 'видалений юзер' }}" data-message-avatar="{{ author.avatar_url if author and author.avatar_url else '' }}" data-message-delete-url="/community/servers/{{ server.id }}/channel/{{ channel.id }}/message/{{ item.message.id }}/delete" data-message-editable="{{ '1' if is_mine else '0' }}">
+      <article class="message" id="message-{{ item.message.id }}" data-message-id="{{ item.message.id }}" data-message-content="{{ item.message.content|e }}" data-message-author="{{ author.username if author else 'видалений юзер' }}" data-message-avatar="{{ author.avatar_url if author and author.avatar_url else '' }}" data-message-delete-url="/community/servers/{{ server.id }}/channel/{{ channel.id }}/message/{{ item.message.id }}/delete" data-message-editable="{{ '1' if is_mine else '0' }}" data-message-edited="{{ '1' if item.message.edited_at else '0' }}">
         <a href="/community/profile/{{ author.username if author else '' }}" class="avatar mini-profile-trigger profile-click" data-mini-username="{{ author.username if author else 'видалений юзер' }}" data-mini-avatar="{{ author.avatar_url if author and author.avatar_url else '' }}" data-mini-status="{{ account.account_status if author and author.id == account.id else (author.account_status if author and author.account_status else 'offline') }}" data-mini-banner="{{ author.banner_url if author and author.banner_url else '' }}" data-mini-role="{{ author.role_label if author and author.role_label else 'member' }}" data-mini-effect="{{ author.name_effect if author and author.name_effect else 'none' }}" data-mini-font="{{ author.name_font if author and author.name_font else 'default' }}" data-mini-c1="{{ author.role_color_start if author and author.role_color_start else '#f5576c' }}" data-mini-c2="{{ author.role_color_end if author and author.role_color_end else '#7367f0' }}" data-mini-profile="/community/profile/{{ author.username if author else '' }}" data-mini-bio="{{ author.bio if author and author.bio else '' }}" {% if author and author.avatar_url %}style="background-image:url('{{ author.avatar_url }}');"{% endif %}>{% if author and not author.avatar_url %}{{ author.username[:1]|upper }}{% endif %}</a>
         <div class="message-body">
           <div class="message-head">
             <a href="/community/profile/{{ author.username if author else '' }}" class="visual-name mini-profile-trigger profile-click name-{{ author.name_effect if author and author.name_effect else 'none' }} font-{{ author.name_font if author and author.name_font else 'default' }}" data-mini-username="{{ author.username if author else 'видалений юзер' }}" data-mini-avatar="{{ author.avatar_url if author and author.avatar_url else '' }}" data-mini-status="{{ account.account_status if author and author.id == account.id else (author.account_status if author and author.account_status else 'offline') }}" data-mini-banner="{{ author.banner_url if author and author.banner_url else '' }}" data-mini-role="{{ author.role_label if author and author.role_label else 'member' }}" data-mini-effect="{{ author.name_effect if author and author.name_effect else 'none' }}" data-mini-font="{{ author.name_font if author and author.name_font else 'default' }}" data-mini-c1="{{ author.role_color_start if author and author.role_color_start else '#f5576c' }}" data-mini-c2="{{ author.role_color_end if author and author.role_color_end else '#7367f0' }}" data-mini-profile="/community/profile/{{ author.username if author else '' }}" data-mini-bio="{{ author.bio if author and author.bio else '' }}" style="--name-c1: {{ author.role_color_start if author and author.role_color_start else '#f5576c' }}; --name-c2: {{ author.role_color_end if author and author.role_color_end else '#7367f0' }}; text-decoration:none;">{{ author.username if author else 'видалений юзер' }}</a>
             <span class="message-time">{{ item.message.created_at }}</span>
           </div>
-          <div class="message-content" id="content-{{ item.message.id }}">{{ item.message.content }}</div>
+          <div class="message-content" id="content-{{ item.message.id }}"><span class="message-content-text">{{ item.message.content }}</span><span class="message-edited {{ '' if item.message.edited_at else 'hidden' }}" id="edited-{{ item.message.id }}">(изменено)</span></div>
           {% if item.message.image_url %}<img src="{{ item.message.image_url }}" class="message-image" alt="">{% endif %}
 
           {% if is_mine %}
@@ -1808,6 +1810,7 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
       avatar.dataset.miniUsername = author.username || 'user';
       avatar.dataset.miniAvatar = author.avatar_url || '';
       avatar.dataset.miniStatus = author.account_status || author.status || ((author.id === myAccountId) ? '{{ account.account_status or 'online' }}' : 'offline');
+      avatar.dataset.miniBanner = author.banner_url || '';
       avatar.dataset.miniRole = author.role_label || 'member';
       avatar.dataset.miniEffect = author.name_effect || 'none';
       avatar.dataset.miniFont = author.name_font || 'default';
@@ -1827,6 +1830,7 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
       name.dataset.miniUsername = author.username || 'user';
       name.dataset.miniAvatar = author.avatar_url || '';
       name.dataset.miniStatus = author.account_status || author.status || ((author.id === myAccountId) ? '{{ account.account_status or 'online' }}' : 'offline');
+      name.dataset.miniBanner = author.banner_url || '';
       name.dataset.miniRole = author.role_label || 'member';
       name.dataset.miniEffect = author.name_effect || 'none';
       name.dataset.miniFont = author.name_font || 'default';
@@ -1856,6 +1860,7 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
       article.dataset.messageAvatar = author.avatar_url || '';
       article.dataset.messageDeleteUrl = '/community/servers/{{ server.id }}/channel/{{ channel.id }}/message/' + msg.id + '/delete';
       article.dataset.messageEditable = (author.id === myAccountId) ? '1' : '0';
+      article.dataset.messageEdited = msg.edited_at ? '1' : '0';
       article.appendChild(buildAvatar(author));
 
       var body = document.createElement('div');
@@ -1872,7 +1877,8 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
       var content = document.createElement('div');
       content.className = 'message-content';
       content.id = 'content-' + msg.id;
-      content.textContent = msg.content || '';
+      content.innerHTML = '<span class="message-content-text"></span><span class="message-edited ' + (msg.edited_at ? '' : 'hidden') + '" id="edited-' + msg.id + '">(изменено)</span>';
+      content.querySelector('.message-content-text').textContent = msg.content || '';
 
       body.appendChild(head);
       body.appendChild(content);
@@ -1962,6 +1968,7 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
         var data;
         try { data = JSON.parse(event.data); } catch (e) { return; }
         if (data.type === 'message') appendMessage(data.message, data.author || {});
+        if (data.type === 'message_edit') applyServerMessageEdit(data.message || {});
         if (data.type === 'typing') renderTyping(data.users || []);
         if (data.type === 'presence') updateMemberPresence(data.account_id, data.status, data.online);
       });
@@ -2042,6 +2049,48 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
       textarea.addEventListener('blur', function () { sendSocket({ type: 'typing_stop' }); });
     }
 
+    function applyServerMessageEdit(msg) {
+      if (!msg || !msg.id) return;
+      var article = document.getElementById('message-' + msg.id);
+      if (!article) return;
+      article.dataset.messageContent = msg.content || '';
+      article.dataset.messageEdited = '1';
+      var content = document.getElementById('content-' + msg.id);
+      if (content) {
+        var text = content.querySelector('.message-content-text');
+        if (!text) {
+          var oldText = content.textContent || '';
+          content.textContent = '';
+          text = document.createElement('span');
+          text.className = 'message-content-text';
+          content.appendChild(text);
+          var edited = document.createElement('span');
+          edited.className = 'message-edited hidden';
+          edited.id = 'edited-' + msg.id;
+          edited.textContent = '(изменено)';
+          content.appendChild(edited);
+          if (!msg.content) msg.content = oldText.replace(/\s*\(изменено\)\s*$/, '');
+        }
+        text.textContent = msg.content || '';
+        var editedEl = document.getElementById('edited-' + msg.id) || content.querySelector('.message-edited');
+        if (!editedEl) {
+          editedEl = document.createElement('span');
+          editedEl.className = 'message-edited';
+          editedEl.id = 'edited-' + msg.id;
+          editedEl.textContent = '(изменено)';
+          content.appendChild(editedEl);
+        }
+        editedEl.classList.remove('hidden');
+      }
+      var form = document.getElementById('edit-form-' + msg.id);
+      if (form) {
+        var area = form.querySelector('textarea[name="content"]');
+        var image = form.querySelector('input[name="image_url"]');
+        if (area) area.value = msg.content || '';
+        if (image) image.value = msg.image_url || '';
+      }
+    }
+
     function wireServerInlineEdit(form) {
       if (!form || form.dataset.inlineEditReady === '1') return;
       form.dataset.inlineEditReady = '1';
@@ -2066,6 +2115,18 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
         });
         setTimeout(autosize, 0);
       }
+      form.addEventListener('submit', function(e) {
+        var id = (form.id || '').replace('edit-form-', '');
+        var content = area ? area.value.trim() : '';
+        var image = form.querySelector('input[name="image_url"]');
+        var imageUrl = image ? image.value.trim() : '';
+        if (socket && socket.readyState === WebSocket.OPEN) {
+          e.preventDefault();
+          if (!id || !content) return;
+          socket.send(JSON.stringify({ type: 'edit', id: id, content: content, image_url: imageUrl }));
+          closeEdit(id);
+        }
+      });
     }
 
     function openEdit(id) {
