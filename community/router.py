@@ -73,6 +73,8 @@ async def _ensure_server_visual_columns(db: AsyncSession) -> None:
     await db.execute(text("ALTER TABLE community_direct_messages ADD COLUMN IF NOT EXISTS edited_at TIMESTAMP WITH TIME ZONE"))
     await db.execute(text("ALTER TABLE community_server_messages ADD COLUMN IF NOT EXISTS reply_to_id INTEGER"))
     await db.execute(text("ALTER TABLE community_direct_messages ADD COLUMN IF NOT EXISTS reply_to_id INTEGER"))
+    await db.execute(text("ALTER TABLE community_server_messages ADD COLUMN IF NOT EXISTS is_forwarded BOOLEAN NOT NULL DEFAULT FALSE"))
+    await db.execute(text("ALTER TABLE community_direct_messages ADD COLUMN IF NOT EXISTS is_forwarded BOOLEAN NOT NULL DEFAULT FALSE"))
     await db.commit()
 
 
@@ -950,7 +952,7 @@ async def server_message_edit_submit(
         return RedirectResponse(url="/community", status_code=303)
 
     message = await crud.get_server_message(db, server_id, channel_id, message_id)
-    if message and message.author_id == account.id and content.strip():
+    if message and message.author_id == account.id and not getattr(message, "is_forwarded", False) and content.strip():
         updated = await crud.update_server_message(db, message, content.strip(), image_url.strip())
         await realtime_channels.broadcast(
             (server_id, channel_id),
@@ -1221,7 +1223,7 @@ async def api_forward_message(request: Request, db: AsyncSession = Depends(get_d
             if not thread:
                 continue
             thread_id = int(thread.id)
-            msg = await crud.create_dm_message(db, thread_id, account_id, source_content, source_image_url)
+            msg = await crud.create_dm_message(db, thread_id, account_id, source_content, source_image_url, is_forwarded=True)
             message_payload = {
                 "id": int(msg.id),
                 "thread_id": thread_id,
@@ -1231,6 +1233,7 @@ async def api_forward_message(request: Request, db: AsyncSession = Depends(get_d
                 "created_at": msg.created_at.isoformat(),
                 "reply_to_id": None,
                 "reply": None,
+                "is_forwarded": True,
             }
             await realtime_channels.broadcast((0, thread_id), {"type": "message", "message": message_payload, "author": author_payload})
             sent.append({"type": "dm", "username": username})
@@ -1252,7 +1255,7 @@ async def api_forward_message(request: Request, db: AsyncSession = Depends(get_d
             if not channel:
                 continue
 
-            msg = await crud.create_server_message(db, server_id, channel_id, account_id, source_content, source_image_url)
+            msg = await crud.create_server_message(db, server_id, channel_id, account_id, source_content, source_image_url, is_forwarded=True)
             message_payload = {
                 "id": int(msg.id),
                 "server_id": int(server_id),
@@ -1263,6 +1266,7 @@ async def api_forward_message(request: Request, db: AsyncSession = Depends(get_d
                 "created_at": msg.created_at.isoformat(),
                 "reply_to_id": None,
                 "reply": None,
+                "is_forwarded": True,
             }
             await realtime_channels.broadcast((server_id, channel_id), {"type": "message", "message": message_payload, "author": author_payload})
             sent.append({"type": "channel", "server_id": server_id, "channel_id": channel_id})
@@ -1365,7 +1369,7 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
                         await websocket.close(code=1008)
                         return
                     message = await crud.get_server_message(db, server_id, channel_id, edit_id)
-                    if not message or message.author_id != account_id:
+                    if not message or message.author_id != account_id or getattr(message, "is_forwarded", False):
                         continue
                     updated = await crud.update_server_message(db, message, content, image_url)
                     payload = {
@@ -1426,6 +1430,7 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
                         "created_at": created_at,
                         "reply_to_id": reply_id,
                         "reply": reply_payload,
+                        "is_forwarded": False,
                     },
                     "author": profile,
                 },
@@ -1535,7 +1540,7 @@ async def dm_message_edit_submit(
     if not thread:
         return RedirectResponse(url=f"/community/dm/{other.username}", status_code=303)
     message = await crud.get_dm_message(db, thread.id, message_id)
-    if message and message.author_id == account.id and content.strip():
+    if message and message.author_id == account.id and not getattr(message, "is_forwarded", False) and content.strip():
         updated = await crud.update_dm_message(db, message, content.strip(), image_url.strip())
         await realtime_channels.broadcast(
             (0, thread.id),
@@ -1635,7 +1640,7 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
                         await websocket.close(code=1008)
                         return
                     message = await crud.get_dm_message(db, thread_id, edit_id)
-                    if not message or message.author_id != account_id:
+                    if not message or message.author_id != account_id or getattr(message, "is_forwarded", False):
                         continue
                     updated = await crud.update_dm_message(db, message, content, image_url)
                     payload = {
@@ -1691,6 +1696,7 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
                         "created_at": created_at,
                         "reply_to_id": reply_id,
                         "reply": reply_payload,
+                        "is_forwarded": False,
                     },
                     "author": profile,
                 },
