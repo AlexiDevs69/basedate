@@ -1062,6 +1062,7 @@ async def server_invite_submit(
     server_id: int,
     request: Request,
     username: str = Form(...),
+    channel_id: str = Form(""),
     redirect_to: str = Form(""),
     db: AsyncSession = Depends(get_db),
 ):
@@ -1073,9 +1074,62 @@ async def server_invite_submit(
 
     target = await crud.get_account_by_username(db, username.strip())
     if target:
-        await crud.invite_friend_to_server(db, server_id, account.id, target.id)
+        # Capture primitive values BEFORE helper functions commit. AsyncSession can
+        # expire ORM instances on commit; touching account.id/invite.id after that
+        # is exactly how MissingGreenlet can appear on Render/asyncpg.
+        account_id = int(account.id)
+        target_id = int(target.id)
+        author_payload = _account_payload(account)
+
+        invite = await crud.invite_friend_to_server(db, server_id, account_id, target_id)
+        if invite:
+            invite_id = int(invite.id)
+            invite_channel_id = _parse_optional_int(channel_id)
+            if invite_channel_id:
+                channel = await crud.get_server_channel(db, server_id, invite_channel_id)
+                if not channel:
+                    invite_channel_id = None
+
+            # Keep the database message as plain text. The DM page will render
+            # the Discord-like card client-side through /api/.../preview.
+            # This makes old/broken invite rows unable to crash the whole DM page.
+            thread = await crud.get_or_create_dm_thread(db, account_id, target_id)
+            if thread:
+                thread_id = int(thread.id)
+                content = crud.make_server_invite_dm_content(invite_id, invite_channel_id)
+                msg = await crud.create_dm_message(db, thread_id, account_id, content)
+                message_id = int(msg.id)
+                created_at = msg.created_at.isoformat()
+                await realtime_channels.broadcast(
+                    (0, thread_id),
+                    {
+                        "type": "message",
+                        "message": {
+                            "id": message_id,
+                            "thread_id": thread_id,
+                            "author_id": account_id,
+                            "content": content,
+                            "image_url": None,
+                            "created_at": created_at,
+                            "reply_to_id": None,
+                            "reply": None,
+                        },
+                        "author": author_payload,
+                    },
+                )
     safe_redirect = redirect_to if redirect_to.startswith("/community/") else f"/community/servers/{server_id}"
     return RedirectResponse(url=safe_redirect, status_code=303)
+
+
+
+@router.get("/api/server-invites/{invite_id}/preview")
+async def api_server_invite_preview(invite_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    viewer = await current_account(request, db)
+    if not viewer:
+        return JSONResponse({"error": "not_logged_in"}, status_code=401)
+    channel_id = _parse_optional_int(request.query_params.get("channel_id"))
+    payload = await crud.build_server_invite_preview(db, invite_id, viewer.id, channel_id)
+    return JSONResponse(payload)
 
 
 @router.post("/api/server-invites/respond/{invite_id}")
@@ -1086,11 +1140,18 @@ async def api_respond_server_invite(invite_id: int, request: Request, db: AsyncS
 
     body = await request.json()
     accept = bool(body.get("accept"))
+    requested_channel_id = _parse_optional_int(body.get("channel_id"))
     invite = await crud.respond_server_invite(db, invite_id, viewer.id, accept)
     if not invite:
         return JSONResponse({"error": "not_found"}, status_code=404)
 
-    return JSONResponse({"status": invite.status, "server_id": invite.server_id})
+    channel_id = None
+    if accept and requested_channel_id:
+        ch = await crud.get_server_channel(db, invite.server_id, requested_channel_id)
+        if ch:
+            channel_id = ch.id
+
+    return JSONResponse({"status": invite.status, "server_id": invite.server_id, "channel_id": channel_id})
 
 
 
