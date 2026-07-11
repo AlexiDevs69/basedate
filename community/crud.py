@@ -3,6 +3,7 @@ Query functions for the community module -- kept separate from the admin
 dashboard's crud.py so the two stay easy to reason about independently.
 """
 from datetime import datetime, timedelta, timezone
+import re
 
 from sqlalchemy import and_, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -72,6 +73,46 @@ async def ensure_account_visual_columns(db: AsyncSession) -> None:
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS account_status VARCHAR(16) DEFAULT 'online' NOT NULL"))
     await db.execute(text("UPDATE community_accounts SET account_status = 'online' WHERE account_status IS NULL OR account_status = ''"))
     await db.commit()
+
+
+# Server invite safety guard.
+# Render/create_all() does not add columns to old tables, so every route that touches
+# invites can call this cheaply. It only does real work once per process.
+_SERVER_INVITE_COLUMNS_READY = False
+
+async def ensure_server_invite_columns(db: AsyncSession) -> None:
+    global _SERVER_INVITE_COLUMNS_READY
+    if _SERVER_INVITE_COLUMNS_READY:
+        return
+    await db.execute(text("ALTER TABLE community_server_invites ADD COLUMN IF NOT EXISTS status VARCHAR(16) DEFAULT 'pending' NOT NULL"))
+    await db.execute(text("ALTER TABLE community_server_invites ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL"))
+    await db.execute(text("ALTER TABLE community_server_invites ADD COLUMN IF NOT EXISTS responded_at TIMESTAMP WITH TIME ZONE"))
+    await db.execute(text("UPDATE community_server_invites SET status='pending' WHERE status IS NULL OR status=''"))
+    await db.commit()
+    _SERVER_INVITE_COLUMNS_READY = True
+
+
+SERVER_INVITE_DM_PREFIX = "alexihub://server-invite/"
+
+
+def make_server_invite_dm_content(invite_id: int, channel_id: int | None = None) -> str:
+    base = f"{SERVER_INVITE_DM_PREFIX}{int(invite_id)}"
+    if channel_id:
+        return f"{base}?channel={int(channel_id)}"
+    return base
+
+
+def parse_server_invite_dm_content(content: str | None) -> tuple[int, int | None] | None:
+    raw = (content or "").strip()
+    if not raw.startswith(SERVER_INVITE_DM_PREFIX):
+        return None
+    m = re.search(r"alexihub://server-invite/(\d+)(?:\?channel=(\d+))?", raw)
+    if not m:
+        return None
+    invite_id = int(m.group(1))
+    channel_id = int(m.group(2)) if m.group(2) else None
+    return invite_id, channel_id
+
 
 
 
@@ -832,6 +873,7 @@ async def invite_friend_to_server(
     inviter_id: int,
     invitee_id: int,
 ) -> ServerInvite | None:
+    await ensure_server_invite_columns(db)
     if inviter_id == invitee_id:
         return None
     if not await is_server_member(db, server_id, inviter_id):
@@ -868,6 +910,7 @@ async def invite_friend_to_server(
 
 
 async def list_pending_server_invites(db: AsyncSession, account_id: int) -> list[dict]:
+    await ensure_server_invite_columns(db)
     result = await db.execute(
         select(ServerInvite)
         .where(ServerInvite.invitee_id == account_id, ServerInvite.status == "pending")
@@ -887,6 +930,7 @@ async def respond_server_invite(
     account_id: int,
     accept: bool,
 ) -> ServerInvite | None:
+    await ensure_server_invite_columns(db)
     result = await db.execute(select(ServerInvite).where(ServerInvite.id == invite_id))
     invite = result.scalar_one_or_none()
     if not invite or invite.invitee_id != account_id or invite.status != "pending":
@@ -901,6 +945,77 @@ async def respond_server_invite(
     await db.commit()
     await db.refresh(invite)
     return invite
+
+
+async def get_server_invite_by_id(db: AsyncSession, invite_id: int) -> ServerInvite | None:
+    await ensure_server_invite_columns(db)
+    result = await db.execute(select(ServerInvite).where(ServerInvite.id == invite_id))
+    return result.scalar_one_or_none()
+
+
+async def build_server_invite_preview(
+    db: AsyncSession,
+    invite_id: int,
+    viewer_id: int,
+    channel_id: int | None = None,
+) -> dict:
+    """Return a plain JSON-safe invite preview.
+
+    This intentionally returns a dict instead of ORM objects so the template never
+    touches lazy/expired SQLAlchemy state. One broken invite must not break DM view.
+    """
+    await ensure_server_invite_columns(db)
+    try:
+        invite = await get_server_invite_by_id(db, invite_id)
+        if not invite:
+            return {"type": "server_invite", "invite_id": invite_id, "valid": False, "status": "invalid"}
+
+        server = await get_server_by_id(db, invite.server_id)
+        if not server:
+            return {"type": "server_invite", "invite_id": invite_id, "valid": False, "status": "invalid"}
+
+        channel = None
+        if channel_id:
+            channel = await get_server_channel(db, invite.server_id, channel_id)
+            if not channel:
+                channel_id = None
+
+        inviter = await get_account_by_id(db, invite.inviter_id)
+        count_result = await db.execute(
+            select(func.count()).select_from(ServerMember).where(ServerMember.server_id == invite.server_id)
+        )
+        members_count = int(count_result.scalar_one() or 0)
+        viewer_is_invitee = int(viewer_id) == int(invite.invitee_id)
+        viewer_is_inviter = int(viewer_id) == int(invite.inviter_id)
+        already_member = await is_server_member(db, invite.server_id, viewer_id)
+        valid = invite.status == "pending" and (viewer_is_invitee or viewer_is_inviter)
+
+        return {
+            "type": "server_invite",
+            "invite_id": int(invite.id),
+            "server_id": int(server.id),
+            "server_name": server.name,
+            "server_icon_url": server.icon_url or "",
+            "server_description": server.description or "",
+            "channel_id": int(channel.id) if channel else None,
+            "channel_name": channel.name if channel else "",
+            "inviter_id": int(invite.inviter_id),
+            "inviter_username": inviter.username if inviter else "user",
+            "invitee_id": int(invite.invitee_id),
+            "viewer_is_invitee": viewer_is_invitee,
+            "viewer_is_inviter": viewer_is_inviter,
+            "already_member": bool(already_member),
+            "status": invite.status,
+            "valid": bool(valid),
+            "members_count": members_count,
+        }
+    except Exception:
+        try:
+            await db.rollback()
+        except Exception:
+            pass
+        return {"type": "server_invite", "invite_id": invite_id, "valid": False, "status": "error"}
+
 
 
 
