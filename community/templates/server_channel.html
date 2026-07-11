@@ -1786,6 +1786,9 @@ function openChannelInviteModal(event, btn) {
       try{
         const res = await fetch('/community/api/forward-targets');
         ahForwardTargetsCache = await res.json();
+        if(!ahForwardTargetsCache || typeof ahForwardTargetsCache !== 'object') ahForwardTargetsCache = {dms:[], channels:[]};
+        if(!Array.isArray(ahForwardTargetsCache.dms)) ahForwardTargetsCache.dms = [];
+        if(!Array.isArray(ahForwardTargetsCache.channels)) ahForwardTargetsCache.channels = [];
         renderForwardTargets(ahForwardTargetsCache);
       }catch(e){
         if(list) list.innerHTML = '<div class="ah-forward-empty">Не удалось загрузить список.</div>';
