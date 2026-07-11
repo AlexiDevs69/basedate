@@ -698,11 +698,13 @@ async def create_server_message(
     author_id: int,
     content: str,
     image_url: str | None = None,
+    reply_to_id: int | None = None,
 ) -> ServerMessage:
     message = ServerMessage(
         server_id=server_id,
         channel_id=channel_id,
         author_id=author_id,
+        reply_to_id=reply_to_id,
         content=content.strip(),
         image_url=image_url.strip() if image_url else None,
     )
@@ -762,7 +764,14 @@ async def get_server_feed(db: AsyncSession, server_id: int, channel_id: int, lim
     feed = []
     for msg in messages:
         author = await get_account_by_id(db, msg.author_id)
-        feed.append({"message": msg, "author": author})
+        reply = None
+        reply_id = getattr(msg, "reply_to_id", None)
+        if reply_id:
+            reply_msg = await get_server_message(db, server_id, channel_id, int(reply_id))
+            if reply_msg:
+                reply_author = await get_account_by_id(db, reply_msg.author_id)
+                reply = {"message": reply_msg, "author": reply_author}
+        feed.append({"message": msg, "author": author, "reply": reply})
     return feed
 
 
@@ -912,10 +921,12 @@ async def create_dm_message(
     author_id: int,
     content: str,
     image_url: str | None = None,
+    reply_to_id: int | None = None,
 ) -> DirectMessage:
     message = DirectMessage(
         thread_id=thread_id,
         author_id=author_id,
+        reply_to_id=reply_to_id,
         content=content.strip(),
         image_url=image_url.strip() if image_url and image_url.strip() else None,
     )
@@ -941,7 +952,14 @@ async def list_dm_messages(db: AsyncSession, thread_id: int, limit: int = 80) ->
     feed: list[dict] = []
     for message in messages:
         author = await get_account_by_id(db, message.author_id)
-        feed.append({"message": message, "author": author})
+        reply = None
+        reply_id = getattr(message, "reply_to_id", None)
+        if reply_id:
+            reply_msg = await get_dm_message(db, thread_id, int(reply_id))
+            if reply_msg:
+                reply_author = await get_account_by_id(db, reply_msg.author_id)
+                reply = {"message": reply_msg, "author": reply_author}
+        feed.append({"message": message, "author": author, "reply": reply})
     return feed
 
 
