@@ -1234,30 +1234,47 @@ async def list_forward_targets(db: AsyncSession, account_id: int) -> dict:
 
     DMs are limited to friends. Channel targets are every text channel in every
     server where the current user is a member.
+
+    Important: the current Account model does NOT always have display_name.
+    The previous version used friend.display_name directly and could throw
+    AttributeError, which made /api/forward-targets return 500 and the modal
+    show "Не удалось загрузить список".
     """
     friends = await list_friends(db, account_id)
     servers = await list_servers_for_account(db, account_id)
 
-    dm_targets = []
+    dm_targets: list[dict] = []
     for friend in friends:
+        username = getattr(friend, "username", "") or ""
+        title = (getattr(friend, "display_name", None) or username).strip()
+        if not username:
+            continue
         dm_targets.append({
             "type": "dm",
-            "username": friend.username,
-            "display_name": friend.display_name or friend.username,
-            "avatar_url": friend.avatar_url or "",
+            "username": username,
+            "display_name": title or username,
+            "avatar_url": getattr(friend, "avatar_url", None) or "",
         })
 
-    channel_targets = []
+    channel_targets: list[dict] = []
     for server in servers:
-        channels = await list_server_channels(db, server.id)
+        server_id = int(getattr(server, "id", 0) or 0)
+        if not server_id:
+            continue
+        server_name = getattr(server, "name", "") or "Сервер"
+        server_icon_url = getattr(server, "icon_url", None) or ""
+        channels = await list_server_channels(db, server_id)
         for channel in channels:
+            channel_id = int(getattr(channel, "id", 0) or 0)
+            if not channel_id:
+                continue
             channel_targets.append({
                 "type": "channel",
-                "server_id": server.id,
-                "server_name": server.name,
-                "server_icon_url": server.icon_url or "",
-                "channel_id": channel.id,
-                "channel_name": channel.name,
+                "server_id": server_id,
+                "server_name": server_name,
+                "server_icon_url": server_icon_url,
+                "channel_id": channel_id,
+                "channel_name": getattr(channel, "name", "") or "channel",
             })
 
     return {"dms": dm_targets, "channels": channel_targets}
