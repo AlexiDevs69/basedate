@@ -809,6 +809,13 @@ async def get_server_message(
     return result.scalar_one_or_none()
 
 
+async def get_server_message_by_id(db: AsyncSession, message_id: int) -> ServerMessage | None:
+    """Return a server message by id. Authorization is checked in the router."""
+    await ensure_message_meta_columns(db)
+    result = await db.execute(select(ServerMessage).where(ServerMessage.id == message_id))
+    return result.scalar_one_or_none()
+
+
 async def update_server_message(
     db: AsyncSession,
     message: ServerMessage,
@@ -1150,6 +1157,17 @@ async def get_dm_message(db: AsyncSession, thread_id: int, message_id: int) -> D
     return result.scalar_one_or_none()
 
 
+async def get_dm_message_by_id(db: AsyncSession, message_id: int) -> DirectMessage | None:
+    """Return a DM message by id without knowing the thread first.
+
+    Used by forward-message flow. Authorization is checked in the router with
+    is_dm_participant(), so this helper intentionally only fetches.
+    """
+    await ensure_message_meta_columns(db)
+    result = await db.execute(select(DirectMessage).where(DirectMessage.id == message_id))
+    return result.scalar_one_or_none()
+
+
 async def update_dm_message(
     db: AsyncSession,
     message: DirectMessage,
@@ -1208,6 +1226,41 @@ async def list_dm_threads_for_account(db: AsyncSession, account_id: int, limit: 
         items.append({"thread": thread, "other": other, "last_message": last_message})
     return items
 
+
+
+
+async def list_forward_targets(db: AsyncSession, account_id: int) -> dict:
+    """Targets shown in the Discord-like forward modal.
+
+    DMs are limited to friends. Channel targets are every text channel in every
+    server where the current user is a member.
+    """
+    friends = await list_friends(db, account_id)
+    servers = await list_servers_for_account(db, account_id)
+
+    dm_targets = []
+    for friend in friends:
+        dm_targets.append({
+            "type": "dm",
+            "username": friend.username,
+            "display_name": friend.display_name or friend.username,
+            "avatar_url": friend.avatar_url or "",
+        })
+
+    channel_targets = []
+    for server in servers:
+        channels = await list_server_channels(db, server.id)
+        for channel in channels:
+            channel_targets.append({
+                "type": "channel",
+                "server_id": server.id,
+                "server_name": server.name,
+                "server_icon_url": server.icon_url or "",
+                "channel_id": channel.id,
+                "channel_name": channel.name,
+            })
+
+    return {"dms": dm_targets, "channels": channel_targets}
 
 # ============================================================================
 # Gifts
