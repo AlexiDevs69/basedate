@@ -204,6 +204,7 @@ class ServerMessage(Base):
     image_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True, nullable=False)
     edited_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    is_forwarded: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
 
 
@@ -235,6 +236,7 @@ class DirectMessage(Base):
     image_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True, nullable=False)
     edited_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    is_forwarded: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
 
 # ============================================================================
