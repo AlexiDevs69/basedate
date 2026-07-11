@@ -968,7 +968,191 @@ function dmToast(text){if(window.showActionToast)showActionToast(text);else cons
 document.addEventListener('click',function(e){if(!e.target.closest('#dm-message-context-menu')&&!e.target.closest('.msg-actions'))closeDmMessageMenu();if(e.target&&e.target.id==='dm-delete-message-modal')closeDmDeleteConfirm();});
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeDmMessageMenu();closeDmDeleteConfirm();}});
 
-const currentUser={id:{{ account.id }},username:"{{ account.username }}"};const messagesEl=document.getElementById('messages');const form=document.getElementById('dm-form');const input=document.getElementById('content');const imageInput=document.getElementById('image_url');const typingEl=document.getElementById('typing');const live=document.getElementById('live-status');function scrollBottom(){messagesEl.scrollTop=messagesEl.scrollHeight}scrollBottom();function escapeHtml(s){return (s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}function messageHtml(msg,author){const own=author.id===currentUser.id;const av=author.avatar_url?`style="background-image:url('${escapeHtml(author.avatar_url)}')"`:'';const first=author.avatar_url?'':escapeHtml(author.username.slice(0,1).toUpperCase());const img=msg.image_url?`<img class="msg-img" src="${escapeHtml(msg.image_url)}" alt="">`:'';const role=author.role_label||'member';const c1=author.role_color_start||'#5865f2';const c2=author.role_color_end||'#9b5cf6';const bio=author.bio||'';const kp=(window.getKnownProfile?window.getKnownProfile(author.username):null);const status=author.account_status||author.status||(kp&&kp.status)||'offline';const actions=`<div class="msg-actions"><button type="button" class="dm-message-more-btn" onclick="openDmMessageMenu(event)" title="More"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button></div>`;return `<div class="msg" id="dm-message-${msg.id}" data-id="${msg.id}" data-message-id="${msg.id}" data-own="${own?'1':'0'}" data-message-editable="${own?'1':'0'}" data-message-author="${escapeHtml(author.username||'user')}" data-message-avatar="${escapeHtml(author.avatar_url||'')}" data-message-content="${escapeHtml(msg.content||'')}" data-message-delete-url="/community/dm/{{ other.username }}/message/${msg.id}/delete" data-message-edited="${msg.edited_at?'1':'0'}" data-message-image="${escapeHtml(msg.image_url||'')}"><span class="msg-avatar mini-profile-trigger" data-mini-username="${escapeHtml(author.username)}" data-mini-avatar="${escapeHtml(author.avatar_url||'')}" data-mini-banner="${escapeHtml(author.banner_url||'')}" data-mini-status="${escapeHtml(status)}" data-mini-role="${escapeHtml(role)}" data-mini-c1="${escapeHtml(c1)}" data-mini-c2="${escapeHtml(c2)}" data-mini-profile="/community/profile/${encodeURIComponent(author.username)}" data-mini-bio="${escapeHtml(bio)}" ${av}>${first}</span><div class="msg-body"><div class="msg-head"><span class="msg-name mini-profile-trigger" data-mini-username="${escapeHtml(author.username)}" data-mini-avatar="${escapeHtml(author.avatar_url||'')}" data-mini-banner="${escapeHtml(author.banner_url||'')}" data-mini-status="${escapeHtml(status)}" data-mini-role="${escapeHtml(role)}" data-mini-c1="${escapeHtml(c1)}" data-mini-c2="${escapeHtml(c2)}" data-mini-profile="/community/profile/${encodeURIComponent(author.username)}" data-mini-bio="${escapeHtml(bio)}">${escapeHtml(author.username)}</span><span class="msg-time">${escapeHtml(msg.created_at||'')}</span></div>${dmReplyHtml(msg.reply||null)}<div class="msg-text"><span class="dm-message-text">${escapeHtml(msg.content)}</span><span class="dm-message-edited ${msg.edited_at?'':'hidden'}" id="dm-edited-${msg.id}">(изменено)</span></div>${img}</div>${actions}</div>`}function jumpToDmMessage(id){const target=document.getElementById('dm-message-'+id);if(!target)return;target.scrollIntoView({behavior:'smooth',block:'center'});target.classList.add('search-jump');setTimeout(()=>target.classList.remove('search-jump'),1400)}function setDmReplyTarget(row){if(!row)return;const input=document.getElementById('dm-reply-to-id');const box=document.getElementById('dm-reply-preview');const au=document.getElementById('dm-reply-author');const tx=document.getElementById('dm-reply-text');if(!input||!box)return;input.value=row.dataset.messageId||row.dataset.id||'';if(au)au.textContent=row.dataset.messageAuthor||'user';if(tx)tx.textContent=(row.dataset.messageContent||'Вкладення').slice(0,180);box.classList.remove('hidden');const composerInput=document.getElementById('content');if(composerInput)composerInput.focus()}function replyDmMessageFromMenu(){if(!activeDmMessageEl)return;setDmReplyTarget(activeDmMessageEl);closeDmMessageMenu()}function clearDmReply(){const input=document.getElementById('dm-reply-to-id');const box=document.getElementById('dm-reply-preview');if(input)input.value='';if(box)box.classList.add('hidden')}function dmReplyHtml(reply){if(!reply||!reply.id)return '';const a=(reply.author&&reply.author.username)?reply.author.username:'видалений юзер';const t=reply.content||(reply.image_url?'Вкладення':'Повідомлення');return `<div class="dm-reply" onclick="jumpToDmMessage(${reply.id})"><span class="dm-reply-author">${escapeHtml(a)}</span><span class="dm-reply-text">${escapeHtml(t)}</span></div>`}let ws=null,typingTimer=null,stopTimer=null;function connect(){const proto=location.protocol==='https:'?'wss':'ws';ws=new WebSocket(`${proto}://${location.host}/community/ws/dm/{{ thread.id }}`);ws.onopen=()=>{live.textContent='live';live.style.color='var(--green)'};ws.onclose=()=>{live.textContent='reconnecting...';live.style.color='#f59e0b';setTimeout(connect,1500)};ws.onerror=()=>{try{ws.close()}catch(e){}};ws.onmessage=(ev)=>{const data=JSON.parse(ev.data);if(data.type==='message'){messagesEl.insertAdjacentHTML('beforeend',messageHtml(data.message,data.author));scrollBottom()}if(data.type==='message_edit'){applyDmMessageEdit(data.message||{})}if(data.type==='typing'){const users=(data.users||[]).filter(u=>u.id!==currentUser.id);typingEl.textContent=users.length?users.map(u=>u.username).join(', ')+' друкує...':''}}}connect();input.addEventListener('input',()=>{input.style.height='auto';input.style.height=Math.min(input.scrollHeight,160)+'px';if(ws&&ws.readyState===1){clearTimeout(typingTimer);clearTimeout(stopTimer);ws.send(JSON.stringify({type:'typing'}));stopTimer=setTimeout(()=>ws.send(JSON.stringify({type:'typing_stop'})),1400)}});form.addEventListener('submit',(e)=>{if(ws&&ws.readyState===1){e.preventDefault();const content=input.value.trim();const image_url=imageInput.value.trim();if(!content&&!image_url)return;const replyInput=document.getElementById('dm-reply-to-id');const reply_to_id=replyInput?replyInput.value.trim():'';ws.send(JSON.stringify({type:'message',content,image_url,reply_to_id}));input.value='';imageInput.value='';input.style.height='auto';clearDmReply();(function(){const legacyImageLine=document.getElementById('image-line'); if(legacyImageLine) legacyImageLine.classList.remove('open'); if(typeof clearDmAttachment==='function') clearDmAttachment();})()} });input.addEventListener('keydown',(e)=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();form.requestSubmit()}});function toggleImage(){document.getElementById('image-line').classList.toggle('open');}
+const currentUser={id:{{ account.id }},username:"{{ account.username }}"};
+const messagesEl=document.getElementById('messages');
+const form=document.getElementById('dm-form');
+const input=document.getElementById('content');
+const imageInput=document.getElementById('image_url');
+const typingEl=document.getElementById('typing');
+const live=document.getElementById('live-status');
+const dmReplyCache=new Map();
+let pendingDmReplyFallback=null;
+
+function scrollBottom(){messagesEl.scrollTop=messagesEl.scrollHeight}
+scrollBottom();
+
+function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+
+function buildDmReplyFromRow(row){
+  if(!row)return null;
+  const id=row.dataset.messageId||row.dataset.id||'';
+  if(!id)return null;
+  const content=row.dataset.messageContent||row.querySelector('.dm-message-text')?.textContent||'';
+  const image=row.dataset.messageImage||'';
+  const author=row.dataset.messageAuthor||'user';
+  return {
+    id:Number(id),
+    content:content,
+    image_url:image||null,
+    author:{username:author,avatar_url:row.dataset.messageAvatar||''}
+  };
+}
+
+function cacheDmReplyFromRow(row){
+  const r=buildDmReplyFromRow(row);
+  if(r&&r.id)dmReplyCache.set(String(r.id),r);
+  return r;
+}
+
+function primeDmReplyCache(){
+  document.querySelectorAll('.msg[data-message-id],.msg[data-id]').forEach(row=>cacheDmReplyFromRow(row));
+}
+
+function resolveDmReply(msg){
+  if(msg&&msg.reply&&msg.reply.id)return msg.reply;
+  const rid=msg&&(msg.reply_to_id||msg.replyToId||msg.reply_id);
+  if(!rid)return null;
+  const key=String(rid);
+  return dmReplyCache.get(key)||buildDmReplyFromRow(document.getElementById('dm-message-'+key))||pendingDmReplyFallback||null;
+}
+
+function dmReplyHtml(reply){
+  if(!reply||!reply.id)return '';
+  const a=(reply.author&&reply.author.username)?reply.author.username:'видалений юзер';
+  const t=reply.content||(reply.image_url?'Вкладення':'Повідомлення');
+  return `<div class="dm-reply" onclick="jumpToDmMessage(${reply.id})"><span class="dm-reply-author">${escapeHtml(a)}</span><span class="dm-reply-text">${escapeHtml(t)}</span></div>`;
+}
+
+function messageHtml(msg,author){
+  author=author||{};
+  msg=msg||{};
+  if((!msg.reply||!msg.reply.id)&&(msg.reply_to_id||msg.replyToId||msg.reply_id)){
+    const resolved=resolveDmReply(msg);
+    if(resolved)msg.reply=resolved;
+  }
+  const own=Number(author.id)===Number(currentUser.id);
+  const username=author.username||'user';
+  const av=author.avatar_url?`style="background-image:url('${escapeHtml(author.avatar_url)}')"`:'';
+  const first=author.avatar_url?'':escapeHtml(username.slice(0,1).toUpperCase());
+  const img=msg.image_url?`<img class="msg-img" src="${escapeHtml(msg.image_url)}" alt="">`:'';
+  const role=author.role_label||'member';
+  const c1=author.role_color_start||'#5865f2';
+  const c2=author.role_color_end||'#9b5cf6';
+  const bio=author.bio||'';
+  const kp=(window.getKnownProfile?window.getKnownProfile(username):null);
+  const status=author.account_status||author.status||(kp&&kp.status)||'offline';
+  const actions=`<div class="msg-actions"><button type="button" class="dm-message-more-btn" onclick="openDmMessageMenu(event)" title="More"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button></div>`;
+  return `<div class="msg" id="dm-message-${msg.id}" data-id="${msg.id}" data-message-id="${msg.id}" data-own="${own?'1':'0'}" data-message-editable="${own?'1':'0'}" data-message-author="${escapeHtml(username)}" data-message-avatar="${escapeHtml(author.avatar_url||'')}" data-message-content="${escapeHtml(msg.content||'')}" data-message-delete-url="/community/dm/{{ other.username }}/message/${msg.id}/delete" data-message-edited="${msg.edited_at?'1':'0'}" data-message-image="${escapeHtml(msg.image_url||'')}"><span class="msg-avatar mini-profile-trigger" data-mini-username="${escapeHtml(username)}" data-mini-avatar="${escapeHtml(author.avatar_url||'')}" data-mini-banner="${escapeHtml(author.banner_url||'')}" data-mini-status="${escapeHtml(status)}" data-mini-role="${escapeHtml(role)}" data-mini-c1="${escapeHtml(c1)}" data-mini-c2="${escapeHtml(c2)}" data-mini-profile="/community/profile/${encodeURIComponent(username)}" data-mini-bio="${escapeHtml(bio)}" ${av}>${first}</span><div class="msg-body"><div class="msg-head"><span class="msg-name mini-profile-trigger" data-mini-username="${escapeHtml(username)}" data-mini-avatar="${escapeHtml(author.avatar_url||'')}" data-mini-banner="${escapeHtml(author.banner_url||'')}" data-mini-status="${escapeHtml(status)}" data-mini-role="${escapeHtml(role)}" data-mini-c1="${escapeHtml(c1)}" data-mini-c2="${escapeHtml(c2)}" data-mini-profile="/community/profile/${encodeURIComponent(username)}" data-mini-bio="${escapeHtml(bio)}">${escapeHtml(username)}</span><span class="msg-time">${escapeHtml(msg.created_at||'')}</span></div>${dmReplyHtml(resolveDmReply(msg))}<div class="msg-text"><span class="dm-message-text">${escapeHtml(msg.content||'')}</span><span class="dm-message-edited ${msg.edited_at?'':'hidden'}" id="dm-edited-${msg.id}">(изменено)</span></div>${img}</div>${actions}</div>`;
+}
+
+function jumpToDmMessage(id){
+  const target=document.getElementById('dm-message-'+id);
+  if(!target)return;
+  target.scrollIntoView({behavior:'smooth',block:'center'});
+  target.classList.add('search-jump');
+  setTimeout(()=>target.classList.remove('search-jump'),1400);
+}
+
+function setDmReplyTarget(row){
+  if(!row)return;
+  const input=document.getElementById('dm-reply-to-id');
+  const box=document.getElementById('dm-reply-preview');
+  const au=document.getElementById('dm-reply-author');
+  const tx=document.getElementById('dm-reply-text');
+  if(!input||!box)return;
+  const reply=cacheDmReplyFromRow(row);
+  if(!reply)return;
+  input.value=String(reply.id);
+  pendingDmReplyFallback=reply;
+  if(au)au.textContent=(reply.author&&reply.author.username)||'user';
+  if(tx)tx.textContent=(reply.content||(reply.image_url?'Вкладення':'Повідомлення')).slice(0,180);
+  box.classList.remove('hidden');
+  const composerInput=document.getElementById('content');
+  if(composerInput)composerInput.focus();
+}
+
+function replyDmMessageFromMenu(){
+  if(!activeDmMessageEl)return;
+  setDmReplyTarget(activeDmMessageEl);
+  closeDmMessageMenu();
+}
+
+function clearDmReply(){
+  const input=document.getElementById('dm-reply-to-id');
+  const box=document.getElementById('dm-reply-preview');
+  if(input)input.value='';
+  if(box)box.classList.add('hidden');
+  pendingDmReplyFallback=null;
+}
+
+primeDmReplyCache();
+
+let ws=null,typingTimer=null,stopTimer=null;
+function connect(){
+  const proto=location.protocol==='https:'?'wss':'ws';
+  ws=new WebSocket(`${proto}://${location.host}/community/ws/dm/{{ thread.id }}`);
+  ws.onopen=()=>{live.textContent='live';live.style.color='var(--green)'};
+  ws.onclose=()=>{live.textContent='reconnecting...';live.style.color='#f59e0b';setTimeout(connect,1500)};
+  ws.onerror=()=>{try{ws.close()}catch(e){}};
+  ws.onmessage=(ev)=>{
+    const data=JSON.parse(ev.data);
+    if(data.type==='message'){
+      const msg=data.message||{};
+      const rid=msg.reply_to_id||msg.replyToId||msg.reply_id;
+      if((!msg.reply||!msg.reply.id)&&rid){
+        msg.reply=dmReplyCache.get(String(rid))||buildDmReplyFromRow(document.getElementById('dm-message-'+rid))||pendingDmReplyFallback||null;
+      }
+      messagesEl.insertAdjacentHTML('beforeend',messageHtml(msg,data.author||{}));
+      const added=document.getElementById('dm-message-'+msg.id);
+      if(added)cacheDmReplyFromRow(added);
+      pendingDmReplyFallback=null;
+      scrollBottom();
+    }
+    if(data.type==='message_edit'){
+      applyDmMessageEdit(data.message||{});
+      const edited=document.getElementById('dm-message-'+(data.message&&data.message.id));
+      if(edited)cacheDmReplyFromRow(edited);
+    }
+    if(data.type==='typing'){
+      const users=(data.users||[]).filter(u=>u.id!==currentUser.id);
+      typingEl.textContent=users.length?users.map(u=>u.username).join(', ')+' друкує...':'';
+    }
+  };
+}
+connect();
+
+input.addEventListener('input',()=>{
+  input.style.height='auto';
+  input.style.height=Math.min(input.scrollHeight,160)+'px';
+  if(ws&&ws.readyState===1){
+    clearTimeout(typingTimer);clearTimeout(stopTimer);
+    ws.send(JSON.stringify({type:'typing'}));
+    stopTimer=setTimeout(()=>ws.send(JSON.stringify({type:'typing_stop'})),1400);
+  }
+});
+
+form.addEventListener('submit',(e)=>{
+  if(ws&&ws.readyState===1){
+    e.preventDefault();
+    const content=input.value.trim();
+    const image_url=imageInput.value.trim();
+    if(!content&&!image_url)return;
+    const replyInput=document.getElementById('dm-reply-to-id');
+    const reply_to_id=replyInput?replyInput.value.trim():'';
+    pendingDmReplyFallback=reply_to_id?(dmReplyCache.get(String(reply_to_id))||buildDmReplyFromRow(document.getElementById('dm-message-'+reply_to_id))):null;
+    ws.send(JSON.stringify({type:'message',content,image_url,reply_to_id:reply_to_id||null}));
+    input.value='';
+    imageInput.value='';
+    input.style.height='auto';
+    const replyBox=document.getElementById('dm-reply-preview');
+    if(replyInput)replyInput.value='';
+    if(replyBox)replyBox.classList.add('hidden');
+    (function(){const legacyImageLine=document.getElementById('image-line'); if(legacyImageLine) legacyImageLine.classList.remove('open'); if(typeof clearDmAttachment==='function') clearDmAttachment();})();
+  }
+});
+
+input.addEventListener('keydown',(e)=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();form.requestSubmit()}});
+function toggleImage(){document.getElementById('image-line').classList.toggle('open');}
 function chooseDmImage(){const fileInput=document.getElementById('dm-file-input'); if(fileInput) fileInput.click();}
 const dmFileInput=document.getElementById('dm-file-input');
 if(dmFileInput)dmFileInput.addEventListener('change',async()=>{const file=dmFileInput.files&&dmFileInput.files[0]; if(!file)return; const line=document.getElementById('image-line'); if(line)line.classList.add('open'); imageInput.value='Завантаження фото...'; try{const fd=new FormData(); fd.append('file',file); const r=await fetch('/community/api/upload-image',{method:'POST',body:fd}); const data=await r.json(); if(!r.ok||!data.url) throw new Error(data.error||'upload failed'); imageInput.value=data.url;}catch(e){imageInput.value=''; alert('Не вдалось завантажити фото');} finally{dmFileInput.value='';}});
