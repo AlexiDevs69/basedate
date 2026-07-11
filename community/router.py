@@ -71,6 +71,8 @@ async def _ensure_server_visual_columns(db: AsyncSession) -> None:
     await db.execute(text("ALTER TABLE community_servers ADD COLUMN IF NOT EXISTS banner_color VARCHAR(255)"))
     await db.execute(text("ALTER TABLE community_server_messages ADD COLUMN IF NOT EXISTS edited_at TIMESTAMP WITH TIME ZONE"))
     await db.execute(text("ALTER TABLE community_direct_messages ADD COLUMN IF NOT EXISTS edited_at TIMESTAMP WITH TIME ZONE"))
+    await db.execute(text("ALTER TABLE community_server_messages ADD COLUMN IF NOT EXISTS reply_to_id INTEGER"))
+    await db.execute(text("ALTER TABLE community_direct_messages ADD COLUMN IF NOT EXISTS reply_to_id INTEGER"))
     await db.commit()
 
 
@@ -338,6 +340,24 @@ def _account_payload(account) -> dict:
         "bio": account.bio or "",
     }
 
+
+def _parse_optional_int(value) -> int | None:
+    try:
+        clean = str(value or "").strip()
+        return int(clean) if clean else None
+    except Exception:
+        return None
+
+
+def _reply_payload(message, author) -> dict | None:
+    if not message:
+        return None
+    return {
+        "id": message.id,
+        "content": message.content or "",
+        "image_url": message.image_url,
+        "author": _account_payload(author) if author else {"id": None, "username": "видалений юзер", "avatar_url": ""},
+    }
 
 
 async def current_account(request: Request, db: AsyncSession):
@@ -818,6 +838,7 @@ async def server_message_submit(
     request: Request,
     content: str = Form(""),
     image_url: str = Form(""),
+    reply_to_id: str = Form(""),
     db: AsyncSession = Depends(get_db),
 ):
     account = await current_account(request, db)
@@ -828,7 +849,12 @@ async def server_message_submit(
 
     channel = await crud.get_server_channel(db, server_id, channel_id)
     if channel and (content.strip() or image_url.strip()):
-        await crud.create_server_message(db, server_id, channel_id, account.id, content.strip(), image_url.strip())
+        reply_id = _parse_optional_int(reply_to_id)
+        if reply_id:
+            reply_msg = await crud.get_server_message(db, server_id, channel_id, reply_id)
+            if not reply_msg:
+                reply_id = None
+        await crud.create_server_message(db, server_id, channel_id, account.id, content.strip(), image_url.strip(), reply_to_id=reply_id)
     return RedirectResponse(url=f"/community/servers/{server_id}/channel/{channel_id}", status_code=303)
 
 
@@ -1073,6 +1099,7 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
 
             content = (data.get("content") or "").strip()
             image_url = (data.get("image_url") or "").strip()
+            reply_to_id = _parse_optional_int(data.get("reply_to_id"))
             if not content and not image_url:
                 await realtime_channels.clear_typing(key, account_id)
                 continue
@@ -1089,7 +1116,15 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
                 if not channel:
                     await websocket.close(code=1008)
                     return
-                msg = await crud.create_server_message(db, server_id, channel_id, account_id, content, image_url)
+                reply_payload = None
+                reply_id = None
+                if reply_to_id:
+                    reply_msg = await crud.get_server_message(db, server_id, channel_id, reply_to_id)
+                    if reply_msg:
+                        reply_id = reply_msg.id
+                        reply_author = await crud.get_account_by_id(db, reply_msg.author_id)
+                        reply_payload = _reply_payload(reply_msg, reply_author)
+                msg = await crud.create_server_message(db, server_id, channel_id, account_id, content, image_url, reply_to_id=reply_id)
                 created_at = msg.created_at.isoformat()
 
             await realtime_channels.clear_typing(key, account_id)
@@ -1105,6 +1140,8 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
                         "content": content,
                         "image_url": image_url or None,
                         "created_at": created_at,
+                        "reply_to_id": reply_id,
+                        "reply": reply_payload,
                     },
                     "author": profile,
                 },
@@ -1173,6 +1210,7 @@ async def dm_message_submit(
     request: Request,
     content: str = Form(""),
     image_url: str = Form(""),
+    reply_to_id: str = Form(""),
     db: AsyncSession = Depends(get_db),
 ):
     account = await current_account(request, db)
@@ -1184,8 +1222,13 @@ async def dm_message_submit(
         return RedirectResponse(url="/community", status_code=303)
 
     thread = await crud.get_or_create_dm_thread(db, account.id, other.id)
-    if thread and content.strip():
-        await crud.create_dm_message(db, thread.id, account.id, content.strip(), image_url.strip())
+    if thread and (content.strip() or image_url.strip()):
+        reply_id = _parse_optional_int(reply_to_id)
+        if reply_id:
+            reply_msg = await crud.get_dm_message(db, thread.id, reply_id)
+            if not reply_msg:
+                reply_id = None
+        await crud.create_dm_message(db, thread.id, account.id, content.strip(), image_url.strip(), reply_to_id=reply_id)
     return RedirectResponse(url=f"/community/dm/{other.username}", status_code=303)
 
 
@@ -1326,6 +1369,7 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
 
             content = (data.get("content") or "").strip()
             image_url = (data.get("image_url") or "").strip()
+            reply_to_id = _parse_optional_int(data.get("reply_to_id"))
             if not content and not image_url:
                 await realtime_channels.clear_typing(key, account_id)
                 continue
@@ -1338,7 +1382,15 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
                 if not await crud.is_dm_participant(db, thread_id, account_id):
                     await websocket.close(code=1008)
                     return
-                msg = await crud.create_dm_message(db, thread_id, account_id, content, image_url)
+                reply_payload = None
+                reply_id = None
+                if reply_to_id:
+                    reply_msg = await crud.get_dm_message(db, thread_id, reply_to_id)
+                    if reply_msg:
+                        reply_id = reply_msg.id
+                        reply_author = await crud.get_account_by_id(db, reply_msg.author_id)
+                        reply_payload = _reply_payload(reply_msg, reply_author)
+                msg = await crud.create_dm_message(db, thread_id, account_id, content, image_url, reply_to_id=reply_id)
                 created_at = msg.created_at.isoformat()
 
             await realtime_channels.clear_typing(key, account_id)
@@ -1353,6 +1405,8 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
                         "content": content,
                         "image_url": image_url or None,
                         "created_at": created_at,
+                        "reply_to_id": reply_id,
+                        "reply": reply_payload,
                     },
                     "author": profile,
                 },
