@@ -69,6 +69,8 @@ def _clean_server_banner(value: str | None) -> str:
 async def _ensure_server_visual_columns(db: AsyncSession) -> None:
     # Safe Render migration: create_all does not add columns to old tables.
     await db.execute(text("ALTER TABLE community_servers ADD COLUMN IF NOT EXISTS banner_color VARCHAR(255)"))
+    await db.execute(text("ALTER TABLE community_server_messages ADD COLUMN IF NOT EXISTS edited_at TIMESTAMP WITH TIME ZONE"))
+    await db.execute(text("ALTER TABLE community_direct_messages ADD COLUMN IF NOT EXISTS edited_at TIMESTAMP WITH TIME ZONE"))
     await db.commit()
 
 
@@ -848,7 +850,19 @@ async def server_message_edit_submit(
 
     message = await crud.get_server_message(db, server_id, channel_id, message_id)
     if message and message.author_id == account.id and content.strip():
-        await crud.update_server_message(db, message, content.strip(), image_url.strip())
+        updated = await crud.update_server_message(db, message, content.strip(), image_url.strip())
+        await realtime_channels.broadcast(
+            (server_id, channel_id),
+            {
+                "type": "message_edit",
+                "message": {
+                    "id": updated.id,
+                    "content": updated.content,
+                    "image_url": updated.image_url,
+                    "edited_at": (updated.edited_at.isoformat() if getattr(updated, "edited_at", None) else None),
+                },
+            },
+        )
     return RedirectResponse(url=f"/community/servers/{server_id}/channel/{channel_id}#message-{message_id}", status_code=303)
 
 
@@ -1022,6 +1036,38 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
                 await realtime_channels.clear_typing(key, account_id)
                 continue
 
+            if event_type == "edit":
+                try:
+                    edit_id = int(data.get("id") or data.get("message_id") or 0)
+                except Exception:
+                    edit_id = 0
+                content = (data.get("content") or "").strip()
+                image_url = (data.get("image_url") or "").strip()
+                if not edit_id or not content:
+                    continue
+                if len(content) > 4000:
+                    content = content[:4000]
+                if len(image_url) > 512:
+                    image_url = image_url[:512]
+
+                async with AsyncSessionLocal() as db:
+                    if not await crud.is_server_member(db, server_id, account_id):
+                        await websocket.close(code=1008)
+                        return
+                    message = await crud.get_server_message(db, server_id, channel_id, edit_id)
+                    if not message or message.author_id != account_id:
+                        continue
+                    updated = await crud.update_server_message(db, message, content, image_url)
+                    payload = {
+                        "id": updated.id,
+                        "content": updated.content,
+                        "image_url": updated.image_url,
+                        "edited_at": (updated.edited_at.isoformat() if getattr(updated, "edited_at", None) else None),
+                    }
+
+                await realtime_channels.broadcast(key, {"type": "message_edit", "message": payload})
+                continue
+
             if event_type != "message":
                 continue
 
@@ -1163,7 +1209,19 @@ async def dm_message_edit_submit(
         return RedirectResponse(url=f"/community/dm/{other.username}", status_code=303)
     message = await crud.get_dm_message(db, thread.id, message_id)
     if message and message.author_id == account.id and content.strip():
-        await crud.update_dm_message(db, message, content.strip(), image_url.strip())
+        updated = await crud.update_dm_message(db, message, content.strip(), image_url.strip())
+        await realtime_channels.broadcast(
+            (0, thread.id),
+            {
+                "type": "message_edit",
+                "message": {
+                    "id": updated.id,
+                    "content": updated.content,
+                    "image_url": updated.image_url,
+                    "edited_at": (updated.edited_at.isoformat() if getattr(updated, "edited_at", None) else None),
+                },
+            },
+        )
     return RedirectResponse(url=f"/community/dm/{other.username}#dm-message-{message_id}", status_code=303)
 
 
@@ -1229,6 +1287,38 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
 
             if event_type == "typing_stop":
                 await realtime_channels.clear_typing(key, account_id)
+                continue
+
+            if event_type == "edit":
+                try:
+                    edit_id = int(data.get("id") or data.get("message_id") or 0)
+                except Exception:
+                    edit_id = 0
+                content = (data.get("content") or "").strip()
+                image_url = (data.get("image_url") or "").strip()
+                if not edit_id or not content:
+                    continue
+                if len(content) > 4000:
+                    content = content[:4000]
+                if len(image_url) > 512:
+                    image_url = image_url[:512]
+
+                async with AsyncSessionLocal() as db:
+                    if not await crud.is_dm_participant(db, thread_id, account_id):
+                        await websocket.close(code=1008)
+                        return
+                    message = await crud.get_dm_message(db, thread_id, edit_id)
+                    if not message or message.author_id != account_id:
+                        continue
+                    updated = await crud.update_dm_message(db, message, content, image_url)
+                    payload = {
+                        "id": updated.id,
+                        "content": updated.content,
+                        "image_url": updated.image_url,
+                        "edited_at": (updated.edited_at.isoformat() if getattr(updated, "edited_at", None) else None),
+                    }
+
+                await realtime_channels.broadcast(key, {"type": "message_edit", "message": payload})
                 continue
 
             if event_type != "message":
