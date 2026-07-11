@@ -1455,8 +1455,8 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
     <section id="messages" class="messages">
       {% for item in feed %}
       {% set author = item.author %}
-      {% set is_mine = author and author.id == account.id %}
-      <article class="message" id="message-{{ item.message.id }}" data-message-id="{{ item.message.id }}" data-message-content="{{ item.message.content|e }}" data-message-author="{{ author.username if author else 'видалений юзер' }}" data-message-avatar="{{ author.avatar_url if author and author.avatar_url else '' }}" data-message-delete-url="/community/servers/{{ server.id }}/channel/{{ channel.id }}/message/{{ item.message.id }}/delete" data-message-editable="{{ '1' if is_mine else '0' }}" data-message-edited="{{ '1' if item.message.edited_at else '0' }}">
+      {% set is_mine = author and author.id == account.id %}{% set is_forwarded = item.message.is_forwarded if item.message.is_forwarded is defined else false %}
+      <article class="message" id="message-{{ item.message.id }}" data-message-id="{{ item.message.id }}" data-message-content="{{ item.message.content|e }}" data-message-author="{{ author.username if author else 'видалений юзер' }}" data-message-avatar="{{ author.avatar_url if author and author.avatar_url else '' }}" data-message-delete-url="/community/servers/{{ server.id }}/channel/{{ channel.id }}/message/{{ item.message.id }}/delete" data-own="{{ '1' if is_mine else '0' }}" data-message-editable="{{ '1' if is_mine and not is_forwarded else '0' }}" data-message-forwarded="{{ '1' if is_forwarded else '0' }}" data-message-edited="{{ '1' if item.message.edited_at else '0' }}">
         <a href="/community/profile/{{ author.username if author else '' }}" class="avatar mini-profile-trigger profile-click" data-mini-username="{{ author.username if author else 'видалений юзер' }}" data-mini-avatar="{{ author.avatar_url if author and author.avatar_url else '' }}" data-mini-status="{{ account.account_status if author and author.id == account.id else (author.account_status if author and author.account_status else 'offline') }}" data-mini-banner="{{ author.banner_url if author and author.banner_url else '' }}" data-mini-role="{{ author.role_label if author and author.role_label else 'member' }}" data-mini-effect="{{ author.name_effect if author and author.name_effect else 'none' }}" data-mini-font="{{ author.name_font if author and author.name_font else 'default' }}" data-mini-c1="{{ author.role_color_start if author and author.role_color_start else '#f5576c' }}" data-mini-c2="{{ author.role_color_end if author and author.role_color_end else '#7367f0' }}" data-mini-profile="/community/profile/{{ author.username if author else '' }}" data-mini-bio="{{ author.bio if author and author.bio else '' }}" {% if author and author.avatar_url %}style="background-image:url('{{ author.avatar_url }}');"{% endif %}>{% if author and not author.avatar_url %}{{ author.username[:1]|upper }}{% endif %}</a>
         <div class="message-body">
           <div class="message-head">
@@ -1472,7 +1472,7 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
           <div class="message-content" id="content-{{ item.message.id }}"><span class="message-content-text">{{ item.message.content }}</span><span class="message-edited {{ '' if item.message.edited_at else 'hidden' }}" id="edited-{{ item.message.id }}">(изменено)</span></div>
           {% if item.message.image_url %}<img src="{{ item.message.image_url }}" class="message-image" alt="">{% endif %}
 
-          {% if is_mine %}
+          {% if is_mine and not is_forwarded %}
           <form id="edit-form-{{ item.message.id }}" class="edit-form" method="post" action="/community/servers/{{ server.id }}/channel/{{ channel.id }}/message/{{ item.message.id }}/edit">
             <textarea name="content" required>{{ item.message.content }}</textarea>
             <input type="text" name="image_url" value="{{ item.message.image_url or '' }}" placeholder="Image URL, необовʼязково">
@@ -1539,6 +1539,15 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
   
 <style id="ah-forward-modal-style">
 .ah-forward-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;z-index:99990}.ah-forward-backdrop.open{display:flex}.ah-forward-modal{width:440px;max-width:calc(100vw - 32px);max-height:86vh;background:#2b2d31;border:1px solid rgba(255,255,255,.09);border-radius:14px;box-shadow:0 24px 70px rgba(0,0,0,.58);display:flex;flex-direction:column;color:#f2f3f5;overflow:hidden}.ah-forward-head{padding:22px 24px 10px;position:relative}.ah-forward-head h2{margin:0 0 8px;font-size:22px;line-height:1.1;font-weight:800}.ah-forward-head p{margin:0;color:#b5bac1;font-size:14px}.ah-forward-close{position:absolute;right:18px;top:16px;width:30px;height:30px;border:0;background:transparent;color:#b5bac1;border-radius:50%;font-size:30px;line-height:1;cursor:pointer}.ah-forward-close:hover{color:#fff;background:#35373c}.ah-forward-search{margin:10px 24px 8px;height:42px;border-radius:8px;border:1px solid #5865f2;background:#1e1f22;display:flex;align-items:center;padding:0 12px;gap:10px}.ah-forward-search svg{width:19px;height:19px;color:#b5bac1}.ah-forward-search input{background:transparent;border:0;outline:0;color:#f2f3f5;width:100%;font-size:15px}.ah-forward-list{overflow:auto;max-height:390px;padding:0 16px 8px}.ah-forward-section{font-size:11px;color:#949ba4;text-transform:uppercase;font-weight:800;margin:12px 8px 6px;letter-spacing:.04em}.ah-forward-row{height:52px;display:flex;align-items:center;gap:12px;padding:5px 8px;border-radius:7px;cursor:pointer}.ah-forward-row:hover{background:#35373c}.ah-forward-avatar{width:34px;height:34px;border-radius:50%;background:#5865f2 center/cover no-repeat;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;flex:0 0 auto}.ah-forward-avatar.channel{border-radius:12px;background:#3b3d44;color:#dbdee1}.ah-forward-meta{min-width:0;flex:1}.ah-forward-title{font-weight:800;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ah-forward-sub{font-size:12px;color:#949ba4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ah-forward-check{width:22px;height:22px;accent-color:#5865f2;cursor:pointer}.ah-forward-preview{border-top:1px solid rgba(255,255,255,.08);padding:12px 24px;color:#b5bac1;font-size:13px;max-height:76px;overflow:hidden}.ah-forward-preview b{color:#f2f3f5}.ah-forward-foot{border-top:1px solid rgba(255,255,255,.08);padding:14px 24px;display:flex;gap:10px;align-items:center}.ah-forward-note{flex:1;height:38px;border:1px solid #1e1f22;background:#1e1f22;border-radius:8px;color:#dbdee1;padding:0 12px;outline:0}.ah-forward-note:focus{border-color:#5865f2}.ah-forward-send{height:38px;border:0;border-radius:8px;background:#5865f2;color:#fff;font-weight:800;padding:0 18px;cursor:pointer}.ah-forward-send:disabled{opacity:.55;cursor:not-allowed}.ah-forward-empty{padding:22px;color:#949ba4;text-align:center}.ah-forward-row.is-hidden{display:none}.ah-forward-sending{opacity:.7;pointer-events:none}
+
+.ah-forward-check{appearance:none;-webkit-appearance:none;width:22px!important;height:22px!important;border:2px solid #4e5058!important;border-radius:7px!important;background:#2b2d31!important;display:grid;place-items:center;position:relative;flex:0 0 auto;transition:.12s ease;}
+.ah-forward-check:hover{border-color:#b5bac1!important;background:#35373c!important;}
+.ah-forward-check:checked{background:#5865f2!important;border-color:#5865f2!important;}
+.ah-forward-check:checked::after{content:"";width:10px;height:6px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg);margin-top:-2px;}
+.ah-forward-avatar.channel{background-color:#3b3d44!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important;}
+.message-forwarded{display:flex;align-items:center;gap:.42rem;margin:.05rem 0 .22rem;color:#949ba4;font-size:.78rem;font-weight:800;min-width:0;opacity:.92;}
+.message-forwarded::before{content:"";width:22px;height:12px;border-left:2px solid #4e5058;border-top:2px solid #4e5058;border-top-left-radius:7px;flex:0 0 auto;margin-left:-.05rem;}
+.message-forwarded svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;}
 </style>
 
 <div id="message-context-menu" class="message-context-menu" aria-hidden="true">
@@ -1557,7 +1566,7 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
     <button class="ctx-item" type="button" onclick="showActionToast && showActionToast('Закріплення поки заглушка')"><span>Закрепить сообщение</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3l5 5-6 6v4l-2 2-3.5-3.5L5 21l-2-2 4.5-4.5L4 11l2-2h4z"/></svg></button>
     <button class="ctx-item" type="button" onclick="showActionToast && showActionToast('Позначено як непрочитане')"><span>Отметить как непрочитанное</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v12H5.17L4 17.17z"/><path d="M9 10h6"/></svg></button>
     <div class="ctx-sep"></div>
-    <button class="ctx-item danger" type="button" data-edit-only onclick="openDeleteConfirmFromMenu()"><span>Удалить сообщение</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
+    <button class="ctx-item danger" type="button" data-own-only onclick="openDeleteConfirmFromMenu()"><span>Удалить сообщение</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
     <button class="ctx-item muted" type="button" onclick="copyMessageIdFromMenu()"><span>Копировать ID сообщения</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M8 9h8"/><path d="M8 15h8"/></svg></button>
   </div>
 
@@ -1649,8 +1658,11 @@ function openChannelInviteModal(event, btn) {
       activeMessageEl = msg;
       document.querySelectorAll('.message-more-btn.active').forEach(function (b) { if (b !== btn) b.classList.remove('active'); });
       btn.classList.add('active');
-      var editable = msg.dataset.messageEditable === '1';
+      var owner = msg.dataset.messageEditable === '1' || msg.dataset.own === '1';
+      var forwarded = msg.dataset.messageForwarded === '1' || msg.dataset.isForwarded === '1';
+      var editable = (msg.dataset.messageEditable === '1') && !forwarded;
       menu.querySelectorAll('[data-edit-only]').forEach(function (el) { el.style.display = editable ? 'flex' : 'none'; });
+      menu.querySelectorAll('[data-own-only]').forEach(function (el) { el.style.display = owner ? 'flex' : 'none'; });
       menu.classList.add('open');
       menu.setAttribute('aria-hidden', 'false');
       var r = btn.getBoundingClientRect();
@@ -1766,8 +1778,9 @@ function openChannelInviteModal(event, btn) {
       }
       const serverName = target.server_name || 'Server';
       const channelName = target.channel_name || 'channel';
-      const iconStyle = target.server_icon_url ? `style="background-image:url('${ahForwardEscape(String(target.server_icon_url).replace(/'/g,'%27'))}')"` : '';
-      return `<label class="ah-forward-row" data-search="${ahForwardEscape((serverName+' '+channelName).toLowerCase())}"><span class="ah-forward-avatar channel" ${iconStyle}>${target.server_icon_url ? '' : '#'}</span><span class="ah-forward-meta"><span class="ah-forward-title">${ahForwardEscape(channelName)}</span><span class="ah-forward-sub">${ahForwardEscape(serverName)}</span></span><input class="ah-forward-check" type="checkbox" data-target-type="channel" data-server-id="${ahForwardEscape(target.server_id)}" data-channel-id="${ahForwardEscape(target.channel_id)}" onchange="updateForwardSendState()"></label>`;
+      const serverIcon = target.server_icon_url || target.icon_url || target.avatar_url || '';
+      const iconStyle = serverIcon ? `style="background-image:url('${ahForwardEscape(String(serverIcon).replace(/'/g,'%27'))}');background-size:cover;background-position:center;background-repeat:no-repeat"` : '';
+      return `<label class="ah-forward-row" data-search="${ahForwardEscape((serverName+' '+channelName).toLowerCase())}"><span class="ah-forward-avatar channel" ${iconStyle}>${serverIcon ? '' : '#'}</span><span class="ah-forward-meta"><span class="ah-forward-title">${ahForwardEscape(channelName)}</span><span class="ah-forward-sub">${ahForwardEscape(serverName)}</span></span><input class="ah-forward-check" type="checkbox" data-target-type="channel" data-server-id="${ahForwardEscape(target.server_id)}" data-channel-id="${ahForwardEscape(target.channel_id)}" onchange="updateForwardSendState()"></label>`;
     }
     function renderForwardTargets(data){
       const list = document.getElementById('ah-forward-list');
@@ -2126,7 +2139,10 @@ function openChannelInviteModal(event, btn) {
       article.dataset.messageAuthor = author.username || 'user';
       article.dataset.messageAvatar = author.avatar_url || '';
       article.dataset.messageDeleteUrl = '/community/servers/{{ server.id }}/channel/{{ channel.id }}/message/' + msg.id + '/delete';
-      article.dataset.messageEditable = (author.id === myAccountId) ? '1' : '0';
+      var isForwarded = msg.is_forwarded === true || msg.is_forwarded === '1' || msg.forwarded === true || msg.forwarded === '1';
+      article.dataset.own = (author.id === myAccountId) ? '1' : '0';
+      article.dataset.messageEditable = (author.id === myAccountId && !isForwarded) ? '1' : '0';
+      article.dataset.messageForwarded = isForwarded ? '1' : '0';
       article.dataset.messageEdited = msg.edited_at ? '1' : '0';
       article.appendChild(buildAvatar(author));
 
@@ -2147,9 +2163,15 @@ function openChannelInviteModal(event, btn) {
       content.innerHTML = '<span class="message-content-text"></span><span class="message-edited ' + (msg.edited_at ? '' : 'hidden') + '" id="edited-' + msg.id + '">(изменено)</span>';
       content.querySelector('.message-content-text').textContent = msg.content || '';
 
+      body.appendChild(head);
+      if (isForwarded) {
+        var fw = document.createElement('div');
+        fw.className = 'message-forwarded';
+        fw.innerHTML = '<svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg><span>Переслано</span>';
+        body.appendChild(fw);
+      }
       var replyNode = buildReply(msg.reply || null);
       if (replyNode) body.appendChild(replyNode);
-      body.appendChild(head);
       body.appendChild(content);
 
       if (msg.image_url) {
@@ -2160,7 +2182,7 @@ function openChannelInviteModal(event, btn) {
         body.appendChild(img);
       }
 
-      if (author.id === myAccountId) {
+      if (author.id === myAccountId && !isForwarded) {
         var editForm = document.createElement('form');
         editForm.id = 'edit-form-' + msg.id;
         editForm.className = 'edit-form';
@@ -2409,6 +2431,7 @@ function openChannelInviteModal(event, btn) {
       var content = document.getElementById('content-' + id);
       var form = document.getElementById('edit-form-' + id);
       var message = document.getElementById('message-' + id);
+      if (message && message.dataset.messageForwarded === '1') return;
       if (!form) return;
       wireServerInlineEdit(form);
       if (content) content.style.display = 'none';
