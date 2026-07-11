@@ -52,6 +52,31 @@ def parse_server_invite_dm_content(content: str | None) -> tuple[int, int | None
     return invite_id, channel_id
 
 
+_INVITE_DELIVERY_COLUMNS_READY = False
+
+
+async def ensure_invite_delivery_columns(db: AsyncSession) -> None:
+    """Render/Postgres-safe guard for server invite DM cards.
+
+    Older deployments can already have community_server_invites created by
+    create_all() before status/responded_at existed. SQLAlchemy then includes
+    those mapped columns in INSERT/SELECT and PostgreSQL throws 500.
+    Calling this before invite creation/rendering keeps the old database alive.
+    """
+    global _INVITE_DELIVERY_COLUMNS_READY
+    if _INVITE_DELIVERY_COLUMNS_READY:
+        return
+    try:
+        await db.execute(text("ALTER TABLE community_server_invites ADD COLUMN IF NOT EXISTS status VARCHAR(16) DEFAULT 'pending' NOT NULL"))
+        await db.execute(text("ALTER TABLE community_server_invites ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL"))
+        await db.execute(text("ALTER TABLE community_server_invites ADD COLUMN IF NOT EXISTS responded_at TIMESTAMP WITH TIME ZONE"))
+        await db.commit()
+        _INVITE_DELIVERY_COLUMNS_READY = True
+    except Exception:
+        await db.rollback()
+        raise
+
+
 VISUAL_NAME_EFFECTS = {"none", "gradient", "glow"}
 VISUAL_NAME_FONTS = {"default", "mono", "serif", "rounded", "cyber", "display", "pixel", "bubble", "puffy", "block", "neon", "glitch", "graffiti", "spooky", "medieval", "roundfat"}
 
@@ -854,6 +879,7 @@ async def invite_friend_to_server(
     inviter_id: int,
     invitee_id: int,
 ) -> ServerInvite | None:
+    await ensure_invite_delivery_columns(db)
     if inviter_id == invitee_id:
         return None
     if not await is_server_member(db, server_id, inviter_id):
@@ -890,6 +916,7 @@ async def invite_friend_to_server(
 
 
 async def list_pending_server_invites(db: AsyncSession, account_id: int) -> list[dict]:
+    await ensure_invite_delivery_columns(db)
     result = await db.execute(
         select(ServerInvite)
         .where(ServerInvite.invitee_id == account_id, ServerInvite.status == "pending")
@@ -909,6 +936,7 @@ async def respond_server_invite(
     account_id: int,
     accept: bool,
 ) -> ServerInvite | None:
+    await ensure_invite_delivery_columns(db)
     result = await db.execute(select(ServerInvite).where(ServerInvite.id == invite_id))
     invite = result.scalar_one_or_none()
     if not invite or invite.invitee_id != account_id or invite.status != "pending":
@@ -925,11 +953,13 @@ async def respond_server_invite(
     return invite
 
 async def get_server_invite_by_id(db: AsyncSession, invite_id: int) -> ServerInvite | None:
+    await ensure_invite_delivery_columns(db)
     result = await db.execute(select(ServerInvite).where(ServerInvite.id == invite_id))
     return result.scalar_one_or_none()
 
 
 async def build_dm_server_invite_payload(db: AsyncSession, content: str | None) -> dict | None:
+    await ensure_invite_delivery_columns(db)
     parsed = parse_server_invite_dm_content(content)
     if not parsed:
         return None
@@ -1088,7 +1118,8 @@ async def list_dm_messages(db: AsyncSession, thread_id: int, limit: int = 80) ->
             if reply_msg:
                 reply_author = await get_account_by_id(db, reply_msg.author_id)
                 reply = {"message": reply_msg, "author": reply_author}
-        feed.append({"message": message, "author": author, "reply": reply})
+        invite = await build_dm_server_invite_payload(db, message.content)
+        feed.append({"message": message, "author": author, "reply": reply, "invite": invite})
     return feed
 
 
@@ -1158,7 +1189,8 @@ async def list_dm_threads_for_account(db: AsyncSession, account_id: int, limit: 
         if not other:
             continue
         last_message = await _last_dm_message(db, thread.id)
-        items.append({"thread": thread, "other": other, "last_message": last_message})
+        last_invite = await build_dm_server_invite_payload(db, last_message.content) if last_message else None
+        items.append({"thread": thread, "other": other, "last_message": last_message, "last_invite": last_invite})
     return items
 
 
