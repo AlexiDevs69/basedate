@@ -95,6 +95,19 @@
     .edit-cancel:hover { text-decoration:underline; color:#37b7ff; }
     .message-edited { color:#8e949f; font-size:.72em; font-weight:650; margin-left:.32rem; white-space:nowrap; }
     .message-edited.hidden { display:none; }
+
+    .message-reply{display:flex;align-items:center;gap:.42rem;margin:.05rem 0 .22rem;color:#949ba4;font-size:.78rem;font-weight:700;min-width:0;cursor:pointer;opacity:.92;}
+    .message-reply:hover{color:#dbdee1;}
+    .message-reply::before{content:"";width:22px;height:12px;border-left:2px solid #4e5058;border-top:2px solid #4e5058;border-top-left-radius:7px;flex:0 0 auto;margin-left:-.05rem;}
+    .message-reply-author{color:#b5bac1;font-weight:900;white-space:nowrap;max-width:150px;overflow:hidden;text-overflow:ellipsis;}
+    .message-reply-text{min-width:0;max-width:560px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#949ba4;}
+    .message.search-jump{background:rgba(88,101,242,.18)!important;box-shadow:inset 3px 0 #5865f2;}
+    .reply-preview{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#2b2d31;border:1px solid #3a3d45;border-bottom:0;border-radius:10px 10px 0 0;padding:9px 12px;color:#b5bac1;font-size:.8rem;font-weight:750;}
+    .reply-preview.hidden{display:none;}
+    .reply-preview b{color:#fff;font-weight:950;}
+    .reply-preview-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;color:#949ba4;}
+    .reply-preview button{width:24px;height:24px;border:0;border-radius:50%;background:transparent;color:#b5bac1;cursor:pointer;font-weight:950;display:grid;place-items:center;}
+    .reply-preview button:hover{background:#3a3d45;color:#fff;}
     .empty-chat { color:#666; text-align:center; padding:4rem 1rem; font-size:.9rem; }
 
     .typing-indicator {
@@ -1414,6 +1427,12 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
             <a href="/community/profile/{{ author.username if author else '' }}" class="visual-name mini-profile-trigger profile-click name-{{ author.name_effect if author and author.name_effect else 'none' }} font-{{ author.name_font if author and author.name_font else 'default' }}" data-mini-username="{{ author.username if author else 'видалений юзер' }}" data-mini-avatar="{{ author.avatar_url if author and author.avatar_url else '' }}" data-mini-status="{{ account.account_status if author and author.id == account.id else (author.account_status if author and author.account_status else 'offline') }}" data-mini-banner="{{ author.banner_url if author and author.banner_url else '' }}" data-mini-role="{{ author.role_label if author and author.role_label else 'member' }}" data-mini-effect="{{ author.name_effect if author and author.name_effect else 'none' }}" data-mini-font="{{ author.name_font if author and author.name_font else 'default' }}" data-mini-c1="{{ author.role_color_start if author and author.role_color_start else '#f5576c' }}" data-mini-c2="{{ author.role_color_end if author and author.role_color_end else '#7367f0' }}" data-mini-profile="/community/profile/{{ author.username if author else '' }}" data-mini-bio="{{ author.bio if author and author.bio else '' }}" style="--name-c1: {{ author.role_color_start if author and author.role_color_start else '#f5576c' }}; --name-c2: {{ author.role_color_end if author and author.role_color_end else '#7367f0' }}; text-decoration:none;">{{ author.username if author else 'видалений юзер' }}</a>
             <span class="message-time">{{ item.message.created_at }}</span>
           </div>
+          {% if item.reply and item.reply.message %}
+          <div class="message-reply" onclick="jumpToMessage({{ item.reply.message.id }})">
+            <span class="message-reply-author">{{ item.reply.author.username if item.reply.author else 'видалений юзер' }}</span>
+            <span class="message-reply-text">{{ item.reply.message.content if item.reply.message.content else 'Вкладення' }}</span>
+          </div>
+          {% endif %}
           <div class="message-content" id="content-{{ item.message.id }}"><span class="message-content-text">{{ item.message.content }}</span><span class="message-edited {{ '' if item.message.edited_at else 'hidden' }}" id="edited-{{ item.message.id }}">(изменено)</span></div>
           {% if item.message.image_url %}<img src="{{ item.message.image_url }}" class="message-image" alt="">{% endif %}
 
@@ -1441,6 +1460,12 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
 
     <form class="composer-wrap" method="post" action="/community/servers/{{ server.id }}/channel/{{ channel.id }}/message" id="composer-form" enctype="multipart/form-data">
       <div id="typing-indicator" class="typing-indicator"></div>
+      <div id="reply-preview" class="reply-preview hidden">
+        <span>Ответ на <b id="reply-preview-author"></b></span>
+        <span id="reply-preview-text" class="reply-preview-text"></span>
+        <button type="button" onclick="clearReply()" aria-label="Cancel reply">×</button>
+        <input id="reply-to-id" type="hidden" name="reply_to_id" value="">
+      </div>
       <div class="composer-box discord-composer">
         <div class="composer-row">
           <button id="composer-plus-btn" class="composer-plus-btn" type="button" onclick="toggleComposerPlus(event)" title="Додати"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg></button>
@@ -1483,7 +1508,7 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
       <button class="ctx-react" type="button" onclick="fakeReaction('✅')">✅</button>
     </div>
     <button class="ctx-item" type="button" data-edit-only onclick="editMessageFromMenu()"><span>Редактировать</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
-    <button class="ctx-item" type="button" onclick="showActionToast && showActionToast('Відповідь поки заглушка')"><span>Ответить</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg></button>
+    <button class="ctx-item" type="button" onclick="replyMessageFromMenu()"><span>Ответить</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg></button>
     <button class="ctx-item" type="button" onclick="showActionToast && showActionToast('Переслати поки заглушка')"><span>Переслать</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></button>
     <button class="ctx-item" type="button" onclick="showActionToast && showActionToast('Ветки поки заглушка')"><span>Создать ветку</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v12"/><path d="M18 9v12"/><path d="M6 15a6 6 0 0 0 6-6"/><path d="M12 9h6"/></svg></button>
     <div class="ctx-sep"></div>
@@ -1568,6 +1593,40 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
       closeMessageMenu();
       if (id) openEdit(id);
     }
+
+    function jumpToMessage(id) {
+      var target = document.getElementById('message-' + id);
+      if (!target) return;
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      target.classList.add('search-jump');
+      setTimeout(function(){ target.classList.remove('search-jump'); }, 1400);
+    }
+    function setReplyTarget(msg) {
+      if (!msg) return;
+      var input = document.getElementById('reply-to-id');
+      var box = document.getElementById('reply-preview');
+      var author = document.getElementById('reply-preview-author');
+      var text = document.getElementById('reply-preview-text');
+      if (!input || !box) return;
+      input.value = msg.dataset.messageId || '';
+      if (author) author.textContent = msg.dataset.messageAuthor || 'user';
+      if (text) text.textContent = (msg.dataset.messageContent || 'Вкладення').slice(0, 180);
+      box.classList.remove('hidden');
+      var area = document.getElementById('composer-textarea');
+      if (area) area.focus();
+    }
+    function replyMessageFromMenu() {
+      if (!activeMessageEl) return;
+      setReplyTarget(activeMessageEl);
+      closeMessageMenu();
+    }
+    function clearReply() {
+      var input = document.getElementById('reply-to-id');
+      var box = document.getElementById('reply-preview');
+      if (input) input.value = '';
+      if (box) box.classList.add('hidden');
+    }
+
     function openDeleteConfirmFromMenu() {
       if (!activeMessageEl) return;
       var url = activeMessageEl.dataset.messageDeleteUrl || '';
@@ -1845,6 +1904,23 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
       return name;
     }
 
+
+    function buildReply(reply) {
+      if (!reply || !reply.id) return null;
+      var line = document.createElement('div');
+      line.className = 'message-reply';
+      line.onclick = function(){ jumpToMessage(reply.id); };
+      var au = document.createElement('span');
+      au.className = 'message-reply-author';
+      au.textContent = (reply.author && reply.author.username) ? reply.author.username : 'видалений юзер';
+      var tx = document.createElement('span');
+      tx.className = 'message-reply-text';
+      tx.textContent = reply.content || (reply.image_url ? 'Вкладення' : 'Повідомлення');
+      line.appendChild(au);
+      line.appendChild(tx);
+      return line;
+    }
+
     function appendMessage(msg, author) {
       if (!messagesEl || document.getElementById('message-' + msg.id)) return;
       var shouldStick = scrollIfNearBottom();
@@ -1880,6 +1956,8 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
       content.innerHTML = '<span class="message-content-text"></span><span class="message-edited ' + (msg.edited_at ? '' : 'hidden') + '" id="edited-' + msg.id + '">(изменено)</span>';
       content.querySelector('.message-content-text').textContent = msg.content || '';
 
+      var replyNode = buildReply(msg.reply || null);
+      if (replyNode) body.appendChild(replyNode);
       body.appendChild(head);
       body.appendChild(content);
 
@@ -2003,7 +2081,9 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
       var imageUrl = imageInput ? imageInput.value.trim() : '';
       if (!content && !imageUrl) return;
 
-      var ok = sendSocket({ type: 'message', content: content, image_url: imageUrl });
+      var replyInput = document.getElementById('reply-to-id');
+      var replyToId = replyInput ? replyInput.value.trim() : '';
+      var ok = sendSocket({ type: 'message', content: content, image_url: imageUrl, reply_to_id: replyToId });
       if (!ok) {
         HTMLFormElement.prototype.submit.call(composerForm);
         return;
@@ -2012,6 +2092,7 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
       textarea.style.height = 'auto';
       if (imageInput) imageInput.value = '';
       clearComposerImage();
+      clearReply();
       sendSocket({ type: 'typing_stop' });
     }
 
