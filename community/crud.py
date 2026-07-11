@@ -776,6 +776,7 @@ async def create_server_message(
     content: str,
     image_url: str | None = None,
     reply_to_id: int | None = None,
+    is_forwarded: bool = False,
 ) -> ServerMessage:
     await ensure_message_meta_columns(db)
     message = ServerMessage(
@@ -783,6 +784,7 @@ async def create_server_message(
         channel_id=channel_id,
         author_id=author_id,
         reply_to_id=reply_to_id,
+        is_forwarded=bool(is_forwarded),
         content=content.strip(),
         image_url=image_url.strip() if image_url else None,
     )
@@ -823,6 +825,8 @@ async def update_server_message(
     image_url: str | None = None,
 ) -> ServerMessage:
     await ensure_message_meta_columns(db)
+    if getattr(message, "is_forwarded", False):
+        return message
     message.content = content.strip()
     message.image_url = image_url.strip() if image_url and image_url.strip() else None
     message.edited_at = datetime.now(timezone.utc)
@@ -1042,6 +1046,8 @@ async def ensure_message_meta_columns(db: AsyncSession) -> None:
     await db.execute(text("ALTER TABLE community_direct_messages ADD COLUMN IF NOT EXISTS edited_at TIMESTAMP WITH TIME ZONE"))
     await db.execute(text("ALTER TABLE community_server_messages ADD COLUMN IF NOT EXISTS reply_to_id INTEGER"))
     await db.execute(text("ALTER TABLE community_direct_messages ADD COLUMN IF NOT EXISTS reply_to_id INTEGER"))
+    await db.execute(text("ALTER TABLE community_server_messages ADD COLUMN IF NOT EXISTS is_forwarded BOOLEAN NOT NULL DEFAULT FALSE"))
+    await db.execute(text("ALTER TABLE community_direct_messages ADD COLUMN IF NOT EXISTS is_forwarded BOOLEAN NOT NULL DEFAULT FALSE"))
     await db.commit()
     _MESSAGE_META_COLUMNS_READY = True
 
@@ -1103,12 +1109,14 @@ async def create_dm_message(
     content: str,
     image_url: str | None = None,
     reply_to_id: int | None = None,
+    is_forwarded: bool = False,
 ) -> DirectMessage:
     await ensure_message_meta_columns(db)
     message = DirectMessage(
         thread_id=thread_id,
         author_id=author_id,
         reply_to_id=reply_to_id,
+        is_forwarded=bool(is_forwarded),
         content=content.strip(),
         image_url=image_url.strip() if image_url and image_url.strip() else None,
     )
@@ -1175,6 +1183,8 @@ async def update_dm_message(
     image_url: str | None = None,
 ) -> DirectMessage:
     await ensure_message_meta_columns(db)
+    if getattr(message, "is_forwarded", False):
+        return message
     message.content = content.strip()
     message.image_url = image_url.strip() if image_url and image_url.strip() else None
     message.edited_at = datetime.now(timezone.utc)
@@ -1273,6 +1283,8 @@ async def list_forward_targets(db: AsyncSession, account_id: int) -> dict:
                 "server_id": server_id,
                 "server_name": server_name,
                 "server_icon_url": server_icon_url,
+                "icon_url": server_icon_url,
+                "avatar_url": server_icon_url,
                 "channel_id": channel_id,
                 "channel_name": getattr(channel, "name", "") or "channel",
             })
