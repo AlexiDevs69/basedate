@@ -3,6 +3,7 @@ Query functions for the community module -- kept separate from the admin
 dashboard's crud.py so the two stay easy to reason about independently.
 """
 from datetime import datetime, timedelta, timezone
+import re
 
 from sqlalchemy import and_, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -29,6 +30,27 @@ from community.models import (
 # A member counts as "online" if we've seen a request from them in the
 # last 3 minutes. Cheap to compute, no background job or websocket needed.
 ONLINE_WINDOW = timedelta(minutes=3)
+
+DM_SERVER_INVITE_RE = re.compile(r"^alexihub://server-invite/(?P<invite_id>\d+)(?:\?channel=(?P<channel_id>\d+))?$")
+
+
+def make_server_invite_dm_content(invite_id: int, channel_id: int | None = None) -> str:
+    """Tiny internal marker stored as DM content; dm_chat renders it as a Discord-like invite card."""
+    base = f"alexihub://server-invite/{int(invite_id)}"
+    if channel_id:
+        return f"{base}?channel={int(channel_id)}"
+    return base
+
+
+def parse_server_invite_dm_content(content: str | None) -> tuple[int, int | None] | None:
+    match = DM_SERVER_INVITE_RE.match((content or "").strip())
+    if not match:
+        return None
+    invite_id = int(match.group("invite_id"))
+    channel_raw = match.group("channel")
+    channel_id = int(channel_raw) if channel_raw else None
+    return invite_id, channel_id
+
 
 VISUAL_NAME_EFFECTS = {"none", "gradient", "glow"}
 VISUAL_NAME_FONTS = {"default", "mono", "serif", "rounded", "cyber", "display", "pixel", "bubble", "puffy", "block", "neon", "glitch", "graffiti", "spooky", "medieval", "roundfat"}
@@ -901,6 +923,52 @@ async def respond_server_invite(
     await db.commit()
     await db.refresh(invite)
     return invite
+
+async def get_server_invite_by_id(db: AsyncSession, invite_id: int) -> ServerInvite | None:
+    result = await db.execute(select(ServerInvite).where(ServerInvite.id == invite_id))
+    return result.scalar_one_or_none()
+
+
+async def build_dm_server_invite_payload(db: AsyncSession, content: str | None) -> dict | None:
+    parsed = parse_server_invite_dm_content(content)
+    if not parsed:
+        return None
+
+    invite_id, channel_id = parsed
+    invite = await get_server_invite_by_id(db, invite_id)
+    if not invite:
+        return {"type": "server_invite", "invite_id": invite_id, "status": "invalid", "valid": False}
+
+    server = await get_server_by_id(db, invite.server_id)
+    inviter = await get_account_by_id(db, invite.inviter_id)
+    channel = None
+    if channel_id:
+        channel = await get_server_channel(db, invite.server_id, channel_id)
+    count_result = await db.execute(
+        select(func.count()).select_from(ServerMember).where(ServerMember.server_id == invite.server_id)
+    )
+    members_count = int(count_result.scalar_one() or 0)
+    if not server:
+        return {"type": "server_invite", "invite_id": invite_id, "status": "invalid", "valid": False}
+
+    return {
+        "type": "server_invite",
+        "invite_id": invite.id,
+        "server_id": server.id,
+        "server_name": server.name,
+        "server_icon_url": server.icon_url or "",
+        "server_description": server.description or "",
+        "channel_id": channel.id if channel else None,
+        "channel_name": channel.name if channel else "",
+        "inviter_id": invite.inviter_id,
+        "inviter_username": inviter.username if inviter else "user",
+        "invitee_id": invite.invitee_id,
+        "status": invite.status,
+        "valid": invite.status == "pending",
+        "members_count": members_count,
+        "created_at": invite.created_at.isoformat() if invite.created_at else "",
+    }
+
 
 
 
