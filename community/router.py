@@ -1122,6 +1122,137 @@ async def server_invite_submit(
 
 
 
+
+
+@router.get("/api/forward-targets")
+async def api_forward_targets(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"error": "not_logged_in"}, status_code=401)
+    targets = await crud.list_forward_targets(db, account.id)
+    return JSONResponse(targets)
+
+
+@router.post("/api/messages/forward")
+async def api_forward_message(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+
+    source_type = str(body.get("source_type") or body.get("sourceType") or "").strip().lower()
+    message_id = _parse_optional_int(body.get("message_id") or body.get("messageId"))
+    targets = body.get("targets") if isinstance(body.get("targets"), list) else []
+
+    if source_type not in {"dm", "server"} or not message_id:
+        return JSONResponse({"ok": False, "error": "bad_source"}, status_code=400)
+    if not targets:
+        return JSONResponse({"ok": False, "error": "no_targets"}, status_code=400)
+
+    source_content = ""
+    source_image_url = ""
+
+    if source_type == "dm":
+        source = await crud.get_dm_message_by_id(db, message_id)
+        if not source or not await crud.is_dm_participant(db, source.thread_id, account.id):
+            return JSONResponse({"ok": False, "error": "source_not_found"}, status_code=404)
+        source_content = source.content or ""
+        source_image_url = source.image_url or ""
+    else:
+        source = await crud.get_server_message_by_id(db, message_id)
+        if not source or not await crud.is_server_member(db, source.server_id, account.id):
+            return JSONResponse({"ok": False, "error": "source_not_found"}, status_code=404)
+        source_content = source.content or ""
+        source_image_url = source.image_url or ""
+
+    if not source_content.strip() and not source_image_url.strip():
+        return JSONResponse({"ok": False, "error": "empty_source"}, status_code=400)
+
+    # Store primitive values before commits to avoid MissingGreenlet surprises
+    # when SQLAlchemy expires ORM attributes after a commit.
+    account_id = int(account.id)
+    author_payload = _account_payload(account)
+    sent = []
+    seen_targets = set()
+
+    for raw_target in targets[:25]:
+        if not isinstance(raw_target, dict):
+            continue
+        target_type = str(raw_target.get("type") or "").strip().lower()
+
+        if target_type == "dm":
+            username = str(raw_target.get("username") or "").strip()
+            if not username:
+                continue
+            dedupe_key = ("dm", username.lower())
+            if dedupe_key in seen_targets:
+                continue
+            seen_targets.add(dedupe_key)
+
+            target_account = await crud.get_account_by_username(db, username)
+            if not target_account or target_account.id == account_id:
+                continue
+            # Forwarding to a DM is intentionally limited to friends, like the modal list.
+            if await crud.friendship_status(db, account_id, target_account.id) != "friends":
+                continue
+
+            thread = await crud.get_or_create_dm_thread(db, account_id, target_account.id)
+            if not thread:
+                continue
+            thread_id = int(thread.id)
+            msg = await crud.create_dm_message(db, thread_id, account_id, source_content, source_image_url)
+            message_payload = {
+                "id": int(msg.id),
+                "thread_id": thread_id,
+                "author_id": account_id,
+                "content": msg.content,
+                "image_url": msg.image_url,
+                "created_at": msg.created_at.isoformat(),
+                "reply_to_id": None,
+                "reply": None,
+            }
+            await realtime_channels.broadcast((0, thread_id), {"type": "message", "message": message_payload, "author": author_payload})
+            sent.append({"type": "dm", "username": username})
+            continue
+
+        if target_type == "channel":
+            server_id = _parse_optional_int(raw_target.get("server_id"))
+            channel_id = _parse_optional_int(raw_target.get("channel_id"))
+            if not server_id or not channel_id:
+                continue
+            dedupe_key = ("channel", int(server_id), int(channel_id))
+            if dedupe_key in seen_targets:
+                continue
+            seen_targets.add(dedupe_key)
+
+            if not await crud.is_server_member(db, server_id, account_id):
+                continue
+            channel = await crud.get_server_channel(db, server_id, channel_id)
+            if not channel:
+                continue
+
+            msg = await crud.create_server_message(db, server_id, channel_id, account_id, source_content, source_image_url)
+            message_payload = {
+                "id": int(msg.id),
+                "server_id": int(server_id),
+                "channel_id": int(channel_id),
+                "author_id": account_id,
+                "content": msg.content,
+                "image_url": msg.image_url,
+                "created_at": msg.created_at.isoformat(),
+                "reply_to_id": None,
+                "reply": None,
+            }
+            await realtime_channels.broadcast((server_id, channel_id), {"type": "message", "message": message_payload, "author": author_payload})
+            sent.append({"type": "channel", "server_id": server_id, "channel_id": channel_id})
+
+    return JSONResponse({"ok": True, "sent": sent, "count": len(sent)})
+
+
 @router.get("/api/server-invites/{invite_id}/preview")
 async def api_server_invite_preview(invite_id: int, request: Request, db: AsyncSession = Depends(get_db)):
     viewer = await current_account(request, db)
