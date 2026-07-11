@@ -691,6 +691,42 @@ async def create_server_channel(
     return channel
 
 
+async def update_server_channel(
+    db: AsyncSession,
+    server_id: int,
+    channel_id: int,
+    name: str,
+    description: str | None = None,
+) -> ServerChannel | None:
+    channel = await get_server_channel(db, server_id, channel_id)
+    if not channel:
+        return None
+    clean_name = name.strip().lower().replace(" ", "-")[:64]
+    if not clean_name:
+        clean_name = channel.name
+    channel.name = clean_name
+    channel.description = description.strip()[:255] if description else None
+    await db.commit()
+    await db.refresh(channel)
+    return channel
+
+
+async def delete_server_channel(db: AsyncSession, server_id: int, channel_id: int) -> bool:
+    channel = await get_server_channel(db, server_id, channel_id)
+    if not channel:
+        return False
+    count_result = await db.execute(select(func.count()).select_from(ServerChannel).where(ServerChannel.server_id == server_id))
+    channel_count = int(count_result.scalar_one() or 0)
+    if channel_count <= 1:
+        return False
+    messages = await db.execute(select(ServerMessage).where(ServerMessage.server_id == server_id, ServerMessage.channel_id == channel_id))
+    for msg in messages.scalars().all():
+        await db.delete(msg)
+    await db.delete(channel)
+    await db.commit()
+    return True
+
+
 async def create_server_message(
     db: AsyncSession,
     server_id: int,
