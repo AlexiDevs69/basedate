@@ -1062,6 +1062,7 @@ async def server_invite_submit(
     server_id: int,
     request: Request,
     username: str = Form(...),
+    channel_id: str = Form(""),
     redirect_to: str = Form(""),
     db: AsyncSession = Depends(get_db),
 ):
@@ -1073,7 +1074,37 @@ async def server_invite_submit(
 
     target = await crud.get_account_by_username(db, username.strip())
     if target:
-        await crud.invite_friend_to_server(db, server_id, account.id, target.id)
+        invite = await crud.invite_friend_to_server(db, server_id, account.id, target.id)
+        if invite:
+            invite_channel_id = _parse_optional_int(channel_id)
+            if invite_channel_id:
+                channel = await crud.get_server_channel(db, server_id, invite_channel_id)
+                if not channel:
+                    invite_channel_id = None
+
+            thread = await crud.get_or_create_dm_thread(db, account.id, target.id)
+            if thread:
+                content = crud.make_server_invite_dm_content(invite.id, invite_channel_id)
+                msg = await crud.create_dm_message(db, thread.id, account.id, content)
+                invite_payload = await crud.build_dm_server_invite_payload(db, content)
+                await realtime_channels.broadcast(
+                    (0, thread.id),
+                    {
+                        "type": "message",
+                        "message": {
+                            "id": msg.id,
+                            "thread_id": thread.id,
+                            "author_id": account.id,
+                            "content": content,
+                            "image_url": None,
+                            "created_at": msg.created_at.isoformat(),
+                            "reply_to_id": None,
+                            "reply": None,
+                            "invite": invite_payload,
+                        },
+                        "author": _account_payload(account),
+                    },
+                )
     safe_redirect = redirect_to if redirect_to.startswith("/community/") else f"/community/servers/{server_id}"
     return RedirectResponse(url=safe_redirect, status_code=303)
 
