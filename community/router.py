@@ -1072,7 +1072,11 @@ async def server_invite_submit(
     if not await crud.is_server_member(db, server_id, account.id):
         return RedirectResponse(url="/community", status_code=303)
 
-    await crud.ensure_invite_delivery_columns(db)
+    try:
+        await crud.ensure_invite_delivery_columns(db)
+    except Exception as exc:
+        await db.rollback()
+        print("[AlexiHub] invite schema guard failed before submit:", repr(exc))
 
     target = await crud.get_account_by_username(db, username.strip())
     ok = False
@@ -1129,7 +1133,11 @@ async def api_respond_server_invite(invite_id: int, request: Request, db: AsyncS
     viewer = await current_account(request, db)
     if not viewer:
         return JSONResponse({"error": "not_logged_in"}, status_code=401)
-    await crud.ensure_invite_delivery_columns(db)
+    try:
+        await crud.ensure_invite_delivery_columns(db)
+    except Exception as exc:
+        await db.rollback()
+        print("[AlexiHub] invite schema guard failed before respond:", repr(exc))
 
     body = await request.json()
     accept = bool(body.get("accept"))
@@ -1304,8 +1312,18 @@ async def dm_chat_view(username: str, request: Request, db: AsyncSession = Depen
     online_members = await crud.list_online_accounts(db)
     online_ids = [m.id for m in online_members]
     friends = await crud.list_friends(db, account.id)
-    dm_threads = await crud.list_dm_threads_for_account(db, account.id)
-    messages = await crud.list_dm_messages(db, thread.id)
+    try:
+        dm_threads = await crud.list_dm_threads_for_account(db, account.id)
+    except Exception as exc:
+        await db.rollback()
+        print("[AlexiHub] dm thread list failed:", repr(exc))
+        dm_threads = []
+    try:
+        messages = await crud.list_dm_messages(db, thread.id)
+    except Exception as exc:
+        await db.rollback()
+        print("[AlexiHub] dm message list failed:", repr(exc))
+        messages = []
     rail = await server_rail_context(db, account.id)
 
     return templates.TemplateResponse(
