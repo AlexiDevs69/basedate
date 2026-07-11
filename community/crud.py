@@ -3,7 +3,6 @@ Query functions for the community module -- kept separate from the admin
 dashboard's crud.py so the two stay easy to reason about independently.
 """
 from datetime import datetime, timedelta, timezone
-import re
 
 from sqlalchemy import and_, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -30,52 +29,6 @@ from community.models import (
 # A member counts as "online" if we've seen a request from them in the
 # last 3 minutes. Cheap to compute, no background job or websocket needed.
 ONLINE_WINDOW = timedelta(minutes=3)
-
-DM_SERVER_INVITE_RE = re.compile(r"^alexihub://server-invite/(?P<invite_id>\d+)(?:\?channel=(?P<channel_id>\d+))?$")
-
-
-def make_server_invite_dm_content(invite_id: int, channel_id: int | None = None) -> str:
-    """Tiny internal marker stored as DM content; dm_chat renders it as a Discord-like invite card."""
-    base = f"alexihub://server-invite/{int(invite_id)}"
-    if channel_id:
-        return f"{base}?channel={int(channel_id)}"
-    return base
-
-
-def parse_server_invite_dm_content(content: str | None) -> tuple[int, int | None] | None:
-    match = DM_SERVER_INVITE_RE.match((content or "").strip())
-    if not match:
-        return None
-    invite_id = int(match.group("invite_id"))
-    channel_raw = match.group("channel")
-    channel_id = int(channel_raw) if channel_raw else None
-    return invite_id, channel_id
-
-
-_INVITE_DELIVERY_COLUMNS_READY = False
-
-
-async def ensure_invite_delivery_columns(db: AsyncSession) -> None:
-    """Best-effort schema guard for invite cards.
-
-    Important: this helper must never kill DM pages. If PostgreSQL refuses an
-    ALTER for any reason, we rollback and let invite rendering fall back to an
-    invalid/safe card instead of throwing Internal Server Error.
-    """
-    global _INVITE_DELIVERY_COLUMNS_READY
-    if _INVITE_DELIVERY_COLUMNS_READY:
-        return
-    try:
-        await db.execute(text("ALTER TABLE community_server_invites ADD COLUMN IF NOT EXISTS status VARCHAR(16) DEFAULT 'pending' NOT NULL"))
-        await db.execute(text("ALTER TABLE community_server_invites ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL"))
-        await db.execute(text("ALTER TABLE community_server_invites ADD COLUMN IF NOT EXISTS responded_at TIMESTAMP WITH TIME ZONE"))
-        await db.commit()
-        _INVITE_DELIVERY_COLUMNS_READY = True
-    except Exception as exc:
-        await db.rollback()
-        print("[AlexiHub] invite schema guard skipped:", repr(exc))
-
-
 
 VISUAL_NAME_EFFECTS = {"none", "gradient", "glow"}
 VISUAL_NAME_FONTS = {"default", "mono", "serif", "rounded", "cyber", "display", "pixel", "bubble", "puffy", "block", "neon", "glitch", "graffiti", "spooky", "medieval", "roundfat"}
@@ -879,7 +832,6 @@ async def invite_friend_to_server(
     inviter_id: int,
     invitee_id: int,
 ) -> ServerInvite | None:
-    await ensure_invite_delivery_columns(db)
     if inviter_id == invitee_id:
         return None
     if not await is_server_member(db, server_id, inviter_id):
@@ -916,7 +868,6 @@ async def invite_friend_to_server(
 
 
 async def list_pending_server_invites(db: AsyncSession, account_id: int) -> list[dict]:
-    await ensure_invite_delivery_columns(db)
     result = await db.execute(
         select(ServerInvite)
         .where(ServerInvite.invitee_id == account_id, ServerInvite.status == "pending")
@@ -936,7 +887,6 @@ async def respond_server_invite(
     account_id: int,
     accept: bool,
 ) -> ServerInvite | None:
-    await ensure_invite_delivery_columns(db)
     result = await db.execute(select(ServerInvite).where(ServerInvite.id == invite_id))
     invite = result.scalar_one_or_none()
     if not invite or invite.invitee_id != account_id or invite.status != "pending":
@@ -952,127 +902,6 @@ async def respond_server_invite(
     await db.refresh(invite)
     return invite
 
-async def get_server_invite_by_id(db: AsyncSession, invite_id: int) -> ServerInvite | None:
-    await ensure_invite_delivery_columns(db)
-    result = await db.execute(select(ServerInvite).where(ServerInvite.id == invite_id))
-    return result.scalar_one_or_none()
-
-
-async def build_dm_server_invite_payload(db: AsyncSession, content: str | None) -> dict | None:
-    parsed = parse_server_invite_dm_content(content)
-    if not parsed:
-        return None
-
-    invite_id, channel_id = parsed
-
-    # Do NOT let a broken/old invite row break the whole DM chat.
-    # This is intentionally raw-SQL and heavily guarded because old Render DBs
-    # can have slightly different columns from the current SQLAlchemy model.
-    await ensure_invite_delivery_columns(db)
-    row = None
-    try:
-        result = await db.execute(
-            text(
-                """
-                SELECT
-                    id, server_id, inviter_id, invitee_id,
-                    COALESCE(status, 'pending') AS status,
-                    created_at
-                FROM community_server_invites
-                WHERE id = :invite_id
-                """
-            ),
-            {"invite_id": invite_id},
-        )
-        row = result.mappings().first()
-    except Exception as exc:
-        await db.rollback()
-        print("[AlexiHub] invite payload full select failed:", repr(exc))
-        try:
-            # Fallback for very old rows/tables where status/created_at failed.
-            result = await db.execute(
-                text(
-                    """
-                    SELECT id, server_id, inviter_id, invitee_id
-                    FROM community_server_invites
-                    WHERE id = :invite_id
-                    """
-                ),
-                {"invite_id": invite_id},
-            )
-            row = result.mappings().first()
-        except Exception as exc2:
-            await db.rollback()
-            print("[AlexiHub] invite payload fallback select failed:", repr(exc2))
-            return {"type": "server_invite", "invite_id": invite_id, "channel_id": channel_id, "status": "invalid", "valid": False}
-
-    if not row:
-        return {"type": "server_invite", "invite_id": invite_id, "channel_id": channel_id, "status": "invalid", "valid": False}
-
-    try:
-        server_id = int(row["server_id"])
-        inviter_id = int(row["inviter_id"])
-        invitee_id = int(row["invitee_id"])
-        status = (row.get("status") or "pending") if hasattr(row, "get") else (row["status"] if "status" in row else "pending")
-    except Exception:
-        return {"type": "server_invite", "invite_id": invite_id, "channel_id": channel_id, "status": "invalid", "valid": False}
-
-    server = None
-    inviter = None
-    channel = None
-    members_count = 0
-    try:
-        server = await get_server_by_id(db, server_id)
-    except Exception as exc:
-        await db.rollback()
-        print("[AlexiHub] invite payload server fetch failed:", repr(exc))
-    try:
-        inviter = await get_account_by_id(db, inviter_id)
-    except Exception as exc:
-        await db.rollback()
-        print("[AlexiHub] invite payload inviter fetch failed:", repr(exc))
-    if channel_id:
-        try:
-            channel = await get_server_channel(db, server_id, int(channel_id))
-        except Exception as exc:
-            await db.rollback()
-            print("[AlexiHub] invite payload channel fetch failed:", repr(exc))
-    try:
-        count_result = await db.execute(
-            text("SELECT COUNT(*) FROM community_server_members WHERE server_id = :server_id"),
-            {"server_id": server_id},
-        )
-        members_count = int(count_result.scalar_one() or 0)
-    except Exception as exc:
-        await db.rollback()
-        print("[AlexiHub] invite payload count failed:", repr(exc))
-
-    if not server:
-        return {"type": "server_invite", "invite_id": invite_id, "channel_id": channel_id, "status": "invalid", "valid": False}
-
-    created_raw = row.get("created_at") if hasattr(row, "get") else None
-    try:
-        created_at = created_raw.isoformat() if created_raw else ""
-    except Exception:
-        created_at = ""
-
-    return {
-        "type": "server_invite",
-        "invite_id": invite_id,
-        "server_id": server.id,
-        "server_name": server.name,
-        "server_icon_url": getattr(server, "icon_url", None) or "",
-        "server_description": getattr(server, "description", None) or "",
-        "channel_id": channel.id if channel else channel_id,
-        "channel_name": channel.name if channel else "",
-        "inviter_id": inviter_id,
-        "inviter_username": inviter.username if inviter else "user",
-        "invitee_id": invitee_id,
-        "status": status,
-        "valid": status == "pending",
-        "members_count": members_count,
-        "created_at": created_at,
-    }
 
 
 
@@ -1191,14 +1020,7 @@ async def list_dm_messages(db: AsyncSession, thread_id: int, limit: int = 80) ->
             if reply_msg:
                 reply_author = await get_account_by_id(db, reply_msg.author_id)
                 reply = {"message": reply_msg, "author": reply_author}
-        try:
-            invite = await build_dm_server_invite_payload(db, message.content)
-        except Exception as exc:
-            await db.rollback()
-            print("[AlexiHub] DM invite render skipped:", repr(exc))
-            parsed = parse_server_invite_dm_content(message.content)
-            invite = {"type": "server_invite", "invite_id": parsed[0], "channel_id": parsed[1], "status": "invalid", "valid": False} if parsed else None
-        feed.append({"message": message, "author": author, "reply": reply, "invite": invite})
+        feed.append({"message": message, "author": author, "reply": reply})
     return feed
 
 
@@ -1268,14 +1090,7 @@ async def list_dm_threads_for_account(db: AsyncSession, account_id: int, limit: 
         if not other:
             continue
         last_message = await _last_dm_message(db, thread.id)
-        last_invite = None
-        if last_message:
-            try:
-                last_invite = await build_dm_server_invite_payload(db, last_message.content)
-            except Exception as exc:
-                await db.rollback()
-                print("[AlexiHub] DM thread invite preview skipped:", repr(exc))
-        items.append({"thread": thread, "other": other, "last_message": last_message, "last_invite": last_invite})
+        items.append({"thread": thread, "other": other, "last_message": last_message})
     return items
 
 
