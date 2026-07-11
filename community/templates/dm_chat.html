@@ -434,6 +434,12 @@
 .attachment-preview .attach-meta{min-width:0;display:grid;gap:3px;padding-top:3px}.attachment-preview .attach-title{font-weight:900;color:#fff}.attachment-preview .attach-sub{font-size:12px;color:#b5bac1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}.attachment-preview .attach-remove{margin-left:auto!important;width:28px!important;height:28px!important;border-radius:50%!important;background:#3a3c45!important;color:#dbdee1!important;border:0!important;display:grid!important;place-items:center!important;font-weight:900!important;cursor:pointer!important}.attachment-preview .attach-remove:hover{background:#da373c!important;color:#fff!important}
 .image-line{display:none!important}
 
+
+
+/* Client-side server/channel invite cards in DMs. Kept client-rendered so a broken invite can never 500 the DM page. */
+.dm-server-invite-card{margin:8px 0 4px;max-width:430px;background:#2b2d31;border:1px solid #1e1f22;border-radius:12px;padding:14px;box-shadow:0 10px 24px rgba(0,0,0,.18)}
+.dm-server-invite-top{font-size:12px;font-weight:900;text-transform:uppercase;color:#b5bac1;margin-bottom:10px;letter-spacing:.02em}.dm-server-invite-main{display:flex;align-items:center;gap:12px}.dm-server-invite-icon{width:50px;height:50px;border-radius:16px;background:#5865f2;background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:950;font-size:20px;flex:0 0 auto}.dm-server-invite-meta{min-width:0;flex:1}.dm-server-invite-name{font-size:16px;font-weight:950;color:#f2f3f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dm-server-invite-sub{display:flex;align-items:center;gap:6px;margin-top:4px;font-size:12px;color:#b5bac1}.dm-server-invite-sub .dot{width:8px;height:8px;border-radius:50%;background:#23a55a}.dm-server-invite-actions{margin-top:12px}.dm-server-invite-actions button{width:100%;height:38px;border:0;border-radius:8px;background:#248046;color:white;font-weight:900;cursor:pointer}.dm-server-invite-actions button:hover{background:#1a6334}.dm-server-invite-card.invalid .dm-server-invite-icon{background:#4e5058}.dm-server-invite-card.invalid .dm-server-invite-actions button,.dm-server-invite-actions button.disabled{background:#4e5058!important;color:#b5bac1!important;cursor:default}.msg-text.dm-invite-raw{display:none!important}
+
 </style>
 
 
@@ -968,6 +974,82 @@ function dmToast(text){if(window.showActionToast)showActionToast(text);else cons
 document.addEventListener('click',function(e){if(!e.target.closest('#dm-message-context-menu')&&!e.target.closest('.msg-actions'))closeDmMessageMenu();if(e.target&&e.target.id==='dm-delete-message-modal')closeDmDeleteConfirm();});
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeDmMessageMenu();closeDmDeleteConfirm();}});
 
+
+function parseDmServerInviteContent(content){
+  const raw=String(content||'').trim();
+  const m=raw.match(/^alexihub:\/\/server-invite\/(\d+)(?:\?channel=(\d+))?/);
+  if(!m)return null;
+  return {inviteId:m[1], channelId:m[2]||''};
+}
+function dmInviteCardHtml(invite, parsed){
+  parsed=parsed||{};
+  if(!invite||invite.error){
+    return `<div class="dm-server-invite-card invalid"><div class="dm-server-invite-top">Приглашение</div><div class="dm-server-invite-main"><div class="dm-server-invite-icon">?</div><div class="dm-server-invite-meta"><div class="dm-server-invite-name">Приглашение недействительно</div><div class="dm-server-invite-sub">Не удалось загрузить карточку</div></div></div></div>`;
+  }
+  const valid=!!invite.valid;
+  const serverName=invite.server_name||'Приглашение недействительно';
+  const icon=invite.server_icon_url?`style="background-image:url('${escapeHtml(invite.server_icon_url)}')"`:'';
+  const first=invite.server_icon_url?'':escapeHtml((serverName||'?').slice(0,1).toUpperCase());
+  const channel=invite.channel_name?` · #${escapeHtml(invite.channel_name)}`:'';
+  const sub=valid?`<span class="dot"></span>${Number(invite.members_count||0)} участников${channel}`:'Попробуйте отправить новое приглашение';
+  let top='Вы получили приглашение на сервер';
+  if(Number(invite.inviter_id)===Number(currentUser.id))top='Вы отправили приглашение';
+  let action='';
+  if(invite.already_member){ action='<button type="button" class="disabled" disabled>Уже на сервере</button>'; }
+  else if(valid&&Number(invite.invitee_id)===Number(currentUser.id)){
+    action=`<button type="button" data-invite-id="${Number(invite.invite_id||parsed.inviteId||0)}" data-channel-id="${escapeHtml(invite.channel_id||parsed.channelId||'')}" onclick="acceptDmServerInvite(this)">Присоединиться</button>`;
+  }else if(!valid){ action='<button type="button" class="disabled" disabled>Недействительно</button>'; }
+  return `<div class="dm-server-invite-card ${valid?'':'invalid'}" data-invite-id="${Number(invite.invite_id||parsed.inviteId||0)}"><div class="dm-server-invite-top">${top}</div><div class="dm-server-invite-main"><div class="dm-server-invite-icon" ${icon}>${first}</div><div class="dm-server-invite-meta"><div class="dm-server-invite-name">${escapeHtml(valid?serverName:'Приглашение недействительно')}</div><div class="dm-server-invite-sub">${sub}</div></div></div><div class="dm-server-invite-actions">${action}</div></div>`;
+}
+function ensureInviteSlot(row, parsed){
+  if(!row||!parsed)return null;
+  let slot=row.querySelector('.dm-server-invite-slot');
+  if(!slot){
+    slot=document.createElement('div');
+    slot.className='dm-server-invite-slot';
+    const body=row.querySelector('.msg-body');
+    const text=row.querySelector('.msg-text');
+    if(body&&text)body.insertBefore(slot,text);else if(body)body.appendChild(slot);
+  }
+  const text=row.querySelector('.msg-text');
+  if(text)text.classList.add('dm-invite-raw');
+  return slot;
+}
+async function hydrateDmInviteCard(row){
+  if(!row||row.dataset.inviteHydrated==='1')return;
+  const parsed=parseDmServerInviteContent(row.dataset.messageContent||row.querySelector('.dm-message-text')?.textContent||'');
+  if(!parsed)return;
+  row.dataset.inviteHydrated='1';
+  const slot=ensureInviteSlot(row, parsed);
+  if(!slot)return;
+  slot.innerHTML=`<div class="dm-server-invite-card"><div class="dm-server-invite-top">Приглашение</div><div class="dm-server-invite-main"><div class="dm-server-invite-icon">…</div><div class="dm-server-invite-meta"><div class="dm-server-invite-name">Загрузка приглашения...</div><div class="dm-server-invite-sub">Перевіряємо сервер</div></div></div></div>`;
+  try{
+    const url='/community/api/server-invites/'+encodeURIComponent(parsed.inviteId)+'/preview'+(parsed.channelId?('?channel_id='+encodeURIComponent(parsed.channelId)):'');
+    const r=await fetch(url,{headers:{'Accept':'application/json'}});
+    const data=await r.json();
+    slot.innerHTML=dmInviteCardHtml(data, parsed);
+    const display=(data&&data.server_name)?('Запрошення на '+data.server_name):'Запрошення на сервер';
+    row.dataset.messageContent=display;
+  }catch(e){
+    slot.innerHTML=dmInviteCardHtml({error:true}, parsed);
+  }
+}
+function hydrateDmInviteCards(root){
+  (root||document).querySelectorAll('.msg').forEach(hydrateDmInviteCard);
+}
+function acceptDmServerInvite(btn){
+  const inviteId=btn.dataset.inviteId||'';
+  const channelId=btn.dataset.channelId||'';
+  if(!inviteId)return;
+  btn.disabled=true;btn.textContent='Подключение...';
+  fetch('/community/api/server-invites/respond/'+encodeURIComponent(inviteId),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({accept:true,channel_id:channelId||null})})
+    .then(r=>r.json()).then(data=>{
+      if(!data||!data.server_id)throw new Error('bad invite');
+      if(data.channel_id) location.href='/community/servers/'+data.server_id+'/channel/'+data.channel_id;
+      else location.href='/community/servers/'+data.server_id;
+    }).catch(()=>{btn.disabled=false;btn.textContent='Не удалось';});
+}
+
 const currentUser={id:{{ account.id }},username:"{{ account.username }}"};
 const messagesEl=document.getElementById('messages');
 const form=document.getElementById('dm-form');
@@ -1086,6 +1168,7 @@ function clearDmReply(){
 }
 
 primeDmReplyCache();
+hydrateDmInviteCards();
 
 let ws=null,typingTimer=null,stopTimer=null;
 function connect(){
@@ -1104,7 +1187,7 @@ function connect(){
       }
       messagesEl.insertAdjacentHTML('beforeend',messageHtml(msg,data.author||{}));
       const added=document.getElementById('dm-message-'+msg.id);
-      if(added)cacheDmReplyFromRow(added);
+      if(added){cacheDmReplyFromRow(added);hydrateDmInviteCard(added);} 
       pendingDmReplyFallback=null;
       scrollBottom();
     }
