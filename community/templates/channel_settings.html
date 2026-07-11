@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Налаштування каналу — #{{ channel.name }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#1e1f24;--left:#15161a;--panel:#2b2d31;--line:#34363d;--muted:#b5bac1;--muted2:#8b909b;--text:#f2f3f5;--accent:#5865f2;--danger:#f23f42;--font:'Inter',system-ui,-apple-system,sans-serif;}
+    *{box-sizing:border-box;margin:0;padding:0} body{min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;overflow:hidden} a{color:inherit;text-decoration:none} button,input,textarea,select{font:inherit}
+    .settings-app{height:100vh;display:grid;grid-template-columns:minmax(240px,35vw) minmax(0,1fr);}
+    .settings-sidebar{background:var(--left);display:flex;justify-content:flex-end;border-right:1px solid #101114;overflow:auto;padding:34px 20px 40px;}
+    .side-inner{width:260px}.side-kicker{font-size:11px;text-transform:uppercase;color:#8b909b;font-weight:900;letter-spacing:.06em;margin:0 0 8px 10px}.side-item{height:36px;border-radius:5px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 10px;color:#b5bac1;font-weight:750;margin-bottom:2px;cursor:default}.side-item:hover{background:#2b2d31;color:#fff}.side-item.active{background:#3a3c43;color:#fff}.side-item.danger{color:#ff7777}.side-sep{height:1px;background:#2b2d34;margin:12px 10px 14px}.side-channel{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .settings-main{position:relative;overflow:auto;padding:56px 112px 90px 44px}.settings-close{position:fixed;right:48px;top:56px;display:flex;flex-direction:column;align-items:center;gap:7px;color:#b5bac1;font-size:12px;font-weight:800}.close-btn{width:38px;height:38px;border-radius:50%;border:2px solid #6b7280;background:transparent;color:#d1d5db;display:grid;place-items:center;cursor:pointer}.close-btn:hover{background:#2b2d31;color:#fff}.close-btn svg{width:20px;height:20px;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+    .content{max-width:680px}.settings-title{font-size:22px;font-weight:900;margin-bottom:24px}.form-section{border-bottom:1px solid var(--line);padding-bottom:28px;margin-bottom:28px}.field{display:grid;gap:8px;margin-bottom:18px}.field label,.section-title{font-weight:900;color:#fff}.field input,.field textarea,.field select{width:100%;background:#111214;border:1px solid #3b3d45;border-radius:6px;color:#fff;outline:none;padding:11px 12px}.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent)}.field textarea{min-height:190px;resize:vertical}.hint{color:#9ca3af;font-size:13px;line-height:1.45}.toolbar{height:34px;background:#3a3a40;border:1px solid #3b3d45;border-bottom:0;border-radius:6px 6px 0 0;display:flex;align-items:center;gap:14px;padding:0 12px;color:#c4c9d1;font-size:20px;font-weight:900}.topic-wrap textarea{border-radius:0 0 6px 6px;min-height:205px}.count{float:right;margin-top:-28px;margin-right:12px;color:#b5bac1;font-weight:850;font-size:12px}.select-row{position:relative}.toggle-row{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:22px 0}.switch{width:44px;height:24px;border-radius:99px;background:#24262d;border:1px solid #373a43;position:relative;flex:0 0 auto}.switch:after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#f2f3f5;left:3px;top:2px}.info-box{border:1px solid #3b82f6;background:rgba(59,130,246,.08);border-radius:8px;padding:12px 14px;color:#dce9ff;font-size:13px;font-weight:650;line-height:1.4}.blue-btn{border:0;border-radius:6px;background:var(--accent);color:#fff;font-weight:900;padding:10px 14px;cursor:pointer}.blue-btn:hover{background:#4752c4}.gray-btn{border:0;border-radius:6px;background:#4e5058;color:#fff;font-weight:900;padding:10px 14px;cursor:pointer}.danger-btn{border:0;border-radius:6px;background:#da373c;color:#fff;font-weight:900;padding:10px 14px;cursor:pointer}.save-bar{position:fixed;left:calc(35vw + 44px);bottom:22px;width:min(680px,calc(65vw - 170px));z-index:40;background:#111214;border:1px solid #2b2d34;border-radius:10px;padding:10px;display:flex;align-items:center;justify-content:space-between;gap:14px;box-shadow:0 18px 60px rgba(0,0,0,.35);transform:translateY(90px);opacity:0;pointer-events:none;transition:transform .22s cubic-bezier(.2,.9,.2,1), opacity .16s ease}.save-bar.dirty{transform:translateY(0);opacity:1;pointer-events:auto}.save-bar small{font-weight:800;color:#dbdee1}
+    @media(max-width:900px){body{overflow:auto}.settings-app{height:auto;min-height:100vh;grid-template-columns:1fr}.settings-sidebar{display:none}.settings-main{padding:28px 18px 90px}.settings-close{right:18px;top:18px}.settings-close span{display:none}.save-bar{left:12px;right:12px;width:auto;bottom:12px}}
+  </style>
+</head>
+<body>
+  <div class="settings-app">
+    <aside class="settings-sidebar">
+      <div class="side-inner">
+        <div class="side-kicker"># {{ channel.name }} ТЕКСТОВЫЕ КАНАЛЫ</div>
+        <div class="side-item active"><span class="side-channel">Обзор</span></div>
+        <div class="side-item">Права доступа</div>
+        <div class="side-item">Приглашения</div>
+        <div class="side-item">Интеграция</div>
+        <div class="side-sep"></div>
+        <form method="post" action="/community/servers/{{ server.id }}/channel/{{ channel.id }}/delete" onsubmit="return confirm('Удалить канал #{{ channel.name }}?')">
+          <button class="side-item danger" style="width:100%;border:0;background:transparent;text-align:left" type="submit">Удалить канал <span>🗑</span></button>
+        </form>
+      </div>
+    </aside>
+    <main class="settings-main">
+      <a class="settings-close" href="/community/servers/{{ server.id }}/channel/{{ channel.id }}"><button class="close-btn" type="button" aria-label="Закрити"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button><span>ESC</span></a>
+      <form id="channel-settings-form" class="content" method="post" action="/community/servers/{{ server.id }}/channel/{{ channel.id }}/settings">
+        <input type="hidden" name="redirect_to" value="{{ request.url.path }}">
+        <h1 class="settings-title">Обзор</h1>
+        <div class="form-section">
+          <div class="field"><label>Название канала</label><input id="channel-name" name="name" value="{{ channel.name }}" required maxlength="64"></div>
+          <div class="field topic-wrap"><label>Тема канала</label><div class="toolbar"><span>B</span><span style="font-style:italic">I</span><span style="text-decoration:underline">U</span><span style="text-decoration:line-through">S</span><span>☻</span></div><textarea id="channel-desc" name="description" maxlength="255" placeholder="Расскажите участникам, как пользоваться этим каналом!">{{ channel.description or '' }}</textarea><div class="count"><span id="desc-count">{{ (channel.description or '')|length }}</span>/255</div></div>
+        </div>
+        <div class="form-section">
+          <div class="field"><label>Медленный режим</label><select disabled><option>Выкл</option></select><p class="hint">Учасники не смогут отправлять больше одного сообщения в течение выбранного периода. Пока декоративно.</p></div>
+          <div class="toggle-row"><div><div class="section-title">Канал с возрастным ограничением</div><p class="hint">Для просмотра содержимого пользователям нужно подтвердить возраст. Пока декоративно.</p></div><div class="switch"></div></div>
+          <div class="toggle-row"><div><div class="section-title">Канал с объявлениями</div><p class="hint">Пользователи смогут подписываться на публикации канала. Пока декоративно.</p></div><div class="switch"></div></div>
+          <div class="info-box">После создания канала с объявлениями профиль вашего сервера смогут просматривать пользователи, не входящие в список участников. Настройки конфиденциальности сервера можно изменить в меню «Настройки сервера».</div>
+        </div>
+        <div class="form-section">
+          <div class="field"><label>Скрыть после неактивности</label><select disabled><option>3 дней</option></select><p class="hint">Новые ветки перестанут отображаться в списке каналов после заданного периода неактивности. Декоративно.</p></div>
+        </div>
+        <div class="save-bar"><small>Есть несохраненные изменения?</small><div style="display:flex;gap:8px"><button id="cancel-changes-btn" class="gray-btn" type="button">Скасувати</button><button class="blue-btn" type="submit">Зберегти</button></div></div>
+      </form>
+    </main>
+  </div>
+  <script>
+    const form=document.getElementById('channel-settings-form');
+    const nameInput=document.getElementById('channel-name');
+    const descInput=document.getElementById('channel-desc');
+    const count=document.getElementById('desc-count');
+    const bar=document.querySelector('.save-bar');
+    const cancel=document.getElementById('cancel-changes-btn');
+    const initial={name:nameInput.value,desc:descInput.value};
+    function dirty(){bar.classList.add('dirty')}
+    function hide(){bar.classList.remove('dirty')}
+    nameInput.addEventListener('input',dirty);
+    descInput.addEventListener('input',function(){count.textContent=String(descInput.value.length);dirty();});
+    cancel.addEventListener('click',function(){nameInput.value=initial.name;descInput.value=initial.desc;count.textContent=String(initial.desc.length);hide();});
+    window.addEventListener('keydown',function(e){if(e.key==='Escape'){window.location.href='/community/servers/{{ server.id }}/channel/{{ channel.id }}';}});
+  </script>
+</body>
+</html>
