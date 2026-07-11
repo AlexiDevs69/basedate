@@ -1069,8 +1069,13 @@ function messageHtml(msg,author){
   const av=author.avatar_url?`style="background-image:url('${escapeHtml(author.avatar_url)}')"`:'';
   const first=author.avatar_url?'':escapeHtml(username.slice(0,1).toUpperCase());
   const img=msg.image_url?`<img class="msg-img" src="${escapeHtml(msg.image_url)}" alt="">`:'';
-  const inviteHtml=dmInviteCardHtml(msg.invite);
-  const displayContent=inviteHtml?(msg.invite&&msg.invite.server_name?('Запрошення на '+msg.invite.server_name):'Запрошення на сервер'):(msg.content||'');
+  let inviteObj = msg.invite || null;
+  if(!inviteObj && /^alexihub:\/\/server-invite\/\d+/.test(String(msg.content||''))){
+    const m=String(msg.content||'').match(/^alexihub:\/\/server-invite\/(\d+)(?:\?channel=(\d+))?/);
+    inviteObj={type:'server_invite', invite_id:m?Number(m[1]):0, channel_id:m&&m[2]?Number(m[2]):'', valid:false, server_name:'Приглашение загружается'};
+  }
+  const inviteHtml=dmInviteCardHtml(inviteObj);
+  const displayContent=inviteHtml?(inviteObj&&inviteObj.server_name?('Запрошення на '+inviteObj.server_name):'Запрошення на сервер'):(msg.content||'');
   const role=author.role_label||'member';
   const c1=author.role_color_start||'#5865f2';
   const c2=author.role_color_end||'#9b5cf6';
