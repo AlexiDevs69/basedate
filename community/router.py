@@ -1128,9 +1128,26 @@ async def server_invite_submit(
 async def api_forward_targets(request: Request, db: AsyncSession = Depends(get_db)):
     account = await current_account(request, db)
     if not account:
-        return JSONResponse({"error": "not_logged_in"}, status_code=401)
-    targets = await crud.list_forward_targets(db, account.id)
-    return JSONResponse(targets)
+        return JSONResponse({"error": "not_logged_in", "dms": [], "channels": []}, status_code=401)
+
+    # Keep this endpoint bulletproof: the forward modal should never break the page.
+    # The real bug was an AttributeError in crud.list_forward_targets() when an
+    # Account has no display_name column/attribute. If another edge case appears,
+    # return an empty list and print traceback to Render logs instead of throwing
+    # an HTML 500 that makes fetch().json() explode.
+    try:
+        account_id = int(account.id)
+        targets = await crud.list_forward_targets(db, account_id)
+        if not isinstance(targets, dict):
+            targets = {"dms": [], "channels": []}
+        targets.setdefault("dms", [])
+        targets.setdefault("channels", [])
+        return JSONResponse(targets)
+    except Exception as exc:
+        import traceback
+        print("[forward-targets] failed:", repr(exc))
+        traceback.print_exc()
+        return JSONResponse({"dms": [], "channels": [], "error": "forward_targets_failed"}, status_code=200)
 
 
 @router.post("/api/messages/forward")
