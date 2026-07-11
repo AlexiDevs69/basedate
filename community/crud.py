@@ -700,6 +700,7 @@ async def create_server_message(
     image_url: str | None = None,
     reply_to_id: int | None = None,
 ) -> ServerMessage:
+    await ensure_message_meta_columns(db)
     message = ServerMessage(
         server_id=server_id,
         channel_id=channel_id,
@@ -720,6 +721,7 @@ async def get_server_message(
     channel_id: int,
     message_id: int,
 ) -> ServerMessage | None:
+    await ensure_message_meta_columns(db)
     result = await db.execute(
         select(ServerMessage).where(
             ServerMessage.id == message_id,
@@ -736,6 +738,7 @@ async def update_server_message(
     content: str,
     image_url: str | None = None,
 ) -> ServerMessage:
+    await ensure_message_meta_columns(db)
     message.content = content.strip()
     message.image_url = image_url.strip() if image_url and image_url.strip() else None
     message.edited_at = datetime.now(timezone.utc)
@@ -750,6 +753,7 @@ async def delete_server_message(db: AsyncSession, message: ServerMessage) -> Non
 
 
 async def list_server_messages(db: AsyncSession, server_id: int, channel_id: int, limit: int = 80) -> list[ServerMessage]:
+    await ensure_message_meta_columns(db)
     result = await db.execute(
         select(ServerMessage)
         .where(ServerMessage.server_id == server_id, ServerMessage.channel_id == channel_id)
@@ -865,6 +869,25 @@ async def respond_server_invite(
 
 
 
+
+
+# Render/free-tier safe schema guard for message metadata.
+# Startup usually runs this, but DM WebSocket/form handlers call it too,
+# because create_all() never adds columns to old PostgreSQL tables.
+_MESSAGE_META_COLUMNS_READY = False
+
+async def ensure_message_meta_columns(db: AsyncSession) -> None:
+    global _MESSAGE_META_COLUMNS_READY
+    if _MESSAGE_META_COLUMNS_READY:
+        return
+    await db.execute(text("ALTER TABLE community_server_messages ADD COLUMN IF NOT EXISTS edited_at TIMESTAMP WITH TIME ZONE"))
+    await db.execute(text("ALTER TABLE community_direct_messages ADD COLUMN IF NOT EXISTS edited_at TIMESTAMP WITH TIME ZONE"))
+    await db.execute(text("ALTER TABLE community_server_messages ADD COLUMN IF NOT EXISTS reply_to_id INTEGER"))
+    await db.execute(text("ALTER TABLE community_direct_messages ADD COLUMN IF NOT EXISTS reply_to_id INTEGER"))
+    await db.commit()
+    _MESSAGE_META_COLUMNS_READY = True
+
+
 # ============================================================================
 # Direct messages
 # ============================================================================
@@ -923,6 +946,7 @@ async def create_dm_message(
     image_url: str | None = None,
     reply_to_id: int | None = None,
 ) -> DirectMessage:
+    await ensure_message_meta_columns(db)
     message = DirectMessage(
         thread_id=thread_id,
         author_id=author_id,
@@ -942,6 +966,7 @@ async def create_dm_message(
 
 
 async def list_dm_messages(db: AsyncSession, thread_id: int, limit: int = 80) -> list[dict]:
+    await ensure_message_meta_columns(db)
     result = await db.execute(
         select(DirectMessage)
         .where(DirectMessage.thread_id == thread_id)
@@ -964,6 +989,7 @@ async def list_dm_messages(db: AsyncSession, thread_id: int, limit: int = 80) ->
 
 
 async def get_dm_message(db: AsyncSession, thread_id: int, message_id: int) -> DirectMessage | None:
+    await ensure_message_meta_columns(db)
     result = await db.execute(
         select(DirectMessage).where(
             DirectMessage.id == message_id,
@@ -979,6 +1005,7 @@ async def update_dm_message(
     content: str,
     image_url: str | None = None,
 ) -> DirectMessage:
+    await ensure_message_meta_columns(db)
     message.content = content.strip()
     message.image_url = image_url.strip() if image_url and image_url.strip() else None
     message.edited_at = datetime.now(timezone.utc)
