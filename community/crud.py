@@ -736,6 +736,7 @@ async def update_server_message(
 ) -> ServerMessage:
     message.content = content.strip()
     message.image_url = image_url.strip() if image_url and image_url.strip() else None
+    message.edited_at = datetime.now(timezone.utc)
     await db.commit()
     await db.refresh(message)
     return message
