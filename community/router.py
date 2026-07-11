@@ -831,6 +831,81 @@ async def server_channel_view(server_id: int, channel_id: int, request: Request,
     )
 
 
+
+@router.get("/servers/{server_id}/channel/{channel_id}/settings")
+async def server_channel_settings_page(
+    server_id: int,
+    channel_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return RedirectResponse(url="/community/login", status_code=303)
+    if not await crud.is_server_member(db, server_id, account.id):
+        return RedirectResponse(url="/community", status_code=303)
+    if not await crud.can_manage_server(db, server_id, account.id):
+        return RedirectResponse(url=f"/community/servers/{server_id}/channel/{channel_id}", status_code=303)
+
+    server = await crud.get_server_by_id(db, server_id)
+    channel = await crud.get_server_channel(db, server_id, channel_id)
+    if not server or not channel:
+        return RedirectResponse(url=f"/community/servers/{server_id}", status_code=303)
+
+    channels = await crud.list_server_channels(db, server_id)
+    rail = await server_rail_context(db, account.id, active_server_id=server_id)
+    return templates.TemplateResponse(
+        "channel_settings.html",
+        {
+            "request": request,
+            "account": account,
+            "server": server,
+            "channel": channel,
+            "channels": channels,
+            **rail,
+        },
+    )
+
+
+@router.post("/servers/{server_id}/channel/{channel_id}/settings")
+async def server_channel_settings_submit(
+    server_id: int,
+    channel_id: int,
+    request: Request,
+    name: str = Form(...),
+    description: str = Form(""),
+    redirect_to: str = Form(""),
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return RedirectResponse(url="/community/login", status_code=303)
+    if not await crud.can_manage_server(db, server_id, account.id):
+        return RedirectResponse(url=f"/community/servers/{server_id}/channel/{channel_id}", status_code=303)
+
+    if name.strip():
+        await crud.update_server_channel(db, server_id, channel_id, name.strip(), description.strip())
+    safe_redirect = redirect_to if redirect_to.startswith("/community/") else f"/community/servers/{server_id}/channel/{channel_id}/settings"
+    return RedirectResponse(url=safe_redirect, status_code=303)
+
+
+@router.post("/servers/{server_id}/channel/{channel_id}/delete")
+async def server_channel_delete_submit(
+    server_id: int,
+    channel_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return RedirectResponse(url="/community/login", status_code=303)
+    if not await crud.can_manage_server(db, server_id, account.id):
+        return RedirectResponse(url=f"/community/servers/{server_id}/channel/{channel_id}", status_code=303)
+
+    await crud.delete_server_channel(db, server_id, channel_id)
+    return RedirectResponse(url=f"/community/servers/{server_id}", status_code=303)
+
+
 @router.post("/servers/{server_id}/channel/{channel_id}/message")
 async def server_message_submit(
     server_id: int,
