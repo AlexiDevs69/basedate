@@ -82,13 +82,17 @@
     .mini-action { width:28px; height:26px; border:none; background:transparent; color:var(--text-secondary); border-radius:6px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:.78rem; padding:0; }
     .mini-action:hover { color:var(--text-primary); background:rgba(255,255,255,.07); }
     .mini-action.danger:hover { color:#ef4444; }
-    .edit-form { display:none; margin-top:.45rem; }
-    .edit-form textarea { width:100%; min-height:58px; max-height:180px; resize:vertical; background:#0d0d0d; color:var(--text-primary); border:1px solid var(--border-hover); border-radius:8px; padding:.65rem .75rem; font-family:var(--font-sans); }
-    .edit-form input { width:100%; margin-top:.45rem; background:#0d0d0d; color:var(--text-primary); border:1px solid var(--border); border-radius:8px; padding:.52rem .65rem; }
-    .edit-actions { display:flex; align-items:center; gap:.45rem; margin-top:.45rem; }
-    .edit-save { border:none; background:#5865f2; color:white; border-radius:7px; padding:.4rem .7rem; font-weight:800; cursor:pointer; }
-    .edit-cancel { border:none; background:transparent; color:var(--text-secondary); cursor:pointer; padding:.4rem .45rem; }
-    .edit-cancel:hover { color:var(--text-primary); }
+    .message.is-editing { background: rgba(255,255,255,.045); }
+    .message.is-editing .message-actions { display:none !important; }
+    .edit-form { display:none; margin-top:.28rem; width:100%; }
+    .edit-form.open { display:block; }
+    .edit-form textarea { width:100%; min-height:46px; max-height:190px; resize:none; overflow:hidden; background:#1e1f22; color:#dbdee1; border:1px solid #3f424a; border-radius:8px; padding:.72rem .82rem; font-family:var(--font-sans); font-size:.94rem; line-height:1.42; outline:none; box-shadow: inset 0 0 0 1px rgba(0,0,0,.18); }
+    .edit-form textarea:focus { border-color:#5865f2; box-shadow:0 0 0 1px rgba(88,101,242,.34), inset 0 0 0 1px rgba(0,0,0,.18); }
+    .edit-form input[name="image_url"] { display:none; }
+    .edit-actions { display:flex; align-items:center; gap:.35rem; margin-top:.32rem; color:#949ba4; font-size:.72rem; font-weight:650; }
+    .edit-save { display:none; }
+    .edit-cancel { border:none; background:transparent; color:#00a8fc; cursor:pointer; padding:0 .12rem; font:inherit; font-weight:800; }
+    .edit-cancel:hover { text-decoration:underline; color:#37b7ff; }
     .empty-chat { color:#666; text-align:center; padding:4rem 1rem; font-size:.9rem; }
 
     .typing-indicator {
@@ -1416,8 +1420,8 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
             <textarea name="content" required>{{ item.message.content }}</textarea>
             <input type="text" name="image_url" value="{{ item.message.image_url or '' }}" placeholder="Image URL, необовʼязково">
             <div class="edit-actions">
-              <button type="submit" class="edit-save">Save</button>
-              <button type="button" class="edit-cancel" onclick="closeEdit({{ item.message.id }})">Cancel</button>
+              <span>esc для</span><button type="button" class="edit-cancel" onclick="closeEdit({{ item.message.id }})">отмены</button><span>• enter чтобы сохранить</span>
+              <button type="submit" class="edit-save" aria-label="Save">Save</button>
             </div>
           </form>
           {% endif %}
@@ -1887,10 +1891,11 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
         editForm.className = 'edit-form';
         editForm.method = 'post';
         editForm.action = '/community/servers/{{ server.id }}/channel/{{ channel.id }}/message/' + msg.id + '/edit';
-        editForm.innerHTML = '<textarea name="content" required></textarea><input type="text" name="image_url" placeholder="Image URL, необовʼязково"><div class="edit-actions"><button type="submit" class="edit-save">Save</button><button type="button" class="edit-cancel" onclick="closeEdit(' + msg.id + ')">Cancel</button></div>';
+        editForm.innerHTML = '<textarea name="content" required></textarea><input type="text" name="image_url" placeholder="Image URL, необовʼязково"><div class="edit-actions"><span>esc для</span><button type="button" class="edit-cancel" onclick="closeEdit(' + msg.id + ')">отмены</button><span>• enter чтобы сохранить</span><button type="submit" class="edit-save" aria-label="Save">Save</button></div>';
         editForm.querySelector('textarea').value = msg.content || '';
         editForm.querySelector('input').value = msg.image_url || '';
         body.appendChild(editForm);
+        if (typeof wireServerInlineEdit === 'function') wireServerInlineEdit(editForm);
       }
 
       article.appendChild(body);
@@ -2037,22 +2042,64 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
       textarea.addEventListener('blur', function () { sendSocket({ type: 'typing_stop' }); });
     }
 
+    function wireServerInlineEdit(form) {
+      if (!form || form.dataset.inlineEditReady === '1') return;
+      form.dataset.inlineEditReady = '1';
+      var area = form.querySelector('textarea');
+      function autosize() {
+        if (!area) return;
+        area.style.height = 'auto';
+        area.style.height = Math.min(area.scrollHeight, 190) + 'px';
+      }
+      if (area) {
+        area.addEventListener('input', autosize);
+        area.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            var id = (form.id || '').replace('edit-form-', '');
+            closeEdit(id);
+          }
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            if (form.requestSubmit) form.requestSubmit(); else form.submit();
+          }
+        });
+        setTimeout(autosize, 0);
+      }
+    }
+
     function openEdit(id) {
+      document.querySelectorAll('.edit-form.open').forEach(function (opened) {
+        var oldId = (opened.id || '').replace('edit-form-', '');
+        if (String(oldId) !== String(id)) closeEdit(oldId);
+      });
       var content = document.getElementById('content-' + id);
       var form = document.getElementById('edit-form-' + id);
+      var message = document.getElementById('message-' + id);
       if (!form) return;
+      wireServerInlineEdit(form);
       if (content) content.style.display = 'none';
       form.style.display = 'block';
+      form.classList.add('open');
+      if (message) message.classList.add('is-editing');
       var area = form.querySelector('textarea');
-      if (area) { area.focus(); area.setSelectionRange(area.value.length, area.value.length); }
+      if (area) {
+        area.style.height = 'auto';
+        area.style.height = Math.min(area.scrollHeight, 190) + 'px';
+        area.focus();
+        area.setSelectionRange(area.value.length, area.value.length);
+      }
     }
 
     function closeEdit(id) {
       var content = document.getElementById('content-' + id);
       var form = document.getElementById('edit-form-' + id);
+      var message = document.getElementById('message-' + id);
       if (content) content.style.display = '';
-      if (form) form.style.display = 'none';
+      if (form) { form.style.display = 'none'; form.classList.remove('open'); }
+      if (message) message.classList.remove('is-editing');
     }
+    document.querySelectorAll('.edit-form').forEach(wireServerInlineEdit);
   
 
 function showActionToast(text){
