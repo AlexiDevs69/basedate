@@ -934,6 +934,11 @@
   </div>
 
 
+
+<style id="ah-forward-modal-style">
+.ah-forward-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;z-index:99990}.ah-forward-backdrop.open{display:flex}.ah-forward-modal{width:440px;max-width:calc(100vw - 32px);max-height:86vh;background:#2b2d31;border:1px solid rgba(255,255,255,.09);border-radius:14px;box-shadow:0 24px 70px rgba(0,0,0,.58);display:flex;flex-direction:column;color:#f2f3f5;overflow:hidden}.ah-forward-head{padding:22px 24px 10px;position:relative}.ah-forward-head h2{margin:0 0 8px;font-size:22px;line-height:1.1;font-weight:800}.ah-forward-head p{margin:0;color:#b5bac1;font-size:14px}.ah-forward-close{position:absolute;right:18px;top:16px;width:30px;height:30px;border:0;background:transparent;color:#b5bac1;border-radius:50%;font-size:30px;line-height:1;cursor:pointer}.ah-forward-close:hover{color:#fff;background:#35373c}.ah-forward-search{margin:10px 24px 8px;height:42px;border-radius:8px;border:1px solid #5865f2;background:#1e1f22;display:flex;align-items:center;padding:0 12px;gap:10px}.ah-forward-search svg{width:19px;height:19px;color:#b5bac1}.ah-forward-search input{background:transparent;border:0;outline:0;color:#f2f3f5;width:100%;font-size:15px}.ah-forward-list{overflow:auto;max-height:390px;padding:0 16px 8px}.ah-forward-section{font-size:11px;color:#949ba4;text-transform:uppercase;font-weight:800;margin:12px 8px 6px;letter-spacing:.04em}.ah-forward-row{height:52px;display:flex;align-items:center;gap:12px;padding:5px 8px;border-radius:7px;cursor:pointer}.ah-forward-row:hover{background:#35373c}.ah-forward-avatar{width:34px;height:34px;border-radius:50%;background:#5865f2 center/cover no-repeat;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;flex:0 0 auto}.ah-forward-avatar.channel{border-radius:12px;background:#3b3d44;color:#dbdee1}.ah-forward-meta{min-width:0;flex:1}.ah-forward-title{font-weight:800;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ah-forward-sub{font-size:12px;color:#949ba4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ah-forward-check{width:22px;height:22px;accent-color:#5865f2;cursor:pointer}.ah-forward-preview{border-top:1px solid rgba(255,255,255,.08);padding:12px 24px;color:#b5bac1;font-size:13px;max-height:76px;overflow:hidden}.ah-forward-preview b{color:#f2f3f5}.ah-forward-foot{border-top:1px solid rgba(255,255,255,.08);padding:14px 24px;display:flex;gap:10px;align-items:center}.ah-forward-note{flex:1;height:38px;border:1px solid #1e1f22;background:#1e1f22;border-radius:8px;color:#dbdee1;padding:0 12px;outline:0}.ah-forward-note:focus{border-color:#5865f2}.ah-forward-send{height:38px;border:0;border-radius:8px;background:#5865f2;color:#fff;font-weight:800;padding:0 18px;cursor:pointer}.ah-forward-send:disabled{opacity:.55;cursor:not-allowed}.ah-forward-empty{padding:22px;color:#949ba4;text-align:center}.ah-forward-row.is-hidden{display:none}.ah-forward-sending{opacity:.7;pointer-events:none}
+</style>
+
 <div id="dm-message-context-menu" class="dm-context-menu" aria-hidden="true">
   <div class="dm-reactions">
     <button class="dm-reaction" type="button" onclick="dmFakeReaction('❤️')">❤️</button>
@@ -943,6 +948,7 @@
   </div>
   <button class="dm-ctx-item" type="button" data-edit-only onclick="editDmMessageFromMenu()"><span>Редактировать</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
   <button class="dm-ctx-item" type="button" onclick="replyDmMessageFromMenu()"><span>Ответить</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17 4 12l5-5"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg></button>
+  <button class="dm-ctx-item" type="button" onclick="openForwardModalFromDm()"><span>Переслать</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></button>
   <button class="dm-ctx-item" type="button" onclick="copyDmMessageText()"><span>Скопировать текст</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
   <button class="dm-ctx-item" type="button" onclick="dmToast('Закреп поки заглушка')"><span>Закрепить сообщение</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M5 17h14"/><path d="M7 4h10l-2 8H9Z"/></svg></button>
   <div class="dm-ctx-sep"></div>
@@ -959,6 +965,28 @@
   </form>
 </div>
 
+
+<div id="ah-forward-modal" class="ah-forward-backdrop" aria-hidden="true">
+  <div class="ah-forward-modal" role="dialog" aria-modal="true">
+    <div class="ah-forward-head">
+      <h2>Переслать</h2>
+      <p>Выберите, где вы хотите поделиться этим сообщением.</p>
+      <button type="button" class="ah-forward-close" onclick="closeForwardModal()">×</button>
+    </div>
+    <div class="ah-forward-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="ah-forward-search" type="text" placeholder="Поиск" oninput="filterForwardTargets(this.value)">
+    </div>
+    <div id="ah-forward-list" class="ah-forward-list"><div class="ah-forward-empty">Загрузка...</div></div>
+    <div class="ah-forward-preview"><b id="ah-forward-preview-author">Сообщение</b><div id="ah-forward-preview-text"></div></div>
+    <div class="ah-forward-foot">
+      <input id="ah-forward-note" class="ah-forward-note" type="text" placeholder="Добавить сообщение (необязательно)">
+      <button id="ah-forward-send" class="ah-forward-send" type="button" onclick="submitForwardMessage()" disabled>Отправить ➤</button>
+    </div>
+  </div>
+</div>
+
+
 <script>
 
 let activeDmMessageEl=null;
@@ -970,6 +998,121 @@ function closeDmDeleteConfirm(){const modal=document.getElementById('dm-delete-m
 function copyDmMessageText(){if(!activeDmMessageEl)return;const text=activeDmMessageEl.dataset.messageContent||'';if(navigator.clipboard)navigator.clipboard.writeText(text);closeDmMessageMenu();dmToast('Текст скопійовано');}
 function copyDmMessageId(){if(!activeDmMessageEl)return;const id=activeDmMessageEl.dataset.messageId||'';if(navigator.clipboard)navigator.clipboard.writeText(id);closeDmMessageMenu();dmToast('ID повідомлення скопійовано');}
 function dmFakeReaction(emoji){closeDmMessageMenu();dmToast('Реакції поки заглушка: '+emoji);}
+function openForwardModalFromDm(){if(!activeDmMessageEl)return;closeDmMessageMenu();openForwardModalFromElement('dm', activeDmMessageEl);}
+
+
+let ahForwardSource = null;
+let ahForwardTargetsCache = null;
+
+function ahForwardEscape(value){
+  return String(value ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+}
+function ahForwardInitials(value){
+  const s = String(value || '?').trim();
+  return ahForwardEscape((s[0] || '?').toUpperCase());
+}
+function ahForwardRowHtml(target, section){
+  if(target.type === 'dm'){
+    const title = target.display_name || target.username;
+    const avatarStyle = target.avatar_url ? `style="background-image:url('${ahForwardEscape(String(target.avatar_url).replace(/'/g,'%27'))}')"` : '';
+    return `<label class="ah-forward-row" data-search="${ahForwardEscape((title+' '+target.username).toLowerCase())}"><span class="ah-forward-avatar" ${avatarStyle}>${target.avatar_url ? '' : ahForwardInitials(title)}</span><span class="ah-forward-meta"><span class="ah-forward-title">${ahForwardEscape(title)}</span><span class="ah-forward-sub">${ahForwardEscape(target.username)}</span></span><input class="ah-forward-check" type="checkbox" data-target-type="dm" data-username="${ahForwardEscape(target.username)}" onchange="updateForwardSendState()"></label>`;
+  }
+  const serverName = target.server_name || 'Server';
+  const channelName = target.channel_name || 'channel';
+  const iconStyle = target.server_icon_url ? `style="background-image:url('${ahForwardEscape(String(target.server_icon_url).replace(/'/g,'%27'))}')"` : '';
+  return `<label class="ah-forward-row" data-search="${ahForwardEscape((serverName+' '+channelName).toLowerCase())}"><span class="ah-forward-avatar channel" ${iconStyle}>${target.server_icon_url ? '' : '#'}</span><span class="ah-forward-meta"><span class="ah-forward-title">${ahForwardEscape(channelName)}</span><span class="ah-forward-sub">${ahForwardEscape(serverName)}</span></span><input class="ah-forward-check" type="checkbox" data-target-type="channel" data-server-id="${ahForwardEscape(target.server_id)}" data-channel-id="${ahForwardEscape(target.channel_id)}" onchange="updateForwardSendState()"></label>`;
+}
+function renderForwardTargets(data){
+  const list = document.getElementById('ah-forward-list');
+  if(!list) return;
+  const dms = (data && Array.isArray(data.dms)) ? data.dms : [];
+  const channels = (data && Array.isArray(data.channels)) ? data.channels : [];
+  let html = '';
+  if(dms.length){ html += '<div class="ah-forward-section">Личные сообщения</div>' + dms.map(t=>ahForwardRowHtml(t,'dm')).join(''); }
+  if(channels.length){ html += '<div class="ah-forward-section">Каналы</div>' + channels.map(t=>ahForwardRowHtml(t,'channel')).join(''); }
+  list.innerHTML = html || '<div class="ah-forward-empty">Немає доступних чатів для пересилки.</div>';
+}
+async function loadForwardTargets(){
+  if(ahForwardTargetsCache){ renderForwardTargets(ahForwardTargetsCache); return; }
+  const list = document.getElementById('ah-forward-list');
+  if(list) list.innerHTML = '<div class="ah-forward-empty">Загрузка...</div>';
+  try{
+    const res = await fetch('/community/api/forward-targets');
+    ahForwardTargetsCache = await res.json();
+    renderForwardTargets(ahForwardTargetsCache);
+  }catch(e){
+    if(list) list.innerHTML = '<div class="ah-forward-empty">Не удалось загрузить список.</div>';
+  }
+}
+function updateForwardSendState(){
+  const btn = document.getElementById('ah-forward-send');
+  if(!btn) return;
+  const count = document.querySelectorAll('#ah-forward-list .ah-forward-check:checked').length;
+  btn.disabled = count < 1 || !ahForwardSource;
+}
+function filterForwardTargets(value){
+  const q = String(value || '').trim().toLowerCase();
+  document.querySelectorAll('#ah-forward-list .ah-forward-row').forEach(row=>{
+    const ok = !q || (row.dataset.search || row.textContent || '').toLowerCase().includes(q);
+    row.classList.toggle('is-hidden', !ok);
+  });
+}
+function openForwardModalFromElement(kind, msg){
+  if(!msg) return;
+  const id = msg.dataset.messageId || msg.dataset.id;
+  if(!id) return;
+  ahForwardSource = {type: kind, id: id, author: msg.dataset.messageAuthor || 'user', content: msg.dataset.messageContent || '', image: msg.dataset.messageImage || ''};
+  const modal = document.getElementById('ah-forward-modal');
+  const author = document.getElementById('ah-forward-preview-author');
+  const text = document.getElementById('ah-forward-preview-text');
+  const note = document.getElementById('ah-forward-note');
+  const search = document.getElementById('ah-forward-search');
+  if(author) author.textContent = ahForwardSource.author;
+  if(text) text.textContent = (ahForwardSource.content || (ahForwardSource.image ? 'Вложение' : 'Сообщение')).slice(0, 260);
+  if(note) note.value = '';
+  if(search) search.value = '';
+  document.querySelectorAll('#ah-forward-list .ah-forward-check').forEach(ch=>ch.checked=false);
+  updateForwardSendState();
+  if(modal){ modal.classList.add('open'); modal.setAttribute('aria-hidden','false'); }
+  loadForwardTargets().then(updateForwardSendState);
+  setTimeout(()=>{ const s=document.getElementById('ah-forward-search'); if(s) s.focus(); }, 50);
+}
+function closeForwardModal(){
+  const modal = document.getElementById('ah-forward-modal');
+  if(modal){ modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); }
+  ahForwardSource = null;
+}
+async function submitForwardMessage(){
+  if(!ahForwardSource) return;
+  const checks = Array.from(document.querySelectorAll('#ah-forward-list .ah-forward-check:checked'));
+  if(!checks.length) return;
+  const targets = checks.map(ch=>{
+    const type = ch.dataset.targetType;
+    if(type === 'dm') return {type:'dm', username: ch.dataset.username || ''};
+    return {type:'channel', server_id: ch.dataset.serverId || '', channel_id: ch.dataset.channelId || ''};
+  });
+  const btn = document.getElementById('ah-forward-send');
+  const modal = document.getElementById('ah-forward-modal');
+  if(btn) { btn.disabled = true; btn.textContent = 'Отправка...'; }
+  if(modal) modal.classList.add('ah-forward-sending');
+  try{
+    const res = await fetch('/community/api/messages/forward', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({source_type: ahForwardSource.type, message_id: ahForwardSource.id, targets})});
+    const data = await res.json().catch(()=>({}));
+    if(!res.ok || !data.ok) throw new Error(data.error || 'forward_failed');
+    closeForwardModal();
+    if(window.showActionToast) showActionToast('Переслано: ' + (data.count || 0));
+    else if(window.dmToast) dmToast('Переслано: ' + (data.count || 0));
+  }catch(e){
+    if(window.showActionToast) showActionToast('Не удалось переслать');
+    else if(window.dmToast) dmToast('Не удалось переслать');
+  }finally{
+    if(btn) { btn.textContent = 'Отправить ➤'; updateForwardSendState(); }
+    if(modal) modal.classList.remove('ah-forward-sending');
+  }
+}
+document.addEventListener('click', function(e){ if(e.target && e.target.id === 'ah-forward-modal') closeForwardModal(); });
+document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeForwardModal(); });
+
 function dmToast(text){if(window.showActionToast)showActionToast(text);else console.log(text);}
 document.addEventListener('click',function(e){if(!e.target.closest('#dm-message-context-menu')&&!e.target.closest('.msg-actions'))closeDmMessageMenu();if(e.target&&e.target.id==='dm-delete-message-modal')closeDmDeleteConfirm();});
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeDmMessageMenu();closeDmDeleteConfirm();}});
