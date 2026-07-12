@@ -18,7 +18,7 @@ from pathlib import Path
 import httpx
 
 from fastapi import APIRouter, Depends, File, Form, Request, UploadFile, WebSocket, WebSocketDisconnect
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse, PlainTextResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -44,6 +44,10 @@ def _safe_next_url(next_url: str | None, fallback: str = "/community") -> str:
     if target.startswith("/community") and not target.startswith("//"):
         return target
     return fallback
+
+
+def _forbidden_response() -> PlainTextResponse:
+    return PlainTextResponse("Forbidden", status_code=403)
 
 
 SERVER_BANNER_FALLBACK = "linear-gradient(135deg,#111,#555)"
@@ -701,10 +705,12 @@ async def server_join_submit(
         return RedirectResponse(url="/community/login", status_code=303)
 
     raw_invite = (invite or "").strip()
-    # MVP invite parser: accepts raw server id, /community/servers/123,
-    # full site URL, or discord-like links ending in a numeric code.
-    match = re.search(r"(?:servers/)?(\d+)(?:\D*$|$)", raw_invite)
-    if not match:
+    # Secure invite parser: accepts alexihub://server-invite/<code>,
+    # /community/api/server-invites/respond/<code>, discord-like links ending in a code,
+    # or just the random code itself. Direct server ids are no longer accepted.
+    match = re.search(r"server-invite/([A-Za-z0-9_-]+)", raw_invite) or re.search(r"(?:invite|invites|respond|accept)/([A-Za-z0-9_-]+)", raw_invite)
+    invite_code = match.group(1) if match else raw_invite.strip().split("/")[-1].split("?")[0]
+    if not invite_code or not re.fullmatch(r"[A-Za-z0-9_-]{6,64}", invite_code):
         rail = await server_rail_context(db, account.id)
         return templates.TemplateResponse(
             "server_create.html",
@@ -712,16 +718,15 @@ async def server_join_submit(
                 "request": request,
                 "account": account,
                 "error": None,
-                "join_error": "Встав нормальне запрошення або ID сервера. Для MVP працює ID сервера або лінк виду /community/servers/1.",
+                "join_error": "Встав нормальний код або посилання-запрошення. Прямий ID сервера більше не працює.",
                 "mode": "join",
                 **rail,
             },
             status_code=400,
         )
 
-    server_id = int(match.group(1))
-    server = await crud.join_server_by_id(db, server_id=server_id, account_id=account.id)
-    if not server:
+    invite_row = await crud.accept_server_invite_by_code(db, invite_code, account.id)
+    if not invite_row:
         rail = await server_rail_context(db, account.id)
         return templates.TemplateResponse(
             "server_create.html",
@@ -729,14 +734,14 @@ async def server_join_submit(
                 "request": request,
                 "account": account,
                 "error": None,
-                "join_error": "Сервер не знайдено або запрошення недійсне.",
+                "join_error": "Запрошення не знайдено, вже використане або не належить цьому акаунту.",
                 "mode": "join",
                 **rail,
             },
             status_code=404,
         )
 
-    return RedirectResponse(url=f"/community/servers/{server.id}", status_code=303)
+    return RedirectResponse(url=f"/community/servers/{invite_row.server_id}", status_code=303)
 
 
 @router.get("/servers/{server_id}")
@@ -745,7 +750,7 @@ async def server_home(server_id: int, request: Request, db: AsyncSession = Depen
     if not account:
         return RedirectResponse(url="/community/login", status_code=303)
     if not await crud.is_server_member(db, server_id, account.id):
-        return RedirectResponse(url="/community", status_code=303)
+        return _forbidden_response()
 
     await crud.touch_last_seen(db, account.id)
     server = await crud.get_server_by_id(db, server_id)
@@ -801,7 +806,7 @@ async def server_channel_view(server_id: int, channel_id: int, request: Request,
     if not account:
         return RedirectResponse(url="/community/login", status_code=303)
     if not await crud.is_server_member(db, server_id, account.id):
-        return RedirectResponse(url="/community", status_code=303)
+        return _forbidden_response()
 
     await crud.touch_last_seen(db, account.id)
     server = await crud.get_server_by_id(db, server_id)
@@ -845,7 +850,7 @@ async def server_channel_settings_page(
     if not account:
         return RedirectResponse(url="/community/login", status_code=303)
     if not await crud.is_server_member(db, server_id, account.id):
-        return RedirectResponse(url="/community", status_code=303)
+        return _forbidden_response()
     if not await crud.can_manage_server(db, server_id, account.id):
         return RedirectResponse(url=f"/community/servers/{server_id}/channel/{channel_id}", status_code=303)
 
@@ -922,7 +927,7 @@ async def server_message_submit(
     if not account:
         return RedirectResponse(url="/community/login", status_code=303)
     if not await crud.is_server_member(db, server_id, account.id):
-        return RedirectResponse(url="/community", status_code=303)
+        return _forbidden_response()
 
     channel = await crud.get_server_channel(db, server_id, channel_id)
     if channel and (content.strip() or image_url.strip()):
@@ -949,7 +954,7 @@ async def server_message_edit_submit(
     if not account:
         return RedirectResponse(url="/community/login", status_code=303)
     if not await crud.is_server_member(db, server_id, account.id):
-        return RedirectResponse(url="/community", status_code=303)
+        return _forbidden_response()
 
     message = await crud.get_server_message(db, server_id, channel_id, message_id)
     if message and message.author_id == account.id and not getattr(message, "is_forwarded", False) and content.strip():
@@ -981,7 +986,7 @@ async def server_message_delete_submit(
     if not account:
         return RedirectResponse(url="/community/login", status_code=303)
     if not await crud.is_server_member(db, server_id, account.id):
-        return RedirectResponse(url="/community", status_code=303)
+        return _forbidden_response()
 
     message = await crud.get_server_message(db, server_id, channel_id, message_id)
     if message and (message.author_id == account.id or await crud.can_manage_server(db, server_id, account.id)):
@@ -1000,7 +1005,7 @@ async def server_settings_page(
     if not account:
         return RedirectResponse(url="/community/login", status_code=303)
     if not await crud.is_server_member(db, server_id, account.id):
-        return RedirectResponse(url="/community", status_code=303)
+        return _forbidden_response()
     if not await crud.can_manage_server(db, server_id, account.id):
         return RedirectResponse(url=f"/community/servers/{server_id}", status_code=303)
 
@@ -1072,7 +1077,7 @@ async def server_invite_submit(
     if not account:
         return RedirectResponse(url="/community/login", status_code=303)
     if not await crud.is_server_member(db, server_id, account.id):
-        return RedirectResponse(url="/community", status_code=303)
+        return _forbidden_response()
 
     target = await crud.get_account_by_username(db, username.strip())
     if target:
@@ -1085,7 +1090,7 @@ async def server_invite_submit(
 
         invite = await crud.invite_friend_to_server(db, server_id, account_id, target_id)
         if invite:
-            invite_id = int(invite.id)
+            invite_code = str(getattr(invite, "code", None) or invite.id)
             invite_channel_id = _parse_optional_int(channel_id)
             if invite_channel_id:
                 channel = await crud.get_server_channel(db, server_id, invite_channel_id)
@@ -1098,7 +1103,7 @@ async def server_invite_submit(
             thread = await crud.get_or_create_dm_thread(db, account_id, target_id)
             if thread:
                 thread_id = int(thread.id)
-                content = crud.make_server_invite_dm_content(invite_id, invite_channel_id)
+                content = crud.make_server_invite_dm_content(invite_code, invite_channel_id)
                 msg = await crud.create_dm_message(db, thread_id, account_id, content)
                 message_id = int(msg.id)
                 created_at = msg.created_at.isoformat()
@@ -1274,18 +1279,37 @@ async def api_forward_message(request: Request, db: AsyncSession = Depends(get_d
     return JSONResponse({"ok": True, "sent": sent, "count": len(sent)})
 
 
-@router.get("/api/server-invites/{invite_id}/preview")
-async def api_server_invite_preview(invite_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+@router.get("/api/server-invites/{invite_code}/preview")
+async def api_server_invite_preview(invite_code: str, request: Request, db: AsyncSession = Depends(get_db)):
     viewer = await current_account(request, db)
     if not viewer:
         return JSONResponse({"error": "not_logged_in"}, status_code=401)
     channel_id = _parse_optional_int(request.query_params.get("channel_id"))
-    payload = await crud.build_server_invite_preview(db, invite_id, viewer.id, channel_id)
+    payload = await crud.build_server_invite_preview(db, invite_code, viewer.id, channel_id)
     return JSONResponse(payload)
 
 
-@router.post("/api/server-invites/respond/{invite_id}")
-async def api_respond_server_invite(invite_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+@router.post("/api/server-invites/accept/{invite_code}")
+async def api_accept_server_invite_by_code(invite_code: str, request: Request, db: AsyncSession = Depends(get_db)):
+    viewer = await current_account(request, db)
+    if not viewer:
+        return JSONResponse({"error": "not_logged_in"}, status_code=401)
+    body = await request.json() if request.headers.get("content-type", "").lower().startswith("application/json") else {}
+    requested_channel_id = _parse_optional_int(body.get("channel_id"))
+    invite = await crud.accept_server_invite_by_code(db, invite_code, viewer.id)
+    if not invite:
+        return JSONResponse({"error": "not_found_or_used"}, status_code=404)
+
+    channel_id = None
+    if requested_channel_id:
+        ch = await crud.get_server_channel(db, invite.server_id, requested_channel_id)
+        if ch:
+            channel_id = ch.id
+    return JSONResponse({"status": "accepted", "server_id": invite.server_id, "channel_id": channel_id})
+
+
+@router.post("/api/server-invites/respond/{invite_code}")
+async def api_respond_server_invite(invite_code: str, request: Request, db: AsyncSession = Depends(get_db)):
     viewer = await current_account(request, db)
     if not viewer:
         return JSONResponse({"error": "not_logged_in"}, status_code=401)
@@ -1293,9 +1317,9 @@ async def api_respond_server_invite(invite_id: int, request: Request, db: AsyncS
     body = await request.json()
     accept = bool(body.get("accept"))
     requested_channel_id = _parse_optional_int(body.get("channel_id"))
-    invite = await crud.respond_server_invite(db, invite_id, viewer.id, accept)
+    invite = await crud.respond_server_invite(db, invite_code, viewer.id, accept)
     if not invite:
-        return JSONResponse({"error": "not_found"}, status_code=404)
+        return JSONResponse({"error": "not_found_or_used"}, status_code=404)
 
     channel_id = None
     if accept and requested_channel_id:
@@ -1903,7 +1927,7 @@ async def api_notifications(request: Request, db: AsyncSession = Depends(get_db)
         inviter = p["inviter"]
         items.append({
             "type": "server_invite",
-            "invite_id": invite.id,
+            "invite_id": str(getattr(invite, "code", None) or invite.id),
             "server_id": invite.server_id,
             "server_name": server.name if server else "Сервер",
             "icon_url": server.icon_url if server else None,
