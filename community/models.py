@@ -184,10 +184,15 @@ class ServerInvite(Base):
     __table_args__ = (UniqueConstraint("server_id", "invitee_id", name="uq_community_server_invite"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    # Public invite reference. New invites use this random numeric code instead of
+    # the incremental server id / invite row id, so users cannot join by guessing ids.
+    code: Mapped[str | None] = mapped_column(String(32), unique=True, index=True, nullable=True)
     server_id: Mapped[int] = mapped_column(Integer, ForeignKey("community_servers.id"), nullable=False, index=True)
     inviter_id: Mapped[int] = mapped_column(Integer, ForeignKey("community_accounts.id"), nullable=False, index=True)
     invitee_id: Mapped[int] = mapped_column(Integer, ForeignKey("community_accounts.id"), nullable=False, index=True)
     status: Mapped[str] = mapped_column(String(16), default="pending", nullable=False)
+    # One-time invite flag. For accepted/declined invites this becomes True.
+    is_used: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
     responded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
