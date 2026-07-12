@@ -3015,6 +3015,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   function applyMessages(messages){
     if(!messages) return;
     AH_MESSAGES = messages;
+    window.__AH_TRANSLATIONS = messages || {};
     document.querySelectorAll('[data-i18n]').forEach(el=>{
       const key = el.dataset.i18n;
       if(Object.prototype.hasOwnProperty.call(messages, key)) el.textContent = messages[key];
@@ -3136,7 +3137,12 @@ document.addEventListener('DOMContentLoaded',()=>{
 <script id="ah-presence-server-save-fix">
 (function(){
   if(window.__ahPresenceSaveFix) return; window.__ahPresenceSaveFix = true;
-  const statusLabels = { online:'В мережі', idle:'Неактивний', dnd:'Не турбувати', invisible:'Невидимий' };
+  function ahStatusLabel(status){
+  const m = window.__AH_TRANSLATIONS || {};
+  const fallback = {online:'В мережі', idle:'Неактивний', dnd:'Не турбувати', invisible:'Невидимий', offline:'Не в мережі'};
+  return m['status.' + status] || fallback[status] || fallback.online;
+}
+const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabel(String(prop)); } });
   function normalizeStatus(s){ return ['online','idle','dnd','invisible'].includes(s) ? s : 'online'; }
   window.applyLocalStatus = window.applyLocalStatus || function(status){
     status = normalizeStatus(status);
@@ -3201,7 +3207,12 @@ document.addEventListener('DOMContentLoaded',()=>{
 (function(){
   if(window.__ahLiveMemberStatusFix) return; window.__ahLiveMemberStatusFix=true;
   const oldApply = window.applyLocalStatus;
-  const statusLabels = { online:'В мережі', idle:'Неактивний', dnd:'Не турбувати', invisible:'Невидимий' };
+  function ahStatusLabel(status){
+  const m = window.__AH_TRANSLATIONS || {};
+  const fallback = {online:'В мережі', idle:'Неактивний', dnd:'Не турбувати', invisible:'Невидимий', offline:'Не в мережі'};
+  return m['status.' + status] || fallback[status] || fallback.online;
+}
+const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabel(String(prop)); } });
   function normalizeStatus(s){ return ['online','idle','dnd','invisible'].includes(s) ? s : 'online'; }
   function updateOwnMemberStatus(status){
     status = normalizeStatus(status);
