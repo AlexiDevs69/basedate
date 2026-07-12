@@ -86,6 +86,20 @@
     "Неактивний": "Idle",
     "Не беспокоить": "Do Not Disturb",
     "Не турбувати": "Do Not Disturb",
-    "Онлайн": "Online"
-  }
+    "Онлайн": "Online",
+    "В мережі": "Online",
+    "online": "Online",
+    "Невидимий": "Invisible",
+    "Невидимый": "Invisible"
+  },
+  "ui.friends": "Friends",
+  "ui.online": "Online",
+  "ui.all": "All",
+  "ui.pending": "Pending",
+  "ui.add_friend": "Add Friend",
+  "status.online": "Online",
+  "status.idle": "Idle",
+  "status.dnd": "Do Not Disturb",
+  "status.invisible": "Invisible",
+  "status.offline": "Offline"
 }
