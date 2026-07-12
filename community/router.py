@@ -421,8 +421,14 @@ async def current_account(request: Request, db: AsyncSession):
 @router.get("/api/i18n")
 async def api_i18n(request: Request, db: AsyncSession = Depends(get_db)):
     account = await current_account(request, db)
-    language = getattr(account, "language", DEFAULT_LANGUAGE) if account else DEFAULT_LANGUAGE
-    return JSONResponse(_language_response_payload(language))
+    cookie_language = _normalize_language(request.cookies.get("alexihub_language")) if request.cookies.get("alexihub_language") else None
+    if account:
+        language = _normalize_language(getattr(account, "language", None) or cookie_language or DEFAULT_LANGUAGE)
+    else:
+        language = cookie_language or DEFAULT_LANGUAGE
+    response = JSONResponse(_language_response_payload(language))
+    response.set_cookie("alexihub_language", language, max_age=60 * 60 * 24 * 365, path="/", samesite="lax")
+    return response
 
 
 @router.post("/api/settings/language")
@@ -440,9 +446,13 @@ async def api_settings_language(request: Request, db: AsyncSession = Depends(get
         language = form.get("language") or form.get("lang") or DEFAULT_LANGUAGE
 
     normalized = _normalize_language(str(language))
-    updated = await crud.update_account_language(db, account.id, normalized)
-    final_language = getattr(updated, "language", normalized) if updated else normalized
-    return JSONResponse(_language_response_payload(final_language))
+    saved_language = await crud.update_account_language(db, account.id, normalized)
+    final_language = saved_language or normalized
+    response = JSONResponse(_language_response_payload(final_language))
+    # Keep a lightweight client-side fallback too, so a refresh does not jump back
+    # if the browser opens settings before the DB value is hydrated.
+    response.set_cookie("alexihub_language", final_language, max_age=60 * 60 * 24 * 365, path="/", samesite="lax")
+    return response
 
 
 @router.post("/api/upload-image")
