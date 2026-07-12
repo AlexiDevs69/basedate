@@ -4,6 +4,7 @@ dashboard's crud.py so the two stay easy to reason about independently.
 """
 from datetime import datetime, timedelta, timezone
 import re
+import secrets
 
 from sqlalchemy import and_, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -84,10 +85,16 @@ async def ensure_server_invite_columns(db: AsyncSession) -> None:
     global _SERVER_INVITE_COLUMNS_READY
     if _SERVER_INVITE_COLUMNS_READY:
         return
+    await db.execute(text("ALTER TABLE community_server_invites ADD COLUMN IF NOT EXISTS code VARCHAR(32)"))
+    await db.execute(text("ALTER TABLE community_server_invites ADD COLUMN IF NOT EXISTS is_used BOOLEAN NOT NULL DEFAULT FALSE"))
     await db.execute(text("ALTER TABLE community_server_invites ADD COLUMN IF NOT EXISTS status VARCHAR(16) DEFAULT 'pending' NOT NULL"))
     await db.execute(text("ALTER TABLE community_server_invites ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL"))
     await db.execute(text("ALTER TABLE community_server_invites ADD COLUMN IF NOT EXISTS responded_at TIMESTAMP WITH TIME ZONE"))
     await db.execute(text("UPDATE community_server_invites SET status='pending' WHERE status IS NULL OR status=''"))
+    await db.execute(text("UPDATE community_server_invites SET is_used = TRUE WHERE status IN ('accepted','declined')"))
+    # Unique random-code index. Postgres permits many NULL values, so old legacy rows
+    # without code do not break startup.
+    await db.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ix_community_server_invites_code ON community_server_invites (code)"))
     await db.commit()
     _SERVER_INVITE_COLUMNS_READY = True
 
@@ -95,23 +102,41 @@ async def ensure_server_invite_columns(db: AsyncSession) -> None:
 SERVER_INVITE_DM_PREFIX = "alexihub://server-invite/"
 
 
-def make_server_invite_dm_content(invite_id: int, channel_id: int | None = None) -> str:
-    base = f"{SERVER_INVITE_DM_PREFIX}{int(invite_id)}"
+def make_server_invite_dm_content(invite_code: str | int, channel_id: int | None = None) -> str:
+    # Keep the visible scheme untouched for the current frontend, but put the
+    # random invite code there instead of an incremental id.
+    base = f"{SERVER_INVITE_DM_PREFIX}{str(invite_code).strip()}"
     if channel_id:
         return f"{base}?channel={int(channel_id)}"
     return base
 
 
-def parse_server_invite_dm_content(content: str | None) -> tuple[int, int | None] | None:
+def parse_server_invite_dm_content(content: str | None) -> tuple[str, int | None] | None:
     raw = (content or "").strip()
     if not raw.startswith(SERVER_INVITE_DM_PREFIX):
         return None
-    m = re.search(r"alexihub://server-invite/(\d+)(?:\?channel=(\d+))?", raw)
+    m = re.search(r"alexihub://server-invite/([A-Za-z0-9_-]+)(?:\?channel=(\d+))?", raw)
     if not m:
         return None
-    invite_id = int(m.group(1))
+    invite_code = m.group(1)
     channel_id = int(m.group(2)) if m.group(2) else None
-    return invite_id, channel_id
+    return invite_code, channel_id
+
+
+def _new_invite_code() -> str:
+    # Numeric on purpose: the existing DM frontend parses invite refs as digits.
+    # 12 random digits is still not guessable in practice for this beta.
+    return str(secrets.randbelow(900_000_000_000) + 100_000_000_000)
+
+
+async def _generate_unique_invite_code(db: AsyncSession) -> str:
+    await ensure_server_invite_columns(db)
+    for _ in range(24):
+        code = _new_invite_code()
+        result = await db.execute(select(ServerInvite.id).where(ServerInvite.code == code))
+        if result.scalar_one_or_none() is None:
+            return code
+    raise RuntimeError("Could not generate unique server invite code")
 
 
 
@@ -595,21 +620,35 @@ async def is_server_member(db: AsyncSession, server_id: int, account_id: int) ->
 
 
 async def join_server_by_id(db: AsyncSession, server_id: int, account_id: int) -> CommunityServer | None:
-    """Join a server by numeric invite/server id. Used by the Discord-like join modal.
+    """Deprecated unsafe MVP helper.
 
-    This keeps the DB load tiny: one server lookup, one membership lookup,
-    and one insert only when the user is not already a member.
+    Direct joining by server id is intentionally disabled to remove the IDOR
+    class where a user could guess / paste a server id and join or probe it.
+    Use accept_server_invite_by_code() instead.
     """
-    server = await get_server_by_id(db, server_id)
-    if not server:
+    return None
+
+
+async def accept_server_invite_by_code(db: AsyncSession, invite_code: str | int, account_id: int) -> ServerInvite | None:
+    invite = await get_server_invite_by_ref(db, str(invite_code))
+    if not invite:
+        return None
+    if int(invite.invitee_id) != int(account_id):
+        return None
+    if invite.status != "pending" or bool(getattr(invite, "is_used", False)):
         return None
 
-    existing = await get_server_member(db, server_id, account_id)
-    if not existing:
-        db.add(ServerMember(server_id=server_id, account_id=account_id, role="member"))
-        await db.commit()
+    server_id = int(invite.server_id)
+    invite.status = "accepted"
+    invite.is_used = True
+    invite.responded_at = datetime.now(timezone.utc)
 
-    return server
+    if not await is_server_member(db, server_id, account_id):
+        db.add(ServerMember(server_id=server_id, account_id=account_id, role="member"))
+
+    await db.commit()
+    await db.refresh(invite)
+    return invite
 
 
 async def can_manage_server(db: AsyncSession, server_id: int, account_id: int) -> bool:
@@ -889,10 +928,7 @@ async def invite_friend_to_server(
         return None
     if not await is_server_member(db, server_id, inviter_id):
         return None
-    if not await is_server_member(db, server_id, invitee_id):
-        # ok, target is not in server yet
-        pass
-    else:
+    if await is_server_member(db, server_id, invitee_id):
         return None
 
     # Only friends can be invited, keeps random spam out.
@@ -903,17 +939,33 @@ async def invite_friend_to_server(
         select(ServerInvite).where(ServerInvite.server_id == server_id, ServerInvite.invitee_id == invitee_id)
     )
     existing = result.scalar_one_or_none()
-    if existing and existing.status == "pending":
+    if existing and existing.status == "pending" and not bool(getattr(existing, "is_used", False)):
+        # Legacy pending rows may not have a code yet. Give them a real random code.
+        if not getattr(existing, "code", None):
+            existing.code = await _generate_unique_invite_code(db)
+            await db.commit()
+            await db.refresh(existing)
         return existing
-    if existing and existing.status in {"declined", "accepted"}:
+
+    code = await _generate_unique_invite_code(db)
+    if existing:
         existing.inviter_id = inviter_id
         existing.status = "pending"
+        existing.is_used = False
         existing.responded_at = None
+        existing.code = code
         await db.commit()
         await db.refresh(existing)
         return existing
 
-    invite = ServerInvite(server_id=server_id, inviter_id=inviter_id, invitee_id=invitee_id, status="pending")
+    invite = ServerInvite(
+        server_id=server_id,
+        inviter_id=inviter_id,
+        invitee_id=invitee_id,
+        status="pending",
+        is_used=False,
+        code=code,
+    )
     db.add(invite)
     await db.commit()
     await db.refresh(invite)
@@ -937,17 +989,19 @@ async def list_pending_server_invites(db: AsyncSession, account_id: int) -> list
 
 async def respond_server_invite(
     db: AsyncSession,
-    invite_id: int,
+    invite_code: str | int,
     account_id: int,
     accept: bool,
 ) -> ServerInvite | None:
     await ensure_server_invite_columns(db)
-    result = await db.execute(select(ServerInvite).where(ServerInvite.id == invite_id))
-    invite = result.scalar_one_or_none()
-    if not invite or invite.invitee_id != account_id or invite.status != "pending":
+    invite = await get_server_invite_by_ref(db, str(invite_code))
+    if not invite or int(invite.invitee_id) != int(account_id):
+        return None
+    if invite.status != "pending" or bool(getattr(invite, "is_used", False)):
         return None
 
     invite.status = "accepted" if accept else "declined"
+    invite.is_used = True
     invite.responded_at = datetime.now(timezone.utc)
 
     if accept and not await is_server_member(db, invite.server_id, account_id):
@@ -958,15 +1012,33 @@ async def respond_server_invite(
     return invite
 
 
-async def get_server_invite_by_id(db: AsyncSession, invite_id: int) -> ServerInvite | None:
+async def get_server_invite_by_ref(db: AsyncSession, invite_ref: str | int) -> ServerInvite | None:
     await ensure_server_invite_columns(db)
-    result = await db.execute(select(ServerInvite).where(ServerInvite.id == invite_id))
-    return result.scalar_one_or_none()
+    raw = str(invite_ref or "").strip()
+    if not raw:
+        return None
+
+    # New secure path: random invite code.
+    result = await db.execute(select(ServerInvite).where(ServerInvite.code == raw))
+    invite = result.scalar_one_or_none()
+    if invite:
+        return invite
+
+    # Legacy fallback only for old DM messages that still contain an old invite row id.
+    # This does NOT allow joining arbitrary servers by server_id.
+    if raw.isdigit():
+        result = await db.execute(select(ServerInvite).where(ServerInvite.id == int(raw)))
+        return result.scalar_one_or_none()
+    return None
+
+
+async def get_server_invite_by_id(db: AsyncSession, invite_id: int) -> ServerInvite | None:
+    return await get_server_invite_by_ref(db, invite_id)
 
 
 async def build_server_invite_preview(
     db: AsyncSession,
-    invite_id: int,
+    invite_code: str | int,
     viewer_id: int,
     channel_id: int | None = None,
 ) -> dict:
@@ -977,13 +1049,13 @@ async def build_server_invite_preview(
     """
     await ensure_server_invite_columns(db)
     try:
-        invite = await get_server_invite_by_id(db, invite_id)
+        invite = await get_server_invite_by_ref(db, invite_code)
         if not invite:
-            return {"type": "server_invite", "invite_id": invite_id, "valid": False, "status": "invalid"}
+            return {"type": "server_invite", "invite_id": str(invite_code), "invite_code": str(invite_code), "valid": False, "status": "invalid"}
 
         server = await get_server_by_id(db, invite.server_id)
         if not server:
-            return {"type": "server_invite", "invite_id": invite_id, "valid": False, "status": "invalid"}
+            return {"type": "server_invite", "invite_id": str(invite_code), "invite_code": str(invite_code), "valid": False, "status": "invalid"}
 
         channel = None
         if channel_id:
@@ -999,11 +1071,14 @@ async def build_server_invite_preview(
         viewer_is_invitee = int(viewer_id) == int(invite.invitee_id)
         viewer_is_inviter = int(viewer_id) == int(invite.inviter_id)
         already_member = await is_server_member(db, invite.server_id, viewer_id)
-        valid = invite.status == "pending" and (viewer_is_invitee or viewer_is_inviter)
+        valid = invite.status == "pending" and not bool(getattr(invite, "is_used", False)) and (viewer_is_invitee or viewer_is_inviter)
+        public_ref = str(getattr(invite, "code", None) or invite.id)
 
         return {
             "type": "server_invite",
-            "invite_id": int(invite.id),
+            "invite_id": public_ref,
+            "invite_code": public_ref,
+            "legacy_invite_id": int(invite.id),
             "server_id": int(server.id),
             "server_name": server.name,
             "server_icon_url": server.icon_url or "",
@@ -1017,6 +1092,7 @@ async def build_server_invite_preview(
             "viewer_is_inviter": viewer_is_inviter,
             "already_member": bool(already_member),
             "status": invite.status,
+            "is_used": bool(getattr(invite, "is_used", False)),
             "valid": bool(valid),
             "members_count": members_count,
         }
@@ -1025,7 +1101,7 @@ async def build_server_invite_preview(
             await db.rollback()
         except Exception:
             pass
-        return {"type": "server_invite", "invite_id": invite_id, "valid": False, "status": "error"}
+        return {"type": "server_invite", "invite_id": str(invite_code), "invite_code": str(invite_code), "valid": False, "status": "error"}
 
 
 
