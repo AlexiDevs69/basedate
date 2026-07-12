@@ -8,6 +8,7 @@ main.py -- everything here lives under the /community prefix so it can
 never collide with the admin dashboard's routes.
 """
 import asyncio
+import json
 import hashlib
 import os
 import re
@@ -32,6 +33,48 @@ router = APIRouter(prefix="/community", tags=["community"])
 
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+
+LOCALES_DIR = Path(__file__).resolve().parent / "locales"
+SUPPORTED_LANGUAGES = {"ru", "uk", "en"}
+DEFAULT_LANGUAGE = "ru"
+_LANGUAGE_META = {
+    "ru": {"code": "ru", "flag": "🇷🇺", "name": "Русский", "native": "Русский"},
+    "uk": {"code": "uk", "flag": "🇺🇦", "name": "Українська", "native": "Українська"},
+    "en": {"code": "en", "flag": "🇺🇸", "name": "English", "native": "English"},
+}
+_LOCALE_CACHE: dict[str, dict] = {}
+
+
+def _normalize_language(value: str | None) -> str:
+    lang = (value or DEFAULT_LANGUAGE).strip().lower()
+    return lang if lang in SUPPORTED_LANGUAGES else DEFAULT_LANGUAGE
+
+
+def _load_locale(language: str | None) -> dict:
+    lang = _normalize_language(language)
+    if lang in _LOCALE_CACHE:
+        return _LOCALE_CACHE[lang]
+    path = LOCALES_DIR / f"{lang}.json"
+    fallback_path = LOCALES_DIR / f"{DEFAULT_LANGUAGE}.json"
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        try:
+            data = json.loads(fallback_path.read_text(encoding="utf-8"))
+        except Exception:
+            data = {}
+    _LOCALE_CACHE[lang] = data
+    return data
+
+
+def _language_response_payload(language: str | None) -> dict:
+    lang = _normalize_language(language)
+    return {
+        "ok": True,
+        "language": lang,
+        "languages": list(_LANGUAGE_META.values()),
+        "messages": _load_locale(lang),
+    }
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 PROFILE_UPLOAD_DIR = ROOT_DIR / "static" / "uploads" / "profiles"
@@ -344,6 +387,7 @@ def _account_payload(account) -> dict:
         "name_font": account.name_font or "default",
         "account_status": account.account_status or "online",
         "bio": account.bio or "",
+        "language": getattr(account, "language", DEFAULT_LANGUAGE) or DEFAULT_LANGUAGE,
     }
 
 
@@ -372,6 +416,33 @@ async def current_account(request: Request, db: AsyncSession):
     if not account_id:
         return None
     return await crud.get_account_by_id(db, account_id)
+
+
+@router.get("/api/i18n")
+async def api_i18n(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    language = getattr(account, "language", DEFAULT_LANGUAGE) if account else DEFAULT_LANGUAGE
+    return JSONResponse(_language_response_payload(language))
+
+
+@router.post("/api/settings/language")
+async def api_settings_language(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_authenticated"}, status_code=401)
+
+    language = DEFAULT_LANGUAGE
+    try:
+        data = await request.json()
+        language = data.get("language") or data.get("lang") or DEFAULT_LANGUAGE
+    except Exception:
+        form = await request.form()
+        language = form.get("language") or form.get("lang") or DEFAULT_LANGUAGE
+
+    normalized = _normalize_language(str(language))
+    updated = await crud.update_account_language(db, account.id, normalized)
+    final_language = getattr(updated, "language", normalized) if updated else normalized
+    return JSONResponse(_language_response_payload(final_language))
 
 
 @router.post("/api/upload-image")
