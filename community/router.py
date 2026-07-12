@@ -421,11 +421,19 @@ async def current_account(request: Request, db: AsyncSession):
 @router.get("/api/i18n")
 async def api_i18n(request: Request, db: AsyncSession = Depends(get_db)):
     account = await current_account(request, db)
+    requested_language_raw = request.query_params.get("language") or request.query_params.get("lang")
+    requested_language = _normalize_language(requested_language_raw) if requested_language_raw else None
     cookie_language = _normalize_language(request.cookies.get("alexihub_language")) if request.cookies.get("alexihub_language") else None
-    if account:
+
+    # Якщо frontend просить конкретну мову для миттєвого свапу, віддаємо саме її.
+    # Це НЕ міняє DB. DB міняється тільки через POST /api/settings/language.
+    if requested_language:
+        language = requested_language
+    elif account:
         language = _normalize_language(getattr(account, "language", None) or cookie_language or DEFAULT_LANGUAGE)
     else:
         language = cookie_language or DEFAULT_LANGUAGE
+
     response = JSONResponse(_language_response_payload(language))
     response.set_cookie("alexihub_language", language, max_age=60 * 60 * 24 * 365, path="/", samesite="lax")
     return response
