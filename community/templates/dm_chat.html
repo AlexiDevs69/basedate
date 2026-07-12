@@ -1667,12 +1667,12 @@ document.addEventListener('DOMContentLoaded',()=>{
     <aside class="ah-settings-sidebar">
       <div class="ah-settings-me">
         <div class="ah-settings-avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}')"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}</div>
-        <div><strong>{{ account.username }}</strong><span>Редагувати профіль</span></div>
+        <div><strong>{{ account.username }}</strong><span data-i18n="settings.edit_profile">Редагувати профіль</span></div>
       </div>
-      <input class="ah-settings-search" placeholder="Пошук" oninput="ahSettingsFilter(this.value)">
+      <input class="ah-settings-search" placeholder="Пошук" data-i18n-placeholder="settings.search_placeholder" oninput="ahSettingsFilter(this.value)">
       <div class="ah-settings-group">
         <button class="ah-settings-nav active" data-settings-tab="account" onclick="showSettingsTab('account')"><svg><use href="#i-user"></use></svg><span data-i18n="settings.account">Учётная запись</span></button>
-        <button class="ah-settings-nav" data-settings-tab="profile" onclick="showSettingsTab('profile')"><svg><use href="#i-edit"></use></svg>Профіль</button>
+        <button class="ah-settings-nav" data-settings-tab="profile" onclick="showSettingsTab('profile')"><svg><use href="#i-edit"></use></svg><span data-i18n="settings.profile">Профіль</span></button>
         <button class="ah-settings-nav" data-settings-tab="security" onclick="showSettingsTab('security')"><svg><use href="#i-shield"></use></svg><span data-i18n="settings.security">Пароль и безопасность</span></button>
         <button class="ah-settings-nav" data-settings-tab="privacy" onclick="showSettingsTab('privacy')"><svg><use href="#i-users"></use></svg><span data-i18n="settings.privacy">Данные и конфиденциальность</span></button>
       </div>
@@ -1711,7 +1711,7 @@ document.addEventListener('DOMContentLoaded',()=>{
         <div class="ah-settings-good"><div class="dot">✓</div><div><b>У твоєї учётки нормальна репутація</b><p class="ah-settings-muted">Якщо будуть мут/бан/скарги — цей блок потім можна зробити реальним.</p></div></div>
       </section>
       <section class="ah-settings-page" data-settings-page="profile">
-        <h1>Профіль</h1>
+        <h1 data-i18n="settings.profile">Профіль</h1>
         <form id="ah-profile-edit-form" class="ah-settings-form ah-discord-profile-form" method="post" action="/community/settings" enctype="multipart/form-data">
           <input type="hidden" name="next_url" value="{{ request.url.path }}">
 
@@ -1772,13 +1772,13 @@ document.addEventListener('DOMContentLoaded',()=>{
             <p data-i18n="language.choose_desc">Выберите язык, на котором будет отображаться AlexiHub.</p>
             <div class="ah-language-select" id="ah-language-select">
               <button class="ah-language-current" type="button" id="ah-language-current" aria-expanded="false">
-                <span class="ah-lang-left"><span id="ah-language-current-flag">🇷🇺</span><span id="ah-language-current-name">Русский</span></span>
+                <span class="ah-lang-left"><span id="ah-language-current-flag" class="ah-lang-flag ah-lang-flag-ru"></span><span id="ah-language-current-name">Русский</span></span>
                 <span class="ah-lang-right"><span id="ah-language-current-native">Русский</span><span class="ah-language-chevron">⌄</span></span>
               </button>
               <div class="ah-language-menu" id="ah-language-menu" role="listbox">
-                <button class="ah-language-option" type="button" data-language="en"><span class="flag">🇺🇸</span><span class="main">English</span><span class="native">English</span></button>
-                <button class="ah-language-option" type="button" data-language="ru"><span class="flag">🇷🇺</span><span class="main">Русский</span><span class="native">Русский</span></button>
-                <button class="ah-language-option" type="button" data-language="uk"><span class="flag">🇺🇦</span><span class="main">Українська</span><span class="native">Українська</span></button>
+                <button class="ah-language-option" type="button" data-language="en"><span class="ah-lang-flag ah-lang-flag-en"></span><span class="main">English</span><span class="native">English</span></button>
+                <button class="ah-language-option" type="button" data-language="ru"><span class="ah-lang-flag ah-lang-flag-ru"></span><span class="main">Русский</span><span class="native">Русский</span></button>
+                <button class="ah-language-option" type="button" data-language="uk"><span class="ah-lang-flag ah-lang-flag-uk"></span><span class="main">Українська</span><span class="native">Українська</span></button>
               </div>
             </div>
           </div>
@@ -1799,7 +1799,36 @@ document.addEventListener('DOMContentLoaded',()=>{
 <div id="ah-settings-toast" class="ah-settings-toast"></div>
 
 <style id="ah-i18n-language-css">
-.ah-language-settings{max-width:760px;margin-top:72px}.ah-language-block{margin-bottom:28px}.ah-language-block h3{margin:0 0 6px;color:#fff;font-size:16px;font-weight:900}.ah-language-block p{margin:0 0 12px;color:#b5bac1;font-size:13px}.ah-language-select{position:relative;max-width:720px}.ah-language-current{width:100%;height:44px;background:#1e1f22;border:1px solid #3f4149;border-radius:7px;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 12px;cursor:pointer;font-weight:800}.ah-language-select.open .ah-language-current{border-color:#5865f2;box-shadow:0 0 0 1px #5865f2}.ah-lang-left,.ah-lang-right{display:flex;align-items:center;gap:10px}.ah-lang-right{color:#f2f3f5;font-size:13px}.ah-language-chevron{font-size:19px;color:#dbdee1;transition:.14s}.ah-language-select.open .ah-language-chevron{transform:rotate(180deg)}.ah-language-menu{display:none;position:absolute;left:0;right:0;top:46px;max-height:260px;overflow:auto;background:#2b2d31;border:1px solid #3f4149;border-radius:0 0 7px 7px;padding:6px;z-index:80;box-shadow:0 18px 45px rgba(0,0,0,.35)}.ah-language-select.open .ah-language-menu{display:block}.ah-language-option{width:100%;height:40px;border:0;background:transparent;color:#dbdee1;border-radius:4px;display:grid;grid-template-columns:26px 1fr auto;align-items:center;gap:10px;padding:0 8px;cursor:pointer;text-align:left}.ah-language-option:hover,.ah-language-option.active{background:#3a3c43;color:#fff}.ah-language-option .main{font-weight:850}.ah-language-option .native{font-size:12px;color:#c6cad1}.ah-language-option.active .native::after{content:' ✓';color:#fff;font-weight:950;margin-left:8px}.ah-time-radio{display:flex;align-items:center;gap:12px;margin:13px 0;color:#dbdee1;font-size:15px;cursor:pointer}.ah-time-radio input{display:none}.ah-time-radio span{width:20px;height:20px;border-radius:50%;border:1px solid #5b5f68;background:#232428;display:grid;place-items:center}.ah-time-radio input:checked+span{border-color:#5865f2;background:#5865f2}.ah-time-radio input:checked+span:after{content:'';width:7px;height:7px;background:#fff;border-radius:50%}.ah-time-radio b{font-weight:750}
+.ah-language-settings{max-width:760px;margin-top:72px}
+.ah-language-block{margin-bottom:28px}
+.ah-language-block h3{margin:0 0 6px;color:#fff;font-size:16px;font-weight:900}
+.ah-language-block p{margin:0 0 12px;color:#b5bac1;font-size:13px}
+.ah-language-select{position:relative;width:min(720px,100%);max-width:720px;box-sizing:border-box}
+.ah-language-current{width:100%;height:44px;background:#1e1f22;border:1px solid #3f4149;border-radius:7px;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 12px;cursor:pointer;font-weight:800;box-sizing:border-box;overflow:hidden}
+.ah-language-select.open .ah-language-current{border-color:#5865f2;box-shadow:0 0 0 1px #5865f2}
+.ah-lang-left,.ah-lang-right{display:flex;align-items:center;gap:10px;min-width:0}
+.ah-lang-left span:not(.ah-lang-flag),.ah-lang-right span:not(.ah-language-chevron){white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ah-lang-right{color:#f2f3f5;font-size:13px;flex:0 0 auto;max-width:48%}
+.ah-language-chevron{font-size:19px;color:#dbdee1;transition:.14s;line-height:1}
+.ah-language-select.open .ah-language-chevron{transform:rotate(180deg)}
+.ah-language-menu{display:none;position:absolute;left:0;right:0;top:46px;max-height:230px;overflow-y:auto!important;overflow-x:hidden!important;background:#2b2d31;border:1px solid #3f4149;border-radius:0 0 7px 7px;padding:6px;z-index:28050;box-shadow:0 18px 45px rgba(0,0,0,.35);box-sizing:border-box}
+.ah-language-select.open .ah-language-menu{display:block}
+.ah-language-option{width:100%;height:40px;border:0;background:transparent;color:#dbdee1;border-radius:4px;display:grid;grid-template-columns:26px minmax(0,1fr) minmax(70px,auto);align-items:center;gap:10px;padding:0 8px;cursor:pointer;text-align:left;box-sizing:border-box;min-width:0}
+.ah-language-option:hover,.ah-language-option.active{background:#3a3c43;color:#fff}
+.ah-language-option .main{font-weight:850;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ah-language-option .native{font-size:12px;color:#c6cad1;text-align:right;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ah-language-option.active .native::after{content:' ✓';color:#fff;font-weight:950;margin-left:8px}
+.ah-lang-flag{width:22px;height:14px;border-radius:2px;display:inline-block;flex:0 0 auto;box-shadow:0 0 0 1px rgba(255,255,255,.18) inset;background:#4b5563;font-size:0!important;line-height:0;color:transparent!important;overflow:hidden}
+.ah-lang-flag-ru{background:linear-gradient(to bottom,#fff 0 33%,#2f6fea 33% 66%,#d52b1e 66%)}
+.ah-lang-flag-uk{background:linear-gradient(to bottom,#1e63d6 0 50%,#ffd43b 50%)}
+.ah-lang-flag-en{background:linear-gradient(135deg,#0a3161 0 38%,#fff 38% 44%,#b31942 44% 56%,#fff 56% 62%,#0a3161 62%);position:relative}
+.ah-lang-flag-en:after{content:'';position:absolute;left:0;top:0;width:9px;height:8px;background:#0a3161;border-radius:1px}
+.ah-time-radio{display:flex;align-items:center;gap:12px;margin:13px 0;color:#dbdee1;font-size:15px;cursor:pointer}
+.ah-time-radio input{display:none}
+.ah-time-radio span{width:20px;height:20px;border-radius:50%;border:1px solid #5b5f68;background:#232428;display:grid;place-items:center}
+.ah-time-radio input:checked+span{border-color:#5865f2;background:#5865f2}
+.ah-time-radio input:checked+span:after{content:'';width:7px;height:7px;background:#fff;border-radius:50%}
+.ah-time-radio b{font-weight:750}
 </style>
 
 
@@ -1847,23 +1876,66 @@ document.addEventListener('DOMContentLoaded',()=>{
 <script id="ah-i18n-language-js">
 (function(){
   if(window.__ahI18nReady) return; window.__ahI18nReady=true;
-  const META={ru:{flag:'🇷🇺',name:'Русский',native:'Русский'},uk:{flag:'🇺🇦',name:'Українська',native:'Українська'},en:{flag:'🇺🇸',name:'English',native:'English'}};
+  const META={ru:{flagClass:'ah-lang-flag-ru',name:'Русский',native:'Русский'},uk:{flagClass:'ah-lang-flag-uk',name:'Українська',native:'Українська'},en:{flagClass:'ah-lang-flag-en',name:'English',native:'English'}};
+  let AH_MESSAGES={};
   function currentLang(){
     const box=document.querySelector('.ah-language-settings');
     return (box && box.dataset.currentLanguage) || '{{ account.language if account and account.language else "ru" }}' || 'ru';
+  }
+  function setFlag(el,lang){
+    if(!el) return;
+    lang = META[lang] ? lang : 'ru';
+    el.textContent='';
+    el.className='ah-lang-flag '+META[lang].flagClass;
+  }
+  function normalizeOptionFlags(){
+    document.querySelectorAll('.ah-language-option[data-language]').forEach(btn=>{
+      let f=btn.querySelector('.flag,.ah-lang-flag');
+      if(!f){ f=document.createElement('span'); btn.insertBefore(f,btn.firstChild); }
+      f.className='ah-lang-flag '+(META[btn.dataset.language]?.flagClass||META.ru.flagClass);
+      f.textContent='';
+    });
   }
   function setCurrentLanguageUI(lang){
     lang = META[lang] ? lang : 'ru';
     document.documentElement.lang = lang;
     document.querySelectorAll('.ah-language-settings').forEach(b=>b.dataset.currentLanguage=lang);
     const m=META[lang];
-    const flag=document.getElementById('ah-language-current-flag'); if(flag) flag.textContent=m.flag;
+    setFlag(document.getElementById('ah-language-current-flag'),lang);
     const name=document.getElementById('ah-language-current-name'); if(name) name.textContent=m.name;
     const native=document.getElementById('ah-language-current-native'); if(native) native.textContent=m.native;
+    normalizeOptionFlags();
     document.querySelectorAll('.ah-language-option').forEach(btn=>btn.classList.toggle('active',btn.dataset.language===lang));
+  }
+  function textReplaceInElement(el,textMap){
+    if(!el || !textMap) return;
+    const walker=document.createTreeWalker(el,NodeFilter.SHOW_TEXT,{acceptNode(node){
+      const p=node.parentElement;
+      if(!p) return NodeFilter.FILTER_REJECT;
+      if(p.closest('.messages,.message-list,.chat-messages,.dm-messages,.server-messages,.msg-content,.message-content,textarea,input,script,style')) return NodeFilter.FILTER_REJECT;
+      if(!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    }});
+    const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(node=>{
+      const raw=node.nodeValue;
+      const trimmed=raw.trim();
+      let next=null;
+      if(Object.prototype.hasOwnProperty.call(textMap,trimmed)) next=textMap[trimmed];
+      else {
+        for(const [from,to] of Object.entries(textMap)){
+          if(from.length>2 && trimmed.includes(from)) { next=raw.replace(from,to); break; }
+        }
+      }
+      if(next!==null){
+        const prefix=(raw.match(/^\s*/)||[''])[0]; const suffix=(raw.match(/\s*$/)||[''])[0];
+        node.nodeValue=prefix+next+suffix;
+      }
+    });
   }
   function applyMessages(messages){
     if(!messages) return;
+    AH_MESSAGES=messages;
     document.querySelectorAll('[data-i18n]').forEach(el=>{
       const key=el.dataset.i18n;
       if(messages[key]) el.textContent=messages[key];
@@ -1872,6 +1944,8 @@ document.addEventListener('DOMContentLoaded',()=>{
       const key=el.dataset.i18nPlaceholder;
       if(messages[key]) el.setAttribute('placeholder',messages[key]);
     });
+    const textMap=messages._text || {};
+    document.querySelectorAll('.ah-settings-backdrop,.friends-shell,.friends-main,.friends-topbar,.friend-tabs,.dm-sidebar,.dm-topbar,.dm-layout>.left,.server-sidebar,.channels,.server-topbar,.topbar').forEach(root=>textReplaceInElement(root,textMap));
     const active=document.querySelector('[data-settings-tab].active');
     const h=document.getElementById('ah-settings-heading');
     if(active && h) h.textContent=active.textContent.trim();
@@ -1891,8 +1965,8 @@ document.addEventListener('DOMContentLoaded',()=>{
       const data=await res.json();
       if(!res.ok || !data.ok) throw new Error('save failed');
       setCurrentLanguageUI(data.language || lang); applyMessages(data.messages || {});
-      if(typeof settingsToast==='function') settingsToast((data.messages&&data.messages['language.saved']) || 'Язык сохранён');
-    }catch(e){ if(typeof settingsToast==='function') settingsToast('Не удалось сохранить язык'); }
+      if(typeof settingsToast==='function') settingsToast((data.messages&&data.messages['language.saved']) || 'Language saved');
+    }catch(e){ if(typeof settingsToast==='function') settingsToast((AH_MESSAGES&&AH_MESSAGES['language.failed']) || 'Could not save language'); }
   }
   document.addEventListener('click',function(e){
     const current=e.target.closest('#ah-language-current');
@@ -1904,6 +1978,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   },true);
   document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ const s=document.getElementById('ah-language-select'); if(s)s.classList.remove('open'); }});
   document.addEventListener('DOMContentLoaded',function(){ setCurrentLanguageUI(currentLang()); loadI18n(currentLang()); });
+  window.AlexiHubI18n={load:loadI18n,apply:applyMessages,set:setCurrentLanguageUI};
 })();
 </script>
 
@@ -2075,7 +2150,7 @@ document.addEventListener('DOMContentLoaded',()=>{
         </button>
         <button type="button" class="ah-server-card" data-template="friends" data-default-name="Сервер друзей">
           <span class="ah-server-card-icon friends" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M16 20v-1.5A3.5 3.5 0 0 0 12.5 15h-5A3.5 3.5 0 0 0 4 18.5V20"/><circle cx="10" cy="8" r="4"/><path d="M19 8v6"/><path d="M22 11h-6"/></svg></span>
-          <span>Друзья</span><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+          <span data-i18n="ui.friends">Друзья</span><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
         </button>
         <button type="button" class="ah-server-card" data-template="study" data-default-name="Учебная группа">
           <span class="ah-server-card-icon study" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 3H20v18H6.5A2.5 2.5 0 0 1 4 18.5v-13A2.5 2.5 0 0 1 6.5 3Z"/><path d="M9 7h7"/><path d="M9 11h5"/></svg></span>
