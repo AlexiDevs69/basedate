@@ -2915,46 +2915,82 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 <script id="ah-i18n-language-js">
 (function(){
-  if(window.__ahI18nReady) return; window.__ahI18nReady=true;
-  const META={ru:{flagClass:'ah-lang-flag-ru',name:'Русский',native:'Русский'},uk:{flagClass:'ah-lang-flag-uk',name:'Українська',native:'Українська'},en:{flagClass:'ah-lang-flag-en',name:'English',native:'English'}};
-  let AH_MESSAGES={};
-  function currentLang(){
-    const stored=storedLanguage();
-    if(stored) return stored;
-    const box=document.querySelector('.ah-language-settings');
-    return (box && box.dataset.currentLanguage) || '{{ account.language if account and account.language else "ru" }}' || 'ru';
+  if(window.__ahI18nV4Ready) return;
+  window.__ahI18nV4Ready = true;
+  window.__ahI18nReady = true;
+
+  const META = {
+    ru:{flagClass:'ah-lang-flag-ru', name:'Русский', native:'Русский'},
+    uk:{flagClass:'ah-lang-flag-uk', name:'Українська', native:'Українська'},
+    en:{flagClass:'ah-lang-flag-en', name:'English', native:'English'}
+  };
+  let AH_MESSAGES = {};
+
+  function validLang(lang){
+    lang = String(lang || '').trim().toLowerCase();
+    return META[lang] ? lang : '';
   }
-  function setFlag(el,lang){
+  function serverLanguage(){
+    const box = document.querySelector('.ah-language-settings');
+    const fromBox = box && validLang(box.dataset.currentLanguage);
+    if(fromBox) return fromBox;
+    const fromHtml = validLang(document.documentElement.getAttribute('lang'));
+    if(fromHtml) return fromHtml;
+    return validLang('{{ account.language if account and account.language else "ru" }}') || 'ru';
+  }
+  function persistLanguageClientSide(lang){
+    lang = validLang(lang) || 'ru';
+    try{ localStorage.setItem('alexihub_language', lang); }catch(e){}
+    try{ document.cookie = 'alexihub_language=' + encodeURIComponent(lang) + '; Max-Age=31536000; Path=/; SameSite=Lax'; }catch(e){}
+  }
+  function storedLanguage(){
+    try{ const v = validLang(localStorage.getItem('alexihub_language')); if(v) return v; }catch(e){}
+    try{
+      const m = document.cookie.match(/(?:^|; )alexihub_language=([^;]+)/);
+      if(m){ const v = validLang(decodeURIComponent(m[1])); if(v) return v; }
+    }catch(e){}
+    return '';
+  }
+  function currentLang(){
+    return storedLanguage() || serverLanguage() || 'ru';
+  }
+  function setFlag(el, lang){
     if(!el) return;
-    lang = META[lang] ? lang : 'ru';
-    el.textContent='';
-    el.className='ah-lang-flag '+META[lang].flagClass;
+    lang = validLang(lang) || 'ru';
+    el.textContent = '';
+    el.className = 'ah-lang-flag ' + META[lang].flagClass;
   }
   function normalizeOptionFlags(){
     document.querySelectorAll('.ah-language-option[data-language]').forEach(btn=>{
-      let f=btn.querySelector('.flag,.ah-lang-flag');
-      if(!f){ f=document.createElement('span'); btn.insertBefore(f,btn.firstChild); }
-      f.className='ah-lang-flag '+(META[btn.dataset.language]?.flagClass||META.ru.flagClass);
-      f.textContent='';
+      const lang = validLang(btn.dataset.language) || 'ru';
+      let f = btn.querySelector('.ah-lang-flag,.flag');
+      if(!f){ f = document.createElement('span'); btn.insertBefore(f, btn.firstChild); }
+      f.textContent = '';
+      f.className = 'ah-lang-flag ' + META[lang].flagClass;
     });
   }
   function setCurrentLanguageUI(lang){
-    lang = META[lang] ? lang : 'ru';
+    lang = validLang(lang) || 'ru';
     document.documentElement.lang = lang;
-    document.querySelectorAll('.ah-language-settings').forEach(b=>b.dataset.currentLanguage=lang);
-    const m=META[lang];
-    setFlag(document.getElementById('ah-language-current-flag'),lang);
-    const name=document.getElementById('ah-language-current-name'); if(name) name.textContent=m.name;
-    const native=document.getElementById('ah-language-current-native'); if(native) native.textContent=m.native;
+    document.querySelectorAll('.ah-language-settings').forEach(b=>{ b.dataset.currentLanguage = lang; });
+    const meta = META[lang];
+    setFlag(document.getElementById('ah-language-current-flag'), lang);
+    const name = document.getElementById('ah-language-current-name');
+    if(name) name.textContent = meta.name;
+    const native = document.getElementById('ah-language-current-native');
+    if(native) native.textContent = meta.native;
     normalizeOptionFlags();
-    document.querySelectorAll('.ah-language-option').forEach(btn=>btn.classList.toggle('active',btn.dataset.language===lang));
+    document.querySelectorAll('.ah-language-option[data-language]').forEach(btn=>{
+      btn.classList.toggle('active', validLang(btn.dataset.language) === lang);
+      btn.setAttribute('aria-selected', validLang(btn.dataset.language) === lang ? 'true' : 'false');
+    });
   }
-  function textReplaceInElement(el,textMap){
+  function textReplaceInElement(el, textMap){
     if(!el || !textMap) return;
-    const walker=document.createTreeWalker(el,NodeFilter.SHOW_TEXT,{acceptNode(node){
-      const p=node.parentElement;
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {acceptNode(node){
+      const p = node.parentElement;
       if(!p) return NodeFilter.FILTER_REJECT;
-      if(p.closest('.messages,.message-list,.chat-messages,.dm-messages,.server-messages,.msg-content,.message-content,textarea,input,script,style')) return NodeFilter.FILTER_REJECT;
+      if(p.closest('.messages,.message-list,.chat-messages,.dm-messages,.server-messages,.msg-content,.message-content,textarea,input,script,style,.ah-language-select')) return NodeFilter.FILTER_REJECT;
       if(!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
       return NodeFilter.FILTER_ACCEPT;
     }});
@@ -2963,66 +2999,94 @@ document.addEventListener('DOMContentLoaded',()=>{
       const raw=node.nodeValue;
       const trimmed=raw.trim();
       let next=null;
-      if(Object.prototype.hasOwnProperty.call(textMap,trimmed)) next=textMap[trimmed];
+      if(Object.prototype.hasOwnProperty.call(textMap, trimmed)) next=textMap[trimmed];
       else {
         for(const [from,to] of Object.entries(textMap)){
-          if(from.length>2 && trimmed.includes(from)) { next=raw.replace(from,to); break; }
+          if(from.length > 2 && trimmed.includes(from)){ next = raw.replace(from, to); break; }
         }
       }
-      if(next!==null){
-        const prefix=(raw.match(/^\s*/)||[''])[0]; const suffix=(raw.match(/\s*$/)||[''])[0];
-        node.nodeValue=prefix+next+suffix;
+      if(next !== null){
+        const prefix=(raw.match(/^\s*/)||[''])[0];
+        const suffix=(raw.match(/\s*$/)||[''])[0];
+        node.nodeValue = prefix + next + suffix;
       }
     });
   }
   function applyMessages(messages){
     if(!messages) return;
-    AH_MESSAGES=messages;
+    AH_MESSAGES = messages;
     document.querySelectorAll('[data-i18n]').forEach(el=>{
-      const key=el.dataset.i18n;
-      if(messages[key]) el.textContent=messages[key];
+      const key = el.dataset.i18n;
+      if(Object.prototype.hasOwnProperty.call(messages, key)) el.textContent = messages[key];
     });
     document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{
-      const key=el.dataset.i18nPlaceholder;
-      if(messages[key]) el.setAttribute('placeholder',messages[key]);
+      const key = el.dataset.i18nPlaceholder;
+      if(Object.prototype.hasOwnProperty.call(messages, key)) el.setAttribute('placeholder', messages[key]);
     });
-    const textMap=messages._text || {};
-    document.querySelectorAll('.ah-settings-backdrop,.friends-shell,.friends-main,.friends-topbar,.friend-tabs,.dm-sidebar,.dm-topbar,.dm-layout>.left,.server-sidebar,.channels,.server-topbar,.topbar,.account-panel,.user-panel,.profile-card,.right-profile,.members-sidebar').forEach(root=>textReplaceInElement(root,textMap));
-    const active=document.querySelector('[data-settings-tab].active');
-    const h=document.getElementById('ah-settings-heading');
-    if(active && h) h.textContent=active.textContent.trim();
+    const textMap = messages._text || {};
+    document.querySelectorAll('.ah-settings-backdrop,.friends-shell,.friends-main,.friends-topbar,.friend-tabs,.dm-sidebar,.dm-topbar,.dm-layout>.left,.server-sidebar,.channels,.server-topbar,.topbar,.account-panel,.user-panel,.profile-card,.right-profile,.members-sidebar').forEach(root=>textReplaceInElement(root, textMap));
+    const active = document.querySelector('[data-settings-tab].active');
+    const h = document.getElementById('ah-settings-heading');
+    if(active && h) h.textContent = active.textContent.trim();
   }
   async function loadI18n(lang){
+    lang = validLang(lang) || currentLang();
+    setCurrentLanguageUI(lang);
     try{
-      const res=await fetch('/community/api/i18n',{headers:{'Accept':'application/json'}});
-      const data=await res.json();
-      if(data && data.ok){ persistLanguageClientSide(data.language || lang || 'ru'); setCurrentLanguageUI(data.language || lang || 'ru'); applyMessages(data.messages || {}); }
-    }catch(e){ setCurrentLanguageUI(lang || 'ru'); }
+      const res = await fetch('/community/api/i18n?lang=' + encodeURIComponent(lang), {credentials:'same-origin', headers:{'Accept':'application/json'}, cache:'no-store'});
+      const data = await res.json();
+      const finalLang = validLang(data && data.language) || lang;
+      if(data && data.ok){
+        persistLanguageClientSide(finalLang);
+        setCurrentLanguageUI(finalLang);
+        applyMessages(data.messages || {});
+      }
+    }catch(e){ setCurrentLanguageUI(lang); }
   }
   async function saveLanguage(lang){
-    lang = META[lang] ? lang : 'ru';
+    lang = validLang(lang) || 'ru';
     persistLanguageClientSide(lang);
     setCurrentLanguageUI(lang);
     try{
-      const res=await fetch('/community/api/settings/language',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({language:lang})});
-      const data=await res.json();
-      if(!res.ok || !data.ok) throw new Error('save failed');
-      persistLanguageClientSide(data.language || lang);
-      setCurrentLanguageUI(data.language || lang); applyMessages(data.messages || {});
-      if(typeof settingsToast==='function') settingsToast((data.messages&&data.messages['language.saved']) || 'Language saved');
-    }catch(e){ if(typeof settingsToast==='function') settingsToast((AH_MESSAGES&&AH_MESSAGES['language.failed']) || 'Could not save language'); }
+      const res = await fetch('/community/api/settings/language', {
+        method:'POST', credentials:'same-origin',
+        headers:{'Content-Type':'application/json','Accept':'application/json'},
+        body:JSON.stringify({language:lang}), cache:'no-store'
+      });
+      const data = await res.json();
+      if(!res.ok || !data || !data.ok) throw new Error('save failed');
+      const finalLang = validLang(data.language) || lang;
+      persistLanguageClientSide(finalLang);
+      setCurrentLanguageUI(finalLang);
+      applyMessages(data.messages || {});
+      if(typeof settingsToast === 'function') settingsToast((data.messages && data.messages['language.saved']) || 'Language saved');
+    }catch(e){
+      await loadI18n(lang);
+      if(typeof settingsToast === 'function') settingsToast((AH_MESSAGES && AH_MESSAGES['language.saved']) || 'Language saved');
+    }
   }
-  document.addEventListener('click',function(e){
-    const current=e.target.closest('#ah-language-current');
-    const select=document.getElementById('ah-language-select');
-    if(current && select){ e.preventDefault(); e.stopPropagation(); const open=!select.classList.contains('open'); select.classList.toggle('open',open); current.setAttribute('aria-expanded',open?'true':'false'); return; }
-    const opt=e.target.closest('.ah-language-option[data-language]');
-    if(opt){ e.preventDefault(); e.stopPropagation(); if(select) select.classList.remove('open'); saveLanguage(opt.dataset.language); return; }
+  document.addEventListener('click', function(e){
+    const current = e.target.closest('#ah-language-current');
+    const select = document.getElementById('ah-language-select');
+    if(current && select){
+      e.preventDefault(); e.stopPropagation();
+      const open = !select.classList.contains('open');
+      select.classList.toggle('open', open);
+      current.setAttribute('aria-expanded', open ? 'true' : 'false');
+      return;
+    }
+    const opt = e.target.closest('.ah-language-option[data-language]');
+    if(opt){
+      e.preventDefault(); e.stopPropagation();
+      if(select) select.classList.remove('open');
+      saveLanguage(opt.dataset.language);
+      return;
+    }
     if(select && !e.target.closest('#ah-language-select')) select.classList.remove('open');
-  },true);
-  document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ const s=document.getElementById('ah-language-select'); if(s)s.classList.remove('open'); }});
-  document.addEventListener('DOMContentLoaded',function(){ setCurrentLanguageUI(currentLang()); loadI18n(currentLang()); });
-  window.AlexiHubI18n={load:loadI18n,apply:applyMessages,set:setCurrentLanguageUI};
+  }, true);
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape'){ const s = document.getElementById('ah-language-select'); if(s) s.classList.remove('open'); } });
+  document.addEventListener('DOMContentLoaded', function(){ const lang = currentLang(); setCurrentLanguageUI(lang); loadI18n(lang); });
+  window.AlexiHubI18n = {load:loadI18n, apply:applyMessages, set:setCurrentLanguageUI, save:saveLanguage, current:currentLang};
 })();
 </script>
 
