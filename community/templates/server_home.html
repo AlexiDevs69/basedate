@@ -1637,26 +1637,26 @@ document.addEventListener('DOMContentLoaded',()=>{
       </div>
       <input class="ah-settings-search" placeholder="Пошук" oninput="ahSettingsFilter(this.value)">
       <div class="ah-settings-group">
-        <button class="ah-settings-nav active" data-settings-tab="account" onclick="showSettingsTab('account')"><svg><use href="#i-user"></use></svg>Учётная запись</button>
+        <button class="ah-settings-nav active" data-settings-tab="account" onclick="showSettingsTab('account')"><svg><use href="#i-user"></use></svg><span data-i18n="settings.account">Учётная запись</span></button>
         <button class="ah-settings-nav" data-settings-tab="profile" onclick="showSettingsTab('profile')"><svg><use href="#i-edit"></use></svg>Профіль</button>
-        <button class="ah-settings-nav" data-settings-tab="security" onclick="showSettingsTab('security')"><svg><use href="#i-shield"></use></svg>Пароль и безопасность</button>
-        <button class="ah-settings-nav" data-settings-tab="privacy" onclick="showSettingsTab('privacy')"><svg><use href="#i-users"></use></svg>Данные и конфиденциальность</button>
+        <button class="ah-settings-nav" data-settings-tab="security" onclick="showSettingsTab('security')"><svg><use href="#i-shield"></use></svg><span data-i18n="settings.security">Пароль и безопасность</span></button>
+        <button class="ah-settings-nav" data-settings-tab="privacy" onclick="showSettingsTab('privacy')"><svg><use href="#i-users"></use></svg><span data-i18n="settings.privacy">Данные и конфиденциальность</span></button>
       </div>
       <div class="ah-settings-group">
         <div class="ah-settings-label">Взаимодействие</div>
-        <button class="ah-settings-nav" data-settings-tab="voice" onclick="showSettingsTab('voice')"><svg><use href="#i-mic"></use></svg>Голос и видео</button>
-        <button class="ah-settings-nav" data-settings-tab="appearance" onclick="showSettingsTab('appearance')"><svg><use href="#i-settings"></use></svg>Внешний вид</button>
-        <button class="ah-settings-nav" data-settings-tab="notifications" onclick="showSettingsTab('notifications')"><svg><use href="#i-bell"></use></svg>Уведомления</button>
-        <button class="ah-settings-nav" data-settings-tab="language" onclick="showSettingsTab('language')"><svg><use href="#i-search"></use></svg>Язык и время</button>
+        <button class="ah-settings-nav" data-settings-tab="voice" onclick="showSettingsTab('voice')"><svg><use href="#i-mic"></use></svg><span data-i18n="settings.voice">Голос и видео</span></button>
+        <button class="ah-settings-nav" data-settings-tab="appearance" onclick="showSettingsTab('appearance')"><svg><use href="#i-settings"></use></svg><span data-i18n="settings.appearance">Внешний вид</span></button>
+        <button class="ah-settings-nav" data-settings-tab="notifications" onclick="showSettingsTab('notifications')"><svg><use href="#i-bell"></use></svg><span data-i18n="settings.notifications">Уведомления</span></button>
+        <button class="ah-settings-nav" data-settings-tab="language" onclick="showSettingsTab('language')"><svg><use href="#i-search"></use></svg><span data-i18n="settings.language_time">Язык и время</span></button>
       </div>
       <div class="ah-settings-group">
         <div class="ah-settings-label">AlexiHub</div>
-        <button class="ah-settings-nav" data-settings-tab="servers" onclick="showSettingsTab('servers')"><svg><use href="#i-server"></use></svg>Серверы</button>
-        <button class="ah-settings-nav" data-settings-tab="gifts" onclick="showSettingsTab('gifts')"><svg><use href="#i-gift"></use></svg>Подарки</button>
-        <button class="ah-settings-nav" data-settings-tab="developer" onclick="showSettingsTab('developer')"><svg><use href="#i-code"></use></svg>Разработчик</button>
+        <button class="ah-settings-nav" data-settings-tab="servers" onclick="showSettingsTab('servers')"><svg><use href="#i-server"></use></svg><span data-i18n="settings.servers">Серверы</span></button>
+        <button class="ah-settings-nav" data-settings-tab="gifts" onclick="showSettingsTab('gifts')"><svg><use href="#i-gift"></use></svg><span data-i18n="settings.gifts">Подарки</span></button>
+        <button class="ah-settings-nav" data-settings-tab="developer" onclick="showSettingsTab('developer')"><svg><use href="#i-code"></use></svg><span data-i18n="settings.developer">Разработчик</span></button>
       </div>
       <div class="ah-settings-divider"></div>
-      <a class="ah-settings-nav danger" href="/community/logout"><svg><use href="#i-logout"></use></svg>Выйти</a>
+      <a class="ah-settings-nav danger" href="/community/logout"><svg><use href="#i-logout"></use></svg><span data-i18n="settings.logout">Выйти</span></a>
       <div class="ah-settings-version">AlexiHub desktop settings panel<br>stable 1.0.0</div>
     </aside>
     <main class="ah-settings-main">
@@ -1730,7 +1730,32 @@ document.addEventListener('DOMContentLoaded',()=>{
       <section class="ah-settings-page" data-settings-page="voice"><h1>Голос и видео</h1><div class="ah-settings-placeholder">Поки заглушка під майбутні voice-фічі: мікрофон, камера, echo test.</div></section>
       <section class="ah-settings-page" data-settings-page="appearance"><h1>Внешний вид</h1><div class="ah-settings-placeholder">Поки заглушка. Тут можна буде вибирати тему, щільність UI, анімації.</div></section>
       <section class="ah-settings-page" data-settings-page="notifications"><h1>Уведомления</h1><div class="ah-settings-placeholder">Поки заглушка. Тут будуть звуки, desktop notifications, mute servers.</div></section>
-      <section class="ah-settings-page" data-settings-page="language"><h1>Язык и время</h1><div class="ah-settings-placeholder">Поки заглушка. Тут будуть мова, часовий пояс, формат дати.</div></section>
+      <section class="ah-settings-page" data-settings-page="language">
+        <h1 data-i18n="language.title">Язык и время</h1>
+        <div class="ah-language-settings" data-current-language="{{ account.language if account and account.language else 'ru' }}">
+          <div class="ah-language-block">
+            <h3 data-i18n="language.choose_title">Выберите язык</h3>
+            <p data-i18n="language.choose_desc">Выберите язык, на котором будет отображаться AlexiHub.</p>
+            <div class="ah-language-select" id="ah-language-select">
+              <button class="ah-language-current" type="button" id="ah-language-current" aria-expanded="false">
+                <span class="ah-lang-left"><span id="ah-language-current-flag">🇷🇺</span><span id="ah-language-current-name">Русский</span></span>
+                <span class="ah-lang-right"><span id="ah-language-current-native">Русский</span><span class="ah-language-chevron">⌄</span></span>
+              </button>
+              <div class="ah-language-menu" id="ah-language-menu" role="listbox">
+                <button class="ah-language-option" type="button" data-language="en"><span class="flag">🇺🇸</span><span class="main">English</span><span class="native">English</span></button>
+                <button class="ah-language-option" type="button" data-language="ru"><span class="flag">🇷🇺</span><span class="main">Русский</span><span class="native">Русский</span></button>
+                <button class="ah-language-option" type="button" data-language="uk"><span class="flag">🇺🇦</span><span class="main">Українська</span><span class="native">Українська</span></button>
+              </div>
+            </div>
+          </div>
+          <div class="ah-language-block compact">
+            <h3 data-i18n="language.time_format">Формат времени</h3>
+            <label class="ah-time-radio"><input type="radio" name="ah_time_format" checked><span></span><b data-i18n="language.auto">Автоматически</b></label>
+            <label class="ah-time-radio"><input type="radio" name="ah_time_format"><span></span><b data-i18n="language.12h">12 часов</b></label>
+            <label class="ah-time-radio"><input type="radio" name="ah_time_format"><span></span><b data-i18n="language.24h">24 часа</b></label>
+          </div>
+        </div>
+      </section>
       <section class="ah-settings-page" data-settings-page="servers"><h1>Серверы</h1><div class="ah-settings-placeholder">Поки заглушка. Тут можна буде керувати своїми серверами.</div></section>
       <section class="ah-settings-page" data-settings-page="gifts"><h1>Подарки</h1><div class="ah-settings-placeholder">Поки заглушка. Тут потім можна показати отримані gifts.</div></section>
       <section class="ah-settings-page" data-settings-page="developer"><h1>Разработчик</h1><div class="ah-settings-placeholder">Поки заглушка. Тут можна буде додати API/debug info.</div></section>
@@ -1738,6 +1763,11 @@ document.addEventListener('DOMContentLoaded',()=>{
   </div>
 </div>
 <div id="ah-settings-toast" class="ah-settings-toast"></div>
+
+<style id="ah-i18n-language-css">
+.ah-language-settings{max-width:760px;margin-top:72px}.ah-language-block{margin-bottom:28px}.ah-language-block h3{margin:0 0 6px;color:#fff;font-size:16px;font-weight:900}.ah-language-block p{margin:0 0 12px;color:#b5bac1;font-size:13px}.ah-language-select{position:relative;max-width:720px}.ah-language-current{width:100%;height:44px;background:#1e1f22;border:1px solid #3f4149;border-radius:7px;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 12px;cursor:pointer;font-weight:800}.ah-language-select.open .ah-language-current{border-color:#5865f2;box-shadow:0 0 0 1px #5865f2}.ah-lang-left,.ah-lang-right{display:flex;align-items:center;gap:10px}.ah-lang-right{color:#f2f3f5;font-size:13px}.ah-language-chevron{font-size:19px;color:#dbdee1;transition:.14s}.ah-language-select.open .ah-language-chevron{transform:rotate(180deg)}.ah-language-menu{display:none;position:absolute;left:0;right:0;top:46px;max-height:260px;overflow:auto;background:#2b2d31;border:1px solid #3f4149;border-radius:0 0 7px 7px;padding:6px;z-index:80;box-shadow:0 18px 45px rgba(0,0,0,.35)}.ah-language-select.open .ah-language-menu{display:block}.ah-language-option{width:100%;height:40px;border:0;background:transparent;color:#dbdee1;border-radius:4px;display:grid;grid-template-columns:26px 1fr auto;align-items:center;gap:10px;padding:0 8px;cursor:pointer;text-align:left}.ah-language-option:hover,.ah-language-option.active{background:#3a3c43;color:#fff}.ah-language-option .main{font-weight:850}.ah-language-option .native{font-size:12px;color:#c6cad1}.ah-language-option.active .native::after{content:' ✓';color:#fff;font-weight:950;margin-left:8px}.ah-time-radio{display:flex;align-items:center;gap:12px;margin:13px 0;color:#dbdee1;font-size:15px;cursor:pointer}.ah-time-radio input{display:none}.ah-time-radio span{width:20px;height:20px;border-radius:50%;border:1px solid #5b5f68;background:#232428;display:grid;place-items:center}.ah-time-radio input:checked+span{border-color:#5865f2;background:#5865f2}.ah-time-radio input:checked+span:after{content:'';width:7px;height:7px;background:#fff;border-radius:50%}.ah-time-radio b{font-weight:750}
+</style>
+
 
 
 <script>
@@ -1777,6 +1807,69 @@ document.addEventListener('DOMContentLoaded',()=>{
     t.classList.remove('show'); void t.offsetWidth; t.classList.add('show');
   };
   document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeUserSettings(); });
+})();
+</script>
+
+<script id="ah-i18n-language-js">
+(function(){
+  if(window.__ahI18nReady) return; window.__ahI18nReady=true;
+  const META={ru:{flag:'🇷🇺',name:'Русский',native:'Русский'},uk:{flag:'🇺🇦',name:'Українська',native:'Українська'},en:{flag:'🇺🇸',name:'English',native:'English'}};
+  function currentLang(){
+    const box=document.querySelector('.ah-language-settings');
+    return (box && box.dataset.currentLanguage) || '{{ account.language if account and account.language else "ru" }}' || 'ru';
+  }
+  function setCurrentLanguageUI(lang){
+    lang = META[lang] ? lang : 'ru';
+    document.documentElement.lang = lang;
+    document.querySelectorAll('.ah-language-settings').forEach(b=>b.dataset.currentLanguage=lang);
+    const m=META[lang];
+    const flag=document.getElementById('ah-language-current-flag'); if(flag) flag.textContent=m.flag;
+    const name=document.getElementById('ah-language-current-name'); if(name) name.textContent=m.name;
+    const native=document.getElementById('ah-language-current-native'); if(native) native.textContent=m.native;
+    document.querySelectorAll('.ah-language-option').forEach(btn=>btn.classList.toggle('active',btn.dataset.language===lang));
+  }
+  function applyMessages(messages){
+    if(!messages) return;
+    document.querySelectorAll('[data-i18n]').forEach(el=>{
+      const key=el.dataset.i18n;
+      if(messages[key]) el.textContent=messages[key];
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{
+      const key=el.dataset.i18nPlaceholder;
+      if(messages[key]) el.setAttribute('placeholder',messages[key]);
+    });
+    const active=document.querySelector('[data-settings-tab].active');
+    const h=document.getElementById('ah-settings-heading');
+    if(active && h) h.textContent=active.textContent.trim();
+  }
+  async function loadI18n(lang){
+    try{
+      const res=await fetch('/community/api/i18n',{headers:{'Accept':'application/json'}});
+      const data=await res.json();
+      if(data && data.ok){ setCurrentLanguageUI(data.language || lang || 'ru'); applyMessages(data.messages || {}); }
+    }catch(e){ setCurrentLanguageUI(lang || 'ru'); }
+  }
+  async function saveLanguage(lang){
+    lang = META[lang] ? lang : 'ru';
+    setCurrentLanguageUI(lang);
+    try{
+      const res=await fetch('/community/api/settings/language',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({language:lang})});
+      const data=await res.json();
+      if(!res.ok || !data.ok) throw new Error('save failed');
+      setCurrentLanguageUI(data.language || lang); applyMessages(data.messages || {});
+      if(typeof settingsToast==='function') settingsToast((data.messages&&data.messages['language.saved']) || 'Язык сохранён');
+    }catch(e){ if(typeof settingsToast==='function') settingsToast('Не удалось сохранить язык'); }
+  }
+  document.addEventListener('click',function(e){
+    const current=e.target.closest('#ah-language-current');
+    const select=document.getElementById('ah-language-select');
+    if(current && select){ e.preventDefault(); e.stopPropagation(); const open=!select.classList.contains('open'); select.classList.toggle('open',open); current.setAttribute('aria-expanded',open?'true':'false'); return; }
+    const opt=e.target.closest('.ah-language-option[data-language]');
+    if(opt){ e.preventDefault(); e.stopPropagation(); if(select) select.classList.remove('open'); saveLanguage(opt.dataset.language); return; }
+    if(select && !e.target.closest('#ah-language-select')) select.classList.remove('open');
+  },true);
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ const s=document.getElementById('ah-language-select'); if(s)s.classList.remove('open'); }});
+  document.addEventListener('DOMContentLoaded',function(){ setCurrentLanguageUI(currentLang()); loadI18n(currentLang()); });
 })();
 </script>
 
