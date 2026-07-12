@@ -90,7 +90,9 @@
     "В мережі": "Online",
     "online": "Online",
     "Невидимий": "Invisible",
-    "Невидимый": "Invisible"
+    "Невидимый": "Invisible",
+    "Друзі / ЛС": "Friends / DMs",
+    "Друзья / ЛС": "Friends / DMs"
   },
   "ui.friends": "Friends",
   "ui.online": "Online",
@@ -101,5 +103,7 @@
   "status.idle": "Idle",
   "status.dnd": "Do Not Disturb",
   "status.invisible": "Invisible",
-  "status.offline": "Offline"
+  "status.offline": "Offline",
+  "ui.friends_dm": "Friends / DMs",
+  "ui.direct_messages": "Direct Messages"
 }
