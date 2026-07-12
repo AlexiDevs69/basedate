@@ -36,6 +36,13 @@ VISUAL_NAME_EFFECTS = {"none", "gradient", "glow"}
 VISUAL_NAME_FONTS = {"default", "mono", "serif", "rounded", "cyber", "display", "pixel", "bubble", "puffy", "block", "neon", "glitch", "graffiti", "spooky", "medieval", "roundfat"}
 
 PRESENCE_STATUSES = {"online", "idle", "dnd", "invisible"}
+SUPPORTED_LANGUAGES = {"ru", "uk", "en"}
+DEFAULT_LANGUAGE = "ru"
+
+
+def normalize_language(value: str | None) -> str:
+    lang = (value or DEFAULT_LANGUAGE).strip().lower()
+    return lang if lang in SUPPORTED_LANGUAGES else DEFAULT_LANGUAGE
 
 
 def _normalize_presence_status(value: str | None) -> str:
@@ -73,6 +80,8 @@ async def ensure_account_visual_columns(db: AsyncSession) -> None:
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS profile_card_bg_url VARCHAR(512)"))
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS account_status VARCHAR(16) DEFAULT 'online' NOT NULL"))
     await db.execute(text("UPDATE community_accounts SET account_status = 'online' WHERE account_status IS NULL OR account_status = ''"))
+    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS language VARCHAR(8) DEFAULT 'ru' NOT NULL"))
+    await db.execute(text("UPDATE community_accounts SET language = 'ru' WHERE language IS NULL OR language = ''"))
     await db.commit()
 
 
@@ -198,6 +207,18 @@ async def update_presence_status(db: AsyncSession, account_id: int, status: str 
         return None
     account.account_status = _normalize_presence_status(status)
     account.last_seen_at = datetime.now(timezone.utc)
+    await db.commit()
+    await db.refresh(account)
+    return account
+
+
+async def update_account_language(db: AsyncSession, account_id: int, language: str | None) -> Account | None:
+    """Persist the user's UI language. Keep normalization server-side."""
+    await ensure_account_visual_columns(db)
+    account = await get_account_by_id(db, account_id)
+    if not account:
+        return None
+    account.language = normalize_language(language)
     await db.commit()
     await db.refresh(account)
     return account
