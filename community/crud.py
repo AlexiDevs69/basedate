@@ -212,16 +212,24 @@ async def update_presence_status(db: AsyncSession, account_id: int, status: str 
     return account
 
 
-async def update_account_language(db: AsyncSession, account_id: int, language: str | None) -> Account | None:
-    """Persist the user's UI language. Keep normalization server-side."""
+async def update_account_language(db: AsyncSession, account_id: int, language: str | None) -> str | None:
+    """Persist the user's UI language.
+
+    Important: use a direct SQL UPDATE instead of mutating an ORM Account object.
+    On Render/asyncpg, stale ORM instances after prior commits can make the UI look
+    saved while the next refresh still reads the old language. Direct SQL also avoids
+    async lazy-load/MissingGreenlet edge cases.
+    """
     await ensure_account_visual_columns(db)
-    account = await get_account_by_id(db, account_id)
-    if not account:
-        return None
-    account.language = normalize_language(language)
+    normalized = normalize_language(language)
+    result = await db.execute(
+        text("UPDATE community_accounts SET language = :language WHERE id = :account_id"),
+        {"language": normalized, "account_id": account_id},
+    )
     await db.commit()
-    await db.refresh(account)
-    return account
+    if getattr(result, "rowcount", 0) == 0:
+        return None
+    return normalized
 
 
 async def list_online_accounts(db: AsyncSession, limit: int = 50) -> list[Account]:
