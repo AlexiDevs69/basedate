@@ -69,6 +69,10 @@ class Account(Base):
     # Values: online, idle, dnd, invisible.
     account_status: Mapped[str] = mapped_column(String(16), default="online", nullable=False)
 
+    # UI language selected by the user. Used by the backend i18n JSON loader.
+    # Values: ru, uk, en.
+    language: Mapped[str] = mapped_column(String(8), default="ru", nullable=False)
+
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
 
 
