@@ -1845,6 +1845,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   const META={ru:{flagClass:'ah-lang-flag-ru',name:'Русский',native:'Русский'},uk:{flagClass:'ah-lang-flag-uk',name:'Українська',native:'Українська'},en:{flagClass:'ah-lang-flag-en',name:'English',native:'English'}};
   let AH_MESSAGES={};
   function currentLang(){
+    const stored=storedLanguage();
+    if(stored) return stored;
     const box=document.querySelector('.ah-language-settings');
     return (box && box.dataset.currentLanguage) || '{{ account.language if account and account.language else "ru" }}' || 'ru';
   }
@@ -1920,16 +1922,18 @@ document.addEventListener('DOMContentLoaded',()=>{
     try{
       const res=await fetch('/community/api/i18n',{headers:{'Accept':'application/json'}});
       const data=await res.json();
-      if(data && data.ok){ setCurrentLanguageUI(data.language || lang || 'ru'); applyMessages(data.messages || {}); }
+      if(data && data.ok){ persistLanguageClientSide(data.language || lang || 'ru'); setCurrentLanguageUI(data.language || lang || 'ru'); applyMessages(data.messages || {}); }
     }catch(e){ setCurrentLanguageUI(lang || 'ru'); }
   }
   async function saveLanguage(lang){
     lang = META[lang] ? lang : 'ru';
+    persistLanguageClientSide(lang);
     setCurrentLanguageUI(lang);
     try{
       const res=await fetch('/community/api/settings/language',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({language:lang})});
       const data=await res.json();
       if(!res.ok || !data.ok) throw new Error('save failed');
+      persistLanguageClientSide(data.language || lang);
       setCurrentLanguageUI(data.language || lang); applyMessages(data.messages || {});
       if(typeof settingsToast==='function') settingsToast((data.messages&&data.messages['language.saved']) || 'Language saved');
     }catch(e){ if(typeof settingsToast==='function') settingsToast((AH_MESSAGES&&AH_MESSAGES['language.failed']) || 'Could not save language'); }
