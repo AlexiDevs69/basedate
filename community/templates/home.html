@@ -1314,7 +1314,7 @@
       <nav class="nav">
         <a class="nav-item active" href="/community">
           <span class="nav-ico"><svg class="icon"><use href="#i-users"></use></svg></span>
-          Друзі / ЛС
+          <span data-i18n="ui.friends_dm">Друзі / ЛС</span>
         </a>
         {% for ch in channels %}
         <a class="nav-item" href="/community/channel/{{ ch.slug }}">
@@ -1325,7 +1325,7 @@
       </nav>
 
       <div class="section">
-        <span>Особисті повідомлення</span>
+        <span data-i18n="ui.direct_messages">Особисті повідомлення</span>
         <span class="section-action" title="Новий діалог"><svg class="icon icon-sm"><use href="#i-plus"></use></svg></span>
       </div>
 
@@ -2118,6 +2118,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   function applyMessages(messages){
     if(!messages) return;
     AH_MESSAGES = messages;
+    window.__AH_TRANSLATIONS = messages || {};
     document.querySelectorAll('[data-i18n]').forEach(el=>{
       const key = el.dataset.i18n;
       if(Object.prototype.hasOwnProperty.call(messages, key)) el.textContent = messages[key];
@@ -2289,7 +2290,12 @@ document.addEventListener('DOMContentLoaded',()=>{
 <script id="ah-presence-server-save-fix">
 (function(){
   if(window.__ahPresenceSaveFix) return; window.__ahPresenceSaveFix = true;
-  const statusLabels = { online:'В мережі', idle:'Неактивний', dnd:'Не турбувати', invisible:'Невидимий' };
+  function ahStatusLabel(status){
+  const m = window.__AH_TRANSLATIONS || {};
+  const fallback = {online:'В мережі', idle:'Неактивний', dnd:'Не турбувати', invisible:'Невидимий', offline:'Не в мережі'};
+  return m['status.' + status] || fallback[status] || fallback.online;
+}
+const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabel(String(prop)); } });
   function normalizeStatus(s){ return ['online','idle','dnd','invisible'].includes(s) ? s : 'online'; }
   window.applyLocalStatus = window.applyLocalStatus || function(status){
     status = normalizeStatus(status);
