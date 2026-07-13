@@ -2621,48 +2621,58 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
 
 
 
+
 <style id="ah-nitro-gifts-css">
-.ah-nitro-page{max-width:760px;margin-top:54px;color:#f2f3f5}.ah-nitro-page h1{font-size:24px;margin:0 0 18px;font-weight:950}.ah-nitro-page h2{font-size:20px;margin:34px 0 12px;font-weight:950}.ah-nitro-page p{color:#b5bac1;line-height:1.45}.ah-nitro-redeem{display:flex;gap:8px;margin-top:10px}.ah-nitro-input{flex:1;height:42px;border:1px solid #3f4149;border-radius:7px;background:#1e1f22;color:#fff;padding:0 12px;font:inherit;font-weight:750;outline:0;text-transform:uppercase}.ah-nitro-input:focus{border-color:#5865f2;box-shadow:0 0 0 1px #5865f2}.ah-nitro-btn{border:0;border-radius:7px;background:#5865f2;color:#fff;padding:0 16px;min-height:42px;font:inherit;font-weight:900;cursor:pointer}.ah-nitro-btn:hover{background:#4752c4}.ah-nitro-btn.secondary{background:#4e5058}.ah-nitro-btn.secondary:hover{background:#5c5f68}.ah-nitro-sep{height:1px;background:rgba(255,255,255,.1);margin:34px 0}.ah-nitro-empty{min-height:210px;display:grid;place-items:center;text-align:center;color:#b5bac1}.ah-nitro-empty-illu{width:210px;height:116px;border-radius:28px;background:radial-gradient(circle at 65% 28%,#4e5058 0 18%,transparent 19%),linear-gradient(135deg,#313338,#232428);opacity:.75;margin:auto auto 14px;position:relative}.ah-nitro-empty-illu:after{content:'?';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:58px;font-weight:950;color:#6d717b}.ah-nitro-card{background:#15161a;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.055);margin:12px 0 22px}.ah-nitro-card-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;background:#1e1f22}.ah-nitro-icon{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,#5865f2,#9b5cf6);display:inline-grid;place-items:center;margin-right:10px;box-shadow:0 0 0 1px rgba(255,255,255,.08) inset}.ah-nitro-icon svg{width:22px;height:22px}.ah-nitro-card-title{display:flex;align-items:center;font-weight:950}.ah-nitro-card-bottom{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;background:#101115;color:#a7b0ff;font-weight:900}.ah-nitro-pill{background:#5865f2;color:#fff;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:950}.ah-nitro-admin{border:1px solid rgba(88,101,242,.3);border-radius:12px;background:rgba(88,101,242,.08);padding:14px;margin-top:18px}.ah-nitro-admin-grid{display:grid;grid-template-columns:100px 1fr auto;gap:8px;align-items:center}.ah-nitro-code-out{margin-top:10px;display:none;gap:8px}.ah-nitro-code-out.show{display:flex}.ah-nitro-status{min-height:18px;font-size:13px;font-weight:800;margin-top:8px;color:#b5bac1}.ah-nitro-status.ok{color:#23a55a}.ah-nitro-status.err{color:#ff6b6b}.ah-nitro-profile-badge{display:inline-flex;align-items:center;gap:4px;margin-left:7px;vertical-align:middle;border-radius:999px;background:rgba(88,101,242,.18);border:1px solid rgba(88,101,242,.48);color:#dfe3ff;padding:2px 6px;font-size:11px;font-weight:950;line-height:1;cursor:default}.ah-nitro-profile-badge svg{width:13px;height:13px;fill:#dfe3ff}.ah-nitro-profile-badge.hidden{display:none!important}.ah-v3-full-name .ah-nitro-profile-badge,.ah-v3-name .ah-nitro-profile-badge{font-size:11px;letter-spacing:0}.ah-profile-live-name .ah-nitro-profile-badge,.dm-name .ah-nitro-profile-badge,.member-name .ah-nitro-profile-badge{font-size:10px;padding:2px 5px}.ah-settings-nav[data-settings-tab="subscriptions"] span:after{content:'1 день';margin-left:8px;border-radius:999px;background:#5865f2;color:#fff;font-size:10px;padding:2px 6px;font-weight:950;display:none}.ah-settings-nav[data-settings-tab="subscriptions"].ah-nitro-active span:after{display:inline-block}@media(max-width:700px){.ah-nitro-redeem,.ah-nitro-admin-grid,.ah-nitro-code-out{grid-template-columns:1fr;display:grid}.ah-nitro-code-out{display:none}.ah-nitro-code-out.show{display:grid}}
+.ah-nitro-page{max-width:760px;margin-top:54px;color:#f2f3f5}.ah-nitro-page h1{font-size:24px;margin:0 0 18px;font-weight:950}.ah-nitro-page h2{font-size:20px;margin:34px 0 12px;font-weight:950}.ah-nitro-page p{color:#b5bac1;line-height:1.45}.ah-nitro-redeem{display:flex;gap:8px;margin-top:10px}.ah-nitro-input{flex:1;height:42px;border:1px solid #3f4149;border-radius:7px;background:#1e1f22;color:#fff;padding:0 12px;font:inherit;font-weight:750;outline:0;text-transform:uppercase}.ah-nitro-input:focus{border-color:#5865f2;box-shadow:0 0 0 1px #5865f2}.ah-nitro-btn{border:0;border-radius:7px;background:#5865f2;color:#fff;padding:0 16px;min-height:42px;font:inherit;font-weight:900;cursor:pointer}.ah-nitro-btn:hover{background:#4752c4}.ah-nitro-btn.secondary{background:#4e5058}.ah-nitro-btn.secondary:hover{background:#5c5f68}.ah-nitro-sep{height:1px;background:rgba(255,255,255,.1);margin:34px 0}.ah-nitro-empty{min-height:210px;display:grid;place-items:center;text-align:center;color:#b5bac1}.ah-nitro-empty-illu{width:210px;height:116px;border-radius:28px;background:radial-gradient(circle at 65% 28%,#4e5058 0 18%,transparent 19%),linear-gradient(135deg,#313338,#232428);opacity:.75;margin:auto auto 14px;position:relative}.ah-nitro-empty-illu:after{content:'?';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:58px;font-weight:950;color:#6d717b}.ah-nitro-card{background:#15161a;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.055);margin:12px 0 22px}.ah-nitro-card-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;background:#1e1f22}.ah-nitro-card-title{display:flex;align-items:center;font-weight:950}.ah-nitro-card-bottom{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;background:#101115;color:#a7b0ff;font-weight:900}.ah-nitro-pill{background:#5865f2;color:#fff;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:950}.ah-nitro-admin{border:1px solid rgba(88,101,242,.3);border-radius:12px;background:rgba(88,101,242,.08);padding:14px;margin-top:18px}.ah-nitro-admin-grid{display:grid;grid-template-columns:100px 1fr auto;gap:8px;align-items:center}.ah-nitro-code-out{margin-top:10px;display:none;gap:8px}.ah-nitro-code-out.show{display:flex}.ah-nitro-status{min-height:18px;font-size:13px;font-weight:800;margin-top:8px;color:#b5bac1}.ah-nitro-status.ok{color:#23a55a}.ah-nitro-status.err{color:#ff6b6b}
+.ah-nitro-icon{width:36px;height:36px;display:inline-grid;place-items:center;margin-right:10px}.ah-nitro-icon .ah-nitro-medal{width:34px;height:34px}.ah-nitro-profile-badge{--nitro-a:#6b5cff;--nitro-b:#9b5cf6;--nitro-c:#dfe3ff;--nitro-glow:rgba(139,92,246,.45);display:inline-grid;place-items:center;margin-left:6px;vertical-align:-3px;width:18px;height:18px;border:0;background:transparent;padding:0;line-height:1;cursor:default;position:relative;z-index:4}.ah-nitro-profile-badge.hidden{display:none!important}.ah-nitro-medal{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;position:relative;background:conic-gradient(from 25deg,var(--nitro-c),var(--nitro-a),var(--nitro-b),var(--nitro-c),var(--nitro-a));box-shadow:0 0 0 1px rgba(255,255,255,.18) inset,0 0 10px var(--nitro-glow),0 1px 2px rgba(0,0,0,.45);transform:translateZ(0)}.ah-nitro-medal:before{content:'';position:absolute;inset:3.5px;border-radius:50%;background:radial-gradient(circle at 35% 25%,rgba(255,255,255,.85),transparent 18%),linear-gradient(135deg,var(--nitro-a),var(--nitro-b));box-shadow:0 0 0 1.5px rgba(0,0,0,.28) inset}.ah-nitro-medal:after{content:'';position:absolute;width:7px;height:7px;border-radius:2px;border:2px solid rgba(255,255,255,.78);transform:rotate(45deg);box-shadow:0 0 0 1px rgba(0,0,0,.15)}.ah-nitro-profile-badge.tier-basic{--nitro-a:#5865f2;--nitro-b:#9b5cf6;--nitro-c:#dfe3ff;--nitro-glow:rgba(88,101,242,.45)}.ah-nitro-profile-badge.tier-gold{--nitro-a:#f59e0b;--nitro-b:#ff7a18;--nitro-c:#ffe082;--nitro-glow:rgba(245,158,11,.55)}.ah-nitro-profile-badge.tier-platinum{--nitro-a:#19c7ff;--nitro-b:#5865f2;--nitro-c:#bff7ff;--nitro-glow:rgba(25,199,255,.55)}.ah-nitro-profile-badge.tier-diamond{--nitro-a:#8b5cf6;--nitro-b:#ec4cff;--nitro-c:#7df9ff;--nitro-glow:rgba(236,72,255,.56)}.ah-nitro-profile-badge:hover:after{content:attr(data-title);position:absolute;left:50%;bottom:calc(100% + 9px);transform:translateX(-50%);min-width:170px;max-width:230px;background:#111214;color:#fff;border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:8px 10px;font-size:12px;font-weight:800;line-height:1.25;text-align:center;box-shadow:0 12px 30px rgba(0,0,0,.42);white-space:normal;pointer-events:none}.ah-nitro-profile-badge:hover:before{content:'';position:absolute;left:50%;bottom:calc(100% + 4px);transform:translateX(-50%) rotate(45deg);width:9px;height:9px;background:#111214;border-right:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08);pointer-events:none}.ah-nitro-big-tier{display:flex;align-items:center;gap:10px}.ah-nitro-big-tier .ah-nitro-profile-badge{width:34px;height:34px;margin:0;vertical-align:middle}.ah-nitro-big-tier .ah-nitro-medal{width:34px;height:34px}.ah-nitro-big-tier .ah-nitro-medal:before{inset:6px}.ah-nitro-big-tier .ah-nitro-medal:after{width:12px;height:12px;border-width:3px}.ah-v3-full-name .ah-nitro-profile-badge,.ah-v3-name .ah-nitro-profile-badge{width:19px;height:19px}.ah-v3-full-name .ah-nitro-medal,.ah-v3-name .ah-nitro-medal{width:19px;height:19px}.ah-profile-live-name .ah-nitro-profile-badge,.dm-name .ah-nitro-profile-badge,.member-name .ah-nitro-profile-badge{width:16px;height:16px;vertical-align:-2px}.ah-profile-live-name .ah-nitro-medal,.dm-name .ah-nitro-medal,.member-name .ah-nitro-medal{width:16px;height:16px}.ah-settings-nav[data-settings-tab="subscriptions"] span:after{content:'1 день';margin-left:8px;border-radius:999px;background:#5865f2;color:#fff;font-size:10px;padding:2px 6px;font-weight:950;display:none}.ah-settings-nav[data-settings-tab="subscriptions"].ah-nitro-active span:after{display:inline-block}@media(max-width:700px){.ah-nitro-redeem,.ah-nitro-admin-grid,.ah-nitro-code-out{grid-template-columns:1fr;display:grid}.ah-nitro-code-out{display:none}.ah-nitro-code-out.show{display:grid}}
 </style>
 
 <script id="ah-nitro-gifts-js">
 (function(){
   if(window.__ahNitroGiftsReady) return;
   window.__ahNitroGiftsReady = true;
-  const nitroIconSvg = '<svg viewBox="0 0 24 24"><path d="M12 2 3 7v7c0 5.1 3.7 8.1 9 8.9 5.3-.8 9-3.8 9-8.9V7l-9-5Zm0 4.2 4.8 2.7-4.8 2.7-4.8-2.7L12 6.2Zm-5 5 4 2.2v5.1c-2.7-.8-4-2.4-4-4.6v-2.7Zm10 0v2.7c0 2.2-1.3 3.8-4 4.6v-5.1l4-2.2Z"/></svg>';
   const nitroCache = new Map();
 
   function esc(v){return String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
   function fmtDate(iso){ if(!iso) return ''; try{return new Date(iso).toLocaleDateString('ru-RU',{day:'numeric',month:'short',year:'numeric'});}catch(e){return iso;} }
-  function fmtLong(iso){ if(!iso) return ''; try{return new Date(iso).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return iso;} }
   function toast(text){ if(typeof settingsToast==='function') settingsToast(text); else console.log(text); }
+  function tierFromNitro(nitro){
+    const t = String((nitro && nitro.tier) || '').toLowerCase();
+    if(['gold','platinum','diamond','basic'].includes(t)) return t;
+    const d = Number((nitro && (nitro.duration_days || nitro.days_left)) || 0);
+    if(d > 100) return 'diamond';
+    if(d > 60) return 'platinum';
+    if(d > 30) return 'gold';
+    return 'basic';
+  }
+  function tierLabel(nitro){
+    const tier = tierFromNitro(nitro);
+    if(nitro && nitro.tier_label) return nitro.tier_label;
+    return {diamond:'Алмаз Nitro', platinum:'Платина Nitro', gold:'Золото Nitro', basic:'AlexiHub Nitro'}[tier] || 'AlexiHub Nitro';
+  }
+  function tierBadgeHtml(nitro, big=false){
+    const tier = tierFromNitro(nitro);
+    const title = nitro && nitro.active ? tierLabel(nitro)+' · Подписчик с '+fmtDate(nitro.started_at) : tierLabel(nitro);
+    return '<span class="ah-nitro-profile-badge tier-'+esc(tier)+' '+(big?'ah-nitro-big-badge':'')+'" title="'+esc(title)+'" data-title="'+esc(title)+'"><span class="ah-nitro-medal"></span></span>';
+  }
+  function tierBigTitleHtml(nitro){ return '<span class="ah-nitro-big-tier">'+tierBadgeHtml(nitro,true)+'<span>'+esc(tierLabel(nitro))+'</span></span>'; }
 
   function ensureSettingsSubscriptionNav(){
     const giftNav = document.querySelector('.ah-settings-nav[data-settings-tab="gifts"]');
     if(!giftNav || document.querySelector('.ah-settings-nav[data-settings-tab="subscriptions"]')) return;
     const btn = document.createElement('button');
-    btn.className = 'ah-settings-nav';
-    btn.type = 'button';
-    btn.dataset.settingsTab = 'subscriptions';
+    btn.className = 'ah-settings-nav'; btn.type = 'button'; btn.dataset.settingsTab = 'subscriptions';
     btn.onclick = function(){ showSettingsTab('subscriptions'); loadNitroMe(); };
     btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M7.5 4.2 12 6.8l4.5-2.6M7.5 19.8v-5.1L3 12M16.5 19.8v-5.1L21 12M3.3 7.2 12 12l8.7-4.8M12 22v-10" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>Подписки</span>';
     giftNav.parentNode.insertBefore(btn, giftNav);
   }
 
   function ensureNitroPages(){
-    const main = document.querySelector('.ah-settings-main');
-    if(!main) return;
+    const main = document.querySelector('.ah-settings-main'); if(!main) return;
     ensureSettingsSubscriptionNav();
     let subPage = document.querySelector('[data-settings-page="subscriptions"]');
-    if(!subPage){
-      subPage = document.createElement('section');
-      subPage.className = 'ah-settings-page';
-      subPage.dataset.settingsPage = 'subscriptions';
-      const giftPage = document.querySelector('[data-settings-page="gifts"]');
-      main.insertBefore(subPage, giftPage || null);
-    }
-    subPage.innerHTML = '<div class="ah-nitro-page"><h1>Ваши подписки</h1><p>Это ваши активные подписки. Средства за них будут списаны в одном и том же расчётном периоде. Подписки можно изменить в любой момент.</p><div id="ah-nitro-subscription-box"></div><h2>Кредит Nitro</h2><p>Кредиты хранятся здесь и применяются автоматически. Если у вас есть активная подписка Nitro, кредиты активируются между расчётными периодами.</p><div id="ah-nitro-credit-box"></div><h2>Кредит подписки</h2><p>Подарки, принятые при наличии активной подписки или отличающиеся от текущей подписки, будут отображаться здесь в виде кредитов.</p><div class="ah-nitro-card"><div class="ah-nitro-card-row"><div class="ah-nitro-card-title"><span class="ah-nitro-icon">'+nitroIconSvg+'</span><span>У вас нет неиспользованных подарков</span></div></div></div></div>';
-
+    if(!subPage){ subPage = document.createElement('section'); subPage.className = 'ah-settings-page'; subPage.dataset.settingsPage = 'subscriptions'; const giftPage = document.querySelector('[data-settings-page="gifts"]'); main.insertBefore(subPage, giftPage || null); }
+    subPage.innerHTML = '<div class="ah-nitro-page"><h1>Ваши подписки</h1><p>Это ваши активные подписки. Средства за них будут списаны в одном и том же расчётном периоде. Подписки можно изменить в любой момент.</p><div id="ah-nitro-subscription-box"></div><h2>Кредит Nitro</h2><p>Кредиты хранятся здесь и применяются автоматически. Если у вас есть активная подписка Nitro, кредиты активируются между расчётными периодами.</p><div id="ah-nitro-credit-box"></div><h2>Кредит подписки</h2><p>Подарки, принятые при наличии активной подписки или отличающиеся от текущей подписки, будут отображаться здесь в виде кредитов.</p><div class="ah-nitro-card"><div class="ah-nitro-card-row"><div class="ah-nitro-card-title"><span class="ah-nitro-icon">'+tierBadgeHtml({active:true,tier:'basic',started_at:null},true)+'</span><span>У вас нет неиспользованных подарков</span></div></div></div></div>';
     const giftsPage = document.querySelector('[data-settings-page="gifts"]');
     if(giftsPage){
       giftsPage.innerHTML = '<div class="ah-nitro-page"><h1>Склад подарков</h1><h2>Активировать коды</h2><p><b>Получили код для Nitro или игры?</b><br>Круто! Введите его ниже.</p><div class="ah-nitro-redeem"><input id="ah-nitro-code-input" class="ah-nitro-input" placeholder="ALEXI-AAAAA-BBBBB-CCCCC"><button class="ah-nitro-btn" type="button" onclick="redeemNitroCode()">Применить</button></div><div id="ah-nitro-redeem-status" class="ah-nitro-status"></div><div id="ah-nitro-admin-box" class="ah-nitro-admin" style="display:none"><b>Генерация одноразового подарка</b><p style="margin:6px 0 10px">Доступно для CODE/admin. Код можно активировать только один раз.</p><div class="ah-nitro-admin-grid"><input id="ah-nitro-gen-days" class="ah-nitro-input" type="number" min="1" max="365" value="30"><input id="ah-nitro-gen-note" class="ah-nitro-input" placeholder="Заметка, необязательно"><button class="ah-nitro-btn" type="button" onclick="generateNitroCode()">Сгенерировать</button></div><div id="ah-nitro-gen-out" class="ah-nitro-code-out"><input id="ah-nitro-gen-code" class="ah-nitro-input" readonly><button class="ah-nitro-btn secondary" type="button" onclick="copyGeneratedNitroCode()">Копировать</button></div></div><div class="ah-nitro-sep"></div><h2>Купленные подарки</h2><div id="ah-nitro-gifts-empty" class="ah-nitro-empty"><div><div class="ah-nitro-empty-illu"></div><h2 style="margin:0 0 8px">Нет подарков.</h2><p>Хотите сделать что-то хорошее? Подарите кому-нибудь Nitro!</p></div></div></div>';
@@ -2677,11 +2687,11 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     const credit = document.getElementById('ah-nitro-credit-box');
     if(!box || !credit) return;
     if(active){
-      box.innerHTML = '<div class="ah-nitro-card"><div class="ah-nitro-card-row"><div class="ah-nitro-card-title"><span class="ah-nitro-icon">'+nitroIconSvg+'</span><span>AlexiHub Nitro</span></div><b>Активные</b></div><div class="ah-nitro-card-bottom"><span>Осталось времени (всего)</span><span class="ah-nitro-pill">'+Number(sub.days_left||1)+' день</span></div></div>';
-      credit.innerHTML = '<div class="ah-nitro-card"><div class="ah-nitro-card-row"><div class="ah-nitro-card-title"><span class="ah-nitro-icon">'+nitroIconSvg+'</span><span>Кредит Nitro</span></div><b>Активные</b></div><div class="ah-nitro-card-bottom"><span>Подписчик с '+esc(fmtDate(sub.started_at))+'</span><span class="ah-nitro-pill">'+Number(sub.days_left||1)+' день</span></div></div>';
+      box.innerHTML = '<div class="ah-nitro-card"><div class="ah-nitro-card-row"><div class="ah-nitro-card-title">'+tierBigTitleHtml(sub)+'</div><b>Активные</b></div><div class="ah-nitro-card-bottom"><span>Осталось времени (всего)</span><span class="ah-nitro-pill">'+Number(sub.days_left||1)+' день</span></div></div>';
+      credit.innerHTML = '<div class="ah-nitro-card"><div class="ah-nitro-card-row"><div class="ah-nitro-card-title">'+tierBigTitleHtml(sub)+'</div><b>Активные</b></div><div class="ah-nitro-card-bottom"><span>Подписчик с '+esc(fmtDate(sub.started_at))+'</span><span class="ah-nitro-pill">'+Number(sub.duration_days||sub.days_left||1)+' дней активировано</span></div></div>';
     } else {
-      box.innerHTML = '<div class="ah-nitro-card"><div class="ah-nitro-card-row"><div class="ah-nitro-card-title"><span class="ah-nitro-icon">'+nitroIconSvg+'</span><span>У вас нет активных подписок</span></div></div></div>';
-      credit.innerHTML = '<div class="ah-nitro-card"><div class="ah-nitro-card-row"><div class="ah-nitro-card-title"><span class="ah-nitro-icon">'+nitroIconSvg+'</span><span>У вас нет активного кредита Nitro</span></div></div></div>';
+      box.innerHTML = '<div class="ah-nitro-card"><div class="ah-nitro-card-row"><div class="ah-nitro-card-title"><span class="ah-nitro-icon">'+tierBadgeHtml({active:true,tier:'basic'},true)+'</span><span>У вас нет активных подписок</span></div></div></div>';
+      credit.innerHTML = '<div class="ah-nitro-card"><div class="ah-nitro-card-row"><div class="ah-nitro-card-title"><span class="ah-nitro-icon">'+tierBadgeHtml({active:true,tier:'basic'},true)+'</span><span>У вас нет активного кредита Nitro</span></div></div></div>';
     }
   }
 
@@ -2745,10 +2755,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
       return nitro;
     }catch(e){ return {active:false}; }
   }
-  function badgeHtml(nitro){
-    const title = nitro && nitro.active ? 'Подписчик с '+fmtDate(nitro.started_at) : '';
-    return '<span class="ah-nitro-profile-badge" title="'+esc(title)+'">'+nitroIconSvg+'</span>';
-  }
+  function badgeHtml(nitro){ return tierBadgeHtml(nitro,false); }
   function setBadgeAfter(el, nitro){
     if(!el) return;
     const next = el.nextElementSibling;
@@ -2780,7 +2787,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   }
   function refreshSelfNitroBadges(sub){
     const username = {{ account.username|tojson }};
-    nitroCache.set(String(username).toLowerCase(), {active:!!sub.active, started_at:sub.started_at, expires_at:sub.expires_at, days_left:sub.days_left});
+    nitroCache.set(String(username).toLowerCase(), {active:!!sub.active, started_at:sub.started_at, expires_at:sub.expires_at, days_left:sub.days_left, duration_days:sub.duration_days, tier:sub.tier, tier_label:sub.tier_label});
     hydrateVisibleProfileBadge();
   }
 
@@ -2806,6 +2813,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   });
 })();
 </script>
+
 
 </body>
 </html>
