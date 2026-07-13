@@ -3034,5 +3034,175 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
 })();
 </script>
 
+
+<!-- Nitro badge corner + tooltip portal fix -->
+<style id="ah-nitro-corner-tooltip-fix">
+.ah-v3-mini,
+.ah-v3-full,
+.ah-profile-live-card,
+.profile-card,
+.right-profile,
+.self-profile-card{
+  overflow:hidden!important;
+  isolation:isolate!important;
+}
+.ah-v3-full-left,
+.ah-v3-banner,
+.ah-v3-full-banner,
+.banner{
+  overflow:hidden!important;
+}
+.ah-v3-full-right{
+  overflow:auto!important;
+}
+.ah-v3-body,
+.profile-body,
+.ah-v3-name-row,
+.ah-profile-live-name,
+.ah-v3-name,
+.ah-v3-full-name,
+.profile-body h2,
+.right-profile h2,
+.profile-name{
+  overflow:visible!important;
+}
+.ah-nitro-profile-badge:hover::before,
+.ah-nitro-profile-badge:hover::after{
+  content:none!important;
+  display:none!important;
+}
+#ah-nitro-tooltip-portal{
+  position:fixed;
+  left:0;top:0;
+  transform:translate3d(0,0,0);
+  z-index:2147483646;
+  max-width:min(250px,calc(100vw - 16px));
+  min-width:170px;
+  background:#111214;
+  color:#fff;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:8px;
+  padding:8px 10px;
+  font-size:12px;
+  font-weight:800;
+  line-height:1.25;
+  text-align:center;
+  box-shadow:0 12px 30px rgba(0,0,0,.42);
+  pointer-events:none;
+  opacity:0;
+  visibility:hidden;
+  transition:opacity .12s ease,visibility .12s ease;
+}
+#ah-nitro-tooltip-portal.show{
+  opacity:1;
+  visibility:visible;
+}
+#ah-nitro-tooltip-portal::after{
+  content:'';
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%) rotate(45deg);
+  width:9px;height:9px;
+  background:#111214;
+  border-right:1px solid rgba(255,255,255,.08);
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+#ah-nitro-tooltip-portal[data-placement="top"]::after{
+  bottom:-5px;
+}
+#ah-nitro-tooltip-portal[data-placement="bottom"]::after{
+  top:-5px;
+  transform:translateX(-50%) rotate(225deg);
+}
+</style>
+<script>
+(function(){
+  if(window.__ahNitroTooltipPortalInit) return;
+  window.__ahNitroTooltipPortalInit = true;
+
+  function ensureTip(){
+    let tip = document.getElementById('ah-nitro-tooltip-portal');
+    if(!tip){
+      tip = document.createElement('div');
+      tip.id = 'ah-nitro-tooltip-portal';
+      tip.setAttribute('aria-hidden','true');
+      document.body.appendChild(tip);
+    }
+    return tip;
+  }
+
+  let activeBadge = null;
+  let tip = null;
+
+  function getBadge(node){
+    return node && node.closest ? node.closest('.ah-nitro-profile-badge[data-title]') : null;
+  }
+
+  function placeTip(){
+    if(!activeBadge || !tip) return;
+    const rect = activeBadge.getBoundingClientRect();
+    tip.style.left = '0px';
+    tip.style.top = '0px';
+    tip.dataset.placement = 'top';
+    const tRect0 = tip.getBoundingClientRect();
+    let left = rect.left + rect.width / 2 - tRect0.width / 2;
+    left = Math.max(8, Math.min(left, window.innerWidth - tRect0.width - 8));
+    let top = rect.top - tRect0.height - 12;
+    let placement = 'top';
+    if(top < 8){
+      top = rect.bottom + 12;
+      placement = 'bottom';
+    }
+    tip.dataset.placement = placement;
+    tip.style.left = left + 'px';
+    tip.style.top = top + 'px';
+  }
+
+  function showTip(badge){
+    const text = badge.getAttribute('data-title');
+    if(!text) return;
+    tip = ensureTip();
+    activeBadge = badge;
+    tip.textContent = text;
+    tip.classList.add('show');
+    placeTip();
+  }
+
+  function hideTip(){
+    if(!tip) return;
+    tip.classList.remove('show');
+    activeBadge = null;
+  }
+
+  document.addEventListener('mouseover', function(e){
+    const badge = getBadge(e.target);
+    if(!badge) return;
+    if(activeBadge === badge) return;
+    showTip(badge);
+  }, true);
+
+  document.addEventListener('mouseout', function(e){
+    const badge = getBadge(e.target);
+    if(!badge) return;
+    const related = e.relatedTarget;
+    if(related && badge.contains(related)) return;
+    if(activeBadge === badge) hideTip();
+  }, true);
+
+  document.addEventListener('focusin', function(e){
+    const badge = getBadge(e.target);
+    if(badge) showTip(badge);
+  }, true);
+
+  document.addEventListener('focusout', function(e){
+    const badge = getBadge(e.target);
+    if(badge && activeBadge === badge) hideTip();
+  }, true);
+
+  window.addEventListener('scroll', placeTip, true);
+  window.addEventListener('resize', placeTip);
+})();
+</script>
+
 </body>
 </html>
