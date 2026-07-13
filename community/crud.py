@@ -1785,22 +1785,58 @@ async def create_nitro_gift_code(db: AsyncSession, creator_id: int, days: int = 
     }
 
 
+
+def _nitro_tier_for_days(days: int | float | None) -> dict:
+    try:
+        d = int(days or 0)
+    except Exception:
+        d = 0
+    if d > 100:
+        return {"tier": "diamond", "tier_label": "Алмаз Nitro"}
+    if d > 60:
+        return {"tier": "platinum", "tier_label": "Платина Nitro"}
+    if d > 30:
+        return {"tier": "gold", "tier_label": "Золото Nitro"}
+    return {"tier": "basic", "tier_label": "AlexiHub Nitro"}
+
+
 def _nitro_payload_from_row(row) -> dict:
     if not row:
-        return {"active": False, "started_at": None, "expires_at": None, "days_left": 0}
+        return {
+            "active": False,
+            "started_at": None,
+            "expires_at": None,
+            "days_left": 0,
+            "duration_days": 0,
+            "tier": "none",
+            "tier_label": "",
+            "source_code": None,
+        }
     now = datetime.now(timezone.utc)
     expires_at = row['expires_at']
     started_at = row['started_at']
+    if expires_at and expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    if started_at and started_at.tzinfo is None:
+        started_at = started_at.replace(tzinfo=timezone.utc)
     active = bool(expires_at and expires_at > now)
     days_left = 0
+    duration_days = 0
+    if started_at and expires_at:
+        total_seconds = max(0, (expires_at - started_at).total_seconds())
+        duration_days = max(1, int((total_seconds + 86399) // 86400))
     if active:
         seconds = max(0, (expires_at - now).total_seconds())
         days_left = max(1, int((seconds + 86399) // 86400))
+    tier = _nitro_tier_for_days(duration_days if active else 0)
     return {
         "active": active,
         "started_at": started_at.isoformat() if started_at else None,
         "expires_at": expires_at.isoformat() if expires_at else None,
         "days_left": days_left,
+        "duration_days": duration_days if active else 0,
+        "tier": tier["tier"] if active else "none",
+        "tier_label": tier["tier_label"] if active else "",
         "source_code": row.get('source_code') if hasattr(row, 'get') else row['source_code'],
     }
 
@@ -1881,4 +1917,7 @@ async def nitro_profile_payload(db: AsyncSession, account_id: int) -> dict:
         "started_at": sub.get('started_at'),
         "expires_at": sub.get('expires_at'),
         "days_left": sub.get('days_left') or 0,
+        "duration_days": sub.get('duration_days') or 0,
+        "tier": sub.get('tier') or "none",
+        "tier_label": sub.get('tier_label') or "",
     }
