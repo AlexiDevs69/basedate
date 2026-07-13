@@ -1672,3 +1672,205 @@ async def unpin_server_message(db: AsyncSession, server_id: int, channel_id: int
     """), {"server_id": int(server_id), "channel_id": int(channel_id), "message_id": int(message_id)})).first()
     await db.commit()
     return bool(row)
+
+
+# ============================================================================
+# Nitro-like one-time gift codes + user subscription credits.
+# ============================================================================
+
+_NITRO_TABLES_READY = False
+NITRO_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+
+
+async def ensure_nitro_tables(db: AsyncSession) -> None:
+    global _NITRO_TABLES_READY
+    if _NITRO_TABLES_READY:
+        return
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_nitro_gift_codes (
+            id SERIAL PRIMARY KEY,
+            code VARCHAR(64) NOT NULL UNIQUE,
+            days INTEGER NOT NULL DEFAULT 30,
+            note VARCHAR(255),
+            created_by_id INTEGER REFERENCES community_accounts(id) ON DELETE SET NULL,
+            used_by_id INTEGER REFERENCES community_accounts(id) ON DELETE SET NULL,
+            is_used BOOLEAN NOT NULL DEFAULT FALSE,
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+            used_at TIMESTAMP WITH TIME ZONE
+        )
+    """))
+    await db.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ix_community_nitro_gift_codes_code ON community_nitro_gift_codes (code)"))
+    await db.execute(text("CREATE INDEX IF NOT EXISTS ix_community_nitro_gift_codes_used ON community_nitro_gift_codes (is_used, used_by_id)"))
+
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_nitro_subscriptions (
+            id SERIAL PRIMARY KEY,
+            account_id INTEGER NOT NULL UNIQUE REFERENCES community_accounts(id) ON DELETE CASCADE,
+            started_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+            expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+            source_code VARCHAR(64),
+            updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+        )
+    """))
+    await db.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uq_community_nitro_subscriptions_account ON community_nitro_subscriptions (account_id)"))
+    await db.commit()
+    _NITRO_TABLES_READY = True
+
+
+def _chunk_nitro_code(raw: str) -> str:
+    clean = ''.join(ch for ch in raw.upper() if ch.isalnum())[:20]
+    return '-'.join(clean[i:i+5] for i in range(0, len(clean), 5))
+
+
+def _new_nitro_code() -> str:
+    token = ''.join(secrets.choice(NITRO_CODE_ALPHABET) for _ in range(15))
+    return 'ALEXI-' + _chunk_nitro_code(token)
+
+
+def normalize_nitro_code(value: str | None) -> str:
+    clean = (value or '').strip().upper()
+    clean = re.sub(r'[^A-Z0-9-]', '', clean)
+    # Accept ALEXI-XXXXX-XXXXX-XXXXX and also bare XXXXX-XXXXX-XXXXX.
+    if clean and not clean.startswith('ALEXI-') and len(clean.replace('-', '')) >= 12:
+        clean = 'ALEXI-' + _chunk_nitro_code(clean)
+    return clean
+
+
+async def _generate_unique_nitro_code(db: AsyncSession) -> str:
+    await ensure_nitro_tables(db)
+    for _ in range(32):
+        code = _new_nitro_code()
+        row = (await db.execute(text("SELECT id FROM community_nitro_gift_codes WHERE code = :code LIMIT 1"), {"code": code})).first()
+        if not row:
+            return code
+    raise RuntimeError('Could not generate unique Nitro code')
+
+
+def is_nitro_code_generator(account: Account | None) -> bool:
+    if not account:
+        return False
+    role = (getattr(account, 'role_label', None) or '').strip().lower()
+    username = (getattr(account, 'username', None) or '').strip().lower()
+    admin_roles = {'owner', 'admin', 'administrator', 'developer', 'dev', 'code', 'staff', 'модер', 'админ'}
+    return bool(getattr(account, 'is_verified', False) or role in admin_roles or username in {'alexi', 'anchousxvii'})
+
+
+async def create_nitro_gift_code(db: AsyncSession, creator_id: int, days: int = 30, note: str | None = None) -> dict:
+    await ensure_nitro_tables(db)
+    days = max(1, min(int(days or 30), 365))
+    code = await _generate_unique_nitro_code(db)
+    await db.execute(text("""
+        INSERT INTO community_nitro_gift_codes (code, days, note, created_by_id)
+        VALUES (:code, :days, :note, :created_by_id)
+    """), {
+        "code": code,
+        "days": days,
+        "note": (note or '').strip()[:255] or None,
+        "created_by_id": int(creator_id),
+    })
+    await db.commit()
+    row = (await db.execute(text("""
+        SELECT code, days, note, created_at
+        FROM community_nitro_gift_codes
+        WHERE code = :code
+    """), {"code": code})).mappings().first()
+    return dict(row) if row else {"code": code, "days": days, "note": note or '', "created_at": None}
+
+
+def _nitro_payload_from_row(row) -> dict:
+    if not row:
+        return {"active": False, "started_at": None, "expires_at": None, "days_left": 0}
+    now = datetime.now(timezone.utc)
+    expires_at = row['expires_at']
+    started_at = row['started_at']
+    active = bool(expires_at and expires_at > now)
+    days_left = 0
+    if active:
+        seconds = max(0, (expires_at - now).total_seconds())
+        days_left = max(1, int((seconds + 86399) // 86400))
+    return {
+        "active": active,
+        "started_at": started_at.isoformat() if started_at else None,
+        "expires_at": expires_at.isoformat() if expires_at else None,
+        "days_left": days_left,
+        "source_code": row.get('source_code') if hasattr(row, 'get') else row['source_code'],
+    }
+
+
+async def get_nitro_subscription(db: AsyncSession, account_id: int) -> dict:
+    await ensure_nitro_tables(db)
+    row = (await db.execute(text("""
+        SELECT started_at, expires_at, source_code
+        FROM community_nitro_subscriptions
+        WHERE account_id = :account_id
+        LIMIT 1
+    """), {"account_id": int(account_id)})).mappings().first()
+    return _nitro_payload_from_row(row)
+
+
+async def redeem_nitro_gift_code(db: AsyncSession, account_id: int, code_value: str | None) -> dict:
+    await ensure_nitro_tables(db)
+    code = normalize_nitro_code(code_value)
+    if not code:
+        return {"ok": False, "error": "bad_code", "message": "Введи код."}
+
+    row = (await db.execute(text("""
+        SELECT id, code, days, is_used, used_by_id
+        FROM community_nitro_gift_codes
+        WHERE code = :code
+        LIMIT 1
+        FOR UPDATE
+    """), {"code": code})).mappings().first()
+    if not row:
+        return {"ok": False, "error": "not_found", "message": "Код не найден."}
+    if bool(row['is_used']):
+        return {"ok": False, "error": "used", "message": "Код уже использован."}
+
+    now = datetime.now(timezone.utc)
+    current = (await db.execute(text("""
+        SELECT started_at, expires_at, source_code
+        FROM community_nitro_subscriptions
+        WHERE account_id = :account_id
+        LIMIT 1
+    """), {"account_id": int(account_id)})).mappings().first()
+    days = int(row['days'] or 30)
+    base_time = now
+    if current and current['expires_at'] and current['expires_at'] > now:
+        base_time = current['expires_at']
+    expires_at = base_time + timedelta(days=days)
+
+    if current:
+        await db.execute(text("""
+            UPDATE community_nitro_subscriptions
+            SET expires_at = :expires_at,
+                source_code = :source_code,
+                updated_at = NOW()
+            WHERE account_id = :account_id
+        """), {"expires_at": expires_at, "source_code": code, "account_id": int(account_id)})
+    else:
+        await db.execute(text("""
+            INSERT INTO community_nitro_subscriptions (account_id, started_at, expires_at, source_code)
+            VALUES (:account_id, :started_at, :expires_at, :source_code)
+        """), {"account_id": int(account_id), "started_at": now, "expires_at": expires_at, "source_code": code})
+
+    await db.execute(text("""
+        UPDATE community_nitro_gift_codes
+        SET is_used = TRUE,
+            used_by_id = :account_id,
+            used_at = NOW()
+        WHERE id = :id
+    """), {"account_id": int(account_id), "id": int(row['id'])})
+    await db.commit()
+
+    sub = await get_nitro_subscription(db, account_id)
+    return {"ok": True, "code": code, "days_added": days, "subscription": sub}
+
+
+async def nitro_profile_payload(db: AsyncSession, account_id: int) -> dict:
+    sub = await get_nitro_subscription(db, account_id)
+    return {
+        "active": bool(sub.get('active')),
+        "started_at": sub.get('started_at'),
+        "expires_at": sub.get('expires_at'),
+        "days_left": sub.get('days_left') or 0,
+    }
