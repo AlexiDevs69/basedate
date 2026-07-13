@@ -1478,3 +1478,197 @@ async def list_gifts_for_account(db: AsyncSession, account_id: int) -> list[Gift
         .order_by(GiftInstance.created_at.desc())
     )
     return list(result.scalars().all())
+
+
+# ============================================================================
+# Pinned messages: DM + server channel pins.
+# ============================================================================
+
+_PIN_TABLES_READY = False
+
+
+async def ensure_pin_tables(db: AsyncSession) -> None:
+    global _PIN_TABLES_READY
+    if _PIN_TABLES_READY:
+        return
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_direct_message_pins (
+            id SERIAL PRIMARY KEY,
+            thread_id INTEGER NOT NULL REFERENCES community_direct_threads(id) ON DELETE CASCADE,
+            message_id INTEGER NOT NULL REFERENCES community_direct_messages(id) ON DELETE CASCADE,
+            pinned_by_id INTEGER NOT NULL REFERENCES community_accounts(id) ON DELETE CASCADE,
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+        )
+    """))
+    await db.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uq_community_direct_message_pins_message_id ON community_direct_message_pins (message_id)"))
+    await db.execute(text("CREATE INDEX IF NOT EXISTS ix_community_direct_message_pins_thread_created ON community_direct_message_pins (thread_id, created_at DESC)"))
+
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_server_message_pins (
+            id SERIAL PRIMARY KEY,
+            server_id INTEGER NOT NULL REFERENCES community_servers(id) ON DELETE CASCADE,
+            channel_id INTEGER NOT NULL REFERENCES community_server_channels(id) ON DELETE CASCADE,
+            message_id INTEGER NOT NULL REFERENCES community_server_messages(id) ON DELETE CASCADE,
+            pinned_by_id INTEGER NOT NULL REFERENCES community_accounts(id) ON DELETE CASCADE,
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+        )
+    """))
+    await db.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uq_community_server_message_pins_message_id ON community_server_message_pins (message_id)"))
+    await db.execute(text("CREATE INDEX IF NOT EXISTS ix_community_server_message_pins_channel_created ON community_server_message_pins (server_id, channel_id, created_at DESC)"))
+    await db.commit()
+    _PIN_TABLES_READY = True
+
+
+async def _build_dm_pin_payload(db: AsyncSession, *, message: DirectMessage, pinned_by_id: int | None, created_at) -> dict:
+    author = await get_account_by_id(db, message.author_id)
+    pinned_by = await get_account_by_id(db, pinned_by_id) if pinned_by_id else None
+    return {
+        "message_id": int(message.id),
+        "thread_id": int(message.thread_id),
+        "content": message.content or "",
+        "image_url": message.image_url or "",
+        "created_at": message.created_at.isoformat() if getattr(message, 'created_at', None) else None,
+        "pinned_at": created_at.isoformat() if created_at else None,
+        "author": {
+            "id": int(author.id) if author else None,
+            "username": author.username if author else "видалений юзер",
+            "avatar_url": author.avatar_url if author else "",
+        },
+        "pinned_by": {
+            "id": int(pinned_by.id) if pinned_by else None,
+            "username": pinned_by.username if pinned_by else "",
+        },
+    }
+
+
+async def list_dm_pins(db: AsyncSession, thread_id: int) -> list[dict]:
+    await ensure_pin_tables(db)
+    rows = (await db.execute(text("""
+        SELECT message_id, pinned_by_id, created_at
+        FROM community_direct_message_pins
+        WHERE thread_id = :thread_id
+        ORDER BY created_at DESC
+    """), {"thread_id": int(thread_id)})).mappings().all()
+    result: list[dict] = []
+    for row in rows:
+        message = await get_dm_message(db, thread_id, int(row["message_id"]))
+        if not message:
+            continue
+        result.append(await _build_dm_pin_payload(db, message=message, pinned_by_id=row["pinned_by_id"], created_at=row["created_at"]))
+    return result
+
+
+async def pin_dm_message(db: AsyncSession, thread_id: int, message_id: int, pinned_by_id: int) -> tuple[dict | None, bool]:
+    await ensure_pin_tables(db)
+    message = await get_dm_message(db, thread_id, message_id)
+    if not message:
+        return None, False
+    existing = (await db.execute(text("""
+        SELECT pinned_by_id, created_at
+        FROM community_direct_message_pins
+        WHERE message_id = :message_id
+        LIMIT 1
+    """), {"message_id": int(message_id)})).mappings().first()
+    if existing:
+        return await _build_dm_pin_payload(db, message=message, pinned_by_id=existing["pinned_by_id"], created_at=existing["created_at"]), False
+    await db.execute(text("""
+        INSERT INTO community_direct_message_pins (thread_id, message_id, pinned_by_id)
+        VALUES (:thread_id, :message_id, :pinned_by_id)
+    """), {"thread_id": int(thread_id), "message_id": int(message_id), "pinned_by_id": int(pinned_by_id)})
+    await db.commit()
+    created_row = (await db.execute(text("""
+        SELECT pinned_by_id, created_at
+        FROM community_direct_message_pins
+        WHERE message_id = :message_id
+        LIMIT 1
+    """), {"message_id": int(message_id)})).mappings().first()
+    return await _build_dm_pin_payload(db, message=message, pinned_by_id=created_row["pinned_by_id"], created_at=created_row["created_at"]), True
+
+
+async def unpin_dm_message(db: AsyncSession, thread_id: int, message_id: int) -> bool:
+    await ensure_pin_tables(db)
+    row = (await db.execute(text("""
+        DELETE FROM community_direct_message_pins
+        WHERE thread_id = :thread_id AND message_id = :message_id
+        RETURNING id
+    """), {"thread_id": int(thread_id), "message_id": int(message_id)})).first()
+    await db.commit()
+    return bool(row)
+
+
+async def _build_server_pin_payload(db: AsyncSession, *, message: ServerMessage, pinned_by_id: int | None, created_at) -> dict:
+    author = await get_account_by_id(db, message.author_id)
+    pinned_by = await get_account_by_id(db, pinned_by_id) if pinned_by_id else None
+    return {
+        "message_id": int(message.id),
+        "server_id": int(message.server_id),
+        "channel_id": int(message.channel_id),
+        "content": message.content or "",
+        "image_url": message.image_url or "",
+        "created_at": message.created_at.isoformat() if getattr(message, 'created_at', None) else None,
+        "pinned_at": created_at.isoformat() if created_at else None,
+        "author": {
+            "id": int(author.id) if author else None,
+            "username": author.username if author else "видалений юзер",
+            "avatar_url": author.avatar_url if author else "",
+        },
+        "pinned_by": {
+            "id": int(pinned_by.id) if pinned_by else None,
+            "username": pinned_by.username if pinned_by else "",
+        },
+    }
+
+
+async def list_server_pins(db: AsyncSession, server_id: int, channel_id: int) -> list[dict]:
+    await ensure_pin_tables(db)
+    rows = (await db.execute(text("""
+        SELECT message_id, pinned_by_id, created_at
+        FROM community_server_message_pins
+        WHERE server_id = :server_id AND channel_id = :channel_id
+        ORDER BY created_at DESC
+    """), {"server_id": int(server_id), "channel_id": int(channel_id)})).mappings().all()
+    result: list[dict] = []
+    for row in rows:
+        message = await get_server_message(db, server_id, channel_id, int(row["message_id"]))
+        if not message:
+            continue
+        result.append(await _build_server_pin_payload(db, message=message, pinned_by_id=row["pinned_by_id"], created_at=row["created_at"]))
+    return result
+
+
+async def pin_server_message(db: AsyncSession, server_id: int, channel_id: int, message_id: int, pinned_by_id: int) -> tuple[dict | None, bool]:
+    await ensure_pin_tables(db)
+    message = await get_server_message(db, server_id, channel_id, message_id)
+    if not message:
+        return None, False
+    existing = (await db.execute(text("""
+        SELECT pinned_by_id, created_at
+        FROM community_server_message_pins
+        WHERE message_id = :message_id
+        LIMIT 1
+    """), {"message_id": int(message_id)})).mappings().first()
+    if existing:
+        return await _build_server_pin_payload(db, message=message, pinned_by_id=existing["pinned_by_id"], created_at=existing["created_at"]), False
+    await db.execute(text("""
+        INSERT INTO community_server_message_pins (server_id, channel_id, message_id, pinned_by_id)
+        VALUES (:server_id, :channel_id, :message_id, :pinned_by_id)
+    """), {"server_id": int(server_id), "channel_id": int(channel_id), "message_id": int(message_id), "pinned_by_id": int(pinned_by_id)})
+    await db.commit()
+    created_row = (await db.execute(text("""
+        SELECT pinned_by_id, created_at
+        FROM community_server_message_pins
+        WHERE message_id = :message_id
+        LIMIT 1
+    """), {"message_id": int(message_id)})).mappings().first()
+    return await _build_server_pin_payload(db, message=message, pinned_by_id=created_row["pinned_by_id"], created_at=created_row["created_at"]), True
+
+
+async def unpin_server_message(db: AsyncSession, server_id: int, channel_id: int, message_id: int) -> bool:
+    await ensure_pin_tables(db)
+    row = (await db.execute(text("""
+        DELETE FROM community_server_message_pins
+        WHERE server_id = :server_id AND channel_id = :channel_id AND message_id = :message_id
+        RETURNING id
+    """), {"server_id": int(server_id), "channel_id": int(channel_id), "message_id": int(message_id)})).first()
+    await db.commit()
+    return bool(row)
