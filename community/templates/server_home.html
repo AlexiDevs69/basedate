@@ -2492,7 +2492,8 @@ if (typeof window.openSelfProfileSettings !== 'function') {
   }
   function tierBadgeHtml(nitro, big=false){
     const tier = tierFromNitro(nitro);
-    const title = nitro && nitro.active ? tierLabel(nitro)+' · Подписчик с '+fmtDate(nitro.started_at) : tierLabel(nitro);
+    const started = nitro && nitro.started_at ? fmtDate(nitro.started_at) : '';
+    const title = nitro && nitro.active && started ? tierLabel(nitro)+' · Подписчик с '+started : tierLabel(nitro);
     return '<span class="ah-nitro-profile-badge tier-'+esc(tier)+' '+(big?'ah-nitro-big-badge':'')+'" title="'+esc(title)+'" data-title="'+esc(title)+'"><span class="ah-nitro-medal"></span></span>';
   }
   function tierBigTitleHtml(nitro){ return '<span class="ah-nitro-big-tier">'+tierBadgeHtml(nitro,true)+'<span>'+esc(tierLabel(nitro))+'</span></span>'; }
@@ -2654,6 +2655,175 @@ if (typeof window.openSelfProfileSettings !== 'function') {
 })();
 </script>
 
+
+
+
+<style id="ah-nitro-badge-ui-fix">
+/* Nitro badge polish: do not render tooltip inside tiny profile cards. */
+.ah-nitro-profile-badge:hover::before,
+.ah-nitro-profile-badge:hover::after{
+  display:none!important;
+  content:none!important;
+}
+.ah-nitro-profile-badge{
+  flex:0 0 auto!important;
+  overflow:visible!important;
+  contain:none!important;
+  margin-left:6px!important;
+  vertical-align:-4px!important;
+}
+.ah-nitro-profile-badge .ah-nitro-medal{
+  overflow:visible!important;
+}
+.ah-v3-mini,
+.ah-v3-full,
+.ah-v3-body,
+.ah-v3-name-row,
+.ah-profile-live-card,
+.profile-card,
+.right-profile,
+.profile-body{
+  overflow:visible!important;
+}
+.ah-v3-name + .ah-nitro-profile-badge,
+#ah-v3-name + .ah-nitro-profile-badge,
+#ah-v3-full-name + .ah-nitro-profile-badge,
+.ah-profile-live-name + .ah-nitro-profile-badge,
+.profile-name + .ah-nitro-profile-badge,
+.right-profile h2 + .ah-nitro-profile-badge{
+  position:relative!important;
+  top:1px!important;
+}
+.ah-nitro-icon .ah-nitro-profile-badge,
+.ah-nitro-big-tier .ah-nitro-profile-badge,
+.ah-nitro-profile-badge.ah-nitro-big-badge{
+  width:38px!important;
+  height:38px!important;
+  margin:0!important;
+  vertical-align:middle!important;
+}
+.ah-nitro-icon .ah-nitro-medal,
+.ah-nitro-big-tier .ah-nitro-medal,
+.ah-nitro-profile-badge.ah-nitro-big-badge .ah-nitro-medal{
+  width:38px!important;
+  height:38px!important;
+}
+.ah-nitro-icon .ah-nitro-medal:before,
+.ah-nitro-big-tier .ah-nitro-medal:before,
+.ah-nitro-profile-badge.ah-nitro-big-badge .ah-nitro-medal:before{
+  inset:7px!important;
+}
+.ah-nitro-icon .ah-nitro-medal:after,
+.ah-nitro-big-tier .ah-nitro-medal:after,
+.ah-nitro-profile-badge.ah-nitro-big-badge .ah-nitro-medal:after{
+  width:13px!important;
+  height:13px!important;
+  border-width:3px!important;
+}
+.ah-nitro-big-tier{
+  min-height:42px!important;
+  gap:12px!important;
+}
+.ah-nitro-card-title{
+  gap:10px!important;
+  min-width:0!important;
+}
+.ah-nitro-card-title .ah-nitro-icon{
+  margin-right:0!important;
+  flex:0 0 38px!important;
+}
+.ah-nitro-card-title > span:last-child,
+.ah-nitro-big-tier > span:last-child{
+  min-width:0!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+#ah-nitro-floating-tooltip{
+  position:fixed;
+  z-index:2147483647;
+  max-width:260px;
+  padding:8px 10px;
+  border-radius:8px;
+  background:#111214;
+  color:#fff;
+  border:1px solid rgba(255,255,255,.09);
+  box-shadow:0 12px 30px rgba(0,0,0,.46);
+  font-size:12px;
+  line-height:1.25;
+  font-weight:850;
+  text-align:center;
+  pointer-events:none;
+  opacity:0;
+  transform:translateY(3px) scale(.98);
+  transition:opacity .09s ease, transform .09s ease;
+  white-space:normal;
+}
+#ah-nitro-floating-tooltip.show{
+  opacity:1;
+  transform:translateY(0) scale(1);
+}
+</style>
+
+<script id="ah-nitro-badge-ui-fix-js">
+(function(){
+  if(window.__ahNitroBadgeUiFix) return;
+  window.__ahNitroBadgeUiFix = true;
+
+  function ensureTooltip(){
+    let tip = document.getElementById('ah-nitro-floating-tooltip');
+    if(!tip){
+      tip = document.createElement('div');
+      tip.id = 'ah-nitro-floating-tooltip';
+      document.body.appendChild(tip);
+    }
+    return tip;
+  }
+  function placeTooltip(badge){
+    const tip = ensureTooltip();
+    const text = badge.getAttribute('data-title') || badge.getAttribute('title') || '';
+    if(!text) return;
+    // Native browser title duplicates the custom one and looks ugly in profile cards.
+    if(badge.getAttribute('title')) badge.setAttribute('data-native-title', badge.getAttribute('title'));
+    badge.removeAttribute('title');
+    tip.textContent = text;
+    tip.classList.add('show');
+    tip.style.left = '0px';
+    tip.style.top = '0px';
+    const r = badge.getBoundingClientRect();
+    const tw = Math.min(tip.offsetWidth || 220, 260);
+    const th = tip.offsetHeight || 34;
+    let left = r.left + r.width / 2 - tw / 2;
+    left = Math.max(8, Math.min(left, window.innerWidth - tw - 8));
+    let top = r.top - th - 10;
+    if(top < 8) top = r.bottom + 10;
+    top = Math.max(8, Math.min(top, window.innerHeight - th - 8));
+    tip.style.left = left + 'px';
+    tip.style.top = top + 'px';
+  }
+  function hideTooltip(){
+    const tip = document.getElementById('ah-nitro-floating-tooltip');
+    if(tip) tip.classList.remove('show');
+  }
+  document.addEventListener('mouseover', function(e){
+    const badge = e.target.closest && e.target.closest('.ah-nitro-profile-badge');
+    if(!badge) return;
+    placeTooltip(badge);
+  }, true);
+  document.addEventListener('mousemove', function(e){
+    const badge = e.target.closest && e.target.closest('.ah-nitro-profile-badge');
+    if(!badge) return;
+    placeTooltip(badge);
+  }, true);
+  document.addEventListener('mouseout', function(e){
+    const badge = e.target.closest && e.target.closest('.ah-nitro-profile-badge');
+    if(!badge) return;
+    if(e.relatedTarget && badge.contains(e.relatedTarget)) return;
+    hideTooltip();
+  }, true);
+  document.addEventListener('scroll', hideTooltip, true);
+  window.addEventListener('resize', hideTooltip);
+})();
+</script>
 
 </body>
 </html>
