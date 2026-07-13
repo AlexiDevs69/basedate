@@ -1774,7 +1774,15 @@ async def create_nitro_gift_code(db: AsyncSession, creator_id: int, days: int = 
         FROM community_nitro_gift_codes
         WHERE code = :code
     """), {"code": code})).mappings().first()
-    return dict(row) if row else {"code": code, "days": days, "note": note or '', "created_at": None}
+    if not row:
+        return {"code": code, "days": days, "note": note or '', "created_at": None}
+    created_at = row["created_at"]
+    return {
+        "code": row["code"],
+        "days": int(row["days"] or days),
+        "note": row["note"] or "",
+        "created_at": created_at.isoformat() if created_at else None,
+    }
 
 
 def _nitro_payload_from_row(row) -> dict:
