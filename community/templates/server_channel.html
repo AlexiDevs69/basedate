@@ -2296,6 +2296,8 @@ function openChannelInviteModal(event, btn) {
         if (data.type === 'message_edit') applyServerMessageEdit(data.message || {});
         if (data.type === 'typing') renderTyping(data.users || []);
         if (data.type === 'presence') updateMemberPresence(data.account_id, data.status, data.online);
+        if (data.type === 'pin_add' && data.pin && window.__serverPinsApi) window.__serverPinsApi.upsertServerPin(data.pin);
+        if (data.type === 'pin_remove' && window.__serverPinsApi) window.__serverPinsApi.removeServerPin(data.message_id);
       });
       socket.addEventListener('close', function () {
         setWsStatus('offline', 'reconnecting');
@@ -3532,6 +3534,173 @@ if (typeof window.openSelfProfileSettings !== 'function') {
 .ah-lang-flag-ru{background:linear-gradient(to bottom,#fff 0 33%,#2f6fea 33% 66%,#d52b1e 66%)!important}
 .ah-lang-flag-uk{background:linear-gradient(to bottom,#1e63d6 0 50%,#ffd43b 50%)!important}
 </style>
+
+
+
+<style id="server-pins-style">
+.server-pins-panel{position:fixed;top:64px;right:304px;width:368px;max-height:calc(100vh - 96px);background:#2b2d31;border:1px solid #1f2124;border-radius:14px;box-shadow:0 18px 50px rgba(0,0,0,.35);z-index:60;display:none;overflow:hidden}
+.server-pins-panel.open{display:block}
+.server-pins-head{display:flex;align-items:center;gap:10px;padding:18px 18px 14px;border-bottom:1px solid rgba(255,255,255,.06);font-weight:900;font-size:16px}
+.server-pins-head svg{width:20px;height:20px;opacity:.9}
+.server-pins-body{padding:14px;overflow:auto;max-height:calc(100vh - 150px)}
+.server-pins-empty{display:grid;place-items:center;text-align:center;color:#d2d5da;gap:10px;padding:24px 14px 18px;border-radius:12px;background:rgba(255,255,255,.03)}
+.server-pins-empty svg{width:82px;height:82px;opacity:.22}
+.server-pins-empty small{display:block;color:#9ea4ad;line-height:1.45;font-size:12px}
+.server-pin-card{position:relative;border-radius:12px;background:#313338;border:1px solid rgba(255,255,255,.06);padding:14px 14px 12px 14px;color:#f2f3f5;margin-bottom:10px}
+.server-pin-card:hover .server-pin-hover{opacity:1;pointer-events:auto}
+.server-pin-head{display:flex;align-items:center;gap:10px;margin-bottom:8px;padding-right:120px}
+.server-pin-avatar{width:38px;height:38px;border-radius:50%;background:#5865f2 center/cover no-repeat;flex:0 0 38px;display:grid;place-items:center;font-weight:900}
+.server-pin-name{font-weight:900;line-height:1.05}
+.server-pin-time{font-size:12px;color:#9ea4ad;margin-top:3px}
+.server-pin-content{font-size:14px;line-height:1.4;white-space:pre-wrap;word-break:break-word;color:#e8eaed}
+.server-pin-image{margin-top:9px;max-width:100%;max-height:150px;border-radius:10px;display:block}
+.server-pin-hover{position:absolute;top:10px;right:10px;display:flex;gap:8px;opacity:0;pointer-events:none;transition:opacity .12s ease}
+.server-pin-hover button{border:0;border-radius:8px;background:#3f4248;color:#fff;padding:8px 12px;font:inherit;font-size:13px;font-weight:800;cursor:pointer}
+.server-pin-hover button:hover{filter:brightness(1.08)}
+.server-pin-hover .danger{width:36px;padding:8px 0;background:#4a2a2e}
+.server-pin-modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.74);display:none;align-items:center;justify-content:center;z-index:70;padding:16px}
+.server-pin-modal-backdrop.open{display:flex}
+.server-pin-modal{width:min(560px,100%);background:#313338;border:1px solid #1f2124;border-radius:18px;padding:22px 22px 18px;box-shadow:0 18px 50px rgba(0,0,0,.45);color:#f2f3f5}
+.server-pin-modal h2{margin:0 0 10px;font-size:20px;line-height:1.15}
+.server-pin-modal p{margin:0;color:#c7cbd1;line-height:1.45}
+.server-pin-preview{margin:18px 0 16px;border-radius:12px;background:#2b2d31;padding:14px;display:flex;gap:12px;align-items:flex-start}
+.server-pin-preview .avatar{width:40px;height:40px;border-radius:50%;background:#5865f2 center/cover no-repeat;flex:0 0 40px;display:grid;place-items:center;font-weight:900;color:#fff}
+.server-pin-preview .meta strong{display:block;font-size:18px;line-height:1.1;margin-bottom:2px}
+.server-pin-preview .meta .time{font-size:12px;color:#9ea4ad;margin-left:6px}
+.server-pin-preview .meta .content{margin-top:6px;color:#e6e8eb;white-space:pre-wrap;word-break:break-word}
+.server-pin-preview .meta img{display:block;max-width:120px;max-height:84px;border-radius:10px;margin-top:8px}
+.server-pin-hint{margin:12px 0 0;color:#7ee787;font-size:13px;font-weight:900}
+.server-pin-hint span{display:block;color:#c7cbd1;font-weight:500;margin-top:4px}
+.server-pin-actions{display:flex;gap:10px;margin-top:18px}
+.server-pin-actions button{flex:1;border:0;border-radius:10px;padding:12px 14px;font:inherit;font-weight:900;cursor:pointer}
+.server-pin-actions .secondary{background:#4e5058;color:#fff}
+.server-pin-actions .primary{background:#5865f2;color:#fff}
+.server-pin-actions .danger{background:#da373c;color:#fff}
+.server-pin-system{display:flex;align-items:center;gap:9px;color:#b5bac1;font-size:14px;padding:12px 0 6px 50px}
+.server-pin-system svg{width:18px;height:18px;opacity:.8;flex:0 0 18px}
+.server-pin-system b{color:#e3e5e8}
+.server-pin-system a{color:#dfe3ff;font-weight:800;text-decoration:none}
+.server-pin-system a:hover{text-decoration:underline}
+.message.flash,.msg.flash{animation:pinFlash 1.4s ease}
+@keyframes pinFlash{0%{background:rgba(88,101,242,.35)}100%{background:transparent}}
+@media (max-width: 1380px){.server-pins-panel{right:18px;top:72px;width:min(368px,calc(100vw - 36px));}}
+</style>
+
+<script>
+(function(){
+  const SERVER_PINS_BASE = '/community/api/servers/{{ server.id }}/channels/{{ channel.id }}/pins';
+  const currentViewer = {{ account.username|tojson }};
+  let serverPins = [];
+  let serverPinConfirmTarget = null;
+  let serverUnpinTarget = null;
+
+  function serverPinEscape(v){return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  function serverPinTime(v){if(!v)return ''; try{return new Date(v).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return v;}}
+  function serverPinInitials(v){const s=String(v||'?').trim();return serverPinEscape((s[0]||'?').toUpperCase());}
+  function ensureServerPinsUi(){
+    if(document.getElementById('server-pins-panel')) return;
+    const panel=document.createElement('aside');
+    panel.id='server-pins-panel'; panel.className='server-pins-panel';
+    panel.innerHTML='<div class="server-pins-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3l5 5-6 6v4l-2 2-3.5-3.5L5 21l-2-2 4.5-4.5L4 11l2-2h4z"/></svg><span>Закреплённые сообщения</span></div><div id="server-pins-body" class="server-pins-body"></div>';
+    document.body.appendChild(panel);
+    const modal=document.createElement('div');
+    modal.id='server-pin-confirm-modal'; modal.className='server-pin-modal-backdrop';
+    modal.innerHTML='<div class="server-pin-modal"><h2 id="server-pin-modal-title">Закрепите это. Хорошо закрепите.</h2><p id="server-pin-modal-text">Просто уточняю, вы хотите закрепить это сообщение в канале #{{ channel.name }} для потомков и величия?</p><div id="server-pin-preview" class="server-pin-preview"></div><div class="server-pin-actions"><button class="secondary" type="button" onclick="closeServerPinConfirm()">Отмена</button><button id="server-pin-confirm-btn" class="primary" type="button">О, да. Закрепите это.</button></div></div>';
+    document.body.appendChild(modal);
+    const unpin=document.createElement('div');
+    unpin.id='server-unpin-confirm-modal'; unpin.className='server-pin-modal-backdrop';
+    unpin.innerHTML='<div class="server-pin-modal"><h2>Открепить сообщение</h2><p>Вы уверены, что хотите удалить сообщение из закреплённых?</p><div id="server-unpin-preview" class="server-pin-preview"></div><div class="server-pin-hint"><strong>ПОДСКАЗКА:</strong><span>Чтобы полностью обойти это подтверждение, удерживайте Shift при нажатии на «открепить сообщение».</span></div><div class="server-pin-actions"><button class="secondary" type="button" onclick="closeServerUnpinConfirm()">Отмена</button><button id="server-unpin-confirm-btn" class="danger" type="button">Ага, уберите его, пожалуйста!</button></div></div>';
+    document.body.appendChild(unpin);
+    panel.addEventListener('click', function(e){e.stopPropagation();});
+    modal.addEventListener('click', function(e){if(e.target===modal) closeServerPinConfirm();});
+    unpin.addEventListener('click', function(e){if(e.target===unpin) closeServerUnpinConfirm();});
+    document.getElementById('server-pin-confirm-btn').addEventListener('click', submitServerPinConfirm);
+    document.getElementById('server-unpin-confirm-btn').addEventListener('click', submitServerUnpinConfirm);
+  }
+  function getServerPinBtn(){ return document.querySelector('.discord-tool-btn.pin-btn'); }
+  function bindServerPinButtons(){
+    const btn=getServerPinBtn(); if(btn) btn.onclick=function(e){ e.preventDefault(); toggleServerPinsPanel(); };
+    const ctxBtns=Array.from(document.querySelectorAll('.ctx-item')).filter(btn => /Закрепить сообщение/i.test(btn.textContent||''));
+    ctxBtns.forEach(btn => btn.onclick=function(e){ e.preventDefault(); openServerPinConfirmFromMenu(); });
+  }
+  function renderServerPinPreview(container, source){
+    if(!container) return;
+    if(!source){ container.innerHTML=''; return; }
+    const author = source.author || {username: source.messageAuthor || '?', avatar_url: source.messageAvatar || ''};
+    const avatarStyle = author.avatar_url ? "style=\"background-image:url('"+String(author.avatar_url).replace(/'/g,'%27')+"')\"" : '';
+    const initials = author.avatar_url ? '' : serverPinInitials(author.username);
+    const image = source.image_url ? '<img src="'+serverPinEscape(source.image_url)+'" alt="">' : '';
+    container.innerHTML = '<div class="avatar" '+avatarStyle+'>'+initials+'</div><div class="meta"><div><strong>'+serverPinEscape(author.username || '?')+'</strong><span class="time">'+serverPinEscape(serverPinTime(source.created_at || source.messageTime || ''))+'</span></div><div class="content">'+serverPinEscape(source.content || source.messageContent || '')+'</div>'+image+'</div>';
+  }
+  function showServerPinsEmpty(){
+    const body=document.getElementById('server-pins-body'); if(!body) return;
+    body.innerHTML='<div class="server-pins-empty"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 3l5 5-6 6v4l-2 2-3.5-3.5L5 21l-2-2 4.5-4.5L4 11l2-2h4z"/></svg><div><div style="font-weight:900;font-size:18px;margin-bottom:6px;">В этом канале нет закреплённых сообщений... пока что.</div><small><b>ПОДСКАЗКА:</b><br>Вы можете закрепить сообщение при помощи контекстного меню.</small></div></div>';
+  }
+  function renderServerPinsPanel(){
+    const body=document.getElementById('server-pins-body'); if(!body) return;
+    if(!serverPins.length){ showServerPinsEmpty(); return; }
+    body.innerHTML = serverPins.map(pin => {
+      const author = pin.author || {};
+      const avatarStyle = author.avatar_url ? "style=\"background-image:url('"+String(author.avatar_url).replace(/'/g,'%27')+"')\"" : '';
+      const image = pin.image_url ? '<img class="server-pin-image" src="'+serverPinEscape(pin.image_url)+'" alt="">' : '';
+      return '<div class="server-pin-card" data-pin-message-id="'+Number(pin.message_id)+'"><div class="server-pin-hover"><button type="button" onclick="jumpToServerPinnedMessage('+Number(pin.message_id)+')">Перейти</button><button type="button" class="danger" onclick="openServerUnpinConfirmById('+Number(pin.message_id)+')">×</button></div><div class="server-pin-head"><div class="server-pin-avatar" '+avatarStyle+'>'+(author.avatar_url ? '' : serverPinInitials(author.username || '?'))+'</div><div><div class="server-pin-name">'+serverPinEscape(author.username || '?')+'</div><div class="server-pin-time">'+serverPinEscape(serverPinTime(pin.created_at || pin.pinned_at || ''))+'</div></div></div><div class="server-pin-content">'+serverPinEscape(pin.content || '')+'</div>'+image+'</div>';
+    }).join('');
+  }
+  async function loadServerPins(openAfter){
+    ensureServerPinsUi();
+    try{
+      const res = await fetch(SERVER_PINS_BASE, {credentials:'same-origin'});
+      const data = await res.json();
+      serverPins = Array.isArray(data.pins) ? data.pins : [];
+      renderServerPinsPanel();
+      if(openAfter) document.getElementById('server-pins-panel')?.classList.add('open');
+    }catch(e){ showServerPinsEmpty(); if(openAfter) document.getElementById('server-pins-panel')?.classList.add('open'); }
+  }
+  window.toggleServerPinsPanel = function(){ ensureServerPinsUi(); const panel=document.getElementById('server-pins-panel'); if(!panel) return; const willOpen=!panel.classList.contains('open'); if(willOpen) loadServerPins(true); else panel.classList.remove('open'); };
+  function serverMessageSourceFromRow(row){
+    if(!row) return null;
+    const imgNode=row.querySelector('.message-image');
+    const timeNode=row.querySelector('.message-time');
+    return {
+      message_id: Number(row.dataset.messageId || 0),
+      content: row.dataset.messageContent || '',
+      image_url: imgNode ? (imgNode.getAttribute('src') || '') : '',
+      created_at: timeNode ? timeNode.textContent.trim() : '',
+      author: { username: row.dataset.messageAuthor || '?', avatar_url: row.dataset.messageAvatar || '' }
+    };
+  }
+  window.openServerPinConfirmFromMenu = function(){ if(typeof activeMessageEl === 'undefined' || !activeMessageEl) return; closeMessageMenu(); openServerPinConfirmFromRow(activeMessageEl); };
+  function openServerPinConfirmFromRow(row){ ensureServerPinsUi(); serverPinConfirmTarget = serverMessageSourceFromRow(row); if(!serverPinConfirmTarget || !serverPinConfirmTarget.message_id) return; renderServerPinPreview(document.getElementById('server-pin-preview'), serverPinConfirmTarget); document.getElementById('server-pin-confirm-modal').classList.add('open'); }
+  window.closeServerPinConfirm = function(){ const el=document.getElementById('server-pin-confirm-modal'); if(el) el.classList.remove('open'); serverPinConfirmTarget=null; };
+  async function submitServerPinConfirm(){
+    if(!serverPinConfirmTarget || !serverPinConfirmTarget.message_id) return;
+    const res = await fetch(SERVER_PINS_BASE + '/' + serverPinConfirmTarget.message_id, {method:'POST', credentials:'same-origin'});
+    const data = await res.json().catch(()=>({ok:false}));
+    if(data && data.ok && data.pin){ upsertServerPin(data.pin); renderServerPinsPanel(); insertServerPinNotice((data.pin.pinned_by && data.pin.pinned_by.username) || currentViewer); closeServerPinConfirm(); const panel=document.getElementById('server-pins-panel'); if(panel) panel.classList.add('open'); }
+  }
+  function upsertServerPin(pin){ if(!pin || !pin.message_id) return; const idx = serverPins.findIndex(x => Number(x.message_id) === Number(pin.message_id)); if(idx >= 0) serverPins[idx] = pin; else serverPins.unshift(pin); }
+  function removeServerPin(messageId){ serverPins = serverPins.filter(x => Number(x.message_id) !== Number(messageId)); renderServerPinsPanel(); }
+  window.openServerUnpinConfirmById = function(messageId){ ensureServerPinsUi(); serverUnpinTarget = serverPins.find(x => Number(x.message_id) === Number(messageId)) || null; if(!serverUnpinTarget) return; renderServerPinPreview(document.getElementById('server-unpin-preview'), serverUnpinTarget); document.getElementById('server-unpin-confirm-modal').classList.add('open'); };
+  window.closeServerUnpinConfirm = function(){ const el=document.getElementById('server-unpin-confirm-modal'); if(el) el.classList.remove('open'); serverUnpinTarget=null; };
+  async function submitServerUnpinConfirm(){
+    if(!serverUnpinTarget || !serverUnpinTarget.message_id) return;
+    const res = await fetch(SERVER_PINS_BASE + '/' + serverUnpinTarget.message_id, {method:'DELETE', credentials:'same-origin'});
+    const data = await res.json().catch(()=>({ok:false}));
+    if(data && data.ok){ removeServerPin(serverUnpinTarget.message_id); closeServerUnpinConfirm(); }
+  }
+  window.jumpToServerPinnedMessage = function(messageId){ const row=document.getElementById('message-'+messageId); if(row){ row.scrollIntoView({behavior:'smooth', block:'center'}); row.classList.add('flash'); setTimeout(()=>row.classList.remove('flash'), 1600); } };
+  function insertServerPinNotice(actorName){
+    const messages=document.getElementById('messages'); if(!messages || !serverPinConfirmTarget) return;
+    const el=document.createElement('div'); el.className='server-pin-system';
+    el.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3l5 5-6 6v4l-2 2-3.5-3.5L5 21l-2-2 4.5-4.5L4 11l2-2h4z"/></svg><span><b>'+serverPinEscape(actorName || currentViewer)+'</b> закрепляет сообщение на этом канале. <a href="#" onclick="toggleServerPinsPanel();return false;">Показать все закреплённые сообщения.</a></span>';
+    messages.appendChild(el);
+    const main=document.querySelector('.chat-main'); if(main) main.scrollTop = main.scrollHeight;
+  }
+  function bindServerPinGlobalClose(){ document.addEventListener('click', function(e){ const panel=document.getElementById('server-pins-panel'); if(panel && panel.classList.contains('open')){ const btn=getServerPinBtn(); if(!panel.contains(e.target) && !(btn && btn.contains(e.target))) panel.classList.remove('open'); } }, true); }
+  document.addEventListener('DOMContentLoaded', function(){ ensureServerPinsUi(); bindServerPinButtons(); bindServerPinGlobalClose(); loadServerPins(false); });
+  window.__serverPinsApi = {upsertServerPin, removeServerPin, loadServerPins, insertServerPinNotice};
+})();
+</script>
 
 </body>
 </html>
