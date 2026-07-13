@@ -1423,6 +1423,75 @@ async def api_respond_server_invite(invite_code: str, request: Request, db: Asyn
 
 
 
+
+
+@router.get("/api/nitro/me")
+async def api_nitro_me(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    sub = await crud.get_nitro_subscription(db, account.id)
+    return JSONResponse({
+        "ok": True,
+        "subscription": sub,
+        "can_generate": crud.is_nitro_code_generator(account),
+    })
+
+
+@router.post("/api/nitro/redeem")
+async def api_nitro_redeem(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    code = ""
+    try:
+        body = await request.json()
+        code = str(body.get("code") or "")
+    except Exception:
+        try:
+            form = await request.form()
+            code = str(form.get("code") or "")
+        except Exception:
+            code = ""
+    result = await crud.redeem_nitro_gift_code(db, account.id, code)
+    return JSONResponse(result, status_code=200 if result.get("ok") else 400)
+
+
+@router.post("/api/nitro/generate")
+async def api_nitro_generate(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    if not crud.is_nitro_code_generator(account):
+        return JSONResponse({"ok": False, "error": "forbidden", "message": "Генерация доступна только CODE/admin."}, status_code=403)
+    days = 30
+    note = ""
+    try:
+        body = await request.json()
+        days = int(body.get("days") or 30)
+        note = str(body.get("note") or "")
+    except Exception:
+        try:
+            form = await request.form()
+            days = int(form.get("days") or 30)
+            note = str(form.get("note") or "")
+        except Exception:
+            pass
+    code = await crud.create_nitro_gift_code(db, account.id, days=days, note=note)
+    return JSONResponse({"ok": True, "code": code})
+
+
+@router.get("/api/users/{username}/nitro")
+async def api_user_nitro(username: str, request: Request, db: AsyncSession = Depends(get_db)):
+    viewer = await current_account(request, db)
+    if not viewer:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    account = await crud.get_account_by_username(db, username)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
+    payload = await crud.nitro_profile_payload(db, account.id)
+    return JSONResponse({"ok": True, "username": account.username, "nitro": payload})
+
 @router.get("/api/dm/{username}/pins")
 async def api_list_dm_pins(username: str, request: Request, db: AsyncSession = Depends(get_db)):
     account = await current_account(request, db)
