@@ -1358,6 +1358,12 @@ function connect(){
       const users=(data.users||[]).filter(u=>u.id!==currentUser.id);
       typingEl.textContent=users.length?users.map(u=>u.username).join(', ')+' друкує...':'';
     }
+    if(data.type==='pin_add' && data.pin){
+      if(window.__dmPinsApi){ window.__dmPinsApi.upsertDmPin(data.pin); }
+    }
+    if(data.type==='pin_remove'){
+      if(window.__dmPinsApi){ window.__dmPinsApi.removeDmPin(data.message_id); }
+    }
   };
 }
 connect();
@@ -2469,6 +2475,198 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
 .ah-lang-flag-ru{background:linear-gradient(to bottom,#fff 0 33%,#2f6fea 33% 66%,#d52b1e 66%)!important}
 .ah-lang-flag-uk{background:linear-gradient(to bottom,#1e63d6 0 50%,#ffd43b 50%)!important}
 </style>
+
+
+
+<style id="dm-pins-style">
+.dm-pins-panel{position:fixed;top:64px;right:300px;width:360px;max-height:calc(100vh - 92px);background:#2b2d31;border:1px solid #1f2124;border-radius:14px;box-shadow:0 18px 50px rgba(0,0,0,.35);z-index:55;display:none;overflow:hidden}
+.dm-pins-panel.open{display:block}
+.dm-pins-head{display:flex;align-items:center;gap:10px;padding:18px 18px 14px;border-bottom:1px solid rgba(255,255,255,.06);font-weight:900;font-size:16px}
+.dm-pins-head svg{width:20px;height:20px;opacity:.9}
+.dm-pins-body{padding:14px;overflow:auto;max-height:calc(100vh - 150px)}
+.dm-pins-empty{display:grid;place-items:center;text-align:center;color:#d2d5da;gap:10px;padding:24px 14px 18px;border-radius:12px;background:rgba(255,255,255,.03)}
+.dm-pins-empty svg{width:82px;height:82px;opacity:.22}
+.dm-pins-empty small{display:block;color:#9ea4ad;line-height:1.45;font-size:12px}
+.dm-pin-card{position:relative;border-radius:12px;background:#313338;border:1px solid rgba(255,255,255,.06);padding:14px 14px 12px 14px;color:#f2f3f5;margin-bottom:10px}
+.dm-pin-card:hover .dm-pin-hover{opacity:1;pointer-events:auto}
+.dm-pin-head{display:flex;align-items:center;gap:10px;margin-bottom:8px;padding-right:120px}
+.dm-pin-avatar{width:38px;height:38px;border-radius:50%;background:#5865f2 center/cover no-repeat;flex:0 0 38px;display:grid;place-items:center;font-weight:900}
+.dm-pin-name{font-weight:900;line-height:1.05}
+.dm-pin-time{font-size:12px;color:#9ea4ad;margin-top:3px}
+.dm-pin-content{font-size:14px;line-height:1.4;white-space:pre-wrap;word-break:break-word;color:#e8eaed}
+.dm-pin-image{margin-top:9px;max-width:100%;max-height:150px;border-radius:10px;display:block}
+.dm-pin-hover{position:absolute;top:10px;right:10px;display:flex;gap:8px;opacity:0;pointer-events:none;transition:opacity .12s ease}
+.dm-pin-hover button{border:0;border-radius:8px;background:#3f4248;color:#fff;padding:8px 12px;font:inherit;font-size:13px;font-weight:800;cursor:pointer}
+.dm-pin-hover button:hover{filter:brightness(1.08)}
+.dm-pin-hover .danger{width:36px;padding:8px 0;background:#4a2a2e}
+.dm-pin-modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.74);display:none;align-items:center;justify-content:center;z-index:70;padding:16px}
+.dm-pin-modal-backdrop.open{display:flex}
+.dm-pin-modal{width:min(520px,100%);background:#313338;border:1px solid #1f2124;border-radius:18px;padding:22px 22px 18px;box-shadow:0 18px 50px rgba(0,0,0,.45);color:#f2f3f5}
+.dm-pin-modal h2{margin:0 0 10px;font-size:20px;line-height:1.15}
+.dm-pin-modal p{margin:0;color:#c7cbd1;line-height:1.45}
+.dm-pin-preview{margin:18px 0 16px;border-radius:12px;background:#2b2d31;padding:14px;display:flex;gap:12px;align-items:flex-start}
+.dm-pin-preview .avatar{width:40px;height:40px;border-radius:50%;background:#5865f2 center/cover no-repeat;flex:0 0 40px;display:grid;place-items:center;font-weight:900;color:#fff}
+.dm-pin-preview .meta strong{display:block;font-size:18px;line-height:1.1;margin-bottom:2px}
+.dm-pin-preview .meta .time{font-size:12px;color:#9ea4ad;margin-left:6px}
+.dm-pin-preview .meta .content{margin-top:6px;color:#e6e8eb;white-space:pre-wrap;word-break:break-word}
+.dm-pin-preview .meta img{display:block;max-width:120px;max-height:84px;border-radius:10px;margin-top:8px}
+.dm-pin-hint{margin:12px 0 0;color:#7ee787;font-size:13px;font-weight:900}
+.dm-pin-hint span{display:block;color:#c7cbd1;font-weight:500;margin-top:4px}
+.dm-pin-actions{display:flex;gap:10px;margin-top:18px}
+.dm-pin-actions button{flex:1;border:0;border-radius:10px;padding:12px 14px;font:inherit;font-weight:900;cursor:pointer}
+.dm-pin-actions .secondary{background:#4e5058;color:#fff}
+.dm-pin-actions .primary{background:#5865f2;color:#fff}
+.dm-pin-actions .danger{background:#da373c;color:#fff}
+.dm-pin-system{display:flex;align-items:center;gap:9px;color:#b5bac1;font-size:14px;padding:14px 0 4px 62px}
+.dm-pin-system svg{width:18px;height:18px;opacity:.8;flex:0 0 18px}
+.dm-pin-system b{color:#e3e5e8}
+.dm-pin-system a{color:#dfe3ff;font-weight:800;text-decoration:none}
+.dm-pin-system a:hover{text-decoration:underline}
+@media (max-width: 1280px){.dm-pins-panel{right:18px;top:72px;width:min(360px,calc(100vw - 36px));}}
+</style>
+
+<script>
+(function(){
+  const DM_PINS_BASE = '/community/api/dm/{{ other.username }}/pins';
+  const currentViewer = {{ account.username|tojson }};
+  let dmPins = [];
+  let dmPinConfirmTarget = null;
+  let dmUnpinTarget = null;
+
+  function dmPinEscape(v){return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  function dmPinTime(v){if(!v)return ''; try{return new Date(v).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return v;}}
+  function dmPinInitials(v){const s=String(v||'?').trim();return dmPinEscape((s[0]||'?').toUpperCase());}
+  function ensureDmPinsUi(){
+    if(document.getElementById('dm-pins-panel')) return;
+    const panel=document.createElement('aside');
+    panel.id='dm-pins-panel'; panel.className='dm-pins-panel';
+    panel.innerHTML='<div class="dm-pins-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M5 17h14"/><path d="M7 4h10l-2 8H9Z"/></svg><span>Закреплённые сообщения</span></div><div id="dm-pins-body" class="dm-pins-body"></div>';
+    document.body.appendChild(panel);
+
+    const modal=document.createElement('div');
+    modal.id='dm-pin-confirm-modal'; modal.className='dm-pin-modal-backdrop';
+    modal.innerHTML='<div class="dm-pin-modal"><h2 id="dm-pin-modal-title">Закрепить это. Хорошо закрепите.</h2><p id="dm-pin-modal-text">Просто уточняю, вы хотите закрепить это сообщение в личном диалоге?</p><div id="dm-pin-preview" class="dm-pin-preview"></div><div id="dm-pin-modal-hint" class="dm-pin-hint" style="display:none"></div><div class="dm-pin-actions"><button class="secondary" type="button" onclick="closeDmPinConfirm()">Отмена</button><button id="dm-pin-confirm-btn" class="primary" type="button">О, да. Закрепите это.</button></div></div>';
+    document.body.appendChild(modal);
+
+    const unpin=document.createElement('div');
+    unpin.id='dm-unpin-confirm-modal'; unpin.className='dm-pin-modal-backdrop';
+    unpin.innerHTML='<div class="dm-pin-modal"><h2>Открепить сообщение</h2><p>Вы уверены, что хотите удалить сообщение из закреплённых?</p><div id="dm-unpin-preview" class="dm-pin-preview"></div><div class="dm-pin-hint"><strong>ПОДСКАЗКА:</strong><span>Чтобы повністю обойти это подтверждение, удерживайте Shift при нажатии на «открепить сообщение».</span></div><div class="dm-pin-actions"><button class="secondary" type="button" onclick="closeDmUnpinConfirm()">Отмена</button><button id="dm-unpin-confirm-btn" class="danger" type="button">Ага, уберите его, пожалуйста!</button></div></div>';
+    document.body.appendChild(unpin);
+
+    panel.addEventListener('click', function(e){e.stopPropagation();});
+    modal.addEventListener('click', function(e){if(e.target===modal) closeDmPinConfirm();});
+    unpin.addEventListener('click', function(e){if(e.target===unpin) closeDmUnpinConfirm();});
+    document.getElementById('dm-pin-confirm-btn').addEventListener('click', submitDmPinConfirm);
+    document.getElementById('dm-unpin-confirm-btn').addEventListener('click', submitDmUnpinConfirm);
+  }
+  function getDmPinBtn(){ return document.querySelector('.top-actions button[title="Pin"]'); }
+  function bindDmPinButtons(){
+    const topBtn = getDmPinBtn();
+    if(topBtn) topBtn.onclick = function(e){ e.preventDefault(); toggleDmPinsPanel(); };
+    const ctxBtns = Array.from(document.querySelectorAll('#dm-message-context-menu .dm-ctx-item')).filter(btn => /Закрепить сообщение/i.test(btn.textContent||''));
+    ctxBtns.forEach(btn => btn.onclick = function(e){ e.preventDefault(); openDmPinConfirmFromMenu(); });
+  }
+  function renderDmPinPreview(container, source){
+    if(!container) return;
+    if(!source){ container.innerHTML=''; return; }
+    const author = source.author || {username: source.messageAuthor || '?', avatar_url: source.messageAvatar || ''};
+    const avatarStyle = author.avatar_url ? "style=\"background-image:url('"+String(author.avatar_url).replace(/'/g,'%27')+"')\"" : '';
+    const initials = author.avatar_url ? '' : dmPinInitials(author.username);
+    const image = source.image_url ? '<img src="'+dmPinEscape(source.image_url)+'" alt="">' : '';
+    container.innerHTML = '<div class="avatar" '+avatarStyle+'>'+initials+'</div><div class="meta"><div><strong>'+dmPinEscape(author.username || '?')+'</strong><span class="time">'+dmPinEscape(dmPinTime(source.created_at || source.messageTime || ''))+'</span></div><div class="content">'+dmPinEscape(source.content || source.messageContent || '')+'</div>'+image+'</div>';
+  }
+  function showDmPinsEmpty(){
+    const body=document.getElementById('dm-pins-body'); if(!body) return;
+    body.innerHTML='<div class="dm-pins-empty"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 17v5"/><path d="M5 17h14"/><path d="M7 4h10l-2 8H9Z"/></svg><div><div style="font-weight:900;font-size:18px;margin-bottom:6px;">В этом диалоге нет закреплённых сообщений... пока что.</div><small><b>ПОДСКАЗКА:</b><br>Вы можете закрепить сообщение при помощи контекстного меню.</small></div></div>';
+  }
+  function renderDmPinsPanel(){
+    const body=document.getElementById('dm-pins-body'); if(!body) return;
+    if(!dmPins.length){ showDmPinsEmpty(); return; }
+    body.innerHTML = dmPins.map(pin => {
+      const author = pin.author || {};
+      const avatarStyle = author.avatar_url ? "style=\"background-image:url('"+String(author.avatar_url).replace(/'/g,'%27')+"')\"" : '';
+      const image = pin.image_url ? '<img class="dm-pin-image" src="'+dmPinEscape(pin.image_url)+'" alt="">' : '';
+      return '<div class="dm-pin-card" data-pin-message-id="'+Number(pin.message_id)+'"><div class="dm-pin-hover"><button type="button" onclick="jumpToDmPinnedMessage('+Number(pin.message_id)+')">Перейти</button><button type="button" class="danger" onclick="openDmUnpinConfirmById('+Number(pin.message_id)+')">×</button></div><div class="dm-pin-head"><div class="dm-pin-avatar" '+avatarStyle+'>'+(author.avatar_url ? '' : dmPinInitials(author.username || '?'))+'</div><div><div class="dm-pin-name">'+dmPinEscape(author.username || '?')+'</div><div class="dm-pin-time">'+dmPinEscape(dmPinTime(pin.created_at || pin.pinned_at || ''))+'</div></div></div><div class="dm-pin-content">'+dmPinEscape(pin.content || '')+'</div>'+image+'</div>';
+    }).join('');
+  }
+  async function loadDmPins(openAfter){
+    ensureDmPinsUi();
+    try{
+      const res = await fetch(DM_PINS_BASE, {credentials:'same-origin'});
+      const data = await res.json();
+      dmPins = Array.isArray(data.pins) ? data.pins : [];
+      renderDmPinsPanel();
+      if(openAfter) document.getElementById('dm-pins-panel')?.classList.add('open');
+    }catch(e){ showDmPinsEmpty(); if(openAfter) document.getElementById('dm-pins-panel')?.classList.add('open'); }
+  }
+  window.toggleDmPinsPanel = function(){ ensureDmPinsUi(); const panel=document.getElementById('dm-pins-panel'); if(!panel) return; const willOpen=!panel.classList.contains('open'); if(willOpen) loadDmPins(true); else panel.classList.remove('open'); };
+  function dmMessageSourceFromRow(row){
+    if(!row) return null;
+    const img = row.dataset.messageImage || (row.querySelector('.msg-img') ? row.querySelector('.msg-img').getAttribute('src') : '');
+    const timeNode = row.querySelector('.msg-time');
+    return {
+      message_id: Number(row.dataset.messageId || row.dataset.id || 0),
+      content: row.dataset.messageContent || '',
+      image_url: img || '',
+      created_at: timeNode ? timeNode.textContent.trim() : '',
+      author: { username: row.dataset.messageAuthor || '?', avatar_url: row.dataset.messageAvatar || '' }
+    };
+  }
+  window.openDmPinConfirmFromMenu = function(){ if(!window.activeDmMessageEl && !activeDmMessageEl) return; const row = window.activeDmMessageEl || activeDmMessageEl; closeDmMessageMenu(); openDmPinConfirmFromRow(row); };
+  function openDmPinConfirmFromRow(row){
+    ensureDmPinsUi(); dmPinConfirmTarget = dmMessageSourceFromRow(row); if(!dmPinConfirmTarget || !dmPinConfirmTarget.message_id) return;
+    document.getElementById('dm-pin-modal-title').textContent = 'Закрепить это. Хорошо закрепите.';
+    document.getElementById('dm-pin-modal-text').textContent = 'Просто уточняю, вы хотите закрепить это сообщение в личном диалоге?';
+    const hint=document.getElementById('dm-pin-modal-hint'); if(hint){hint.style.display='none'; hint.innerHTML='';}
+    renderDmPinPreview(document.getElementById('dm-pin-preview'), dmPinConfirmTarget);
+    document.getElementById('dm-pin-confirm-modal').classList.add('open');
+  }
+  window.closeDmPinConfirm = function(){ const el=document.getElementById('dm-pin-confirm-modal'); if(el) el.classList.remove('open'); dmPinConfirmTarget=null; };
+  async function submitDmPinConfirm(){
+    if(!dmPinConfirmTarget || !dmPinConfirmTarget.message_id) return;
+    const res = await fetch(DM_PINS_BASE + '/' + dmPinConfirmTarget.message_id, {method:'POST', credentials:'same-origin'});
+    const data = await res.json().catch(()=>({ok:false}));
+    if(data && data.ok && data.pin){ upsertDmPin(data.pin); renderDmPinsPanel(); insertDmPinNotice((data.pin.pinned_by && data.pin.pinned_by.username) || currentViewer); closeDmPinConfirm(); const panel=document.getElementById('dm-pins-panel'); if(panel) panel.classList.add('open'); }
+  }
+  function upsertDmPin(pin){
+    if(!pin || !pin.message_id) return;
+    const idx = dmPins.findIndex(x => Number(x.message_id) === Number(pin.message_id));
+    if(idx >= 0) dmPins[idx] = pin; else dmPins.unshift(pin);
+  }
+  function removeDmPin(messageId){ dmPins = dmPins.filter(x => Number(x.message_id) !== Number(messageId)); renderDmPinsPanel(); }
+  window.openDmUnpinConfirmById = function(messageId){ ensureDmPinsUi(); dmUnpinTarget = dmPins.find(x => Number(x.message_id) === Number(messageId)) || null; if(!dmUnpinTarget) return; renderDmPinPreview(document.getElementById('dm-unpin-preview'), dmUnpinTarget); document.getElementById('dm-unpin-confirm-modal').classList.add('open'); };
+  window.closeDmUnpinConfirm = function(){ const el=document.getElementById('dm-unpin-confirm-modal'); if(el) el.classList.remove('open'); dmUnpinTarget=null; };
+  async function submitDmUnpinConfirm(){
+    if(!dmUnpinTarget || !dmUnpinTarget.message_id) return;
+    const res = await fetch(DM_PINS_BASE + '/' + dmUnpinTarget.message_id, {method:'DELETE', credentials:'same-origin'});
+    const data = await res.json().catch(()=>({ok:false}));
+    if(data && data.ok){ removeDmPin(dmUnpinTarget.message_id); closeDmUnpinConfirm(); }
+  }
+  window.jumpToDmPinnedMessage = function(messageId){ const row=document.getElementById('dm-message-'+messageId); if(row){ row.scrollIntoView({behavior:'smooth', block:'center'}); row.classList.add('flash'); setTimeout(()=>row.classList.remove('flash'), 1600); } };
+  function insertDmPinNotice(actorName){
+    const messages = document.getElementById('messages'); if(!messages || !dmPinConfirmTarget) return;
+    const el = document.createElement('div'); el.className='dm-pin-system';
+    el.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M5 17h14"/><path d="M7 4h10l-2 8H9Z"/></svg><span><b>'+dmPinEscape(actorName || currentViewer)+'</b> закрепляет сообщение в этом диалоге. <a href="#" onclick="toggleDmPinsPanel();return false;">Показать все закреплённые сообщения.</a></span>';
+    messages.appendChild(el);
+    const main=document.querySelector('.main'); if(main) main.scrollTop = main.scrollHeight;
+  }
+  function bindDmPinGlobalClose(){
+    document.addEventListener('click', function(e){
+      const panel=document.getElementById('dm-pins-panel');
+      if(panel && panel.classList.contains('open')){
+        const topBtn=getDmPinBtn();
+        if(!panel.contains(e.target) && !(topBtn && topBtn.contains(e.target))) panel.classList.remove('open');
+      }
+    }, true);
+  }
+  document.addEventListener('DOMContentLoaded', function(){ ensureDmPinsUi(); bindDmPinButtons(); bindDmPinGlobalClose(); loadDmPins(false); });
+  const oldConnect = window.connect;
+  if(typeof oldConnect === 'function'){
+    // no-op; ws handler patched separately below
+  }
+  window.__dmPinsApi = {upsertDmPin, removeDmPin, loadDmPins, insertDmPinNotice};
+})();
+</script>
 
 </body>
 </html>
