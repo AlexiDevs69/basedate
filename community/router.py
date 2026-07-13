@@ -1421,6 +1421,106 @@ async def api_respond_server_invite(invite_code: str, request: Request, db: Asyn
 
 
 
+
+
+@router.get("/api/dm/{username}/pins")
+async def api_list_dm_pins(username: str, request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in", "pins": []}, status_code=401)
+    other = await crud.get_account_by_username(db, username)
+    if not other:
+        return JSONResponse({"ok": False, "error": "not_found", "pins": []}, status_code=404)
+    thread = await crud.get_or_create_dm_thread(db, account.id, other.id)
+    if not thread or not await crud.is_dm_participant(db, thread.id, account.id):
+        return JSONResponse({"ok": False, "error": "forbidden", "pins": []}, status_code=403)
+    pins = await crud.list_dm_pins(db, thread.id)
+    return JSONResponse({"ok": True, "pins": pins})
+
+
+@router.post("/api/dm/{username}/pins/{message_id}")
+async def api_pin_dm_message(username: str, message_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    other = await crud.get_account_by_username(db, username)
+    if not other:
+        return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
+    thread = await crud.get_or_create_dm_thread(db, account.id, other.id)
+    if not thread or not await crud.is_dm_participant(db, thread.id, account.id):
+        return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
+    pin, created = await crud.pin_dm_message(db, thread.id, message_id, account.id)
+    if not pin:
+        return JSONResponse({"ok": False, "error": "message_not_found"}, status_code=404)
+    payload = {"type": "pin_add", "pin": pin, "actor": _account_payload(account), "created": created}
+    await realtime_channels.broadcast((0, int(thread.id)), payload)
+    return JSONResponse({"ok": True, "created": created, "pin": pin})
+
+
+@router.delete("/api/dm/{username}/pins/{message_id}")
+async def api_unpin_dm_message(username: str, message_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    other = await crud.get_account_by_username(db, username)
+    if not other:
+        return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
+    thread = await crud.get_or_create_dm_thread(db, account.id, other.id)
+    if not thread or not await crud.is_dm_participant(db, thread.id, account.id):
+        return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
+    removed = await crud.unpin_dm_message(db, thread.id, message_id)
+    if removed:
+        await realtime_channels.broadcast((0, int(thread.id)), {"type": "pin_remove", "message_id": int(message_id), "actor": _account_payload(account)})
+    return JSONResponse({"ok": True, "removed": bool(removed), "message_id": int(message_id)})
+
+
+@router.get("/api/servers/{server_id}/channels/{channel_id}/pins")
+async def api_list_server_pins(server_id: int, channel_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in", "pins": []}, status_code=401)
+    if not await crud.is_server_member(db, server_id, account.id):
+        return JSONResponse({"ok": False, "error": "forbidden", "pins": []}, status_code=403)
+    channel = await crud.get_server_channel(db, server_id, channel_id)
+    if not channel:
+        return JSONResponse({"ok": False, "error": "not_found", "pins": []}, status_code=404)
+    pins = await crud.list_server_pins(db, server_id, channel_id)
+    return JSONResponse({"ok": True, "pins": pins})
+
+
+@router.post("/api/servers/{server_id}/channels/{channel_id}/pins/{message_id}")
+async def api_pin_server_message(server_id: int, channel_id: int, message_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    if not await crud.is_server_member(db, server_id, account.id):
+        return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
+    channel = await crud.get_server_channel(db, server_id, channel_id)
+    if not channel:
+        return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
+    pin, created = await crud.pin_server_message(db, server_id, channel_id, message_id, account.id)
+    if not pin:
+        return JSONResponse({"ok": False, "error": "message_not_found"}, status_code=404)
+    payload = {"type": "pin_add", "pin": pin, "actor": _account_payload(account), "created": created}
+    await realtime_channels.broadcast((int(server_id), int(channel_id)), payload)
+    return JSONResponse({"ok": True, "created": created, "pin": pin})
+
+
+@router.delete("/api/servers/{server_id}/channels/{channel_id}/pins/{message_id}")
+async def api_unpin_server_message(server_id: int, channel_id: int, message_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    if not await crud.is_server_member(db, server_id, account.id):
+        return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
+    channel = await crud.get_server_channel(db, server_id, channel_id)
+    if not channel:
+        return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
+    removed = await crud.unpin_server_message(db, server_id, channel_id, message_id)
+    if removed:
+        await realtime_channels.broadcast((int(server_id), int(channel_id)), {"type": "pin_remove", "message_id": int(message_id), "actor": _account_payload(account)})
+    return JSONResponse({"ok": True, "removed": bool(removed), "message_id": int(message_id)})
+
 @router.websocket("/ws/servers/{server_id}/channel/{channel_id}")
 async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: int):
     """Realtime server channel: messages + typing indicator.
