@@ -2,235 +2,561 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Налаштування сервера — {{ server.name }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
   <style>
     :root {
       --bg: #1e1f24;
-      --side: #15161a;
+      --left: #15161a;
       --panel: #2b2d31;
       --panel-2: #313338;
       --panel-3: #3a3c43;
-      --line: #2b2d34;
-      --text: #f2f3f5;
+      --line: #34363d;
       --muted: #b5bac1;
-      --soft: #8b909b;
-      --primary: #5865f2;
-      --primary-hover: #4752c4;
-      --green: #23a559;
-      --red: #ff7777;
+      --muted-2: #8b909b;
+      --text: #f2f3f5;
+      --accent: #5865f2;
+      --accent-hover: #4752c4;
+      --danger: #f23f42;
+      --green: #23a55a;
+      --font: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
     * {
       box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
 
     body {
-      margin: 0;
+      min-height: 100vh;
       background: var(--bg);
       color: var(--text);
-      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: var(--font);
+      font-size: 14px;
+      overflow: hidden;
     }
 
-    .app {
-      min-height: 100vh;
-      display: grid;
-      grid-template-columns: 360px 1fr;
+    a {
+      color: inherit;
+      text-decoration: none;
     }
 
-    .side {
-      background: var(--side);
-      display: flex;
-      justify-content: flex-end;
-      padding: 34px 20px;
-      overflow: auto;
-    }
-
-    .side-in {
-      width: 260px;
-    }
-
-    .k {
-      font-size: 11px;
-      text-transform: uppercase;
-      color: var(--soft);
-      font-weight: 900;
-      margin: 0 0 8px 10px;
-    }
-
-    .i {
-      height: 36px;
-      border: 0;
-      border-radius: 5px;
-      width: 100%;
-      background: transparent;
-      color: var(--muted);
-      text-align: left;
-      padding: 0 10px;
-      font-weight: 800;
-      cursor: pointer;
+    button,
+    input,
+    textarea,
+    select {
       font: inherit;
     }
 
-    .i:hover,
-    .i.active {
+    button {
+      border: 0;
+    }
+
+    .settings-app {
+      height: 100vh;
+      display: grid;
+      grid-template-columns: minmax(240px, 32vw) minmax(0, 1fr);
+    }
+
+    .settings-sidebar {
+      background: var(--left);
+      display: flex;
+      justify-content: flex-end;
+      border-right: 1px solid #101114;
+      overflow: auto;
+      padding: 34px 20px 40px;
+    }
+
+    .side-inner {
+      width: 260px;
+    }
+
+    .side-kicker {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: var(--muted-2);
+      font-weight: 900;
+      letter-spacing: .06em;
+      margin: 0 0 8px 10px;
+    }
+
+    .side-item {
+      width: 100%;
+      min-height: 36px;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 0 10px;
+      color: var(--muted);
+      background: transparent;
+      font-weight: 700;
+      margin-bottom: 2px;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .side-item:hover {
+      background: #2b2d31;
+      color: #fff;
+    }
+
+    .side-item.active {
       background: var(--panel-3);
       color: #fff;
     }
 
-    .sep {
+    .side-item.danger {
+      color: #ff7777;
+    }
+
+    .side-sep {
       height: 1px;
-      background: var(--line);
-      margin: 12px 10px;
+      background: #2b2d34;
+      margin: 12px 10px 14px;
     }
 
-    .main {
-      padding: 56px 110px;
+    .badge-new {
+      font-size: 10px;
+      background: var(--danger);
+      color: #fff;
+      border-radius: 999px;
+      padding: 2px 6px;
+      font-weight: 900;
+    }
+
+    .external {
+      opacity: .72;
+    }
+
+    .settings-main {
       position: relative;
-      min-width: 0;
+      overflow: auto;
+      padding: 56px 112px 80px 44px;
     }
 
-    .close {
+    .settings-close {
       position: fixed;
       right: 48px;
       top: 56px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 7px;
       color: var(--muted);
-      text-align: center;
-      text-decoration: none;
       font-size: 12px;
       font-weight: 800;
+      z-index: 20;
     }
 
-    .x {
+    .close-btn {
       width: 38px;
       height: 38px;
       border-radius: 50%;
       border: 2px solid #6b7280;
       background: transparent;
-      color: var(--muted);
-      font-size: 24px;
-      line-height: 1;
+      color: #d1d5db;
+      display: grid;
+      place-items: center;
       cursor: pointer;
     }
 
-    .page {
-      display: none;
-      max-width: 760px;
+    .close-btn:hover {
+      background: #2b2d31;
+      color: #fff;
     }
 
-    .page.active {
+    .close-btn svg {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      stroke-width: 2.2;
+      stroke-linecap: round;
+    }
+
+    .settings-page {
+      display: none;
+      max-width: 980px;
+      min-height: calc(100vh - 136px);
+    }
+
+    .settings-page.active {
       display: block;
     }
 
-    h1 {
-      margin: 0 0 8px;
+    .content-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 620px) 300px;
+      gap: 42px;
+      align-items: start;
+    }
+
+    .settings-title {
       font-size: 22px;
       font-weight: 900;
+      margin-bottom: 8px;
     }
 
-    h2 {
-      margin: 0 0 8px;
-      font-size: 20px;
-      font-weight: 900;
-    }
-
-    h3 {
-      margin: 26px 0 8px;
-      font-size: 17px;
-      font-weight: 900;
-    }
-
-    .desc {
-      margin: 0 0 22px;
-      color: var(--muted);
+    .settings-desc {
+      color: #d1d5db;
+      font-size: 13px;
       line-height: 1.45;
-      font-size: 14px;
+      margin-bottom: 28px;
+    }
+
+    .form-section {
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 28px;
+      margin-bottom: 28px;
     }
 
     .field {
-      margin: 18px 0;
+      display: grid;
+      gap: 8px;
+      margin-bottom: 18px;
     }
 
-    label {
-      display: block;
-      margin: 0 0 8px;
+    .field label,
+    .section-title {
       font-weight: 900;
       color: #fff;
-      font-size: 14px;
     }
 
-    input,
-    textarea {
+    .field input,
+    .field textarea,
+    .field select,
+    .media-input {
       width: 100%;
-      border: 1px solid #3f4147;
       background: #111214;
+      border: 1px solid #3b3d45;
+      border-radius: 6px;
       color: #fff;
-      border-radius: 8px;
-      padding: 12px 14px;
-      font: inherit;
       outline: none;
+      padding: 11px 12px;
     }
 
-    textarea {
-      min-height: 92px;
+    .field input:focus,
+    .field textarea:focus,
+    .media-input:focus {
+      border-color: var(--accent);
+    }
+
+    .field textarea {
+      min-height: 88px;
       resize: vertical;
     }
 
-    input:focus,
-    textarea:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 2px rgba(88, 101, 242, .18);
+    .hint {
+      color: #9ca3af;
+      font-size: 13px;
+      line-height: 1.45;
     }
 
-    .btn {
-      border: 0;
-      border-radius: 8px;
-      background: var(--primary);
-      color: #fff;
-      padding: 11px 16px;
-      font: inherit;
+    .blue-btn,
+    .gray-btn,
+    .white-btn,
+    .red-btn {
+      border-radius: 6px;
       font-weight: 900;
+      padding: 10px 14px;
       cursor: pointer;
-      text-decoration: none;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
     }
 
-    .btn:hover {
-      background: var(--primary-hover);
+    .blue-btn {
+      background: var(--accent);
+      color: #fff;
     }
 
-    .btn.gray {
+    .blue-btn:hover {
+      background: var(--accent-hover);
+    }
+
+    .gray-btn {
+      background: #4e5058;
+      color: #fff;
+    }
+
+    .gray-btn:hover {
+      background: #5b5d66;
+    }
+
+    .white-btn {
       background: #fff;
-      color: #111;
+      color: #111214;
     }
 
-    .btn.gray:hover {
-      background: #e4e6eb;
+    .red-btn {
+      background: var(--danger);
+      color: #fff;
     }
 
-    .muted {
+    .icon-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: 12px;
+    }
+
+    .server-icon-preview {
+      width: 74px;
+      height: 74px;
+      border-radius: 24px;
+      background: #111 center / cover no-repeat;
+      display: grid;
+      place-items: center;
+      font-size: 22px;
+      font-weight: 950;
+      border: 1px solid rgba(255, 255, 255, .08);
+      overflow: hidden;
+    }
+
+    .server-icon-preview.has-image {
+      font-size: 0;
+      color: transparent;
+    }
+
+    .banner-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .banner-choice {
+      height: 58px;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08);
+      transition: transform .12s ease, filter .12s ease;
+    }
+
+    .banner-choice:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.08);
+    }
+
+    .banner-choice.active {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .feature-input {
+      height: 38px;
+      background: #111214;
+      border: 1px solid #3b3d45;
+      border-radius: 6px;
+      color: #fff;
+      padding: 0 10px;
+    }
+
+    .save-bar {
+      position: fixed;
+      left: calc(32vw + 44px);
+      bottom: 22px;
+      width: min(620px, calc(68vw - 170px));
+      z-index: 40;
+      background: #111214;
+      border: 1px solid #2b2d34;
+      border-radius: 10px;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      box-shadow: 0 18px 60px rgba(0, 0, 0, .35);
+      transform: translateY(90px);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform .22s cubic-bezier(.2, .9, .2, 1), opacity .16s ease;
+    }
+
+    .save-bar.dirty {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .save-bar small {
+      color: #dbdee1;
+      font-weight: 800;
+    }
+
+    .preview-card {
+      position: sticky;
+      top: 60px;
+      background: var(--panel);
+      border: 1px solid #3b3d45;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, .22);
+    }
+
+    .preview-banner {
+      height: 98px;
+      background: linear-gradient(135deg, #111, #555);
+      transition: background .18s ease;
+    }
+
+    .preview-body {
+      padding: 0 14px 14px;
+    }
+
+    .preview-icon {
+      width: 70px;
+      height: 70px;
+      border-radius: 20px;
+      background: #111 center / cover no-repeat;
+      border: 6px solid var(--panel);
+      margin-top: -34px;
+      display: grid;
+      place-items: center;
+      font-weight: 950;
+      font-size: 18px;
+      overflow: hidden;
+    }
+
+    .preview-icon.has-image {
+      font-size: 0;
+      color: transparent;
+    }
+
+    .preview-name {
+      font-weight: 950;
+      margin-top: 10px;
+      font-size: 16px;
+    }
+
+    .preview-meta {
       color: var(--muted);
-      font-size: 13px;
+      font-size: 12px;
+      margin-top: 3px;
     }
 
-    .empty {
-      margin-top: 80px;
+    .preview-desc {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+      margin-top: 12px;
+    }
+
+    .placeholder-page {
+      max-width: 680px;
+      padding-top: 16px;
+    }
+
+    .placeholder-box {
+      margin-top: 24px;
+      padding: 28px;
+      border-radius: 16px;
+      background: var(--panel);
+      border: 1px solid #34363d;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .media-page {
+      max-width: 760px;
+    }
+
+    .media-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    .media-top .settings-desc {
+      max-width: 620px;
+      margin-bottom: 0;
+    }
+
+    .media-empty {
+      min-height: 360px;
+      display: grid;
+      place-items: center;
       text-align: center;
-      color: var(--muted);
+      color: var(--muted-2);
     }
 
-    .empty .illu {
+    .media-empty-icon {
+      width: 190px;
+      height: 124px;
+      margin: 0 auto 18px;
+      display: grid;
+      place-items: center;
       font-size: 78px;
       filter: grayscale(1);
-      opacity: .28;
-      margin-bottom: 16px;
+      opacity: .35;
     }
 
-    .banner {
+    .media-empty h2 {
+      font-size: 18px;
+      margin-bottom: 8px;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .media-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .media-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-height: 72px;
+      padding: 10px 12px;
+      background: var(--panel);
+      border: 1px solid #34363d;
+      border-radius: 10px;
+    }
+
+    .media-thumb {
+      width: 52px;
+      height: 52px;
+      flex: 0 0 52px;
+      border-radius: 10px;
+      background: #1f2024 center / contain no-repeat;
+    }
+
+    .media-card-main {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .media-card-name {
+      font-weight: 900;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .media-card-meta {
+      margin-top: 3px;
+      color: var(--muted-2);
+      font-size: 12px;
+    }
+
+    .boost-banner {
       min-height: 180px;
       border-radius: 10px;
       margin: 16px 0 40px;
@@ -239,28 +565,61 @@
       display: grid;
       place-items: center;
       background:
-        radial-gradient(circle at 16% 18%, #ff80db 0 0, transparent 15%),
+        radial-gradient(circle at 16% 18%, rgba(255, 128, 219, .85) 0 0, transparent 15%),
+        radial-gradient(circle at 92% 24%, rgba(255, 255, 255, .22) 0 0, transparent 12%),
         linear-gradient(135deg, #3848ff, #a541f5);
       overflow: hidden;
     }
 
-    .banner h2 {
+    .boost-banner h2 {
       font-size: 24px;
       margin-bottom: 8px;
     }
 
-    .banner p {
+    .boost-banner p {
       max-width: 470px;
       margin: 0 auto 22px;
       line-height: 1.35;
     }
 
-    .slots {
+    .boost-row {
+      display: grid;
+      grid-template-columns: 22px minmax(0, 1fr);
+      gap: 18px;
+      align-items: stretch;
+      margin-top: 22px;
+    }
+
+    .boost-line {
+      position: relative;
+      display: flex;
+      justify-content: center;
+    }
+
+    .boost-line::before {
+      content: "";
+      width: 3px;
+      border-radius: 99px;
+      background: linear-gradient(#ff6ce6, #4e5058 48px, #4e5058);
+      min-height: 100%;
+    }
+
+    .boost-dot {
+      position: absolute;
+      top: 0;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #ff6ce6;
+      box-shadow: 0 0 0 4px rgba(255, 108, 230, .12);
+    }
+
+    .slots-panel {
       border: 1px solid #3a3c43;
       border-radius: 10px;
       overflow: hidden;
       background: #232428;
-      margin: 18px 0;
+      margin: 18px 0 22px;
     }
 
     .slots-head {
@@ -273,14 +632,14 @@
       border-bottom: 1px solid #3a3c43;
     }
 
-    .grid {
+    .slots-grid {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
       gap: 12px;
       padding: 14px;
     }
 
-    .slot {
+    .sticker-slot {
       min-height: 130px;
       border-radius: 8px;
       border: 1px dashed #464950;
@@ -289,59 +648,63 @@
       place-items: center;
       color: #7c828d;
       font-size: 44px;
-      filter: grayscale(.4);
+      filter: grayscale(.2);
     }
 
-    .card {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: var(--panel);
+    .level-card {
       border: 1px solid #3a3c43;
       border-radius: 10px;
-      padding: 12px;
-      margin: 12px 0;
+      overflow: hidden;
+      background: #232428;
+      margin-top: 18px;
     }
 
-    .thumb {
-      width: 52px;
-      height: 52px;
-      flex: 0 0 52px;
-      border-radius: 10px;
-      background: #1f2024 center / contain no-repeat;
+    .level-head {
+      height: 58px;
+      background: #3a3c43;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      font-weight: 900;
     }
 
-    .grow {
-      flex: 1;
-      min-width: 0;
+    .level-body {
+      min-height: 150px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: var(--muted);
+      gap: 12px;
+      padding: 24px;
     }
 
-    .modal-bg {
+    .upload-backdrop {
       position: fixed;
       inset: 0;
       display: none;
       align-items: center;
       justify-content: center;
       background: rgba(0, 0, 0, .74);
-      z-index: 50;
+      z-index: 100;
       padding: 18px;
     }
 
-    .modal-bg.open {
+    .upload-backdrop.open {
       display: flex;
     }
 
-    .modal {
+    .upload-modal {
       width: min(520px, 100%);
-      max-height: min(760px, calc(100vh - 36px));
-      background: #2b2d31;
+      max-height: min(780px, calc(100vh - 36px));
+      background: var(--panel);
       border: 1px solid #3a3c43;
       border-radius: 14px;
       overflow: hidden;
       box-shadow: 0 18px 50px rgba(0, 0, 0, .45);
     }
 
-    .mh {
+    .upload-head {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
@@ -350,17 +713,18 @@
       border-bottom: 1px solid #3a3c43;
     }
 
-    .mh h2 {
-      margin: 0 0 6px;
+    .upload-head h2 {
+      font-size: 20px;
+      margin-bottom: 7px;
     }
 
-    .mb {
+    .upload-body {
       padding: 20px 24px;
-      max-height: 520px;
+      max-height: 540px;
       overflow: auto;
     }
 
-    .mf {
+    .upload-foot {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
@@ -368,239 +732,431 @@
       border-top: 1px solid #3a3c43;
     }
 
-    .preview {
+    .media-preview {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 0;
       overflow: hidden;
       border-radius: 8px;
       margin-bottom: 18px;
       background: #363840;
+      border: 1px solid #3f4147;
     }
 
-    .preview > div {
-      min-height: 160px;
+    .media-preview-box {
+      min-height: 168px;
       display: grid;
       place-items: center;
       background: #363840;
+      color: #9ca3af;
+      font-size: 34px;
     }
 
-    .preview > div:nth-child(2) {
+    .media-preview-box.light {
       background: #fff;
+      color: #9ca3af;
     }
 
-    .preview img {
+    .media-preview img {
       max-width: 82%;
-      max-height: 150px;
+      max-height: 152px;
       object-fit: contain;
+    }
+
+    .close-mini {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: transparent;
+      color: var(--muted);
+      font-size: 26px;
+      cursor: pointer;
+    }
+
+    .close-mini:hover {
+      background: #3a3c43;
+      color: #fff;
     }
 
     .toast {
       position: fixed;
       left: 50%;
-      bottom: 28px;
-      transform: translateX(-50%);
-      background: #111214;
-      color: #fff;
-      padding: 12px 16px;
-      border-radius: 10px;
+      bottom: 24px;
+      transform: translateX(-50%) translateY(12px);
       opacity: 0;
+      background: #111214;
+      border: 1px solid #3b3d45;
+      color: #fff;
+      border-radius: 12px;
+      padding: 11px 14px;
+      font-weight: 850;
+      transition: .18s ease;
       pointer-events: none;
-      transition: opacity .15s ease;
-      z-index: 90;
-      font-weight: 800;
+      z-index: 140;
     }
 
     .toast.show {
       opacity: 1;
+      transform: translateX(-50%) translateY(0);
     }
 
-    @media (max-width: 980px) {
-      .app {
-        grid-template-columns: 240px 1fr;
+    @media (max-width: 900px) {
+      body {
+        overflow: auto;
       }
 
-      .main {
-        padding: 44px 38px;
+      .settings-app {
+        height: auto;
+        min-height: 100vh;
+        grid-template-columns: 1fr;
       }
 
-      .side-in {
-        width: 210px;
+      .settings-sidebar {
+        display: none;
+      }
+
+      .settings-main {
+        padding: 28px 18px 90px;
+      }
+
+      .settings-close {
+        right: 18px;
+        top: 18px;
+      }
+
+      .settings-close span {
+        display: none;
+      }
+
+      .content-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .preview-card {
+        position: static;
+      }
+
+      .save-bar {
+        left: 12px;
+        right: 12px;
+        width: auto;
+        bottom: 12px;
+      }
+
+      .banner-grid,
+      .slots-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .feature-grid {
+        grid-template-columns: 1fr;
       }
     }
   </style>
 </head>
 
 <body>
-  <div class="app">
-    <aside class="side">
-      <div class="side-in">
-        <div class="k">{{ server.name }}</div>
+  <div class="settings-app">
+    <aside class="settings-sidebar">
+      <div class="side-inner">
+        <div class="side-kicker">{{ server.name }}</div>
+        <button class="side-item active" type="button" data-tab="profile">Профіль сервера</button>
+        <button class="side-item" type="button" data-tab="tag">Тег сервера</button>
+        <button class="side-item" type="button" data-tab="theme">Тема сервера <span class="badge-new">НОВОЕ</span></button>
+        <button class="side-item" type="button" data-tab="engagement">Вовлечённость</button>
+        <button class="side-item" type="button" data-tab="boosts">Бонусы буста</button>
 
-        <button class="i active" data-page="profile">Профиль сервера</button>
-        <button class="i">Тег сервера</button>
-        <button class="i">Тема сервера</button>
-        <button class="i">Бонусы буста</button>
+        <div class="side-sep"></div>
+        <div class="side-kicker">Реакции</div>
+        <button class="side-item" type="button" data-tab="emojis">Эмодзи</button>
+        <button class="side-item" type="button" data-tab="stickers">Стикеры</button>
+        <button class="side-item" type="button" data-tab="soundboard">Звуковая панель</button>
 
-        <div class="sep"></div>
-        <div class="k">Реакции</div>
+        <div class="side-sep"></div>
+        <div class="side-kicker">Люди</div>
+        <button class="side-item" type="button" data-tab="members">Участники <span class="external">↗</span></button>
+        <button class="side-item" type="button" data-tab="roles">Роли</button>
+        <button class="side-item" type="button" data-tab="invites">Приглашения</button>
+        <button class="side-item" type="button" data-tab="access">Доступ</button>
 
-        <button class="i" data-page="emojis">Эмодзи</button>
-        <button class="i" data-page="stickers">Стикеры</button>
-        <button class="i">Звуковая панель</button>
+        <div class="side-sep"></div>
+        <div class="side-kicker">Приложения</div>
+        <button class="side-item" type="button" data-tab="integrations">Интеграция</button>
+        <button class="side-item" type="button" data-tab="apps">Каталог приложений <span class="external">↗</span></button>
 
-        <div class="sep"></div>
-        <div class="k">Люди</div>
+        <div class="side-sep"></div>
+        <div class="side-kicker">Модерация</div>
+        <button class="side-item" type="button" data-tab="safety">Настройка безопасности</button>
+        <button class="side-item" type="button" data-tab="audit">Журнал аудита</button>
+        <button class="side-item" type="button" data-tab="bans">Баны</button>
 
-        <button class="i">Участники</button>
-        <button class="i">Роли</button>
-        <button class="i">Приглашения</button>
-        <button class="i">Доступ</button>
-
-        <div class="sep"></div>
-        <button class="i" style="color: #ff7777;">Удалить сервер 🗑</button>
+        <div class="side-sep"></div>
+        <button class="side-item" type="button" data-tab="community">Обзор сообщества</button>
+        <button class="side-item" type="button" data-tab="adaptation">Адаптация</button>
+        <button class="side-item" type="button" data-tab="analytics">Аналитика сервера</button>
+        <div class="side-sep"></div>
+        <button class="side-item" type="button" data-tab="template">Шаблон сервера</button>
+        <button class="side-item danger" type="button" data-tab="delete">Удалить сервер <span>🗑</span></button>
       </div>
     </aside>
 
-    <main class="main">
-      <a class="close" href="/community/servers/{{ server.id }}">
-        <button class="x" type="button">×</button>
-        <br />ESC
+    <main class="settings-main">
+      <a class="settings-close" href="/community/servers/{{ server.id }}">
+        <button class="close-btn" type="button" aria-label="Закрити">
+          <svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12" /></svg>
+        </button>
+        <span>ESC</span>
       </a>
 
-      <section id="page-profile" class="page active">
-        <h1>Профіль сервера</h1>
-        <p class="desc">Базові налаштування сервера лишив як раніше.</p>
-
-        <form method="post" action="/community/servers/{{ server.id }}/settings">
+      <section id="page-profile" class="settings-page active">
+        <form id="server-settings-form" class="content-grid" method="post" action="/community/servers/{{ server.id }}/settings">
           <input type="hidden" name="redirect_to" value="{{ request.url.path }}" />
-          <input type="hidden" name="icon_url" value="{{ server.icon_url or '' }}" />
-          <input type="hidden" name="banner_color" value="{{ banner_color or '' }}" />
+          <input id="server-icon-url" type="hidden" name="icon_url" value="{{ server.icon_url or '' }}" />
+          <input id="server-banner-color" type="hidden" name="banner_color" value="{{ banner_color or 'linear-gradient(135deg,#111,#555)' }}" />
 
-          <div class="field">
-            <label>Имя</label>
-            <input name="name" value="{{ server.name }}" />
-          </div>
+          <section>
+            <h1 class="settings-title">Профіль сервера</h1>
+            <p class="settings-desc">Налаштуй відображення сервера в запрошеннях, списку серверів і повідомленнях. Іконку можна завантажити прямо з пристрою.</p>
 
-          <div class="field">
-            <label>Описание</label>
-            <textarea name="description">{{ server.description or '' }}</textarea>
-          </div>
+            <div class="form-section">
+              <div class="field">
+                <label>Имя</label>
+                <input id="server-name" name="name" value="{{ server.name }}" required maxlength="64" />
+              </div>
+            </div>
 
-          <button class="btn" type="submit">Зберегти</button>
+            <div class="form-section">
+              <div class="section-title">Значок</div>
+              <p class="hint">Рекомендується квадратне зображення мінімум 512×512.</p>
+
+              <div class="icon-row">
+                <div id="server-icon-preview" class="server-icon-preview {% if server.icon_url %}has-image{% endif %}" style="{% if server.icon_url %}background-image:url('{{ server.icon_url }}'){% endif %}">
+                  {% if not server.icon_url %}{{ (server.name or 'S')[:2] }}{% endif %}
+                </div>
+
+                <div>
+                  <button id="server-icon-btn" class="blue-btn" type="button">Змінити значок сервера</button>
+                  <input id="server-icon-file" type="file" accept="image/*" hidden />
+                  <p id="upload-hint" class="hint" style="margin-top:8px">Файл піде через Cloudinary/local upload endpoint, у базу пишеться тільки URL.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <div class="section-title">Баннер</div>
+              <div class="banner-grid" id="banner-grid">
+                <button type="button" class="banner-choice" data-bg="linear-gradient(135deg,#111,#555)" style="background:linear-gradient(135deg,#111,#555)"></button>
+                <button type="button" class="banner-choice" data-bg="linear-gradient(135deg,#ff2e9f,#ff6ad5)" style="background:linear-gradient(135deg,#ff2e9f,#ff6ad5)"></button>
+                <button type="button" class="banner-choice" data-bg="linear-gradient(135deg,#ff2222,#ff6b5f)" style="background:linear-gradient(135deg,#ff2222,#ff6b5f)"></button>
+                <button type="button" class="banner-choice" data-bg="linear-gradient(135deg,#ff7a18,#ffbd4a)" style="background:linear-gradient(135deg,#ff7a18,#ffbd4a)"></button>
+                <button type="button" class="banner-choice" data-bg="linear-gradient(135deg,#ffe259,#ffa751)" style="background:linear-gradient(135deg,#ffe259,#ffa751)"></button>
+                <button type="button" class="banner-choice" data-bg="linear-gradient(135deg,#7f35bd,#c471ed)" style="background:linear-gradient(135deg,#7f35bd,#c471ed)"></button>
+                <button type="button" class="banner-choice" data-bg="linear-gradient(135deg,#20c6ff,#4facfe)" style="background:linear-gradient(135deg,#20c6ff,#4facfe)"></button>
+                <button type="button" class="banner-choice" data-bg="linear-gradient(135deg,#43e97b,#38f9d7)" style="background:linear-gradient(135deg,#43e97b,#38f9d7)"></button>
+                <button type="button" class="banner-choice" data-bg="linear-gradient(135deg,#3a7d0f,#7ed957)" style="background:linear-gradient(135deg,#3a7d0f,#7ed957)"></button>
+                <button type="button" class="banner-choice" data-bg="linear-gradient(135deg,#222,#aaa)" style="background:linear-gradient(135deg,#222,#aaa)"></button>
+              </div>
+              <p class="hint" style="margin-top:10px">Банер зберігається як легкий колір/градієнт.</p>
+            </div>
+
+            <div class="form-section">
+              <div class="section-title">Особенности</div>
+              <p class="hint">Додай до 5 інтересів сервера. Поки це декоративний блок.</p>
+              <div class="feature-grid">
+                <input class="feature-input" placeholder="🙂" />
+                <input class="feature-input" placeholder="🎮" />
+                <input class="feature-input" placeholder="🎧" />
+                <input class="feature-input" placeholder="💬" />
+                <input class="feature-input" placeholder="⚡" />
+              </div>
+            </div>
+
+            <div class="form-section">
+              <div class="field">
+                <label>Описание</label>
+                <textarea id="server-description" name="description" maxlength="255" placeholder="Розкажіть миру про цей сервер.">{{ server.description or '' }}</textarea>
+              </div>
+            </div>
+
+            <div class="save-bar">
+              <small>Є незбережені зміни?</small>
+              <div style="display:flex;gap:8px">
+                <button id="cancel-changes-btn" class="gray-btn" type="button">Скасувати</button>
+                <button class="blue-btn" type="submit">Зберегти</button>
+              </div>
+            </div>
+          </section>
+
+          <aside class="preview-card">
+            <div id="preview-banner" class="preview-banner" style="background:{{ banner_color or 'linear-gradient(135deg,#111,#555)' }}"></div>
+            <div class="preview-body">
+              <div id="preview-icon" class="preview-icon {% if server.icon_url %}has-image{% endif %}" style="{% if server.icon_url %}background-image:url('{{ server.icon_url }}'){% endif %}">
+                {% if not server.icon_url %}{{ (server.name or 'S')[:2] }}{% endif %}
+              </div>
+              <div id="preview-name" class="preview-name">{{ server.name }}</div>
+              <div class="preview-meta"><span style="color:#23a55a">●</span> 1 в сети · {{ members_count|default(1) }} учасників</div>
+              <div id="preview-desc" class="preview-desc">{{ server.description or 'Опис сервера буде показаний тут.' }}</div>
+            </div>
+          </aside>
         </form>
       </section>
 
-      <section id="page-emojis" class="page">
-        <h1>Эмодзи</h1>
-        <p class="desc">
-          Добавьте до 50 пользовательских эмодзи для всех на этом сервере.
-          На цьому сервері вони без Nitro, в ЛС/інших серверах — тільки з Nitro.
-        </p>
+      <section id="page-emojis" class="settings-page media-page">
+        <div class="media-top">
+          <div>
+            <h1 class="settings-title">Эмодзи</h1>
+            <p class="settings-desc">Добавьте до 50 пользовательских эмодзи для всех на этом сервере. Анимированные эмодзи и использование на других серверах доступны подписчикам Nitro.</p>
+          </div>
+          <button class="blue-btn" type="button" onclick="openMediaUpload('emoji')">Загрузить эмодзи</button>
+        </div>
 
-        <button class="btn" type="button" onclick="openUp('emoji')">Загрузить эмодзи</button>
+        <p class="hint">Если вы хотите загрузить несколько эмодзи или пропустить редактирование, перетащите файлы на эту страницу. Эмодзи будут названы именем файла.</p>
+        <div class="form-section" style="margin-top:22px"></div>
 
-        <div id="emoji-list"></div>
+        <div id="emoji-list" class="media-list"></div>
 
-        <div id="emoji-empty" class="empty">
-          <div class="illu">🎭</div>
-          <h2>ЭМОДЗИ НЕТ</h2>
-          <p>Начните вечеринку, загрузив эмодзи</p>
+        <div id="emoji-empty" class="media-empty">
+          <div>
+            <div class="media-empty-icon">🎭</div>
+            <h2>ЭМОДЗИ НЕТ</h2>
+            <p>Начните вечеринку, загрузив эмодзи</p>
+          </div>
         </div>
       </section>
 
-      <section id="page-stickers" class="page">
-        <h1>Стикеры</h1>
+      <section id="page-stickers" class="settings-page media-page">
+        <h1 class="settings-title">Стикеры</h1>
 
-        <div class="banner">
+        <div class="boost-banner">
           <div>
             <h2>Получите буст</h2>
-            <p>Дайте буст серверу до 1-го уровня, чтобы разблокировать больше стикеров.</p>
-            <button class="btn gray" type="button">Буст сервера</button>
-            <button class="btn gray" type="button">Узнать больше</button>
+            <p>Дайте буст серверу до 1-го уровня, чтобы разблокировать больше стикеров и других бонусов.</p>
+            <button class="white-btn" type="button">Буст сервера</button>
+            <button class="white-btn" type="button">Узнать больше</button>
           </div>
         </div>
 
-        <h3>Нет буста сервера</h3>
-        <p class="desc">Никто пока не дал этому серверу буст.</p>
+        <div class="form-section"></div>
 
-        <div class="slots">
-          <div class="slots-head">
-            <b>
-              Бесплатные слоты<br />
-              <span class="muted">Можно использовать 5 из 5 ячеек</span>
-            </b>
-            <button class="btn" type="button" onclick="openUp('sticker')">Загрузить стикер</button>
+        <div class="boost-row">
+          <div class="boost-line"><span class="boost-dot"></span></div>
+          <div>
+            <h3 style="margin-bottom:8px">Нет буста сервера</h3>
+            <p class="settings-desc" style="margin-bottom:14px">Никто пока не дал этому серверу буст. Попросите участников сервера подарить бонусы буста всем пользователям сервера.</p>
+
+            <div class="slots-panel">
+              <div class="slots-head">
+                <b>Бесплатные слоты<br /><span class="hint">Можно использовать 5 из 5 ячеек</span></b>
+                <button class="blue-btn" type="button" onclick="openMediaUpload('sticker')">Загрузить стикер</button>
+              </div>
+              <div id="sticker-slots" class="slots-grid"></div>
+            </div>
+
+            <div class="level-card">
+              <div class="level-head">
+                <span>◇ 1-й уровень</span>
+                <span>2 буста 🔒</span>
+              </div>
+              <div class="level-body">
+                <div style="font-size:56px;filter:grayscale(1);opacity:.45">🤖</div>
+                <div>+10 слотов для стикеров</div>
+                <button class="blue-btn" type="button" style="background:#0f9d58">Купить уровень</button>
+              </div>
+            </div>
+
+            <div id="sticker-list" class="media-list"></div>
           </div>
-
-          <div id="sticker-slots" class="grid"></div>
         </div>
+      </section>
 
-        <div id="sticker-list"></div>
+      <section id="page-placeholder" class="settings-page placeholder-page">
+        <h1 id="placeholder-title" class="settings-title">Налаштування</h1>
+        <p id="placeholder-desc" class="settings-desc">Цей розділ поки в процесі.</p>
+        <div class="placeholder-box">Тут буде нормальна сторінка налаштувань. Я залишив вкладки як у Discord, щоб меню не ламалось і не виглядало обрізаним.</div>
       </section>
     </main>
   </div>
 
-  <div id="up" class="modal-bg">
-    <form id="up-form" class="modal">
-      <div class="mh">
+  <div id="media-upload" class="upload-backdrop">
+    <form id="media-upload-form" class="upload-modal">
+      <div class="upload-head">
         <div>
-          <h2 id="up-title">Отправить файл</h2>
-          <p class="muted">PNG/JPG/GIF/WebP до 5 MB</p>
+          <h2 id="media-upload-title">Отправить файл</h2>
+          <p id="media-upload-desc" class="hint">Допускаются APNG, JPG, PNG или GIF.</p>
         </div>
-        <button type="button" class="i" style="width: 40px;" onclick="closeUp()">×</button>
+        <button type="button" class="close-mini" onclick="closeMediaUpload()">×</button>
       </div>
 
-      <div class="mb">
-        <div class="preview">
-          <div><img id="p1" alt="preview dark" /></div>
-          <div><img id="p2" alt="preview light" /></div>
+      <div class="upload-body">
+        <div class="media-preview">
+          <div class="media-preview-box"><span id="preview-placeholder-dark">🖼️</span><img id="media-preview-dark" alt="" hidden /></div>
+          <div class="media-preview-box light"><span id="preview-placeholder-light">🖼️</span><img id="media-preview-light" alt="" hidden /></div>
         </div>
 
         <div class="field">
           <label>Файл *</label>
-          <input id="up-file" name="file" type="file" accept="image/*" required />
+          <input id="media-file" name="file" type="file" accept="image/*" required />
         </div>
 
-        <div class="field" id="emoji-field">
-          <label>Соответствующее эмодзи</label>
-          <input name="emoji" placeholder="🙂" />
+        <div class="field" id="media-emoji-field">
+          <label>Соответствующее эмодзи *</label>
+          <input name="emoji" placeholder="🙂 Нажмите, чтобы выбрать" />
         </div>
 
         <div class="field">
-          <label>Название *</label>
-          <input id="up-name" name="name" required placeholder="cat_hug" />
+          <label id="media-name-label">Название *</label>
+          <input id="media-name" name="name" required placeholder="cat_hug" maxlength="48" />
         </div>
 
-        <div class="field" id="desc-field">
+        <div class="field" id="media-description-field">
           <label>Описание</label>
-          <textarea name="description"></textarea>
+          <textarea name="description" placeholder="В нашем справочном центре вы найдёте советы по созданию описаний для стикеров."></textarea>
+          <p class="hint">Описание необязательно, но помогает пользователям понять стикер.</p>
         </div>
       </div>
 
-      <div class="mf">
-        <button type="button" class="btn gray" onclick="closeUp()">Не, проехали</button>
-        <button class="btn" type="submit">Загрузить</button>
+      <div class="upload-foot">
+        <button type="button" class="gray-btn" onclick="closeMediaUpload()">Не, проехали</button>
+        <button class="blue-btn" type="submit">Загрузить</button>
       </div>
     </form>
   </div>
 
-  <div id="toast" class="toast">ok</div>
+  <div id="toast" class="toast">Готово</div>
 
   <script>
-    const SID = {{ server.id }};
-    let mode = 'emoji';
+    const SERVER_ID = {{ server.id }};
+    let mediaMode = 'emoji';
 
     const toast = document.getElementById('toast');
-    const upName = document.getElementById('up-name');
+    const saveBar = document.querySelector('.save-bar');
+    const form = document.getElementById('server-settings-form');
+    const nameInput = document.getElementById('server-name');
+    const descInput = document.getElementById('server-description');
+    const bannerInput = document.getElementById('server-banner-color');
+    const previewName = document.getElementById('preview-name');
+    const previewDesc = document.getElementById('preview-desc');
+    const previewBanner = document.getElementById('preview-banner');
+    const iconBtn = document.getElementById('server-icon-btn');
+    const fileInput = document.getElementById('server-icon-file');
+    const iconUrl = document.getElementById('server-icon-url');
+    const iconPreview = document.getElementById('server-icon-preview');
+    const previewIcon = document.getElementById('preview-icon');
+    const cancelBtn = document.getElementById('cancel-changes-btn');
 
-    function t(text) {
+    const initialState = {
+      name: nameInput ? nameInput.value : '',
+      desc: descInput ? descInput.value : '',
+      banner: bannerInput ? bannerInput.value : 'linear-gradient(135deg,#111,#555)',
+      icon: iconUrl ? iconUrl.value : '',
+    };
+
+    function showToast(text) {
       toast.textContent = text;
       toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 1400);
+      setTimeout(() => toast.classList.remove('show'), 1600);
     }
 
-    function esc(value) {
+    function escapeHtml(value) {
       return String(value || '').replace(/[&<>"']/g, char => ({
         '&': '&amp;',
         '<': '&lt;',
@@ -610,141 +1166,295 @@
       }[char]));
     }
 
-    function pg(name) {
-      document
-        .querySelectorAll('.page')
-        .forEach(page => page.classList.toggle('active', page.id === 'page-' + name));
-
-      document
-        .querySelectorAll('.i[data-page]')
-        .forEach(button => button.classList.toggle('active', button.dataset.page === name));
-
-      if (name === 'emojis') loadE();
-      if (name === 'stickers') loadS();
-
-      location.hash = name === 'profile' ? '' : '#' + name;
+    function initials(value) {
+      return (value || 'S').trim().slice(0, 2).toUpperCase() || 'S';
     }
 
-    document.querySelectorAll('.i[data-page]').forEach(button => {
-      button.onclick = () => pg(button.dataset.page);
+    function markDirty() {
+      saveBar && saveBar.classList.add('dirty');
+    }
+
+    function hideDirty() {
+      saveBar && saveBar.classList.remove('dirty');
+    }
+
+    function setBanner(bg) {
+      if (!bg) return;
+      if (previewBanner) previewBanner.style.background = bg;
+      if (bannerInput) bannerInput.value = bg;
+      document.querySelectorAll('.banner-choice').forEach(button => {
+        button.classList.toggle('active', button.dataset.bg === bg);
+      });
+    }
+
+    function clearIconPreview() {
+      if (!iconPreview || !previewIcon) return;
+      iconPreview.style.backgroundImage = '';
+      previewIcon.style.backgroundImage = '';
+      iconPreview.classList.remove('has-image');
+      previewIcon.classList.remove('has-image');
+      const value = initials(nameInput ? nameInput.value : initialState.name);
+      iconPreview.textContent = value;
+      previewIcon.textContent = value;
+    }
+
+    function setIconPreview(url) {
+      if (!url) {
+        clearIconPreview();
+        return;
+      }
+      iconPreview.style.backgroundImage = `url('${url}')`;
+      previewIcon.style.backgroundImage = `url('${url}')`;
+      iconPreview.classList.add('has-image');
+      previewIcon.classList.add('has-image');
+      iconPreview.textContent = '';
+      previewIcon.textContent = '';
+    }
+
+    function resetChanges() {
+      if (nameInput) nameInput.value = initialState.name;
+      if (descInput) descInput.value = initialState.desc;
+      if (bannerInput) bannerInput.value = initialState.banner;
+      if (iconUrl) iconUrl.value = initialState.icon;
+      if (fileInput) fileInput.value = '';
+      if (previewName) previewName.textContent = initialState.name || 'Server';
+      if (previewDesc) previewDesc.textContent = initialState.desc || 'Опис сервера буде показаний тут.';
+      setBanner(initialState.banner);
+      setIconPreview(initialState.icon);
+      hideDirty();
+      showToast('Зміни скасовано');
+    }
+
+    function switchTab(tab) {
+      const known = ['profile', 'emojis', 'stickers'];
+      const page = known.includes(tab) ? tab : 'placeholder';
+      document.querySelectorAll('.settings-page').forEach(section => {
+        section.classList.toggle('active', section.id === `page-${page}`);
+      });
+      document.querySelectorAll('.side-item').forEach(item => {
+        item.classList.toggle('active', item.dataset.tab === tab);
+      });
+
+      if (page === 'placeholder') {
+        const title = document.querySelector(`.side-item[data-tab="${tab}"]`)?.innerText?.replace('↗', '').replace('🗑', '').trim() || 'Налаштування';
+        document.getElementById('placeholder-title').textContent = title;
+        document.getElementById('placeholder-desc').textContent = 'Цей розділ поки заглушка, але меню лишається нормальним як було.';
+      }
+
+      if (tab === 'emojis') loadEmojis();
+      if (tab === 'stickers') loadStickers();
+      location.hash = page === 'profile' ? '' : tab;
+    }
+
+    document.querySelectorAll('.side-item[data-tab]').forEach(button => {
+      button.addEventListener('click', () => switchTab(button.dataset.tab));
     });
 
-    if (location.hash === '#emojis') pg('emojis');
-    if (location.hash === '#stickers') pg('stickers');
+    setBanner(initialState.banner);
+    setIconPreview(initialState.icon);
 
-    function openUp(nextMode) {
-      mode = nextMode;
+    nameInput?.addEventListener('input', () => {
+      previewName.textContent = nameInput.value || 'Server';
+      if (!iconUrl.value) {
+        iconPreview.textContent = initials(nameInput.value);
+        previewIcon.textContent = initials(nameInput.value);
+      }
+      markDirty();
+    });
 
-      document.getElementById('up').classList.add('open');
-      document.getElementById('up-title').textContent = mode === 'emoji' ? 'Добавить эмодзи' : 'Отправить файл';
-      document.getElementById('emoji-field').style.display = mode === 'emoji' ? 'none' : 'block';
-      document.getElementById('desc-field').style.display = mode === 'emoji' ? 'none' : 'block';
+    descInput?.addEventListener('input', () => {
+      previewDesc.textContent = descInput.value || 'Опис сервера буде показаний тут.';
+      markDirty();
+    });
+
+    document.querySelectorAll('.banner-choice').forEach(button => {
+      button.addEventListener('click', () => {
+        setBanner(button.dataset.bg);
+        markDirty();
+      });
+    });
+
+    iconBtn?.addEventListener('click', () => fileInput.click());
+
+    fileInput?.addEventListener('change', async () => {
+      const file = fileInput.files && fileInput.files[0];
+      if (!file) return;
+
+      const localUrl = URL.createObjectURL(file);
+      setIconPreview(localUrl);
+      markDirty();
+
+      const formData = new FormData();
+      formData.append('file', file);
+      iconBtn.disabled = true;
+      iconBtn.textContent = 'Завантаження...';
+
+      try {
+        const response = await fetch('/community/api/upload-image', { method: 'POST', body: formData });
+        const data = await response.json();
+        if (data && data.ok && data.url) {
+          iconUrl.value = data.url;
+          setIconPreview(data.url);
+          showToast('Іконку завантажено');
+        } else {
+          showToast('Не вдалося завантажити');
+        }
+      } catch (error) {
+        showToast('Помилка upload');
+      } finally {
+        iconBtn.disabled = false;
+        iconBtn.textContent = 'Змінити значок сервера';
+      }
+    });
+
+    cancelBtn?.addEventListener('click', resetChanges);
+    form?.addEventListener('submit', () => hideDirty());
+
+    function openMediaUpload(mode) {
+      mediaMode = mode;
+      document.getElementById('media-upload').classList.add('open');
+      document.getElementById('media-upload-title').textContent = mode === 'emoji' ? 'Добавить эмодзи' : 'Отправить файл';
+      document.getElementById('media-upload-desc').textContent = mode === 'emoji'
+        ? 'Допускаются APNG, JPG, PNG или GIF.'
+        : 'Допускаются файлы APNG, JPG, PNG или GIF.';
+      document.getElementById('media-emoji-field').style.display = mode === 'emoji' ? 'none' : 'grid';
+      document.getElementById('media-description-field').style.display = mode === 'emoji' ? 'none' : 'grid';
+      document.getElementById('media-name-label').textContent = mode === 'emoji' ? 'Название эмодзи *' : 'Название стикера *';
     }
 
-    function closeUp() {
-      document.getElementById('up').classList.remove('open');
-      document.getElementById('up-form').reset();
-      document.getElementById('p1').src = '';
-      document.getElementById('p2').src = '';
+    function closeMediaUpload() {
+      document.getElementById('media-upload').classList.remove('open');
+      document.getElementById('media-upload-form').reset();
+      document.getElementById('media-preview-dark').hidden = true;
+      document.getElementById('media-preview-light').hidden = true;
+      document.getElementById('preview-placeholder-dark').style.display = '';
+      document.getElementById('preview-placeholder-light').style.display = '';
     }
 
-    document.getElementById('up-file').onchange = event => {
-      const file = event.target.files[0];
+    document.getElementById('media-file')?.addEventListener('change', event => {
+      const file = event.target.files && event.target.files[0];
       if (!file) return;
 
       const url = URL.createObjectURL(file);
-      document.getElementById('p1').src = url;
-      document.getElementById('p2').src = url;
+      const dark = document.getElementById('media-preview-dark');
+      const light = document.getElementById('media-preview-light');
+      dark.src = url;
+      light.src = url;
+      dark.hidden = false;
+      light.hidden = false;
+      document.getElementById('preview-placeholder-dark').style.display = 'none';
+      document.getElementById('preview-placeholder-light').style.display = 'none';
 
-      if (!upName.value) {
-        upName.value = file.name
+      const mediaName = document.getElementById('media-name');
+      if (!mediaName.value) {
+        mediaName.value = file.name
           .replace(/\.[^.]+$/, '')
           .toLowerCase()
           .replace(/[^a-z0-9а-яёіїєґ_-]+/gi, '_')
           .slice(0, 32);
       }
-    };
+    });
 
-    document.getElementById('up-form').onsubmit = async event => {
+    document.getElementById('media-upload-form')?.addEventListener('submit', async event => {
       event.preventDefault();
+      const formData = new FormData(event.currentTarget);
+      const endpoint = mediaMode === 'emoji' ? 'emojis' : 'stickers';
 
-      const formData = new FormData(event.target);
-      const endpoint = mode === 'emoji' ? 'emojis' : 'stickers';
-      const url = `/community/api/servers/${SID}/${endpoint}`;
-
-      const response = await fetch(url, {
-        method: 'POST',
-        body: formData,
-      });
-
-      const data = await response.json();
-
-      if (data.ok) {
-        closeUp();
-        t('Загружено');
-        mode === 'emoji' ? loadE() : loadS();
-      } else {
-        t(data.message || 'Ошибка');
+      try {
+        const response = await fetch(`/community/api/servers/${SERVER_ID}/${endpoint}`, {
+          method: 'POST',
+          body: formData,
+          credentials: 'same-origin',
+        });
+        const data = await response.json();
+        if (!data.ok) {
+          showToast(data.error || data.message || 'Помилка');
+          return;
+        }
+        closeMediaUpload();
+        showToast('Загружено');
+        mediaMode === 'emoji' ? loadEmojis() : loadStickers();
+      } catch (error) {
+        showToast('Помилка upload');
       }
-    };
+    });
 
-    async function loadE() {
-      const response = await fetch(`/community/api/servers/${SID}/emojis`);
-      const data = await response.json();
-      const emojis = data.emojis || [];
-
-      emojiEmpty.style.display = emojis.length ? 'none' : 'block';
-      emojiList.innerHTML = emojis.map(emoji => `
-        <div class="card">
-          <div class="thumb" style="background-image: url('${esc(emoji.image_url)}')"></div>
-          <div class="grow">
-            <b>:${esc(emoji.name)}:</b>
-            <div class="muted">ID ${emoji.id}</div>
+    async function loadEmojis() {
+      const list = document.getElementById('emoji-list');
+      const empty = document.getElementById('emoji-empty');
+      try {
+        const response = await fetch(`/community/api/servers/${SERVER_ID}/emojis`, { credentials: 'same-origin' });
+        const data = await response.json();
+        const emojis = data.emojis || [];
+        empty.style.display = emojis.length ? 'none' : 'grid';
+        list.innerHTML = emojis.map(emoji => `
+          <div class="media-card">
+            <div class="media-thumb" style="background-image:url('${escapeHtml(emoji.image_url)}')"></div>
+            <div class="media-card-main">
+              <div class="media-card-name">:${escapeHtml(emoji.name)}:</div>
+              <div class="media-card-meta">ID ${escapeHtml(emoji.id)}</div>
+            </div>
+            <button class="gray-btn" type="button" onclick="deleteEmoji(${Number(emoji.id)})">Удалить</button>
           </div>
-          <button class="btn gray" type="button" onclick="delE(${emoji.id})">Удалить</button>
-        </div>
-      `).join('');
-    }
-
-    async function loadS() {
-      const response = await fetch(`/community/api/servers/${SID}/stickers`);
-      const data = await response.json();
-      const stickers = data.stickers || [];
-
-      stickerList.innerHTML = stickers.map(sticker => `
-        <div class="card">
-          <div class="thumb" style="background-image: url('${esc(sticker.image_url)}')"></div>
-          <div class="grow">
-            <b>${esc(sticker.name)}</b>
-            <div class="muted">${esc(sticker.emoji || '')} ${esc(sticker.description || '')}</div>
-          </div>
-          <button class="btn gray" type="button" onclick="delS(${sticker.id})">Удалить</button>
-        </div>
-      `).join('');
-
-      stickerSlots.innerHTML = '';
-
-      for (let i = 0; i < 5; i++) {
-        const sticker = stickers[i];
-
-        stickerSlots.insertAdjacentHTML(
-          'beforeend',
-          sticker
-            ? `<div class="slot" style="background-image: url('${esc(sticker.image_url)}')"></div>`
-            : '<div class="slot">🤖</div>'
-        );
+        `).join('');
+      } catch (error) {
+        showToast('Не удалось загрузить эмодзи');
       }
     }
 
-    async function delE(id) {
-      await fetch(`/community/api/servers/${SID}/emojis/${id}`, { method: 'DELETE' });
-      loadE();
+    async function loadStickers() {
+      const list = document.getElementById('sticker-list');
+      const slots = document.getElementById('sticker-slots');
+      try {
+        const response = await fetch(`/community/api/servers/${SERVER_ID}/stickers`, { credentials: 'same-origin' });
+        const data = await response.json();
+        const stickers = data.stickers || [];
+
+        slots.innerHTML = '';
+        for (let index = 0; index < 5; index++) {
+          const sticker = stickers[index];
+          slots.insertAdjacentHTML('beforeend', sticker
+            ? `<div class="sticker-slot" style="background-image:url('${escapeHtml(sticker.image_url)}')"></div>`
+            : '<div class="sticker-slot">🤖</div>');
+        }
+
+        list.innerHTML = stickers.map(sticker => `
+          <div class="media-card">
+            <div class="media-thumb" style="background-image:url('${escapeHtml(sticker.image_url)}')"></div>
+            <div class="media-card-main">
+              <div class="media-card-name">${escapeHtml(sticker.name)}</div>
+              <div class="media-card-meta">${escapeHtml(sticker.emoji || '')} ${escapeHtml(sticker.description || '')}</div>
+            </div>
+            <button class="gray-btn" type="button" onclick="deleteSticker(${Number(sticker.id)})">Удалить</button>
+          </div>
+        `).join('');
+      } catch (error) {
+        showToast('Не удалось загрузить стикеры');
+      }
     }
 
-    async function delS(id) {
-      await fetch(`/community/api/servers/${SID}/stickers/${id}`, { method: 'DELETE' });
-      loadS();
+    async function deleteEmoji(id) {
+      await fetch(`/community/api/servers/${SERVER_ID}/emojis/${id}`, { method: 'DELETE', credentials: 'same-origin' });
+      loadEmojis();
     }
+
+    async function deleteSticker(id) {
+      await fetch(`/community/api/servers/${SERVER_ID}/stickers/${id}`, { method: 'DELETE', credentials: 'same-origin' });
+      loadStickers();
+    }
+
+    const initialTab = location.hash ? location.hash.slice(1) : 'profile';
+    switchTab(initialTab || 'profile');
+
+    window.addEventListener('keydown', event => {
+      if (event.key === 'Escape') {
+        if (document.getElementById('media-upload').classList.contains('open')) {
+          closeMediaUpload();
+        } else {
+          location.href = '/community/servers/{{ server.id }}';
+        }
+      }
+    });
   </script>
 </body>
 </html>
