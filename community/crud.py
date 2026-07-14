@@ -1990,3 +1990,52 @@ async def media_library_for_account(db: AsyncSession, account_id: int, current_s
     for r in rows_s:
         it=_sticker_payload(r, allowed=allow(r['server_id']), local=bool(current_server_id and int(r['server_id'])==int(current_server_id))); it['server_name']=r['server_name']; it['server_icon_url']=r['server_icon_url']; stickers.append(it)
     return {'nitro':nitro,'emojis':emojis,'stickers':stickers}
+
+
+async def get_media_item_for_send(
+    db: AsyncSession,
+    account_id: int,
+    kind: str,
+    item_id: int,
+    current_server_id: int | None = None,
+    context: str = 'server',
+) -> dict | None:
+    """Resolve a custom emoji/sticker and enforce the Discord-like Nitro rule.
+
+    Rule:
+    - inside the same server where the media was created: allowed without Nitro;
+    - in DM or another server: allowed only with active Nitro;
+    - user must still be a member of the source server, so random ids cannot be abused.
+    """
+    await ensure_server_media_tables(db)
+    if kind == 'sticker':
+        row = (await db.execute(text("""
+            SELECT st.id, st.server_id, st.name, st.description, st.emoji, st.image_url, st.content_type, st.created_at,
+                   s.name AS server_name, s.icon_url AS server_icon_url
+            FROM community_server_stickers st
+            JOIN community_servers s ON s.id = st.server_id
+            WHERE st.id = :id
+            LIMIT 1
+        """), {'id': int(item_id)})).mappings().first()
+    else:
+        row = (await db.execute(text("""
+            SELECT e.id, e.server_id, e.name, e.image_url, e.content_type, e.created_at,
+                   s.name AS server_name, s.icon_url AS server_icon_url
+            FROM community_server_emojis e
+            JOIN community_servers s ON s.id = e.server_id
+            WHERE e.id = :id
+            LIMIT 1
+        """), {'id': int(item_id)})).mappings().first()
+    if not row:
+        return None
+    if not await is_server_member(db, int(row['server_id']), int(account_id)):
+        return None
+    sub = await get_nitro_subscription(db, int(account_id))
+    has_nitro = bool(sub.get('active'))
+    local = bool(context == 'server' and current_server_id and int(current_server_id) == int(row['server_id']))
+    allowed = bool(local or has_nitro)
+    payload = _sticker_payload(row, allowed=allowed, local=local) if kind == 'sticker' else _emoji_payload(row, allowed=allowed, local=local)
+    payload['server_name'] = row.get('server_name') if hasattr(row, 'get') else row['server_name']
+    payload['server_icon_url'] = row.get('server_icon_url') if hasattr(row, 'get') else row['server_icon_url']
+    payload['nitro'] = has_nitro
+    return payload
