@@ -1590,6 +1590,75 @@ async def api_unpin_server_message(server_id: int, channel_id: int, message_id: 
         await realtime_channels.broadcast((int(server_id), int(channel_id)), {"type": "pin_remove", "message_id": int(message_id), "actor": _account_payload(account)})
     return JSONResponse({"ok": True, "removed": bool(removed), "message_id": int(message_id)})
 
+
+
+# --- Custom server emoji/sticker media --------------------------------------
+async def _media_upload_url(file: UploadFile | None, account_id: int, kind: str) -> tuple[str | None, str | None]:
+    prepared = await _read_profile_upload(file)
+    if not prepared:
+        return None, None
+    data, content_type = prepared
+    url = await _upload_to_cloudinary(data, content_type)
+    if not url:
+        url = await _upload_to_imgur(data, content_type)
+    if not url:
+        url = _save_profile_upload_local(data, content_type, account_id, kind)
+    return url, content_type
+
+@router.get('/api/servers/{server_id}/emojis')
+async def api_list_server_emojis(server_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    account=await current_account(request, db)
+    if not account: return JSONResponse({'ok':False,'error':'not_logged_in','emojis':[]}, status_code=401)
+    if not await crud.is_server_member(db, server_id, account.id): return JSONResponse({'ok':False,'error':'forbidden','emojis':[]}, status_code=403)
+    return JSONResponse({'ok':True,'emojis':await crud.list_server_emojis(db, server_id)})
+
+@router.post('/api/servers/{server_id}/emojis')
+async def api_create_server_emoji(server_id:int, request:Request, name:str=Form(...), file:UploadFile=File(...), db:AsyncSession=Depends(get_db)):
+    account=await current_account(request, db)
+    if not account: return JSONResponse({'ok':False,'error':'not_logged_in'}, status_code=401)
+    if not await crud.can_manage_server(db, server_id, account.id): return JSONResponse({'ok':False,'error':'forbidden'}, status_code=403)
+    url,ct=await _media_upload_url(file, account.id, 'emoji')
+    if not url: return JSONResponse({'ok':False,'error':'bad_file','message':'Потрібен PNG/JPG/GIF/WebP до 5 MB.'}, status_code=400)
+    return JSONResponse({'ok':True,'emoji':await crud.create_server_emoji(db, server_id, name, url, ct, account.id)})
+
+@router.delete('/api/servers/{server_id}/emojis/{emoji_id}')
+async def api_delete_server_emoji(server_id:int, emoji_id:int, request:Request, db:AsyncSession=Depends(get_db)):
+    account=await current_account(request, db)
+    if not account: return JSONResponse({'ok':False,'error':'not_logged_in'}, status_code=401)
+    if not await crud.can_manage_server(db, server_id, account.id): return JSONResponse({'ok':False,'error':'forbidden'}, status_code=403)
+    return JSONResponse({'ok':True,'removed':await crud.delete_server_emoji(db, server_id, emoji_id)})
+
+@router.get('/api/servers/{server_id}/stickers')
+async def api_list_server_stickers(server_id:int, request:Request, db:AsyncSession=Depends(get_db)):
+    account=await current_account(request, db)
+    if not account: return JSONResponse({'ok':False,'error':'not_logged_in','stickers':[]}, status_code=401)
+    if not await crud.is_server_member(db, server_id, account.id): return JSONResponse({'ok':False,'error':'forbidden','stickers':[]}, status_code=403)
+    return JSONResponse({'ok':True,'stickers':await crud.list_server_stickers(db, server_id)})
+
+@router.post('/api/servers/{server_id}/stickers')
+async def api_create_server_sticker(server_id:int, request:Request, name:str=Form(...), description:str=Form(''), emoji:str=Form(''), file:UploadFile=File(...), db:AsyncSession=Depends(get_db)):
+    account=await current_account(request, db)
+    if not account: return JSONResponse({'ok':False,'error':'not_logged_in'}, status_code=401)
+    if not await crud.can_manage_server(db, server_id, account.id): return JSONResponse({'ok':False,'error':'forbidden'}, status_code=403)
+    url,ct=await _media_upload_url(file, account.id, 'sticker')
+    if not url: return JSONResponse({'ok':False,'error':'bad_file','message':'Потрібен APNG/JPG/PNG/GIF/WebP до 5 MB.'}, status_code=400)
+    return JSONResponse({'ok':True,'sticker':await crud.create_server_sticker(db, server_id, name, description, emoji, url, ct, account.id)})
+
+@router.delete('/api/servers/{server_id}/stickers/{sticker_id}')
+async def api_delete_server_sticker(server_id:int, sticker_id:int, request:Request, db:AsyncSession=Depends(get_db)):
+    account=await current_account(request, db)
+    if not account: return JSONResponse({'ok':False,'error':'not_logged_in'}, status_code=401)
+    if not await crud.can_manage_server(db, server_id, account.id): return JSONResponse({'ok':False,'error':'forbidden'}, status_code=403)
+    return JSONResponse({'ok':True,'removed':await crud.delete_server_sticker(db, server_id, sticker_id)})
+
+@router.get('/api/media/library')
+async def api_media_library(request:Request, context:str='server', server_id:int|None=None, db:AsyncSession=Depends(get_db)):
+    account=await current_account(request, db)
+    if not account: return JSONResponse({'ok':False,'error':'not_logged_in','emojis':[],'stickers':[]}, status_code=401)
+    if context == 'server' and server_id and not await crud.is_server_member(db, server_id, account.id): return JSONResponse({'ok':False,'error':'forbidden','emojis':[],'stickers':[]}, status_code=403)
+    lib=await crud.media_library_for_account(db, account.id, current_server_id=server_id, context=context); lib['ok']=True
+    return JSONResponse(lib)
+
 @router.websocket("/ws/servers/{server_id}/channel/{channel_id}")
 async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: int):
     """Realtime server channel: messages + typing indicator.
