@@ -1785,58 +1785,22 @@ async def create_nitro_gift_code(db: AsyncSession, creator_id: int, days: int = 
     }
 
 
-
-def _nitro_tier_for_days(days: int | float | None) -> dict:
-    try:
-        d = int(days or 0)
-    except Exception:
-        d = 0
-    if d > 100:
-        return {"tier": "diamond", "tier_label": "Алмаз Nitro"}
-    if d > 60:
-        return {"tier": "platinum", "tier_label": "Платина Nitro"}
-    if d > 30:
-        return {"tier": "gold", "tier_label": "Золото Nitro"}
-    return {"tier": "basic", "tier_label": "AlexiHub Nitro"}
-
-
 def _nitro_payload_from_row(row) -> dict:
     if not row:
-        return {
-            "active": False,
-            "started_at": None,
-            "expires_at": None,
-            "days_left": 0,
-            "duration_days": 0,
-            "tier": "none",
-            "tier_label": "",
-            "source_code": None,
-        }
+        return {"active": False, "started_at": None, "expires_at": None, "days_left": 0}
     now = datetime.now(timezone.utc)
     expires_at = row['expires_at']
     started_at = row['started_at']
-    if expires_at and expires_at.tzinfo is None:
-        expires_at = expires_at.replace(tzinfo=timezone.utc)
-    if started_at and started_at.tzinfo is None:
-        started_at = started_at.replace(tzinfo=timezone.utc)
     active = bool(expires_at and expires_at > now)
     days_left = 0
-    duration_days = 0
-    if started_at and expires_at:
-        total_seconds = max(0, (expires_at - started_at).total_seconds())
-        duration_days = max(1, int((total_seconds + 86399) // 86400))
     if active:
         seconds = max(0, (expires_at - now).total_seconds())
         days_left = max(1, int((seconds + 86399) // 86400))
-    tier = _nitro_tier_for_days(duration_days if active else 0)
     return {
         "active": active,
         "started_at": started_at.isoformat() if started_at else None,
         "expires_at": expires_at.isoformat() if expires_at else None,
         "days_left": days_left,
-        "duration_days": duration_days if active else 0,
-        "tier": tier["tier"] if active else "none",
-        "tier_label": tier["tier_label"] if active else "",
         "source_code": row.get('source_code') if hasattr(row, 'get') else row['source_code'],
     }
 
@@ -1917,7 +1881,112 @@ async def nitro_profile_payload(db: AsyncSession, account_id: int) -> dict:
         "started_at": sub.get('started_at'),
         "expires_at": sub.get('expires_at'),
         "days_left": sub.get('days_left') or 0,
-        "duration_days": sub.get('duration_days') or 0,
-        "tier": sub.get('tier') or "none",
-        "tier_label": sub.get('tier_label') or "",
     }
+
+
+# ============================================================================
+# Custom server emojis + stickers.
+# ============================================================================
+_SERVER_MEDIA_TABLES_READY = False
+
+def _media_dt(v):
+    return v.isoformat() if v else None
+
+def _clean_media_name(name: str | None) -> str:
+    raw = (name or '').strip().lower()
+    safe = ''.join(ch if (ch.isalnum() or ch in ['_', '-']) else '_' for ch in raw)
+    safe = '_'.join(part for part in safe.split('_') if part)
+    return (safe or 'media')[:32]
+
+async def ensure_server_media_tables(db: AsyncSession) -> None:
+    global _SERVER_MEDIA_TABLES_READY
+    if _SERVER_MEDIA_TABLES_READY:
+        return
+    await db.execute(text('''
+        CREATE TABLE IF NOT EXISTS community_server_emojis (
+            id SERIAL PRIMARY KEY,
+            server_id INTEGER NOT NULL REFERENCES community_servers(id) ON DELETE CASCADE,
+            name VARCHAR(64) NOT NULL,
+            image_url TEXT NOT NULL,
+            content_type VARCHAR(80),
+            created_by_id INTEGER REFERENCES community_accounts(id) ON DELETE SET NULL,
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+        )
+    '''))
+    await db.execute(text('''
+        CREATE UNIQUE INDEX IF NOT EXISTS uq_community_server_emojis_server_name
+        ON community_server_emojis (server_id, lower(name))
+    '''))
+    await db.execute(text('''
+        CREATE TABLE IF NOT EXISTS community_server_stickers (
+            id SERIAL PRIMARY KEY,
+            server_id INTEGER NOT NULL REFERENCES community_servers(id) ON DELETE CASCADE,
+            name VARCHAR(64) NOT NULL,
+            description TEXT,
+            emoji VARCHAR(32),
+            image_url TEXT NOT NULL,
+            content_type VARCHAR(80),
+            created_by_id INTEGER REFERENCES community_accounts(id) ON DELETE SET NULL,
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+        )
+    '''))
+    await db.execute(text('''
+        CREATE UNIQUE INDEX IF NOT EXISTS uq_community_server_stickers_server_name
+        ON community_server_stickers (server_id, lower(name))
+    '''))
+    await db.commit()
+    _SERVER_MEDIA_TABLES_READY = True
+
+def _emoji_payload(row, *, allowed: bool = True, local: bool = True) -> dict:
+    return {'id': int(row['id']), 'server_id': int(row['server_id']), 'name': row['name'], 'shortcode': ':' + row['name'] + ':', 'image_url': row['image_url'], 'content_type': row.get('content_type') if hasattr(row,'get') else row['content_type'], 'created_at': _media_dt(row.get('created_at') if hasattr(row,'get') else row['created_at']), 'allowed': bool(allowed), 'local': bool(local), 'type': 'emoji'}
+
+def _sticker_payload(row, *, allowed: bool = True, local: bool = True) -> dict:
+    return {'id': int(row['id']), 'server_id': int(row['server_id']), 'name': row['name'], 'description': row.get('description') if hasattr(row,'get') else row['description'], 'emoji': row.get('emoji') if hasattr(row,'get') else row['emoji'], 'image_url': row['image_url'], 'content_type': row.get('content_type') if hasattr(row,'get') else row['content_type'], 'created_at': _media_dt(row.get('created_at') if hasattr(row,'get') else row['created_at']), 'allowed': bool(allowed), 'local': bool(local), 'type': 'sticker'}
+
+async def list_server_emojis(db: AsyncSession, server_id: int) -> list[dict]:
+    await ensure_server_media_tables(db)
+    rows=(await db.execute(text('''SELECT id, server_id, name, image_url, content_type, created_at FROM community_server_emojis WHERE server_id=:server_id ORDER BY created_at DESC,id DESC'''), {'server_id':int(server_id)})).mappings().all()
+    return [_emoji_payload(r) for r in rows]
+
+async def list_server_stickers(db: AsyncSession, server_id: int) -> list[dict]:
+    await ensure_server_media_tables(db)
+    rows=(await db.execute(text('''SELECT id, server_id, name, description, emoji, image_url, content_type, created_at FROM community_server_stickers WHERE server_id=:server_id ORDER BY created_at DESC,id DESC'''), {'server_id':int(server_id)})).mappings().all()
+    return [_sticker_payload(r) for r in rows]
+
+async def create_server_emoji(db: AsyncSession, server_id: int, name: str, image_url: str, content_type: str | None, created_by_id: int) -> dict:
+    await ensure_server_media_tables(db); clean=_clean_media_name(name)
+    await db.execute(text('''INSERT INTO community_server_emojis(server_id,name,image_url,content_type,created_by_id) VALUES(:server_id,:name,:image_url,:content_type,:created_by_id) ON CONFLICT (server_id, lower(name)) DO UPDATE SET image_url=EXCLUDED.image_url, content_type=EXCLUDED.content_type, created_by_id=EXCLUDED.created_by_id, created_at=NOW()'''), {'server_id':int(server_id),'name':clean,'image_url':image_url,'content_type':content_type,'created_by_id':int(created_by_id)})
+    await db.commit()
+    row=(await db.execute(text('''SELECT id,server_id,name,image_url,content_type,created_at FROM community_server_emojis WHERE server_id=:server_id AND lower(name)=lower(:name) LIMIT 1'''), {'server_id':int(server_id),'name':clean})).mappings().first()
+    return _emoji_payload(row)
+
+async def create_server_sticker(db: AsyncSession, server_id: int, name: str, description: str | None, emoji: str | None, image_url: str, content_type: str | None, created_by_id: int) -> dict:
+    await ensure_server_media_tables(db); clean=_clean_media_name(name)
+    await db.execute(text('''INSERT INTO community_server_stickers(server_id,name,description,emoji,image_url,content_type,created_by_id) VALUES(:server_id,:name,:description,:emoji,:image_url,:content_type,:created_by_id) ON CONFLICT (server_id, lower(name)) DO UPDATE SET description=EXCLUDED.description, emoji=EXCLUDED.emoji, image_url=EXCLUDED.image_url, content_type=EXCLUDED.content_type, created_by_id=EXCLUDED.created_by_id, created_at=NOW()'''), {'server_id':int(server_id),'name':clean,'description':(description or '').strip()[:240] or None,'emoji':(emoji or '').strip()[:24] or None,'image_url':image_url,'content_type':content_type,'created_by_id':int(created_by_id)})
+    await db.commit()
+    row=(await db.execute(text('''SELECT id,server_id,name,description,emoji,image_url,content_type,created_at FROM community_server_stickers WHERE server_id=:server_id AND lower(name)=lower(:name) LIMIT 1'''), {'server_id':int(server_id),'name':clean})).mappings().first()
+    return _sticker_payload(row)
+
+async def delete_server_emoji(db: AsyncSession, server_id: int, emoji_id: int) -> bool:
+    await ensure_server_media_tables(db)
+    row=(await db.execute(text('''DELETE FROM community_server_emojis WHERE server_id=:server_id AND id=:id RETURNING id'''), {'server_id':int(server_id),'id':int(emoji_id)})).first(); await db.commit(); return bool(row)
+
+async def delete_server_sticker(db: AsyncSession, server_id: int, sticker_id: int) -> bool:
+    await ensure_server_media_tables(db)
+    row=(await db.execute(text('''DELETE FROM community_server_stickers WHERE server_id=:server_id AND id=:id RETURNING id'''), {'server_id':int(server_id),'id':int(sticker_id)})).first(); await db.commit(); return bool(row)
+
+async def media_library_for_account(db: AsyncSession, account_id: int, current_server_id: int | None = None, context: str = 'server') -> dict:
+    await ensure_server_media_tables(db)
+    sub=await get_nitro_subscription(db, account_id); nitro=bool(sub.get('active'))
+    servers=await list_servers_for_account(db, account_id); ids=[int(s.id) for s in servers]
+    if not ids: return {'nitro':nitro,'emojis':[],'stickers':[]}
+    rows_e=(await db.execute(text('''SELECT e.id,e.server_id,e.name,e.image_url,e.content_type,e.created_at,s.name AS server_name,s.icon_url AS server_icon_url FROM community_server_emojis e JOIN community_servers s ON s.id=e.server_id WHERE e.server_id = ANY(:ids) ORDER BY s.name ASC,e.created_at DESC'''), {'ids':ids})).mappings().all()
+    rows_s=(await db.execute(text('''SELECT st.id,st.server_id,st.name,st.description,st.emoji,st.image_url,st.content_type,st.created_at,s.name AS server_name,s.icon_url AS server_icon_url FROM community_server_stickers st JOIN community_servers s ON s.id=st.server_id WHERE st.server_id = ANY(:ids) ORDER BY s.name ASC,st.created_at DESC'''), {'ids':ids})).mappings().all()
+    def allow(sid): return bool((context=='server' and current_server_id and int(sid)==int(current_server_id)) or nitro)
+    emojis=[]
+    for r in rows_e:
+        it=_emoji_payload(r, allowed=allow(r['server_id']), local=bool(current_server_id and int(r['server_id'])==int(current_server_id))); it['server_name']=r['server_name']; it['server_icon_url']=r['server_icon_url']; emojis.append(it)
+    stickers=[]
+    for r in rows_s:
+        it=_sticker_payload(r, allowed=allow(r['server_id']), local=bool(current_server_id and int(r['server_id'])==int(current_server_id))); it['server_name']=r['server_name']; it['server_icon_url']=r['server_icon_url']; stickers.append(it)
+    return {'nitro':nitro,'emojis':emojis,'stickers':stickers}
