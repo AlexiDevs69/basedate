@@ -1019,6 +1019,9 @@ async def server_message_submit(
         return _forbidden_response()
 
     channel = await crud.get_server_channel(db, server_id, channel_id)
+    content, image_url, _media_item = await _prepare_custom_media_message(
+        db, account.id, content, image_url, context="server", server_id=server_id
+    )
     if channel and (content.strip() or image_url.strip()):
         reply_id = _parse_optional_int(reply_to_id)
         if reply_id:
@@ -1592,6 +1595,41 @@ async def api_unpin_server_message(server_id: int, channel_id: int, message_id: 
 
 
 
+
+_MEDIA_SEND_RE = re.compile(r"^\s*\[\[ah:(emoji|sticker):(\d+)\]\]\s*$")
+
+async def _prepare_custom_media_message(
+    db: AsyncSession,
+    account_id: int,
+    content: str,
+    image_url: str,
+    *,
+    context: str,
+    server_id: int | None = None,
+) -> tuple[str, str, dict | None]:
+    """Normalize custom emoji/sticker messages and enforce Nitro/server-scope rules."""
+    clean_content = (content or "").strip()
+    clean_image = (image_url or "").strip()
+    match = _MEDIA_SEND_RE.match(clean_content)
+    if not match:
+        return clean_content, clean_image, None
+
+    kind = match.group(1)
+    item_id = int(match.group(2))
+    item = await crud.get_media_item_for_send(
+        db,
+        account_id=int(account_id),
+        kind=kind,
+        item_id=item_id,
+        current_server_id=server_id if context == "server" else None,
+        context=context,
+    )
+    if not item or not item.get("allowed"):
+        return "", "", None
+    if kind == "sticker":
+        return f"[[ah:sticker:{item_id}]]", item.get("image_url") or "", item
+    return f":{item.get('name') or 'emoji'}:", "", item
+
 # --- Custom server emoji/sticker media --------------------------------------
 async def _media_upload_url(file: UploadFile | None, account_id: int, kind: str) -> tuple[str | None, str | None]:
     prepared = await _read_profile_upload(file)
@@ -1755,6 +1793,12 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
                 if not channel:
                     await websocket.close(code=1008)
                     return
+                content, image_url, _media_item = await _prepare_custom_media_message(
+                    db, account_id, content, image_url, context="server", server_id=server_id
+                )
+                if not content and not image_url:
+                    await realtime_channels.clear_typing(key, account_id)
+                    continue
                 reply_payload = None
                 reply_id = None
                 if reply_to_id:
@@ -1862,6 +1906,9 @@ async def dm_message_submit(
         return RedirectResponse(url="/community", status_code=303)
 
     thread = await crud.get_or_create_dm_thread(db, account.id, other.id)
+    content, image_url, _media_item = await _prepare_custom_media_message(
+        db, account.id, content, image_url, context="dm", server_id=None
+    )
     if thread and (content.strip() or image_url.strip()):
         reply_id = _parse_optional_int(reply_to_id)
         if reply_id:
@@ -2022,6 +2069,12 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
                 if not await crud.is_dm_participant(db, thread_id, account_id):
                     await websocket.close(code=1008)
                     return
+                content, image_url, _media_item = await _prepare_custom_media_message(
+                    db, account_id, content, image_url, context="dm", server_id=None
+                )
+                if not content and not image_url:
+                    await realtime_channels.clear_typing(key, account_id)
+                    continue
                 reply_payload = None
                 reply_id = None
                 if reply_to_id:
