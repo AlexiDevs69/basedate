@@ -4299,5 +4299,250 @@ if (typeof window.openSelfProfileSettings !== 'function') {
   document.addEventListener('DOMContentLoaded',load);setTimeout(load,600);new MutationObserver(()=>renderCustomMedia(document)).observe(document.body,{childList:true,subtree:true});window.AlexiHubMediaPicker={open,close,load,renderCustomMedia};
 })();
 </script>
+
+
+<!-- Custom media final fix: render saved emoji codes after reload + DM composer picker buttons -->
+<style id="ah-media-reload-dm-composer-fix-css">
+.ah-media-inline-icon-btn{
+  background:transparent!important;
+  color:var(--muted,#b5bac1)!important;
+  border:0!important;
+  width:34px!important;
+  height:34px!important;
+  min-width:34px!important;
+  border-radius:8px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:0!important;
+  box-shadow:none!important;
+  flex:0 0 34px!important;
+  cursor:pointer!important;
+}
+.ah-media-inline-icon-btn:hover{
+  background:rgba(255,255,255,.07)!important;
+  color:#fff!important;
+}
+.ah-media-inline-icon-btn svg{
+  width:22px!important;
+  height:22px!important;
+  display:block!important;
+}
+.ah-custom-emoji{
+  width:1.55em!important;
+  height:1.55em!important;
+  object-fit:contain!important;
+  vertical-align:-.38em!important;
+  display:inline-block!important;
+}
+.msg-img.ah-sticker-img,
+.message-image.ah-sticker-img{
+  max-width:178px!important;
+  max-height:178px!important;
+  width:auto!important;
+  height:auto!important;
+  object-fit:contain!important;
+  background:transparent!important;
+  border-radius:4px!important;
+  box-shadow:none!important;
+}
+.msg.ah-sticker-message .msg-text,
+.message.ah-sticker-message .message-content{
+  display:none!important;
+}
+</style>
+<script id="ah-media-reload-dm-composer-fix-js">
+(function(){
+  if(window.__ahMediaReloadDmComposerFix) return;
+  window.__ahMediaReloadDmComposerFix = true;
+
+  let mediaLib = null;
+  let mediaLoading = null;
+
+  function esc(s){
+    return String(s ?? '').replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  function escapeRegExp(s){
+    return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  function cleanName(s){
+    return String(s || 'emoji')
+      .replace(/[^a-zA-Z0-9_а-яА-ЯіїєґІЇЄҐ-]/g, '_')
+      .slice(0, 64) || 'emoji';
+  }
+
+  function mediaContextUrl(){
+    const isServer = location.pathname.includes('/servers/');
+    const m = location.pathname.match(/\/servers\/(\d+)/);
+    const serverId = m ? m[1] : '';
+    return '/community/api/media/library?context=' + encodeURIComponent(isServer ? 'server' : 'dm') + (serverId ? '&server_id=' + encodeURIComponent(serverId) : '');
+  }
+
+  async function loadMediaLib(){
+    if(mediaLib) return mediaLib;
+    if(mediaLoading) return mediaLoading;
+    mediaLoading = fetch(mediaContextUrl(), {credentials:'same-origin'})
+      .then(r => r.json())
+      .then(data => {
+        mediaLib = data && data.ok !== false ? data : {ok:false, emojis:[], stickers:[]};
+        return mediaLib;
+      })
+      .catch(() => {
+        mediaLib = {ok:false, emojis:[], stickers:[]};
+        return mediaLib;
+      })
+      .finally(() => { mediaLoading = null; });
+    return mediaLoading;
+  }
+
+  function rawTextFor(row, el){
+    if(row && row.dataset && row.dataset.messageContent !== undefined){
+      return row.dataset.messageContent || '';
+    }
+    if(el && el.dataset && el.dataset.ahRawText !== undefined){
+      return el.dataset.ahRawText || '';
+    }
+    return el ? (el.textContent || '') : '';
+  }
+
+  function renderOneText(el, raw, emojis){
+    if(!el) return;
+    if(el.dataset) el.dataset.ahRawText = raw || '';
+    const trimmed = String(raw || '').trim();
+    if(/^\[\[ah:sticker:\d+\]\]$/.test(trimmed)){
+      el.textContent = '';
+      return;
+    }
+
+    let html = esc(raw || '');
+    const seen = new Set();
+    (emojis || []).forEach(function(item){
+      if(!item || !item.image_url) return;
+      const names = [item.name, cleanName(item.name)].filter(Boolean);
+      names.forEach(function(name){
+        const key = String(name).toLowerCase();
+        if(seen.has(key)) return;
+        seen.add(key);
+        const pattern = new RegExp(':' + escapeRegExp(esc(name)) + ':', 'gi');
+        html = html.replace(pattern, '<img class="ah-custom-emoji" src="' + esc(item.image_url) + '" alt=":' + esc(name) + ':" title=":' + esc(name) + ':">');
+      });
+    });
+    el.innerHTML = html;
+    if(el.dataset) el.dataset.mediaRendered = '2';
+  }
+
+  function renderSavedCustomMedia(){
+    const lib = mediaLib;
+    if(!lib) return;
+    const emojis = lib.emojis || [];
+
+    document.querySelectorAll('.msg,.message').forEach(function(row){
+      const textEl = row.querySelector('.dm-message-text,.message-content-text,.msg-text');
+      const raw = rawTextFor(row, textEl).trim();
+      if(/^\[\[ah:sticker:\d+\]\]$/.test(raw)){
+        row.classList.add('ah-sticker-message');
+        const img = row.querySelector('.msg-img,.message-image');
+        if(img) img.classList.add('ah-sticker-img');
+      }
+    });
+
+    document.querySelectorAll('.dm-message-text,.message-content-text').forEach(function(el){
+      const row = el.closest('.msg,.message');
+      renderOneText(el, rawTextFor(row, el), emojis);
+    });
+  }
+
+  async function forceRenderSavedCustomMedia(){
+    await loadMediaLib();
+    renderSavedCustomMedia();
+    if(window.AlexiHubMediaPicker && typeof window.AlexiHubMediaPicker.renderCustomMedia === 'function'){
+      // Keep original picker data fresh, but our renderer above ignores the old allowed-only render bug.
+      try { window.AlexiHubMediaPicker.renderCustomMedia(document); } catch(e) {}
+      renderSavedCustomMedia();
+    }
+  }
+
+  function svgSmile(){
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8.5 14.2c1.6 1.4 5.4 1.4 7 0"/><path d="M9 9h.01"/><path d="M15 9h.01"/></svg>';
+  }
+
+  function svgSticker(){
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H7a3 3 0 0 0-3 3v14a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V8z"/><path d="M14 2v6h6"/><path d="M9 13h.01"/><path d="M15 13h.01"/><path d="M9.5 17c1.4 1 3.6 1 5 0"/></svg>';
+  }
+
+  function injectDmMediaButtons(){
+    if(location.pathname.includes('/servers/')) return;
+    const composer = document.querySelector('.composer');
+    if(!composer) return;
+    const submit = composer.querySelector('button[type="submit"]');
+    if(!submit) return;
+    if(!composer.querySelector('.ah-dm-open-emojis')){
+      const emojiBtn = document.createElement('button');
+      emojiBtn.type = 'button';
+      emojiBtn.title = 'Emoji';
+      emojiBtn.className = 'composer-icon-btn ah-media-inline-icon-btn ah-dm-open-emojis';
+      emojiBtn.innerHTML = svgSmile();
+      submit.parentNode.insertBefore(emojiBtn, submit);
+    }
+    if(!composer.querySelector('.ah-dm-open-stickers')){
+      const stickerBtn = document.createElement('button');
+      stickerBtn.type = 'button';
+      stickerBtn.title = 'Sticker';
+      stickerBtn.className = 'composer-icon-btn ah-media-inline-icon-btn ah-dm-open-stickers';
+      stickerBtn.innerHTML = svgSticker();
+      submit.parentNode.insertBefore(stickerBtn, submit);
+    }
+
+    const open = function(tab){
+      if(window.AlexiHubMediaPicker && typeof window.AlexiHubMediaPicker.open === 'function'){
+        window.AlexiHubMediaPicker.open(tab);
+      }else{
+        setTimeout(function(){
+          if(window.AlexiHubMediaPicker && typeof window.AlexiHubMediaPicker.open === 'function') window.AlexiHubMediaPicker.open(tab);
+        }, 250);
+      }
+    };
+
+    composer.querySelector('.ah-dm-open-emojis')?.addEventListener('click', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      open('emojis');
+    });
+    composer.querySelector('.ah-dm-open-stickers')?.addEventListener('click', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      open('stickers');
+    });
+  }
+
+  let mediaRenderTimer = null;
+  function scheduleRender(){
+    clearTimeout(mediaRenderTimer);
+    mediaRenderTimer = setTimeout(forceRenderSavedCustomMedia, 120);
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    injectDmMediaButtons();
+    forceRenderSavedCustomMedia();
+    setTimeout(forceRenderSavedCustomMedia, 700);
+    setTimeout(forceRenderSavedCustomMedia, 1600);
+  });
+
+  setTimeout(function(){
+    injectDmMediaButtons();
+    forceRenderSavedCustomMedia();
+  }, 300);
+
+  new MutationObserver(function(){
+    injectDmMediaButtons();
+    scheduleRender();
+  }).observe(document.documentElement, {childList:true, subtree:true});
+})();
+</script>
+
 </body>
 </html>
