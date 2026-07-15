@@ -385,8 +385,6 @@ def _account_payload(account) -> dict:
         "role_color_end": account.role_color_end or "#7367f0",
         "name_effect": account.name_effect or "none",
         "name_font": account.name_font or "default",
-        "name_color_start": account.name_color_start or account.role_color_start or "#f2f3f5",
-        "name_color_end": account.name_color_end or account.role_color_end or account.name_color_start or "#f2f3f5",
         "account_status": account.account_status or "online",
         "bio": account.bio or "",
         "language": getattr(account, "language", DEFAULT_LANGUAGE) or DEFAULT_LANGUAGE,
@@ -1448,52 +1446,6 @@ async def api_nitro_me(request: Request, db: AsyncSession = Depends(get_db)):
         "subscription": profile_nitro,
         "can_generate": crud.is_nitro_code_generator(account),
     })
-
-
-@router.get("/api/profile/name-style")
-async def api_get_own_name_style(request: Request, db: AsyncSession = Depends(get_db)):
-    account = await current_account(request, db)
-    if not account:
-        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
-    nitro = await crud.get_nitro_subscription(db, account.id)
-    return JSONResponse({
-        "ok": True,
-        "nitro_active": bool(nitro.get("active")),
-        "nitro": nitro,
-        "account": _account_payload(account),
-    })
-
-
-@router.post("/api/profile/name-style")
-async def api_update_own_name_style(request: Request, db: AsyncSession = Depends(get_db)):
-    account = await current_account(request, db)
-    if not account:
-        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
-
-    nitro = await crud.get_nitro_subscription(db, account.id)
-    if not nitro.get("active"):
-        return JSONResponse({
-            "ok": False,
-            "error": "nitro_required",
-            "message": "Стиль отображаемого имени доступен только с активным Nitro.",
-        }, status_code=403)
-
-    try:
-        body = await request.json()
-    except Exception:
-        body = {}
-
-    updated = await crud.update_own_name_style(
-        db,
-        account.id,
-        name_font=str(body.get("name_font") or "default"),
-        name_effect=str(body.get("name_effect") or "none"),
-        name_color_start=str(body.get("name_color_start") or "#f2f3f5"),
-        name_color_end=str(body.get("name_color_end") or body.get("name_color_start") or "#f2f3f5"),
-    )
-    if not updated:
-        return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
-    return JSONResponse({"ok": True, "account": _account_payload(updated), "nitro": nitro})
 
 
 @router.post("/api/nitro/redeem")
