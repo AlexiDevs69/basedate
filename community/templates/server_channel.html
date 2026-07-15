@@ -4953,9 +4953,11 @@ body .composer-wrap{
 
 <style id="ah-message-reactions-css">
 .ah-reaction-action{
-  width:34px!important;height:32px!important;padding:0!important;display:grid!important;place-items:center!important;
+  width:28px!important;height:26px!important;padding:0!important;display:flex!important;align-items:center!important;justify-content:center!important;
+  border:0!important;background:transparent!important;color:var(--text-secondary)!important;border-radius:6px!important;cursor:pointer!important;
 }
-.ah-reaction-action svg{width:18px;height:18px;display:block}
+.ah-reaction-action:hover{background:rgba(255,255,255,.07)!important;color:var(--text-primary)!important}
+.ah-reaction-action svg{width:17px;height:17px;display:block;stroke:currentColor}
 .ah-reactions{display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin-top:7px;min-height:0}
 .ah-reactions:empty{display:none}
 .ah-reaction-chip,.ah-reaction-add{
@@ -5035,7 +5037,7 @@ body .composer-wrap{
 
   function ensureAction(row){
     const box=actionBox(row);if(!box||box.querySelector('.ah-reaction-action'))return;
-    const b=document.createElement('button');b.type='button';b.className='ah-reaction-action';b.title='Добавить реакцию';b.setAttribute('aria-label','Добавить реакцию');b.innerHTML=smileSvg();
+    const b=document.createElement('button');b.type='button';b.className='mini-action ah-reaction-action';b.title='Добавить реакцию';b.setAttribute('aria-label','Добавить реакцию');b.innerHTML=smileSvg();
     b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();openPicker(b,messageId(row));});
     box.insertBefore(b,box.firstChild);
   }
