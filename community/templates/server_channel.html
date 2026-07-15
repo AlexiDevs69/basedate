@@ -3553,6 +3553,8 @@ if (typeof window.openSelfProfileSettings !== 'function') {
 .server-pin-name{font-weight:900;line-height:1.05}
 .server-pin-time{font-size:12px;color:#9ea4ad;margin-top:3px}
 .server-pin-content{font-size:14px;line-height:1.4;white-space:pre-wrap;word-break:break-word;color:#e8eaed}
+.server-pin-content:empty,.server-pin-preview .meta .content:empty{display:none}
+.server-pin-content .server-pin-emoji,.server-pin-preview .content .server-pin-emoji{width:1.55em!important;height:1.55em!important;min-width:1.55em!important;object-fit:contain!important;vertical-align:-.36em!important;display:inline-block!important;background:transparent!important;border-radius:0!important;margin:0!important;box-shadow:none!important}
 .server-pin-image{margin-top:9px;max-width:100%;max-height:150px;border-radius:10px;display:block}
 .server-pin-hover{position:absolute;top:10px;right:10px;display:flex;gap:8px;opacity:0;pointer-events:none;transition:opacity .12s ease}
 .server-pin-hover button{border:0;border-radius:8px;background:#3f4248;color:#fff;padding:8px 12px;font:inherit;font-size:13px;font-weight:800;cursor:pointer}
@@ -3597,6 +3599,57 @@ if (typeof window.openSelfProfileSettings !== 'function') {
   function serverPinEscape(v){return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
   function serverPinTime(v){if(!v)return ''; try{return new Date(v).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return v;}}
   function serverPinInitials(v){const s=String(v||'?').trim();return serverPinEscape((s[0]||'?').toUpperCase());}
+
+  let serverPinMediaLibrary = null;
+  let serverPinMediaLoading = null;
+  function serverPinEscapeRegExp(v){ return String(v || '').replace(/[.*+?^$()|[\]\\]/g, '\\$&'); }
+  function serverPinCleanMediaName(v){
+    return String(v || 'emoji').trim().replace(/^:+|:+$/g,'').replace(/[^a-zA-Z0-9_а-яА-ЯіїєґІЇЄҐ-]/g,'_').slice(0,64) || 'emoji';
+  }
+  async function loadServerPinMediaLibrary(){
+    if(serverPinMediaLibrary) return serverPinMediaLibrary;
+    if(serverPinMediaLoading) return serverPinMediaLoading;
+    serverPinMediaLoading = fetch('/community/api/media/library?context=server&server_id={{ server.id }}', {credentials:'same-origin'})
+      .then(r => r.json())
+      .then(data => {
+        serverPinMediaLibrary = data && data.ok !== false ? data : {emojis:[], stickers:[]};
+        return serverPinMediaLibrary;
+      })
+      .catch(() => {
+        serverPinMediaLibrary = {emojis:[], stickers:[]};
+        return serverPinMediaLibrary;
+      })
+      .finally(() => { serverPinMediaLoading = null; });
+    return serverPinMediaLoading;
+  }
+  function serverPinMediaHtml(raw, emojis){
+    const source = String(raw || '');
+    if(/^\s*\[\[ah:sticker:\d+\]\]\s*$/.test(source)) return '';
+    let html = serverPinEscape(source);
+    const seen = new Set();
+    (emojis || []).forEach(item => {
+      if(!item || !item.image_url) return;
+      [item.name, serverPinCleanMediaName(item.name)].filter(Boolean).forEach(name => {
+        const key = String(name).toLowerCase();
+        if(seen.has(key)) return;
+        seen.add(key);
+        const token = ':' + String(name) + ':';
+        const pattern = new RegExp(serverPinEscapeRegExp(serverPinEscape(token)), 'gi');
+        html = html.replace(pattern, '<img class="ah-custom-emoji server-pin-emoji" src="' + serverPinEscape(item.image_url) + '" alt="' + serverPinEscape(token) + '" title="' + serverPinEscape(token) + '">');
+      });
+    });
+    return html;
+  }
+  async function renderServerPinnedMedia(root){
+    const scope = root || document;
+    const lib = await loadServerPinMediaLibrary();
+    const emojis = lib.emojis || [];
+    scope.querySelectorAll('[data-server-pin-raw]').forEach(el => {
+      const raw = el.getAttribute('data-server-pin-raw') || '';
+      el.innerHTML = serverPinMediaHtml(raw, emojis);
+      el.dataset.serverPinMediaRendered = '1';
+    });
+  }
   function ensureServerPinsUi(){
     if(document.getElementById('server-pins-panel')) return;
     const panel=document.createElement('aside');
@@ -3630,7 +3683,9 @@ if (typeof window.openSelfProfileSettings !== 'function') {
     const avatarStyle = author.avatar_url ? "style=\"background-image:url('"+String(author.avatar_url).replace(/'/g,'%27')+"')\"" : '';
     const initials = author.avatar_url ? '' : serverPinInitials(author.username);
     const image = source.image_url ? '<img src="'+serverPinEscape(source.image_url)+'" alt="">' : '';
-    container.innerHTML = '<div class="avatar" '+avatarStyle+'>'+initials+'</div><div class="meta"><div><strong>'+serverPinEscape(author.username || '?')+'</strong><span class="time">'+serverPinEscape(serverPinTime(source.created_at || source.messageTime || ''))+'</span></div><div class="content">'+serverPinEscape(source.content || source.messageContent || '')+'</div>'+image+'</div>';
+    const rawContent = String(source.content || source.messageContent || '');
+    container.innerHTML = '<div class="avatar" '+avatarStyle+'>'+initials+'</div><div class="meta"><div><strong>'+serverPinEscape(author.username || '?')+'</strong><span class="time">'+serverPinEscape(serverPinTime(source.created_at || source.messageTime || ''))+'</span></div><div class="content" data-server-pin-raw="'+serverPinEscape(rawContent)+'">'+serverPinEscape(rawContent)+'</div>'+image+'</div>';
+    renderServerPinnedMedia(container);
   }
   function showServerPinsEmpty(){
     const body=document.getElementById('server-pins-body'); if(!body) return;
@@ -3643,8 +3698,10 @@ if (typeof window.openSelfProfileSettings !== 'function') {
       const author = pin.author || {};
       const avatarStyle = author.avatar_url ? "style=\"background-image:url('"+String(author.avatar_url).replace(/'/g,'%27')+"')\"" : '';
       const image = pin.image_url ? '<img class="server-pin-image" src="'+serverPinEscape(pin.image_url)+'" alt="">' : '';
-      return '<div class="server-pin-card" data-pin-message-id="'+Number(pin.message_id)+'"><div class="server-pin-hover"><button type="button" onclick="jumpToServerPinnedMessage('+Number(pin.message_id)+')">Перейти</button><button type="button" class="danger" onclick="openServerUnpinConfirmById('+Number(pin.message_id)+')">×</button></div><div class="server-pin-head"><div class="server-pin-avatar" '+avatarStyle+'>'+(author.avatar_url ? '' : serverPinInitials(author.username || '?'))+'</div><div><div class="server-pin-name">'+serverPinEscape(author.username || '?')+'</div><div class="server-pin-time">'+serverPinEscape(serverPinTime(pin.created_at || pin.pinned_at || ''))+'</div></div></div><div class="server-pin-content">'+serverPinEscape(pin.content || '')+'</div>'+image+'</div>';
+      const rawContent = String(pin.content || '');
+      return '<div class="server-pin-card" data-pin-message-id="'+Number(pin.message_id)+'"><div class="server-pin-hover"><button type="button" onclick="jumpToServerPinnedMessage('+Number(pin.message_id)+')">Перейти</button><button type="button" class="danger" onclick="openServerUnpinConfirmById('+Number(pin.message_id)+')">×</button></div><div class="server-pin-head"><div class="server-pin-avatar" '+avatarStyle+'>'+(author.avatar_url ? '' : serverPinInitials(author.username || '?'))+'</div><div><div class="server-pin-name">'+serverPinEscape(author.username || '?')+'</div><div class="server-pin-time">'+serverPinEscape(serverPinTime(pin.created_at || pin.pinned_at || ''))+'</div></div></div><div class="server-pin-content" data-server-pin-raw="'+serverPinEscape(rawContent)+'">'+serverPinEscape(rawContent)+'</div>'+image+'</div>';
     }).join('');
+    renderServerPinnedMedia(body);
   }
   async function loadServerPins(openAfter){
     ensureServerPinsUi();
