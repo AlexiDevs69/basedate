@@ -1688,6 +1688,43 @@ NITRO_TIER_LABELS = {
     "emerald": "Изумруд Nitro",
 }
 
+NITRO_GIFTER_BADGE_LABELS = {
+    "legend": "Легенда",
+    "philanthropist": "Филантроп",
+    "icon": "Икона",
+}
+
+
+def nitro_gifter_badge_from_count(claimed_gifts: int | float | None) -> dict:
+    """Profile gift badge earned from successfully claimed DM Nitro gifts.
+
+    One claimed gift unlocks Legend, two or three unlock Philanthropist,
+    and four or more unlock Icon. Pending/unclaimed cards never count.
+    """
+    count = max(0, int(claimed_gifts or 0))
+    if count >= 4:
+        tier = "icon"
+    elif count >= 2:
+        tier = "philanthropist"
+    elif count >= 1:
+        tier = "legend"
+    else:
+        return {
+            "active": False,
+            "count": 0,
+            "tier": None,
+            "label": None,
+            "title": None,
+        }
+    label = NITRO_GIFTER_BADGE_LABELS[tier]
+    return {
+        "active": True,
+        "count": count,
+        "tier": tier,
+        "label": label,
+        "title": f"Подарки, ур. «{label}»",
+    }
+
 
 def nitro_tier_from_duration(duration_days: int | float | None) -> tuple[str, str]:
     """Return one canonical Nitro tier for the full uninterrupted credit period."""
@@ -1959,8 +1996,20 @@ async def redeem_nitro_gift_code(db: AsyncSession, account_id: int, code_value: 
     return {"ok": True, "code": code, "days_added": days, "subscription": sub}
 
 
+async def get_nitro_gifter_badge(db: AsyncSession, account_id: int) -> dict:
+    """Count only gifts that the recipient actually activated."""
+    await ensure_nitro_tables(db)
+    row = (await db.execute(text("""
+        SELECT COUNT(*) AS claimed_count
+        FROM community_nitro_dm_gifts
+        WHERE sender_id = :account_id AND status = 'claimed'
+    """), {"account_id": int(account_id)})).mappings().first()
+    return nitro_gifter_badge_from_count(row["claimed_count"] if row else 0)
+
+
 async def nitro_profile_payload(db: AsyncSession, account_id: int) -> dict:
     sub = await get_nitro_subscription(db, account_id)
+    gifting = await get_nitro_gifter_badge(db, account_id)
     return {
         "active": bool(sub.get('active')),
         "started_at": sub.get('started_at'),
@@ -1969,6 +2018,7 @@ async def nitro_profile_payload(db: AsyncSession, account_id: int) -> dict:
         "duration_days": sub.get('duration_days') or 0,
         "tier": sub.get('tier') or 'basic',
         "tier_label": sub.get('tier_label') or NITRO_TIER_LABELS['basic'],
+        "gifting": gifting,
     }
 
 
@@ -2148,6 +2198,8 @@ async def claim_nitro_dm_gift(db: AsyncSession, public_token: str, account_id: i
     if str(row.get("status") or "pending") == "claimed":
         await db.rollback()
         gift = await get_nitro_dm_gift(db, token, int(account_id))
+        if gift:
+            gift["sender_gifting"] = await get_nitro_gifter_badge(db, int(row["sender_id"]))
         sub = await get_nitro_subscription(db, int(account_id))
         return {"ok": True, "already_claimed": True, "gift": gift, "subscription": sub}
 
@@ -2202,6 +2254,8 @@ async def claim_nitro_dm_gift(db: AsyncSession, public_token: str, account_id: i
     await db.commit()
 
     gift = await get_nitro_dm_gift(db, token, int(account_id))
+    if gift:
+        gift["sender_gifting"] = await get_nitro_gifter_badge(db, int(row["sender_id"]))
     sub = await get_nitro_subscription(db, int(account_id))
     return {"ok": True, "days_added": days, "gift": gift, "subscription": sub}
 
