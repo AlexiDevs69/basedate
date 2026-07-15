@@ -1440,10 +1440,10 @@ async def api_nitro_me(request: Request, db: AsyncSession = Depends(get_db)):
     account = await current_account(request, db)
     if not account:
         return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
-    sub = await crud.get_nitro_subscription(db, account.id)
+    profile_nitro = await crud.nitro_profile_payload(db, account.id)
     return JSONResponse({
         "ok": True,
-        "subscription": sub,
+        "subscription": profile_nitro,
         "can_generate": crud.is_nitro_code_generator(account),
     })
 
@@ -2261,6 +2261,7 @@ async def public_profile(username: str, request: Request, db: AsyncSession = Dep
 
     friends = await crud.list_friends(db, profile_account.id)
     gifts = await crud.list_gifts_for_account(db, profile_account.id)
+    profile_nitro = await crud.nitro_profile_payload(db, profile_account.id)
 
     return templates.TemplateResponse(
         "public_profile.html",
@@ -2271,6 +2272,7 @@ async def public_profile(username: str, request: Request, db: AsyncSession = Dep
             "is_own": bool(viewer and viewer.id == profile_account.id),
             "friends": friends,
             "gifts": gifts,
+            "nitro": profile_nitro,
         },
     )
 
