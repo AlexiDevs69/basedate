@@ -702,6 +702,57 @@
 }
 .friend-icon-btn:hover{background:#3a3c43;color:#fff;}
 .friend-icon-btn.danger:hover{background:rgba(242,63,66,.16);color:#ff7070;}
+.friend-more-trigger[aria-expanded="true"]{background:#3a3c43;color:#fff;}
+.ah-friend-menu{
+  position:fixed;z-index:9500;width:190px;display:none;padding:6px;
+  border:1px solid #3a3c43;border-radius:8px;background:#24252b;
+  box-shadow:0 14px 38px rgba(0,0,0,.48);transform-origin:top right;
+}
+.ah-friend-menu.open{display:block;animation:ahFriendMenuIn .12s cubic-bezier(.2,.7,.2,1) both;}
+@keyframes ahFriendMenuIn{from{opacity:0;transform:translateY(-5px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+.ah-friend-menu button{
+  width:100%;min-height:34px;border:0;border-radius:5px;background:transparent;
+  color:#dbdee1;padding:7px 10px;text-align:left;font:inherit;font-size:13px;font-weight:650;cursor:pointer;
+}
+.ah-friend-menu button:hover{background:#5865f2;color:#fff;}
+.ah-friend-menu button.danger{color:#f23f42;}
+.ah-friend-menu button.danger:hover{background:#da373c;color:#fff;}
+
+.ah-unfriend-backdrop{
+  position:fixed;inset:0;z-index:9600;display:none;align-items:center;justify-content:center;
+  padding:20px;background:rgba(0,0,0,.72);backdrop-filter:blur(1px);
+}
+.ah-unfriend-backdrop.open{display:flex;animation:ahUnfriendFade .14s ease both;}
+@keyframes ahUnfriendFade{from{opacity:0}to{opacity:1}}
+.ah-unfriend-dialog{
+  width:min(440px,calc(100vw - 32px));overflow:hidden;border:1px solid #3a3c43;
+  border-radius:12px;background:#24252b;color:#f2f3f5;box-shadow:0 22px 70px rgba(0,0,0,.58);
+  animation:ahUnfriendPop .16s cubic-bezier(.2,.75,.2,1) both;
+}
+@keyframes ahUnfriendPop{from{opacity:0;transform:translateY(8px) scale(.975)}to{opacity:1;transform:translateY(0) scale(1)}}
+.ah-unfriend-body{position:relative;padding:22px 22px 20px;}
+.ah-unfriend-title{margin:0 36px 10px 0;font-size:20px;font-weight:900;line-height:1.2;}
+.ah-unfriend-copy{margin:0;color:#b5bac1;font-size:14px;line-height:1.45;}
+.ah-unfriend-close{
+  position:absolute;top:14px;right:14px;width:32px;height:32px;display:grid;place-items:center;
+  border:0;border-radius:8px;background:transparent;color:#b5bac1;cursor:pointer;font-size:24px;line-height:1;
+}
+.ah-unfriend-close:hover{background:#313338;color:#fff;}
+.ah-unfriend-actions{display:flex;justify-content:flex-end;gap:10px;padding:16px 22px;background:#1e1f22;}
+.ah-unfriend-actions button{
+  min-width:132px;min-height:38px;border:0;border-radius:5px;padding:8px 14px;color:#fff;
+  font:inherit;font-weight:800;cursor:pointer;
+}
+.ah-unfriend-cancel{background:#4e5058;}
+.ah-unfriend-cancel:hover{background:#5b5d66;}
+.ah-unfriend-confirm{background:#da373c;}
+.ah-unfriend-confirm:hover{background:#a1282c;}
+.ah-unfriend-confirm:disabled{opacity:.58;cursor:wait;}
+.friend-row.ah-friend-removing{pointer-events:none;animation:ahFriendRowRemove .2s ease forwards;}
+@keyframes ahFriendRowRemove{
+  to{opacity:0;transform:translateX(14px);max-height:0;min-height:0;padding-top:0;padding-bottom:0;border-width:0;}
+}
+
 .friend-empty{
   min-height:240px;
   display:grid;
@@ -1930,10 +1981,17 @@
             {% set f_status = f.account_status or 'online' %}
             {% set f_visible = f.id in online_ids and f_status != 'invisible' %}
             {% if f_visible %}
-            <div class="friend-row mini-profile-trigger" data-name="{{ f.username|lower }}" data-mini-username="{{ f.username }}" data-mini-avatar="{{ f.avatar_url or '' }}" data-mini-banner="{{ f.banner_url or '' }}" data-mini-role="{{ f.role_label or 'member' }}" data-mini-c1="{{ f.role_color_start or '#5865f2' }}" data-mini-c2="{{ f.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ f.username }}" data-mini-bio="{{ f.bio or '' }}">
+            <div class="friend-row mini-profile-trigger" data-friend-username="{{ f.username }}" data-name="{{ f.username|lower }}" data-mini-username="{{ f.username }}" data-mini-avatar="{{ f.avatar_url or '' }}" data-mini-banner="{{ f.banner_url or '' }}" data-mini-role="{{ f.role_label or 'member' }}" data-mini-c1="{{ f.role_color_start or '#5865f2' }}" data-mini-c2="{{ f.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ f.username }}" data-mini-bio="{{ f.bio or '' }}">
               <span class="avatar" {% if f.avatar_url %}style="background-image:url('{{ f.avatar_url }}')"{% endif %}>{% if not f.avatar_url %}{{ f.username[:1]|upper }}{% endif %}<span class="presence status-{{ f_status }}"></span></span>
               <span class="friend-main"><b>{{ f.username }}</b><span>{{ {'online':'В сети','idle':'Неактивен','dnd':'Не беспокоить','invisible':'Не в сети'}.get(f_status, 'В сети') }}</span></span>
-              <span class="friend-actions"><a class="friend-icon-btn" href="/community/dm/{{ f.username }}" title="Сообщение"><svg class="icon icon-sm"><use href="#i-message"></use></svg></a><button class="friend-icon-btn" onclick="showActionToast('Меню друга будет позже')"><svg class="icon icon-sm"><use href="#i-more"></use></svg></button></span>
+              <span class="friend-actions"><a class="friend-icon-btn" href="/community/dm/{{ f.username }}" title="Сообщение"><svg class="icon icon-sm"><use href="#i-message"></use></svg></a><button class="friend-icon-btn friend-more-trigger" type="button"
+                aria-label="Меню друга {{ f.username }}"
+                aria-haspopup="menu"
+                aria-expanded="false"
+                data-friend-menu-username="{{ f.username }}"
+                onclick="openFriendMenu(event,this)">
+                <svg class="icon icon-sm"><use href="#i-more"></use></svg>
+              </button></span>
             </div>
             {% endif %}
             {% endfor %}
@@ -1951,10 +2009,17 @@
             {% for f in friends %}
             {% set f_status = f.account_status or 'online' %}
             {% set f_visible = f.id in online_ids and f_status != 'invisible' %}
-            <div class="friend-row mini-profile-trigger" data-name="{{ f.username|lower }}" data-mini-username="{{ f.username }}" data-mini-avatar="{{ f.avatar_url or '' }}" data-mini-banner="{{ f.banner_url or '' }}" data-mini-role="{{ f.role_label or 'member' }}" data-mini-c1="{{ f.role_color_start or '#5865f2' }}" data-mini-c2="{{ f.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ f.username }}" data-mini-bio="{{ f.bio or '' }}">
+            <div class="friend-row mini-profile-trigger" data-friend-username="{{ f.username }}" data-name="{{ f.username|lower }}" data-mini-username="{{ f.username }}" data-mini-avatar="{{ f.avatar_url or '' }}" data-mini-banner="{{ f.banner_url or '' }}" data-mini-role="{{ f.role_label or 'member' }}" data-mini-c1="{{ f.role_color_start or '#5865f2' }}" data-mini-c2="{{ f.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ f.username }}" data-mini-bio="{{ f.bio or '' }}">
               <span class="avatar" {% if f.avatar_url %}style="background-image:url('{{ f.avatar_url }}')"{% endif %}>{% if not f.avatar_url %}{{ f.username[:1]|upper }}{% endif %}{% if f_visible %}<span class="presence status-{{ f_status }}"></span>{% endif %}</span>
               <span class="friend-main"><b>{{ f.username }}</b><span>{% if f_visible %}{{ {'online':'В сети','idle':'Неактивен','dnd':'Не беспокоить','invisible':'Не в сети'}.get(f_status, 'В сети') }}{% else %}Не в сети{% endif %}</span></span>
-              <span class="friend-actions"><a class="friend-icon-btn" href="/community/dm/{{ f.username }}" title="Сообщение"><svg class="icon icon-sm"><use href="#i-message"></use></svg></a><button class="friend-icon-btn" onclick="showActionToast('Меню друга будет позже')"><svg class="icon icon-sm"><use href="#i-more"></use></svg></button></span>
+              <span class="friend-actions"><a class="friend-icon-btn" href="/community/dm/{{ f.username }}" title="Сообщение"><svg class="icon icon-sm"><use href="#i-message"></use></svg></a><button class="friend-icon-btn friend-more-trigger" type="button"
+                aria-label="Меню друга {{ f.username }}"
+                aria-haspopup="menu"
+                aria-expanded="false"
+                data-friend-menu-username="{{ f.username }}"
+                onclick="openFriendMenu(event,this)">
+                <svg class="icon icon-sm"><use href="#i-more"></use></svg>
+              </button></span>
             </div>
             {% else %}<div class="friend-empty"><div><h2>Список друзей пуст</h2><p>Добавь первого друга через вкладку “Добавить в друзья”.</p></div></div>{% endfor %}
           </div>
@@ -2034,7 +2099,7 @@
       {% set f_status = f.account_status or 'online' %}
       {% if f.id in online_ids and f_status != 'invisible' and shown_active.value < 4 %}
       {% set shown_active.value = shown_active.value + 1 %}
-      <div class="active-contact-card">
+      <div class="active-contact-card" data-active-friend-username="{{ f.username }}">
         <div class="active-contact-top">
           <span class="avatar" {% if f.avatar_url %}style="background-image:url('{{ f.avatar_url }}')"{% endif %}>{% if not f.avatar_url %}{{ f.username[:1]|upper }}{% endif %}<span class="presence status-{{ f_status }}"></span></span>
           <span class="active-contact-title"><b>{{ f.username }}</b><span>{{ {'online':'В сети','idle':'Неактивен','dnd':'Не беспокоить','invisible':'Не в сети'}.get(f_status, 'В сети') }}</span></span>
@@ -2044,10 +2109,30 @@
       {% endif %}
       {% endfor %}
       {% if shown_active.value == 0 %}
-      <div class="active-contact-card"><div class="active-contact-top"><span class="active-contact-title"><b>Пока тихо</b><span>Активные друзья появятся здесь.</span></span></div></div>
+      <div class="active-contact-card" data-active-contacts-empty="1"><div class="active-contact-top"><span class="active-contact-title"><b>Пока тихо</b><span>Активные друзья появятся здесь.</span></span></div></div>
       {% endif %}
     </aside>
 
+  </div>
+
+  <div id="ah-friend-menu" class="ah-friend-menu" role="menu" aria-hidden="true">
+    <button type="button" role="menuitem" onclick="friendMenuPlaceholder('Видеозвонки будут добавлены позже')">Начать видеозвонок</button>
+    <button type="button" role="menuitem" onclick="friendMenuPlaceholder('Голосовые звонки будут добавлены позже')">Начать голосовой звонок</button>
+    <button type="button" role="menuitem" class="danger" onclick="openUnfriendConfirmation()">Удалить из друзей</button>
+  </div>
+
+  <div id="ah-unfriend-modal" class="ah-unfriend-backdrop" aria-hidden="true">
+    <div class="ah-unfriend-dialog" role="dialog" aria-modal="true" aria-labelledby="ah-unfriend-title">
+      <div class="ah-unfriend-body">
+        <button type="button" class="ah-unfriend-close" aria-label="Закрыть" onclick="closeUnfriendConfirmation()">×</button>
+        <h2 id="ah-unfriend-title" class="ah-unfriend-title">Удалить из друзей</h2>
+        <p id="ah-unfriend-copy" class="ah-unfriend-copy">Вы уверены, что хотите удалить пользователя из списка друзей?</p>
+      </div>
+      <div class="ah-unfriend-actions">
+        <button type="button" class="ah-unfriend-cancel" onclick="closeUnfriendConfirmation()">Отмена</button>
+        <button id="ah-unfriend-confirm" type="button" class="ah-unfriend-confirm" onclick="confirmUnfriend()">Удалить из друзей</button>
+      </div>
+    </div>
   </div>
 
 <script>
@@ -2758,6 +2843,217 @@ document.addEventListener('DOMContentLoaded',()=>{
       e.preventDefault(); e.stopPropagation(); window.openProfileSettings();
     }
   },true);
+})();
+</script>
+
+
+<script id="ah-friend-menu-script">
+(function(){
+  let selectedUsername = '';
+  let activeTrigger = null;
+  let removing = false;
+
+  const menu = () => document.getElementById('ah-friend-menu');
+  const modal = () => document.getElementById('ah-unfriend-modal');
+
+  function closeFriendMenu(){
+    const el = menu();
+    if(el){
+      el.classList.remove('open');
+      el.setAttribute('aria-hidden','true');
+    }
+    if(activeTrigger) activeTrigger.setAttribute('aria-expanded','false');
+    activeTrigger = null;
+  }
+
+  function positionFriendMenu(button){
+    const el = menu();
+    if(!el || !button) return;
+    el.classList.add('open');
+    el.setAttribute('aria-hidden','false');
+
+    const rect = button.getBoundingClientRect();
+    const menuRect = el.getBoundingClientRect();
+    let left = rect.right - menuRect.width;
+    let top = rect.bottom + 7;
+
+    left = Math.max(8, Math.min(left, window.innerWidth - menuRect.width - 8));
+    if(top + menuRect.height > window.innerHeight - 8){
+      top = Math.max(8, rect.top - menuRect.height - 7);
+    }
+    el.style.left = left + 'px';
+    el.style.top = top + 'px';
+  }
+
+  window.openFriendMenu = function(event, button){
+    event.preventDefault();
+    event.stopPropagation();
+
+    const username = String(button?.dataset?.friendMenuUsername || '').trim();
+    if(!username) return;
+
+    const sameButton = activeTrigger === button && menu()?.classList.contains('open');
+    closeFriendMenu();
+    if(sameButton) return;
+
+    selectedUsername = username;
+    activeTrigger = button;
+    button.setAttribute('aria-expanded','true');
+    positionFriendMenu(button);
+  };
+
+  window.friendMenuPlaceholder = function(message){
+    closeFriendMenu();
+    if(typeof showActionToast === 'function') showActionToast(message);
+  };
+
+  window.openUnfriendConfirmation = function(){
+    closeFriendMenu();
+    if(!selectedUsername) return;
+
+    const overlay = modal();
+    const title = document.getElementById('ah-unfriend-title');
+    const copy = document.getElementById('ah-unfriend-copy');
+
+    if(title) title.textContent = "Удалить '" + selectedUsername + "'";
+    if(copy) copy.textContent = "Вы уверены, что хотите удалить пользователя " + selectedUsername + " из списка друзей?";
+
+    if(overlay){
+      overlay.classList.add('open');
+      overlay.setAttribute('aria-hidden','false');
+    }
+    setTimeout(() => document.getElementById('ah-unfriend-confirm')?.focus(), 20);
+  };
+
+  window.closeUnfriendConfirmation = function(){
+    if(removing) return;
+    const overlay = modal();
+    if(overlay){
+      overlay.classList.remove('open');
+      overlay.setAttribute('aria-hidden','true');
+    }
+  };
+
+  function friendRows(username){
+    return Array.from(document.querySelectorAll('.friend-row[data-friend-username]'))
+      .filter(row => row.dataset.friendUsername === username);
+  }
+
+  function updateFriendPage(pageName, label){
+    const page = document.querySelector('[data-friend-page="' + pageName + '"]');
+    if(!page) return;
+
+    const list = page.querySelector('.friend-list');
+    const count = page.querySelector('.friend-count');
+    const rows = list ? list.querySelectorAll('.friend-row[data-friend-username]') : [];
+    if(count) count.textContent = label + ' — ' + rows.length;
+
+    if(!list) return;
+    let empty = list.querySelector('.friend-empty');
+    if(rows.length === 0 && !empty){
+      empty = document.createElement('div');
+      empty.className = 'friend-empty';
+      empty.innerHTML = pageName === 'online'
+        ? '<div><h2>Сейчас друзей онлайн нет</h2><p>Когда кто-то будет в сети, он появится здесь.</p></div>'
+        : '<div><h2>Список друзей пуст</h2><p>Добавь первого друга через вкладку “Добавить в друзья”.</p></div>';
+      list.appendChild(empty);
+    }else if(rows.length > 0 && empty){
+      empty.remove();
+    }
+  }
+
+  function updateActiveContacts(username){
+    document.querySelectorAll('.active-contact-card[data-active-friend-username]').forEach(card => {
+      if(card.dataset.activeFriendUsername === username) card.remove();
+    });
+
+    const right = document.querySelector('aside.right');
+    if(!right) return;
+    const remaining = right.querySelectorAll('.active-contact-card[data-active-friend-username]');
+    const oldEmpty = right.querySelector('[data-active-contacts-empty="1"]');
+
+    if(remaining.length === 0 && !oldEmpty){
+      const empty = document.createElement('div');
+      empty.className = 'active-contact-card';
+      empty.dataset.activeContactsEmpty = '1';
+      empty.innerHTML = '<div class="active-contact-top"><span class="active-contact-title"><b>Пока тихо</b><span>Активные друзья появятся здесь.</span></span></div>';
+      right.appendChild(empty);
+    }else if(remaining.length > 0 && oldEmpty){
+      oldEmpty.remove();
+    }
+  }
+
+  window.confirmUnfriend = async function(){
+    if(removing || !selectedUsername) return;
+    const username = selectedUsername;
+    const confirmButton = document.getElementById('ah-unfriend-confirm');
+
+    removing = true;
+    if(confirmButton){
+      confirmButton.disabled = true;
+      confirmButton.textContent = 'Удаление...';
+    }
+
+    try{
+      const response = await fetch('/community/api/friends/remove/' + encodeURIComponent(username), {
+        method:'POST',
+        credentials:'same-origin',
+        headers:{'Accept':'application/json'}
+      });
+      const data = await response.json().catch(() => ({}));
+      if(!response.ok) throw new Error(data.error || 'remove_failed');
+
+      const rows = friendRows(username);
+      rows.forEach(row => row.classList.add('ah-friend-removing'));
+      await new Promise(resolve => setTimeout(resolve, 190));
+      rows.forEach(row => row.remove());
+
+      updateFriendPage('online', 'В сети');
+      updateFriendPage('all', 'Все друзья');
+      updateActiveContacts(username);
+
+      document.getElementById('ah-v3-mini')?.classList.remove('open');
+
+      const overlay = modal();
+      if(overlay){
+        overlay.classList.remove('open');
+        overlay.setAttribute('aria-hidden','true');
+      }
+      selectedUsername = '';
+      if(typeof showActionToast === 'function') showActionToast('Пользователь удалён из друзей');
+    }catch(error){
+      if(typeof showActionToast === 'function') showActionToast('Не удалось удалить пользователя из друзей');
+    }finally{
+      removing = false;
+      if(confirmButton){
+        confirmButton.disabled = false;
+        confirmButton.textContent = 'Удалить из друзей';
+      }
+    }
+  };
+
+  document.addEventListener('click', function(event){
+    const menuElement = menu();
+    if(menuElement?.classList.contains('open') &&
+       !menuElement.contains(event.target) &&
+       !event.target.closest('.friend-more-trigger')){
+      closeFriendMenu();
+    }
+
+    const overlay = modal();
+    if(overlay?.classList.contains('open') && event.target === overlay){
+      closeUnfriendConfirmation();
+    }
+  });
+
+  document.addEventListener('keydown', function(event){
+    if(event.key !== 'Escape') return;
+    if(modal()?.classList.contains('open')) closeUnfriendConfirmation();
+    else closeFriendMenu();
+  });
+
+  window.addEventListener('resize', closeFriendMenu);
+  window.addEventListener('scroll', closeFriendMenu, true);
 })();
 </script>
 
