@@ -1182,7 +1182,7 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
 </style>
 
 </head>
-<body>
+<body data-current-account-id="{{ account.id }}">
   <aside class="server-rail">
     <a href="/community" class="server-dot home-dot {{ 'active' if not active_server_id else '' }}" title="Direct Messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="21" height="21"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg></a>
     <div class="rail-sep"></div>
@@ -3119,6 +3119,303 @@ if (typeof window.openSelfProfileSettings !== 'function') {
   document.addEventListener('focusout',function(e){if(e.target.closest&&e.target.closest('.ah-gifter-profile-badge'))hide()});
   window.addEventListener('scroll',function(){if(current)place(current)},true);
   window.addEventListener('resize',function(){if(current)place(current)});
+})();
+</script>
+
+
+<script>
+(function () {
+  'use strict';
+  if (window.__alexAccountRealtimeStarted) return;
+  window.__alexAccountRealtimeStarted = true;
+
+  var body = document.body;
+  var currentAccountId = Number(body && body.dataset.currentAccountId || 0);
+  var activeDmAccountId = Number(body && body.dataset.activeDmAccountId || 0);
+  var socket = null;
+  var reconnectTimer = null;
+  var reconnectDelay = 900;
+  var pingTimer = null;
+  var dmList = document.getElementById('dm-list');
+
+  function normalizedPresence(status, online) {
+    var clean = String(status || 'online').toLowerCase();
+    if (online === false || clean === 'invisible' || clean === 'offline') return 'offline';
+    if (!['online', 'idle', 'dnd'].includes(clean)) return 'online';
+    return clean;
+  }
+
+  function directTextNodes(element) {
+    if (!element) return [];
+    return Array.prototype.filter.call(element.childNodes, function (node) {
+      return node.nodeType === Node.TEXT_NODE;
+    });
+  }
+
+  function setAvatarContent(avatar, profile) {
+    if (!avatar || !profile) return;
+    directTextNodes(avatar).forEach(function (node) { node.remove(); });
+    var letter = avatar.querySelector('.alex-rt-avatar-letter');
+    if (!letter) {
+      letter = document.createElement('span');
+      letter.className = 'alex-rt-avatar-letter';
+      avatar.insertBefore(letter, avatar.firstChild);
+    }
+    var avatarUrl = String(profile.avatar_url || '');
+    if (avatarUrl) {
+      avatar.style.backgroundImage = 'url("' + avatarUrl.replace(/"/g, '\\"') + '")';
+      letter.textContent = '';
+      letter.hidden = true;
+    } else {
+      avatar.style.backgroundImage = '';
+      letter.textContent = String(profile.username || '?').slice(0, 1).toUpperCase();
+      letter.hidden = false;
+    }
+  }
+
+  function setRowPresence(row, status, online, username) {
+    if (!row) return;
+    var normalized = normalizedPresence(status, online);
+    row.dataset.miniStatus = normalized;
+
+    var avatar = row.querySelector('.avatar, .member-avatar, .msg-avatar');
+    var dot = row.querySelector('.presence, .member-presence');
+    var isDmRow = row.classList.contains('dm-row');
+
+    if (normalized === 'offline' && isDmRow) {
+      if (dot) dot.remove();
+    } else {
+      if (!dot && avatar && normalized !== 'offline') {
+        dot = document.createElement('span');
+        dot.className = isDmRow ? 'presence' : 'member-presence';
+        avatar.appendChild(dot);
+      }
+      if (dot) {
+        [
+          'status-online', 'status-idle', 'status-dnd', 'status-invisible', 'status-offline',
+          'online', 'idle', 'dnd', 'invisible', 'offline'
+        ].forEach(function (name) { dot.classList.remove(name); });
+        dot.classList.add('status-' + normalized);
+        dot.classList.add(normalized);
+      }
+    }
+
+    var rowUsername = username || row.dataset.miniUsername || row.dataset.name || '';
+    if (rowUsername) {
+      document.querySelectorAll('[data-mini-username]').forEach(function (element) {
+        if (String(element.dataset.miniUsername || '').toLowerCase() === String(rowUsername).toLowerCase()) {
+          element.dataset.miniStatus = normalized;
+        }
+      });
+    }
+  }
+
+  function updatePresence(accountId, status, online, username) {
+    accountId = Number(accountId || 0);
+    if (!accountId || accountId === currentAccountId) return;
+    document.querySelectorAll('[data-account-id]').forEach(function (element) {
+      if (Number(element.dataset.accountId || 0) !== accountId) return;
+      if (element.classList.contains('dm-row') || element.classList.contains('member-row')) {
+        setRowPresence(element, status, online, username);
+      } else {
+        element.dataset.miniStatus = normalizedPresence(status, online);
+      }
+    });
+  }
+
+  function makeDmRow(profile, threadId) {
+    var row = document.createElement('a');
+    row.className = 'dm-row';
+    row.href = '/community/dm/' + encodeURIComponent(profile.username || '');
+    row.dataset.threadId = String(threadId || '');
+    row.dataset.accountId = String(profile.id || '');
+    row.dataset.name = String(profile.username || '').toLowerCase();
+    row.dataset.miniUsername = profile.username || '';
+    row.dataset.miniAvatar = profile.avatar_url || '';
+    row.dataset.miniBanner = profile.banner_url || '';
+    row.dataset.miniStatus = 'offline';
+    row.dataset.miniRole = profile.role_label || 'member';
+    row.dataset.miniEffect = profile.name_effect || 'none';
+    row.dataset.miniFont = profile.name_font || 'default';
+    row.dataset.miniC1 = profile.role_color_start || '#5865f2';
+    row.dataset.miniC2 = profile.role_color_end || '#9b5cf6';
+    row.dataset.miniProfile = '/community/profile/' + encodeURIComponent(profile.username || '');
+    row.dataset.miniBio = profile.bio || '';
+
+    var avatar = document.createElement('span');
+    avatar.className = 'avatar';
+    var meta = document.createElement('span');
+    meta.className = 'dm-meta';
+    var name = document.createElement('span');
+    name.className = 'dm-name';
+    name.textContent = profile.username || 'User';
+    var snippet = document.createElement('span');
+    snippet.className = 'dm-snippet';
+
+    meta.appendChild(name);
+    meta.appendChild(snippet);
+    row.appendChild(avatar);
+    row.appendChild(meta);
+    setAvatarContent(avatar, profile);
+    return row;
+  }
+
+  function animateRowToTop(row, isNew) {
+    if (!dmList || !row) return;
+    var oldRect = isNew ? null : row.getBoundingClientRect();
+    dmList.prepend(row);
+    var newRect = row.getBoundingClientRect();
+    var delta = oldRect ? oldRect.top - newRect.top : -10;
+    try {
+      row.animate(
+        [
+          { transform: 'translateY(' + delta + 'px)', opacity: isNew ? 0 : 0.72 },
+          { transform: 'translateY(0)', opacity: 1 }
+        ],
+        { duration: 220, easing: 'cubic-bezier(.2,.8,.2,1)' }
+      );
+    } catch (error) {}
+  }
+
+  function upsertDmSidebar(data) {
+    if (!dmList || !data || !data.other) return;
+    var profile = data.other;
+    var accountId = Number(profile.id || 0);
+    var threadId = Number(data.thread_id || 0);
+    if (!accountId || !threadId) return;
+
+    var row = null;
+    dmList.querySelectorAll('.dm-row').forEach(function (candidate) {
+      if (row) return;
+      if (
+        Number(candidate.dataset.threadId || 0) === threadId ||
+        Number(candidate.dataset.accountId || 0) === accountId ||
+        String(candidate.dataset.name || '').toLowerCase() === String(profile.username || '').toLowerCase()
+      ) {
+        row = candidate;
+      }
+    });
+
+    var isNew = !row;
+    if (!row) row = makeDmRow(profile, threadId);
+
+    row.dataset.threadId = String(threadId);
+    row.dataset.accountId = String(accountId);
+    row.dataset.name = String(profile.username || '').toLowerCase();
+    row.dataset.miniUsername = profile.username || '';
+    row.dataset.miniAvatar = profile.avatar_url || '';
+    row.dataset.miniBanner = profile.banner_url || '';
+    row.dataset.miniRole = profile.role_label || 'member';
+    row.dataset.miniEffect = profile.name_effect || 'none';
+    row.dataset.miniFont = profile.name_font || 'default';
+    row.dataset.miniC1 = profile.role_color_start || '#5865f2';
+    row.dataset.miniC2 = profile.role_color_end || '#9b5cf6';
+    row.dataset.miniProfile = '/community/profile/' + encodeURIComponent(profile.username || '');
+    row.dataset.miniBio = profile.bio || '';
+    row.href = '/community/dm/' + encodeURIComponent(profile.username || '');
+
+    var name = row.querySelector('.dm-name');
+    if (name) name.textContent = profile.username || 'User';
+    var avatar = row.querySelector('.avatar');
+    setAvatarContent(avatar, profile);
+
+    var last = data.last_message || {};
+    var snippet = row.querySelector('.dm-snippet');
+    if (snippet) {
+      snippet.textContent = String(last.content || (last.image_url ? 'Attachment' : '')).slice(0, 90);
+    }
+
+    row.classList.toggle('active', accountId === activeDmAccountId);
+    setRowPresence(row, data.other_status, data.other_online, profile.username);
+    dmList.querySelectorAll('.empty-note').forEach(function (note) { note.remove(); });
+    animateRowToTop(row, isNew);
+  }
+
+  function watchedAccountIds() {
+    var ids = [];
+    var seen = new Set();
+    document.querySelectorAll('[data-account-id]').forEach(function (element) {
+      var accountId = Number(element.dataset.accountId || 0);
+      if (!accountId || accountId === currentAccountId || seen.has(accountId)) return;
+      seen.add(accountId);
+      ids.push(accountId);
+    });
+    return ids;
+  }
+
+  function sendWatchList() {
+    if (!socket || socket.readyState !== WebSocket.OPEN) return;
+    socket.send(JSON.stringify({ type: 'watch_presence', account_ids: watchedAccountIds() }));
+  }
+
+  function handleMessage(event) {
+    var data;
+    try { data = JSON.parse(event.data); } catch (error) { return; }
+    if (data.type === 'presence') {
+      updatePresence(data.account_id, data.status, data.online, data.username);
+      return;
+    }
+    if (data.type === 'presence_snapshot') {
+      (data.accounts || []).forEach(function (item) {
+        updatePresence(item.account_id, item.status, item.online, item.username);
+      });
+      return;
+    }
+    if (data.type === 'dm_sidebar_update') {
+      upsertDmSidebar(data);
+      setTimeout(sendWatchList, 0);
+    }
+  }
+
+  function connectAccountRealtime() {
+    clearTimeout(reconnectTimer);
+    var protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    try {
+      socket = new WebSocket(protocol + '//' + location.host + '/community/ws/account');
+    } catch (error) {
+      reconnectTimer = setTimeout(connectAccountRealtime, reconnectDelay);
+      return;
+    }
+
+    socket.addEventListener('open', function () {
+      reconnectDelay = 900;
+      sendWatchList();
+      clearInterval(pingTimer);
+      pingTimer = setInterval(function () {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+          socket.send(JSON.stringify({ type: 'ping' }));
+        }
+      }, 25000);
+    });
+    socket.addEventListener('message', handleMessage);
+    socket.addEventListener('close', function () {
+      clearInterval(pingTimer);
+      reconnectTimer = setTimeout(connectAccountRealtime, reconnectDelay);
+      reconnectDelay = Math.min(8000, Math.round(reconnectDelay * 1.55));
+    });
+    socket.addEventListener('error', function () {
+      try { socket.close(); } catch (error) {}
+    });
+  }
+
+  window.AlexiHubAccountRealtime = {
+    refreshPresenceWatch: sendWatchList,
+    updatePresence: updatePresence,
+    upsertDmSidebar: upsertDmSidebar
+  };
+
+  connectAccountRealtime();
+
+  window.addEventListener('pagehide', function () {
+    clearTimeout(reconnectTimer);
+    clearInterval(pingTimer);
+    try {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ type: 'leave' }));
+        socket.close(1000, 'pagehide');
+      }
+    } catch (error) {}
+  });
 })();
 </script>
 
