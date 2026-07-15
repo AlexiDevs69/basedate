@@ -32,8 +32,8 @@ from community.models import (
 # last 3 minutes. Cheap to compute, no background job or websocket needed.
 ONLINE_WINDOW = timedelta(minutes=3)
 
-VISUAL_NAME_EFFECTS = {"none", "gradient", "glow"}
-VISUAL_NAME_FONTS = {"default", "mono", "serif", "rounded", "cyber", "display", "pixel", "bubble", "puffy", "block", "neon", "glitch", "graffiti", "spooky", "medieval", "roundfat"}
+VISUAL_NAME_EFFECTS = {"none", "solid", "gradient", "glow", "neon", "multicolor", "outline"}
+VISUAL_NAME_FONTS = {"default", "cherry", "grandstander", "bungee", "pixel", "museo", "serif", "rounded", "mono", "cyber", "display", "bubble", "puffy", "block", "neon", "glitch", "graffiti", "spooky", "medieval", "roundfat"}
 
 PRESENCE_STATUSES = {"online", "idle", "dnd", "invisible"}
 SUPPORTED_LANGUAGES = {"ru", "uk", "en"}
@@ -62,6 +62,13 @@ def _normalize_name_font(value: str | None) -> str | None:
     if font not in VISUAL_NAME_FONTS or font == "default":
         return None
     return font
+
+
+def _normalize_name_color(value: str | None, fallback: str) -> str:
+    clean = (value or "").strip()
+    if re.fullmatch(r"#[0-9a-fA-F]{6}", clean):
+        return clean.lower()
+    return fallback
 
 
 async def ensure_account_visual_columns(db: AsyncSession) -> None:
@@ -259,6 +266,31 @@ async def update_own_profile(
     account.avatar_url = avatar_url or None
     account.banner_url = banner_url or None
     account.bio = bio or None
+    await db.commit()
+    await db.refresh(account)
+    return account
+
+
+async def update_own_name_style(
+    db: AsyncSession,
+    account_id: int,
+    name_font: str | None,
+    name_effect: str | None,
+    name_color_start: str | None,
+    name_color_end: str | None,
+) -> Account | None:
+    """Persist the Nitro-only display-name style without touching role colors."""
+    await ensure_account_visual_columns(db)
+    account = await get_account_by_id(db, account_id)
+    if not account:
+        return None
+
+    color_start = _normalize_name_color(name_color_start, "#f2f3f5")
+    color_end = _normalize_name_color(name_color_end, color_start)
+    account.name_font = _normalize_name_font(name_font)
+    account.name_effect = _normalize_name_effect(name_effect)
+    account.name_color_start = color_start
+    account.name_color_end = color_end
     await db.commit()
     await db.refresh(account)
     return account
