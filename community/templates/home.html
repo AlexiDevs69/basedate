@@ -1275,6 +1275,240 @@
   .ah-server-title{font-size:22px;margin-left:38px;margin-right:38px;}
   .ah-server-join-box{margin-left:-18px;margin-right:-18px;margin-bottom:-12px;padding-left:18px;padding-right:18px;}
 }
+
+
+/* === AlexiHub Nitro home redesign === */
+.home-nav .nav-item{
+  width:100%;border:0;text-align:left;font-family:inherit;cursor:pointer;
+}
+.home-nav .nav-item > span:nth-child(2){min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.home-nav-pill{
+  margin-left:auto;min-width:44px;height:20px;padding:0 8px;border-radius:999px;
+  display:inline-flex;align-items:center;justify-content:center;
+  background:linear-gradient(90deg,#7c3aed,#c026d3);color:#fff;
+  font-size:10px;font-weight:950;letter-spacing:.025em;box-shadow:0 0 16px rgba(168,85,247,.22);
+}
+.app.nitro-open{grid-template-columns:72px 240px minmax(0,1fr);}
+.app.nitro-open .right{display:none!important;}
+.app.nitro-open .friend-topbar,
+.app.nitro-open .friend-content{display:none!important;}
+.ah-nitro-home-view{display:none;min-height:0;height:100%;flex:1;flex-direction:column;background:#18191d;color:#f2f3f5;overflow:hidden;}
+.app.nitro-open .ah-nitro-home-view{display:flex;}
+.ah-nitro-home-topbar{
+  height:48px;flex:0 0 48px;border-bottom:1px solid #3f4148;
+  display:flex;align-items:center;justify-content:space-between;padding:0 16px;
+  background:#191a1f;box-shadow:0 1px 0 rgba(0,0,0,.24);z-index:4;
+}
+.ah-nitro-wordmark{display:flex;align-items:center;gap:8px;font-size:17px;font-style:italic;letter-spacing:.02em;}
+.ah-nitro-wordmark .icon{width:21px;height:21px;stroke-width:2.4;}
+.ah-nitro-wordmark strong{font-weight:1000;}
+.ah-nitro-home-actions{display:flex;align-items:center;gap:9px;}
+.ah-icon-button,.ah-gift-top-button{
+  border:0;background:#111214;color:#f2f3f5;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;
+  height:32px;border-radius:8px;transition:background .15s ease,color .15s ease,transform .15s ease;
+}
+.ah-icon-button{width:32px;}
+.ah-gift-top-button{gap:7px;padding:0 11px;font-size:12px;font-weight:850;}
+.ah-icon-button:hover,.ah-gift-top-button:hover{background:#2b2d31;color:#fff;transform:translateY(-1px);}
+.ah-nitro-home-scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;background:#18191d;overscroll-behavior:contain;}
+.ah-nitro-home-content{width:min(1040px,calc(100% - 48px));margin:0 auto;padding:22px 0 68px;}
+.ah-nitro-kicker{margin:0 0 22px;font-size:16px;line-height:1.2;font-weight:1000;font-style:italic;letter-spacing:.025em;color:#fff;}
+.ah-nitro-category-tabs{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:28px;}
+.ah-nitro-category-tabs button{
+  height:34px;padding:0 13px;border-radius:999px;border:1px solid transparent;background:#24252b;color:#f2f3f5;
+  font:inherit;font-size:12px;font-weight:760;cursor:pointer;transition:background .15s ease,border-color .15s ease,transform .15s ease;
+}
+.ah-nitro-category-tabs button:hover{background:#2f3138;transform:translateY(-1px);}
+.ah-nitro-category-tabs button.active{border-color:#5865f2;background:#202127;box-shadow:0 0 0 1px rgba(88,101,242,.14) inset;}
+.ah-benefit-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;align-items:stretch;}
+.ah-benefit-card{
+  min-width:0;min-height:326px;position:relative;display:flex;flex-direction:column;overflow:hidden;
+  border:1px solid #303238;border-radius:14px;background:#232429;outline:none;
+  box-shadow:0 8px 24px rgba(0,0,0,.08);
+  transition:transform .28s cubic-bezier(.2,.8,.2,1),box-shadow .28s ease,border-color .28s ease,background .28s ease;
+}
+.ah-benefit-card:hover,.ah-benefit-card:focus-visible{
+  transform:translateY(-9px);border-color:#41444d;background:#26272d;
+  box-shadow:0 18px 38px rgba(0,0,0,.34),0 0 0 1px rgba(255,255,255,.025) inset;
+}
+.ah-benefit-art{height:190px;display:flex;align-items:center;justify-content:center;padding:14px 12px 0;transition:transform .34s cubic-bezier(.2,.8,.2,1),filter .34s ease;}
+.ah-benefit-art svg{width:100%;height:100%;overflow:visible;}
+.ah-benefit-card:hover .ah-benefit-art,.ah-benefit-card:focus-visible .ah-benefit-art{transform:translateY(-7px) scale(1.035);filter:saturate(1.08) brightness(1.04);}
+.ah-benefit-body{display:flex;flex-direction:column;flex:1;padding:5px 16px 16px;min-height:0;}
+.ah-benefit-lock{display:flex;align-items:center;gap:5px;color:#868b95;font-size:10px;font-weight:760;margin-bottom:6px;}
+.ah-benefit-lock .icon{width:13px;height:13px;}
+.ah-benefit-body h2{margin:0;font-size:17px;line-height:1.13;font-weight:950;letter-spacing:-.02em;color:#f2f3f5;}
+.ah-benefit-body p{margin:8px 0 0;color:#c4c7ce;font-size:11px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;transition:color .2s ease;}
+.ah-benefit-card:hover .ah-benefit-body p,.ah-benefit-card:focus-visible .ah-benefit-body p{color:#dbdee1;}
+.ah-benefit-more{max-height:0;opacity:0;overflow:hidden;margin-top:0;color:#9ea3ad;font-size:10px;line-height:1.35;transform:translateY(8px);transition:max-height .3s ease,opacity .24s ease,transform .3s ease,margin .3s ease;}
+.ah-benefit-card:hover .ah-benefit-more,.ah-benefit-card:focus-visible .ah-benefit-more{max-height:62px;opacity:1;margin-top:8px;transform:translateY(0);}
+.ah-benefit-cta{
+  width:100%;min-height:38px;margin-top:auto;padding:0 11px;border:0;border-radius:7px;background:#fff;color:#111214;
+  display:flex;align-items:center;justify-content:center;gap:7px;font:inherit;font-size:11px;font-weight:900;cursor:pointer;
+  opacity:0;transform:translateY(11px);pointer-events:none;
+  transition:opacity .22s ease,transform .28s cubic-bezier(.2,.8,.2,1),box-shadow .2s ease;
+}
+.ah-benefit-card:hover .ah-benefit-cta,.ah-benefit-card:focus-within .ah-benefit-cta{opacity:1;transform:translateY(0);pointer-events:auto;box-shadow:0 0 16px rgba(93,210,255,.48),0 0 22px rgba(188,82,255,.42);}
+.ah-card-arrow{position:absolute;right:9px;top:150px;width:35px;height:35px;border:0;border-radius:8px;background:#111214;color:#fff;display:grid;place-items:center;cursor:pointer;transition:transform .2s ease,background .2s ease;}
+.ah-card-arrow:hover{transform:translateX(3px);background:#0b0c0e;}
+.ah-nitro-gift-banner{
+  min-height:308px;margin-top:72px;border-radius:16px;overflow:hidden;position:relative;
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(390px,46%);align-items:center;
+  background:linear-gradient(135deg,#23242a 0%,#25232f 52%,#2c2441 100%);border:1px solid #30313a;
+}
+.ah-gift-copy{padding:46px 16px 46px 34px;position:relative;z-index:2;}
+.ah-gift-copy h2{font-size:28px;margin:0 0 12px;font-weight:1000;letter-spacing:-.04em;}
+.ah-gift-copy p{max-width:500px;margin:0;color:#e2e3e7;font-size:13px;line-height:1.45;font-weight:650;}
+.ah-gift-copy button{margin-top:22px;height:39px;padding:0 14px;border:0;border-radius:7px;background:#4e5058;color:#fff;display:inline-flex;align-items:center;gap:8px;font:inherit;font-size:12px;font-weight:900;cursor:pointer;transition:background .15s ease,transform .15s ease;}
+.ah-gift-copy button:hover{background:#5c5f68;transform:translateY(-1px);}
+.ah-gift-illustration{height:100%;display:flex;align-items:flex-end;justify-content:flex-end;overflow:hidden;}
+.ah-gift-illustration svg{width:100%;min-width:430px;height:auto;display:block;transform:translate(24px,12px);filter:drop-shadow(0 18px 28px rgba(0,0,0,.27));transition:transform .4s cubic-bezier(.2,.8,.2,1);}
+.ah-nitro-gift-banner:hover .ah-gift-illustration svg{transform:translate(16px,3px) scale(1.025);}
+.ah-nitro-footer-note{padding:25px 4px 0;color:#6f747e;font-size:11px;text-align:center;}
+
+/* Nitro card polish: closer to the compact Discord desktop layout. */
+.ah-nitro-home-content{width:min(1060px,calc(100% - 52px));padding-top:20px;}
+.ah-nitro-kicker{margin-bottom:20px;font-size:15px;letter-spacing:.035em;}
+.ah-nitro-category-tabs{gap:10px;margin-bottom:26px;}
+.ah-nitro-category-tabs button{position:relative;height:32px;padding:0 13px;background:#24252a;border-color:rgba(255,255,255,.035);font-size:12px;}
+.ah-nitro-category-tabs button.active{background:#23242a;border-color:#5865f2;box-shadow:none;}
+.ah-nitro-category-tabs button.active::after{content:"";position:absolute;left:13px;right:13px;bottom:-5px;height:2px;border-radius:99px;background:linear-gradient(90deg,#5865f2,#f0b232);opacity:.9;}
+.ah-benefit-grid{gap:14px;align-items:start;}
+.ah-benefit-card{min-height:330px;border-radius:12px;background:#232428;border-color:rgba(255,255,255,.055);box-shadow:0 2px 0 rgba(0,0,0,.12),0 8px 22px rgba(0,0,0,.08);isolation:isolate;}
+.ah-benefit-card::before{content:"";position:absolute;inset:-1px;z-index:-1;border-radius:inherit;background:radial-gradient(circle at 50% 0%,rgba(88,101,242,.16),transparent 40%);opacity:0;transition:opacity .28s ease;}
+.ah-benefit-card:hover,.ah-benefit-card:focus-visible{transform:translateY(-8px);background:#26272c;border-color:#41434a;box-shadow:0 18px 42px rgba(0,0,0,.35);}
+.ah-benefit-card:hover::before,.ah-benefit-card:focus-visible::before{opacity:1;}
+.ah-benefit-art{height:188px;padding:10px 10px 0;overflow:hidden;}
+.ah-benefit-body{padding:4px 15px 15px;}
+.ah-benefit-body h2{font-size:16px;line-height:1.16;}
+.ah-benefit-body p{font-size:11px;line-height:1.38;color:#c7c9cf;}
+.ah-benefit-more{font-size:10px;color:#aeb1b8;}
+.ah-benefit-stream .ah-benefit-art,.ah-benefit-emoji .ah-benefit-art{padding:13px 11px 0;}
+.ah-benefit-stream .ah-benefit-art svg,.ah-benefit-emoji .ah-benefit-art svg{filter:drop-shadow(0 10px 16px rgba(0,0,0,.28));}
+.ah-stream-astronaut{transform-origin:138px 91px;transition:transform .38s cubic-bezier(.2,.8,.2,1);}
+.ah-stream-orbit{transform-origin:178px 63px;transition:transform .5s cubic-bezier(.2,.8,.2,1);}
+.ah-benefit-stream:hover .ah-stream-astronaut{transform:translateY(-5px) rotate(-3deg);}
+.ah-benefit-stream:hover .ah-stream-orbit{transform:rotate(12deg) scale(1.04);}
+.ah-emoji-box,.ah-emoji-heart,.ah-emoji-bot,.ah-emoji-crystal{transition:transform .38s cubic-bezier(.2,.8,.2,1);transform-box:fill-box;transform-origin:center;}
+.ah-benefit-emoji:hover .ah-emoji-box{transform:translateY(4px) scale(1.02);}
+.ah-benefit-emoji:hover .ah-emoji-heart{transform:translate(-3px,-8px) rotate(-6deg) scale(1.08);}
+.ah-benefit-emoji:hover .ah-emoji-bot{transform:translate(4px,-7px) rotate(6deg) scale(1.06);}
+.ah-benefit-emoji:hover .ah-emoji-crystal{transform:translateY(-8px) rotate(5deg) scale(1.06);}
+.ah-card-arrow{right:8px;top:150px;width:34px;height:34px;border-radius:7px;background:#121316;box-shadow:0 5px 14px rgba(0,0,0,.28);}
+.ah-nitro-gift-banner{min-height:312px;margin-top:68px;border-radius:14px;grid-template-columns:minmax(0,1fr) minmax(430px,49%);background:linear-gradient(120deg,#23242a 0%,#25242c 48%,#302742 100%);border-color:rgba(255,255,255,.055);box-shadow:0 14px 34px rgba(0,0,0,.16);}
+.ah-nitro-gift-banner::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 78% 42%,rgba(145,91,255,.24),transparent 34%),radial-gradient(circle at 92% 10%,rgba(255,73,188,.13),transparent 26%);pointer-events:none;}
+.ah-gift-copy{padding:48px 20px 48px 34px;}
+.ah-gift-copy h2{font-size:27px;margin-bottom:11px;}
+.ah-gift-copy p{max-width:520px;color:#dddfe4;font-size:12px;line-height:1.5;}
+.ah-gift-copy button{height:38px;border-radius:6px;background:#4e5058;}
+.ah-gift-illustration{position:relative;align-items:center;padding:12px 0 0;}
+.ah-gift-illustration svg{min-width:455px;transform:translate(20px,7px);filter:drop-shadow(0 22px 32px rgba(0,0,0,.34));}
+.ah-nitro-gift-banner:hover .ah-gift-illustration svg{transform:translate(11px,-1px) scale(1.025);}
+.ah-gift-mascot,.ah-gift-box-art,.ah-gift-cloud{transition:transform .42s cubic-bezier(.2,.8,.2,1);transform-box:fill-box;transform-origin:center;}
+.ah-nitro-gift-banner:hover .ah-gift-mascot{transform:translateY(-7px) rotate(-2deg);}
+.ah-nitro-gift-banner:hover .ah-gift-box-art{transform:translateY(3px) scale(1.02);}
+.ah-nitro-gift-banner:hover .ah-gift-cloud:first-of-type{transform:translateX(-7px);}
+.ah-nitro-gift-banner:hover .ah-gift-cloud:last-of-type{transform:translateX(7px);}
+
+/* Discord-like dark scrollbars; no white tracks. */
+*{scrollbar-width:thin;scrollbar-color:#0f1013 transparent;}
+*::-webkit-scrollbar{width:14px;height:14px;}
+*::-webkit-scrollbar-track{background:transparent;}
+*::-webkit-scrollbar-thumb{background:#0f1013;background-clip:padding-box;border:4px solid transparent;border-radius:999px;min-height:42px;}
+*::-webkit-scrollbar-thumb:hover{background:#07080a;background-clip:padding-box;}
+.ah-nitro-home-scroll::-webkit-scrollbar-track,.friend-content::-webkit-scrollbar-track,.right::-webkit-scrollbar-track,.dm-list::-webkit-scrollbar-track{background:#18191d;}
+.dm-sidebar::-webkit-scrollbar-track,.server-rail::-webkit-scrollbar-track{background:#111114;}
+
+@media(max-width:1220px){
+  .ah-benefit-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .ah-benefit-card{min-height:338px;}
+}
+@media(max-width:900px){
+  .app.nitro-open{grid-template-columns:64px minmax(0,1fr)!important;}
+  .ah-nitro-home-content{width:min(100% - 28px,880px);}
+  .ah-nitro-gift-banner{grid-template-columns:1fr;}
+  .ah-gift-illustration{height:235px;}
+  .ah-gift-copy{padding-bottom:12px;}
+}
+@media(max-width:640px){
+  .ah-nitro-home-topbar{padding:0 10px;}
+  .ah-gift-top-button span{display:none;}
+  .ah-gift-top-button{width:34px;padding:0;}
+  .ah-nitro-home-content{width:calc(100% - 20px);padding-top:16px;}
+  .ah-nitro-kicker{font-size:14px;}
+  .ah-nitro-category-tabs{gap:7px;overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px;}
+  .ah-nitro-category-tabs button{flex:0 0 auto;}
+  .ah-benefit-grid{grid-template-columns:1fr;}
+  .ah-benefit-card{min-height:340px;}
+  .ah-nitro-gift-banner{margin-top:38px;}
+  .ah-gift-copy{padding:30px 22px 8px;}
+  .ah-gift-copy h2{font-size:24px;}
+  .ah-gift-illustration svg{min-width:360px;transform:translate(20px,10px);}
+}
+@media(prefers-reduced-motion:reduce){
+  .ah-benefit-card,.ah-benefit-art,.ah-benefit-more,.ah-benefit-cta,.ah-gift-illustration svg,.ah-icon-button,.ah-gift-top-button{transition:none!important;}
+}
+
+</style>
+
+
+<style id="ah-nitro-carousel-final-css">
+/* Final carousel pass: keep Boost/Profile artwork intact; polish the other cards. */
+.ah-benefit-carousel{position:relative;isolation:isolate;--ah-carousel-gap:14px;--ah-visible-cards:4;}
+.ah-benefit-viewport{overflow:hidden;padding:14px 3px 24px;margin:-14px -3px -24px;scrollbar-width:none;}
+.ah-benefit-viewport::-webkit-scrollbar{display:none;}
+.ah-benefit-grid{display:flex!important;grid-template-columns:none!important;gap:var(--ah-carousel-gap)!important;align-items:stretch!important;will-change:transform;transform:translate3d(0,0,0);transition:transform .58s cubic-bezier(.2,.72,.15,1);}
+.ah-benefit-card{flex:0 0 calc((100% - 42px)/4);width:auto;}
+.ah-carousel-arrow{position:absolute;z-index:12;top:153px;width:35px;height:35px;border:1px solid rgba(255,255,255,.055);border-radius:8px;background:#111214;color:#fff;display:grid;place-items:center;cursor:pointer;box-shadow:0 8px 18px rgba(0,0,0,.38);opacity:1;transition:opacity .2s ease,transform .28s cubic-bezier(.2,.8,.2,1),background .18s ease,border-color .18s ease;}
+.ah-carousel-arrow .icon{width:19px;height:19px;}
+.ah-carousel-prev{left:0;transform:translateX(-48%) scale(1);}
+.ah-carousel-prev .icon{transform:rotate(180deg);}
+.ah-carousel-next{right:0;transform:translateX(48%) scale(1);}
+.ah-carousel-arrow:hover{background:#090a0c;border-color:rgba(255,255,255,.12);}
+.ah-carousel-prev:hover{transform:translateX(-56%) scale(1.06);}
+.ah-carousel-next:hover{transform:translateX(56%) scale(1.06);}
+.ah-carousel-arrow.is-hidden{opacity:0;pointer-events:none;}
+.ah-carousel-prev.is-hidden{transform:translateX(-22%) scale(.82);}
+.ah-carousel-next.is-hidden{transform:translateX(22%) scale(.82);}
+.ah-carousel-status{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;}
+.ah-card-arrow{display:none!important;}
+
+/* Richer surfaces only for cards the user asked to improve. */
+.ah-benefit-stream,.ah-benefit-emoji,.ah-benefit-upload{background:linear-gradient(180deg,#25262c 0%,#222328 100%);}
+.ah-benefit-stream::after,.ah-benefit-emoji::after,.ah-benefit-upload::after{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;opacity:.62;transition:opacity .3s ease;}
+.ah-benefit-stream::after{background:radial-gradient(circle at 50% 18%,rgba(68,83,255,.17),transparent 43%);}
+.ah-benefit-emoji::after{background:radial-gradient(circle at 52% 17%,rgba(222,72,221,.15),transparent 44%);}
+.ah-benefit-upload::after{background:radial-gradient(circle at 58% 16%,rgba(110,82,255,.18),transparent 44%);}
+.ah-benefit-stream:hover::after,.ah-benefit-emoji:hover::after,.ah-benefit-upload:hover::after{opacity:1;}
+.ah-benefit-stream .ah-benefit-art,.ah-benefit-emoji .ah-benefit-art,.ah-benefit-upload .ah-benefit-art{position:relative;}
+.ah-benefit-stream .ah-benefit-art::after,.ah-benefit-emoji .ah-benefit-art::after,.ah-benefit-upload .ah-benefit-art::after{content:"";position:absolute;left:18px;right:18px;bottom:2px;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);}
+.ah-benefit-upload .ah-benefit-art{padding:9px 7px 0;}
+.ah-benefit-upload .ah-benefit-art svg{filter:drop-shadow(0 12px 18px rgba(0,0,0,.3));}
+.ah-upload-creature,.ah-upload-files,.ah-upload-trail,.ah-upload-sparks{transition:transform .42s cubic-bezier(.2,.8,.2,1),opacity .3s ease;transform-box:fill-box;transform-origin:center;}
+.ah-benefit-upload:hover .ah-upload-creature{transform:translate(4px,-7px) rotate(-2deg) scale(1.035);}
+.ah-benefit-upload:hover .ah-upload-files{transform:translate(-6px,-8px) rotate(-3deg) scale(1.04);}
+.ah-benefit-upload:hover .ah-upload-trail{transform:translateX(-5px);opacity:.9;}
+.ah-benefit-upload:hover .ah-upload-sparks{transform:scale(1.12);}
+
+/* More Discord-like tabs and gift stage, without changing the first two cards. */
+.ah-nitro-category-tabs button{border:1px solid rgba(255,255,255,.035);box-shadow:0 1px 0 rgba(0,0,0,.16);}
+.ah-nitro-category-tabs button:hover{background:#2b2d31;border-color:rgba(255,255,255,.075);}
+.ah-nitro-category-tabs button.active{background:#232429;border-color:#5865f2;box-shadow:0 0 0 1px rgba(88,101,242,.1) inset,0 5px 18px rgba(0,0,0,.12);}
+.ah-nitro-gift-banner{background:linear-gradient(118deg,#24252b 0%,#25232d 48%,#322846 100%);border-color:rgba(255,255,255,.065);box-shadow:0 18px 48px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.025);}
+.ah-nitro-gift-banner::after{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(197,164,255,.3),transparent);pointer-events:none;}
+.ah-gift-copy button{box-shadow:0 5px 12px rgba(0,0,0,.2);}
+.ah-gift-copy button:hover{background:#62646d;box-shadow:0 8px 18px rgba(0,0,0,.26);}
+
+@media(max-width:1220px){.ah-benefit-carousel{--ah-visible-cards:2;}.ah-benefit-card{flex-basis:calc((100% - 14px)/2);}}
+@media(max-width:760px){
+  .ah-benefit-carousel{--ah-visible-cards:1;--ah-carousel-gap:12px;}
+  .ah-benefit-card{flex-basis:100%;}
+  .ah-carousel-arrow{top:153px;}
+  .ah-carousel-prev{left:5px;transform:translateX(0);}
+  .ah-carousel-next{right:5px;transform:translateX(0);}
+  .ah-carousel-prev:hover,.ah-carousel-next:hover{transform:scale(1.05);}
+}
+@media(prefers-reduced-motion:reduce){.ah-benefit-grid,.ah-carousel-arrow,.ah-upload-creature,.ah-upload-files,.ah-upload-trail,.ah-upload-sparks{transition:none!important;}}
 </style>
 
 </head>
@@ -1294,9 +1528,15 @@
     <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 1 1 5.82 1c-.6 1.2-1.9 1.6-2.4 2.5"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
     <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
     <symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol>
+    <symbol id="i-nitro" viewBox="0 0 24 24"><path d="M4.5 8.5h4l2.1-3h4.8l2.1 3h2a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-15a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2Z"/><path d="M8.5 12.2a3.7 3.7 0 0 0 7 0"/><circle cx="8" cy="11" r=".65" fill="currentColor" stroke="none"/><circle cx="16" cy="11" r=".65" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-shop" viewBox="0 0 24 24"><path d="M4 10h16v10H4z"/><path d="M2.5 7 4 3h16l1.5 4A3 3 0 0 1 16 9a3 3 0 0 1-4 0 3 3 0 0 1-4 0 3 3 0 0 1-5.5-2Z"/><path d="M9 20v-6h6v6"/></symbol>
+    <symbol id="i-quest" viewBox="0 0 24 24"><path d="m12 2 2.5 5.1L20 8l-4 3.9.9 5.5L12 14.8 7.1 17.4 8 11.9 4 8l5.5-.9Z"/><path d="M5 21h14"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21.3l7.8-7.8 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/></symbol>
+    <symbol id="i-gift" viewBox="0 0 24 24"><path d="M20 12v9H4v-9"/><path d="M2 7h20v5H2z"/><path d="M12 7v14"/><path d="M12 7H7.5a2.5 2.5 0 1 1 2.2-3.7L12 7Zm0 0h4.5a2.5 2.5 0 1 0-2.2-3.7L12 7Z"/></symbol>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
   </svg>
 
-  <div class="app">
+  <div class="app nitro-open" id="home-app">
     <aside class="server-rail">
       <a class="server-dot home-dot active" href="/community" title="Direct Messages"><svg class="icon"><use href="#i-message"></use></svg></a>
       <div class="server-sep"></div>
@@ -1311,17 +1551,24 @@
         <input class="search" id="dm-search" placeholder="Знайти або почати бесіду">
       </div>
 
-      <nav class="nav">
-        <a class="nav-item active" href="/community">
+      <nav class="nav home-nav" aria-label="Home navigation">
+        <button class="nav-item" type="button" data-home-view="friends" onclick="return switchHomeView('friends', this)">
           <span class="nav-ico"><svg class="icon"><use href="#i-users"></use></svg></span>
-          <span data-i18n="ui.friends_dm">Друзі / ЛС</span>
-        </a>
-        {% for ch in channels %}
-        <a class="nav-item" href="/community/channel/{{ ch.slug }}">
-          <span class="nav-ico"><svg class="icon"><use href="#i-hash"></use></svg></span>
-          {{ ch.name }}
-        </a>
-        {% endfor %}
+          <span>Друзья</span>
+        </button>
+        <button class="nav-item active" type="button" data-home-view="nitro" onclick="return switchHomeView('nitro', this)">
+          <span class="nav-ico"><svg class="icon"><use href="#i-nitro"></use></svg></span>
+          <span>Nitro</span>
+          <span class="home-nav-pill" id="home-nitro-days">NITRO</span>
+        </button>
+        <button class="nav-item" type="button" onclick="showHomeComingSoon('Магазин')">
+          <span class="nav-ico"><svg class="icon"><use href="#i-shop"></use></svg></span>
+          <span>Магазин</span>
+        </button>
+        <button class="nav-item" type="button" onclick="showHomeComingSoon('Задания')">
+          <span class="nav-ico"><svg class="icon"><use href="#i-quest"></use></svg></span>
+          <span>Задания</span>
+        </button>
       </nav>
 
       <div class="section">
@@ -1370,6 +1617,269 @@
     </aside>
 
     <main class="main friend-shell">
+      <section id="home-nitro-view" class="ah-nitro-home-view" aria-label="Nitro benefits">
+        <header class="ah-nitro-home-topbar">
+          <div class="ah-nitro-wordmark"><svg class="icon"><use href="#i-nitro"></use></svg><strong>NITRO</strong></div>
+          <div class="ah-nitro-home-actions">
+            <button type="button" class="ah-icon-button" title="Избранное" onclick="showActionToast('Избранное Nitro скоро появится')"><svg class="icon"><use href="#i-heart"></use></svg></button>
+            <button type="button" class="ah-gift-top-button" onclick="openNitroGiftSettings()"><svg class="icon icon-sm"><use href="#i-gift"></use></svg><span>Подарить Nitro</span></button>
+          </div>
+        </header>
+
+        <div class="ah-nitro-home-scroll" id="ah-nitro-home-scroll">
+          <div class="ah-nitro-home-content">
+            <h1 class="ah-nitro-kicker">ВЗГЛЯНИТЕ НА ИЗБРАННЫЕ БОНУСЫ ПОДПИСКИ NITRO</h1>
+
+            <div class="ah-nitro-category-tabs" role="tablist" aria-label="Nitro categories">
+              <button class="active" type="button">Лучшие бонусы Nitro</button>
+              <button type="button" onclick="showHomeComingSoon('Внешний вид и стиль')">Внешний вид и стиль</button>
+              <button type="button" onclick="showHomeComingSoon('Улучшения AlexiHub')">Улучшения AlexiHub</button>
+              <button type="button" onclick="showHomeComingSoon('VIP-возможности')">VIP-возможности</button>
+            </div>
+
+            <div class="ah-benefit-carousel" id="ah-benefit-carousel" aria-label="Nitro benefits carousel">
+              <button class="ah-carousel-arrow ah-carousel-prev is-hidden" id="ah-benefit-prev" type="button" aria-label="Предыдущие преимущества">
+                <svg class="icon"><use href="#i-arrow-right"></use></svg>
+              </button>
+              <div class="ah-benefit-viewport" id="ah-benefit-viewport">
+                <div class="ah-benefit-grid" id="ah-benefit-track">
+              <article class="ah-benefit-card ah-benefit-boost" tabindex="0">
+                <div class="ah-benefit-art" aria-hidden="true">
+                  <svg viewBox="0 0 260 180" role="img">
+                    <defs>
+                      <linearGradient id="gemA" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ff73d4"/><stop offset=".52" stop-color="#ff2fa9"/><stop offset="1" stop-color="#8a5cff"/></linearGradient>
+                      <linearGradient id="handA" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#7d6cff"/><stop offset="1" stop-color="#1f5bff"/></linearGradient>
+                      <filter id="glowA"><feGaussianBlur stdDeviation="7" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                    </defs>
+                    <ellipse cx="130" cy="156" rx="74" ry="12" fill="#11121a" opacity=".45"/>
+                    <path d="M76 132c21-4 30-25 44-24 12 1 12 13 22 15 14 3 23-17 36-13 12 4 9 22 2 32-13 19-35 25-61 22-25-3-47-14-43-32Z" fill="url(#handA)"/>
+                    <path d="m126 27 28 22-9 57-36 5-18-42Z" fill="url(#gemA)" filter="url(#glowA)"/>
+                    <path d="m126 27 8 43-25 41-18-42Z" fill="#ff8ee2" opacity=".72"/>
+                    <path d="m126 27 28 22-20 21Z" fill="#ffd1f3" opacity=".78"/>
+                    <path d="M171 49h19M181 39v20" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+                    <circle cx="70" cy="101" r="5" fill="#aa7bff"/><circle cx="194" cy="99" r="4" fill="#6ea0ff"/>
+                  </svg>
+                </div>
+                <div class="ah-benefit-body">
+                  <div class="ah-benefit-lock"><svg class="icon icon-sm"><use href="#i-nitro"></use></svg><span id="ah-boost-lock-label">Необходима подписка</span></div>
+                  <h2>2 буста сервера + скидка 30%</h2>
+                  <p>Поддерживайте любимые серверы и получайте скидку на дополнительные бусты.</p>
+                  <button class="ah-benefit-cta" type="button" onclick="openNitroSubscriptionSettings()"><svg class="icon icon-sm"><use href="#i-nitro"></use></svg><span id="ah-benefit-cta-label">Открыть с подпиской Nitro</span></button>
+                </div>
+              </article>
+
+              <article class="ah-benefit-card ah-benefit-profile" tabindex="0">
+                <div class="ah-benefit-art" aria-hidden="true">
+                  <svg viewBox="0 0 260 180" role="img">
+                    <defs>
+                      <linearGradient id="cardA" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#163b59"/><stop offset="1" stop-color="#3bd0a2"/></linearGradient>
+                      <linearGradient id="cardB" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#4723a6"/><stop offset=".55" stop-color="#9c49ff"/><stop offset="1" stop-color="#ff5bc5"/></linearGradient>
+                    </defs>
+                    <g transform="translate(18 34) rotate(-7 100 55)"><rect x="10" y="8" width="142" height="92" rx="12" fill="url(#cardA)" stroke="#37e2a4" stroke-width="2"/><circle cx="41" cy="40" r="17" fill="#7ce7db"/><path d="M28 75h68M28 84h45" stroke="#c8fff0" stroke-width="6" stroke-linecap="round" opacity=".7"/></g>
+                    <g transform="translate(92 27) rotate(8 78 56)"><rect x="8" y="10" width="148" height="96" rx="12" fill="url(#cardB)" stroke="#9f70ff" stroke-width="2"/><circle cx="42" cy="43" r="18" fill="#ff88d6"/><path d="M29 78h72M29 88h48" stroke="#ffd5f0" stroke-width="6" stroke-linecap="round" opacity=".8"/></g>
+                    <circle cx="208" cy="38" r="5" fill="#ff67c6"/><circle cx="41" cy="33" r="4" fill="#44e0bf"/>
+                  </svg>
+                </div>
+                <div class="ah-benefit-body">
+                  <h2>Настраивайте свой профиль</h2>
+                  <p>Получите доступ к баннерам, эффектам, фонам карточки и расширенной персонализации.</p>
+                  <div class="ah-benefit-more">Профиль будет выглядеть по‑твоему в ЛС, на серверах и в списках участников.</div>
+                </div>
+              </article>
+
+              <article class="ah-benefit-card ah-benefit-stream" tabindex="0">
+                <div class="ah-benefit-art" aria-hidden="true">
+                  <svg viewBox="0 0 260 180" role="img">
+                    <defs>
+                      <linearGradient id="streamBgV2" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#10084f"/><stop offset=".56" stop-color="#182dba"/><stop offset="1" stop-color="#33136f"/></linearGradient>
+                      <linearGradient id="streamPanelV2" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#ff54bd"/><stop offset="1" stop-color="#6d7cff"/></linearGradient>
+                      <radialGradient id="streamPlanetV2"><stop stop-color="#8668ff"/><stop offset=".58" stop-color="#364bd5"/><stop offset="1" stop-color="#15245d"/></radialGradient>
+                      <filter id="streamGlowV2"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                    </defs>
+                    <rect x="11" y="18" width="238" height="142" rx="13" fill="#0a0b25" opacity=".52"/>
+                    <rect x="15" y="22" width="230" height="134" rx="11" fill="url(#streamBgV2)"/>
+                    <path d="M15 122c42-16 75-10 112 1 36 11 76 13 118-8v41H15Z" fill="#08123d" opacity=".68"/>
+                    <g class="ah-stream-orbit">
+                      <circle cx="188" cy="60" r="29" fill="url(#streamPlanetV2)"/>
+                      <ellipse cx="188" cy="60" rx="41" ry="12" fill="none" stroke="#8a91ff" stroke-width="4" opacity=".55" transform="rotate(-17 188 60)"/>
+                      <circle cx="213" cy="37" r="5" fill="#f06cff" filter="url(#streamGlowV2)"/>
+                    </g>
+                    <g opacity=".9" fill="#a9bcff"><circle cx="37" cy="42" r="2"/><circle cx="66" cy="61" r="3"/><circle cx="94" cy="35" r="2"/><circle cx="221" cy="101" r="2"/><circle cx="198" cy="118" r="2.5"/><circle cx="48" cy="103" r="1.8"/></g>
+                    <g class="ah-stream-astronaut">
+                      <ellipse cx="136" cy="106" rx="30" ry="35" fill="#6e73fa"/>
+                      <path d="M110 103c-13 3-18 16-15 30l18-5 4-18Z" fill="#4d55d9"/><path d="M161 103c13 3 18 16 15 30l-18-5-4-18Z" fill="#4d55d9"/>
+                      <rect x="113" y="72" width="47" height="38" rx="18" fill="#adb2ff"/>
+                      <rect x="120" y="80" width="33" height="21" rx="10" fill="#233e91"/>
+                      <circle cx="130" cy="90" r="2.5" fill="#baf9ff"/><circle cx="143" cy="90" r="2.5" fill="#baf9ff"/>
+                      <path d="M130 98c5 3 9 3 14 0" fill="none" stroke="#baf9ff" stroke-width="2.6" stroke-linecap="round"/>
+                      <path d="M128 71c-2-9 5-14 12-12 7 2 8 8 5 13" fill="none" stroke="#43d773" stroke-width="6" stroke-linecap="round"/>
+                    </g>
+                    <g transform="translate(27 113)">
+                      <rect width="75" height="7" rx="3.5" fill="#20295d"/><rect width="49" height="7" rx="3.5" fill="url(#streamPanelV2)"/>
+                      <rect y="12" width="54" height="6" rx="3" fill="#26306c"/><rect y="12" width="31" height="6" rx="3" fill="#7184ff"/>
+                      <circle cx="82" cy="3.5" r="3.5" fill="#7b88ff"/><circle cx="91" cy="3.5" r="3.5" fill="#ff5fbd"/>
+                    </g>
+                    <rect x="205" y="31" width="29" height="14" rx="7" fill="#f23f42"/><circle cx="213" cy="38" r="2" fill="#fff"/><text x="222" y="41" text-anchor="middle" font-size="7" font-weight="900" fill="#fff">LIVE</text>
+                    <path d="M28 56c12-19 26-21 38-11M31 64c15-12 29-11 42 1" fill="none" stroke="#6877ff" stroke-width="4" stroke-linecap="round" opacity=".55"/>
+                  </svg>
+                </div>
+                <div class="ah-benefit-body">
+                  <h2>Стримьте в разрешении HD</h2>
+                  <p>Делитесь важными моментами в высоком качестве и с более плавной частотой кадров.</p>
+                  <div class="ah-benefit-more">Подходит для игр, демонстраций экрана и совместного просмотра.</div>
+                </div>
+              </article>
+
+              <article class="ah-benefit-card ah-benefit-emoji" tabindex="0">
+                <div class="ah-benefit-art" aria-hidden="true">
+                  <svg viewBox="0 0 260 180" role="img">
+                    <defs>
+                      <linearGradient id="emojiBoxTopV2" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#7a4eff"/><stop offset="1" stop-color="#d148d7"/></linearGradient>
+                      <linearGradient id="emojiBoxSideV2" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#4c32bb"/><stop offset="1" stop-color="#6a32a7"/></linearGradient>
+                      <linearGradient id="emojiHeartV2" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffb3fb"/><stop offset=".5" stop-color="#ff64d8"/><stop offset="1" stop-color="#9f4cff"/></linearGradient>
+                      <linearGradient id="emojiBotV2" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#c8dcff"/><stop offset="1" stop-color="#7190ff"/></linearGradient>
+                      <filter id="emojiGlowV2"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                    </defs>
+                    <ellipse cx="131" cy="153" rx="79" ry="13" fill="#0d0e18" opacity=".42"/>
+                    <g class="ah-emoji-box">
+                      <path d="M57 92 129 54l76 38-75 43Z" fill="url(#emojiBoxTopV2)"/>
+                      <path d="m57 92 73 43v38l-73-42Z" fill="#4932b0"/>
+                      <path d="m205 92-75 43v38l75-42Z" fill="url(#emojiBoxSideV2)"/>
+                      <path d="m103 68 27-14 76 38-27 15Z" fill="#f05cd4" opacity=".72"/>
+                      <circle cx="130" cy="115" r="23" fill="#b785ff"/><circle cx="122" cy="111" r="3" fill="#4a2682"/><circle cx="138" cy="111" r="3" fill="#4a2682"/><path d="M119 124c7 7 15 7 22 0" fill="none" stroke="#4a2682" stroke-width="4" stroke-linecap="round"/>
+                    </g>
+                    <g class="ah-emoji-heart" transform="translate(133 19)">
+                      <path d="M8 12h8V6h9v6h8v8h-5v6h-6v6h-5v-6h-5v-6H8Z" fill="url(#emojiHeartV2)" filter="url(#emojiGlowV2)"/>
+                      <path d="M12 12h7V8h4v6h-5v4h-6Z" fill="#ffd5fa" opacity=".76"/>
+                    </g>
+                    <g class="ah-emoji-bot" transform="translate(174 45) rotate(12 27 24)">
+                      <ellipse cx="27" cy="28" rx="27" ry="19" fill="url(#emojiBotV2)"/>
+                      <rect x="7" y="18" width="40" height="22" rx="10" fill="#d8e4ff"/>
+                      <rect x="12" y="21" width="30" height="16" rx="7" fill="#4654a5"/>
+                      <circle cx="22" cy="29" r="3" fill="#d9fbff"/><circle cx="33" cy="29" r="3" fill="#d9fbff"/>
+                      <path d="M20 37c5 4 10 4 15 0" fill="none" stroke="#d9fbff" stroke-width="2.5" stroke-linecap="round"/>
+                      <path d="M11 15 5 7M42 15l6-8" stroke="#8ba3ff" stroke-width="5" stroke-linecap="round"/>
+                      <path d="M13 17h29" stroke="#15162c" stroke-width="6" stroke-linecap="round" opacity=".9"/>
+                    </g>
+                    <g class="ah-emoji-crystal" transform="translate(35 48)">
+                      <path d="m18 0 18 17-8 27H8L0 17Z" fill="#8d4cff"/>
+                      <path d="m18 0 5 20-15 24L0 17Z" fill="#bd6dff"/>
+                      <path d="m18 0 18 17-13 3Z" fill="#f08cff"/>
+                      <path d="M39 3h13M45-3v13" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".85"/>
+                    </g>
+                    <g fill="#ad7bff" opacity=".85"><circle cx="48" cy="31" r="4"/><circle cx="217" cy="117" r="3"/><circle cx="78" cy="53" r="2.5"/></g>
+                    <path d="M32 102 45 115M45 102 32 115" stroke="#ff5ed2" stroke-width="6" stroke-linecap="round"/>
+                  </svg>
+                </div>
+                <div class="ah-benefit-body">
+                  <h2>Пользовательские эмодзи где угодно</h2>
+                  <p>Используйте эмодзи других серверов в ЛС и реакциях — с активной подпиской Nitro.</p>
+                  <div class="ah-benefit-more">Правило Nitro уже проверяется сервером, а не только интерфейсом.</div>
+                </div>
+              </article>
+
+              <article class="ah-benefit-card ah-benefit-upload" tabindex="0">
+                <div class="ah-benefit-art" aria-hidden="true">
+                  <svg viewBox="0 0 260 180" role="img">
+                    <defs>
+                      <linearGradient id="uploadWingA" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#6f7cff"/><stop offset=".46" stop-color="#4c35d7"/><stop offset="1" stop-color="#ff45c8"/></linearGradient>
+                      <linearGradient id="uploadWingB" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#2637c9"/><stop offset=".55" stop-color="#8f3fe7"/><stop offset="1" stop-color="#ff5ecf"/></linearGradient>
+                      <linearGradient id="uploadFileA" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#bfcbff"/><stop offset="1" stop-color="#6578ff"/></linearGradient>
+                      <linearGradient id="uploadFileB" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ff9ee9"/><stop offset="1" stop-color="#cc49db"/></linearGradient>
+                      <radialGradient id="uploadGlowA"><stop stop-color="#ac52ff" stop-opacity=".72"/><stop offset="1" stop-color="#5228d4" stop-opacity="0"/></radialGradient>
+                      <filter id="uploadShadowA"><feDropShadow dx="0" dy="10" stdDeviation="8" flood-color="#080916" flood-opacity=".52"/></filter>
+                    </defs>
+                    <ellipse cx="133" cy="150" rx="82" ry="13" fill="#0c0d17" opacity=".52"/>
+                    <circle cx="144" cy="83" r="74" fill="url(#uploadGlowA)" opacity=".36"/>
+                    <g class="ah-upload-sparks" fill="#9e8cff">
+                      <circle cx="49" cy="63" r="3"/><circle cx="212" cy="45" r="2.5"/><circle cx="224" cy="115" r="3.5"/><circle cx="72" cy="126" r="2.5"/>
+                    </g>
+                    <g class="ah-upload-files" filter="url(#uploadShadowA)">
+                      <path d="M62 67h37l14 14v48H62Z" fill="url(#uploadFileA)" transform="rotate(-18 87 98)"/>
+                      <path d="M99 58h34l13 13v44H99Z" fill="url(#uploadFileB)" transform="rotate(11 122 87)"/>
+                      <path d="m99 58 13 13H99Z" fill="#ffe0f8" opacity=".68" transform="rotate(11 122 87)"/>
+                      <path d="M69 87h25M69 96h31M69 105h20" stroke="#e6ecff" stroke-width="4" stroke-linecap="round" opacity=".68" transform="rotate(-18 87 98)"/>
+                    </g>
+                    <g class="ah-upload-creature" filter="url(#uploadShadowA)">
+                      <path d="M72 133c17-11 36-14 54-9 11-26 21-49 43-72l9 36 33-27-13 43 25 7-35 19c-23 18-73 23-116 3Z" fill="url(#uploadWingA)"/>
+                      <path d="M129 124c13-30 27-55 53-83l-4 47 36-24-18 42 25 7-39 20Z" fill="url(#uploadWingB)" opacity=".94"/>
+                      <path d="m160 83 18-15-3 26Z" fill="#c6ccff" opacity=".58"/>
+                      <path d="M82 132c8-14 21-22 37-24-7 13-5 24 4 33-15 2-29-1-41-9Z" fill="#5d4ae2"/>
+                      <path d="M125 122c14-14 30-18 47-11-7 15-19 24-38 28Z" fill="#ff66ce"/>
+                      <path d="M155 110 169 97l9 12-15 13Z" fill="#12152f"/>
+                      <path d="M157 111 168 101l5 7-12 9Z" fill="#f4f5ff" opacity=".78"/>
+                      <path d="M102 143c25 7 54 5 80-10" stroke="#ff79d8" stroke-width="5" stroke-linecap="round" opacity=".72"/>
+                    </g>
+                    <path class="ah-upload-trail" d="M38 119c22-4 35 1 48 15M185 42c13-9 27-10 39-3" fill="none" stroke="#8276ff" stroke-width="4" stroke-linecap="round" opacity=".55"/>
+                  </svg>
+                </div>
+                <div class="ah-benefit-body">
+                  <h2>Увеличенный размер загружаемых файлов</h2>
+                  <p>Отправляйте большие изображения, видео, архивы и проекты без лишнего сжатия.</p>
+                  <div class="ah-benefit-more">Больше пространства для медиа и файлов в ЛС и серверных каналах.</div>
+                </div>
+              </article>
+                </div>
+              </div>
+              <button class="ah-carousel-arrow ah-carousel-next" id="ah-benefit-next" type="button" aria-label="Следующие преимущества">
+                <svg class="icon"><use href="#i-arrow-right"></use></svg>
+              </button>
+              <div class="ah-carousel-status" id="ah-benefit-status" aria-live="polite"></div>
+            </div>
+
+            <section class="ah-nitro-gift-banner">
+              <div class="ah-gift-copy">
+                <h2>Подарить Nitro</h2>
+                <p>Подарите кому‑нибудь подписку Nitro — персонализацию профиля, эмодзи и улучшенные возможности чата.</p>
+                <button type="button" onclick="openNitroGiftSettings()"><svg class="icon icon-sm"><use href="#i-gift"></use></svg>Подарить Nitro</button>
+              </div>
+              <div class="ah-gift-illustration" aria-hidden="true">
+                <svg viewBox="0 0 460 270">
+                  <defs>
+                    <linearGradient id="giftSceneV2" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#4732c7"/><stop offset=".5" stop-color="#7c3fd4"/><stop offset="1" stop-color="#c128bc"/></linearGradient>
+                    <linearGradient id="giftBoxV2" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ff40c9"/><stop offset="1" stop-color="#b313b4"/></linearGradient>
+                    <linearGradient id="giftRibbonV2" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#54f09b"/><stop offset="1" stop-color="#20c96f"/></linearGradient>
+                    <linearGradient id="giftBotV2" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#b7c0ff"/><stop offset="1" stop-color="#6879ec"/></linearGradient>
+                    <filter id="giftShadowV2"><feDropShadow dx="0" dy="12" stdDeviation="10" flood-color="#100b32" flood-opacity=".45"/></filter>
+                  </defs>
+                  <rect x="18" y="24" width="424" height="224" rx="28" fill="url(#giftSceneV2)"/>
+                  <path d="M18 187c57-26 105-12 151 5 57 22 102 27 163 0 40-18 76-15 110-2v58H18Z" fill="#5a28ba" opacity=".46"/>
+                  <g class="ah-gift-cloud" opacity=".85"><path d="M45 103c10-17 25-19 34-7 11-10 29-2 31 12 15-2 24 7 24 17H39c-4-10-1-17 6-22Z" fill="#b47eff" opacity=".52"/></g>
+                  <g class="ah-gift-cloud" opacity=".72"><path d="M324 75c11-17 25-17 34-5 13-8 31 1 30 16 14-1 22 7 22 16h-98c-2-12 2-22 12-27Z" fill="#f18cff" opacity=".42"/></g>
+                  <g transform="translate(39 46)">
+                    <rect width="96" height="48" rx="16" fill="#111223" opacity=".35"/>
+                    <circle cx="25" cy="24" r="13" fill="#f2f3f5"/>
+                    <path d="M18 24c2-8 12-8 14 0-2 8-12 8-14 0Zm-1 2-4 4m20-4 4 4" fill="none" stroke="#5865f2" stroke-width="3" stroke-linecap="round"/>
+                    <text x="46" y="29" fill="#fff" font-size="15" font-weight="900">AlexiHub</text>
+                  </g>
+                  <g class="ah-gift-box-art" filter="url(#giftShadowV2)">
+                    <rect x="218" y="157" width="160" height="95" rx="9" fill="url(#giftBoxV2)"/>
+                    <path d="M298 157v95M218 187h160" stroke="url(#giftRibbonV2)" stroke-width="18"/>
+                    <path d="M298 157c-29-35-63-20-48 4 12 18 48 10 48-4Zm0 0c29-37 64-22 49 3-11 19-48 11-49-3Z" fill="none" stroke="url(#giftRibbonV2)" stroke-width="13" stroke-linecap="round"/>
+                    <path d="M227 165h65v16h-65z" fill="#ff7dde" opacity=".48"/>
+                  </g>
+                  <g class="ah-gift-mascot" transform="translate(213 60)" filter="url(#giftShadowV2)">
+                    <ellipse cx="83" cy="64" rx="68" ry="59" fill="#6574dd"/>
+                    <path d="M24 62c-16 2-27 14-29 31 11 4 23 3 35-5Z" fill="#6675df"/><path d="M142 62c16 2 27 14 29 31-11 4-23 3-35-5Z" fill="#6675df"/>
+                    <rect x="25" y="35" width="116" height="72" rx="34" fill="url(#giftBotV2)"/>
+                    <rect x="45" y="54" width="76" height="43" rx="20" fill="#3c54ad"/>
+                    <circle cx="70" cy="74" r="6" fill="#c9fbff"/><circle cx="96" cy="74" r="6" fill="#c9fbff"/>
+                    <path d="M68 89c10 8 20 8 31 0" fill="none" stroke="#c9fbff" stroke-width="5" stroke-linecap="round"/>
+                    <path d="M59 34c-3-13 6-21 16-17 8 3 10 12 6 19" fill="none" stroke="#45d77a" stroke-width="8" stroke-linecap="round"/>
+                    <path d="m78 25 18-18 15 24" fill="#29b861"/>
+                    <path d="M56 111c-3 15-1 26 6 36M110 111c4 15 2 26-5 36" stroke="#6675df" stroke-width="15" stroke-linecap="round"/>
+                  </g>
+                  <g fill="#ffc0ef"><circle cx="155" cy="68" r="5"/><circle cx="397" cy="142" r="5"/><circle cx="165" cy="189" r="4"/></g>
+                  <path d="M173 44h17M181 35v18M399 51h14M406 44v14" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".85"/>
+                </svg>
+              </div>
+            </section>
+
+            <div class="ah-nitro-footer-note">Преимущества и доступность функций могут меняться. Подписка управляется в настройках AlexiHub.</div>
+          </div>
+        </div>
+      </section>
+
       <header class="friend-topbar">
         <div class="friend-title"><svg class="icon"><use href="#i-users"></use></svg><span>Друзі</span></div>
         <div class="friend-tabs" role="tablist">
@@ -3279,6 +3789,167 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   document.addEventListener('focusout',function(e){if(e.target.closest&&e.target.closest('.ah-gifter-profile-badge'))hide()});
   window.addEventListener('scroll',function(){if(current)place(current)},true);
   window.addEventListener('resize',function(){if(current)place(current)});
+})();
+</script>
+
+
+<script id="ah-nitro-home-js">
+(function(){
+  if(window.__ahNitroHomeReady) return;
+  window.__ahNitroHomeReady = true;
+
+  function getHomeApp(){ return document.getElementById('home-app') || document.querySelector('.app'); }
+
+  window.switchHomeView = function(view, trigger){
+    const app = getHomeApp();
+    if(!app) return false;
+    const isNitro = view === 'nitro';
+    app.classList.toggle('nitro-open', isNitro);
+    document.querySelectorAll('[data-home-view]').forEach(function(item){
+      item.classList.toggle('active', item.dataset.homeView === view);
+    });
+    if(trigger && trigger.dataset && trigger.dataset.homeView){ trigger.classList.add('active'); }
+    try{ history.replaceState(null, '', isNitro ? '#nitro' : '#friends'); }catch(e){}
+    if(isNitro){ requestAnimationFrame(function(){ document.getElementById('ah-nitro-home-scroll')?.focus({preventScroll:true}); }); }
+    return false;
+  };
+
+  window.showHomeComingSoon = function(name){
+    if(typeof window.showActionToast === 'function') window.showActionToast(name + ' — скоро');
+    return false;
+  };
+
+  window.openNitroGiftSettings = function(){
+    if(typeof window.openUserSettings === 'function') window.openUserSettings();
+    setTimeout(function(){ if(typeof window.showSettingsTab === 'function') window.showSettingsTab('gifts'); }, 40);
+  };
+
+  window.openNitroSubscriptionSettings = function(){
+    if(typeof window.openUserSettings === 'function') window.openUserSettings();
+    setTimeout(function(){ if(typeof window.showSettingsTab === 'function') window.showSettingsTab('subscriptions'); }, 40);
+  };
+
+  async function loadHomeNitroStatus(){
+    const pill = document.getElementById('home-nitro-days');
+    const lock = document.getElementById('ah-boost-lock-label');
+    const cta = document.getElementById('ah-benefit-cta-label');
+    try{
+      const response = await fetch('/community/api/nitro/me', {credentials:'same-origin'});
+      const data = await response.json();
+      const sub = data && data.ok ? (data.subscription || {}) : {};
+      const active = !!sub.active;
+      const days = Math.max(0, Number(sub.days_left || 0));
+      if(pill){
+        pill.textContent = active ? (days > 0 ? days + ' ДН.' : 'ACTIVE') : 'NITRO';
+        pill.classList.toggle('inactive', !active);
+      }
+      if(lock) lock.textContent = active ? 'Доступно по подписке' : 'Необходима подписка';
+      if(cta) cta.textContent = active ? 'Управление подпиской' : 'Открыть с подпиской Nitro';
+    }catch(e){
+      if(pill) pill.textContent = 'NITRO';
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    const requested = location.hash === '#friends' ? 'friends' : 'nitro';
+    const trigger = document.querySelector('[data-home-view="' + requested + '"]');
+    window.switchHomeView(requested, trigger);
+    loadHomeNitroStatus();
+  });
+})();
+</script>
+
+
+<script id="ah-nitro-carousel-final-js">
+(function(){
+  if(window.__ahNitroCarouselFinalReady) return;
+  window.__ahNitroCarouselFinalReady = true;
+
+  function initNitroCarousel(){
+    const carousel = document.getElementById('ah-benefit-carousel');
+    const viewport = document.getElementById('ah-benefit-viewport');
+    const track = document.getElementById('ah-benefit-track');
+    const prev = document.getElementById('ah-benefit-prev');
+    const next = document.getElementById('ah-benefit-next');
+    const status = document.getElementById('ah-benefit-status');
+    if(!carousel || !viewport || !track || !prev || !next || carousel.dataset.ready === '1') return;
+    carousel.dataset.ready = '1';
+
+    let index = 0;
+    let maxIndex = 0;
+    let step = 0;
+    let touchStartX = null;
+    let touchStartY = null;
+
+    function visibleCount(){
+      const raw = getComputedStyle(carousel).getPropertyValue('--ah-visible-cards');
+      return Math.max(1, parseInt(raw, 10) || 4);
+    }
+
+    function measure(){
+      const cards = track.querySelectorAll('.ah-benefit-card');
+      const first = cards[0];
+      const gap = parseFloat(getComputedStyle(track).gap || '14') || 14;
+      step = first ? first.getBoundingClientRect().width + gap : 0;
+      maxIndex = Math.max(0, cards.length - visibleCount());
+      index = Math.min(index, maxIndex);
+      render(false);
+    }
+
+    function render(animate){
+      if(!animate) track.style.transition = 'none';
+      track.style.transform = 'translate3d(' + (-index * step) + 'px,0,0)';
+      prev.classList.toggle('is-hidden', index <= 0);
+      next.classList.toggle('is-hidden', index >= maxIndex);
+      prev.disabled = index <= 0;
+      next.disabled = index >= maxIndex;
+      if(status) status.textContent = 'Показаны преимущества ' + (index + 1) + '–' + Math.min(index + visibleCount(), track.children.length) + ' из ' + track.children.length;
+      if(!animate){
+        requestAnimationFrame(function(){ track.style.transition = ''; });
+      }
+    }
+
+    function go(delta){
+      const target = Math.max(0, Math.min(maxIndex, index + delta));
+      if(target === index) return;
+      index = target;
+      render(true);
+    }
+
+    prev.addEventListener('click', function(){ go(-1); });
+    next.addEventListener('click', function(){ go(1); });
+    carousel.addEventListener('keydown', function(event){
+      if(event.key === 'ArrowLeft'){ event.preventDefault(); go(-1); }
+      if(event.key === 'ArrowRight'){ event.preventDefault(); go(1); }
+    });
+    viewport.addEventListener('touchstart', function(event){
+      const touch = event.touches && event.touches[0];
+      if(!touch) return;
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+    }, {passive:true});
+    viewport.addEventListener('touchend', function(event){
+      if(touchStartX === null) return;
+      const touch = event.changedTouches && event.changedTouches[0];
+      if(!touch) return;
+      const dx = touch.clientX - touchStartX;
+      const dy = touch.clientY - touchStartY;
+      touchStartX = touchStartY = null;
+      if(Math.abs(dx) > 46 && Math.abs(dx) > Math.abs(dy) * 1.25) go(dx < 0 ? 1 : -1);
+    }, {passive:true});
+
+    if('ResizeObserver' in window){
+      const ro = new ResizeObserver(measure);
+      ro.observe(viewport);
+    }else{
+      window.addEventListener('resize', measure);
+    }
+    if(document.fonts && document.fonts.ready) document.fonts.ready.then(measure).catch(function(){});
+    measure();
+  }
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initNitroCarousel);
+  else initNitroCarousel();
 })();
 </script>
 
