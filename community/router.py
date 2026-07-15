@@ -1285,6 +1285,13 @@ async def api_forward_message(request: Request, db: AsyncSession = Depends(get_d
         source_content = source.content or ""
         source_image_url = source.image_url or ""
 
+    if crud.parse_nitro_dm_gift_marker(source_content):
+        return JSONResponse({
+            "ok": False,
+            "error": "nitro_gift_not_forwardable",
+            "message": "Nitro-подарок нельзя пересылать: он привязан к получателю.",
+        }, status_code=400)
+
     if not source_content.strip() and not source_image_url.strip():
         return JSONResponse({"ok": False, "error": "empty_source"}, status_code=400)
 
@@ -1494,6 +1501,91 @@ async def api_user_nitro(username: str, request: Request, db: AsyncSession = Dep
         return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
     payload = await crud.nitro_profile_payload(db, account.id)
     return JSONResponse({"ok": True, "username": account.username, "nitro": payload})
+
+
+@router.post("/api/dm/{username}/nitro-gifts")
+async def api_send_dm_nitro_gift(username: str, request: Request, db: AsyncSession = Depends(get_db)):
+    sender = await current_account(request, db)
+    if not sender:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    if not crud.is_nitro_code_generator(sender):
+        return JSONResponse({
+            "ok": False,
+            "error": "forbidden",
+            "message": "Упаковывать Nitro могут только верифицированные участники и команда.",
+        }, status_code=403)
+
+    recipient = await crud.get_account_by_username(db, username)
+    if not recipient or recipient.id == sender.id:
+        return JSONResponse({"ok": False, "error": "recipient_not_found", "message": "Получатель не найден."}, status_code=404)
+
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    try:
+        days = int(body.get("days") or 30)
+    except Exception:
+        days = 30
+    note = str(body.get("note") or "")
+
+    sender_id = int(sender.id)
+    recipient_id = int(recipient.id)
+    author_payload = _account_payload(sender)
+    thread = await crud.get_or_create_dm_thread(db, sender_id, recipient_id)
+    if not thread:
+        return JSONResponse({"ok": False, "error": "thread_not_found", "message": "Не удалось открыть ЛС."}, status_code=400)
+    thread_id = int(thread.id)
+
+    result = await crud.create_nitro_dm_gift(
+        db,
+        thread_id=thread_id,
+        sender_id=sender_id,
+        recipient_id=recipient_id,
+        days=days,
+        note=note,
+    )
+    if not result.get("ok"):
+        return JSONResponse(result, status_code=400)
+
+    message_payload = result.get("message") or {}
+    gift_payload = result.get("gift") or {}
+    message_payload["nitro_gift"] = gift_payload
+    await realtime_channels.clear_typing((0, thread_id), sender_id)
+    await realtime_channels.broadcast(
+        (0, thread_id),
+        {"type": "message", "message": message_payload, "author": author_payload},
+    )
+    return JSONResponse({"ok": True, "message": message_payload, "gift": gift_payload})
+
+
+@router.get("/api/nitro/dm-gifts/{public_token}")
+async def api_get_dm_nitro_gift(public_token: str, request: Request, db: AsyncSession = Depends(get_db)):
+    viewer = await current_account(request, db)
+    if not viewer:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    gift = await crud.get_nitro_dm_gift(db, public_token, viewer.id)
+    if not gift:
+        return JSONResponse({"ok": False, "error": "not_found", "message": "Подарок не найден."}, status_code=404)
+    return JSONResponse({"ok": True, "gift": gift})
+
+
+@router.post("/api/nitro/dm-gifts/{public_token}/claim")
+async def api_claim_dm_nitro_gift(public_token: str, request: Request, db: AsyncSession = Depends(get_db)):
+    viewer = await current_account(request, db)
+    if not viewer:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    result = await crud.claim_nitro_dm_gift(db, public_token, viewer.id)
+    if not result.get("ok"):
+        return JSONResponse(result, status_code=400)
+    gift = result.get("gift") or {}
+    thread_id = gift.get("thread_id")
+    if thread_id:
+        await realtime_channels.broadcast(
+            (0, int(thread_id)),
+            {"type": "nitro_gift_update", "gift": gift},
+        )
+    return JSONResponse(result)
 
 @router.get("/api/dm/{username}/pins")
 async def api_list_dm_pins(username: str, request: Request, db: AsyncSession = Depends(get_db)):
@@ -1938,7 +2030,13 @@ async def dm_message_edit_submit(
     if not thread:
         return RedirectResponse(url=f"/community/dm/{other.username}", status_code=303)
     message = await crud.get_dm_message(db, thread.id, message_id)
-    if message and message.author_id == account.id and not getattr(message, "is_forwarded", False) and content.strip():
+    if (
+        message
+        and message.author_id == account.id
+        and not getattr(message, "is_forwarded", False)
+        and not crud.parse_nitro_dm_gift_marker(message.content)
+        and content.strip()
+    ):
         updated = await crud.update_dm_message(db, message, content.strip(), image_url.strip())
         await realtime_channels.broadcast(
             (0, thread.id),
@@ -1971,7 +2069,7 @@ async def dm_message_delete_submit(
     thread = await crud.get_dm_thread_between(db, account.id, other.id)
     if thread:
         message = await crud.get_dm_message(db, thread.id, message_id)
-        if message and message.author_id == account.id:
+        if message and message.author_id == account.id and not crud.parse_nitro_dm_gift_marker(message.content):
             await crud.delete_dm_message(db, message)
     return RedirectResponse(url=f"/community/dm/{other.username}", status_code=303)
 
@@ -2038,7 +2136,12 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
                         await websocket.close(code=1008)
                         return
                     message = await crud.get_dm_message(db, thread_id, edit_id)
-                    if not message or message.author_id != account_id or getattr(message, "is_forwarded", False):
+                    if (
+                        not message
+                        or message.author_id != account_id
+                        or getattr(message, "is_forwarded", False)
+                        or crud.parse_nitro_dm_gift_marker(message.content)
+                    ):
                         continue
                     updated = await crud.update_dm_message(db, message, content, image_url)
                     payload = {
