@@ -1335,7 +1335,7 @@
         {% if other %}
         {% set other_status = other.account_status or 'online' %}
         {% set other_visible = other.id in online_ids and other_status != 'invisible' %}
-        <a class="dm-row" href="/community/dm/{{ other.username }}" data-name="{{ other.username|lower }}" data-mini-username="{{ other.username }}" data-mini-avatar="{{ other.avatar_url or '' }}" data-mini-banner="{{ other.banner_url or '' }}" data-mini-role="{{ other.role_label or 'member' }}" data-mini-c1="{{ other.role_color_start or '#5865f2' }}" data-mini-c2="{{ other.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ other.username }}" data-mini-bio="{{ other.bio or '' }}">
+        <a class="dm-row" href="/community/dm/{{ other.username }}" data-name="{{ other.username|lower }}" data-mini-username="{{ other.username }}" data-mini-avatar="{{ other.avatar_url or '' }}" data-mini-banner="{{ other.banner_url or '' }}" data-mini-role="{{ other.role_label or 'member' }}" data-mini-effect="{{ other.name_effect or 'none' }}" data-mini-font="{{ other.name_font or 'default' }}" data-mini-c1="{{ other.name_color_start or other.role_color_start or '#5865f2' }}" data-mini-c2="{{ other.name_color_end or other.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ other.username }}" data-mini-bio="{{ other.bio or '' }}">
           <span class="avatar" {% if other.avatar_url %}style="background-image:url('{{ other.avatar_url }}')"{% endif %}>
             {% if not other.avatar_url %}{{ other.username[:1]|upper }}{% endif %}
             {% if other_visible %}<span class="presence status-{{ other_status }}"></span>{% endif %}
@@ -1349,7 +1349,7 @@
       </div>
 
       {% set my_status = account.account_status or 'online' %}
-      <div class="user-panel mini-profile-trigger" data-mini-username="{{ account.username }}" data-mini-avatar="{{ account.avatar_url or '' }}" data-mini-banner="{{ account.banner_url or '' }}" data-mini-status="{{ account.account_status or 'online' }}" data-mini-role="{{ account.role_label or 'online' }}" data-mini-c1="{{ account.role_color_start or '#5865f2' }}" data-mini-c2="{{ account.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ account.username }}" data-mini-bio="{{ account.bio or '' }}">
+      <div class="user-panel mini-profile-trigger" data-mini-username="{{ account.username }}" data-mini-avatar="{{ account.avatar_url or '' }}" data-mini-banner="{{ account.banner_url or '' }}" data-mini-status="{{ account.account_status or 'online' }}" data-mini-role="{{ account.role_label or 'online' }}" data-mini-effect="{{ account.name_effect or 'none' }}" data-mini-font="{{ account.name_font or 'default' }}" data-mini-c1="{{ account.name_color_start or account.role_color_start or '#5865f2' }}" data-mini-c2="{{ account.name_color_end or account.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ account.username }}" data-mini-bio="{{ account.bio or '' }}">
         <span class="avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}')"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}<span id="my-avatar-status" class="presence status-{{ my_status }}"></span></span>
         <div class="user-info status-trigger" onclick="openSelfProfile()">
           <b>{{ account.username }}</b>
@@ -1404,7 +1404,7 @@
             {% set f_status = f.account_status or 'online' %}
             {% set f_visible = f.id in online_ids and f_status != 'invisible' %}
             {% if f_visible %}
-            <div class="friend-row mini-profile-trigger" data-name="{{ f.username|lower }}" data-mini-username="{{ f.username }}" data-mini-avatar="{{ f.avatar_url or '' }}" data-mini-banner="{{ f.banner_url or '' }}" data-mini-role="{{ f.role_label or 'member' }}" data-mini-c1="{{ f.role_color_start or '#5865f2' }}" data-mini-c2="{{ f.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ f.username }}" data-mini-bio="{{ f.bio or '' }}">
+            <div class="friend-row mini-profile-trigger" data-name="{{ f.username|lower }}" data-mini-username="{{ f.username }}" data-mini-avatar="{{ f.avatar_url or '' }}" data-mini-banner="{{ f.banner_url or '' }}" data-mini-role="{{ f.role_label or 'member' }}" data-mini-effect="{{ f.name_effect or 'none' }}" data-mini-font="{{ f.name_font or 'default' }}" data-mini-c1="{{ f.name_color_start or f.role_color_start or '#5865f2' }}" data-mini-c2="{{ f.name_color_end or f.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ f.username }}" data-mini-bio="{{ f.bio or '' }}">
               <span class="avatar" {% if f.avatar_url %}style="background-image:url('{{ f.avatar_url }}')"{% endif %}>{% if not f.avatar_url %}{{ f.username[:1]|upper }}{% endif %}<span class="presence status-{{ f_status }}"></span></span>
               <span class="friend-main"><b>{{ f.username }}</b><span>{{ {'online':'В сети','idle':'Неактивен','dnd':'Не беспокоить','invisible':'Не в сети'}.get(f_status, 'В сети') }}</span></span>
               <span class="friend-actions"><a class="friend-icon-btn" href="/community/dm/{{ f.username }}" title="Сообщение"><svg class="icon icon-sm"><use href="#i-message"></use></svg></a><button class="friend-icon-btn" onclick="showActionToast('Меню друга будет позже')"><svg class="icon icon-sm"><use href="#i-more"></use></svg></button></span>
@@ -1425,7 +1425,7 @@
             {% for f in friends %}
             {% set f_status = f.account_status or 'online' %}
             {% set f_visible = f.id in online_ids and f_status != 'invisible' %}
-            <div class="friend-row mini-profile-trigger" data-name="{{ f.username|lower }}" data-mini-username="{{ f.username }}" data-mini-avatar="{{ f.avatar_url or '' }}" data-mini-banner="{{ f.banner_url or '' }}" data-mini-role="{{ f.role_label or 'member' }}" data-mini-c1="{{ f.role_color_start or '#5865f2' }}" data-mini-c2="{{ f.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ f.username }}" data-mini-bio="{{ f.bio or '' }}">
+            <div class="friend-row mini-profile-trigger" data-name="{{ f.username|lower }}" data-mini-username="{{ f.username }}" data-mini-avatar="{{ f.avatar_url or '' }}" data-mini-banner="{{ f.banner_url or '' }}" data-mini-role="{{ f.role_label or 'member' }}" data-mini-effect="{{ f.name_effect or 'none' }}" data-mini-font="{{ f.name_font or 'default' }}" data-mini-c1="{{ f.name_color_start or f.role_color_start or '#5865f2' }}" data-mini-c2="{{ f.name_color_end or f.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ f.username }}" data-mini-bio="{{ f.bio or '' }}">
               <span class="avatar" {% if f.avatar_url %}style="background-image:url('{{ f.avatar_url }}')"{% endif %}>{% if not f.avatar_url %}{{ f.username[:1]|upper }}{% endif %}{% if f_visible %}<span class="presence status-{{ f_status }}"></span>{% endif %}</span>
               <span class="friend-main"><b>{{ f.username }}</b><span>{% if f_visible %}{{ {'online':'В сети','idle':'Неактивен','dnd':'Не беспокоить','invisible':'Не в сети'}.get(f_status, 'В сети') }}{% else %}Не в сети{% endif %}</span></span>
               <span class="friend-actions"><a class="friend-icon-btn" href="/community/dm/{{ f.username }}" title="Сообщение"><svg class="icon icon-sm"><use href="#i-message"></use></svg></a><button class="friend-icon-btn" onclick="showActionToast('Меню друга будет позже')"><svg class="icon icon-sm"><use href="#i-more"></use></svg></button></span>
@@ -1452,7 +1452,7 @@
                 {% if u %}
                 {% set u_status = u.account_status or 'online' %}
                 {% set u_visible = u.id in online_ids and u_status != 'invisible' %}
-                <div class="friend-row mini-profile-trigger" data-name="{{ u.username|lower }}" data-mini-username="{{ u.username }}" data-mini-avatar="{{ u.avatar_url or '' }}" data-mini-banner="{{ u.banner_url or '' }}" data-mini-status="{{ u_status if u_visible else 'offline' }}" data-mini-role="{{ u.role_label or 'member' }}" data-mini-c1="{{ u.role_color_start or '#5865f2' }}" data-mini-c2="{{ u.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ u.username }}" data-mini-bio="{{ u.bio or '' }}">
+                <div class="friend-row mini-profile-trigger" data-name="{{ u.username|lower }}" data-mini-username="{{ u.username }}" data-mini-avatar="{{ u.avatar_url or '' }}" data-mini-banner="{{ u.banner_url or '' }}" data-mini-status="{{ u_status if u_visible else 'offline' }}" data-mini-role="{{ u.role_label or 'member' }}" data-mini-effect="{{ u.name_effect or 'none' }}" data-mini-font="{{ u.name_font or 'default' }}" data-mini-c1="{{ u.name_color_start or u.role_color_start or '#5865f2' }}" data-mini-c2="{{ u.name_color_end or u.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ u.username }}" data-mini-bio="{{ u.bio or '' }}">
                   <span class="avatar" {% if u.avatar_url %}style="background-image:url('{{ u.avatar_url }}')"{% endif %}>{% if not u.avatar_url %}{{ u.username[:1]|upper }}{% endif %}{% if u_visible %}<span class="presence status-{{ u_status }}"></span>{% endif %}</span>
                   <span class="friend-main"><b>{{ u.username }}</b><span>Хочет добавить тебя в друзья</span></span>
                   <span class="friend-actions"><button class="friend-icon-btn" onclick="respondFriendRequest({{ p.friendship_id }}, true, this)" title="Принять"><svg class="icon icon-sm"><use href="#i-check"></use></svg></button><button class="friend-icon-btn danger" onclick="respondFriendRequest({{ p.friendship_id }}, false, this)" title="Отклонить"><svg class="icon icon-sm"><use href="#i-close"></use></svg></button></span>
@@ -1469,7 +1469,7 @@
                 {% if u %}
                 {% set u_status = u.account_status or 'online' %}
                 {% set u_visible = u.id in online_ids and u_status != 'invisible' %}
-                <div class="friend-row mini-profile-trigger" data-name="{{ u.username|lower }}" data-mini-username="{{ u.username }}" data-mini-avatar="{{ u.avatar_url or '' }}" data-mini-banner="{{ u.banner_url or '' }}" data-mini-status="{{ u_status if u_visible else 'offline' }}" data-mini-role="{{ u.role_label or 'member' }}" data-mini-c1="{{ u.role_color_start or '#5865f2' }}" data-mini-c2="{{ u.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ u.username }}" data-mini-bio="{{ u.bio or '' }}">
+                <div class="friend-row mini-profile-trigger" data-name="{{ u.username|lower }}" data-mini-username="{{ u.username }}" data-mini-avatar="{{ u.avatar_url or '' }}" data-mini-banner="{{ u.banner_url or '' }}" data-mini-status="{{ u_status if u_visible else 'offline' }}" data-mini-role="{{ u.role_label or 'member' }}" data-mini-effect="{{ u.name_effect or 'none' }}" data-mini-font="{{ u.name_font or 'default' }}" data-mini-c1="{{ u.name_color_start or u.role_color_start or '#5865f2' }}" data-mini-c2="{{ u.name_color_end or u.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ u.username }}" data-mini-bio="{{ u.bio or '' }}">
                   <span class="avatar" {% if u.avatar_url %}style="background-image:url('{{ u.avatar_url }}')"{% endif %}>{% if not u.avatar_url %}{{ u.username[:1]|upper }}{% endif %}{% if u_visible %}<span class="presence status-{{ u_status }}"></span>{% endif %}</span>
                   <span class="friend-main"><b>{{ u.username }}</b><span>Заявка отправлена</span></span>
                   <span class="friend-actions"><button class="friend-icon-btn danger" onclick="cancelFriendRequest({{ p.friendship_id }}, this)" title="Отменить"><svg class="icon icon-sm"><use href="#i-close"></use></svg></button></span>
@@ -1704,6 +1704,9 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(!role && msg) role=clean(txt($('.role-pill,.badge',msg)));
     if(!role) role='member';
     let c1=el.dataset.miniC1||'#5865f2', c2=el.dataset.miniC2||'#9b5cf6';
+    let styleCarrier = el.closest('[data-mini-effect],[data-mini-font]') || el;
+    let effect=(el.dataset.miniEffect||(styleCarrier.dataset&&styleCarrier.dataset.miniEffect)||'none').trim()||'none';
+    let font=(el.dataset.miniFont||(styleCarrier.dataset&&styleCarrier.dataset.miniFont)||'default').trim()||'default';
     let profile=el.dataset.miniProfile || (name?('/community/profile/'+encodeURIComponent(name)):'#');
     let bioCarrier = el.closest('[data-mini-bio]');
     let bio = (el.dataset.miniBio || (bioCarrier && bioCarrier.dataset ? bioCarrier.dataset.miniBio : '') || '').trim();
@@ -1721,9 +1724,10 @@ document.addEventListener('DOMContentLoaded',()=>{
     let html=(el.outerHTML||'')+(mem?mem.outerHTML:'')+(panel?panel.outerHTML:'');
     let st=html.match(/status-(online|idle|dnd|invisible|offline)/); if(st && (!status || status==='offline')) status=st[1];
     if(isSelf){ let d=$('#my-avatar-status,#modal-avatar-status'); if(d){ let cls=[...d.classList].find(x=>x.startsWith('status-')); if(cls) status=cls.replace('status-',''); } }
-    return {name:clean(name)||'user',avatar,banner,role,c1,c2,profile,isSelf,status,bio};
+    return {name:clean(name)||'user',avatar,banner,role,c1,c2,effect,font,profile,isSelf,status,bio};
   }
   function setAvatar(el,textEl,url,name){ if(!el)return; el.style.backgroundImage=url?`url('${safeUrl(url)}')`:''; if(textEl) textEl.textContent=url?'':(name||'?').slice(0,1).toUpperCase(); }
+  function styleProfileName(el,item){ if(!el||!item)return; [...el.classList].forEach(function(c){if(c.indexOf('name-')===0||c.indexOf('font-')===0)el.classList.remove(c)}); el.classList.add('visual-name','name-'+(item.effect||'none'),'font-'+(item.font||'default')); el.style.setProperty('--name-c1',item.c1||'#5865f2'); el.style.setProperty('--name-c2',item.c2||'#9b5cf6'); }
   function tintFromBanner(url,target){
     if(!target || !url) return;
     try{
@@ -1752,10 +1756,10 @@ document.addEventListener('DOMContentLoaded',()=>{
   function openMini(el,e){
     active=dataFrom(el); let pop=$('#ah-v3-mini'); if(!pop)return;
     pop.classList.toggle('self',!!active.isSelf); pop.style.setProperty('--ah-c1',active.c1); pop.style.setProperty('--ah-c2',active.c2); setBanner($('#ah-v3-banner'), active.banner, active.c1, active.c2);
-    setAvatar($('#ah-v3-avatar'),$('#ah-v3-avatar-text'),active.avatar,active.name); $('#ah-v3-name').textContent=active.name; $('#ah-v3-handle').textContent='@'+active.name; $('#ah-v3-role').textContent=active.role||'member'; const bioText=(active.bio||'').trim(); const noteTitle=$('#ah-v3-mini .ah-v3-note b'); if(noteTitle) noteTitle.textContent=bioText?'Опис профілю':'Міні-профіль'; $('#ah-v3-note-text').textContent=bioText || (active.isSelf?'Звідси можна змінити статус. Натисни на аватарку для повної картки.':'Натисни на аватарку, щоб відкрити повну картку профілю.'); let st=$('#ah-v3-status'); if(st) st.className='ah-v3-status '+(active.status||'offline'); let msg=$('#ah-v3-message'); if(msg){msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; msg.textContent=active.isSelf?'Редактировать профиль':'Message'} place(pop,e);
+    setAvatar($('#ah-v3-avatar'),$('#ah-v3-avatar-text'),active.avatar,active.name); $('#ah-v3-name').textContent=active.name; styleProfileName($('#ah-v3-name'),active); $('#ah-v3-handle').textContent='@'+active.name; $('#ah-v3-role').textContent=active.role||'member'; const bioText=(active.bio||'').trim(); const noteTitle=$('#ah-v3-mini .ah-v3-note b'); if(noteTitle) noteTitle.textContent=bioText?'Опис профілю':'Міні-профіль'; $('#ah-v3-note-text').textContent=bioText || (active.isSelf?'Звідси можна змінити статус. Натисни на аватарку для повної картки.':'Натисни на аватарку, щоб відкрити повну картку профілю.'); let st=$('#ah-v3-status'); if(st) st.className='ah-v3-status '+(active.status||'offline'); let msg=$('#ah-v3-message'); if(msg){msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; msg.textContent=active.isSelf?'Редактировать профиль':'Message'} place(pop,e);
   }
   function closeMini(){let p=$('#ah-v3-mini'); if(p)p.classList.remove('open')}
-  function openFull(){ if(!active)return; let ov=$('#ah-v3-overlay'); if(!ov)return; ov.style.setProperty('--ah-c1',active.c1); ov.style.setProperty('--ah-c2',active.c2); setBanner($('#ah-v3-full-banner'), active.banner, active.c1, active.c2); setAvatar($('#ah-v3-full-avatar'),$('#ah-v3-full-avatar-text'),active.avatar,active.name); $('#ah-v3-full-name').textContent=active.name; $('#ah-v3-full-handle').textContent='@'+active.name; $('#ah-v3-full-meta').textContent=active.isSelf?'Твоя картка AlexiHub.':'Картка користувача AlexiHub.'; $('#ah-v3-full-about').textContent=(active.bio||'').trim() || (active.isSelf?'Тут буде повний профіль, активність, ігри, інтеграції та нотатки.':'Швидкий перегляд профілю поверх поточної сторінки, без переходу зі сторінки.'); let msg=$('#ah-v3-full-message'); if(msg){ msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; } let op=$('#ah-v3-full-open'); if(op) op.href=active.profile; closeMini(); ov.classList.add('open'); }
+  function openFull(){ if(!active)return; let ov=$('#ah-v3-overlay'); if(!ov)return; ov.style.setProperty('--ah-c1',active.c1); ov.style.setProperty('--ah-c2',active.c2); setBanner($('#ah-v3-full-banner'), active.banner, active.c1, active.c2); setAvatar($('#ah-v3-full-avatar'),$('#ah-v3-full-avatar-text'),active.avatar,active.name); $('#ah-v3-full-name').textContent=active.name; styleProfileName($('#ah-v3-full-name'),active); $('#ah-v3-full-handle').textContent='@'+active.name; $('#ah-v3-full-meta').textContent=active.isSelf?'Твоя картка AlexiHub.':'Картка користувача AlexiHub.'; $('#ah-v3-full-about').textContent=(active.bio||'').trim() || (active.isSelf?'Тут буде повний профіль, активність, ігри, інтеграції та нотатки.':'Швидкий перегляд профілю поверх поточної сторінки, без переходу зі сторінки.'); let msg=$('#ah-v3-full-message'); if(msg){ msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; } let op=$('#ah-v3-full-open'); if(op) op.href=active.profile; closeMini(); ov.classList.add('open'); }
   function closeFull(){let ov=$('#ah-v3-overlay'); if(ov)ov.classList.remove('open')}
   document.addEventListener('click',function(e){
     if(e.target.closest('#ah-v3-mini,#ah-v3-overlay')) return;
@@ -3279,6 +3283,133 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   document.addEventListener('focusout',function(e){if(e.target.closest&&e.target.closest('.ah-gifter-profile-badge'))hide()});
   window.addEventListener('scroll',function(){if(current)place(current)},true);
   window.addEventListener('resize',function(){if(current)place(current)});
+})();
+</script>
+
+
+
+<!-- === Nitro display-name style editor === -->
+<style id="ah-name-style-css">
+@import url('https://fonts.googleapis.com/css2?family=Bungee&family=Cherry+Bomb+One&family=Grandstander:wght@700;800;900&family=MuseoModerno:wght@700;800;900&family=Press+Start+2P&family=Fredoka:wght@700;800&family=Lora:wght@700&display=swap');
+.font-cherry{font-family:'Cherry Bomb One','Fredoka',sans-serif!important;font-weight:400!important;letter-spacing:.01em}
+.font-grandstander{font-family:'Grandstander','Fredoka',sans-serif!important;font-weight:900!important;letter-spacing:-.025em}
+.font-bungee{font-family:'Bungee',sans-serif!important;font-weight:400!important;letter-spacing:-.015em}
+.font-museo{font-family:'MuseoModerno','Inter',sans-serif!important;font-weight:900!important;letter-spacing:-.04em}
+.name-solid{color:var(--name-c1-safe)!important;-webkit-text-fill-color:var(--name-c1-safe)!important;background:none!important;text-shadow:none!important;filter:none!important}
+.name-neon{background:linear-gradient(90deg,var(--name-c1-safe),#ffffff 48%,var(--name-c2-safe));background-size:180% auto;-webkit-background-clip:text;background-clip:text;color:transparent!important;-webkit-text-fill-color:transparent!important;animation:ahNameSweep 2.2s linear infinite;filter:drop-shadow(0 0 4px var(--name-c1-safe)) drop-shadow(0 0 9px var(--name-c2-safe)) saturate(1.35)}
+.name-multicolor{background:linear-gradient(90deg,var(--name-c1-safe),#ff4fd8,#6ae7ff,var(--name-c2-safe),#ffe66d,var(--name-c1-safe));background-size:300% auto;-webkit-background-clip:text;background-clip:text;color:transparent!important;-webkit-text-fill-color:transparent!important;animation:ahNameRainbow 3.4s linear infinite;filter:saturate(1.35) brightness(1.08)}
+.name-outline{color:#fff!important;-webkit-text-fill-color:#fff!important;background:none!important;text-shadow:-1px -1px 0 var(--name-c1-safe),1px -1px 0 var(--name-c1-safe),-1px 1px 0 var(--name-c2-safe),1px 1px 0 var(--name-c2-safe),0 0 7px color-mix(in srgb,var(--name-c2-safe) 55%,transparent)!important}
+@keyframes ahNameSweep{to{background-position:180% center}}
+@keyframes ahNameRainbow{to{background-position:300% center}}
+#ah-name-style-brush{display:none;position:absolute;left:-42px;top:34px;width:42px;height:42px;border:0;border-radius:10px 0 0 10px;background:#d9f8df;color:#173b25;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.28);z-index:5}
+#ah-name-style-brush.show{display:flex}
+#ah-name-style-brush svg{width:20px;height:20px}
+#ah-name-style-backdrop{position:fixed;inset:0;z-index:30050;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(0,0,0,.72);backdrop-filter:blur(5px)}
+#ah-name-style-backdrop.open{display:flex}
+.ah-name-style-modal{width:min(760px,calc(100vw - 32px));max-height:min(720px,calc(100dvh - 36px));display:grid;grid-template-columns:305px minmax(0,1fr);overflow:hidden;border:1px solid #3b3d45;border-radius:14px;background:#202126;box-shadow:0 26px 90px rgba(0,0,0,.62);position:relative}
+.ah-name-style-controls{background:#2b2d31;padding:20px;overflow-y:auto;border-right:1px solid #202126}
+.ah-name-style-preview{background:linear-gradient(180deg,#17361f,#0f2817);padding:78px 24px 22px;position:relative;display:flex;flex-direction:column;justify-content:space-between;min-height:520px}
+.ah-name-style-close{position:absolute;right:14px;top:14px;width:32px;height:32px;border:0;border-radius:50%;background:transparent;color:#b5bac1;font-size:25px;cursor:pointer;z-index:4}.ah-name-style-close:hover{background:#3a3c43;color:#fff}
+.ah-name-style-title{font-size:20px;line-height:1.25;font-weight:950;color:#fff;margin:0 34px 18px 0}
+.ah-name-style-section{margin-top:17px}.ah-name-style-label{display:flex;align-items:center;justify-content:space-between;color:#fff;font-size:14px;font-weight:900;margin-bottom:9px}.ah-name-style-label small{color:#b5bac1;font-size:11px;font-weight:750}
+.ah-font-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.ah-font-option{height:50px;border:1px solid #404249;border-radius:7px;background:#35373d;color:#f2f3f5;font-size:22px;cursor:pointer;display:grid;place-items:center}.ah-font-option:hover{background:#3e4148}.ah-font-option.active{border-color:#6d78ff;box-shadow:0 0 0 1px #6d78ff;background:#3b3e49}
+.ah-effect-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.ah-effect-option{height:45px;border:1px solid #404249;border-radius:7px;background:#35373d;color:#f2f3f5;font-size:13px;font-weight:900;cursor:pointer}.ah-effect-option:hover{background:#3e4148}.ah-effect-option.active{border-color:#6d78ff;box-shadow:0 0 0 1px #6d78ff}.ah-effect-option[data-effect="gradient"]{color:#6df0b2}.ah-effect-option[data-effect="neon"]{color:#e29aff;text-shadow:0 0 8px #9e5cff}.ah-effect-option[data-effect="multicolor"]{background-image:linear-gradient(90deg,#ff58c7,#7df8ff);-webkit-background-clip:text;background-clip:text;color:transparent}.ah-effect-option[data-effect="outline"]{color:#b8ffe4;text-shadow:0 0 5px #2bd3a0}
+.ah-color-row{display:flex;gap:9px;align-items:flex-start}.ah-color-current{width:46px;height:46px;border:1px solid #fff;border-radius:4px;background:#fff;display:grid;place-items:center;color:#111;font-size:24px;cursor:pointer}.ah-color-palette{display:grid;grid-template-columns:repeat(6,18px);gap:7px}.ah-color-swatch{width:18px;height:18px;border:0;border-radius:3px;cursor:pointer;box-shadow:0 0 0 1px rgba(255,255,255,.08) inset}.ah-color-swatch.active{box-shadow:0 0 0 2px #fff,0 0 0 4px #5865f2}.ah-custom-colors{display:flex;gap:8px;margin-top:10px}.ah-custom-color{width:50%;height:34px;border:1px solid #44464f;border-radius:7px;background:#202126;padding:3px;cursor:pointer}
+.ah-name-preview-card{width:min(335px,100%);margin:0 auto;background:#24252a;border:1px solid #3c3e46;border-radius:9px;overflow:hidden;box-shadow:0 14px 38px rgba(0,0,0,.35)}.ah-name-preview-banner{height:102px;background:linear-gradient(135deg,#8a8f9b,#d5dae0);background-size:cover;background-position:center}.ah-name-preview-body{padding:0 15px 16px}.ah-name-preview-avatar{width:68px;height:68px;border-radius:50%;background:#111 center/cover no-repeat;border:6px solid #24252a;margin-top:-34px;display:grid;place-items:center;color:#fff;font-size:23px;font-weight:950}.ah-name-preview-name{margin-top:8px;font-size:22px;font-weight:950;line-height:1.12;display:inline-block}.ah-name-preview-handle{color:#b5bac1;font-size:12px;font-weight:750;margin-top:3px}.ah-name-preview-message{margin-top:15px;background:#2b2d31;border-radius:8px;padding:10px 12px;display:flex;gap:9px;align-items:flex-start}.ah-name-preview-mini-avatar{width:32px;height:32px;border-radius:50%;background:#111 center/cover no-repeat;flex:0 0 auto}.ah-name-preview-message b{display:inline-block;font-size:13px}.ah-name-preview-message span{display:block;color:#dbdee1;font-size:12px;margin-top:3px}.ah-name-style-note{color:#b5bac1;font-size:11px;line-height:1.4;margin:20px 0 0}.ah-name-style-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;border-top:1px solid rgba(255,255,255,.08);padding-top:16px;margin-top:22px}.ah-name-style-btn{height:38px;border:0;border-radius:7px;background:#4e5058;color:#fff;padding:0 14px;font-weight:900;cursor:pointer}.ah-name-style-btn.primary{background:#5865f2}.ah-name-style-btn:hover{filter:brightness(1.08)}.ah-name-style-status{min-height:18px;color:#b5bac1;font-size:12px;font-weight:800;margin-top:9px}.ah-name-style-status.ok{color:#23a55a}.ah-name-style-status.err{color:#ff6b6b}
+@media(max-width:760px){ #ah-name-style-brush{left:auto;right:48px;top:12px;border-radius:10px}.ah-name-style-modal{grid-template-columns:1fr;overflow-y:auto}.ah-name-style-preview{min-height:410px;padding-top:54px}.ah-name-style-controls{border-right:0;border-bottom:1px solid #202126}.ah-font-grid{grid-template-columns:repeat(4,1fr)}}
+</style>
+<button id="ah-name-style-brush" type="button" title="Изменить стиль отображаемого имени" aria-label="Изменить стиль отображаемого имени">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14 4 6 6"/><path d="M4 20c3 0 5-2 5-5l9-9-4-4-9 9c-3 0-5 2-5 5 0 2 2 4 4 4Z"/></svg>
+</button>
+<div id="ah-name-style-backdrop" aria-hidden="true">
+  <div class="ah-name-style-modal" role="dialog" aria-modal="true" aria-label="Изменение стиля отображаемого имени">
+    <button id="ah-name-style-close" class="ah-name-style-close" type="button" aria-label="Закрыть">×</button>
+    <aside class="ah-name-style-controls">
+      <h2 class="ah-name-style-title">Изменение стиля отображаемого имени</h2>
+      <div class="ah-name-style-section">
+        <div class="ah-name-style-label"><span>Выбор шрифта</span><small id="ah-name-font-label">По умолчанию</small></div>
+        <div class="ah-font-grid" id="ah-name-font-grid">
+          <button type="button" class="ah-font-option font-default" data-font="default" data-label="По умолчанию">Gg</button>
+          <button type="button" class="ah-font-option font-serif" data-font="serif" data-label="Serif">Gg</button>
+          <button type="button" class="ah-font-option font-cherry" data-font="cherry" data-label="Sakura">Gg</button>
+          <button type="button" class="ah-font-option font-grandstander" data-font="grandstander" data-label="Grandstander">Gg</button>
+          <button type="button" class="ah-font-option font-rounded" data-font="rounded" data-label="Rounded">Gg</button>
+          <button type="button" class="ah-font-option font-bungee" data-font="bungee" data-label="Bungee">Gg</button>
+          <button type="button" class="ah-font-option font-pixel" data-font="pixel" data-label="Pixel">Gg</button>
+          <button type="button" class="ah-font-option font-museo" data-font="museo" data-label="Museo">Gg</button>
+        </div>
+      </div>
+      <div class="ah-name-style-section">
+        <div class="ah-name-style-label"><span>Выбор эффекта</span><small>Nitro</small></div>
+        <div class="ah-effect-grid" id="ah-name-effect-grid">
+          <button type="button" class="ah-effect-option" data-effect="solid">Минимализм</button>
+          <button type="button" class="ah-effect-option" data-effect="gradient">Градиент</button>
+          <button type="button" class="ah-effect-option" data-effect="neon">Неон</button>
+          <button type="button" class="ah-effect-option" data-effect="multicolor">Мультфильм</button>
+          <button type="button" class="ah-effect-option" data-effect="outline">Выделение</button>
+        </div>
+      </div>
+      <div class="ah-name-style-section">
+        <div class="ah-name-style-label"><span>Выбор цвета</span><small>2 цвета</small></div>
+        <div class="ah-color-row"><button id="ah-name-color-current" class="ah-color-current" type="button">✓</button><div class="ah-color-palette" id="ah-name-color-palette"></div></div>
+        <div class="ah-custom-colors"><input id="ah-name-color-1" class="ah-custom-color" type="color" value="#f2f3f5" title="Первый цвет"><input id="ah-name-color-2" class="ah-custom-color" type="color" value="#5865f2" title="Второй цвет"></div>
+      </div>
+      <div id="ah-name-style-status" class="ah-name-style-status"></div>
+    </aside>
+    <section class="ah-name-style-preview">
+      <div class="ah-name-preview-card">
+        <div id="ah-name-preview-banner" class="ah-name-preview-banner"></div>
+        <div class="ah-name-preview-body">
+          <div id="ah-name-preview-avatar" class="ah-name-preview-avatar"><span id="ah-name-preview-avatar-text">A</span></div>
+          <div><span id="ah-name-preview-name" class="ah-name-preview-name visual-name">AlexiHub</span></div>
+          <div id="ah-name-preview-handle" class="ah-name-preview-handle">@alexihub · Nitro</div>
+          <div class="ah-name-preview-message"><div id="ah-name-preview-mini-avatar" class="ah-name-preview-mini-avatar"></div><div><b id="ah-name-preview-message-name" class="visual-name">AlexiHub</b><span>Это кто-нибудь читает?</span></div></div>
+        </div>
+      </div>
+      <div>
+        <p class="ah-name-style-note">Цвета и эффекты имени применяются в профиле, списках участников, личных сообщениях и сообщениях серверов. Роль и её цвета не меняются.</p>
+        <div class="ah-name-style-actions"><button id="ah-name-style-random" class="ah-name-style-btn" type="button">🎲 Удивите меня</button><button id="ah-name-style-save" class="ah-name-style-btn primary" type="button">Сохранить</button></div>
+      </div>
+    </section>
+  </div>
+</div>
+<script id="ah-name-style-js">
+(function(){
+  if(window.__ahNameStyleReady) return; window.__ahNameStyleReady=true;
+  const fonts=['default','serif','cherry','grandstander','rounded','bungee','pixel','museo'];
+  const effects=['solid','gradient','neon','multicolor','outline'];
+  const pairs=[['#f2f3f5','#ffffff'],['#23d5ab','#2bd67b'],['#19c7ff','#5865f2'],['#8b5cf6','#d946ef'],['#ff4fa3','#ff296d'],['#f0b232','#ff7a18'],['#13a88a','#35d6b4'],['#16b45d','#5ce57d'],['#1f7bd7','#32b5ff'],['#8b5cf6','#5b65f2'],['#e91e86','#ff5dac'],['#ff3b30','#ff7a18']];
+  let state={loaded:false,nitro:false,username:'',avatar:'',banner:'',font:'default',effect:'solid',c1:'#f2f3f5',c2:'#5865f2'};
+  const $=s=>document.querySelector(s);
+  const escCss=v=>{try{return CSS.escape(String(v||''))}catch(e){return String(v||'').replace(/[^a-zA-Z0-9_-]/g,'')}};
+  function setBg(el,url){if(!el)return;el.style.backgroundImage=url?`url('${String(url).replace(/'/g,"%27")}')`:''}
+  function cleanStyleClasses(el){if(!el)return;[...el.classList].forEach(c=>{if(c.startsWith('font-')||c.startsWith('name-'))el.classList.remove(c)})}
+  function applyName(el){if(!el)return;cleanStyleClasses(el);el.classList.add('visual-name','font-'+state.font,'name-'+state.effect);el.style.setProperty('--name-c1',state.c1);el.style.setProperty('--name-c2',state.c2)}
+  function styleNamesFromData(root){(root||document).querySelectorAll('[data-mini-username][data-mini-effect],[data-mini-username][data-mini-font]').forEach(carrier=>{const effect=carrier.dataset.miniEffect||'none',font=carrier.dataset.miniFont||'default',c1=carrier.dataset.miniC1||'#5865f2',c2=carrier.dataset.miniC2||'#9b5cf6';let targets=[];if(carrier.matches('.msg-name,.dm-name,.member-name,.account-name,.visual-name'))targets.push(carrier);carrier.querySelectorAll('.msg-name,.dm-name,.member-name,.account-name,.friend-name,.friend-main>b,.visual-name,.user-info>b,.profile-name').forEach(x=>targets.push(x));targets.forEach(el=>{cleanStyleClasses(el);el.classList.add('visual-name','font-'+font,'name-'+effect);el.style.setProperty('--name-c1',c1);el.style.setProperty('--name-c2',c2)})})}
+  function render(){
+    const n=$('#ah-name-preview-name'),m=$('#ah-name-preview-message-name');
+    if(n){n.textContent=state.username||'AlexiHub';applyName(n)} if(m){m.textContent=state.username||'AlexiHub';applyName(m)}
+    const h=$('#ah-name-preview-handle');if(h)h.textContent='@'+(state.username||'alexihub')+' · Nitro';
+    const av=$('#ah-name-preview-avatar'),mini=$('#ah-name-preview-mini-avatar');setBg(av,state.avatar);setBg(mini,state.avatar);const at=$('#ah-name-preview-avatar-text');if(at)at.textContent=state.avatar?'':(state.username||'A').slice(0,1).toUpperCase();setBg($('#ah-name-preview-banner'),state.banner);
+    document.querySelectorAll('.ah-font-option').forEach(b=>b.classList.toggle('active',b.dataset.font===state.font));
+    document.querySelectorAll('.ah-effect-option').forEach(b=>b.classList.toggle('active',b.dataset.effect===state.effect));
+    const activeFont=document.querySelector('.ah-font-option.active');const fl=$('#ah-name-font-label');if(fl)fl.textContent=activeFont?activeFont.dataset.label:'По умолчанию';
+    const c1=$('#ah-name-color-1'),c2=$('#ah-name-color-2');if(c1)c1.value=state.c1;if(c2)c2.value=state.c2;const cur=$('#ah-name-color-current');if(cur){cur.style.background=`linear-gradient(135deg,${state.c1} 0 50%,${state.c2} 50%)`;cur.style.color=(state.c1.toLowerCase()==='#f2f3f5'||state.c1.toLowerCase()==='#ffffff')?'#111':'#fff'}
+    document.querySelectorAll('.ah-color-swatch').forEach(b=>b.classList.toggle('active',b.dataset.c1.toLowerCase()===state.c1.toLowerCase()&&b.dataset.c2.toLowerCase()===state.c2.toLowerCase()));
+  }
+  function buildPalette(){const p=$('#ah-name-color-palette');if(!p||p.children.length)return;pairs.forEach(([c1,c2])=>{const b=document.createElement('button');b.type='button';b.className='ah-color-swatch';b.dataset.c1=c1;b.dataset.c2=c2;b.style.background=`linear-gradient(135deg,${c1} 0 50%,${c2} 50%)`;b.addEventListener('click',()=>{state.c1=c1;state.c2=c2;render()});p.appendChild(b)})}
+  function ownProfileOpen(){const ov=$('#ah-v3-overlay');if(!ov||!ov.classList.contains('open'))return false;const msg=$('#ah-v3-full-message');if(msg&&msg.dataset.self==='1')return true;const name=($('#ah-v3-full-name')?.textContent||'').trim().toLowerCase();return !!state.username&&name===state.username.toLowerCase()}
+  function mountBrush(){const btn=$('#ah-name-style-brush'),card=document.querySelector('#ah-v3-overlay .ah-v3-full');if(btn&&card&&btn.parentElement!==card)card.appendChild(btn);syncBrush()}
+  function syncBrush(){const btn=$('#ah-name-style-brush');if(btn)btn.classList.toggle('show',!!state.nitro&&ownProfileOpen())}
+  async function load(){
+    try{const r=await fetch('/community/api/profile/name-style',{credentials:'same-origin',headers:{Accept:'application/json'},cache:'no-store'});const d=await r.json();if(!r.ok||!d.ok)return;const a=d.account||{};state.loaded=true;state.nitro=!!d.nitro_active;state.username=a.username||'';state.avatar=a.avatar_url||'';state.banner=a.banner_url||'';state.font=fonts.includes(a.name_font)?a.name_font:'default';state.effect=effects.includes(a.name_effect)?a.name_effect:'solid';state.c1=a.name_color_start||'#f2f3f5';state.c2=a.name_color_end||state.c1;render();mountBrush()}catch(e){}
+  }
+  function open(){if(!state.nitro)return;render();const b=$('#ah-name-style-backdrop');if(b){b.classList.add('open');b.setAttribute('aria-hidden','false')}}
+  function close(){const b=$('#ah-name-style-backdrop');if(b){b.classList.remove('open');b.setAttribute('aria-hidden','true')}}
+  async function save(){const s=$('#ah-name-style-status'),btn=$('#ah-name-style-save');if(s){s.textContent='Сохраняем...';s.className='ah-name-style-status'}if(btn)btn.disabled=true;try{const r=await fetch('/community/api/profile/name-style',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({name_font:state.font,name_effect:state.effect,name_color_start:state.c1,name_color_end:state.c2})});const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.message||'Не удалось сохранить.');if(s){s.textContent='Готово. Стиль имени сохранён.';s.className='ah-name-style-status ok'}setTimeout(()=>location.reload(),550)}catch(e){if(s){s.textContent=e.message||'Ошибка сети.';s.className='ah-name-style-status err'}if(btn)btn.disabled=false}}
+  function randomize(){state.font=fonts[Math.floor(Math.random()*fonts.length)];state.effect=effects[Math.floor(Math.random()*effects.length)];const pair=pairs[Math.floor(Math.random()*pairs.length)];state.c1=pair[0];state.c2=pair[1];render()}
+  document.addEventListener('DOMContentLoaded',()=>{buildPalette();styleNamesFromData(document);document.querySelectorAll('.ah-font-option').forEach(b=>b.addEventListener('click',()=>{state.font=b.dataset.font;render()}));document.querySelectorAll('.ah-effect-option').forEach(b=>b.addEventListener('click',()=>{state.effect=b.dataset.effect;render()}));$('#ah-name-color-1')?.addEventListener('input',e=>{state.c1=e.target.value;render()});$('#ah-name-color-2')?.addEventListener('input',e=>{state.c2=e.target.value;render()});$('#ah-name-style-brush')?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();open()});$('#ah-name-style-close')?.addEventListener('click',close);$('#ah-name-style-save')?.addEventListener('click',save);$('#ah-name-style-random')?.addEventListener('click',randomize);$('#ah-name-style-backdrop')?.addEventListener('click',e=>{if(e.target.id==='ah-name-style-backdrop')close()});const pageRoot=document.body;if(pageRoot)new MutationObserver(ms=>ms.forEach(m=>m.addedNodes.forEach(n=>{if(n&&n.nodeType===1)styleNamesFromData(n)}))).observe(pageRoot,{childList:true,subtree:true});const ov=$('#ah-v3-overlay');if(ov)new MutationObserver(()=>{mountBrush();syncBrush()}).observe(ov,{attributes:true,attributeFilter:['class'],subtree:true});load()});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#ah-name-style-backdrop')?.classList.contains('open'))close()});
 })();
 </script>
 
