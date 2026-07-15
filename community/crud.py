@@ -1744,6 +1744,29 @@ async def ensure_nitro_tables(db: AsyncSession) -> None:
         )
     """))
     await db.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uq_community_nitro_subscriptions_account ON community_nitro_subscriptions (account_id)"))
+
+    # Recipient-bound Nitro gifts sent as special cards inside direct messages.
+    # The public token identifies the card but cannot be redeemed by anyone
+    # except the recipient stored in this row.
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_nitro_dm_gifts (
+            id SERIAL PRIMARY KEY,
+            public_token VARCHAR(96) NOT NULL UNIQUE,
+            thread_id INTEGER NOT NULL REFERENCES community_direct_threads(id) ON DELETE CASCADE,
+            message_id INTEGER UNIQUE REFERENCES community_direct_messages(id) ON DELETE CASCADE,
+            sender_id INTEGER NOT NULL REFERENCES community_accounts(id) ON DELETE CASCADE,
+            recipient_id INTEGER NOT NULL REFERENCES community_accounts(id) ON DELETE CASCADE,
+            days INTEGER NOT NULL DEFAULT 30,
+            note VARCHAR(255),
+            status VARCHAR(16) NOT NULL DEFAULT 'pending',
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+            claimed_at TIMESTAMP WITH TIME ZONE
+        )
+    """))
+    await db.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ix_community_nitro_dm_gifts_token ON community_nitro_dm_gifts (public_token)"))
+    await db.execute(text("CREATE INDEX IF NOT EXISTS ix_community_nitro_dm_gifts_recipient_status ON community_nitro_dm_gifts (recipient_id, status)"))
+    await db.execute(text("CREATE INDEX IF NOT EXISTS ix_community_nitro_dm_gifts_thread ON community_nitro_dm_gifts (thread_id, created_at)"))
+
     await db.commit()
     _NITRO_TABLES_READY = True
 
@@ -1947,6 +1970,240 @@ async def nitro_profile_payload(db: AsyncSession, account_id: int) -> dict:
         "tier": sub.get('tier') or 'basic',
         "tier_label": sub.get('tier_label') or NITRO_TIER_LABELS['basic'],
     }
+
+
+# ----------------------------------------------------------------------------
+# Recipient-bound Nitro gifts in direct messages.
+# ----------------------------------------------------------------------------
+NITRO_DM_GIFT_MARKER_RE = re.compile(r"^\[\[ah:nitro-gift:([A-Za-z0-9_-]{20,96})\]\]$")
+NITRO_DM_GIFT_DAYS = {7, 30, 90, 200}
+
+
+def make_nitro_dm_gift_marker(public_token: str) -> str:
+    return f"[[ah:nitro-gift:{public_token}]]"
+
+
+def parse_nitro_dm_gift_marker(content: str | None) -> str | None:
+    match = NITRO_DM_GIFT_MARKER_RE.fullmatch((content or "").strip())
+    return match.group(1) if match else None
+
+
+async def _generate_unique_nitro_dm_gift_token(db: AsyncSession) -> str:
+    await ensure_nitro_tables(db)
+    for _ in range(32):
+        token = secrets.token_urlsafe(24).rstrip('=')
+        exists = (await db.execute(text(
+            "SELECT id FROM community_nitro_dm_gifts WHERE public_token = :token LIMIT 1"
+        ), {"token": token})).first()
+        if not exists:
+            return token
+    raise RuntimeError("Could not generate unique Nitro DM gift token")
+
+
+def _nitro_dm_gift_payload(row, viewer_id: int) -> dict | None:
+    if not row:
+        return None
+    status = str(row.get("status") or "pending")
+    claimed_at = row.get("claimed_at")
+    created_at = row.get("created_at")
+    recipient_id = int(row["recipient_id"])
+    sender_id = int(row["sender_id"])
+    viewer_id = int(viewer_id)
+    return {
+        "token": row["public_token"],
+        "thread_id": int(row["thread_id"]),
+        "message_id": int(row["message_id"]) if row.get("message_id") is not None else None,
+        "sender_id": sender_id,
+        "sender_username": row.get("sender_username") or "user",
+        "sender_avatar_url": row.get("sender_avatar_url") or "",
+        "recipient_id": recipient_id,
+        "recipient_username": row.get("recipient_username") or "user",
+        "recipient_avatar_url": row.get("recipient_avatar_url") or "",
+        "days": int(row.get("days") or 30),
+        "note": row.get("note") or "",
+        "status": status,
+        "created_at": created_at.isoformat() if created_at else None,
+        "claimed_at": claimed_at.isoformat() if claimed_at else None,
+        "is_sender": viewer_id == sender_id,
+        "is_recipient": viewer_id == recipient_id,
+        "can_claim": viewer_id == recipient_id and status == "pending",
+    }
+
+
+async def get_nitro_dm_gift(db: AsyncSession, public_token: str, viewer_id: int) -> dict | None:
+    await ensure_nitro_tables(db)
+    token = (public_token or "").strip()
+    if not token or len(token) > 96:
+        return None
+    row = (await db.execute(text("""
+        SELECT g.public_token, g.thread_id, g.message_id, g.sender_id, g.recipient_id,
+               g.days, g.note, g.status, g.created_at, g.claimed_at,
+               sender.username AS sender_username, sender.avatar_url AS sender_avatar_url,
+               recipient.username AS recipient_username, recipient.avatar_url AS recipient_avatar_url,
+               thread.user_low_id, thread.user_high_id
+        FROM community_nitro_dm_gifts AS g
+        JOIN community_direct_threads AS thread ON thread.id = g.thread_id
+        JOIN community_accounts AS sender ON sender.id = g.sender_id
+        JOIN community_accounts AS recipient ON recipient.id = g.recipient_id
+        WHERE g.public_token = :token
+        LIMIT 1
+    """), {"token": token})).mappings().first()
+    if not row:
+        return None
+    if int(viewer_id) not in {int(row["user_low_id"]), int(row["user_high_id"])}:
+        return None
+    return _nitro_dm_gift_payload(row, int(viewer_id))
+
+
+async def create_nitro_dm_gift(
+    db: AsyncSession,
+    thread_id: int,
+    sender_id: int,
+    recipient_id: int,
+    days: int = 30,
+    note: str | None = None,
+) -> dict:
+    await ensure_nitro_tables(db)
+    await ensure_message_meta_columns(db)
+    thread = await get_dm_thread_by_id(db, int(thread_id))
+    if not thread:
+        return {"ok": False, "error": "thread_not_found", "message": "ЛС не найдено."}
+    participants = {int(thread.user_low_id), int(thread.user_high_id)}
+    if int(sender_id) not in participants or int(recipient_id) not in participants or int(sender_id) == int(recipient_id):
+        return {"ok": False, "error": "forbidden", "message": "Нельзя отправить подарок в это ЛС."}
+
+    requested_days = int(days or 30)
+    if requested_days not in NITRO_DM_GIFT_DAYS:
+        requested_days = 30
+    clean_note = (note or "").strip()[:160] or None
+    token = await _generate_unique_nitro_dm_gift_token(db)
+    marker = make_nitro_dm_gift_marker(token)
+
+    try:
+        inserted = (await db.execute(text("""
+            INSERT INTO community_nitro_dm_gifts
+                (public_token, thread_id, sender_id, recipient_id, days, note)
+            VALUES
+                (:token, :thread_id, :sender_id, :recipient_id, :days, :note)
+            RETURNING id
+        """), {
+            "token": token,
+            "thread_id": int(thread_id),
+            "sender_id": int(sender_id),
+            "recipient_id": int(recipient_id),
+            "days": requested_days,
+            "note": clean_note,
+        })).first()
+        if not inserted:
+            await db.rollback()
+            return {"ok": False, "error": "create_failed", "message": "Не удалось упаковать подарок."}
+
+        # create_dm_message commits the pending gift row and the message together.
+        message = await create_dm_message(db, int(thread_id), int(sender_id), marker)
+        message_payload = {
+            "id": int(message.id),
+            "thread_id": int(thread_id),
+            "author_id": int(sender_id),
+            "content": marker,
+            "image_url": None,
+            "created_at": message.created_at.isoformat(),
+            "reply_to_id": None,
+            "reply": None,
+            "is_forwarded": False,
+        }
+        await db.execute(text("""
+            UPDATE community_nitro_dm_gifts
+            SET message_id = :message_id
+            WHERE public_token = :token
+        """), {"message_id": int(message.id), "token": token})
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        raise
+
+    gift = await get_nitro_dm_gift(db, token, int(sender_id))
+    return {"ok": True, "gift": gift, "message": message_payload}
+
+
+async def claim_nitro_dm_gift(db: AsyncSession, public_token: str, account_id: int) -> dict:
+    await ensure_nitro_tables(db)
+    token = (public_token or "").strip()
+    if not token or len(token) > 96:
+        return {"ok": False, "error": "not_found", "message": "Подарок не найден."}
+
+    row = (await db.execute(text("""
+        SELECT id, public_token, thread_id, message_id, sender_id, recipient_id, days, status
+        FROM community_nitro_dm_gifts
+        WHERE public_token = :token
+        LIMIT 1
+        FOR UPDATE
+    """), {"token": token})).mappings().first()
+    if not row:
+        await db.rollback()
+        return {"ok": False, "error": "not_found", "message": "Подарок не найден."}
+    if int(row["recipient_id"]) != int(account_id):
+        await db.rollback()
+        return {"ok": False, "error": "not_recipient", "message": "Этот подарок предназначен другому пользователю."}
+
+    if str(row.get("status") or "pending") == "claimed":
+        await db.rollback()
+        gift = await get_nitro_dm_gift(db, token, int(account_id))
+        sub = await get_nitro_subscription(db, int(account_id))
+        return {"ok": True, "already_claimed": True, "gift": gift, "subscription": sub}
+
+    now = datetime.now(timezone.utc)
+    current = (await db.execute(text("""
+        SELECT started_at, expires_at, source_code
+        FROM community_nitro_subscriptions
+        WHERE account_id = :account_id
+        LIMIT 1
+        FOR UPDATE
+    """), {"account_id": int(account_id)})).mappings().first()
+
+    current_expires_at = _nitro_datetime_utc(current["expires_at"]) if current else None
+    current_started_at = _nitro_datetime_utc(current["started_at"]) if current else None
+    current_is_active = bool(current_expires_at and current_expires_at > now)
+    started_at = current_started_at if current_is_active and current_started_at else now
+    base_time = current_expires_at if current_is_active else now
+    days = max(1, min(int(row.get("days") or 30), 365))
+    expires_at = base_time + timedelta(days=days)
+    source_code = f"DMGIFT-{token}"[:64]
+
+    if current:
+        await db.execute(text("""
+            UPDATE community_nitro_subscriptions
+            SET started_at = :started_at, expires_at = :expires_at,
+                source_code = :source_code, updated_at = NOW()
+            WHERE account_id = :account_id
+        """), {
+            "started_at": started_at,
+            "expires_at": expires_at,
+            "source_code": source_code,
+            "account_id": int(account_id),
+        })
+    else:
+        await db.execute(text("""
+            INSERT INTO community_nitro_subscriptions
+                (account_id, started_at, expires_at, source_code)
+            VALUES
+                (:account_id, :started_at, :expires_at, :source_code)
+        """), {
+            "account_id": int(account_id),
+            "started_at": started_at,
+            "expires_at": expires_at,
+            "source_code": source_code,
+        })
+
+    await db.execute(text("""
+        UPDATE community_nitro_dm_gifts
+        SET status = 'claimed', claimed_at = NOW()
+        WHERE id = :gift_id AND status = 'pending'
+    """), {"gift_id": int(row["id"])})
+    await db.commit()
+
+    gift = await get_nitro_dm_gift(db, token, int(account_id))
+    sub = await get_nitro_subscription(db, int(account_id))
+    return {"ok": True, "days_added": days, "gift": gift, "subscription": sub}
 
 
 # ============================================================================
