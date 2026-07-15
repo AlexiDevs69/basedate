@@ -1552,7 +1552,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     let msg=el.closest('.msg,.message,.post-author,.comment-row')||null;
     let mem=el.closest('.member-row')||null;
     let panel=el.closest('.account-panel,.user-panel')||null;
-    let dm=el.closest('.dm-item')||null;
+    let dm=el.closest('.dm-item,.dm-row')||null;
     let name=el.dataset.miniUsername||el.dataset.username||'';
     if(!name && a){ let mm=(a.getAttribute('href')||'').match(/\/community\/profile\/([^/?#]+)/); if(mm) name=decodeURIComponent(mm[1]); }
     if(!name && msg) name=clean(txt($('.msg-name,.message-head .visual-name,.comment-author,.post-name',msg)));
@@ -1643,6 +1643,15 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(e.target.closest('#ah-v3-mini,#ah-v3-overlay')) return;
     const bad=e.target.closest('.account-actions,.user-actions,.top-actions,.msg-actions,.server-menu,.modal-backdrop,form,input,textarea,select,button');
     if(bad) return;
+
+    // The DM row itself is a navigation link. Only clicking its avatar or
+    // username opens the mini profile; the rest of the row follows href.
+    const sidebarDmRow=e.target.closest('.dm-list a.dm-row[href*="/community/dm/"], .dm-list a.dm-item[href*="/community/dm/"]');
+    if(sidebarDmRow && !e.target.closest('.avatar,.dm-avatar,.dm-name')){
+      closeMini();
+      return;
+    }
+
     const t=e.target.closest('[data-mini-username],.mini-profile-trigger,.profile-click,a[href*="/community/profile/"],.member-row,.msg-avatar,.msg-name,.dm-item,.account-panel,.user-panel');
     if(!t){ closeMini(); return; }
     e.preventDefault(); e.stopPropagation(); if(e.stopImmediatePropagation)e.stopImmediatePropagation();
