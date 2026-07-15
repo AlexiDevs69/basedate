@@ -1371,6 +1371,7 @@ function connect(){
     if(data.type==='nitro_gift_update' && window.AlexiHubNitroGifts){
       const gift=data.gift||{};
       if(gift.token) window.AlexiHubNitroGifts.invalidate(gift.token);
+      if(gift.sender_username && window.AlexiHubNitroProfiles) window.AlexiHubNitroProfiles.invalidate(gift.sender_username);
     }
   };
 }
@@ -2874,17 +2875,30 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     }catch(e){ return {active:false}; }
   }
   function badgeHtml(nitro){ return tierBadgeHtml(nitro,false); }
+  function gifterBadgeHtml(nitro){
+    const gifting=nitro&&nitro.gifting&&nitro.gifting.active?nitro.gifting:null;
+    if(!gifting)return '';
+    const tier=['legend','philanthropist','icon'].includes(String(gifting.tier||''))?String(gifting.tier):'legend';
+    const label=String(gifting.label||({legend:'Легенда',philanthropist:'Филантроп',icon:'Икона'}[tier]));
+    const title=String(gifting.title||('Подарки, ур. «'+label+'»'));
+    return '<span class="ah-gifter-profile-badge gifter-tier-'+esc(tier)+'" data-gifter-tier="'+esc(tier)+'" data-gifter-count="'+Number(gifting.count||0)+'" data-title="'+esc(title)+'" tabindex="0" aria-label="'+esc(title)+'"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="ah-gift-box" d="M5 12.2h14v8.3H5z"/><path class="ah-gift-lid" d="M3.7 8.3h16.6v4.4H3.7z"/><path class="ah-gift-ribbon" d="M12 8.5v12M12 8.5c-1.5-3.7-5.6-3.6-5.4-.8.1 1.6 2.1 2.1 5.4.8Zm0 0c1.5-3.7 5.6-3.6 5.4-.8-.1 1.6-2.1 2.1-5.4.8Z"/><path class="ah-gift-spark" d="m19.5 4 .55 1.45L21.5 6l-1.45.55L19.5 8l-.55-1.45L17.5 6l1.45-.55Z"/></svg></span>';
+  }
   function setBadgeAfter(el, nitro){
     if(!el) return;
-    const next = el.nextElementSibling;
-    if(next && next.classList && next.classList.contains('ah-nitro-profile-badge')) next.remove();
-    if(nitro && nitro.active) el.insertAdjacentHTML('afterend', badgeHtml(nitro));
+    let next=el.nextElementSibling;
+    while(next && next.classList && (next.classList.contains('ah-nitro-profile-badge')||next.classList.contains('ah-gifter-profile-badge'))){
+      const remove=next;next=next.nextElementSibling;remove.remove();
+    }
+    let html='';
+    if(nitro&&nitro.active)html+=badgeHtml(nitro);
+    html+=gifterBadgeHtml(nitro);
+    if(html)el.insertAdjacentHTML('afterend',html);
   }
   async function hydrateStaticProfileCards(){
     const cards = Array.from(document.querySelectorAll('.profile-body h2, .right-profile h2, .right-profile .profile-name'));
     for(const h of cards){
       const clone = h.cloneNode(true);
-      clone.querySelectorAll('.ah-nitro-profile-badge').forEach(x=>x.remove());
+      clone.querySelectorAll('.ah-nitro-profile-badge,.ah-gifter-profile-badge').forEach(x=>x.remove());
       const username = (clone.textContent || '').replace(/\s+/g,' ').trim();
       if(username) setBadgeAfter(h, await fetchUserNitro(username));
     }
@@ -2905,9 +2919,20 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   }
   function refreshSelfNitroBadges(sub){
     const username = {{ account.username|tojson }};
-    nitroCache.set(String(username).toLowerCase(), {active:!!sub.active, started_at:sub.started_at, expires_at:sub.expires_at, days_left:sub.days_left, duration_days:sub.duration_days, tier:sub.tier, tier_label:sub.tier_label});
+    const key=String(username).toLowerCase();
+    const previous=nitroCache.get(key)||{};
+    nitroCache.set(key, {active:!!sub.active, started_at:sub.started_at, expires_at:sub.expires_at, days_left:sub.days_left, duration_days:sub.duration_days, tier:sub.tier, tier_label:sub.tier_label, gifting:sub.gifting||previous.gifting||null});
     hydrateVisibleProfileBadge();
   }
+
+  window.AlexiHubNitroProfiles={
+    invalidate:function(username){
+      const key=String(username||'').trim().toLowerCase();
+      if(key)nitroCache.delete(key);
+      setTimeout(function(){hydrateVisibleProfileBadge();hydrateStaticProfileCards()},40);
+    },
+    refresh:function(){hydrateVisibleProfileBadge();hydrateStaticProfileCards()}
+  };
 
   function watchProfileNames(){
     ['ah-v3-name','ah-v3-full-name'].forEach(id=>{
@@ -3893,7 +3918,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
       const response=await fetch('/community/api/nitro/dm-gifts/'+encodeURIComponent(token)+'/claim',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:'{}'});
       const data=await response.json().catch(function(){return{}});
       if(!response.ok||!data.ok)throw new Error(data.message||'Не удалось активировать подарок');
-      if(data.gift){cache.set(token,data.gift);updateEverywhere(token,data.gift)}
+      if(data.gift){cache.set(token,data.gift);updateEverywhere(token,data.gift);if(data.gift.sender_username&&window.AlexiHubNitroProfiles)window.AlexiHubNitroProfiles.invalidate(data.gift.sender_username)}
       if(typeof window.loadNitroMe==='function'){try{window.loadNitroMe()}catch(e){}}
       if(typeof showActionToast==='function')showActionToast('Nitro активирован на '+String(data.days_added||(data.gift&&data.gift.days)||0)+' дней');
     }catch(error){
@@ -3942,6 +3967,96 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
 
   function start(){installButton();hydrate(document);const messages=document.getElementById('messages');if(messages){new MutationObserver(function(records){records.forEach(function(record){record.addedNodes.forEach(function(node){if(node.nodeType===1)hydrate(node)})})}).observe(messages,{childList:true,subtree:true})}}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+})();
+</script>
+
+
+
+<style id="ah-nitro-gifter-badge-css">
+.ah-gifter-profile-badge {
+  --gift-a:#a855f7;
+  --gift-b:#ec4899;
+  --gift-c:#ffe08a;
+  display:inline-grid;
+  place-items:center;
+  width:18px;
+  height:18px;
+  margin-left:5px;
+  vertical-align:-4px;
+  flex:0 0 auto;
+  cursor:default;
+  position:relative;
+  z-index:5;
+  filter:drop-shadow(0 0 5px color-mix(in srgb,var(--gift-a) 45%,transparent));
+}
+.ah-gifter-profile-badge svg { width:18px;height:18px;display:block;overflow:visible; }
+.ah-gifter-profile-badge .ah-gift-box { fill:var(--gift-a);stroke:rgba(255,255,255,.72);stroke-width:1.15; }
+.ah-gifter-profile-badge .ah-gift-lid { fill:var(--gift-b);stroke:rgba(255,255,255,.78);stroke-width:1.05; }
+.ah-gifter-profile-badge .ah-gift-ribbon { fill:none;stroke:var(--gift-c);stroke-width:2;stroke-linecap:round;stroke-linejoin:round; }
+.ah-gifter-profile-badge .ah-gift-spark { fill:var(--gift-c); }
+.ah-gifter-profile-badge.gifter-tier-legend { --gift-a:#8b5cf6;--gift-b:#ec4899;--gift-c:#ffe082; }
+.ah-gifter-profile-badge.gifter-tier-philanthropist { --gift-a:#14b8a6;--gift-b:#22d3ee;--gift-c:#b9ffcf; }
+.ah-gifter-profile-badge.gifter-tier-icon {
+  --gift-a:#ff4fa3;
+  --gift-b:#7c5cff;
+  --gift-c:#ffe45c;
+  animation:ahGifterIconPulse 2.4s ease-in-out infinite;
+  filter:drop-shadow(0 0 5px rgba(255,79,163,.58)) drop-shadow(0 0 8px rgba(34,211,238,.35));
+}
+@keyframes ahGifterIconPulse { 0%,100% { transform:translateY(0) scale(1); } 50% { transform:translateY(-1px) scale(1.06); } }
+#ah-gifter-tooltip {
+  position:fixed;
+  z-index:2147483647;
+  display:none;
+  pointer-events:none;
+  max-width:245px;
+  padding:7px 10px;
+  border-radius:7px;
+  background:#111214;
+  color:#f2f3f5;
+  border:1px solid rgba(255,255,255,.1);
+  box-shadow:0 12px 30px rgba(0,0,0,.48);
+  font-size:12px;
+  line-height:1.25;
+  font-weight:850;
+  white-space:nowrap;
+  opacity:0;
+  transform:translateY(3px) scale(.98);
+  transition:opacity .09s ease,transform .09s ease;
+}
+#ah-gifter-tooltip.show { display:block;opacity:1;transform:translateY(0) scale(1); }
+@media (prefers-reduced-motion:reduce) { .ah-gifter-profile-badge.gifter-tier-icon { animation:none; } }
+</style>
+<script id="ah-nitro-gifter-tooltip-js">
+(function(){
+  if(window.__ahNitroGifterTooltipReady)return;
+  window.__ahNitroGifterTooltipReady=true;
+  let current=null;
+  function tip(){
+    let node=document.getElementById('ah-gifter-tooltip');
+    if(!node){node=document.createElement('div');node.id='ah-gifter-tooltip';document.body.appendChild(node)}
+    return node;
+  }
+  function place(badge){
+    const node=tip(),rect=badge.getBoundingClientRect();
+    node.textContent=badge.dataset.title||'Подарки';
+    node.style.display='block';node.classList.remove('show');
+    const width=node.offsetWidth||170,height=node.offsetHeight||30;
+    let left=rect.left+rect.width/2-width/2;
+    left=Math.max(8,Math.min(window.innerWidth-width-8,left));
+    let top=rect.top-height-9;
+    if(top<8)top=rect.bottom+9;
+    node.style.left=Math.round(left)+'px';node.style.top=Math.round(top)+'px';
+    requestAnimationFrame(function(){node.classList.add('show')});
+  }
+  function show(badge){current=badge;place(badge)}
+  function hide(){current=null;const node=document.getElementById('ah-gifter-tooltip');if(node){node.classList.remove('show');setTimeout(function(){if(!current)node.style.display='none'},100)}}
+  document.addEventListener('pointerover',function(e){const badge=e.target.closest&&e.target.closest('.ah-gifter-profile-badge');if(badge&&badge!==current)show(badge)});
+  document.addEventListener('pointerout',function(e){const badge=e.target.closest&&e.target.closest('.ah-gifter-profile-badge');if(badge&&!badge.contains(e.relatedTarget))hide()});
+  document.addEventListener('focusin',function(e){const badge=e.target.closest&&e.target.closest('.ah-gifter-profile-badge');if(badge)show(badge)});
+  document.addEventListener('focusout',function(e){if(e.target.closest&&e.target.closest('.ah-gifter-profile-badge'))hide()});
+  window.addEventListener('scroll',function(){if(current)place(current)},true);
+  window.addEventListener('resize',function(){if(current)place(current)});
 })();
 </script>
 
