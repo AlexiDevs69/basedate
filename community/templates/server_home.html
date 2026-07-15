@@ -1245,17 +1245,17 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
   </div>
 </div>
     <div class="sidebar-scroll">{% if server.description %}<div class="server-desc">{{ server.description }}</div>{% endif %}<a href="/community/servers/{{ server.id }}" class="chan-link active">⌂ Огляд</a><div class="sidebar-label-row"><div class="sidebar-label">Канали</div>{% if can_manage %}<button type="button" class="sidebar-plus" onclick="openModal('channel-modal')" title="Створити канал">+</button>{% endif %}</div>{% for ch in channels %}<div class="chan-row "><a href="/community/servers/{{ server.id }}/channel/{{ ch.id }}" class="chan-link "><span class="chan-symbol">#</span><span class="chan-name">{{ ch.name }}</span></a><div class="chan-actions"><button type="button" class="chan-action-btn" data-channel-id="{{ ch.id }}" data-channel-name="{{ ch.name }}" onclick="openChannelInviteModal(event, this)" title="Пригласить"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></button>{% if can_manage %}<a class="chan-action-btn" href="/community/servers/{{ server.id }}/channel/{{ ch.id }}/settings" onclick="event.stopPropagation()" title="Настройки канала"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.33 1.82 2 2 0 1 1-3.34 0A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.82-.33 2 2 0 1 1 0-3.34A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .33-1.82 2 2 0 1 1 3.34 0A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 .6 1 1.65 1.65 0 0 0 1.82.33 2 2 0 1 1 0 3.34A1.65 1.65 0 0 0 19.4 15Z"/></svg></a>{% endif %}</div></div>{% endfor %}</div>
-    <div class="account-panel mini-profile-trigger" data-mini-username="{{ account.username|e }}" data-mini-avatar="{{ account.avatar_url or '' }}" data-mini-banner="{{ account.banner_url or '' }}" data-mini-status="{{ account.account_status or 'online' }}" data-mini-role="{{ account.role_label or 'online' }}" data-mini-effect="{{ account.name_effect or 'none' }}" data-mini-font="{{ account.name_font or 'default' }}" data-mini-c1="{{ account.name_color_start or account.role_color_start or '#f5576c' }}" data-mini-c2="{{ account.name_color_end or account.role_color_end or '#7367f0' }}" data-mini-profile="/community/profile/{{ account.username }}" data-mini-bio="{{ account.bio or '' }}"><span class="account-avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}');"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}</span><span class="account-meta"><span class="visual-name account-name name-{{ account.name_effect or 'none' }} font-{{ account.name_font or 'default' }}" style="--name-c1: {{ account.name_color_start or account.role_color_start or '#f5576c' }}; --name-c2: {{ account.name_color_end or account.role_color_end or '#7367f0' }};">{{ account.username }}</span><span class="account-status">{{ {'online':'В мережі','idle':'Неактивний','dnd':'Не турбувати','invisible':'Невидимий'}.get(account.account_status or 'online', 'В мережі') }}</span><small class="account-username">@{{ account.username }}</small></span><span class="account-actions"><button class="voice-control" data-audio-kind="mic" type="button" onclick="event.stopPropagation();toggleAudioControl(this,'mic')" title="Mute"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button><button class="voice-control" data-audio-kind="headphones" type="button" onclick="event.stopPropagation();toggleAudioControl(this,'headphones')" title="Deafen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg></button><button type="button" onclick="event.stopPropagation();openUserSettings()" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.4 1.08V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.08-.4H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6A1.65 1.65 0 0 0 10.4 3V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 16 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.15.32.36.6.6 1 .26.25.64.4 1.08.4H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51.6z"/></svg></button></span></div>
+    <div class="account-panel mini-profile-trigger" data-mini-username="{{ account.username|e }}" data-mini-avatar="{{ account.avatar_url or '' }}" data-mini-banner="{{ account.banner_url or '' }}" data-mini-status="{{ account.account_status or 'online' }}" data-mini-role="{{ account.role_label or 'online' }}" data-mini-effect="{{ account.name_effect or 'none' }}" data-mini-font="{{ account.name_font or 'default' }}" data-mini-c1="{{ account.role_color_start or '#f5576c' }}" data-mini-c2="{{ account.role_color_end or '#7367f0' }}" data-mini-profile="/community/profile/{{ account.username }}" data-mini-bio="{{ account.bio or '' }}"><span class="account-avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}');"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}</span><span class="account-meta"><span class="visual-name account-name name-{{ account.name_effect or 'none' }} font-{{ account.name_font or 'default' }}" style="--name-c1: {{ account.role_color_start or '#f5576c' }}; --name-c2: {{ account.role_color_end or '#7367f0' }};">{{ account.username }}</span><span class="account-status">{{ {'online':'В мережі','idle':'Неактивний','dnd':'Не турбувати','invisible':'Невидимий'}.get(account.account_status or 'online', 'В мережі') }}</span><small class="account-username">@{{ account.username }}</small></span><span class="account-actions"><button class="voice-control" data-audio-kind="mic" type="button" onclick="event.stopPropagation();toggleAudioControl(this,'mic')" title="Mute"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button><button class="voice-control" data-audio-kind="headphones" type="button" onclick="event.stopPropagation();toggleAudioControl(this,'headphones')" title="Deafen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg></button><button type="button" onclick="event.stopPropagation();openUserSettings()" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.4 1.08V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.08-.4H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6A1.65 1.65 0 0 0 10.4 3V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 16 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.15.32.36.6.6 1 .26.25.64.4 1.08.4H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51.6z"/></svg></button></span></div>
   </aside>
   <aside class="members-sidebar">
     <div class="members-title">Учасники — {{ members|length }}</div>
     {% for item in members %}
       {% set m = item.account %}
       {% if m %}
-      <a href="/community/profile/{{ m.username }}" class="member-row mini-profile-trigger profile-click" data-account-id="{{ m.id }}" data-mini-username="{{ m.username|e }}" data-mini-avatar="{{ m.avatar_url or '' }}" data-mini-banner="{{ m.banner_url or '' }}" data-mini-status="{{ account.account_status if m.id == account.id else (m.account_status or 'offline') }}" data-mini-role="{{ m.role_label or item.role }}" data-mini-effect="{{ m.name_effect or 'none' }}" data-mini-font="{{ m.name_font or 'default' }}" data-mini-c1="{{ m.name_color_start or m.role_color_start or '#f5576c' }}" data-mini-c2="{{ m.name_color_end or m.role_color_end or '#7367f0' }}" data-mini-profile="/community/profile/{{ m.username }}" data-mini-bio="{{ m.bio or '' }}">
+      <a href="/community/profile/{{ m.username }}" class="member-row mini-profile-trigger profile-click" data-account-id="{{ m.id }}" data-mini-username="{{ m.username|e }}" data-mini-avatar="{{ m.avatar_url or '' }}" data-mini-banner="{{ m.banner_url or '' }}" data-mini-status="{{ account.account_status if m.id == account.id else (m.account_status or 'offline') }}" data-mini-role="{{ m.role_label or item.role }}" data-mini-effect="{{ m.name_effect or 'none' }}" data-mini-font="{{ m.name_font or 'default' }}" data-mini-c1="{{ m.role_color_start or '#f5576c' }}" data-mini-c2="{{ m.role_color_end or '#7367f0' }}" data-mini-profile="/community/profile/{{ m.username }}" data-mini-bio="{{ m.bio or '' }}">
         <span class="member-avatar-wrap"><span class="member-avatar" {% if m.avatar_url %}style="background-image:url('{{ m.avatar_url }}');"{% endif %}>{% if not m.avatar_url %}{{ m.username[:1]|upper }}{% endif %}</span><span class="member-presence status-{{ account.account_status if m.id == account.id else (m.account_status or 'offline') }}"></span></span>
         <span class="member-info">
-          <span class="visual-name member-name name-{{ m.name_effect or 'none' }} font-{{ m.name_font or 'default' }}" style="--name-c1: {{ m.name_color_start or m.role_color_start or '#f5576c' }}; --name-c2: {{ m.name_color_end or m.role_color_end or '#7367f0' }};">{{ m.username }}</span>
+          <span class="visual-name member-name name-{{ m.name_effect or 'none' }} font-{{ m.name_font or 'default' }}" style="--name-c1: {{ m.role_color_start or '#f5576c' }}; --name-c2: {{ m.role_color_end or '#7367f0' }};">{{ m.username }}</span>
           <span class="member-role">{{ item.role }}</span>
         </span>
       </a>
@@ -1531,9 +1531,6 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(!role && msg) role=clean(txt($('.role-pill,.badge',msg)));
     if(!role) role='member';
     let c1=el.dataset.miniC1||'#5865f2', c2=el.dataset.miniC2||'#9b5cf6';
-    let styleCarrier = el.closest('[data-mini-effect],[data-mini-font]') || el;
-    let effect=(el.dataset.miniEffect||(styleCarrier.dataset&&styleCarrier.dataset.miniEffect)||'none').trim()||'none';
-    let font=(el.dataset.miniFont||(styleCarrier.dataset&&styleCarrier.dataset.miniFont)||'default').trim()||'default';
     let profile=el.dataset.miniProfile || (name?('/community/profile/'+encodeURIComponent(name)):'#');
     let bioCarrier = el.closest('[data-mini-bio]');
     let bio = (el.dataset.miniBio || (bioCarrier && bioCarrier.dataset ? bioCarrier.dataset.miniBio : '') || '').trim();
@@ -1551,10 +1548,9 @@ document.addEventListener('DOMContentLoaded',()=>{
     let html=(el.outerHTML||'')+(mem?mem.outerHTML:'')+(panel?panel.outerHTML:'');
     let st=html.match(/status-(online|idle|dnd|invisible|offline)/); if(st && (!status || status==='offline')) status=st[1];
     if(isSelf){ let d=$('#my-avatar-status,#modal-avatar-status'); if(d){ let cls=[...d.classList].find(x=>x.startsWith('status-')); if(cls) status=cls.replace('status-',''); } }
-    return {name:clean(name)||'user',avatar,banner,role,c1,c2,effect,font,profile,isSelf,status,bio};
+    return {name:clean(name)||'user',avatar,banner,role,c1,c2,profile,isSelf,status,bio};
   }
   function setAvatar(el,textEl,url,name){ if(!el)return; el.style.backgroundImage=url?`url('${safeUrl(url)}')`:''; if(textEl) textEl.textContent=url?'':(name||'?').slice(0,1).toUpperCase(); }
-  function styleProfileName(el,item){ if(!el||!item)return; [...el.classList].forEach(function(c){if(c.indexOf('name-')===0||c.indexOf('font-')===0)el.classList.remove(c)}); el.classList.add('visual-name','name-'+(item.effect||'none'),'font-'+(item.font||'default')); el.style.setProperty('--name-c1',item.c1||'#5865f2'); el.style.setProperty('--name-c2',item.c2||'#9b5cf6'); }
   function tintFromBanner(url,target){
     if(!target || !url) return;
     try{
@@ -1583,10 +1579,10 @@ document.addEventListener('DOMContentLoaded',()=>{
   function openMini(el,e){
     active=dataFrom(el); let pop=$('#ah-v3-mini'); if(!pop)return;
     pop.classList.toggle('self',!!active.isSelf); pop.style.setProperty('--ah-c1',active.c1); pop.style.setProperty('--ah-c2',active.c2); setBanner($('#ah-v3-banner'), active.banner, active.c1, active.c2);
-    setAvatar($('#ah-v3-avatar'),$('#ah-v3-avatar-text'),active.avatar,active.name); $('#ah-v3-name').textContent=active.name; styleProfileName($('#ah-v3-name'),active); $('#ah-v3-handle').textContent='@'+active.name; $('#ah-v3-role').textContent=active.role||'member'; const bioText=(active.bio||'').trim(); const noteTitle=$('#ah-v3-mini .ah-v3-note b'); if(noteTitle) noteTitle.textContent=bioText?'Опис профілю':'Міні-профіль'; $('#ah-v3-note-text').textContent=bioText || (active.isSelf?'Звідси можна змінити статус. Натисни на аватарку для повної картки.':'Натисни на аватарку, щоб відкрити повну картку профілю.'); let st=$('#ah-v3-status'); if(st) st.className='ah-v3-status '+(active.status||'offline'); let msg=$('#ah-v3-message'); if(msg){msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; msg.textContent=active.isSelf?'Редактировать профиль':'Message'} place(pop,e);
+    setAvatar($('#ah-v3-avatar'),$('#ah-v3-avatar-text'),active.avatar,active.name); $('#ah-v3-name').textContent=active.name; $('#ah-v3-handle').textContent='@'+active.name; $('#ah-v3-role').textContent=active.role||'member'; const bioText=(active.bio||'').trim(); const noteTitle=$('#ah-v3-mini .ah-v3-note b'); if(noteTitle) noteTitle.textContent=bioText?'Опис профілю':'Міні-профіль'; $('#ah-v3-note-text').textContent=bioText || (active.isSelf?'Звідси можна змінити статус. Натисни на аватарку для повної картки.':'Натисни на аватарку, щоб відкрити повну картку профілю.'); let st=$('#ah-v3-status'); if(st) st.className='ah-v3-status '+(active.status||'offline'); let msg=$('#ah-v3-message'); if(msg){msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; msg.textContent=active.isSelf?'Редактировать профиль':'Message'} place(pop,e);
   }
   function closeMini(){let p=$('#ah-v3-mini'); if(p)p.classList.remove('open')}
-  function openFull(){ if(!active)return; let ov=$('#ah-v3-overlay'); if(!ov)return; ov.style.setProperty('--ah-c1',active.c1); ov.style.setProperty('--ah-c2',active.c2); setBanner($('#ah-v3-full-banner'), active.banner, active.c1, active.c2); setAvatar($('#ah-v3-full-avatar'),$('#ah-v3-full-avatar-text'),active.avatar,active.name); $('#ah-v3-full-name').textContent=active.name; styleProfileName($('#ah-v3-full-name'),active); $('#ah-v3-full-handle').textContent='@'+active.name; $('#ah-v3-full-meta').textContent=active.isSelf?'Твоя картка AlexiHub.':'Картка користувача AlexiHub.'; $('#ah-v3-full-about').textContent=(active.bio||'').trim() || (active.isSelf?'Тут буде повний профіль, активність, ігри, інтеграції та нотатки.':'Швидкий перегляд профілю поверх поточної сторінки, без переходу зі сторінки.'); let msg=$('#ah-v3-full-message'); if(msg){ msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; } let op=$('#ah-v3-full-open'); if(op) op.href=active.profile; closeMini(); ov.classList.add('open'); }
+  function openFull(){ if(!active)return; let ov=$('#ah-v3-overlay'); if(!ov)return; ov.style.setProperty('--ah-c1',active.c1); ov.style.setProperty('--ah-c2',active.c2); setBanner($('#ah-v3-full-banner'), active.banner, active.c1, active.c2); setAvatar($('#ah-v3-full-avatar'),$('#ah-v3-full-avatar-text'),active.avatar,active.name); $('#ah-v3-full-name').textContent=active.name; $('#ah-v3-full-handle').textContent='@'+active.name; $('#ah-v3-full-meta').textContent=active.isSelf?'Твоя картка AlexiHub.':'Картка користувача AlexiHub.'; $('#ah-v3-full-about').textContent=(active.bio||'').trim() || (active.isSelf?'Тут буде повний профіль, активність, ігри, інтеграції та нотатки.':'Швидкий перегляд профілю поверх поточної сторінки, без переходу зі сторінки.'); let msg=$('#ah-v3-full-message'); if(msg){ msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; } let op=$('#ah-v3-full-open'); if(op) op.href=active.profile; closeMini(); ov.classList.add('open'); }
   function closeFull(){let ov=$('#ah-v3-overlay'); if(ov)ov.classList.remove('open')}
   document.addEventListener('click',function(e){
     if(e.target.closest('#ah-v3-mini,#ah-v3-overlay')) return;
@@ -3123,403 +3119,6 @@ if (typeof window.openSelfProfileSettings !== 'function') {
   document.addEventListener('focusout',function(e){if(e.target.closest&&e.target.closest('.ah-gifter-profile-badge'))hide()});
   window.addEventListener('scroll',function(){if(current)place(current)},true);
   window.addEventListener('resize',function(){if(current)place(current)});
-})();
-</script>
-
-
-
-<!-- === Nitro profile customizer + display-name style editor === -->
-<style id="ah-name-style-css">
-@import url('https://fonts.googleapis.com/css2?family=Cherry+Bomb+One&family=Cinzel+Decorative:wght@700;900&family=Fredoka:wght@700;800&family=Grenze+Gotisch:wght@700;800;900&family=Lora:wght@700&family=MuseoModerno:wght@700;800;900&family=Press+Start+2P&display=swap');
-
-/* Eight Discord-like name faces. The ids stay compatible with already saved profiles. */
-.font-default{font-family:'Inter',system-ui,sans-serif!important;font-weight:800!important;letter-spacing:-.025em}
-.font-serif{font-family:'Lora',Georgia,serif!important;font-weight:700!important;letter-spacing:-.035em}
-.font-cherry{font-family:'Cherry Bomb One','Fredoka',sans-serif!important;font-weight:400!important;letter-spacing:.005em}
-.font-grandstander{font-family:'Grenze Gotisch',Georgia,serif!important;font-weight:800!important;letter-spacing:.015em}
-.font-rounded{font-family:'Fredoka','Inter',sans-serif!important;font-weight:800!important;letter-spacing:-.02em}
-.font-bungee{font-family:'Cinzel Decorative',Georgia,serif!important;font-weight:900!important;letter-spacing:-.025em}
-.font-pixel{font-family:'Press Start 2P',ui-monospace,monospace!important;font-weight:400!important;font-size:.72em!important;letter-spacing:-.04em;line-height:1.35!important}
-.font-museo{font-family:'MuseoModerno','Inter',sans-serif!important;font-weight:900!important;letter-spacing:-.055em}
-
-/* Always use real fallbacks. Undefined custom properties used to make random neon names transparent. */
-.name-none,.name-solid{color:var(--name-c1,#f2f3f5)!important;-webkit-text-fill-color:var(--name-c1,#f2f3f5)!important;background:none!important;text-shadow:none!important;filter:none!important}
-.name-gradient{background-image:linear-gradient(90deg,var(--name-c1,#5865f2) 0%,var(--name-c2,#9b5cf6) 48%,var(--name-c1,#5865f2) 100%)!important;background-size:200% auto!important;background-position:0 center!important;-webkit-background-clip:text!important;background-clip:text!important;color:transparent!important;-webkit-text-fill-color:transparent!important;animation:ahNameSweep 2.8s linear infinite!important;text-shadow:none!important;filter:saturate(1.2) brightness(1.06)!important}
-.name-neon{background-image:linear-gradient(90deg,var(--name-c1,#a56bff),#ffffff 48%,var(--name-c2,#ff69d8))!important;background-size:190% auto!important;-webkit-background-clip:text!important;background-clip:text!important;color:transparent!important;-webkit-text-fill-color:transparent!important;animation:ahNameSweep 2.2s linear infinite!important;filter:drop-shadow(0 0 4px var(--name-c1,#a56bff)) drop-shadow(0 0 9px var(--name-c2,#ff69d8)) saturate(1.35)!important}
-.name-multicolor{background-image:linear-gradient(90deg,var(--name-c1,#ff4fd8),#ff4fd8,#6ae7ff,var(--name-c2,#ffe66d),#ffe66d,var(--name-c1,#ff4fd8))!important;background-size:300% auto!important;-webkit-background-clip:text!important;background-clip:text!important;color:transparent!important;-webkit-text-fill-color:transparent!important;animation:ahNameRainbow 3.4s linear infinite!important;filter:saturate(1.35) brightness(1.08)!important}
-.name-outline{color:#fff!important;-webkit-text-fill-color:#fff!important;background:none!important;text-shadow:-1px -1px 0 var(--name-c1,#34d399),1px -1px 0 var(--name-c1,#34d399),-1px 1px 0 var(--name-c2,#22d3ee),1px 1px 0 var(--name-c2,#22d3ee),0 0 7px color-mix(in srgb,var(--name-c2,#22d3ee) 55%,transparent)!important;filter:none!important}
-@keyframes ahNameSweep{to{background-position:200% center}}
-@keyframes ahNameRainbow{to{background-position:300% center}}
-
-/* Paint-brush tab and the first-level profile appearance sidebar. */
-#ah-v3-overlay .ah-v3-full{overflow:visible!important;transition:width .18s ease,grid-template-columns .18s ease}
-#ah-v3-overlay .ah-v3-full-left{overflow:hidden!important}
-#ah-v3-overlay .ah-v3-full-right{overflow:auto!important}
-#ah-name-style-brush{display:none;position:absolute;left:-42px;top:34px;width:42px;height:42px;border:0;border-radius:10px 0 0 10px;background:#d9f8df;color:#173b25;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.28);z-index:40;padding:0}
-#ah-name-style-brush.show{display:flex}
-#ah-name-style-brush:hover{background:#ecfff0}
-#ah-name-style-brush svg{width:20px;height:20px}
-#ah-profile-customizer{display:none;grid-column:1;grid-row:1;min-width:0;background:#2b2d31;border-right:1px solid #202126;border-radius:18px 0 0 18px;overflow-y:auto;color:#f2f3f5;padding:0 14px 18px}
-#ah-v3-overlay .ah-v3-full.ah-name-customizing{width:min(1080px,calc(100vw - 44px));grid-template-columns:230px 330px minmax(0,1fr)!important}
-#ah-v3-overlay .ah-v3-full.ah-name-customizing #ah-profile-customizer{display:block}
-#ah-v3-overlay .ah-v3-full.ah-name-customizing .ah-v3-full-left{grid-column:2;grid-row:1;border-radius:0}
-#ah-v3-overlay .ah-v3-full.ah-name-customizing .ah-v3-full-right{grid-column:3;grid-row:1}
-#ah-v3-overlay .ah-v3-full.ah-name-customizing #ah-name-style-brush{display:none!important}
-.ah-customizer-head{height:54px;margin:0 -14px 10px;padding:0 14px;border-bottom:1px solid #3a3c43;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:14px;font-weight:950}
-.ah-customizer-head button{width:34px;height:34px;border:0;border-radius:8px;background:transparent;color:#dbdee1;cursor:pointer;font-size:24px;line-height:1}.ah-customizer-head button:hover{background:#3a3c43;color:#fff}
-.ah-customizer-section{margin-top:16px}.ah-customizer-label{display:flex;align-items:center;gap:5px;margin-bottom:8px;color:#f2f3f5;font-size:12px;font-weight:950}.ah-customizer-info{width:14px;height:14px;border-radius:50%;display:inline-grid;place-items:center;background:#b5bac1;color:#2b2d31;font-size:9px;font-weight:1000}
-.ah-customizer-badges{height:36px;border-radius:7px;background:#35373d;display:flex;align-items:center;gap:8px;padding:7px 9px}.ah-customizer-badge-dot{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#5865f2,#9b5cf6);box-shadow:0 0 0 2px rgba(255,255,255,.09) inset}.ah-customizer-badge-line{height:10px;flex:1;border-radius:999px;background:#44464e}.ah-customizer-plus{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:#f2f3f5;color:#313338;font-size:20px;font-weight:900;line-height:1}
-.ah-customizer-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.ah-customizer-tile{height:86px;border:0;border-radius:8px;background:#35373d center/cover no-repeat;position:relative;overflow:hidden;display:grid;place-items:center;color:#fff}.ah-customizer-tile.avatar{border-radius:8px}.ah-customizer-avatar{width:58px;height:58px;border-radius:50%;background:#111 center/cover no-repeat;box-shadow:0 0 0 4px rgba(255,255,255,.08)}.ah-customizer-add{width:48px;height:48px;border-radius:50%;border:2px dashed #5d6069;display:grid;place-items:center;color:#fff;font-size:27px;background:#2b2d31}
-.ah-customizer-name-entry{width:100%;height:44px;border:0;border-radius:7px;background:#35373d;color:#b5bac1;padding:0 9px;display:flex;align-items:center;gap:8px;cursor:pointer;text-align:left;overflow:hidden}.ah-customizer-name-entry:hover{background:#3e4148}.ah-customizer-name-preview{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:16px}.ah-customizer-name-entry .ah-customizer-plus{flex:0 0 auto}
-.ah-customizer-theme{background:linear-gradient(135deg,#237b42,#78d89b)}.ah-customizer-banner{background:linear-gradient(135deg,#e8e8e8,#6c6c6c)}.ah-customizer-frame{background:linear-gradient(135deg,#101828,#4f46e5)}.ah-customizer-placeholder{border:2px dashed #51545d;background:#303238}.ah-customizer-tile-check{position:absolute;right:8px;top:8px;width:19px;height:19px;border-radius:6px;border:2px solid #fff;background:rgba(0,0,0,.2)}
-
-/* Second-level editor. It must sit above the already high-z-index profile overlay. */
-#ah-name-style-backdrop{position:fixed;inset:0;z-index:2147483645;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(0,0,0,.74);backdrop-filter:blur(5px)}
-#ah-name-style-backdrop.open{display:flex}
-.ah-name-style-modal{width:min(760px,calc(100vw - 32px));max-height:min(720px,calc(100dvh - 36px));display:grid;grid-template-columns:305px minmax(0,1fr);overflow:hidden;border:1px solid #3b3d45;border-radius:14px;background:#202126;box-shadow:0 26px 90px rgba(0,0,0,.62);position:relative}
-.ah-name-style-controls{background:#2b2d31;padding:20px;overflow-y:auto;border-right:1px solid #202126}
-.ah-name-style-preview{background:linear-gradient(180deg,#17361f,#0f2817);padding:78px 24px 22px;position:relative;display:flex;flex-direction:column;justify-content:space-between;min-height:520px}
-.ah-name-style-close{position:absolute;right:14px;top:14px;width:32px;height:32px;border:0;border-radius:50%;background:transparent;color:#b5bac1;font-size:25px;cursor:pointer;z-index:4}.ah-name-style-close:hover{background:#3a3c43;color:#fff}
-.ah-name-style-title{font-size:20px;line-height:1.25;font-weight:950;color:#fff;margin:0 34px 18px 0}
-.ah-name-style-section{margin-top:17px}.ah-name-style-label{display:flex;align-items:center;justify-content:space-between;color:#fff;font-size:14px;font-weight:900;margin-bottom:9px}.ah-name-style-label small{color:#b5bac1;font-size:11px;font-weight:750}
-.ah-font-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.ah-font-option{height:50px;border:1px solid #404249;border-radius:7px;background:#35373d;color:#f2f3f5;font-size:22px;cursor:pointer;display:grid;place-items:center;position:relative;overflow:visible}.ah-font-option:hover{background:#3e4148}.ah-font-option.active{border-color:#6d78ff;box-shadow:0 0 0 1px #6d78ff;background:#3b3e49}.ah-font-option:hover:after{content:attr(data-label);position:absolute;left:50%;bottom:calc(100% + 7px);transform:translateX(-50%);background:#111214;color:#fff;border-radius:6px;padding:5px 8px;font:700 11px 'Inter',sans-serif;white-space:nowrap;box-shadow:0 8px 22px rgba(0,0,0,.38);z-index:8}
-.ah-effect-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.ah-effect-option{height:45px;border:1px solid #404249;border-radius:7px;background:#35373d;color:#f2f3f5;font-size:13px;font-weight:900;cursor:pointer}.ah-effect-option:hover{background:#3e4148}.ah-effect-option.active{border-color:#6d78ff;box-shadow:0 0 0 1px #6d78ff}.ah-effect-option[data-effect="gradient"]{color:#6df0b2}.ah-effect-option[data-effect="neon"]{color:#e29aff;text-shadow:0 0 8px #9e5cff}.ah-effect-option[data-effect="multicolor"]{background-image:linear-gradient(90deg,#ff58c7,#7df8ff);-webkit-background-clip:text;background-clip:text;color:transparent}.ah-effect-option[data-effect="outline"]{color:#b8ffe4;text-shadow:0 0 5px #2bd3a0}
-.ah-color-row{display:grid;grid-template-columns:46px 46px 1fr;gap:9px;align-items:start}.ah-color-default,.ah-color-picker-button{width:46px;height:46px;border:1px solid #44464f;border-radius:4px;background:#f2f3f5;display:grid;place-items:center;color:#111;font-size:24px;cursor:pointer;position:relative}.ah-color-default.active{box-shadow:0 0 0 2px #5865f2}.ah-color-picker-button{background:#202126;color:#fff;overflow:hidden}.ah-color-picker-button svg{width:17px;height:17px}.ah-color-picker-button input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}.ah-color-palette{display:grid;grid-template-columns:repeat(6,18px);gap:7px}.ah-color-swatch{width:18px;height:18px;border:0;border-radius:3px;cursor:pointer;box-shadow:0 0 0 1px rgba(255,255,255,.08) inset}.ah-color-swatch.active{box-shadow:0 0 0 2px #fff,0 0 0 4px #5865f2}
-.ah-name-preview-card{width:min(335px,100%);margin:0 auto;background:#24252a;border:1px solid #3c3e46;border-radius:9px;overflow:hidden;box-shadow:0 14px 38px rgba(0,0,0,.35)}.ah-name-preview-banner{height:102px;background:linear-gradient(135deg,#8a8f9b,#d5dae0);background-size:cover;background-position:center}.ah-name-preview-body{padding:0 15px 16px}.ah-name-preview-avatar{width:68px;height:68px;border-radius:50%;background:#111 center/cover no-repeat;border:6px solid #24252a;margin-top:-34px;display:grid;place-items:center;color:#fff;font-size:23px;font-weight:950}.ah-name-preview-name{margin-top:8px;font-size:22px;font-weight:950;line-height:1.12;display:inline-block;min-height:25px}.ah-name-preview-handle{color:#b5bac1;font-size:12px;font-weight:750;margin-top:3px}.ah-name-preview-message{margin-top:15px;background:#2b2d31;border-radius:8px;padding:10px 12px;display:flex;gap:9px;align-items:flex-start}.ah-name-preview-mini-avatar{width:32px;height:32px;border-radius:50%;background:#111 center/cover no-repeat;flex:0 0 auto}.ah-name-preview-message b{display:inline-block;font-size:13px;min-height:16px}.ah-name-preview-message span{display:block;color:#dbdee1;font-size:12px;margin-top:3px}.ah-name-style-note{color:#b5bac1;font-size:11px;line-height:1.4;margin:20px 0 0}.ah-name-style-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;border-top:1px solid rgba(255,255,255,.08);padding-top:16px;margin-top:22px}.ah-name-style-btn{height:38px;border:0;border-radius:7px;background:#4e5058;color:#fff;padding:0 14px;font-weight:900;cursor:pointer}.ah-name-style-btn.primary{background:#5865f2}.ah-name-style-btn:hover:not(:disabled){filter:brightness(1.08)}.ah-name-style-btn:disabled{opacity:.55;cursor:not-allowed}.ah-name-style-status{min-height:18px;color:#b5bac1;font-size:12px;font-weight:800;margin-top:9px}.ah-name-style-status.ok{color:#23a55a}.ah-name-style-status.err{color:#ff6b6b}
-@media(max-width:1050px){ #ah-v3-overlay .ah-v3-full.ah-name-customizing{grid-template-columns:220px minmax(0,1fr)!important;width:min(850px,calc(100vw - 32px))}#ah-v3-overlay .ah-v3-full.ah-name-customizing .ah-v3-full-left{grid-column:2}#ah-v3-overlay .ah-v3-full.ah-name-customizing .ah-v3-full-right{display:none}}
-@media(max-width:760px){ #ah-name-style-brush{left:auto;right:48px;top:12px;border-radius:10px}.ah-name-style-modal{grid-template-columns:1fr;overflow-y:auto}.ah-name-style-preview{min-height:410px;padding-top:54px}.ah-name-style-controls{border-right:0;border-bottom:1px solid #202126}.ah-font-grid{grid-template-columns:repeat(4,1fr)}#ah-v3-overlay .ah-v3-full.ah-name-customizing{display:grid!important;grid-template-columns:1fr!important;width:100%}#ah-profile-customizer{grid-column:1!important;border-radius:22px 22px 0 0;max-height:74vh}#ah-v3-overlay .ah-v3-full.ah-name-customizing .ah-v3-full-left,#ah-v3-overlay .ah-v3-full.ah-name-customizing .ah-v3-full-right{display:none!important}}
-</style>
-
-<button id="ah-name-style-brush" type="button" title="Настроить профиль" aria-label="Настроить профиль">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14 4 6 6"/><path d="M4 20c3 0 5-2 5-5l9-9-4-4-9 9c-3 0-5 2-5 5 0 2 2 4 4 4Z"/></svg>
-</button>
-
-<aside id="ah-profile-customizer" aria-hidden="true">
-  <div class="ah-customizer-head"><span>Основной профиль⌄</span><button id="ah-profile-customizer-close" type="button" aria-label="Свернуть настройки">»</button></div>
-  <div class="ah-customizer-section">
-    <div class="ah-customizer-label">Бейджики</div>
-    <div class="ah-customizer-badges"><span class="ah-customizer-badge-dot"></span><span class="ah-customizer-badge-line"></span><span class="ah-customizer-plus">+</span></div>
-  </div>
-  <div class="ah-customizer-section">
-    <div class="ah-customizer-label">Аватар и украшение</div>
-    <div class="ah-customizer-grid"><div class="ah-customizer-tile avatar"><div id="ah-profile-custom-avatar" class="ah-customizer-avatar"></div></div><div class="ah-customizer-tile ah-customizer-placeholder"><span class="ah-customizer-add">+</span></div></div>
-  </div>
-  <div class="ah-customizer-section">
-    <div class="ah-customizer-label">Стиль отображаемого имени <span class="ah-customizer-info">i</span></div>
-    <button id="ah-profile-name-style-entry" class="ah-customizer-name-entry" type="button"><span id="ah-profile-custom-name" class="ah-customizer-name-preview visual-name">AlexiHub</span><span class="ah-customizer-plus">+</span></button>
-  </div>
-  <div class="ah-customizer-section">
-    <div class="ah-customizer-label">Тема и баннер <span class="ah-customizer-info">i</span></div>
-    <div class="ah-customizer-grid"><div class="ah-customizer-tile ah-customizer-theme"><span class="ah-customizer-tile-check"></span></div><div id="ah-profile-custom-banner" class="ah-customizer-tile ah-customizer-banner"><span class="ah-customizer-tile-check"></span></div></div>
-  </div>
-  <div class="ah-customizer-section">
-    <div class="ah-customizer-label">Эффект профиля и рамка</div>
-    <div class="ah-customizer-grid"><div class="ah-customizer-tile ah-customizer-frame"></div><div class="ah-customizer-tile ah-customizer-placeholder"><span class="ah-customizer-add">+</span></div></div>
-  </div>
-</aside>
-
-<div id="ah-name-style-backdrop" aria-hidden="true">
-  <div class="ah-name-style-modal" role="dialog" aria-modal="true" aria-label="Изменение стиля отображаемого имени">
-    <button id="ah-name-style-close" class="ah-name-style-close" type="button" aria-label="Закрыть">×</button>
-    <aside class="ah-name-style-controls">
-      <h2 class="ah-name-style-title">Изменение стиля отображаемого имени</h2>
-      <div class="ah-name-style-section">
-        <div class="ah-name-style-label"><span>Выбор шрифта ⓘ</span><small id="ah-name-font-label">Modern</small></div>
-        <div class="ah-font-grid" id="ah-name-font-grid">
-          <button type="button" class="ah-font-option font-default" data-font="default" data-label="Modern" title="Modern">Gg</button>
-          <button type="button" class="ah-font-option font-serif" data-font="serif" data-label="Classic" title="Classic">Gg</button>
-          <button type="button" class="ah-font-option font-cherry" data-font="cherry" data-label="Jellybean" title="Jellybean">Gg</button>
-          <button type="button" class="ah-font-option font-grandstander" data-font="grandstander" data-label="Vampyre" title="Vampyre">Gg</button>
-          <button type="button" class="ah-font-option font-rounded" data-font="rounded" data-label="Rounded" title="Rounded">Gg</button>
-          <button type="button" class="ah-font-option font-bungee" data-font="bungee" data-label="Medieval" title="Medieval">Gg</button>
-          <button type="button" class="ah-font-option font-pixel" data-font="pixel" data-label="8Bit" title="8Bit">Gg</button>
-          <button type="button" class="ah-font-option font-museo" data-font="museo" data-label="Futuristic" title="Futuristic">Gg</button>
-        </div>
-      </div>
-      <div class="ah-name-style-section">
-        <div class="ah-name-style-label"><span>Выбор эффекта ⓘ</span><small>Nitro</small></div>
-        <div class="ah-effect-grid" id="ah-name-effect-grid">
-          <button type="button" class="ah-effect-option" data-effect="solid">Минимализм</button>
-          <button type="button" class="ah-effect-option" data-effect="gradient">Градиент</button>
-          <button type="button" class="ah-effect-option" data-effect="neon">Неон</button>
-          <button type="button" class="ah-effect-option" data-effect="multicolor">Мультфильм</button>
-          <button type="button" class="ah-effect-option" data-effect="outline">Выделение</button>
-        </div>
-      </div>
-      <div class="ah-name-style-section">
-        <div class="ah-name-style-label"><span>Выбор цвета ⓘ</span><small>Цвет имени</small></div>
-        <div class="ah-color-row">
-          <button id="ah-name-color-default" class="ah-color-default" type="button" title="Цвет по умолчанию">✓</button>
-          <label class="ah-color-picker-button" title="Свой цвет"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m14 4 6 6"/><path d="M4 20c3 0 5-2 5-5l9-9-4-4-9 9c-3 0-5 2-5 5 0 2 2 4 4 4Z"/></svg><input id="ah-name-color-custom" type="color" value="#5865f2" aria-label="Выбрать свой цвет"></label>
-          <div class="ah-color-palette" id="ah-name-color-palette"></div>
-        </div>
-      </div>
-      <div id="ah-name-style-status" class="ah-name-style-status"></div>
-    </aside>
-    <section class="ah-name-style-preview">
-      <div class="ah-name-preview-card">
-        <div id="ah-name-preview-banner" class="ah-name-preview-banner"></div>
-        <div class="ah-name-preview-body">
-          <div id="ah-name-preview-avatar" class="ah-name-preview-avatar"><span id="ah-name-preview-avatar-text">A</span></div>
-          <div><span id="ah-name-preview-name" class="ah-name-preview-name visual-name">AlexiHub</span></div>
-          <div id="ah-name-preview-handle" class="ah-name-preview-handle">@alexihub · Nitro</div>
-          <div class="ah-name-preview-message"><div id="ah-name-preview-mini-avatar" class="ah-name-preview-mini-avatar"></div><div><b id="ah-name-preview-message-name" class="visual-name">AlexiHub</b><span>Это кто-нибудь читает?</span></div></div>
-        </div>
-      </div>
-      <div>
-        <p class="ah-name-style-note">Цвета и эффекты имени применяются в профиле, списках участников, личных сообщениях и сообщениях серверов. Роль и её цвета не меняются.</p>
-        <div class="ah-name-style-actions"><button id="ah-name-style-random" class="ah-name-style-btn" type="button" disabled>🎲 Удивите меня</button><button id="ah-name-style-save" class="ah-name-style-btn primary" type="button" disabled>Отправить</button></div>
-      </div>
-    </section>
-  </div>
-</div>
-
-<script id="ah-name-style-js">
-(function(){
-  if(window.__ahNameStyleReady) return;
-  window.__ahNameStyleReady=true;
-
-  const fallbackUsername=String({{ account.username|tojson }}||'AlexiHub').trim()||'AlexiHub';
-  const fallbackAvatar={{ (account.avatar_url or '')|tojson }};
-  const fallbackBanner={{ (account.banner_url or '')|tojson }};
-  const fonts=['default','serif','cherry','grandstander','rounded','bungee','pixel','museo'];
-  const effects=['solid','gradient','neon','multicolor','outline'];
-  const pairs=[['#22cfa2','#2bd67b'],['#35d477','#22b85d'],['#29a7e8','#3077d8'],['#b946e8','#8b5cf6'],['#f62486','#ff4fa3'],['#d5a617','#ff7a18'],['#13a88a','#35d6b4'],['#16b45d','#5ce57d'],['#1f7bd7','#32b5ff'],['#a638d6','#7c3aed'],['#dc176d','#ff5dac'],['#ff3b30','#ff7a18']];
-  let state={loaded:false,nitro:false,username:fallbackUsername,avatar:fallbackAvatar||'',banner:fallbackBanner||'',font:'default',effect:'solid',c1:'#f2f3f5',c2:'#ffffff'};
-  const $=s=>document.querySelector(s);
-  const validColor=v=>/^#[0-9a-f]{6}$/i.test(String(v||''));
-  const safeName=()=>String(state.username||fallbackUsername||'AlexiHub').trim()||'AlexiHub';
-  const safeColor=(v,f)=>validColor(v)?String(v).toLowerCase():f;
-
-  function setBg(el,url){
-    if(!el)return;
-    el.style.backgroundImage=url?`url('${String(url).replace(/'/g,'%27')}')`:'';
-    el.classList.toggle('has-image',!!url);
-  }
-  function cleanStyleClasses(el){
-    if(!el)return;
-    [...el.classList].forEach(c=>{if(c.startsWith('font-')||c.startsWith('name-'))el.classList.remove(c)});
-  }
-  function applyName(el,override){
-    if(!el)return;
-    const cfg=override||state;
-    const font=fonts.includes(cfg.font)?cfg.font:'default';
-    const effect=effects.includes(cfg.effect)?cfg.effect:'solid';
-    const c1=safeColor(cfg.c1,'#f2f3f5');
-    const c2=safeColor(cfg.c2,c1);
-    cleanStyleClasses(el);
-    el.classList.add('visual-name','font-'+font,'name-'+effect);
-    el.style.setProperty('--name-c1',c1);
-    el.style.setProperty('--name-c2',c2);
-    el.style.setProperty('--name-c1-safe',c1);
-    el.style.setProperty('--name-c2-safe',c2);
-  }
-  function styleNamesFromData(root){
-    (root||document).querySelectorAll('[data-mini-username][data-mini-effect],[data-mini-username][data-mini-font]').forEach(carrier=>{
-      const cfg={effect:carrier.dataset.miniEffect||'solid',font:carrier.dataset.miniFont||'default',c1:carrier.dataset.miniC1||'#f2f3f5',c2:carrier.dataset.miniC2||carrier.dataset.miniC1||'#f2f3f5'};
-      let targets=[];
-      if(carrier.matches('.msg-name,.dm-name,.member-name,.account-name,.visual-name'))targets.push(carrier);
-      carrier.querySelectorAll('.msg-name,.dm-name,.member-name,.account-name,.friend-name,.friend-main>b,.visual-name,.user-info>b,.profile-name').forEach(x=>targets.push(x));
-      targets.forEach(el=>applyName(el,cfg));
-    });
-  }
-  function setStatus(text,kind){
-    const s=$('#ah-name-style-status');
-    if(!s)return;
-    s.textContent=text||'';
-    s.className='ah-name-style-status'+(kind?' '+kind:'');
-  }
-  function mixColor(hex,ratio){
-    const clean=safeColor(hex,'#5865f2').slice(1);
-    const n=parseInt(clean,16);
-    const target=ratio>=0?255:0;
-    const p=Math.abs(ratio);
-    const r=Math.round(((n>>16)&255)+(target-((n>>16)&255))*p);
-    const g=Math.round(((n>>8)&255)+(target-((n>>8)&255))*p);
-    const b=Math.round((n&255)+(target-(n&255))*p);
-    return '#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('');
-  }
-  function renderSidebar(){
-    const name=safeName();
-    const n=$('#ah-profile-custom-name');
-    if(n){n.textContent=name;applyName(n)}
-    const av=$('#ah-profile-custom-avatar');
-    setBg(av,state.avatar);
-    if(av&&!state.avatar)av.textContent=name.slice(0,1).toUpperCase();
-    setBg($('#ah-profile-custom-banner'),state.banner);
-  }
-  function render(){
-    const name=safeName();
-    const n=$('#ah-name-preview-name'),m=$('#ah-name-preview-message-name');
-    if(n){n.textContent=name;applyName(n)}
-    if(m){m.textContent=name;applyName(m)}
-    const h=$('#ah-name-preview-handle');
-    if(h)h.textContent='@'+name+' · Nitro';
-    const av=$('#ah-name-preview-avatar'),mini=$('#ah-name-preview-mini-avatar');
-    setBg(av,state.avatar);setBg(mini,state.avatar);
-    const at=$('#ah-name-preview-avatar-text');
-    if(at)at.textContent=state.avatar?'':name.slice(0,1).toUpperCase();
-    setBg($('#ah-name-preview-banner'),state.banner);
-    document.querySelectorAll('.ah-font-option').forEach(b=>b.classList.toggle('active',b.dataset.font===state.font));
-    document.querySelectorAll('.ah-effect-option').forEach(b=>b.classList.toggle('active',b.dataset.effect===state.effect));
-    const activeFont=document.querySelector('.ah-font-option.active');
-    const fl=$('#ah-name-font-label');
-    if(fl)fl.textContent=activeFont?activeFont.dataset.label:'Modern';
-    const custom=$('#ah-name-color-custom');
-    if(custom)custom.value=safeColor(state.c1,'#5865f2');
-    const isDefault=state.c1.toLowerCase()==='#f2f3f5'&&(state.c2.toLowerCase()==='#ffffff'||state.c2.toLowerCase()==='#f2f3f5');
-    $('#ah-name-color-default')?.classList.toggle('active',isDefault);
-    document.querySelectorAll('.ah-color-swatch').forEach(b=>b.classList.toggle('active',b.dataset.c1.toLowerCase()===state.c1.toLowerCase()&&b.dataset.c2.toLowerCase()===state.c2.toLowerCase()));
-    renderSidebar();
-  }
-  function buildPalette(){
-    const p=$('#ah-name-color-palette');
-    if(!p||p.children.length)return;
-    pairs.forEach(([c1,c2])=>{
-      const b=document.createElement('button');
-      b.type='button';b.className='ah-color-swatch';b.dataset.c1=c1;b.dataset.c2=c2;b.title=c1;
-      b.style.background=c1;
-      b.addEventListener('click',()=>{state.c1=c1;state.c2=c2;render();setStatus('')});
-      p.appendChild(b);
-    });
-  }
-  function ownProfileOpen(){
-    const ov=$('#ah-v3-overlay');
-    if(!ov||!ov.classList.contains('open'))return false;
-    const msg=$('#ah-v3-full-message');
-    if(msg&&msg.dataset.self==='1')return true;
-    const name=($('#ah-v3-full-name')?.textContent||'').trim().toLowerCase();
-    return name===fallbackUsername.toLowerCase();
-  }
-  function profileCard(){return document.querySelector('#ah-v3-overlay .ah-v3-full')}
-  function setCustomizer(open){
-    const card=profileCard(),panel=$('#ah-profile-customizer');
-    const allow=!!state.nitro&&ownProfileOpen();
-    const shouldOpen=!!open&&allow;
-    if(card)card.classList.toggle('ah-name-customizing',shouldOpen);
-    if(panel)panel.setAttribute('aria-hidden',shouldOpen?'false':'true');
-    if(shouldOpen)renderSidebar();
-    syncBrush();
-  }
-  function mountTools(){
-    const card=profileCard(),btn=$('#ah-name-style-brush'),panel=$('#ah-profile-customizer');
-    if(card&&panel&&panel.parentElement!==card)card.appendChild(panel);
-    if(card&&btn&&btn.parentElement!==card)card.appendChild(btn);
-    syncBrush();
-  }
-  function syncBrush(){
-    const btn=$('#ah-name-style-brush'),card=profileCard();
-    if(!btn)return;
-    const own=!!state.nitro&&ownProfileOpen();
-    if(!own&&card)card.classList.remove('ah-name-customizing');
-    const customizing=!!card?.classList.contains('ah-name-customizing');
-    btn.classList.toggle('show',own&&!customizing);
-    btn.setAttribute('aria-hidden',own&&!customizing?'false':'true');
-  }
-  async function load(){
-    const localAccount={
-      username:fallbackUsername,
-      avatar_url:fallbackAvatar,
-      banner_url:fallbackBanner,
-      name_font:{{ (account.name_font or 'default')|tojson }},
-      name_effect:{{ (account.name_effect or 'none')|tojson }},
-      name_color_start:{{ (account.name_color_start or account.role_color_start or '#f2f3f5')|tojson }},
-      name_color_end:{{ (account.name_color_end or account.role_color_end or account.name_color_start or '#f2f3f5')|tojson }}
-    };
-    let payload=null;
-    try{
-      const r=await fetch('/community/api/profile/name-style',{credentials:'same-origin',headers:{Accept:'application/json'},cache:'no-store'});
-      const d=await r.json();
-      if(r.ok&&d&&d.ok)payload=d;
-    }catch(e){}
-    if(!payload){
-      try{
-        const r=await fetch('/community/api/nitro/me',{credentials:'same-origin',headers:{Accept:'application/json'},cache:'no-store'});
-        const d=await r.json();
-        if(r.ok&&d&&d.ok)payload={ok:true,nitro_active:!!(d.subscription&&d.subscription.active),account:localAccount};
-      }catch(e){}
-    }
-    const a=(payload&&payload.account)||localAccount;
-    state.loaded=true;
-    state.nitro=!!(payload&&payload.nitro_active);
-    state.username=String(a.username||fallbackUsername).trim()||fallbackUsername;
-    state.avatar=a.avatar_url||fallbackAvatar||'';
-    state.banner=a.banner_url||fallbackBanner||'';
-    state.font=fonts.includes(a.name_font)?a.name_font:'default';
-    state.effect=effects.includes(a.name_effect)?a.name_effect:'solid';
-    state.c1=safeColor(a.name_color_start,'#f2f3f5');
-    state.c2=safeColor(a.name_color_end,state.c1);
-    const random=$('#ah-name-style-random'),saveBtn=$('#ah-name-style-save');
-    if(random)random.disabled=!state.nitro;
-    if(saveBtn)saveBtn.disabled=!state.nitro;
-    render();mountTools();syncBrush();
-  }
-  function openEditor(){
-    if(!state.nitro||!state.loaded)return;
-    render();setStatus('');
-    const b=$('#ah-name-style-backdrop');
-    if(b){b.classList.add('open');b.setAttribute('aria-hidden','false')}
-  }
-  function closeEditor(){
-    const b=$('#ah-name-style-backdrop');
-    if(b){b.classList.remove('open');b.setAttribute('aria-hidden','true')}
-  }
-  async function save(){
-    const btn=$('#ah-name-style-save');
-    if(!state.loaded||!state.nitro||!safeName()){setStatus('Профиль ещё загружается.','err');return}
-    setStatus('Сохраняем...');
-    if(btn)btn.disabled=true;
-    try{
-      const r=await fetch('/community/api/profile/name-style',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({name_font:state.font,name_effect:state.effect,name_color_start:state.c1,name_color_end:state.c2})});
-      const d=await r.json();
-      if(!r.ok||!d.ok)throw new Error(d.message||'Не удалось сохранить.');
-      setStatus('Готово. Стиль имени сохранён.','ok');
-      setTimeout(()=>location.reload(),550);
-    }catch(e){
-      setStatus(e.message||'Ошибка сети.','err');
-      if(btn)btn.disabled=false;
-    }
-  }
-  function randomize(){
-    if(!state.loaded||!state.nitro){setStatus('Профиль ещё загружается.','err');return}
-    const oldName=safeName();
-    state.font=fonts[Math.floor(Math.random()*fonts.length)]||'default';
-    state.effect=effects[Math.floor(Math.random()*effects.length)]||'solid';
-    const pair=pairs[Math.floor(Math.random()*pairs.length)]||['#5865f2','#9b5cf6'];
-    state.c1=pair[0];state.c2=pair[1];
-    state.username=oldName||fallbackUsername;
-    render();
-    if(!$('#ah-name-preview-name')?.textContent.trim()){
-      state.username=fallbackUsername;state.font='default';state.effect='solid';state.c1='#f2f3f5';state.c2='#ffffff';render();
-    }
-    setStatus('Случайный стиль готов. Нажми «Отправить», чтобы сохранить.');
-  }
-
-  document.addEventListener('DOMContentLoaded',()=>{
-    buildPalette();styleNamesFromData(document);
-    document.querySelectorAll('.ah-font-option').forEach(b=>b.addEventListener('click',()=>{state.font=fonts.includes(b.dataset.font)?b.dataset.font:'default';render();setStatus('')}));
-    document.querySelectorAll('.ah-effect-option').forEach(b=>b.addEventListener('click',()=>{state.effect=effects.includes(b.dataset.effect)?b.dataset.effect:'solid';render();setStatus('')}));
-    $('#ah-name-color-default')?.addEventListener('click',()=>{state.c1='#f2f3f5';state.c2='#ffffff';render();setStatus('')});
-    $('#ah-name-color-custom')?.addEventListener('input',e=>{const c=safeColor(e.target.value,'#5865f2');state.c1=c;state.c2=mixColor(c,.28);render();setStatus('')});
-    $('#ah-name-style-brush')?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();setCustomizer(true)});
-    $('#ah-profile-customizer-close')?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();setCustomizer(false)});
-    $('#ah-profile-name-style-entry')?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();openEditor()});
-    $('#ah-name-style-close')?.addEventListener('click',closeEditor);
-    $('#ah-name-style-save')?.addEventListener('click',save);
-    $('#ah-name-style-random')?.addEventListener('click',randomize);
-    $('#ah-name-style-backdrop')?.addEventListener('click',e=>{if(e.target.id==='ah-name-style-backdrop')closeEditor()});
-    const pageRoot=document.body;
-    if(pageRoot)new MutationObserver(ms=>ms.forEach(m=>m.addedNodes.forEach(n=>{if(n&&n.nodeType===1)styleNamesFromData(n)}))).observe(pageRoot,{childList:true,subtree:true});
-    const ov=$('#ah-v3-overlay');
-    if(ov)new MutationObserver(()=>{mountTools();syncBrush();if(!ov.classList.contains('open'))setCustomizer(false)}).observe(ov,{attributes:true,attributeFilter:['class'],subtree:true});
-    document.addEventListener('click',()=>setTimeout(syncBrush,0),true);
-    load();
-  });
-  document.addEventListener('keydown',e=>{
-    if(e.key!=='Escape')return;
-    if($('#ah-name-style-backdrop')?.classList.contains('open'))closeEditor();
-    else if(profileCard()?.classList.contains('ah-name-customizing'))setCustomizer(false);
-  });
 })();
 </script>
 
