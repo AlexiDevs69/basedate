@@ -1680,6 +1680,37 @@ async def unpin_server_message(db: AsyncSession, server_id: int, channel_id: int
 
 _NITRO_TABLES_READY = False
 NITRO_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+NITRO_TIER_LABELS = {
+    "basic": "AlexiHub Nitro",
+    "gold": "Золото Nitro",
+    "platinum": "Платина Nitro",
+    "diamond": "Алмаз Nitro",
+    "emerald": "Изумруд Nitro",
+}
+
+
+def nitro_tier_from_duration(duration_days: int | float | None) -> tuple[str, str]:
+    """Return one canonical Nitro tier for the full uninterrupted credit period."""
+    days = max(0, int(duration_days or 0))
+    if days >= 200:
+        tier = "emerald"
+    elif days >= 101:
+        tier = "diamond"
+    elif days >= 61:
+        tier = "platinum"
+    elif days >= 31:
+        tier = "gold"
+    else:
+        tier = "basic"
+    return tier, NITRO_TIER_LABELS[tier]
+
+
+def _nitro_datetime_utc(value: datetime | None) -> datetime | None:
+    if value is None:
+        return None
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
 
 
 async def ensure_nitro_tables(db: AsyncSession) -> None:
@@ -1787,20 +1818,42 @@ async def create_nitro_gift_code(db: AsyncSession, creator_id: int, days: int = 
 
 def _nitro_payload_from_row(row) -> dict:
     if not row:
-        return {"active": False, "started_at": None, "expires_at": None, "days_left": 0}
+        tier, tier_label = nitro_tier_from_duration(0)
+        return {
+            "active": False,
+            "started_at": None,
+            "expires_at": None,
+            "days_left": 0,
+            "duration_days": 0,
+            "tier": tier,
+            "tier_label": tier_label,
+            "source_code": None,
+        }
+
     now = datetime.now(timezone.utc)
-    expires_at = row['expires_at']
-    started_at = row['started_at']
+    expires_at = _nitro_datetime_utc(row['expires_at'])
+    started_at = _nitro_datetime_utc(row['started_at'])
     active = bool(expires_at and expires_at > now)
+
     days_left = 0
-    if active:
+    if active and expires_at:
         seconds = max(0, (expires_at - now).total_seconds())
         days_left = max(1, int((seconds + 86399) // 86400))
+
+    duration_days = 0
+    if started_at and expires_at and expires_at > started_at:
+        duration_seconds = max(0, (expires_at - started_at).total_seconds())
+        duration_days = max(1, int((duration_seconds + 86399) // 86400))
+
+    tier, tier_label = nitro_tier_from_duration(duration_days)
     return {
         "active": active,
         "started_at": started_at.isoformat() if started_at else None,
         "expires_at": expires_at.isoformat() if expires_at else None,
         "days_left": days_left,
+        "duration_days": duration_days,
+        "tier": tier,
+        "tier_label": tier_label,
         "source_code": row.get('source_code') if hasattr(row, 'get') else row['source_code'],
     }
 
@@ -1842,24 +1895,33 @@ async def redeem_nitro_gift_code(db: AsyncSession, account_id: int, code_value: 
         LIMIT 1
     """), {"account_id": int(account_id)})).mappings().first()
     days = int(row['days'] or 30)
-    base_time = now
-    if current and current['expires_at'] and current['expires_at'] > now:
-        base_time = current['expires_at']
+
+    current_expires_at = _nitro_datetime_utc(current['expires_at']) if current else None
+    current_started_at = _nitro_datetime_utc(current['started_at']) if current else None
+    current_is_active = bool(current_expires_at and current_expires_at > now)
+    started_at = current_started_at if current_is_active and current_started_at else now
+    base_time = current_expires_at if current_is_active else now
     expires_at = base_time + timedelta(days=days)
 
     if current:
         await db.execute(text("""
             UPDATE community_nitro_subscriptions
-            SET expires_at = :expires_at,
+            SET started_at = :started_at,
+                expires_at = :expires_at,
                 source_code = :source_code,
                 updated_at = NOW()
             WHERE account_id = :account_id
-        """), {"expires_at": expires_at, "source_code": code, "account_id": int(account_id)})
+        """), {
+            "started_at": started_at,
+            "expires_at": expires_at,
+            "source_code": code,
+            "account_id": int(account_id),
+        })
     else:
         await db.execute(text("""
             INSERT INTO community_nitro_subscriptions (account_id, started_at, expires_at, source_code)
             VALUES (:account_id, :started_at, :expires_at, :source_code)
-        """), {"account_id": int(account_id), "started_at": now, "expires_at": expires_at, "source_code": code})
+        """), {"account_id": int(account_id), "started_at": started_at, "expires_at": expires_at, "source_code": code})
 
     await db.execute(text("""
         UPDATE community_nitro_gift_codes
@@ -1881,6 +1943,9 @@ async def nitro_profile_payload(db: AsyncSession, account_id: int) -> dict:
         "started_at": sub.get('started_at'),
         "expires_at": sub.get('expires_at'),
         "days_left": sub.get('days_left') or 0,
+        "duration_days": sub.get('duration_days') or 0,
+        "tier": sub.get('tier') or 'basic',
+        "tier_label": sub.get('tier_label') or NITRO_TIER_LABELS['basic'],
     }
 
 
