@@ -3302,6 +3302,10 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
 @keyframes ahNameSweep{to{background-position:180% center}}
 @keyframes ahNameRainbow{to{background-position:300% center}}
 #ah-name-style-brush{display:none;position:absolute;left:-42px;top:34px;width:42px;height:42px;border:0;border-radius:10px 0 0 10px;background:#d9f8df;color:#173b25;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.28);z-index:5}
+#ah-v3-overlay .ah-v3-full{overflow:visible!important}
+#ah-v3-overlay .ah-v3-full-left{overflow:hidden!important}
+#ah-v3-overlay .ah-v3-full-right{overflow:auto!important}
+#ah-name-style-brush{z-index:40!important}
 #ah-name-style-brush.show{display:flex}
 #ah-name-style-brush svg{width:20px;height:20px}
 #ah-name-style-backdrop{position:fixed;inset:0;z-index:30050;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(0,0,0,.72);backdrop-filter:blur(5px)}
@@ -3400,15 +3404,47 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   function buildPalette(){const p=$('#ah-name-color-palette');if(!p||p.children.length)return;pairs.forEach(([c1,c2])=>{const b=document.createElement('button');b.type='button';b.className='ah-color-swatch';b.dataset.c1=c1;b.dataset.c2=c2;b.style.background=`linear-gradient(135deg,${c1} 0 50%,${c2} 50%)`;b.addEventListener('click',()=>{state.c1=c1;state.c2=c2;render()});p.appendChild(b)})}
   function ownProfileOpen(){const ov=$('#ah-v3-overlay');if(!ov||!ov.classList.contains('open'))return false;const msg=$('#ah-v3-full-message');if(msg&&msg.dataset.self==='1')return true;const name=($('#ah-v3-full-name')?.textContent||'').trim().toLowerCase();return !!state.username&&name===state.username.toLowerCase()}
   function mountBrush(){const btn=$('#ah-name-style-brush'),card=document.querySelector('#ah-v3-overlay .ah-v3-full');if(btn&&card&&btn.parentElement!==card)card.appendChild(btn);syncBrush()}
-  function syncBrush(){const btn=$('#ah-name-style-brush');if(btn)btn.classList.toggle('show',!!state.nitro&&ownProfileOpen())}
+  function syncBrush(){const btn=$('#ah-name-style-brush');if(!btn)return;const show=!!state.nitro&&ownProfileOpen();btn.classList.toggle('show',show);btn.setAttribute('aria-hidden',show?'false':'true')}
   async function load(){
-    try{const r=await fetch('/community/api/profile/name-style',{credentials:'same-origin',headers:{Accept:'application/json'},cache:'no-store'});const d=await r.json();if(!r.ok||!d.ok)return;const a=d.account||{};state.loaded=true;state.nitro=!!d.nitro_active;state.username=a.username||'';state.avatar=a.avatar_url||'';state.banner=a.banner_url||'';state.font=fonts.includes(a.name_font)?a.name_font:'default';state.effect=effects.includes(a.name_effect)?a.name_effect:'solid';state.c1=a.name_color_start||'#f2f3f5';state.c2=a.name_color_end||state.c1;render();mountBrush()}catch(e){}
+    const localAccount={
+      username:{{ account.username|tojson }},
+      avatar_url:{{ (account.avatar_url or '')|tojson }},
+      banner_url:{{ (account.banner_url or '')|tojson }},
+      name_font:{{ (account.name_font or 'default')|tojson }},
+      name_effect:{{ (account.name_effect or 'none')|tojson }},
+      name_color_start:{{ (account.name_color_start or account.role_color_start or '#f2f3f5')|tojson }},
+      name_color_end:{{ (account.name_color_end or account.role_color_end or account.name_color_start or '#f2f3f5')|tojson }}
+    };
+    let payload=null;
+    try{
+      const r=await fetch('/community/api/profile/name-style',{credentials:'same-origin',headers:{Accept:'application/json'},cache:'no-store'});
+      const d=await r.json();
+      if(r.ok&&d&&d.ok)payload=d;
+    }catch(e){}
+    if(!payload){
+      try{
+        const r=await fetch('/community/api/nitro/me',{credentials:'same-origin',headers:{Accept:'application/json'},cache:'no-store'});
+        const d=await r.json();
+        if(r.ok&&d&&d.ok)payload={ok:true,nitro_active:!!(d.subscription&&d.subscription.active),account:localAccount};
+      }catch(e){}
+    }
+    const a=(payload&&payload.account)||localAccount;
+    state.loaded=true;
+    state.nitro=!!(payload&&payload.nitro_active);
+    state.username=a.username||localAccount.username||'';
+    state.avatar=a.avatar_url||localAccount.avatar_url||'';
+    state.banner=a.banner_url||localAccount.banner_url||'';
+    state.font=fonts.includes(a.name_font)?a.name_font:'default';
+    state.effect=effects.includes(a.name_effect)?a.name_effect:'solid';
+    state.c1=a.name_color_start||'#f2f3f5';
+    state.c2=a.name_color_end||state.c1;
+    render();mountBrush();syncBrush();
   }
   function open(){if(!state.nitro)return;render();const b=$('#ah-name-style-backdrop');if(b){b.classList.add('open');b.setAttribute('aria-hidden','false')}}
   function close(){const b=$('#ah-name-style-backdrop');if(b){b.classList.remove('open');b.setAttribute('aria-hidden','true')}}
   async function save(){const s=$('#ah-name-style-status'),btn=$('#ah-name-style-save');if(s){s.textContent='Сохраняем...';s.className='ah-name-style-status'}if(btn)btn.disabled=true;try{const r=await fetch('/community/api/profile/name-style',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({name_font:state.font,name_effect:state.effect,name_color_start:state.c1,name_color_end:state.c2})});const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.message||'Не удалось сохранить.');if(s){s.textContent='Готово. Стиль имени сохранён.';s.className='ah-name-style-status ok'}setTimeout(()=>location.reload(),550)}catch(e){if(s){s.textContent=e.message||'Ошибка сети.';s.className='ah-name-style-status err'}if(btn)btn.disabled=false}}
   function randomize(){state.font=fonts[Math.floor(Math.random()*fonts.length)];state.effect=effects[Math.floor(Math.random()*effects.length)];const pair=pairs[Math.floor(Math.random()*pairs.length)];state.c1=pair[0];state.c2=pair[1];render()}
-  document.addEventListener('DOMContentLoaded',()=>{buildPalette();styleNamesFromData(document);document.querySelectorAll('.ah-font-option').forEach(b=>b.addEventListener('click',()=>{state.font=b.dataset.font;render()}));document.querySelectorAll('.ah-effect-option').forEach(b=>b.addEventListener('click',()=>{state.effect=b.dataset.effect;render()}));$('#ah-name-color-1')?.addEventListener('input',e=>{state.c1=e.target.value;render()});$('#ah-name-color-2')?.addEventListener('input',e=>{state.c2=e.target.value;render()});$('#ah-name-style-brush')?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();open()});$('#ah-name-style-close')?.addEventListener('click',close);$('#ah-name-style-save')?.addEventListener('click',save);$('#ah-name-style-random')?.addEventListener('click',randomize);$('#ah-name-style-backdrop')?.addEventListener('click',e=>{if(e.target.id==='ah-name-style-backdrop')close()});const pageRoot=document.body;if(pageRoot)new MutationObserver(ms=>ms.forEach(m=>m.addedNodes.forEach(n=>{if(n&&n.nodeType===1)styleNamesFromData(n)}))).observe(pageRoot,{childList:true,subtree:true});const ov=$('#ah-v3-overlay');if(ov)new MutationObserver(()=>{mountBrush();syncBrush()}).observe(ov,{attributes:true,attributeFilter:['class'],subtree:true});load()});
+  document.addEventListener('DOMContentLoaded',()=>{buildPalette();styleNamesFromData(document);document.querySelectorAll('.ah-font-option').forEach(b=>b.addEventListener('click',()=>{state.font=b.dataset.font;render()}));document.querySelectorAll('.ah-effect-option').forEach(b=>b.addEventListener('click',()=>{state.effect=b.dataset.effect;render()}));$('#ah-name-color-1')?.addEventListener('input',e=>{state.c1=e.target.value;render()});$('#ah-name-color-2')?.addEventListener('input',e=>{state.c2=e.target.value;render()});$('#ah-name-style-brush')?.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();open()});$('#ah-name-style-close')?.addEventListener('click',close);$('#ah-name-style-save')?.addEventListener('click',save);$('#ah-name-style-random')?.addEventListener('click',randomize);$('#ah-name-style-backdrop')?.addEventListener('click',e=>{if(e.target.id==='ah-name-style-backdrop')close()});const pageRoot=document.body;if(pageRoot)new MutationObserver(ms=>ms.forEach(m=>m.addedNodes.forEach(n=>{if(n&&n.nodeType===1)styleNamesFromData(n)}))).observe(pageRoot,{childList:true,subtree:true});const ov=$('#ah-v3-overlay');if(ov)new MutationObserver(()=>{mountBrush();syncBrush()}).observe(ov,{attributes:true,attributeFilter:['class'],subtree:true});document.addEventListener('click',()=>setTimeout(syncBrush,0),true);load()});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#ah-name-style-backdrop')?.classList.contains('open'))close()});
 })();
 </script>
