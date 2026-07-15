@@ -2415,3 +2415,302 @@ async def get_media_item_for_send(
     payload['server_icon_url'] = row.get('server_icon_url') if hasattr(row, 'get') else row['server_icon_url']
     payload['nitro'] = has_nitro
     return payload
+
+# ============================================================================
+# Message reactions (DM + server channels)
+# ============================================================================
+
+_REACTION_TABLES_READY = False
+REACTION_UNICODE_EMOJIS = {
+    "❤️", "💛", "💚", "💙", "💜", "🩷", "🖤", "🤍",
+    "👍", "👎", "👏", "🙏", "💯", "🔥", "⭐", "✨",
+    "😂", "🤣", "😭", "🥹", "😍", "🥰", "😎", "🤔",
+    "😡", "🤯", "😱", "😴", "🤡", "💀", "👀", "🫡",
+    "✅", "❌", "🎉", "🎄", "🎁", "💩", "🫶", "🤝",
+    "🇺🇦", "🗿", "🐸", "🫠", "😈", "🥳", "🤍", "💔",
+}
+
+
+async def ensure_reaction_tables(db: AsyncSession) -> None:
+    """Create reaction storage without requiring an Alembic migration."""
+    global _REACTION_TABLES_READY
+    if _REACTION_TABLES_READY:
+        return
+    # The custom emoji FK target must exist first.
+    await ensure_server_media_tables(db)
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_message_reactions (
+            id BIGSERIAL PRIMARY KEY,
+            context VARCHAR(16) NOT NULL,
+            message_id INTEGER NOT NULL,
+            account_id INTEGER NOT NULL REFERENCES community_accounts(id) ON DELETE CASCADE,
+            emoji_kind VARCHAR(16) NOT NULL,
+            emoji_value VARCHAR(64),
+            custom_emoji_id INTEGER REFERENCES community_server_emojis(id) ON DELETE CASCADE,
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+        )
+    """))
+    await db.execute(text("""
+        CREATE UNIQUE INDEX IF NOT EXISTS uq_community_message_reaction_actor
+        ON community_message_reactions (
+            context,
+            message_id,
+            account_id,
+            emoji_kind,
+            COALESCE(custom_emoji_id, 0),
+            COALESCE(emoji_value, '')
+        )
+    """))
+    await db.execute(text("""
+        CREATE INDEX IF NOT EXISTS ix_community_message_reactions_message
+        ON community_message_reactions (context, message_id, created_at)
+    """))
+    await db.commit()
+    _REACTION_TABLES_READY = True
+
+
+def _reaction_clean_ids(message_ids: list[int] | tuple[int, ...] | None) -> list[int]:
+    clean: list[int] = []
+    seen: set[int] = set()
+    for raw in message_ids or []:
+        try:
+            value = int(raw)
+        except (TypeError, ValueError):
+            continue
+        if value <= 0 or value in seen:
+            continue
+        clean.append(value)
+        seen.add(value)
+        if len(clean) >= 100:
+            break
+    return clean
+
+
+async def _valid_dm_reaction_message_ids(db: AsyncSession, thread_id: int, message_ids: list[int]) -> list[int]:
+    ids = _reaction_clean_ids(message_ids)
+    if not ids:
+        return []
+    rows = (await db.execute(
+        select(DirectMessage.id).where(
+            DirectMessage.thread_id == int(thread_id),
+            DirectMessage.id.in_(ids),
+        )
+    )).scalars().all()
+    return [int(value) for value in rows]
+
+
+async def _valid_server_reaction_message_ids(
+    db: AsyncSession,
+    server_id: int,
+    channel_id: int,
+    message_ids: list[int],
+) -> list[int]:
+    ids = _reaction_clean_ids(message_ids)
+    if not ids:
+        return []
+    rows = (await db.execute(
+        select(ServerMessage.id).where(
+            ServerMessage.server_id == int(server_id),
+            ServerMessage.channel_id == int(channel_id),
+            ServerMessage.id.in_(ids),
+        )
+    )).scalars().all()
+    return [int(value) for value in rows]
+
+
+def _reaction_key(row) -> str:
+    if str(row["emoji_kind"]) == "custom":
+        return f"custom:{int(row['custom_emoji_id'])}"
+    return "unicode:" + str(row["emoji_value"] or "")
+
+
+async def _reaction_summaries(
+    db: AsyncSession,
+    *,
+    context: str,
+    message_ids: list[int],
+    viewer_id: int,
+) -> dict[int, list[dict]]:
+    await ensure_reaction_tables(db)
+    ids = _reaction_clean_ids(message_ids)
+    if not ids:
+        return {}
+    rows = (await db.execute(text("""
+        SELECT
+            r.message_id,
+            r.account_id,
+            r.emoji_kind,
+            r.emoji_value,
+            r.custom_emoji_id,
+            r.created_at,
+            a.username,
+            a.avatar_url,
+            e.name AS custom_name,
+            e.image_url AS custom_image_url,
+            e.server_id AS custom_server_id
+        FROM community_message_reactions AS r
+        JOIN community_accounts AS a ON a.id = r.account_id
+        LEFT JOIN community_server_emojis AS e ON e.id = r.custom_emoji_id
+        WHERE r.context = :context
+          AND r.message_id = ANY(:message_ids)
+        ORDER BY r.message_id ASC, r.created_at ASC, r.id ASC
+    """), {"context": context, "message_ids": ids})).mappings().all()
+
+    grouped: dict[int, dict[str, dict]] = {}
+    for row in rows:
+        message_id = int(row["message_id"])
+        key = _reaction_key(row)
+        message_group = grouped.setdefault(message_id, {})
+        item = message_group.get(key)
+        if item is None:
+            is_custom = str(row["emoji_kind"]) == "custom"
+            item = {
+                "key": key,
+                "kind": "custom" if is_custom else "unicode",
+                "value": None if is_custom else (row["emoji_value"] or ""),
+                "custom_emoji_id": int(row["custom_emoji_id"]) if is_custom and row["custom_emoji_id"] else None,
+                "name": (row["custom_name"] or "emoji") if is_custom else (row["emoji_value"] or "emoji"),
+                "image_url": (row["custom_image_url"] or "") if is_custom else "",
+                "server_id": int(row["custom_server_id"]) if is_custom and row["custom_server_id"] else None,
+                "count": 0,
+                "me": False,
+                "users": [],
+            }
+            message_group[key] = item
+        account_id = int(row["account_id"])
+        item["count"] += 1
+        item["me"] = bool(item["me"] or account_id == int(viewer_id))
+        item["users"].append({
+            "id": account_id,
+            "username": row["username"] or "user",
+            "avatar_url": row["avatar_url"] or "",
+        })
+
+    return {message_id: list(items.values()) for message_id, items in grouped.items()}
+
+
+async def list_dm_reaction_summaries(
+    db: AsyncSession,
+    thread_id: int,
+    message_ids: list[int],
+    viewer_id: int,
+) -> dict[int, list[dict]]:
+    valid_ids = await _valid_dm_reaction_message_ids(db, thread_id, message_ids)
+    return await _reaction_summaries(
+        db,
+        context="dm",
+        message_ids=valid_ids,
+        viewer_id=viewer_id,
+    )
+
+
+async def list_server_reaction_summaries(
+    db: AsyncSession,
+    server_id: int,
+    channel_id: int,
+    message_ids: list[int],
+    viewer_id: int,
+) -> dict[int, list[dict]]:
+    valid_ids = await _valid_server_reaction_message_ids(db, server_id, channel_id, message_ids)
+    return await _reaction_summaries(
+        db,
+        context="server",
+        message_ids=valid_ids,
+        viewer_id=viewer_id,
+    )
+
+
+async def toggle_message_reaction(
+    db: AsyncSession,
+    *,
+    context: str,
+    message_id: int,
+    account_id: int,
+    emoji_kind: str,
+    emoji_value: str | None = None,
+    custom_emoji_id: int | None = None,
+    current_server_id: int | None = None,
+) -> dict:
+    """Toggle one reaction and return a fresh aggregate for the message.
+
+    Existing reactions are removable even after Nitro expires. Adding an emoji
+    from another server still goes through the same Nitro/source-membership rule
+    as sending that emoji in a message.
+    """
+    await ensure_reaction_tables(db)
+    clean_context = "server" if context == "server" else "dm"
+    clean_kind = "custom" if emoji_kind == "custom" else "unicode"
+    clean_value = (emoji_value or "").strip()
+    custom_id = int(custom_emoji_id or 0) if clean_kind == "custom" else 0
+
+    if clean_kind == "custom" and custom_id <= 0:
+        return {"ok": False, "error": "bad_emoji"}
+    if clean_kind == "unicode" and clean_value not in REACTION_UNICODE_EMOJIS:
+        return {"ok": False, "error": "bad_emoji"}
+
+    existing = (await db.execute(text("""
+        SELECT id
+        FROM community_message_reactions
+        WHERE context = :context
+          AND message_id = :message_id
+          AND account_id = :account_id
+          AND emoji_kind = :emoji_kind
+          AND COALESCE(custom_emoji_id, 0) = :custom_emoji_id
+          AND COALESCE(emoji_value, '') = :emoji_value
+        LIMIT 1
+    """), {
+        "context": clean_context,
+        "message_id": int(message_id),
+        "account_id": int(account_id),
+        "emoji_kind": clean_kind,
+        "custom_emoji_id": custom_id,
+        "emoji_value": clean_value if clean_kind == "unicode" else "",
+    })).mappings().first()
+
+    if existing:
+        await db.execute(text("DELETE FROM community_message_reactions WHERE id = :id"), {"id": int(existing["id"])})
+        await db.commit()
+        summary = await _reaction_summaries(
+            db,
+            context=clean_context,
+            message_ids=[int(message_id)],
+            viewer_id=int(account_id),
+        )
+        return {"ok": True, "added": False, "reactions": summary.get(int(message_id), [])}
+
+    if clean_kind == "custom":
+        item = await get_media_item_for_send(
+            db,
+            account_id=int(account_id),
+            kind="emoji",
+            item_id=custom_id,
+            current_server_id=current_server_id if clean_context == "server" else None,
+            context=clean_context,
+        )
+        if not item:
+            return {"ok": False, "error": "emoji_unavailable"}
+        if not item.get("allowed"):
+            return {"ok": False, "error": "nitro_required"}
+
+    await db.execute(text("""
+        INSERT INTO community_message_reactions
+            (context, message_id, account_id, emoji_kind, emoji_value, custom_emoji_id)
+        VALUES
+            (:context, :message_id, :account_id, :emoji_kind, :emoji_value, :custom_emoji_id)
+        ON CONFLICT DO NOTHING
+    """), {
+        "context": clean_context,
+        "message_id": int(message_id),
+        "account_id": int(account_id),
+        "emoji_kind": clean_kind,
+        "emoji_value": clean_value if clean_kind == "unicode" else None,
+        "custom_emoji_id": custom_id if clean_kind == "custom" else None,
+    })
+    await db.commit()
+    summary = await _reaction_summaries(
+        db,
+        context=clean_context,
+        message_ids=[int(message_id)],
+        viewer_id=int(account_id),
+    )
+    return {"ok": True, "added": True, "reactions": summary.get(int(message_id), [])}
