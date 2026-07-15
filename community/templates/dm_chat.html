@@ -1345,7 +1345,11 @@ function connect(){
       }
       messagesEl.insertAdjacentHTML('beforeend',messageHtml(msg,data.author||{}));
       const added=document.getElementById('dm-message-'+msg.id);
-      if(added){cacheDmReplyFromRow(added);hydrateDmInviteCard(added);} 
+      if(added){
+        cacheDmReplyFromRow(added);
+        hydrateDmInviteCard(added);
+        if(window.AlexiHubNitroGifts) window.AlexiHubNitroGifts.hydrate(added);
+      } 
       pendingDmReplyFallback=null;
       scrollBottom();
     }
@@ -1363,6 +1367,10 @@ function connect(){
     }
     if(data.type==='pin_remove'){
       if(window.__dmPinsApi){ window.__dmPinsApi.removeDmPin(data.message_id); }
+    }
+    if(data.type==='nitro_gift_update' && window.AlexiHubNitroGifts){
+      const gift=data.gift||{};
+      if(gift.token) window.AlexiHubNitroGifts.invalidate(gift.token);
     }
   };
 }
@@ -3713,6 +3721,170 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
   else start();
+})();
+</script>
+
+
+<!-- Recipient-bound Discord-style Nitro gifts in direct messages -->
+<style id="ah-dm-nitro-gifts-css">
+.ah-dm-nitro-gift-btn{width:36px!important;height:34px!important;flex:0 0 36px!important;border:0!important;border-radius:8px!important;background:transparent!important;color:#b5bac1!important;display:none!important;align-items:center!important;justify-content:center!important;padding:0!important;cursor:pointer!important;transition:background .14s ease,color .14s ease,transform .12s ease!important}
+.ah-dm-nitro-gift-btn.ready{display:flex!important}.ah-dm-nitro-gift-btn:hover{background:#35373e!important;color:#fff!important}.ah-dm-nitro-gift-btn:active{transform:scale(.92)}.ah-dm-nitro-gift-btn svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.msg.ah-nitro-gift-message{padding-top:9px;padding-bottom:9px}.msg.ah-nitro-gift-message .msg-text,.msg.ah-nitro-gift-message>.msg-actions,.msg.ah-nitro-gift-message .msg-img{display:none!important}.ah-dm-nitro-slot{margin-top:7px;max-width:390px}
+.ah-dm-nitro-card{--gift-a:#5865f2;--gift-b:#9b5cf6;--gift-c:#ff73fa;width:min(390px,100%);overflow:hidden;border-radius:13px;background:#1e1f22;border:1px solid rgba(255,255,255,.08);box-shadow:0 13px 34px rgba(0,0,0,.28);color:#f2f3f5;position:relative}
+.ah-dm-nitro-card.pack-emerald{--gift-a:#087f52;--gift-b:#13d977;--gift-c:#8affc1}.ah-dm-nitro-card.pack-season{--gift-a:#5b3fd0;--gift-b:#a54cff;--gift-c:#54dfff}.ah-dm-nitro-card.pack-month{--gift-a:#4c5eea;--gift-b:#8c58ee;--gift-c:#ff72d7}.ah-dm-nitro-card.pack-week{--gift-a:#3478f6;--gift-b:#5865f2;--gift-c:#80c8ff}
+.ah-dm-nitro-art{height:142px;background:radial-gradient(circle at 78% 18%,rgba(255,255,255,.28),transparent 23%),radial-gradient(circle at 18% 88%,rgba(255,255,255,.16),transparent 30%),linear-gradient(135deg,var(--gift-a),var(--gift-b) 58%,var(--gift-c));display:grid;place-items:center;position:relative;overflow:hidden}
+.ah-dm-nitro-art:before,.ah-dm-nitro-art:after{content:'';position:absolute;border:1px solid rgba(255,255,255,.18);border-radius:50%;opacity:.75}.ah-dm-nitro-art:before{width:176px;height:176px;right:-64px;top:-78px}.ah-dm-nitro-art:after{width:118px;height:118px;left:-48px;bottom:-62px}
+.ah-dm-gift-box{width:92px;height:67px;background:linear-gradient(155deg,#fff,#dfe4ff);border-radius:9px;position:relative;box-shadow:0 16px 28px rgba(0,0,0,.26),inset 0 -6px 0 rgba(0,0,0,.09);transform:rotate(-3deg);transition:transform .22s ease}.ah-dm-nitro-card:hover .ah-dm-gift-box{transform:rotate(2deg) translateY(-3px)}
+.ah-dm-gift-box:before{content:'';position:absolute;left:-7px;right:-7px;top:-13px;height:24px;border-radius:8px;background:linear-gradient(155deg,#fff,#ecefff);box-shadow:0 5px 8px rgba(0,0,0,.12)}.ah-dm-gift-ribbon{position:absolute;z-index:2;left:38px;top:-13px;width:17px;height:80px;background:linear-gradient(180deg,var(--gift-c),var(--gift-b));box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)}.ah-dm-gift-ribbon:before,.ah-dm-gift-ribbon:after{content:'';position:absolute;top:-20px;width:33px;height:25px;border:8px solid var(--gift-c);border-radius:50% 50% 15% 50%;background:transparent}.ah-dm-gift-ribbon:before{right:9px;transform:rotate(25deg)}.ah-dm-gift-ribbon:after{left:9px;transform:scaleX(-1) rotate(25deg)}
+.ah-dm-nitro-spark{position:absolute;color:#fff;font-size:19px;font-weight:1000;text-shadow:0 2px 7px rgba(0,0,0,.25)}.ah-dm-nitro-spark.s1{left:22%;top:24%;transform:rotate(-14deg)}.ah-dm-nitro-spark.s2{right:20%;bottom:19%;font-size:13px}.ah-dm-nitro-spark.s3{right:27%;top:19%;font-size:10px}
+.ah-dm-nitro-body{padding:15px 16px 14px}.ah-dm-nitro-kicker{font-size:11px;font-weight:950;text-transform:uppercase;letter-spacing:.075em;color:#b5bac1}.ah-dm-nitro-title{font-size:20px;line-height:1.15;font-weight:1000;letter-spacing:-.035em;margin-top:4px}.ah-dm-nitro-copy{color:#b5bac1;font-size:13px;line-height:1.42;margin-top:7px}.ah-dm-nitro-copy b{color:#f2f3f5}.ah-dm-nitro-note{margin-top:10px;padding:9px 10px;border-radius:8px;background:#2b2d31;border-left:3px solid var(--gift-b);color:#dbdee1;font-size:12px;line-height:1.4;word-break:break-word}.ah-dm-nitro-footer{display:flex;align-items:center;gap:9px;margin-top:13px}.ah-dm-nitro-claim{flex:1;min-height:39px;border:0;border-radius:7px;background:#5865f2;color:#fff;font-weight:950;cursor:pointer;padding:0 13px;transition:filter .14s ease,transform .12s ease}.ah-dm-nitro-claim:hover{filter:brightness(1.1)}.ah-dm-nitro-claim:active{transform:scale(.985)}.ah-dm-nitro-claim:disabled{cursor:default;background:#4e5058;color:#c9cbd0;filter:none}.ah-dm-nitro-claim.claimed{background:#248046;color:#fff}.ah-dm-nitro-days{height:39px;min-width:74px;border-radius:7px;background:#2b2d31;display:grid;place-items:center;padding:0 10px;font-size:12px;font-weight:950;color:#fff}.ah-dm-nitro-error{min-height:92px;display:flex;align-items:center;justify-content:center;text-align:center;padding:18px;color:#b5bac1;background:#1e1f22;border-radius:10px;border:1px solid #35373e}
+.ah-nitro-gift-modal-bg{position:fixed;inset:0;z-index:19000;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px}.ah-nitro-gift-modal-bg.open{display:flex;animation:ahGiftFade .14s ease both}@keyframes ahGiftFade{from{opacity:0}to{opacity:1}}
+.ah-nitro-gift-modal{width:min(470px,calc(100vw - 30px));max-height:calc(100dvh - 34px);overflow:auto;border-radius:18px;background:#232428;border:1px solid #3a3c44;box-shadow:0 28px 90px rgba(0,0,0,.58);position:relative}.ah-nitro-gift-modal-head{padding:18px 20px 10px}.ah-nitro-gift-modal-head h2{font-size:22px;font-weight:1000;letter-spacing:-.035em}.ah-nitro-gift-modal-head p{font-size:13px;color:#b5bac1;margin-top:5px}.ah-nitro-gift-close{position:absolute;right:12px;top:12px;width:34px;height:34px;border:0;border-radius:9px;background:transparent;color:#b5bac1;font-size:23px;cursor:pointer}.ah-nitro-gift-close:hover{background:#35373e;color:#fff}
+.ah-nitro-gift-preview{margin:8px 20px 16px;border-radius:13px;overflow:hidden;background:linear-gradient(135deg,#5865f2,#9b5cf6 65%,#ff73fa);height:118px;display:flex;align-items:center;gap:17px;padding:17px 19px;position:relative}.ah-nitro-gift-preview:after{content:'';position:absolute;width:120px;height:120px;border:1px solid rgba(255,255,255,.2);border-radius:50%;right:-38px;top:-54px}.ah-nitro-gift-preview .ah-dm-gift-box{transform:scale(.68) rotate(-4deg);flex:0 0 auto}.ah-nitro-gift-preview-copy{position:relative;z-index:2;min-width:0}.ah-nitro-gift-preview-copy small{font-size:10px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.76)}.ah-nitro-gift-preview-copy strong{display:block;font-size:20px;line-height:1.08;margin-top:4px;font-weight:1000}.ah-nitro-gift-preview-copy span{display:block;font-size:12px;margin-top:5px;color:rgba(255,255,255,.8);font-weight:750}
+.ah-nitro-gift-form{padding:0 20px 20px}.ah-nitro-gift-label{display:block;margin:15px 0 7px;font-size:11px;color:#b5bac1;font-weight:950;text-transform:uppercase;letter-spacing:.065em}.ah-nitro-gift-options{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.ah-nitro-gift-option{height:52px;border:1px solid #3a3c44;border-radius:9px;background:#2b2d31;color:#dbdee1;cursor:pointer;font-weight:900;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}.ah-nitro-gift-option small{font-size:10px;color:#949ba4;font-weight:750}.ah-nitro-gift-option.active{border-color:#7b85ff;background:rgba(88,101,242,.22);color:#fff;box-shadow:0 0 0 1px rgba(88,101,242,.25)}.ah-nitro-gift-note{width:100%;min-height:78px;max-height:130px;resize:vertical;border:1px solid #3a3c44;border-radius:9px;background:#1e1f22;color:#f2f3f5;padding:10px 11px;outline:0;line-height:1.4}.ah-nitro-gift-note:focus{border-color:#5865f2;box-shadow:0 0 0 1px rgba(88,101,242,.35)}.ah-nitro-gift-limit{text-align:right;color:#72767d;font-size:10px;margin-top:4px}.ah-nitro-gift-send{width:100%;height:43px;border:0;border-radius:8px;background:#5865f2;color:#fff;font-weight:1000;cursor:pointer;margin-top:16px}.ah-nitro-gift-send:hover{background:#4752c4}.ah-nitro-gift-send:disabled{cursor:wait;opacity:.65}.ah-nitro-gift-status{min-height:18px;margin-top:8px;text-align:center;font-size:12px;font-weight:850;color:#b5bac1}.ah-nitro-gift-status.err{color:#ff6b6b}
+@media(max-width:620px){.ah-dm-nitro-slot{max-width:100%}.ah-dm-nitro-card{width:100%}.ah-nitro-gift-options{grid-template-columns:repeat(2,1fr)}.ah-nitro-gift-modal-bg{align-items:flex-end;padding:0}.ah-nitro-gift-modal{width:100%;max-height:92dvh;border-radius:20px 20px 0 0;border-left:0;border-right:0;border-bottom:0}}
+</style>
+<script id="ah-dm-nitro-gifts-js">
+(function(){
+  if(window.__ahDmNitroGiftsInit) return;
+  window.__ahDmNitroGiftsInit=true;
+  const marker=/^\[\[ah:nitro-gift:([A-Za-z0-9_-]{20,96})\]\]$/;
+  const otherUsername='{{ other.username if other else "" }}';
+  const cache=new Map();
+  const requests=new Map();
+  let selectedDays=30;
+
+  function esc(value){return String(value==null?'':value).replace(/[&<>"']/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]})}
+  function packClass(days){days=Number(days)||30;if(days>=200)return'pack-emerald';if(days>=90)return'pack-season';if(days>=30)return'pack-month';return'pack-week'}
+  function packName(days){days=Number(days)||30;if(days>=200)return'Изумрудный набор Nitro';if(days>=90)return'Сезон Nitro';if(days>=30)return'Месяц Nitro';return'Неделя Nitro'}
+  function dateText(value){if(!value)return'';try{return new Intl.DateTimeFormat(undefined,{day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date(value))}catch(e){return''}}
+  function tokenFromRow(row){if(!row)return'';const raw=(row.dataset.messageContent||(row.querySelector('.dm-message-text')&&row.querySelector('.dm-message-text').textContent)||'').trim();const found=raw.match(marker);return found?found[1]:''}
+
+  async function loadGift(token,force){
+    if(!force&&cache.has(token))return cache.get(token);
+    if(!force&&requests.has(token))return requests.get(token);
+    const promise=fetch('/community/api/nitro/dm-gifts/'+encodeURIComponent(token),{credentials:'same-origin'}).then(async function(response){
+      const data=await response.json().catch(function(){return{}});
+      if(!response.ok||!data.gift)throw new Error(data.message||'Подарок недоступен');
+      cache.set(token,data.gift);
+      return data.gift;
+    }).finally(function(){requests.delete(token)});
+    requests.set(token,promise);
+    return promise;
+  }
+
+  function cardHtml(gift){
+    const claimed=gift.status==='claimed';
+    let action='';
+    if(claimed){
+      action='<button type="button" class="ah-dm-nitro-claim claimed" disabled>Подарок активирован</button>';
+    }else if(gift.can_claim){
+      action='<button type="button" class="ah-dm-nitro-claim" data-ah-claim-gift="'+esc(gift.token)+'">Принять подарок</button>';
+    }else{
+      action='<button type="button" class="ah-dm-nitro-claim" disabled>Ожидает активации</button>';
+    }
+    const who=gift.is_sender?'Вы подарили Nitro пользователю <b>@'+esc(gift.recipient_username)+'</b>.':'<b>@'+esc(gift.sender_username)+'</b> дарит вам Nitro.';
+    const note=gift.note?'<div class="ah-dm-nitro-note">'+esc(gift.note)+'</div>':'';
+    const claimedLine=claimed&&gift.claimed_at?'<div class="ah-dm-nitro-copy">Активировано '+esc(dateText(gift.claimed_at))+'</div>':'';
+    return '<div class="ah-dm-nitro-card '+packClass(gift.days)+'" data-ah-gift-card="'+esc(gift.token)+'">'
+      +'<div class="ah-dm-nitro-art"><span class="ah-dm-nitro-spark s1">✦</span><span class="ah-dm-nitro-spark s2">✦</span><span class="ah-dm-nitro-spark s3">✦</span><div class="ah-dm-gift-box"><span class="ah-dm-gift-ribbon"></span></div></div>'
+      +'<div class="ah-dm-nitro-body"><div class="ah-dm-nitro-kicker">Подарок Nitro</div><div class="ah-dm-nitro-title">'+esc(packName(gift.days))+'</div><div class="ah-dm-nitro-copy">'+who+'</div>'+claimedLine+note
+      +'<div class="ah-dm-nitro-footer">'+action+'<div class="ah-dm-nitro-days">'+esc(gift.days)+' дней</div></div></div></div>';
+  }
+
+  function renderRow(row,gift){
+    if(!row||!gift)return;
+    row.classList.add('ah-nitro-gift-message');
+    row.dataset.nitroGiftToken=gift.token;
+    row.dataset.messageEditable='0';
+    const actions=row.querySelector('.msg-actions');if(actions)actions.remove();
+    const body=row.querySelector('.msg-body');if(!body)return;
+    let slot=body.querySelector('.ah-dm-nitro-slot');
+    if(!slot){slot=document.createElement('div');slot.className='ah-dm-nitro-slot';body.appendChild(slot)}
+    slot.innerHTML=cardHtml(gift);
+  }
+
+  function renderError(row,message){
+    row.classList.add('ah-nitro-gift-message');
+    row.dataset.messageEditable='0';
+    const actions=row.querySelector('.msg-actions');if(actions)actions.remove();
+    const body=row.querySelector('.msg-body');if(!body)return;
+    let slot=body.querySelector('.ah-dm-nitro-slot');if(!slot){slot=document.createElement('div');slot.className='ah-dm-nitro-slot';body.appendChild(slot)}
+    slot.innerHTML='<div class="ah-dm-nitro-error">'+esc(message||'Этот подарок больше недоступен.')+'</div>';
+  }
+
+  function hydrate(root){
+    const scope=root||document;
+    const rows=[];
+    if(scope.matches&&scope.matches('.msg'))rows.push(scope);
+    if(scope.querySelectorAll)scope.querySelectorAll('.msg').forEach(function(row){rows.push(row)});
+    rows.forEach(function(row){
+      const token=tokenFromRow(row);if(!token)return;
+      if(row.dataset.nitroGiftLoading==='1')return;
+      row.dataset.nitroGiftLoading='1';
+      loadGift(token,false).then(function(gift){renderRow(row,gift)}).catch(function(error){renderError(row,error.message)});
+    });
+  }
+
+  function updateEverywhere(token,gift){
+    document.querySelectorAll('.msg[data-nitro-gift-token="'+CSS.escape(token)+'"]').forEach(function(row){renderRow(row,gift)});
+  }
+
+  async function claim(token,button){
+    if(button){button.disabled=true;button.textContent='Активация...'}
+    try{
+      const response=await fetch('/community/api/nitro/dm-gifts/'+encodeURIComponent(token)+'/claim',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:'{}'});
+      const data=await response.json().catch(function(){return{}});
+      if(!response.ok||!data.ok)throw new Error(data.message||'Не удалось активировать подарок');
+      if(data.gift){cache.set(token,data.gift);updateEverywhere(token,data.gift)}
+      if(typeof window.loadNitroMe==='function'){try{window.loadNitroMe()}catch(e){}}
+      if(typeof showActionToast==='function')showActionToast('Nitro активирован на '+String(data.days_added||(data.gift&&data.gift.days)||0)+' дней');
+    }catch(error){
+      if(button){button.disabled=false;button.textContent='Принять подарок'}
+      if(typeof showActionToast==='function')showActionToast(error.message||'Ошибка активации');else alert(error.message||'Ошибка активации');
+    }
+  }
+
+  function modal(){
+    let node=document.getElementById('ah-nitro-gift-modal-bg');if(node)return node;
+    node=document.createElement('div');node.id='ah-nitro-gift-modal-bg';node.className='ah-nitro-gift-modal-bg';
+    node.innerHTML='<div class="ah-nitro-gift-modal" role="dialog" aria-modal="true"><button type="button" class="ah-nitro-gift-close" aria-label="Закрыть">×</button><div class="ah-nitro-gift-modal-head"><h2>Подарить Nitro</h2><p>Упакуйте подписку для @'+esc(otherUsername)+'. Код не будет виден и сработает только у получателя.</p></div><div class="ah-nitro-gift-preview"><div class="ah-dm-gift-box"><span class="ah-dm-gift-ribbon"></span></div><div class="ah-nitro-gift-preview-copy"><small>Подарок для @'+esc(otherUsername)+'</small><strong id="ah-nitro-gift-preview-name">Месяц Nitro</strong><span id="ah-nitro-gift-preview-days">30 дней подписки</span></div></div><div class="ah-nitro-gift-form"><label class="ah-nitro-gift-label">Срок подарка</label><div class="ah-nitro-gift-options"><button type="button" class="ah-nitro-gift-option" data-days="7"><b>7</b><small>дней</small></button><button type="button" class="ah-nitro-gift-option active" data-days="30"><b>30</b><small>дней</small></button><button type="button" class="ah-nitro-gift-option" data-days="90"><b>90</b><small>дней</small></button><button type="button" class="ah-nitro-gift-option" data-days="200"><b>200</b><small>дней</small></button></div><label class="ah-nitro-gift-label" for="ah-nitro-gift-note">Сообщение</label><textarea id="ah-nitro-gift-note" class="ah-nitro-gift-note" maxlength="160" placeholder="Например: держи подарок 🎁"></textarea><div class="ah-nitro-gift-limit"><span id="ah-nitro-gift-count">0</span>/160</div><button type="button" id="ah-nitro-gift-send" class="ah-nitro-gift-send">Упаковать и отправить</button><div id="ah-nitro-gift-status" class="ah-nitro-gift-status"></div></div></div>';
+    document.body.appendChild(node);
+    node.querySelector('.ah-nitro-gift-close').addEventListener('click',closeModal);
+    node.addEventListener('click',function(e){if(e.target===node)closeModal()});
+    node.querySelectorAll('.ah-nitro-gift-option').forEach(function(option){option.addEventListener('click',function(){selectedDays=Number(option.dataset.days)||30;node.querySelectorAll('.ah-nitro-gift-option').forEach(function(x){x.classList.toggle('active',x===option)});node.querySelector('#ah-nitro-gift-preview-name').textContent=packName(selectedDays);node.querySelector('#ah-nitro-gift-preview-days').textContent=selectedDays+' дней подписки'})});
+    const note=node.querySelector('#ah-nitro-gift-note');note.addEventListener('input',function(){node.querySelector('#ah-nitro-gift-count').textContent=String(note.value.length)});
+    node.querySelector('#ah-nitro-gift-send').addEventListener('click',sendGift);
+    return node;
+  }
+  function openModal(){selectedDays=30;const node=modal();node.querySelectorAll('.ah-nitro-gift-option').forEach(function(x){x.classList.toggle('active',Number(x.dataset.days)===30)});node.querySelector('#ah-nitro-gift-note').value='';node.querySelector('#ah-nitro-gift-count').textContent='0';node.querySelector('#ah-nitro-gift-status').textContent='';node.querySelector('#ah-nitro-gift-status').classList.remove('err');node.querySelector('#ah-nitro-gift-preview-name').textContent=packName(30);node.querySelector('#ah-nitro-gift-preview-days').textContent='30 дней подписки';node.classList.add('open');setTimeout(function(){node.querySelector('#ah-nitro-gift-note').focus()},80)}
+  function closeModal(){const node=document.getElementById('ah-nitro-gift-modal-bg');if(node)node.classList.remove('open')}
+  async function sendGift(){
+    const node=modal(),button=node.querySelector('#ah-nitro-gift-send'),status=node.querySelector('#ah-nitro-gift-status'),note=node.querySelector('#ah-nitro-gift-note').value.trim();
+    button.disabled=true;button.textContent='Упаковываем...';status.textContent='';status.classList.remove('err');
+    try{
+      const response=await fetch('/community/api/dm/'+encodeURIComponent(otherUsername)+'/nitro-gifts',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({days:selectedDays,note:note})});
+      const data=await response.json().catch(function(){return{}});if(!response.ok||!data.ok)throw new Error(data.message||'Не удалось отправить подарок');
+      closeModal();if(typeof showActionToast==='function')showActionToast('Nitro упакован и отправлен');
+    }catch(error){status.textContent=error.message||'Ошибка отправки';status.classList.add('err')}
+    finally{button.disabled=false;button.textContent='Упаковать и отправить'}
+  }
+
+  function installButton(){
+    const composer=document.querySelector('.composer');if(!composer||composer.querySelector('.ah-dm-nitro-gift-btn'))return;
+    const button=document.createElement('button');button.type='button';button.className='ah-dm-nitro-gift-btn';button.title='Подарить Nitro';button.setAttribute('aria-label','Подарить Nitro');button.innerHTML='<svg viewBox="0 0 24 24"><path d="M20 12v9H4v-9"/><path d="M2 7h20v5H2z"/><path d="M12 7v14"/><path d="M12 7H7.5A2.5 2.5 0 1 1 10 4.5C10 6 12 7 12 7Z"/><path d="M12 7h4.5A2.5 2.5 0 1 0 14 4.5C14 6 12 7 12 7Z"/></svg>';
+    const submit=composer.querySelector('button[type="submit"]');composer.insertBefore(button,submit||null);button.addEventListener('click',openModal);
+    fetch('/community/api/nitro/me',{credentials:'same-origin'}).then(function(r){return r.ok?r.json():null}).then(function(data){if(data&&data.can_generate)button.classList.add('ready')}).catch(function(){});
+  }
+
+  document.addEventListener('click',function(e){const button=e.target.closest('[data-ah-claim-gift]');if(button){e.preventDefault();claim(button.dataset.ahClaimGift,button)}});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal()});
+
+  function invalidate(token){cache.delete(token);requests.delete(token);loadGift(token,true).then(function(gift){updateEverywhere(token,gift)}).catch(function(){})}
+  window.AlexiHubNitroGifts={hydrate:hydrate,invalidate:invalidate,open:openModal};
+
+  function start(){installButton();hydrate(document);const messages=document.getElementById('messages');if(messages){new MutationObserver(function(records){records.forEach(function(record){record.addedNodes.forEach(function(node){if(node.nodeType===1)hydrate(node)})})}).observe(messages,{childList:true,subtree:true})}}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();
 </script>
 
