@@ -4543,284 +4543,6 @@ if (typeof window.openSelfProfileSettings !== 'function') {
   }).observe(document.documentElement, {childList:true, subtree:true});
 })();
 </script>
-
-
-
-<!-- Custom media hardfix: keep emoji after send + place picker above attachment preview -->
-<style id="ah-media-send-overlay-hardfix-css">
-#ah-media-picker{
-  z-index:2147483000!important;
-}
-#ah-media-picker.open{
-  display:block!important;
-}
-#dm-attachment-preview,
-.dm-attachment-preview,
-.attach-preview{
-  position:relative;
-  z-index:20;
-}
-.composer-wrap,
-.chat-composer,
-.composer-area{
-  position:relative;
-  z-index:30;
-}
-.ah-custom-emoji{
-  width:1.55em!important;
-  height:1.55em!important;
-  min-width:1.55em!important;
-  object-fit:contain!important;
-  vertical-align:-.38em!important;
-  display:inline-block!important;
-  background:transparent!important;
-  border-radius:0!important;
-}
-.msg-img.ah-sticker-img,
-.message-image.ah-sticker-img{
-  max-width:178px!important;
-  max-height:178px!important;
-  width:auto!important;
-  height:auto!important;
-  object-fit:contain!important;
-  background:transparent!important;
-  border-radius:4px!important;
-  box-shadow:none!important;
-}
-.msg.ah-sticker-message .msg-text,
-.message.ah-sticker-message .message-content{
-  display:none!important;
-}
-</style>
-<script id="ah-media-send-overlay-hardfix-js">
-(function(){
-  if(window.__ahMediaSendOverlayHardFix) return;
-  window.__ahMediaSendOverlayHardFix = true;
-
-  let mediaLib = null;
-  let mediaLibLoading = null;
-
-  function esc(s){
-    return String(s ?? '').replace(/[&<>"']/g, function(c){
-      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
-    });
-  }
-
-  function cleanName(s){
-    return String(s || 'emoji')
-      .replace(/[^a-zA-Z0-9_а-яА-ЯіїєґІЇЄҐ-]/g, '_')
-      .slice(0, 64) || 'emoji';
-  }
-
-  function escapeRegExp(s){
-    return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  }
-
-  function mediaContextUrl(){
-    const isServer = location.pathname.includes('/servers/');
-    const m = location.pathname.match(/\/servers\/(\d+)/);
-    const serverId = m ? m[1] : '';
-    return '/community/api/media/library?context=' + encodeURIComponent(isServer ? 'server' : 'dm') + (serverId ? '&server_id=' + encodeURIComponent(serverId) : '');
-  }
-
-  async function loadMediaLibFresh(){
-    if(mediaLibLoading) return mediaLibLoading;
-    mediaLibLoading = fetch(mediaContextUrl(), {credentials:'same-origin'})
-      .then(function(r){ return r.json(); })
-      .then(function(data){
-        mediaLib = data && data.ok !== false ? data : {ok:false, emojis:[], stickers:[]};
-        return mediaLib;
-      })
-      .catch(function(){
-        mediaLib = {ok:false, emojis:[], stickers:[]};
-        return mediaLib;
-      })
-      .finally(function(){ mediaLibLoading = null; });
-    return mediaLibLoading;
-  }
-
-  function rawTextFor(row, textEl){
-    if(row && row.dataset && row.dataset.messageContent !== undefined){
-      return row.dataset.messageContent || '';
-    }
-    if(textEl && textEl.dataset && textEl.dataset.ahRawText !== undefined){
-      return textEl.dataset.ahRawText || '';
-    }
-    return textEl ? (textEl.textContent || '') : '';
-  }
-
-  function normalizeEmojiNameList(item){
-    const out = [];
-    [item && item.name, cleanName(item && item.name)].forEach(function(name){
-      name = String(name || '').trim();
-      if(!name) return;
-      if(!out.map(function(x){return x.toLowerCase();}).includes(name.toLowerCase())) out.push(name);
-    });
-    return out;
-  }
-
-  function renderCustomMediaHard(root){
-    const scope = root || document;
-    const lib = mediaLib || {emojis:[], stickers:[]};
-    const emojis = lib.emojis || [];
-
-    scope.querySelectorAll('.msg,.message').forEach(function(row){
-      const textEl = row.querySelector('.dm-message-text,.message-content-text');
-      const raw = rawTextFor(row, textEl).trim();
-      if(/^\[\[ah:sticker:\d+\]\]$/.test(raw)){
-        row.classList.add('ah-sticker-message');
-        const img = row.querySelector('.msg-img,.message-image');
-        if(img) img.classList.add('ah-sticker-img');
-      }
-    });
-
-    scope.querySelectorAll('.dm-message-text,.message-content-text').forEach(function(el){
-      const row = el.closest('.msg,.message');
-      const raw = rawTextFor(row, el);
-      if(el.dataset) el.dataset.ahRawText = raw || '';
-      const trimmed = String(raw || '').trim();
-      if(/^\[\[ah:sticker:\d+\]\]$/.test(trimmed)){
-        el.textContent = '';
-        if(el.dataset) el.dataset.mediaRendered = 'hardfix';
-        return;
-      }
-      let html = esc(raw || '');
-      const used = new Set();
-      emojis.forEach(function(item){
-        if(!item || !item.image_url) return;
-        normalizeEmojiNameList(item).forEach(function(name){
-          const low = name.toLowerCase();
-          if(used.has(low)) return;
-          used.add(low);
-          const code = ':' + name + ':';
-          const pattern = new RegExp(escapeRegExp(esc(code)), 'gi');
-          html = html.replace(pattern, '<img class="ah-custom-emoji" src="' + esc(item.image_url) + '" alt="' + esc(code) + '" title="' + esc(code) + '">');
-        });
-      });
-      el.innerHTML = html;
-      if(el.dataset) el.dataset.mediaRendered = 'hardfix';
-    });
-  }
-
-  async function forceRenderCustomMedia(root){
-    await loadMediaLibFresh();
-    renderCustomMediaHard(root || document);
-  }
-
-  function attachRendererOverride(){
-    if(window.AlexiHubMediaPicker){
-      window.AlexiHubMediaPicker.renderCustomMedia = function(root){
-        renderCustomMediaHard(root || document);
-      };
-      const oldLoad = window.AlexiHubMediaPicker.load;
-      if(typeof oldLoad === 'function' && !oldLoad.__hardfixWrapped){
-        const wrapped = function(){
-          const result = oldLoad.apply(this, arguments);
-          Promise.resolve(result).then(function(){ loadMediaLibFresh().then(function(){ renderCustomMediaHard(document); }); });
-          return result;
-        };
-        wrapped.__hardfixWrapped = true;
-        window.AlexiHubMediaPicker.load = wrapped;
-      }
-      const oldOpen = window.AlexiHubMediaPicker.open;
-      if(typeof oldOpen === 'function' && !oldOpen.__hardfixWrapped){
-        const wrappedOpen = function(tab){
-          const result = oldOpen.apply(this, arguments);
-          setTimeout(positionMediaPicker, 0);
-          setTimeout(positionMediaPicker, 120);
-          setTimeout(positionMediaPicker, 420);
-          return result;
-        };
-        wrappedOpen.__hardfixWrapped = true;
-        window.AlexiHubMediaPicker.open = wrappedOpen;
-      }
-    }
-  }
-
-  function composerTop(){
-    const candidates = [
-      document.getElementById('dm-form'),
-      document.querySelector('.composer-wrap'),
-      document.querySelector('.chat-composer'),
-      document.querySelector('.composer-area'),
-      document.querySelector('.composer')
-    ].filter(Boolean);
-    let top = null;
-    candidates.forEach(function(el){
-      const r = el.getBoundingClientRect();
-      if(r.height > 0 && r.top > 0){
-        top = top === null ? r.top : Math.min(top, r.top);
-      }
-    });
-    return top;
-  }
-
-  function positionMediaPicker(){
-    const picker = document.getElementById('ah-media-picker');
-    if(!picker || !picker.classList.contains('open')) return;
-    picker.style.zIndex = '2147483000';
-    const top = composerTop();
-    const attachmentOpen = !!document.querySelector('#dm-attachment-preview.open, .dm-attachment-preview.open, .attach-preview.open');
-    if(top !== null){
-      const bottom = Math.max(72, Math.min(window.innerHeight - 72, window.innerHeight - top + (attachmentOpen ? 16 : 10)));
-      picker.style.bottom = bottom + 'px';
-      picker.style.right = '22px';
-    }
-  }
-
-  function scheduleRender(root){
-    setTimeout(function(){ forceRenderCustomMedia(root || document); }, 30);
-    setTimeout(function(){ forceRenderCustomMedia(root || document); }, 250);
-    setTimeout(function(){ forceRenderCustomMedia(root || document); }, 900);
-  }
-
-  document.addEventListener('submit', function(e){
-    const form = e.target && e.target.closest ? e.target.closest('#dm-form, #server-message-form, form.composer-wrap, form[action$="/message"]') : null;
-    if(form) scheduleRender(document);
-  }, true);
-
-  document.addEventListener('click', function(e){
-    if(e.target && e.target.closest && e.target.closest('.ah-media-item')){
-      setTimeout(positionMediaPicker, 0);
-      setTimeout(function(){ scheduleRender(document); }, 120);
-    }
-    if(e.target && e.target.closest && e.target.closest('.composer-icon-btn,.ah-media-inline-icon-btn,.ah-composer-emoji-btn')){
-      setTimeout(positionMediaPicker, 0);
-      setTimeout(positionMediaPicker, 160);
-    }
-  }, true);
-
-  window.addEventListener('resize', positionMediaPicker);
-  window.addEventListener('scroll', positionMediaPicker, true);
-
-  const obs = new MutationObserver(function(muts){
-    attachRendererOverride();
-    let should = false;
-    for(const m of muts){
-      if(m.addedNodes && m.addedNodes.length){ should = true; break; }
-    }
-    if(should) scheduleRender(document);
-    positionMediaPicker();
-  });
-
-  function start(){
-    attachRendererOverride();
-    loadMediaLibFresh().then(function(){ renderCustomMediaHard(document); });
-    obs.observe(document.documentElement, {childList:true, subtree:true});
-    setTimeout(attachRendererOverride, 300);
-    setTimeout(function(){ forceRenderCustomMedia(document); }, 600);
-    setTimeout(function(){ forceRenderCustomMedia(document); }, 1600);
-  }
-
-  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
-  else start();
-
-  window.__ahForceCustomMediaRender = forceRenderCustomMedia;
-})();
-</script>
-
-
-
 <!-- AH server composer position rollback fix -->
 <style id="ah-server-composer-position-rollback-fix">
 body form.composer-wrap,
@@ -4851,195 +4573,193 @@ body .composer-wrap{
 </style>
 
 
-<!-- AH media final hardfix: correct composer target + keep emoji content -->
-<style id="ah-media-final-target-fix-css">
+<!-- AH media restore save + stable picker position -->
+<style id="ah-media-restore-save-stable-css">
 #ah-media-picker{
   position:fixed!important;
-  z-index:2147483600!important;
+  right:22px!important;
+  left:auto!important;
+  top:auto!important;
+  z-index:2147483000!important;
+  transform:none!important;
+  will-change:auto!important;
 }
-#ah-media-picker.open{
-  display:block!important;
-}
+#ah-media-picker.open{display:block!important;}
 .ah-custom-emoji{
   width:1.55em!important;
   height:1.55em!important;
   min-width:1.55em!important;
   object-fit:contain!important;
-  vertical-align:-.35em!important;
+  vertical-align:-.36em!important;
   display:inline-block!important;
+  background:transparent!important;
+  border-radius:0!important;
 }
-.ah-sticker-message .msg-img,
-.ah-sticker-message .message-image,
-.ah-sticker-img{
-  max-width:220px!important;
-  max-height:220px!important;
+.msg-img.ah-sticker-img,
+.message-image.ah-sticker-img{
+  max-width:178px!important;
+  max-height:178px!important;
   width:auto!important;
   height:auto!important;
   object-fit:contain!important;
   background:transparent!important;
-  border-radius:0!important;
+  border-radius:4px!important;
   box-shadow:none!important;
 }
+@media(max-width:760px){#ah-media-picker{right:10px!important;left:10px!important;width:auto!important;}}
 </style>
-<script id="ah-media-final-target-fix-js">
+<script id="ah-media-restore-save-stable-js">
 (function(){
-  if(window.__ahMediaFinalTargetFix) return;
-  window.__ahMediaFinalTargetFix = true;
-
-  function esc(s){
-    return String(s ?? '').replace(/[&<>"']/g, function(c){
-      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
-    });
-  }
-
-  function cleanName(s){
-    return String(s || 'emoji')
-      .trim()
-      .replace(/^:+|:+$/g, '')
-      .replace(/[^a-zA-Z0-9_а-яА-ЯіїєґІЇЄҐ-]/g, '_')
-      .slice(0, 64) || 'emoji';
-  }
+  if(window.__ahMediaRestoreSaveStable) return;
+  window.__ahMediaRestoreSaveStable = true;
 
   function picker(){ return document.getElementById('ah-media-picker'); }
-
-  function closePicker(){
-    try{
-      if(window.AlexiHubMediaPicker && typeof window.AlexiHubMediaPicker.close === 'function'){
-        window.AlexiHubMediaPicker.close();
-        return;
-      }
-    }catch(e){}
-    const p = picker();
-    if(p) p.classList.remove('open');
-  }
-
-  function showFooter(html){
-    const p = picker();
-    const footer = p && p.querySelector('.ah-media-footer');
-    if(footer) footer.innerHTML = html;
-  }
-
-  function getActiveMessageTextarea(){
+  function textarea(){
     const active = document.activeElement;
-    if(active && active.tagName === 'TEXTAREA'){
-      if(active.closest('#dm-form') || active.closest('form.composer-wrap') || active.closest('#composer-form')) return active;
-    }
+    if(active && active.tagName === 'TEXTAREA' && active.name === 'content') return active;
     return document.querySelector('#dm-form textarea[name="content"]') ||
+           document.querySelector('#server-message-form textarea[name="content"]') ||
            document.querySelector('#composer-form textarea[name="content"]') ||
            document.querySelector('form.composer-wrap textarea[name="content"]') ||
-           document.getElementById('composer-textarea') ||
-           document.getElementById('content');
+           document.getElementById('content') ||
+           document.getElementById('composer-textarea');
+  }
+  function cleanName(s){
+    return String(s || 'emoji').trim().replace(/^:+|:+$/g,'').replace(/[^a-zA-Z0-9_а-яА-ЯіїєґІЇЄҐ-]/g,'_').slice(0,64) || 'emoji';
+  }
+  function insertAtCursor(el, text){
+    if(!el) return;
+    const val = el.value || '';
+    const start = typeof el.selectionStart === 'number' ? el.selectionStart : val.length;
+    const end = typeof el.selectionEnd === 'number' ? el.selectionEnd : val.length;
+    const before = val.slice(0,start);
+    const after = val.slice(end);
+    let ins = text;
+    if(before && !/\s$/.test(before)) ins = ' ' + ins;
+    if(after && !/^\s/.test(after)) ins = ins + ' ';
+    el.value = before + ins + after;
+    const pos = (before + ins).length;
+    try{ el.focus(); el.setSelectionRange(pos,pos); }catch(e){ try{el.focus();}catch(_){} }
+    el.dispatchEvent(new Event('input',{bubbles:true}));
+    el.dispatchEvent(new Event('change',{bubbles:true}));
   }
 
-  function insertAtCursor(textarea, text){
-    if(!textarea) return;
-    const value = textarea.value || '';
-    const start = typeof textarea.selectionStart === 'number' ? textarea.selectionStart : value.length;
-    const end = typeof textarea.selectionEnd === 'number' ? textarea.selectionEnd : value.length;
-    const before = value.slice(0, start);
-    const after = value.slice(end);
-    let insert = text;
-    if(before && !/\s$/.test(before)) insert = ' ' + insert;
-    if(after && !/^\s/.test(after)) insert = insert + ' ';
-    textarea.value = before + insert + after;
-    const pos = (before + insert).length;
-    textarea.focus();
-    try{ textarea.setSelectionRange(pos, pos); }catch(e){}
-    textarea.dispatchEvent(new Event('input', {bubbles:true}));
-    textarea.dispatchEvent(new Event('change', {bubbles:true}));
-  }
-
-  function getImageInputForTextarea(textarea){
-    const form = textarea && textarea.closest('form');
-    return (form && form.querySelector('input[name="image_url"]')) ||
-           document.getElementById('composer-image-url') ||
-           document.getElementById('image_url') ||
-           document.querySelector('input[name="image_url"]');
-  }
-
-  function submitComposerForTextarea(textarea){
-    const form = textarea && textarea.closest('form');
-    if(!form) return;
-    if(form.requestSubmit) form.requestSubmit();
-    else form.dispatchEvent(new Event('submit', {bubbles:true, cancelable:true}));
-  }
-
-  function positionPickerAboveComposer(){
-    const p = picker();
-    if(!p || !p.classList.contains('open')) return;
-    const forms = [
+  let lastBottom = null;
+  let raf = null;
+  function calcBottom(){
+    const candidates = [
       document.getElementById('dm-form'),
+      document.getElementById('server-message-form'),
       document.getElementById('composer-form'),
       document.querySelector('form.composer-wrap'),
       document.querySelector('.composer-wrap'),
       document.querySelector('.chat-composer'),
+      document.querySelector('.composer-area'),
       document.querySelector('.composer')
     ].filter(Boolean);
-    let rect = null;
-    for(const el of forms){
+    let top = null;
+    for(const el of candidates){
       const r = el.getBoundingClientRect();
-      if(r.width > 0 && r.height > 0 && r.bottom > 0){ rect = r; break; }
+      if(r.width > 0 && r.height > 0 && r.top > 0 && r.bottom <= window.innerHeight + 40){
+        top = top === null ? r.top : Math.min(top, r.top);
+      }
     }
-    if(rect){
-      const bottom = Math.max(68, Math.min(window.innerHeight - 60, window.innerHeight - rect.top + 12));
+    if(top === null) return 72;
+    return Math.max(72, Math.min(window.innerHeight - 96, Math.round(window.innerHeight - top + 12)));
+  }
+  function positionPickerStable(){
+    const p = picker();
+    if(!p || !p.classList.contains('open')) return;
+    const bottom = calcBottom();
+    if(lastBottom === null || Math.abs(lastBottom - bottom) > 2){
       p.style.bottom = bottom + 'px';
       p.style.top = 'auto';
+      p.style.right = window.matchMedia('(max-width:760px)').matches ? '10px' : '22px';
+      if(!window.matchMedia('(max-width:760px)').matches) p.style.left = 'auto';
+      lastBottom = bottom;
     }
-    p.style.zIndex = '2147483600';
+  }
+  function schedulePosition(){
+    if(raf) cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(function(){ raf = null; positionPickerStable(); });
   }
 
-  function clickMediaItem(e){
-    const btn = e.target && e.target.closest ? e.target.closest('.ah-media-item') : null;
-    if(!btn || !btn.closest('#ah-media-picker')) return;
-
-    e.preventDefault();
-    e.stopPropagation();
-    if(e.stopImmediatePropagation) e.stopImmediatePropagation();
-
-    if(btn.classList.contains('locked')){
-      showFooter('<svg class="ah-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg><span>Для ЛС або іншого сервера потрібен Nitro</span>');
-      return;
-    }
-
-    const type = btn.dataset.type || '';
-    const id = btn.dataset.id || '';
-    const title = btn.getAttribute('title') || btn.dataset.name || 'emoji';
-    const img = btn.querySelector('img');
-    const imageUrl = (img && img.getAttribute('src')) || '';
-    const textarea = getActiveMessageTextarea();
-    if(!textarea) return;
-
-    if(type === 'sticker'){
-      textarea.value = '[[ah:sticker:' + String(id) + ']]';
-      const imageInput = getImageInputForTextarea(textarea);
-      if(imageInput && imageUrl) imageInput.value = imageUrl;
-      textarea.dispatchEvent(new Event('input', {bubbles:true}));
-      closePicker();
-      submitComposerForTextarea(textarea);
-      return;
-    }
-
+  // Let the original first media system handle normal clicks, but protect the textarea value
+  // in case another later handler/composer preview steals focus or clears the selected token.
+  let pendingToken = '';
+  document.addEventListener('click', function(e){
+    const item = e.target && e.target.closest ? e.target.closest('#ah-media-picker .ah-media-item') : null;
+    if(!item || item.classList.contains('locked')) return;
+    const type = item.dataset.type || '';
+    if(type !== 'emoji') return;
+    const title = item.getAttribute('title') || item.dataset.name || '';
     const token = ':' + cleanName(title) + ':';
-    insertAtCursor(textarea, token + ' ');
-    closePicker();
+    pendingToken = token;
+    setTimeout(function(){
+      const ta = textarea();
+      if(ta && token && !ta.value.includes(token)) insertAtCursor(ta, token + ' ');
+      schedulePosition();
+    }, 0);
+  }, true);
+
+  document.addEventListener('submit', function(e){
+    const form = e.target && e.target.closest ? e.target.closest('#dm-form,#server-message-form,#composer-form,form.composer-wrap') : null;
+    if(!form) return;
+    const ta = form.querySelector('textarea[name="content"]') || textarea();
+    if(ta && pendingToken && !ta.value.includes(pendingToken)){
+      insertAtCursor(ta, pendingToken + ' ');
+    }
+    pendingToken = '';
+    setTimeout(function(){
+      if(window.AlexiHubMediaPicker && typeof window.AlexiHubMediaPicker.renderCustomMedia === 'function'){
+        try{ window.AlexiHubMediaPicker.renderCustomMedia(document); }catch(e){}
+      }
+      if(window.__ahForceCustomMediaRender) try{ window.__ahForceCustomMediaRender(document); }catch(e){}
+    }, 120);
+  }, true);
+
+  function wrapOpen(){
+    if(!window.AlexiHubMediaPicker || window.AlexiHubMediaPicker.__stableWrapped) return;
+    const oldOpen = window.AlexiHubMediaPicker.open;
+    if(typeof oldOpen === 'function'){
+      window.AlexiHubMediaPicker.open = function(tab){
+        const res = oldOpen.apply(this, arguments);
+        lastBottom = null;
+        setTimeout(schedulePosition, 0);
+        setTimeout(schedulePosition, 80);
+        setTimeout(schedulePosition, 220);
+        return res;
+      };
+    }
+    window.AlexiHubMediaPicker.__stableWrapped = true;
   }
 
-  document.addEventListener('click', clickMediaItem, true);
   document.addEventListener('click', function(e){
     if(e.target && e.target.closest && e.target.closest('.composer-icon-btn,.ah-media-inline-icon-btn,.ah-composer-emoji-btn,.dm-emoji-btn,.dm-sticker-btn')){
-      setTimeout(positionPickerAboveComposer, 0);
-      setTimeout(positionPickerAboveComposer, 120);
-      setTimeout(positionPickerAboveComposer, 350);
+      setTimeout(schedulePosition,0);
+      setTimeout(schedulePosition,120);
     }
   }, true);
-  window.addEventListener('resize', positionPickerAboveComposer);
-  window.addEventListener('scroll', positionPickerAboveComposer, true);
+  window.addEventListener('resize', function(){ lastBottom=null; schedulePosition(); });
+  window.addEventListener('scroll', schedulePosition, true);
 
-  const observer = new MutationObserver(function(){
-    setTimeout(positionPickerAboveComposer, 0);
-    if(window.__ahForceCustomMediaRender) setTimeout(function(){ window.__ahForceCustomMediaRender(document); }, 80);
+  const obs = new MutationObserver(function(){
+    wrapOpen();
+    schedulePosition();
+    if(window.AlexiHubMediaPicker && typeof window.AlexiHubMediaPicker.renderCustomMedia === 'function'){
+      clearTimeout(obs._r);
+      obs._r=setTimeout(function(){try{window.AlexiHubMediaPicker.renderCustomMedia(document);}catch(e){}},180);
+    }
   });
-  if(document.documentElement) observer.observe(document.documentElement, {childList:true, subtree:true});
+  function start(){
+    wrapOpen();
+    schedulePosition();
+    obs.observe(document.documentElement,{childList:true,subtree:true});
+    setTimeout(wrapOpen,300);
+    setTimeout(function(){if(window.AlexiHubMediaPicker && window.AlexiHubMediaPicker.renderCustomMedia)try{window.AlexiHubMediaPicker.renderCustomMedia(document)}catch(e){}},600);
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+  else start();
 })();
 </script>
 
