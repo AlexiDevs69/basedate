@@ -243,6 +243,7 @@ async def community_schema_startup() -> None:
     async with AsyncSessionLocal() as db:
         await crud.ensure_account_visual_columns(db)
         await _ensure_server_visual_columns(db)
+        await crud.ensure_reaction_tables(db)
 
 
 # --- Lightweight realtime layer --------------------------------------------
@@ -1686,6 +1687,175 @@ async def api_unpin_server_message(server_id: int, channel_id: int, message_id: 
     return JSONResponse({"ok": True, "removed": bool(removed), "message_id": int(message_id)})
 
 
+
+
+# --- Message reactions -------------------------------------------------------
+
+def _parse_reaction_message_ids(raw: str | None) -> list[int]:
+    result: list[int] = []
+    seen: set[int] = set()
+    for part in (raw or "").split(","):
+        try:
+            value = int(part.strip())
+        except (TypeError, ValueError):
+            continue
+        if value <= 0 or value in seen:
+            continue
+        result.append(value)
+        seen.add(value)
+        if len(result) >= 100:
+            break
+    return result
+
+
+def _reaction_status(error: str | None) -> int:
+    if error == "nitro_required":
+        return 403
+    if error in {"emoji_unavailable", "not_found"}:
+        return 404
+    return 400
+
+
+@router.get("/api/dm/{username}/reactions")
+async def api_dm_reactions(
+    username: str,
+    request: Request,
+    message_ids: str = "",
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in", "reactions": {}}, status_code=401)
+    other = await crud.get_account_by_username(db, username)
+    if not other:
+        return JSONResponse({"ok": False, "error": "not_found", "reactions": {}}, status_code=404)
+    thread = await crud.get_dm_thread_between(db, account.id, other.id)
+    if not thread:
+        return JSONResponse({"ok": True, "reactions": {}})
+    summaries = await crud.list_dm_reaction_summaries(
+        db,
+        int(thread.id),
+        _parse_reaction_message_ids(message_ids),
+        int(account.id),
+    )
+    return JSONResponse({"ok": True, "reactions": {str(key): value for key, value in summaries.items()}})
+
+
+@router.post("/api/dm/{username}/messages/{message_id}/reactions/toggle")
+async def api_toggle_dm_reaction(
+    username: str,
+    message_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    other = await crud.get_account_by_username(db, username)
+    if not other:
+        return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
+    thread = await crud.get_dm_thread_between(db, account.id, other.id)
+    if not thread or not await crud.get_dm_message(db, int(thread.id), int(message_id)):
+        return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    result = await crud.toggle_message_reaction(
+        db,
+        context="dm",
+        message_id=int(message_id),
+        account_id=int(account.id),
+        emoji_kind=str(body.get("kind") or "unicode"),
+        emoji_value=str(body.get("value") or ""),
+        custom_emoji_id=_parse_optional_int(body.get("custom_emoji_id")),
+    )
+    if not result.get("ok"):
+        return JSONResponse(result, status_code=_reaction_status(result.get("error")))
+    realtime_payload = {
+        "type": "reaction_update",
+        "message_id": int(message_id),
+    }
+    await realtime_channels.broadcast((0, int(thread.id)), realtime_payload)
+    return JSONResponse({
+        "ok": True,
+        "type": "reaction_update",
+        "message_id": int(message_id),
+        "reactions": result.get("reactions") or [],
+        "added": bool(result.get("added")),
+    })
+
+
+@router.get("/api/servers/{server_id}/channel/{channel_id}/reactions")
+async def api_server_reactions(
+    server_id: int,
+    channel_id: int,
+    request: Request,
+    message_ids: str = "",
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in", "reactions": {}}, status_code=401)
+    if not await crud.is_server_member(db, server_id, account.id):
+        return JSONResponse({"ok": False, "error": "forbidden", "reactions": {}}, status_code=403)
+    channel = await crud.get_server_channel(db, server_id, channel_id)
+    if not channel:
+        return JSONResponse({"ok": False, "error": "not_found", "reactions": {}}, status_code=404)
+    summaries = await crud.list_server_reaction_summaries(
+        db,
+        server_id,
+        channel_id,
+        _parse_reaction_message_ids(message_ids),
+        int(account.id),
+    )
+    return JSONResponse({"ok": True, "reactions": {str(key): value for key, value in summaries.items()}})
+
+
+@router.post("/api/servers/{server_id}/channel/{channel_id}/messages/{message_id}/reactions/toggle")
+async def api_toggle_server_reaction(
+    server_id: int,
+    channel_id: int,
+    message_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    if not await crud.is_server_member(db, server_id, account.id):
+        return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
+    message = await crud.get_server_message(db, server_id, channel_id, message_id)
+    if not message:
+        return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    result = await crud.toggle_message_reaction(
+        db,
+        context="server",
+        message_id=int(message_id),
+        account_id=int(account.id),
+        emoji_kind=str(body.get("kind") or "unicode"),
+        emoji_value=str(body.get("value") or ""),
+        custom_emoji_id=_parse_optional_int(body.get("custom_emoji_id")),
+        current_server_id=int(server_id),
+    )
+    if not result.get("ok"):
+        return JSONResponse(result, status_code=_reaction_status(result.get("error")))
+    realtime_payload = {
+        "type": "reaction_update",
+        "message_id": int(message_id),
+    }
+    await realtime_channels.broadcast((int(server_id), int(channel_id)), realtime_payload)
+    return JSONResponse({
+        "ok": True,
+        "type": "reaction_update",
+        "message_id": int(message_id),
+        "reactions": result.get("reactions") or [],
+        "added": bool(result.get("added")),
+    })
 
 
 _MEDIA_SEND_RE = re.compile(r"^\s*\[\[ah:(emoji|sticker):(\d+)\]\]\s*$")
