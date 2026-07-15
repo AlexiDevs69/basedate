@@ -265,13 +265,6 @@ class RealtimeChannelManager:
         await websocket.accept()
         async with self.lock:
             self.connections.setdefault(key, {}).setdefault(account_id, set()).add(websocket)
-        await self.broadcast_presence_for_scope(key, {
-            "type": "presence",
-            "account_id": account_id,
-            "online": True,
-            "status": (profile or {}).get("account_status", "online"),
-            "username": (profile or {}).get("username", ""),
-        })
 
     async def disconnect(self, key: tuple[int, int], account_id: int, websocket: WebSocket, profile: dict | None = None) -> None:
         async with self.lock:
@@ -282,19 +275,11 @@ class RealtimeChannelManager:
                     users.pop(account_id, None)
             if users == {}:
                 self.connections.pop(key, None)
-            still_online = self._account_connection_count_unlocked(account_id) > 0
             if key in self.typing:
                 self.typing[key].pop(account_id, None)
                 if not self.typing[key]:
                     self.typing.pop(key, None)
         await self.broadcast_typing(key)
-        await self.broadcast_presence_for_scope(key, {
-            "type": "presence",
-            "account_id": account_id,
-            "online": still_online,
-            "status": ((profile or {}).get("account_status", "online") if still_online else "offline"),
-            "username": (profile or {}).get("username", ""),
-        })
 
     async def broadcast_presence_for_scope(self, key: tuple[int, int], payload: dict) -> None:
         # Server presence must update every open channel of the same server,
@@ -362,6 +347,216 @@ class RealtimeChannelManager:
 realtime_channels = RealtimeChannelManager()
 
 
+class AccountRealtimeManager:
+    """One lightweight WebSocket per open AlexiHub page.
+
+    It powers global account presence and DM sidebar ordering. A short offline
+    grace period prevents the user from blinking offline while navigating
+    between pages.
+    """
+
+    OFFLINE_GRACE_SECONDS = 12.0
+
+    def __init__(self) -> None:
+        self.connections: dict[int, set[WebSocket]] = {}
+        self.profiles: dict[int, dict] = {}
+        self.offline_tasks: dict[int, asyncio.Task] = {}
+        self.lock = asyncio.Lock()
+
+    @staticmethod
+    def _public_presence_payload(profile: dict | None, connected: bool) -> dict:
+        profile = profile or {}
+        account_id = int(profile.get("id") or 0)
+        raw_status = str(profile.get("account_status") or "online").strip().lower()
+        visible = connected and raw_status != "invisible"
+        return {
+            "type": "presence",
+            "account_id": account_id,
+            "username": profile.get("username") or "",
+            "online": visible,
+            "status": raw_status if visible else "offline",
+        }
+
+    async def connect(self, account_id: int, websocket: WebSocket, profile: dict) -> None:
+        await websocket.accept()
+        pending_task = None
+        async with self.lock:
+            pending_task = self.offline_tasks.pop(account_id, None)
+            was_disconnected = not self.connections.get(account_id)
+            self.connections.setdefault(account_id, set()).add(websocket)
+            self.profiles[account_id] = dict(profile)
+            snapshot = [
+                self._public_presence_payload(self.profiles.get(uid), bool(sockets))
+                for uid, sockets in self.connections.items()
+                if sockets
+            ]
+        if pending_task:
+            pending_task.cancel()
+        try:
+            await websocket.send_json({"type": "presence_snapshot", "accounts": snapshot})
+        except Exception:
+            pass
+        if was_disconnected:
+            await self.broadcast_all(self._public_presence_payload(profile, True))
+
+    async def disconnect(self, account_id: int, websocket: WebSocket) -> None:
+        async with self.lock:
+            sockets = self.connections.get(account_id)
+            if sockets:
+                sockets.discard(websocket)
+                if not sockets:
+                    self.connections.pop(account_id, None)
+            if self.connections.get(account_id):
+                return
+            old_task = self.offline_tasks.pop(account_id, None)
+            if old_task:
+                old_task.cancel()
+            task = asyncio.create_task(self._broadcast_offline_after_grace(account_id))
+            self.offline_tasks[account_id] = task
+
+    async def _broadcast_offline_after_grace(self, account_id: int) -> None:
+        try:
+            await asyncio.sleep(self.OFFLINE_GRACE_SECONDS)
+            async with self.lock:
+                if self.connections.get(account_id):
+                    return
+                self.offline_tasks.pop(account_id, None)
+                profile = dict(self.profiles.get(account_id) or {"id": account_id})
+            await self.broadcast_all(self._public_presence_payload(profile, False))
+        except asyncio.CancelledError:
+            return
+
+    async def broadcast_all(self, payload: dict) -> None:
+        async with self.lock:
+            sockets = [ws for group in self.connections.values() for ws in group]
+        dead: list[WebSocket] = []
+        for ws in sockets:
+            try:
+                await ws.send_json(payload)
+            except Exception:
+                dead.append(ws)
+        if dead:
+            async with self.lock:
+                for account_id, group in list(self.connections.items()):
+                    for ws in dead:
+                        group.discard(ws)
+                    if not group:
+                        self.connections.pop(account_id, None)
+
+    async def send_to_account(self, account_id: int, payload: dict) -> None:
+        async with self.lock:
+            sockets = list(self.connections.get(int(account_id), set()))
+        dead: list[WebSocket] = []
+        for ws in sockets:
+            try:
+                await ws.send_json(payload)
+            except Exception:
+                dead.append(ws)
+        if dead:
+            async with self.lock:
+                group = self.connections.get(int(account_id), set())
+                for ws in dead:
+                    group.discard(ws)
+                if not group:
+                    self.connections.pop(int(account_id), None)
+
+    async def set_profile_and_broadcast(self, profile: dict) -> None:
+        account_id = int(profile.get("id") or 0)
+        if not account_id:
+            return
+        async with self.lock:
+            self.profiles[account_id] = dict(profile)
+            connected = bool(self.connections.get(account_id))
+        await self.broadcast_all(self._public_presence_payload(profile, connected))
+
+    async def presence_snapshot_for(self, account_ids: list[int]) -> list[dict]:
+        unique_ids = []
+        seen = set()
+        for raw_id in account_ids[:500]:
+            try:
+                account_id = int(raw_id)
+            except Exception:
+                continue
+            if account_id <= 0 or account_id in seen:
+                continue
+            seen.add(account_id)
+            unique_ids.append(account_id)
+        async with self.lock:
+            return [
+                self._public_presence_payload(
+                    self.profiles.get(account_id) or {"id": account_id},
+                    bool(self.connections.get(account_id)),
+                )
+                for account_id in unique_ids
+            ]
+
+    async def public_status(self, account_id: int, fallback_profile: dict | None = None) -> tuple[bool, str]:
+        async with self.lock:
+            connected = bool(self.connections.get(int(account_id)))
+            profile = dict(self.profiles.get(int(account_id)) or fallback_profile or {"id": account_id})
+        payload = self._public_presence_payload(profile, connected)
+        return bool(payload["online"]), str(payload["status"])
+
+
+account_realtime = AccountRealtimeManager()
+
+
+async def _emit_dm_sidebar_update(thread_id: int, message_id: int) -> None:
+    """Move the relevant DM row to the top for both participants in realtime."""
+    try:
+        async with AsyncSessionLocal() as db:
+            thread = await crud.get_dm_thread_by_id(db, int(thread_id))
+            message = await crud.get_dm_message(db, int(thread_id), int(message_id))
+            if not thread or not message:
+                return
+            sender = await crud.get_account_by_id(db, int(message.author_id))
+            if not sender:
+                return
+            participant_ids = [int(thread.user_low_id), int(thread.user_high_id)]
+            if int(sender.id) not in participant_ids:
+                return
+            recipient_id = participant_ids[1] if participant_ids[0] == int(sender.id) else participant_ids[0]
+            recipient = await crud.get_account_by_id(db, recipient_id)
+            if not recipient:
+                return
+
+            last_message = {
+                "id": int(message.id),
+                "author_id": int(message.author_id),
+                "content": (message.content or "")[:4000],
+                "image_url": message.image_url or None,
+                "created_at": message.created_at.isoformat(),
+                "is_forwarded": bool(getattr(message, "is_forwarded", False)),
+            }
+            updated_at = (
+                thread.updated_at.isoformat()
+                if getattr(thread, "updated_at", None)
+                else message.created_at.isoformat()
+            )
+
+            for viewer_id, other in (
+                (int(sender.id), recipient),
+                (int(recipient.id), sender),
+            ):
+                other_profile = _account_payload(other)
+                other_online, other_status = await account_realtime.public_status(int(other.id), other_profile)
+                await account_realtime.send_to_account(
+                    viewer_id,
+                    {
+                        "type": "dm_sidebar_update",
+                        "thread_id": int(thread.id),
+                        "updated_at": updated_at,
+                        "author_id": int(message.author_id),
+                        "last_message": last_message,
+                        "other": other_profile,
+                        "other_online": other_online,
+                        "other_status": other_status,
+                    },
+                )
+    except Exception as exc:
+        print("DM sidebar realtime update failed:", repr(exc))
+
+
 def _ws_account_id(websocket: WebSocket) -> int | None:
     try:
         account_id = auth.get_logged_in_account_id(websocket)  # works because WebSocket has .session too
@@ -409,6 +604,50 @@ def _reply_payload(message, author) -> dict | None:
         "image_url": message.image_url,
         "author": _account_payload(author) if author else {"id": None, "username": "видалений юзер", "avatar_url": ""},
     }
+
+
+@router.websocket("/ws/account")
+async def ws_account_realtime(websocket: WebSocket):
+    """Global realtime channel for DM sidebar ordering and presence."""
+    account_id = _ws_account_id(websocket)
+    if not account_id:
+        await websocket.close(code=1008)
+        return
+
+    async with AsyncSessionLocal() as db:
+        await crud.touch_last_seen(db, int(account_id))
+        account = await crud.get_account_by_id(db, int(account_id))
+        if not account or account.is_banned:
+            await websocket.close(code=1008)
+            return
+        profile = _account_payload(account)
+
+    await account_realtime.connect(int(account_id), websocket, profile)
+    try:
+        while True:
+            data = await websocket.receive_json()
+            event_type = str(data.get("type") or "").strip().lower()
+            if event_type in {"leave", "disconnect", "close"}:
+                break
+            if event_type == "watch_presence":
+                raw_ids = data.get("account_ids") or []
+                if not isinstance(raw_ids, list):
+                    raw_ids = []
+                accounts = await account_realtime.presence_snapshot_for(raw_ids)
+                await websocket.send_json({"type": "presence_snapshot", "accounts": accounts})
+                continue
+            if event_type == "ping":
+                await websocket.send_json({"type": "pong"})
+    except WebSocketDisconnect:
+        pass
+    except Exception:
+        try:
+            await websocket.close(code=1011)
+        except Exception:
+            pass
+    finally:
+        await account_realtime.disconnect(int(account_id), websocket)
+
 
 
 async def current_account(request: Request, db: AsyncSession):
@@ -1217,6 +1456,7 @@ async def server_invite_submit(
                         "author": author_payload,
                     },
                 )
+                await _emit_dm_sidebar_update(thread_id, message_id)
     safe_redirect = redirect_to if redirect_to.startswith("/community/") else f"/community/servers/{server_id}"
     return RedirectResponse(url=safe_redirect, status_code=303)
 
@@ -1341,6 +1581,7 @@ async def api_forward_message(request: Request, db: AsyncSession = Depends(get_d
                 "is_forwarded": True,
             }
             await realtime_channels.broadcast((0, thread_id), {"type": "message", "message": message_payload, "author": author_payload})
+            await _emit_dm_sidebar_update(thread_id, int(msg.id))
             sent.append({"type": "dm", "username": username})
             continue
 
@@ -1557,6 +1798,9 @@ async def api_send_dm_nitro_gift(username: str, request: Request, db: AsyncSessi
         (0, thread_id),
         {"type": "message", "message": message_payload, "author": author_payload},
     )
+    gift_message_id = _parse_optional_int(message_payload.get("id"))
+    if gift_message_id:
+        await _emit_dm_sidebar_update(thread_id, gift_message_id)
     return JSONResponse({"ok": True, "message": message_payload, "gift": gift_payload})
 
 
@@ -2177,7 +2421,8 @@ async def dm_message_submit(
             reply_msg = await crud.get_dm_message(db, thread.id, reply_id)
             if not reply_msg:
                 reply_id = None
-        await crud.create_dm_message(db, thread.id, account.id, content.strip(), image_url.strip(), reply_to_id=reply_id)
+        msg = await crud.create_dm_message(db, thread.id, account.id, content.strip(), image_url.strip(), reply_to_id=reply_id)
+        await _emit_dm_sidebar_update(int(thread.id), int(msg.id))
     return RedirectResponse(url=f"/community/dm/{other.username}", status_code=303)
 
 
@@ -2378,6 +2623,7 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
                     "author": profile,
                 },
             )
+            await _emit_dm_sidebar_update(thread_id, int(msg.id))
 
     except WebSocketDisconnect:
         pass
@@ -2407,13 +2653,18 @@ async def presence_status_update(request: Request, db: AsyncSession = Depends(ge
 
     updated = await crud.update_presence_status(db, account.id, str(status_value))
     final_status = updated.account_status if updated else "online"
-    await realtime_channels.broadcast_presence_everywhere({
+    updated_profile = _account_payload(updated or account)
+    await account_realtime.set_profile_and_broadcast(updated_profile)
+    presence_payload = {
         "type": "presence",
-        "account_id": account.id,
+        "account_id": int(account.id),
         "online": final_status != "invisible",
         "status": final_status if final_status != "invisible" else "offline",
         "username": account.username,
-    })
+    }
+    # Keep legacy channel sockets informed while all new pages also receive the
+    # global account-socket event.
+    await realtime_channels.broadcast_presence_everywhere(presence_payload)
     return JSONResponse({"ok": True, "status": final_status})
 
 
