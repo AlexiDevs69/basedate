@@ -3,88 +3,375 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Увійти</title>
+  <meta name="color-scheme" content="dark">
+  <title>Log In // AlexiHub</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0b0b0b; --bg-elevated: #111111; --border: #222222; --border-hover: #333333;
-      --text-primary: #ffffff; --text-secondary: #888888; --radius: 8px;
-      --font-sans: 'Inter', system-ui, sans-serif;
+      --brand: #5865f2;
+      --brand-hover: #4752c4;
+      --panel: #313338;
+      --panel-deep: #2b2d31;
+      --field: #1e1f22;
+      --field-border: #111214;
+      --text: #f2f3f5;
+      --muted: #b5bac1;
+      --muted-2: #949ba4;
+      --link: #00a8fc;
+      --danger: #f23f42;
+      --radius: 5px;
+      --font: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
     body {
-      background: var(--bg); color: var(--text-primary); font-family: var(--font-sans);
-      min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem;
+      margin: 0;
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow: hidden;
+      color: var(--text);
+      font-family: var(--font);
+      background:
+        radial-gradient(circle at 18% 75%, rgba(93, 48, 208, .75), transparent 24%),
+        radial-gradient(circle at 88% 30%, rgba(61, 119, 255, .78), transparent 30%),
+        linear-gradient(120deg, #160648 0%, #271180 43%, #2767e5 100%);
     }
-    .card { width: 100%; max-width: 380px; }
-    .brand { font-weight: 700; font-size: 1.2rem; margin-bottom: 2rem; text-align: center; }
-    .form-box {
-      background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius);
-      padding: 1.75rem;
+
+    body::before,
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
     }
-    h1 { font-size: 1.15rem; font-weight: 600; margin-bottom: 1.25rem; }
+    body::before {
+      opacity: .66;
+      background-image:
+        radial-gradient(circle at 9% 38%, rgba(255,255,255,.92) 0 2px, transparent 3px),
+        radial-gradient(circle at 26% 18%, rgba(161,131,255,.9) 0 3px, transparent 4px),
+        radial-gradient(circle at 48% 27%, rgba(255,255,255,.8) 0 2px, transparent 3px),
+        radial-gradient(circle at 69% 16%, rgba(151,185,255,.8) 0 3px, transparent 4px),
+        radial-gradient(circle at 82% 70%, rgba(255,255,255,.8) 0 2px, transparent 3px),
+        radial-gradient(circle at 95% 20%, rgba(178,160,255,.95) 0 3px, transparent 4px),
+        linear-gradient(90deg, transparent 49%, rgba(255,255,255,.65) 50% 52%, transparent 53%) 18% 67% / 22px 22px no-repeat,
+        linear-gradient(transparent 49%, rgba(255,255,255,.65) 50% 52%, transparent 53%) 18% 67% / 22px 22px no-repeat,
+        linear-gradient(90deg, transparent 45%, rgba(154,178,255,.55) 46% 55%, transparent 56%) 79% 75% / 28px 28px no-repeat,
+        linear-gradient(transparent 45%, rgba(154,178,255,.55) 46% 55%, transparent 56%) 79% 75% / 28px 28px no-repeat;
+      animation: starDrift 16s ease-in-out infinite alternate;
+    }
+    body::after {
+      background:
+        radial-gradient(circle at 12% 46%, rgba(160,146,255,.24) 0 54px, rgba(89,74,190,.2) 55px 72px, transparent 74px),
+        radial-gradient(ellipse at 35% 22%, rgba(179,121,255,.2) 0 33px, transparent 35px),
+        radial-gradient(ellipse at 91% 43%, rgba(115,164,255,.18) 0 62px, transparent 64px);
+      filter: blur(.3px);
+    }
+    @keyframes starDrift {
+      from { transform: translate3d(-8px, -5px, 0); }
+      to { transform: translate3d(9px, 7px, 0); }
+    }
+
+    .brand {
+      position: fixed;
+      top: 34px;
+      left: 38px;
+      z-index: 3;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: #fff;
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: -.02em;
+      text-decoration: none;
+      text-shadow: 0 1px 12px rgba(0,0,0,.2);
+    }
+    .brand-mark {
+      width: 31px;
+      height: 25px;
+      display: grid;
+      place-items: center;
+      border-radius: 9px;
+      background: rgba(255,255,255,.96);
+      color: #4f5deb;
+      box-shadow: 0 8px 24px rgba(17,20,80,.25);
+    }
+    .brand-mark svg { width: 21px; height: 21px; display: block; }
+
+    .page {
+      position: relative;
+      z-index: 2;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: grid;
+      place-items: center;
+      padding: 84px 24px 36px;
+    }
+
+    .auth-card {
+      width: min(784px, 100%);
+      min-height: 408px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 252px;
+      gap: 46px;
+      align-items: center;
+      padding: 34px 32px;
+      border-radius: 5px;
+      background: var(--panel);
+      box-shadow: 0 18px 48px rgba(0,0,0,.42);
+    }
+
+    .form-side { min-width: 0; }
+    .heading {
+      margin: 0;
+      text-align: center;
+      font-size: 24px;
+      line-height: 1.25;
+      font-weight: 700;
+      letter-spacing: -.02em;
+    }
+    .subtitle {
+      margin: 7px 0 22px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.35;
+    }
+
     .error {
-      background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3); color: #f87171;
-      border-radius: var(--radius); padding: 0.65rem 0.9rem; font-size: 0.85rem; margin-bottom: 1.1rem;
+      margin-bottom: 18px;
+      padding: 10px 12px;
+      border: 1px solid rgba(242,63,66,.52);
+      border-radius: var(--radius);
+      background: rgba(242,63,66,.12);
+      color: #ffb6b8;
+      font-size: 13px;
+      line-height: 1.4;
     }
-    .form-group { margin-bottom: 1rem; }
-    .form-group label { display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.35rem; }
-    .form-group input {
-      width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
-      padding: 0.6rem 0.75rem; color: var(--text-primary); font-family: var(--font-sans); font-size: 0.9rem;
+
+    .form-group { margin-bottom: 18px; }
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .02em;
+      text-transform: uppercase;
     }
-    .form-group input:focus { outline: none; border-color: var(--border-hover); }
-    .btn {
-      width: 100%; background: var(--text-primary); color: var(--bg); border: none; border-radius: var(--radius);
-      padding: 0.7rem; font-weight: 600; font-size: 0.9rem; cursor: pointer; margin-top: 0.25rem;
+    .required { color: var(--danger); }
+    .form-input {
+      width: 100%;
+      height: 44px;
+      padding: 10px 12px;
+      border: 1px solid var(--field-border);
+      border-radius: 4px;
+      outline: none;
+      background: var(--field);
+      color: var(--text);
+      font: 400 16px/1.2 var(--font);
+      transition: border-color .15s ease, box-shadow .15s ease;
     }
-    .btn:hover { opacity: 0.85; }
-    .divider {
-      display: flex; align-items: center; gap: 0.75rem; margin: 1.25rem 0;
-      color: var(--text-secondary); font-size: 0.75rem; text-transform: uppercase;
+    .form-input:hover { border-color: #0b0c0e; }
+    .form-input:focus {
+      border-color: #00a8fc;
+      box-shadow: 0 0 0 1px #00a8fc;
     }
-    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-    .telegram-wrap { display: flex; justify-content: center; }
-    .switch-link { text-align: center; margin-top: 1.25rem; font-size: 0.85rem; color: var(--text-secondary); }
-    .switch-link a { color: var(--text-primary); text-decoration: none; font-weight: 600; }
+    .form-input::placeholder { color: #72767d; }
+
+    .help-link,
+    .switch-link a {
+      color: var(--link);
+      text-decoration: none;
+    }
+    .help-link:hover,
+    .switch-link a:hover { text-decoration: underline; }
+    .help-link {
+      display: inline-block;
+      margin-top: 7px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .submit-btn {
+      width: 100%;
+      height: 44px;
+      margin-top: 4px;
+      border: 0;
+      border-radius: 4px;
+      background: var(--brand);
+      color: #fff;
+      font: 600 14px/1 var(--font);
+      cursor: pointer;
+      transition: background .16s ease, transform .08s ease;
+    }
+    .submit-btn:hover { background: var(--brand-hover); }
+    .submit-btn:active { transform: translateY(1px); }
+
+    .switch-link {
+      margin-top: 11px;
+      color: var(--muted-2);
+      font-size: 13px;
+    }
+
+    .alt-side {
+      min-width: 0;
+      text-align: center;
+    }
+    .telegram-shell {
+      width: 230px;
+      min-height: 176px;
+      margin: 0 auto 22px;
+      padding: 18px 12px;
+      display: grid;
+      place-items: center;
+      border-radius: 6px;
+      background: #fff;
+      box-shadow: 0 12px 32px rgba(0,0,0,.24);
+      overflow: hidden;
+    }
+    .telegram-shell iframe { max-width: 100% !important; }
+    .alt-icon {
+      width: 82px;
+      height: 82px;
+      display: grid;
+      place-items: center;
+      border-radius: 24px;
+      background: linear-gradient(135deg, #5865f2, #8a5cf6);
+      box-shadow: 0 12px 32px rgba(88,101,242,.3);
+    }
+    .alt-icon svg { width: 45px; height: 45px; color: #fff; }
+    .alt-title {
+      margin: 0 0 8px;
+      font-size: 21px;
+      line-height: 1.18;
+      font-weight: 700;
+      letter-spacing: -.02em;
+    }
+    .alt-copy {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .alt-copy strong { color: var(--text); }
+
+    .mobile-divider {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      margin: 22px 0;
+      color: var(--muted-2);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .mobile-divider::before,
+    .mobile-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #3f4147;
+    }
+
+    @media (max-width: 760px) {
+      body { overflow-y: auto; }
+      .brand { top: 22px; left: 22px; font-size: 17px; }
+      .page { align-items: start; padding: 86px 16px 28px; }
+      .auth-card {
+        width: min(480px, 100%);
+        min-height: 0;
+        grid-template-columns: 1fr;
+        gap: 0;
+        padding: 30px 24px;
+      }
+      .mobile-divider { display: flex; }
+      .alt-side { padding-top: 0; }
+      .telegram-shell { width: 100%; min-height: 92px; margin-bottom: 16px; }
+      .alt-title { font-size: 19px; }
+    }
+
+    @media (max-width: 420px) {
+      .brand { left: 16px; }
+      .page { padding-inline: 10px; }
+      .auth-card { padding: 26px 18px; }
+      .heading { font-size: 22px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
   </style>
 </head>
 <body>
-  <div class="card">
-    <div class="brand">AlexiHub // Community</div>
-    <div class="form-box">
-      <h1>Увійти</h1>
+  <a class="brand" href="/community" aria-label="AlexiHub home">
+    <span class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M7.2 7.7c2.9-1.4 6.7-1.4 9.6 0 1.2 2 1.9 4.2 2.1 6.6-1.3 1.7-3 2.8-4.9 3.3l-.9-1.2c.8-.2 1.5-.6 2.1-1-2 .9-4.3 1.1-6.4.5-2.1-.6-3.8-2-4.8-3.9.3-1.5.8-2.9 1.6-4.3h1.6Z" fill="currentColor"/>
+        <circle cx="9.3" cy="12.1" r="1.1" fill="#fff"/>
+        <circle cx="14.7" cy="12.1" r="1.1" fill="#fff"/>
+      </svg>
+    </span>
+    <span>AlexiHub</span>
+  </a>
 
-      {% if error %}
-      <div class="error">{{ error }}</div>
-      {% endif %}
+  <main class="page">
+    <section class="auth-card" aria-labelledby="login-title">
+      <div class="form-side">
+        <h1 class="heading" id="login-title">Welcome back!</h1>
+        <p class="subtitle">We're so excited to see you again!</p>
 
-      <form method="post" action="/community/login">
-        <div class="form-group">
-          <label for="email">Email</label>
-          <input type="email" id="email" name="email" required autocomplete="email">
-        </div>
-        <div class="form-group">
-          <label for="password">Пароль</label>
-          <input type="password" id="password" name="password" required autocomplete="current-password">
-        </div>
-        <button type="submit" class="btn">Увійти</button>
-      </form>
+        {% if error %}
+        <div class="error" role="alert">{{ error }}</div>
+        {% endif %}
 
-      {% if bot_username %}
-      <div class="divider">або</div>
-      <div class="telegram-wrap">
-        <script async src="https://telegram.org/js/telegram-widget.js?22"
-                data-telegram-login="{{ bot_username }}"
-                data-size="large"
-                data-auth-url="/community/telegram-callback"
-                data-request-access="write"></script>
+        <form method="post" action="/community/login">
+          <div class="form-group">
+            <label class="form-label" for="email">Email <span class="required">*</span></label>
+            <input class="form-input" type="email" id="email" name="email" required autocomplete="email" autofocus>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="password">Password <span class="required">*</span></label>
+            <input class="form-input" type="password" id="password" name="password" required autocomplete="current-password">
+          </div>
+
+          <button class="submit-btn" type="submit">Log In</button>
+        </form>
+
+        <div class="switch-link">Need an account? <a href="/community/register">Register</a></div>
       </div>
-      {% endif %}
 
-      <div class="switch-link">Ще нема акаунту? <a href="/community/register">Зареєструватись</a></div>
-    </div>
-  </div>
+      <div class="mobile-divider">Or</div>
+
+      <aside class="alt-side" aria-label="Alternative sign in">
+        {% if bot_username %}
+        <div class="telegram-shell">
+          <script async src="https://telegram.org/js/telegram-widget.js?22"
+                  data-telegram-login="{{ bot_username }}"
+                  data-size="large"
+                  data-auth-url="/community/telegram-callback"
+                  data-request-access="write"></script>
+        </div>
+        <h2 class="alt-title">Log in with Telegram</h2>
+        <p class="alt-copy">Use your Telegram account to <strong>securely continue</strong> to AlexiHub.</p>
+        {% else %}
+        <div class="telegram-shell">
+          <div class="alt-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8Z"/>
+              <path d="M8 9h8M8 13h5"/>
+            </svg>
+          </div>
+        </div>
+        <h2 class="alt-title">One account. Every chat.</h2>
+        <p class="alt-copy">Sign in to open your messages, servers and profile.</p>
+        {% endif %}
+      </aside>
+    </section>
+  </main>
 </body>
 </html>
