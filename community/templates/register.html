@@ -3,83 +3,309 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Реєстрація</title>
+  <meta name="color-scheme" content="dark">
+  <title>Create an Account // AlexiHub</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0b0b0b; --bg-elevated: #111111; --border: #222222; --border-hover: #333333;
-      --text-primary: #ffffff; --text-secondary: #888888; --radius: 8px;
-      --font-sans: 'Inter', system-ui, sans-serif;
+      --brand: #5865f2;
+      --brand-hover: #4752c4;
+      --panel: #313338;
+      --field: #1e1f22;
+      --field-border: #111214;
+      --text: #f2f3f5;
+      --muted: #b5bac1;
+      --muted-2: #949ba4;
+      --link: #00a8fc;
+      --danger: #f23f42;
+      --font: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
     body {
-      background: var(--bg); color: var(--text-primary); font-family: var(--font-sans);
-      min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem;
+      margin: 0;
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      color: var(--text);
+      font-family: var(--font);
+      background:
+        radial-gradient(circle at 18% 75%, rgba(93, 48, 208, .75), transparent 24%),
+        radial-gradient(circle at 88% 30%, rgba(61, 119, 255, .78), transparent 30%),
+        linear-gradient(120deg, #160648 0%, #271180 43%, #2767e5 100%);
     }
-    .card { width: 100%; max-width: 380px; }
-    .brand { font-weight: 700; font-size: 1.2rem; margin-bottom: 2rem; text-align: center; }
-    .form-box {
-      background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius);
-      padding: 1.75rem;
+
+    body::before,
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
     }
-    h1 { font-size: 1.15rem; font-weight: 600; margin-bottom: 1.25rem; }
+    body::before {
+      opacity: .66;
+      background-image:
+        radial-gradient(circle at 9% 38%, rgba(255,255,255,.92) 0 2px, transparent 3px),
+        radial-gradient(circle at 26% 18%, rgba(161,131,255,.9) 0 3px, transparent 4px),
+        radial-gradient(circle at 48% 27%, rgba(255,255,255,.8) 0 2px, transparent 3px),
+        radial-gradient(circle at 69% 16%, rgba(151,185,255,.8) 0 3px, transparent 4px),
+        radial-gradient(circle at 82% 70%, rgba(255,255,255,.8) 0 2px, transparent 3px),
+        radial-gradient(circle at 95% 20%, rgba(178,160,255,.95) 0 3px, transparent 4px),
+        linear-gradient(90deg, transparent 49%, rgba(255,255,255,.65) 50% 52%, transparent 53%) 18% 67% / 22px 22px no-repeat,
+        linear-gradient(transparent 49%, rgba(255,255,255,.65) 50% 52%, transparent 53%) 18% 67% / 22px 22px no-repeat,
+        linear-gradient(90deg, transparent 45%, rgba(154,178,255,.55) 46% 55%, transparent 56%) 79% 75% / 28px 28px no-repeat,
+        linear-gradient(transparent 45%, rgba(154,178,255,.55) 46% 55%, transparent 56%) 79% 75% / 28px 28px no-repeat;
+      animation: starDrift 16s ease-in-out infinite alternate;
+    }
+    body::after {
+      background:
+        radial-gradient(circle at 12% 46%, rgba(160,146,255,.24) 0 54px, rgba(89,74,190,.2) 55px 72px, transparent 74px),
+        radial-gradient(ellipse at 35% 22%, rgba(179,121,255,.2) 0 33px, transparent 35px),
+        radial-gradient(ellipse at 91% 43%, rgba(115,164,255,.18) 0 62px, transparent 64px);
+    }
+    @keyframes starDrift {
+      from { transform: translate3d(-8px, -5px, 0); }
+      to { transform: translate3d(9px, 7px, 0); }
+    }
+
+    .brand {
+      position: fixed;
+      top: 34px;
+      left: 38px;
+      z-index: 3;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: #fff;
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: -.02em;
+      text-decoration: none;
+      text-shadow: 0 1px 12px rgba(0,0,0,.2);
+    }
+    .brand-mark {
+      width: 31px;
+      height: 25px;
+      display: grid;
+      place-items: center;
+      border-radius: 9px;
+      background: rgba(255,255,255,.96);
+      color: #4f5deb;
+      box-shadow: 0 8px 24px rgba(17,20,80,.25);
+    }
+    .brand-mark svg { width: 21px; height: 21px; display: block; }
+
+    .page {
+      position: relative;
+      z-index: 2;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: grid;
+      place-items: center;
+      padding: 88px 20px 34px;
+    }
+
+    .auth-card {
+      width: min(480px, 100%);
+      padding: 32px;
+      border-radius: 5px;
+      background: var(--panel);
+      box-shadow: 0 18px 48px rgba(0,0,0,.42);
+    }
+
+    .heading {
+      margin: 0 0 26px;
+      text-align: center;
+      font-size: 24px;
+      line-height: 1.25;
+      font-weight: 700;
+      letter-spacing: -.02em;
+    }
+
     .error {
-      background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.3); color: #f87171;
-      border-radius: var(--radius); padding: 0.65rem 0.9rem; font-size: 0.85rem; margin-bottom: 1.1rem;
+      margin-bottom: 18px;
+      padding: 10px 12px;
+      border: 1px solid rgba(242,63,66,.52);
+      border-radius: 4px;
+      background: rgba(242,63,66,.12);
+      color: #ffb6b8;
+      font-size: 13px;
+      line-height: 1.4;
     }
-    .form-group { margin-bottom: 1rem; }
-    .form-group label { display: block; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.35rem; }
-    .form-group input {
-      width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
-      padding: 0.6rem 0.75rem; color: var(--text-primary); font-family: var(--font-sans); font-size: 0.9rem;
+
+    .form-group { margin-bottom: 18px; }
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .02em;
+      text-transform: uppercase;
     }
-    .form-group input:focus { outline: none; border-color: var(--border-hover); }
-    .form-hint { font-size: 0.72rem; color: #555; margin-top: 0.3rem; }
-    .btn {
-      width: 100%; background: var(--text-primary); color: var(--bg); border: none; border-radius: var(--radius);
-      padding: 0.7rem; font-weight: 600; font-size: 0.9rem; cursor: pointer; margin-top: 0.25rem;
+    .required { color: var(--danger); }
+    .form-input {
+      width: 100%;
+      height: 44px;
+      padding: 10px 12px;
+      border: 1px solid var(--field-border);
+      border-radius: 4px;
+      outline: none;
+      background: var(--field);
+      color: var(--text);
+      font: 400 16px/1.2 var(--font);
+      transition: border-color .15s ease, box-shadow .15s ease;
     }
-    .btn:hover { opacity: 0.85; }
+    .form-input:hover { border-color: #0b0c0e; }
+    .form-input:focus {
+      border-color: #00a8fc;
+      box-shadow: 0 0 0 1px #00a8fc;
+    }
+    .form-input::placeholder { color: #72767d; }
+
+    .form-hint {
+      margin: 6px 0 0;
+      color: var(--muted-2);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .compat-note {
+      margin: -3px 0 18px;
+      padding: 10px 12px;
+      border: 1px solid #41434a;
+      border-radius: 4px;
+      background: rgba(30,31,34,.55);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    .compat-note strong { color: var(--text); }
+
+    .terms {
+      margin: 2px 0 18px;
+      color: var(--muted-2);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    .terms a,
+    .switch-link a {
+      color: var(--link);
+      text-decoration: none;
+    }
+    .terms a:hover,
+    .switch-link a:hover { text-decoration: underline; }
+
+    .submit-btn {
+      width: 100%;
+      height: 44px;
+      border: 0;
+      border-radius: 4px;
+      background: var(--brand);
+      color: #fff;
+      font: 600 14px/1 var(--font);
+      cursor: pointer;
+      transition: background .16s ease, transform .08s ease;
+    }
+    .submit-btn:hover { background: var(--brand-hover); }
+    .submit-btn:active { transform: translateY(1px); }
+
+    .switch-link {
+      margin-top: 12px;
+      color: var(--muted-2);
+      font-size: 13px;
+    }
+
     .divider {
-      display: flex; align-items: center; gap: 0.75rem; margin: 1.25rem 0;
-      color: var(--text-secondary); font-size: 0.75rem; text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 22px 0 17px;
+      color: var(--muted-2);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
     }
-    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-    .telegram-wrap { display: flex; justify-content: center; }
-    .switch-link { text-align: center; margin-top: 1.25rem; font-size: 0.85rem; color: var(--text-secondary); }
-    .switch-link a { color: var(--text-primary); text-decoration: none; font-weight: 600; }
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #3f4147;
+    }
+    .telegram-wrap {
+      display: flex;
+      justify-content: center;
+      min-height: 40px;
+    }
+
+    @media (max-width: 560px) {
+      .brand { top: 22px; left: 22px; font-size: 17px; }
+      .page { align-items: start; padding: 84px 12px 24px; }
+      .auth-card { padding: 28px 22px; }
+    }
+
+    @media (max-width: 390px) {
+      .brand { left: 16px; }
+      .page { padding-inline: 8px; }
+      .auth-card { padding: 25px 17px; }
+      .heading { font-size: 22px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
   </style>
 </head>
 <body>
-  <div class="card">
-    <div class="brand">AlexiHub // Community</div>
-    <div class="form-box">
-      <h1>Створити акаунт</h1>
+  <a class="brand" href="/community" aria-label="AlexiHub home">
+    <span class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M7.2 7.7c2.9-1.4 6.7-1.4 9.6 0 1.2 2 1.9 4.2 2.1 6.6-1.3 1.7-3 2.8-4.9 3.3l-.9-1.2c.8-.2 1.5-.6 2.1-1-2 .9-4.3 1.1-6.4.5-2.1-.6-3.8-2-4.8-3.9.3-1.5.8-2.9 1.6-4.3h1.6Z" fill="currentColor"/>
+        <circle cx="9.3" cy="12.1" r="1.1" fill="#fff"/>
+        <circle cx="14.7" cy="12.1" r="1.1" fill="#fff"/>
+      </svg>
+    </span>
+    <span>AlexiHub</span>
+  </a>
+
+  <main class="page">
+    <section class="auth-card" aria-labelledby="register-title">
+      <h1 class="heading" id="register-title">Create an account</h1>
 
       {% if error %}
-      <div class="error">{{ error }}</div>
+      <div class="error" role="alert">{{ error }}</div>
       {% endif %}
 
       <form method="post" action="/community/register">
         <div class="form-group">
-          <label for="username">Юзернейм</label>
-          <input type="text" id="username" name="username" required minlength="2" maxlength="32" pattern="[a-zA-Z0-9_]+">
-          <div class="form-hint">Латиниця, цифри, підкреслення. Це буде твоя адреса профілю.</div>
+          <label class="form-label" for="email">Email <span class="required">*</span></label>
+          <input class="form-input" type="email" id="email" name="email" required autocomplete="email" autofocus>
         </div>
+
         <div class="form-group">
-          <label for="email">Email</label>
-          <input type="email" id="email" name="email" required autocomplete="email">
+          <label class="form-label" for="username">Username <span class="required">*</span></label>
+          <input class="form-input" type="text" id="username" name="username" required minlength="2" maxlength="32" pattern="[a-zA-Z0-9_]+" autocomplete="username">
+          <p class="form-hint">Use Latin letters, numbers and underscores. This remains your unique profile address.</p>
         </div>
+
         <div class="form-group">
-          <label for="password">Пароль</label>
-          <input type="password" id="password" name="password" required minlength="6" autocomplete="new-password">
+          <label class="form-label" for="password">Password <span class="required">*</span></label>
+          <input class="form-input" type="password" id="password" name="password" required minlength="6" autocomplete="new-password">
         </div>
-        <button type="submit" class="btn">Зареєструватись</button>
+
+        <p class="terms">By registering, you agree to the AlexiHub community rules and privacy policy.</p>
+
+        <button class="submit-btn" type="submit">Continue</button>
       </form>
 
+      <div class="switch-link">Already have an account? <a href="/community/login">Log In</a></div>
+
       {% if bot_username %}
-      <div class="divider">або</div>
+      <div class="divider">Or</div>
       <div class="telegram-wrap">
         <script async src="https://telegram.org/js/telegram-widget.js?22"
                 data-telegram-login="{{ bot_username }}"
@@ -88,9 +314,7 @@
                 data-request-access="write"></script>
       </div>
       {% endif %}
-
-      <div class="switch-link">Вже є акаунт? <a href="/community/login">Увійти</a></div>
-    </div>
-  </div>
+    </section>
+  </main>
 </body>
 </html>
