@@ -2298,6 +2298,7 @@ function openChannelInviteModal(event, btn) {
         if (data.type === 'presence') updateMemberPresence(data.account_id, data.status, data.online);
         if (data.type === 'pin_add' && data.pin && window.__serverPinsApi) window.__serverPinsApi.upsertServerPin(data.pin);
         if (data.type === 'pin_remove' && window.__serverPinsApi) window.__serverPinsApi.removeServerPin(data.message_id);
+        if (data.type === 'reaction_update' && window.AlexiHubReactions) window.AlexiHubReactions.handleRealtime(data.message_id);
       });
       socket.addEventListener('close', function () {
         setWsStatus('offline', 'reconnecting');
@@ -4946,6 +4947,177 @@ body .composer-wrap{
   document.addEventListener('focusout',function(e){if(e.target.closest&&e.target.closest('.ah-gifter-profile-badge'))hide()});
   window.addEventListener('scroll',function(){if(current)place(current)},true);
   window.addEventListener('resize',function(){if(current)place(current)});
+})();
+</script>
+
+
+<style id="ah-message-reactions-css">
+.ah-reaction-action{
+  width:34px!important;height:32px!important;padding:0!important;display:grid!important;place-items:center!important;
+}
+.ah-reaction-action svg{width:18px;height:18px;display:block}
+.ah-reactions{display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin-top:7px;min-height:0}
+.ah-reactions:empty{display:none}
+.ah-reaction-chip,.ah-reaction-add{
+  height:28px;border:1px solid #3f4149;border-radius:8px;background:#2b2d31;color:#dbdee1;
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 8px;cursor:pointer;
+  font:700 12px/1 var(--font,Inter,system-ui,sans-serif);transition:.12s ease;position:relative;
+}
+.ah-reaction-chip:hover,.ah-reaction-add:hover{background:#35373c;border-color:#565861}
+.ah-reaction-chip.mine{background:rgba(88,101,242,.18);border-color:#5865f2;color:#fff}
+.ah-reaction-chip .ah-reaction-emoji{font-size:17px;line-height:1;display:grid;place-items:center}
+.ah-reaction-chip img{width:19px;height:19px;object-fit:contain;display:block}
+.ah-reaction-chip .ah-reaction-count{font-size:12px;min-width:7px;text-align:center}
+.ah-reaction-add{width:29px;padding:0;color:#b5bac1}
+.ah-reaction-add svg{width:17px;height:17px}
+.ah-reaction-picker{
+  position:fixed;z-index:50000;width:min(430px,calc(100vw - 24px));max-height:min(480px,calc(100vh - 24px));
+  display:none;flex-direction:column;background:#232428;border:1px solid #3b3d45;border-radius:12px;
+  box-shadow:0 22px 70px rgba(0,0,0,.58);overflow:hidden;color:#f2f3f5;
+}
+.ah-reaction-picker.open{display:flex;animation:ahReactionPop .12s ease-out}
+@keyframes ahReactionPop{from{opacity:0;transform:translateY(5px) scale(.985)}to{opacity:1;transform:none}}
+.ah-reaction-picker-head{padding:12px;border-bottom:1px solid #34363d;background:#2b2d31}
+.ah-reaction-search{height:36px;width:100%;border:1px solid #4c4f59;border-radius:7px;background:#1e1f22;color:#f2f3f5;padding:0 12px;outline:none;font-weight:650}
+.ah-reaction-search:focus{border-color:#5865f2;box-shadow:0 0 0 1px #5865f2}
+.ah-reaction-scroll{overflow:auto;padding:10px 10px 13px;min-height:180px}
+.ah-reaction-section{margin-bottom:13px}.ah-reaction-section:last-child{margin-bottom:0}
+.ah-reaction-section-title{display:flex;align-items:center;gap:8px;color:#b5bac1;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.04em;margin:0 2px 7px}
+.ah-reaction-server-icon{width:18px;height:18px;border-radius:50%;background:#3a3c44 center/cover no-repeat;display:grid;place-items:center;font-size:8px;flex:0 0 auto}
+.ah-reaction-grid{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:3px}
+.ah-reaction-option{height:38px;border:0;border-radius:7px;background:transparent;color:#fff;display:grid;place-items:center;cursor:pointer;position:relative;padding:4px}
+.ah-reaction-option:hover{background:#35373c}
+.ah-reaction-option.unicode{font-size:25px}
+.ah-reaction-option img{max-width:30px;max-height:30px;width:100%;height:100%;object-fit:contain}
+.ah-reaction-option.locked{opacity:.34;filter:grayscale(.25)}
+.ah-reaction-option.locked::after{content:'🔒';position:absolute;right:1px;bottom:0;font-size:10px;filter:none}
+.ah-reaction-nitro-note{font-size:11px;color:#949ba4;margin:5px 2px 8px;line-height:1.35}
+.ah-reaction-empty{padding:34px 10px;color:#949ba4;font-weight:800;text-align:center}
+.ah-reaction-tooltip{
+  position:fixed;z-index:50010;display:none;align-items:center;gap:11px;max-width:330px;min-height:62px;
+  padding:10px 13px;background:#1e1f22;color:#f2f3f5;border:1px solid #3b3d45;border-radius:8px;
+  box-shadow:0 16px 45px rgba(0,0,0,.55);pointer-events:none;font-size:12px;line-height:1.35;
+}
+.ah-reaction-tooltip.show{display:flex}
+.ah-reaction-tooltip .icon{width:38px;height:38px;display:grid;place-items:center;font-size:31px;flex:0 0 auto}
+.ah-reaction-tooltip .icon img{width:38px;height:38px;object-fit:contain}
+.ah-reaction-tooltip b{font-weight:900;color:#fff}
+@media(max-width:760px){.ah-reaction-grid{grid-template-columns:repeat(7,minmax(0,1fr))}.ah-reaction-picker{width:calc(100vw - 16px)}}
+</style>
+
+<script id="ah-message-reactions-js">
+(function(){
+  'use strict';
+  if(window.AlexiHubReactions && window.AlexiHubReactions.version>=1)return;
+  const cfg={context:'server',serverId:{{ server.id }},channelId:{{ channel.id }},currentUserId:{{ account.id }}};
+  const standard=[
+    ['❤️','heart'],['💛','yellow heart'],['💚','green heart'],['💙','blue heart'],['💜','purple heart'],['🩷','pink heart'],['🖤','black heart'],['🤍','white heart'],
+    ['👍','thumbs up'],['👎','thumbs down'],['👏','clap'],['🙏','pray'],['💯','100'],['🔥','fire'],['⭐','star'],['✨','sparkles'],
+    ['😂','joy'],['🤣','rofl'],['😭','cry'],['🥹','tears'],['😍','heart eyes'],['🥰','love'],['😎','cool'],['🤔','thinking'],
+    ['😡','angry'],['🤯','mind blown'],['😱','scream'],['😴','sleep'],['🤡','clown'],['💀','skull'],['👀','eyes'],['🫡','salute'],
+    ['✅','check'],['❌','cross'],['🎉','party'],['🎄','tree'],['🎁','gift'],['💩','poop'],['🫶','heart hands'],['🤝','handshake'],
+    ['🇺🇦','ukraine'],['🗿','moai'],['🐸','frog'],['🫠','melt'],['😈','devil'],['🥳','celebrate'],['💔','broken heart']
+  ];
+  let library={ok:false,nitro:false,emojis:[]};
+  let activeMessageId=0;
+  let activeAnchor=null;
+  let picker=null;
+  let tooltip=null;
+  const state=new Map();
+
+  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
+  function toast(msg){if(typeof window.showActionToast==='function')window.showActionToast(msg);else console.warn(msg);}
+  function rowFor(id){return document.querySelector((cfg.context==='dm'?'#dm-message-':'#message-')+CSS.escape(String(id)));}
+  function messageId(row){return Number(row && (row.dataset.messageId||row.dataset.id)||0);}
+  function actionBox(row){return row&&row.querySelector(cfg.context==='dm'?'.msg-actions':'.message-actions');}
+  function messageBody(row){return row&&row.querySelector(cfg.context==='dm'?'.msg-body':'.message-body');}
+  function smileSvg(){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14s1.3 1.8 3.5 1.8 3.5-1.8 3.5-1.8"/><path d="M9 9h.01M15 9h.01"/></svg>';}
+
+  function ensureAction(row){
+    const box=actionBox(row);if(!box||box.querySelector('.ah-reaction-action'))return;
+    const b=document.createElement('button');b.type='button';b.className='ah-reaction-action';b.title='Добавить реакцию';b.setAttribute('aria-label','Добавить реакцию');b.innerHTML=smileSvg();
+    b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();openPicker(b,messageId(row));});
+    box.insertBefore(b,box.firstChild);
+  }
+  function ensureBar(row){
+    const body=messageBody(row);if(!body)return null;
+    let bar=body.querySelector(':scope > .ah-reactions');
+    if(!bar){bar=document.createElement('div');bar.className='ah-reactions';const edit=body.querySelector(cfg.context==='dm'?'.dm-edit-form':'.edit-form');if(edit)body.insertBefore(bar,edit);else body.appendChild(bar);}
+    return bar;
+  }
+  function install(root){
+    (root||document).querySelectorAll(cfg.context==='dm'?'.msg[data-message-id],.msg[data-id]':'.message[data-message-id]').forEach(row=>{ensureAction(row);ensureBar(row);});
+  }
+
+  function iconHtml(item){return item.kind==='custom'?'<img src="'+esc(item.image_url)+'" alt=":'+esc(item.name)+':">':'<span>'+esc(item.value||item.name)+'</span>';}
+  function tooltipText(item){
+    const names=(item.users||[]).map(u=>u.username).filter(Boolean);
+    const shown=names.slice(0,3).map(esc).join(', ')+(names.length>3?' и ещё '+(names.length-3):'');
+    const reaction=item.kind==='custom'?':'+esc(item.name)+':':esc(item.value||item.name);
+    return '<div><b>'+shown+'</b> '+(names.length===1?'добавляет':'добавили')+' реакцию '+reaction+'</div>';
+  }
+  function ensureTooltip(){if(tooltip)return tooltip;tooltip=document.createElement('div');tooltip.className='ah-reaction-tooltip';tooltip.innerHTML='<div class="icon"></div><div class="copy"></div>';document.body.appendChild(tooltip);return tooltip;}
+  function showTooltip(chip,item){
+    const t=ensureTooltip();t.querySelector('.icon').innerHTML=iconHtml(item);t.querySelector('.copy').innerHTML=tooltipText(item);t.classList.add('show');
+    const r=chip.getBoundingClientRect();const tr=t.getBoundingClientRect();let left=r.left;let top=r.top-tr.height-8;if(top<8)top=r.bottom+8;if(left+tr.width>innerWidth-8)left=innerWidth-tr.width-8;t.style.left=Math.max(8,left)+'px';t.style.top=Math.max(8,top)+'px';
+  }
+  function hideTooltip(){if(tooltip)tooltip.classList.remove('show');}
+
+  function renderBar(id,reactions){
+    id=Number(id);state.set(id,Array.isArray(reactions)?reactions:[]);const row=rowFor(id);if(!row)return;const bar=ensureBar(row);if(!bar)return;bar.innerHTML='';
+    (reactions||[]).forEach(item=>{
+      const b=document.createElement('button');b.type='button';b.className='ah-reaction-chip'+(item.me?' mine':'');b.dataset.key=item.key||'';b.innerHTML='<span class="ah-reaction-emoji">'+iconHtml(item)+'</span><span class="ah-reaction-count">'+Number(item.count||0)+'</span>';
+      b.addEventListener('click',()=>toggle(id,item));b.addEventListener('mouseenter',()=>showTooltip(b,item));b.addEventListener('mouseleave',hideTooltip);bar.appendChild(b);
+    });
+    if((reactions||[]).length){const add=document.createElement('button');add.type='button';add.className='ah-reaction-add';add.title='Добавить реакцию';add.innerHTML=smileSvg();add.addEventListener('click',e=>{e.stopPropagation();openPicker(add,id)});bar.appendChild(add);}
+  }
+
+  function listUrl(ids){
+    const q='?message_ids='+encodeURIComponent(ids.join(','));
+    return cfg.context==='dm'?'/community/api/dm/'+encodeURIComponent(cfg.otherUsername)+'/reactions'+q:'/community/api/servers/'+cfg.serverId+'/channel/'+cfg.channelId+'/reactions'+q;
+  }
+  function toggleUrl(id){return cfg.context==='dm'?'/community/api/dm/'+encodeURIComponent(cfg.otherUsername)+'/messages/'+id+'/reactions/toggle':'/community/api/servers/'+cfg.serverId+'/channel/'+cfg.channelId+'/messages/'+id+'/reactions/toggle';}
+  function libraryUrl(){return '/community/api/media/library?context='+encodeURIComponent(cfg.context)+(cfg.context==='server'?'&server_id='+encodeURIComponent(cfg.serverId):'');}
+
+  async function loadAll(){
+    install(document);const ids=Array.from(document.querySelectorAll(cfg.context==='dm'?'.msg[data-message-id],.msg[data-id]':'.message[data-message-id]')).map(messageId).filter(Boolean);if(!ids.length)return;
+    try{const r=await fetch(listUrl(ids),{credentials:'same-origin'});const data=await r.json();if(data&&data.ok){ids.forEach(id=>renderBar(id,(data.reactions||{})[String(id)]||[]));}}catch(e){}
+  }
+  async function loadOne(id){id=Number(id);if(!id)return;try{const r=await fetch(listUrl([id]),{credentials:'same-origin'});const data=await r.json();if(data&&data.ok)renderBar(id,(data.reactions||{})[String(id)]||[]);}catch(e){}}
+  async function loadLibrary(){try{const r=await fetch(libraryUrl(),{credentials:'same-origin'});const data=await r.json();if(data&&data.ok)library=data;}catch(e){library={ok:false,nitro:false,emojis:[]};}}
+  async function toggle(id,item){
+    hideTooltip();const body=item.kind==='custom'?{kind:'custom',custom_emoji_id:Number(item.custom_emoji_id||item.id)}:{kind:'unicode',value:item.value||item.name};
+    try{const r=await fetch(toggleUrl(id),{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const data=await r.json();if(!data.ok){toast(data.error==='nitro_required'?'Потрібен активний Nitro, щоб ставити емоджі з іншого сервера.':'Не вдалося поставити реакцію.');return;}renderBar(id,data.reactions||[]);}catch(e){toast('Помилка мережі.');}
+  }
+
+  function ensurePicker(){
+    if(picker)return picker;picker=document.createElement('div');picker.className='ah-reaction-picker';picker.id='ah-reaction-picker';picker.innerHTML='<div class="ah-reaction-picker-head"><input class="ah-reaction-search" placeholder="Найдите идеальную реакцию"></div><div class="ah-reaction-scroll"></div>';document.body.appendChild(picker);
+    picker.querySelector('.ah-reaction-search').addEventListener('input',renderPicker);return picker;
+  }
+  function customGroups(items){const map=new Map();items.forEach(i=>{const key=String(i.server_id||0);if(!map.has(key))map.set(key,{name:i.server_name||'Сервер',icon:i.server_icon_url||'',items:[]});map.get(key).items.push(i)});return Array.from(map.values());}
+  function optionButton(item){
+    if(item.kind==='unicode')return '<button type="button" class="ah-reaction-option unicode" data-kind="unicode" data-value="'+esc(item.value)+'" title="'+esc(item.name)+'">'+esc(item.value)+'</button>';
+    return '<button type="button" class="ah-reaction-option custom '+(item.allowed?'':'locked')+'" data-kind="custom" data-id="'+Number(item.id)+'" data-allowed="'+(item.allowed?'1':'0')+'" title=":'+esc(item.name)+':"><img src="'+esc(item.image_url)+'" alt=":'+esc(item.name)+':"></button>';
+  }
+  function renderPicker(){
+    const p=ensurePicker();const q=(p.querySelector('.ah-reaction-search').value||'').toLowerCase().trim();const scroll=p.querySelector('.ah-reaction-scroll');
+    const basic=standard.filter(x=>!q||x[0].includes(q)||x[1].includes(q)).map(x=>({kind:'unicode',value:x[0],name:x[1]}));
+    const custom=(library.emojis||[]).filter(x=>!q||String(x.name||'').toLowerCase().includes(q));let html='';
+    if(basic.length)html+='<section class="ah-reaction-section"><div class="ah-reaction-section-title">Часто используемые</div><div class="ah-reaction-grid">'+basic.map(optionButton).join('')+'</div></section>';
+    customGroups(custom).forEach(g=>{const locked=g.items.some(x=>!x.allowed);html+='<section class="ah-reaction-section"><div class="ah-reaction-section-title"><span class="ah-reaction-server-icon" '+(g.icon?'style="background-image:url(\''+esc(g.icon)+'\')"':'')+'>'+(g.icon?'':esc(g.name.slice(0,2).toUpperCase()))+'</span><span>'+esc(g.name)+'</span></div>'+(locked?'<div class="ah-reaction-nitro-note">Емоджі цього сервера доступні тут лише з Nitro.</div>':'')+'<div class="ah-reaction-grid">'+g.items.map(x=>optionButton({...x,kind:'custom'})).join('')+'</div></section>';});
+    if(!html)html='<div class="ah-reaction-empty">Нічого не знайдено</div>';scroll.innerHTML=html;
+    scroll.querySelectorAll('.ah-reaction-option').forEach(btn=>btn.addEventListener('click',()=>{if(btn.dataset.kind==='custom'&&btn.dataset.allowed!=='1'){toast('Потрібен активний Nitro, щоб ставити емоджі з іншого сервера.');return;}const item=btn.dataset.kind==='custom'?{kind:'custom',custom_emoji_id:Number(btn.dataset.id),id:Number(btn.dataset.id)}:{kind:'unicode',value:btn.dataset.value,name:btn.dataset.value};toggle(activeMessageId,item);closePicker();}));
+  }
+  function positionPicker(anchor){const p=ensurePicker();const r=anchor.getBoundingClientRect();const w=Math.min(430,innerWidth-24);p.style.width=w+'px';p.classList.add('open');const h=Math.min(p.scrollHeight||440,innerHeight-24);let left=Math.min(Math.max(8,r.right-w),innerWidth-w-8);let top=r.bottom+8;if(top+h>innerHeight-8)top=Math.max(8,r.top-h-8);p.style.left=left+'px';p.style.top=top+'px';}
+  async function openPicker(anchor,id){activeMessageId=Number(id);activeAnchor=anchor;const p=ensurePicker();p.querySelector('.ah-reaction-search').value='';if(!library.ok)await loadLibrary();renderPicker();positionPicker(anchor);setTimeout(()=>p.querySelector('.ah-reaction-search').focus(),20);}
+  function closePicker(){if(picker)picker.classList.remove('open');activeMessageId=0;activeAnchor=null;}
+
+  document.addEventListener('click',e=>{if(picker&&picker.classList.contains('open')&&!picker.contains(e.target)&&!(activeAnchor&&activeAnchor.contains(e.target)))closePicker();},true);
+  window.addEventListener('resize',closePicker);
+  const observer=new MutationObserver(muts=>{let changed=false;muts.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType===1){install(n);changed=true;}}));if(changed)setTimeout(()=>install(document),20);});observer.observe(document.body,{childList:true,subtree:true});
+  window.AlexiHubReactions={version:1,applyUpdate:renderBar,handleRealtime:loadOne,reload:loadAll,open:openPicker,close:closePicker};
+  document.addEventListener('DOMContentLoaded',()=>{install(document);loadLibrary();setTimeout(loadAll,120);});
+  if(document.readyState!=='loading'){install(document);loadLibrary();setTimeout(loadAll,120);}
 })();
 </script>
 
