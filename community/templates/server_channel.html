@@ -4819,5 +4819,229 @@ if (typeof window.openSelfProfileSettings !== 'function') {
 })();
 </script>
 
+
+
+<!-- AH server composer position rollback fix -->
+<style id="ah-server-composer-position-rollback-fix">
+body form.composer-wrap,
+body .composer-wrap{
+  position:fixed!important;
+  left:calc(var(--rail) + var(--sidebar))!important;
+  right:var(--members)!important;
+  bottom:0!important;
+  top:auto!important;
+  z-index:35!important;
+  width:auto!important;
+  max-width:none!important;
+  transform:none!important;
+}
+@media(max-width:1100px){
+  body form.composer-wrap,
+  body .composer-wrap{
+    right:0!important;
+  }
+}
+@media(max-width:820px){
+  body form.composer-wrap,
+  body .composer-wrap{
+    left:var(--rail)!important;
+    right:0!important;
+  }
+}
+</style>
+
+
+<!-- AH media final hardfix: correct composer target + keep emoji content -->
+<style id="ah-media-final-target-fix-css">
+#ah-media-picker{
+  position:fixed!important;
+  z-index:2147483600!important;
+}
+#ah-media-picker.open{
+  display:block!important;
+}
+.ah-custom-emoji{
+  width:1.55em!important;
+  height:1.55em!important;
+  min-width:1.55em!important;
+  object-fit:contain!important;
+  vertical-align:-.35em!important;
+  display:inline-block!important;
+}
+.ah-sticker-message .msg-img,
+.ah-sticker-message .message-image,
+.ah-sticker-img{
+  max-width:220px!important;
+  max-height:220px!important;
+  width:auto!important;
+  height:auto!important;
+  object-fit:contain!important;
+  background:transparent!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+}
+</style>
+<script id="ah-media-final-target-fix-js">
+(function(){
+  if(window.__ahMediaFinalTargetFix) return;
+  window.__ahMediaFinalTargetFix = true;
+
+  function esc(s){
+    return String(s ?? '').replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  function cleanName(s){
+    return String(s || 'emoji')
+      .trim()
+      .replace(/^:+|:+$/g, '')
+      .replace(/[^a-zA-Z0-9_а-яА-ЯіїєґІЇЄҐ-]/g, '_')
+      .slice(0, 64) || 'emoji';
+  }
+
+  function picker(){ return document.getElementById('ah-media-picker'); }
+
+  function closePicker(){
+    try{
+      if(window.AlexiHubMediaPicker && typeof window.AlexiHubMediaPicker.close === 'function'){
+        window.AlexiHubMediaPicker.close();
+        return;
+      }
+    }catch(e){}
+    const p = picker();
+    if(p) p.classList.remove('open');
+  }
+
+  function showFooter(html){
+    const p = picker();
+    const footer = p && p.querySelector('.ah-media-footer');
+    if(footer) footer.innerHTML = html;
+  }
+
+  function getActiveMessageTextarea(){
+    const active = document.activeElement;
+    if(active && active.tagName === 'TEXTAREA'){
+      if(active.closest('#dm-form') || active.closest('form.composer-wrap') || active.closest('#composer-form')) return active;
+    }
+    return document.querySelector('#dm-form textarea[name="content"]') ||
+           document.querySelector('#composer-form textarea[name="content"]') ||
+           document.querySelector('form.composer-wrap textarea[name="content"]') ||
+           document.getElementById('composer-textarea') ||
+           document.getElementById('content');
+  }
+
+  function insertAtCursor(textarea, text){
+    if(!textarea) return;
+    const value = textarea.value || '';
+    const start = typeof textarea.selectionStart === 'number' ? textarea.selectionStart : value.length;
+    const end = typeof textarea.selectionEnd === 'number' ? textarea.selectionEnd : value.length;
+    const before = value.slice(0, start);
+    const after = value.slice(end);
+    let insert = text;
+    if(before && !/\s$/.test(before)) insert = ' ' + insert;
+    if(after && !/^\s/.test(after)) insert = insert + ' ';
+    textarea.value = before + insert + after;
+    const pos = (before + insert).length;
+    textarea.focus();
+    try{ textarea.setSelectionRange(pos, pos); }catch(e){}
+    textarea.dispatchEvent(new Event('input', {bubbles:true}));
+    textarea.dispatchEvent(new Event('change', {bubbles:true}));
+  }
+
+  function getImageInputForTextarea(textarea){
+    const form = textarea && textarea.closest('form');
+    return (form && form.querySelector('input[name="image_url"]')) ||
+           document.getElementById('composer-image-url') ||
+           document.getElementById('image_url') ||
+           document.querySelector('input[name="image_url"]');
+  }
+
+  function submitComposerForTextarea(textarea){
+    const form = textarea && textarea.closest('form');
+    if(!form) return;
+    if(form.requestSubmit) form.requestSubmit();
+    else form.dispatchEvent(new Event('submit', {bubbles:true, cancelable:true}));
+  }
+
+  function positionPickerAboveComposer(){
+    const p = picker();
+    if(!p || !p.classList.contains('open')) return;
+    const forms = [
+      document.getElementById('dm-form'),
+      document.getElementById('composer-form'),
+      document.querySelector('form.composer-wrap'),
+      document.querySelector('.composer-wrap'),
+      document.querySelector('.chat-composer'),
+      document.querySelector('.composer')
+    ].filter(Boolean);
+    let rect = null;
+    for(const el of forms){
+      const r = el.getBoundingClientRect();
+      if(r.width > 0 && r.height > 0 && r.bottom > 0){ rect = r; break; }
+    }
+    if(rect){
+      const bottom = Math.max(68, Math.min(window.innerHeight - 60, window.innerHeight - rect.top + 12));
+      p.style.bottom = bottom + 'px';
+      p.style.top = 'auto';
+    }
+    p.style.zIndex = '2147483600';
+  }
+
+  function clickMediaItem(e){
+    const btn = e.target && e.target.closest ? e.target.closest('.ah-media-item') : null;
+    if(!btn || !btn.closest('#ah-media-picker')) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+    if(e.stopImmediatePropagation) e.stopImmediatePropagation();
+
+    if(btn.classList.contains('locked')){
+      showFooter('<svg class="ah-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg><span>Для ЛС або іншого сервера потрібен Nitro</span>');
+      return;
+    }
+
+    const type = btn.dataset.type || '';
+    const id = btn.dataset.id || '';
+    const title = btn.getAttribute('title') || btn.dataset.name || 'emoji';
+    const img = btn.querySelector('img');
+    const imageUrl = (img && img.getAttribute('src')) || '';
+    const textarea = getActiveMessageTextarea();
+    if(!textarea) return;
+
+    if(type === 'sticker'){
+      textarea.value = '[[ah:sticker:' + String(id) + ']]';
+      const imageInput = getImageInputForTextarea(textarea);
+      if(imageInput && imageUrl) imageInput.value = imageUrl;
+      textarea.dispatchEvent(new Event('input', {bubbles:true}));
+      closePicker();
+      submitComposerForTextarea(textarea);
+      return;
+    }
+
+    const token = ':' + cleanName(title) + ':';
+    insertAtCursor(textarea, token + ' ');
+    closePicker();
+  }
+
+  document.addEventListener('click', clickMediaItem, true);
+  document.addEventListener('click', function(e){
+    if(e.target && e.target.closest && e.target.closest('.composer-icon-btn,.ah-media-inline-icon-btn,.ah-composer-emoji-btn,.dm-emoji-btn,.dm-sticker-btn')){
+      setTimeout(positionPickerAboveComposer, 0);
+      setTimeout(positionPickerAboveComposer, 120);
+      setTimeout(positionPickerAboveComposer, 350);
+    }
+  }, true);
+  window.addEventListener('resize', positionPickerAboveComposer);
+  window.addEventListener('scroll', positionPickerAboveComposer, true);
+
+  const observer = new MutationObserver(function(){
+    setTimeout(positionPickerAboveComposer, 0);
+    if(window.__ahForceCustomMediaRender) setTimeout(function(){ window.__ahForceCustomMediaRender(document); }, 80);
+  });
+  if(document.documentElement) observer.observe(document.documentElement, {childList:true, subtree:true});
+})();
+</script>
+
 </body>
 </html>
