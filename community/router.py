@@ -244,6 +244,7 @@ async def community_schema_startup() -> None:
         await crud.ensure_account_visual_columns(db)
         await _ensure_server_visual_columns(db)
         await crud.ensure_reaction_tables(db)
+        await crud.ensure_mention_table(db)
 
 
 # --- Lightweight realtime layer --------------------------------------------
@@ -280,6 +281,10 @@ class RealtimeChannelManager:
                 if not self.typing[key]:
                     self.typing.pop(key, None)
         await self.broadcast_typing(key)
+
+    async def is_account_connected(self, key: tuple[int, int], account_id: int) -> bool:
+        async with self.lock:
+            return bool(self.connections.get(key, {}).get(int(account_id)))
 
     async def broadcast_presence_for_scope(self, key: tuple[int, int], payload: dict) -> None:
         # Server presence must update every open channel of the same server,
@@ -501,6 +506,44 @@ class AccountRealtimeManager:
 account_realtime = AccountRealtimeManager()
 
 
+async def _mention_counts_for(account_id: int) -> dict:
+    async with AsyncSessionLocal() as db:
+        return await crud.unread_mention_summary(db, int(account_id))
+
+
+async def _broadcast_mention_counts(account_ids) -> None:
+    unique_ids = sorted({int(uid) for uid in (account_ids or []) if int(uid or 0) > 0})
+    for account_id in unique_ids:
+        try:
+            counts = await _mention_counts_for(account_id)
+            await account_realtime.send_to_account(
+                account_id,
+                {"type": "mention_counts", "counts": counts},
+            )
+        except Exception as exc:
+            print("Mention count realtime update failed:", repr(exc))
+
+
+async def _sync_dm_message_mentions(db: AsyncSession, message) -> list[int]:
+    mentioned, affected = await crud.sync_dm_mentions(db, message)
+    key = (0, int(message.thread_id))
+    for target_id in mentioned:
+        if await realtime_channels.is_account_connected(key, target_id):
+            await crud.mark_dm_mentions_read(db, target_id, int(message.thread_id))
+    return affected
+
+
+async def _sync_server_message_mentions(db: AsyncSession, message) -> list[int]:
+    mentioned, affected = await crud.sync_server_mentions(db, message)
+    key = (int(message.server_id), int(message.channel_id))
+    for target_id in mentioned:
+        if await realtime_channels.is_account_connected(key, target_id):
+            await crud.mark_server_channel_mentions_read(
+                db, target_id, int(message.server_id), int(message.channel_id)
+            )
+    return affected
+
+
 async def _emit_dm_sidebar_update(thread_id: int, message_id: int) -> None:
     """Move the relevant DM row to the top for both participants in realtime."""
     try:
@@ -625,6 +668,13 @@ async def ws_account_realtime(websocket: WebSocket):
 
     await account_realtime.connect(int(account_id), websocket, profile)
     try:
+        await websocket.send_json({
+            "type": "mention_snapshot",
+            "counts": await _mention_counts_for(int(account_id)),
+        })
+    except Exception:
+        pass
+    try:
         while True:
             data = await websocket.receive_json()
             event_type = str(data.get("type") or "").strip().lower()
@@ -726,6 +776,7 @@ async def server_rail_context(db: AsyncSession, account_id: int, active_server_i
     return {
         "servers": await crud.list_servers_for_account(db, account_id),
         "active_server_id": active_server_id,
+        "mention_counts": await crud.unread_mention_summary(db, account_id),
     }
 
 
@@ -1148,7 +1199,12 @@ async def server_channel_view(server_id: int, channel_id: int, request: Request,
     members = await crud.list_server_members(db, server_id)
     friends = await crud.list_friends(db, account.id)
     feed = await crud.get_server_feed(db, server_id, channel_id)
+    mentions_were_read = await crud.mark_server_channel_mentions_read(
+        db, account.id, server_id, channel_id
+    )
     rail = await server_rail_context(db, account.id, active_server_id=server_id)
+    if mentions_were_read:
+        await _broadcast_mention_counts([account.id])
     can_manage = await crud.can_manage_server(db, server_id, account.id)
 
     return templates.TemplateResponse(
@@ -1269,7 +1325,9 @@ async def server_message_submit(
             reply_msg = await crud.get_server_message(db, server_id, channel_id, reply_id)
             if not reply_msg:
                 reply_id = None
-        await crud.create_server_message(db, server_id, channel_id, account.id, content.strip(), image_url.strip(), reply_to_id=reply_id)
+        msg = await crud.create_server_message(db, server_id, channel_id, account.id, content.strip(), image_url.strip(), reply_to_id=reply_id)
+        mention_affected = await _sync_server_message_mentions(db, msg)
+        await _broadcast_mention_counts(mention_affected)
     return RedirectResponse(url=f"/community/servers/{server_id}/channel/{channel_id}", status_code=303)
 
 
@@ -1292,6 +1350,8 @@ async def server_message_edit_submit(
     message = await crud.get_server_message(db, server_id, channel_id, message_id)
     if message and message.author_id == account.id and not getattr(message, "is_forwarded", False) and content.strip():
         updated = await crud.update_server_message(db, message, content.strip(), image_url.strip())
+        mention_affected = await _sync_server_message_mentions(db, updated)
+        await _broadcast_mention_counts(mention_affected)
         await realtime_channels.broadcast(
             (server_id, channel_id),
             {
@@ -1323,7 +1383,9 @@ async def server_message_delete_submit(
 
     message = await crud.get_server_message(db, server_id, channel_id, message_id)
     if message and (message.author_id == account.id or await crud.can_manage_server(db, server_id, account.id)):
+        mention_affected = await crud.delete_message_mentions(db, "server", message.id)
         await crud.delete_server_message(db, message)
+        await _broadcast_mention_counts(mention_affected)
     return RedirectResponse(url=f"/community/servers/{server_id}/channel/{channel_id}", status_code=303)
 
 
@@ -1438,6 +1500,8 @@ async def server_invite_submit(
                 thread_id = int(thread.id)
                 content = crud.make_server_invite_dm_content(invite_code, invite_channel_id)
                 msg = await crud.create_dm_message(db, thread_id, account_id, content)
+                mention_affected = await _sync_dm_message_mentions(db, msg)
+                await _broadcast_mention_counts(mention_affected)
                 message_id = int(msg.id)
                 created_at = msg.created_at.isoformat()
                 await realtime_channels.broadcast(
@@ -1570,6 +1634,8 @@ async def api_forward_message(request: Request, db: AsyncSession = Depends(get_d
                 continue
             thread_id = int(thread.id)
             msg = await crud.create_dm_message(db, thread_id, account_id, source_content, source_image_url, is_forwarded=True)
+            mention_affected = await _sync_dm_message_mentions(db, msg)
+            await _broadcast_mention_counts(mention_affected)
             message_payload = {
                 "id": int(msg.id),
                 "thread_id": thread_id,
@@ -1603,6 +1669,8 @@ async def api_forward_message(request: Request, db: AsyncSession = Depends(get_d
                 continue
 
             msg = await crud.create_server_message(db, server_id, channel_id, account_id, source_content, source_image_url, is_forwarded=True)
+            mention_affected = await _sync_server_message_mentions(db, msg)
+            await _broadcast_mention_counts(mention_affected)
             message_payload = {
                 "id": int(msg.id),
                 "server_id": int(server_id),
@@ -2274,6 +2342,7 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
                     if not message or message.author_id != account_id or getattr(message, "is_forwarded", False):
                         continue
                     updated = await crud.update_server_message(db, message, content, image_url)
+                    mention_affected = await _sync_server_message_mentions(db, updated)
                     payload = {
                         "id": updated.id,
                         "content": updated.content,
@@ -2282,6 +2351,7 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
                     }
 
                 await realtime_channels.broadcast(key, {"type": "message_edit", "message": payload})
+                await _broadcast_mention_counts(mention_affected)
                 continue
 
             if event_type != "message":
@@ -2321,6 +2391,7 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
                         reply_author = await crud.get_account_by_id(db, reply_msg.author_id)
                         reply_payload = _reply_payload(reply_msg, reply_author)
                 msg = await crud.create_server_message(db, server_id, channel_id, account_id, content, image_url, reply_to_id=reply_id)
+                mention_affected = await _sync_server_message_mentions(db, msg)
                 created_at = msg.created_at.isoformat()
 
             await realtime_channels.clear_typing(key, account_id)
@@ -2343,6 +2414,7 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
                     "author": profile,
                 },
             )
+            await _broadcast_mention_counts(mention_affected)
 
     except WebSocketDisconnect:
         pass
@@ -2381,7 +2453,10 @@ async def dm_chat_view(username: str, request: Request, db: AsyncSession = Depen
     friends = await crud.list_friends(db, account.id)
     dm_threads = await crud.list_dm_threads_for_account(db, account.id)
     messages = await crud.list_dm_messages(db, thread.id)
+    mentions_were_read = await crud.mark_dm_mentions_read(db, account.id, thread.id)
     rail = await server_rail_context(db, account.id)
+    if mentions_were_read:
+        await _broadcast_mention_counts([account.id])
 
     return templates.TemplateResponse(
         "dm_chat.html",
@@ -2429,6 +2504,8 @@ async def dm_message_submit(
             if not reply_msg:
                 reply_id = None
         msg = await crud.create_dm_message(db, thread.id, account.id, content.strip(), image_url.strip(), reply_to_id=reply_id)
+        mention_affected = await _sync_dm_message_mentions(db, msg)
+        await _broadcast_mention_counts(mention_affected)
         await _emit_dm_sidebar_update(int(thread.id), int(msg.id))
     return RedirectResponse(url=f"/community/dm/{other.username}", status_code=303)
 
@@ -2460,6 +2537,8 @@ async def dm_message_edit_submit(
         and content.strip()
     ):
         updated = await crud.update_dm_message(db, message, content.strip(), image_url.strip())
+        mention_affected = await _sync_dm_message_mentions(db, updated)
+        await _broadcast_mention_counts(mention_affected)
         await realtime_channels.broadcast(
             (0, thread.id),
             {
@@ -2492,7 +2571,9 @@ async def dm_message_delete_submit(
     if thread:
         message = await crud.get_dm_message(db, thread.id, message_id)
         if message and message.author_id == account.id and not crud.parse_nitro_dm_gift_marker(message.content):
+            mention_affected = await crud.delete_message_mentions(db, "dm", message.id)
             await crud.delete_dm_message(db, message)
+            await _broadcast_mention_counts(mention_affected)
     return RedirectResponse(url=f"/community/dm/{other.username}", status_code=303)
 
 
@@ -2566,6 +2647,7 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
                     ):
                         continue
                     updated = await crud.update_dm_message(db, message, content, image_url)
+                    mention_affected = await _sync_dm_message_mentions(db, updated)
                     payload = {
                         "id": updated.id,
                         "content": updated.content,
@@ -2574,6 +2656,7 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
                     }
 
                 await realtime_channels.broadcast(key, {"type": "message_edit", "message": payload})
+                await _broadcast_mention_counts(mention_affected)
                 continue
 
             if event_type != "message":
@@ -2609,6 +2692,7 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
                         reply_author = await crud.get_account_by_id(db, reply_msg.author_id)
                         reply_payload = _reply_payload(reply_msg, reply_author)
                 msg = await crud.create_dm_message(db, thread_id, account_id, content, image_url, reply_to_id=reply_id)
+                mention_affected = await _sync_dm_message_mentions(db, msg)
                 created_at = msg.created_at.isoformat()
 
             await realtime_channels.clear_typing(key, account_id)
@@ -2630,6 +2714,7 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
                     "author": profile,
                 },
             )
+            await _broadcast_mention_counts(mention_affected)
             await _emit_dm_sidebar_update(thread_id, int(msg.id))
 
     except WebSocketDisconnect:
