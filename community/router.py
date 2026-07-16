@@ -583,6 +583,7 @@ def _account_payload(account) -> dict:
         "name_font": account.name_font or "default",
         "account_status": account.account_status or "online",
         "bio": account.bio or "",
+        "is_verified": bool(getattr(account, "is_verified", False)),
         "language": getattr(account, "language", DEFAULT_LANGUAGE) or DEFAULT_LANGUAGE,
     }
 
@@ -1686,6 +1687,7 @@ async def api_nitro_me(request: Request, db: AsyncSession = Depends(get_db)):
     return JSONResponse({
         "ok": True,
         "subscription": profile_nitro,
+        "verified": bool(getattr(account, "is_verified", False)),
         "can_generate": crud.is_nitro_code_generator(account),
     })
 
@@ -1742,7 +1744,12 @@ async def api_user_nitro(username: str, request: Request, db: AsyncSession = Dep
     if not account:
         return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
     payload = await crud.nitro_profile_payload(db, account.id)
-    return JSONResponse({"ok": True, "username": account.username, "nitro": payload})
+    return JSONResponse({
+        "ok": True,
+        "username": account.username,
+        "verified": bool(getattr(account, "is_verified", False)),
+        "nitro": payload,
+    })
 
 
 @router.post("/api/dm/{username}/nitro-gifts")
