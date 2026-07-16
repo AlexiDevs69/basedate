@@ -3352,6 +3352,177 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
 })();
 </script>
 
+<script id="ah-home-status-live-only-fix">
+(function(){
+  if(window.__ahHomeStatusLiveOnlyFix) return;
+  window.__ahHomeStatusLiveOnlyFix = true;
+
+  const allowed = new Set(['online','idle','dnd','invisible']);
+  const currentUsername = {{ account.username|tojson }};
+
+  function normalizeStatus(status){
+    status = String(status || '').toLowerCase();
+    return allowed.has(status) ? status : 'online';
+  }
+
+  function currentLanguage(){
+    const htmlLang = String(document.documentElement.lang || '').toLowerCase();
+    if(htmlLang.startsWith('en')) return 'en';
+    if(htmlLang.startsWith('uk')) return 'uk';
+    if(htmlLang.startsWith('ru')) return 'ru';
+
+    try{
+      const saved = String(
+        localStorage.getItem('alexihub-language') ||
+        localStorage.getItem('language') ||
+        ''
+      ).toLowerCase();
+      if(saved.startsWith('en')) return 'en';
+      if(saved.startsWith('uk')) return 'uk';
+      if(saved.startsWith('ru')) return 'ru';
+    }catch(error){}
+
+    return 'uk';
+  }
+
+  function statusLabel(status){
+    const translations = window.__AH_TRANSLATIONS || {};
+    const translated = translations['status.' + status];
+    if(typeof translated === 'string' && translated.trim()) return translated;
+
+    const labels = {
+      en: {
+        online: 'Online',
+        idle: 'Idle',
+        dnd: 'Do Not Disturb',
+        invisible: 'Invisible'
+      },
+      uk: {
+        online: 'В мережі',
+        idle: 'Неактивний',
+        dnd: 'Не турбувати',
+        invisible: 'Невидимий'
+      },
+      ru: {
+        online: 'В сети',
+        idle: 'Неактивен',
+        dnd: 'Не беспокоить',
+        invisible: 'Невидимый'
+      }
+    };
+
+    const language = currentLanguage();
+    return (labels[language] || labels.uk)[status] || labels.uk.online;
+  }
+
+  function setDotStatus(element, status){
+    if(!element) return;
+
+    [
+      'status-online','status-idle','status-dnd','status-invisible','status-offline',
+      'online','idle','dnd','invisible','offline'
+    ].forEach(className => element.classList.remove(className));
+
+    element.classList.add('status-' + status);
+
+    if(
+      element.classList.contains('ah-v3-status') ||
+      element.classList.contains('alex-mini-status') ||
+      element.classList.contains('account-avatar-status') ||
+      element.classList.contains('self-status-dot')
+    ){
+      element.classList.add(status);
+    }
+  }
+
+  function isCurrentUserElement(element){
+    const username = String(element?.dataset?.miniUsername || '').toLowerCase();
+    return username && username === String(currentUsername || '').toLowerCase();
+  }
+
+  function applyStatusImmediately(status){
+    status = normalizeStatus(status);
+    const label = statusLabel(status);
+
+    document.querySelectorAll(
+      '#my-status-dot,#my-avatar-status,#modal-avatar-status,' +
+      '.account-avatar-status,.self-status-dot'
+    ).forEach(element => setDotStatus(element, status));
+
+    const bottomLabel = document.getElementById('my-status-label');
+    if(bottomLabel) bottomLabel.textContent = label;
+
+    document.querySelectorAll('[data-mini-username]').forEach(element => {
+      if(!isCurrentUserElement(element)) return;
+
+      element.dataset.miniStatus = status;
+
+      element.querySelectorAll(
+        '.presence,.member-presence,.account-avatar-status,.self-status-dot'
+      ).forEach(dot => setDotStatus(dot, status));
+
+      element.querySelectorAll(
+        '.account-status,.user-status'
+      ).forEach(statusText => {
+        statusText.textContent = label;
+      });
+    });
+
+    const miniHandle = document.getElementById('ah-v3-handle');
+    if(
+      miniHandle &&
+      String(miniHandle.textContent || '').trim().toLowerCase() ===
+        ('@' + String(currentUsername || '')).toLowerCase()
+    ){
+      setDotStatus(document.getElementById('ah-v3-status'), status);
+    }
+
+    const activeProfile = window.__AH_ACTIVE_PROFILE;
+    if(
+      activeProfile &&
+      String(activeProfile.username || '').toLowerCase() ===
+        String(currentUsername || '').toLowerCase()
+    ){
+      activeProfile.status = status;
+      activeProfile.account_status = status;
+    }
+
+    const menu = document.getElementById('status-menu');
+    if(menu) menu.classList.remove('open');
+  }
+
+  async function saveStatus(status){
+    status = normalizeStatus(status);
+    applyStatusImmediately(status);
+
+    try{
+      const response = await fetch('/community/presence/status', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({status})
+      });
+
+      const data = await response.json().catch(() => null);
+      if(response.ok && data && data.status){
+        applyStatusImmediately(data.status);
+      }
+    }catch(error){
+      // Keep the optimistic UI. Existing account realtime reconnect will
+      // synchronize the confirmed value if the request was interrupted.
+    }
+  }
+
+  // Force replacement because the older Home implementation already exists;
+  // the previous `window.setPresenceStatus || ...` wrapper never replaced it.
+  window.applyLocalStatus = applyStatusImmediately;
+  window.setPresenceStatus = saveStatus;
+})();
+</script>
+
 
 <script id="ah-banner-live-sync-fix">
 (function(){
