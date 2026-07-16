@@ -1000,12 +1000,14 @@
 .chan-link>.ah-mention-count{
   position:static;margin-left:auto;flex:0 0 auto;border-width:0;height:17px;min-width:17px;
 }
-.ah-mention-token{
-  display:inline;padding:1px 2px;border-radius:3px;
-  background:rgba(88,101,242,.18);color:#c9cdfb;font-weight:700;
-}
+.ah-mention-token,
 .ah-mention-token.is-self{
-  background:rgba(250,166,26,.22);color:#ffd38a;
+  display:inline;padding:1px 2px;border-radius:3px;
+  background:rgba(88,101,242,.30);color:#c9cdfb;font-weight:700;
+}
+.ah-mention-token:hover,
+.ah-mention-token.is-self:hover{
+  background:#5865f2;color:#fff;
 }
 .ah-mention-picker{
   position:absolute;left:44px;right:48px;bottom:calc(100% + 8px);z-index:12000;
@@ -4898,7 +4900,13 @@ document.addEventListener('DOMContentLoaded', async function(){
     picker.className='ah-mention-picker';
     picker.innerHTML='<div class="ah-mention-picker-head">Згадки</div><div class="ah-mention-picker-list"></div>';
     host.appendChild(picker);
-    picker.addEventListener('mousedown',e=>e.preventDefault());
+    picker.addEventListener('pointerdown',event=>{
+      const button=event.target.closest('.ah-mention-option');
+      if(!button)return;
+      event.preventDefault();
+      event.stopPropagation();
+      choose(Number(button.dataset.index||0));
+    });
     return picker;
   }
   function closePicker(){
@@ -4954,8 +4962,12 @@ document.addEventListener('DOMContentLoaded', async function(){
         +esc(item.description||(item.everyone?'Усі учасники':'Учасник'))+'</small></span></button>';
     }).join('');
     list.querySelectorAll('.ah-mention-option').forEach(button=>{
-      button.addEventListener('mouseenter',()=>{selected=Number(button.dataset.index||0);renderPicker();});
-      button.addEventListener('click',()=>choose(Number(button.dataset.index||0)));
+      button.addEventListener('mouseenter',()=>{
+        selected=Number(button.dataset.index||0);
+        list.querySelectorAll('.ah-mention-option').forEach((option,index)=>{
+          option.classList.toggle('active',index===selected);
+        });
+      });
     });
     root.classList.add('open');
   }
@@ -5001,7 +5013,7 @@ document.addEventListener('DOMContentLoaded', async function(){
       changed=true;
       if(start>last)frag.appendChild(document.createTextNode(raw.slice(last,start)));
       const span=document.createElement('span');
-      span.className='ah-mention-token'+((lower===String(currentUsername).toLowerCase()||lower==='everyone')?' is-self':'');
+      span.className='ah-mention-token';
       span.textContent=full;
       frag.appendChild(span);
       last=end;
