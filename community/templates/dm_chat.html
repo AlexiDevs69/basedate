@@ -964,37 +964,32 @@
   box-shadow:0 2px 7px rgba(0,0,0,.42);white-space:nowrap;
 }
 .ah-mention-count[hidden]{display:none!important;}
-.server-dot>.ah-mention-count{
+.server-dot .ah-mention-count{display:none!important;}
+.server-dot[data-ah-mention-count]:not([data-ah-mention-count=""]):not([data-ah-mention-count="0"])::after{
+  content:attr(data-ah-mention-count)!important;
   position:absolute!important;
   right:-5px!important;
   bottom:-4px!important;
   z-index:20!important;
-  width:auto!important;
   min-width:18px!important;
   height:18px!important;
   padding:0 5px!important;
   box-sizing:border-box!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
   border:2px solid #08080a!important;
   border-radius:999px!important;
   background:#f23f42!important;
-  background-image:none!important;
   color:#fff!important;
   font-size:10px!important;
   font-weight:950!important;
   line-height:1!important;
+  letter-spacing:-.02em!important;
   white-space:nowrap!important;
   box-shadow:0 2px 7px rgba(0,0,0,.42)!important;
   pointer-events:none!important;
 }
-.server-dot>.ah-mention-count:not([hidden]){
-  display:inline-flex!important;
-  align-items:center!important;
-  justify-content:center!important;
-}
-.server-dot>.ah-mention-count[hidden]{
-  display:none!important;
-}
-.server-dot>.ah-mention-count~.ah-mention-count{display:none!important;}
 .dm-row>.ah-mention-count{
   position:static;margin-left:auto;flex:0 0 auto;border-color:#111114;
 }
@@ -1065,9 +1060,9 @@
 
   <div class="app">
     <aside class="server-rail">
-      <a class="server-dot active home-dot" href="/community" title="Direct Messages" data-mention-home="1"><svg class="icon"><use href="#i-message"></use></svg></a>
+      <a class="server-dot active home-dot" href="/community" title="Direct Messages" data-mention-home="1" data-ah-mention-count="{{ mention_counts.dm_total or '' }}"><svg class="icon"><use href="#i-message"></use></svg></a>
       <div class="server-sep"></div>
-      {% for srv in servers %}<a class="server-dot" data-mention-server-id="{{ srv.id }}" href="/community/servers/{{ srv.id }}" title="{{ srv.name }}" {% if srv.icon_url %}style="background-image:url('{{ srv.icon_url }}')"{% endif %}>{% if not srv.icon_url %}{{ srv.name[:1]|upper }}{% endif %}{% set sc = mention_counts.server_by_id.get(srv.id, 0) %}<span class="ah-mention-count" {% if not sc %}hidden{% endif %}>{{ sc }}</span></a>{% endfor %}
+      {% for srv in servers %}<a class="server-dot" data-mention-server-id="{{ srv.id }}" data-ah-mention-count="{{ mention_counts.server_by_id.get(srv.id, '') or '' }}" href="/community/servers/{{ srv.id }}" title="{{ srv.name }}" {% if srv.icon_url %}style="background-image:url('{{ srv.icon_url }}')"{% endif %}>{% if not srv.icon_url %}{{ srv.name[:1]|upper }}{% endif %}</a>{% endfor %}
       <a class="server-dot plus" href="/community/servers/new" title="Create server"><svg class="icon"><use href="#i-plus"></use></svg></a>
     </aside>
 
@@ -4727,6 +4722,19 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   function setMentionBadge(container, count, kind, key) {
     if (!container) return;
     count = Math.max(0, Number(count || 0));
+
+    // Server rail uses one CSS pseudo-badge only. Removing DOM badges here
+    // prevents the server-rendered count and realtime count from appearing twice.
+    if (container.classList && container.classList.contains('server-dot')) {
+      container.querySelectorAll('.ah-mention-count').forEach(function (extra) { extra.remove(); });
+      if (count > 0) {
+        container.setAttribute('data-ah-mention-count', count > 999 ? '999+' : String(count));
+        container.title = container.title || '';
+      } else {
+        container.removeAttribute('data-ah-mention-count');
+      }
+      return;
+    }
     var badge = directMentionBadge(container);
     if (!badge && count > 0) {
       badge = document.createElement('span');
@@ -4834,6 +4842,15 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     socket.addEventListener('error', function () {
       try { socket.close(); } catch (error) {}
     });
+  }
+
+  var mentionRail = document.querySelector('.server-rail');
+  if (mentionRail) {
+    var mentionRailObserver = new MutationObserver(function () {
+      mentionRail.querySelectorAll('.server-dot .ah-mention-count').forEach(function (extra) { extra.remove(); });
+    });
+    mentionRailObserver.observe(mentionRail, { childList: true, subtree: true });
+    mentionRail.querySelectorAll('.server-dot .ah-mention-count').forEach(function (extra) { extra.remove(); });
   }
 
   window.AlexiHubAccountRealtime = {
