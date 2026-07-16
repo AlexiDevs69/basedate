@@ -1688,6 +1688,63 @@
 }
 </style>
 
+
+<style id="ah-mentions-ui-css">
+.server-dot{overflow:visible!important;}
+.server-dot>span:not(.ah-mention-count){border-radius:inherit;}
+.ah-mention-count{
+  min-width:18px;height:18px;padding:0 5px;border-radius:999px;
+  display:inline-flex;align-items:center;justify-content:center;
+  background:#f23f42;color:#fff;border:2px solid #08080a;
+  font-size:10px;font-weight:950;line-height:1;letter-spacing:-.02em;
+  box-shadow:0 2px 7px rgba(0,0,0,.42);white-space:nowrap;
+}
+.ah-mention-count[hidden]{display:none!important;}
+.server-dot>.ah-mention-count{
+  position:absolute;right:-5px;bottom:-4px;z-index:8;
+}
+.dm-row>.ah-mention-count{
+  position:static;margin-left:auto;flex:0 0 auto;border-color:#111114;
+}
+.chan-link>.ah-mention-count{
+  position:static;margin-left:auto;flex:0 0 auto;border-width:0;height:17px;min-width:17px;
+}
+.ah-mention-token{
+  display:inline;padding:1px 2px;border-radius:3px;
+  background:rgba(88,101,242,.18);color:#c9cdfb;font-weight:700;
+}
+.ah-mention-token.is-self{
+  background:rgba(250,166,26,.22);color:#ffd38a;
+}
+.ah-mention-picker{
+  position:absolute;left:44px;right:48px;bottom:calc(100% + 8px);z-index:12000;
+  max-height:290px;overflow:auto;padding:7px;border:1px solid #3a3d45;border-radius:10px;
+  background:#2b2d31;color:#f2f3f5;box-shadow:0 18px 55px rgba(0,0,0,.52);
+  display:none;
+}
+.ah-mention-picker.open{display:block;animation:ahMentionPickerIn .12s ease both;}
+@keyframes ahMentionPickerIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.ah-mention-picker-head{
+  padding:4px 7px 7px;color:#949ba4;font-size:11px;font-weight:900;text-transform:uppercase;
+}
+.ah-mention-option{
+  width:100%;height:42px;border:0;border-radius:7px;background:transparent;color:#dbdee1;
+  display:flex;align-items:center;gap:10px;padding:5px 8px;text-align:left;cursor:pointer;font:inherit;
+}
+.ah-mention-option:hover,.ah-mention-option.active{background:#5865f2;color:#fff;}
+.ah-mention-avatar{
+  width:30px;height:30px;border-radius:50%;background:#41434a center/cover no-repeat;
+  display:grid;place-items:center;flex:0 0 auto;font-size:12px;font-weight:900;
+}
+.ah-mention-avatar.everyone{border-radius:9px;background:#4752c4;font-size:18px;}
+.ah-mention-option-meta{min-width:0;flex:1;}
+.ah-mention-option-meta b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;}
+.ah-mention-option-meta small{display:block;color:#b5bac1;font-size:11px;margin-top:1px;}
+.ah-mention-option.active .ah-mention-option-meta small,
+.ah-mention-option:hover .ah-mention-option-meta small{color:#fff;}
+.composer-wrap,.dm-composer-shell{position:relative;}
+</style>
+
 </head>
 <body data-current-account-id="{{ account.id }}">
   <svg style="display:none" aria-hidden="true">
@@ -1715,10 +1772,10 @@
 
   <div class="app nitro-open" id="home-app">
     <aside class="server-rail">
-      <a class="server-dot home-dot active" href="/community" title="Direct Messages"><svg class="icon"><use href="#i-message"></use></svg></a>
+      <a class="server-dot home-dot active" href="/community" title="Direct Messages" data-mention-home="1"><svg class="icon"><use href="#i-message"></use></svg></a>
       <div class="server-sep"></div>
       {% for srv in servers %}
-      <a class="server-dot" href="/community/servers/{{ srv.id }}" title="{{ srv.name }}" {% if srv.icon_url %}style="background-image:url('{{ srv.icon_url }}')"{% endif %}>{% if not srv.icon_url %}{{ srv.name[:1]|upper }}{% endif %}</a>
+      <a class="server-dot" data-mention-server-id="{{ srv.id }}" href="/community/servers/{{ srv.id }}" title="{{ srv.name }}" {% if srv.icon_url %}style="background-image:url('{{ srv.icon_url }}')"{% endif %}>{% if not srv.icon_url %}{{ srv.name[:1]|upper }}{% endif %}{% set sc = mention_counts.server_by_id.get(srv.id, 0) %}<span class="ah-mention-count" {% if not sc %}hidden{% endif %}>{{ sc }}</span></a>
       {% endfor %}
       <a class="server-dot plus" href="/community/servers/new" title="Create server"><svg class="icon"><use href="#i-plus"></use></svg></a>
     </aside>
@@ -1765,6 +1822,7 @@
             {% if other_visible %}<span class="presence status-{{ other_status }}"></span>{% endif %}
           </span>
           <span class="dm-meta"><span class="dm-name">{{ other.username }}</span></span>
+          {% set dc = mention_counts.dm_by_thread.get(item.thread.id, 0) %}<span class="ah-mention-count" {% if not dc %}hidden{% endif %}>{{ dc }}</span>
         </a>
         {% endif %}
         {% else %}
@@ -4628,6 +4686,54 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     animateRowToTop(row, isNew);
   }
 
+  function directMentionBadge(container) {
+    if (!container) return null;
+    return Array.prototype.find.call(container.children || [], function (child) {
+      return child.classList && child.classList.contains('ah-mention-count');
+    }) || null;
+  }
+
+  function setMentionBadge(container, count, kind, key) {
+    if (!container) return;
+    count = Math.max(0, Number(count || 0));
+    var badge = directMentionBadge(container);
+    if (!badge && count > 0) {
+      badge = document.createElement('span');
+      badge.className = 'ah-mention-count';
+      container.appendChild(badge);
+    }
+    if (!badge) return;
+    badge.hidden = count <= 0;
+    badge.textContent = count > 999 ? '999+' : String(count);
+    badge.title = count + ' непрочитаних згадок';
+    if (kind === 'thread') badge.dataset.mentionThreadId = String(key || '');
+    if (kind === 'server') badge.dataset.mentionServerId = String(key || '');
+    if (kind === 'channel') badge.dataset.mentionChannelId = String(key || '');
+  }
+
+  function applyMentionCounts(counts) {
+    counts = counts || {};
+    var dm = counts.dm_by_thread || {};
+    var serversMap = counts.server_by_id || {};
+    var channelsMap = counts.channel_by_id || {};
+
+    document.querySelectorAll('[data-thread-id]').forEach(function (row) {
+      var key = String(row.dataset.threadId || '');
+      setMentionBadge(row, dm[key] || dm[Number(key)] || 0, 'thread', key);
+    });
+    document.querySelectorAll('[data-mention-server-id]').forEach(function (dot) {
+      var key = String(dot.dataset.mentionServerId || '');
+      setMentionBadge(dot, serversMap[key] || serversMap[Number(key)] || 0, 'server', key);
+    });
+    document.querySelectorAll('[data-mention-channel-key]').forEach(function (link) {
+      var key = String(link.dataset.mentionChannelKey || '');
+      setMentionBadge(link, channelsMap[key] || 0, 'channel', key);
+    });
+    document.querySelectorAll('[data-mention-home]').forEach(function (dot) {
+      setMentionBadge(dot, counts.dm_total || 0, 'home', 'dm');
+    });
+  }
+
   function watchedAccountIds() {
     var ids = [];
     var seen = new Set();
@@ -4661,6 +4767,10 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     if (data.type === 'dm_sidebar_update') {
       upsertDmSidebar(data);
       setTimeout(sendWatchList, 0);
+      return;
+    }
+    if (data.type === 'mention_snapshot' || data.type === 'mention_counts') {
+      applyMentionCounts(data.counts || {});
     }
   }
 
@@ -4698,9 +4808,11 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   window.AlexiHubAccountRealtime = {
     refreshPresenceWatch: sendWatchList,
     updatePresence: updatePresence,
-    upsertDmSidebar: upsertDmSidebar
+    upsertDmSidebar: upsertDmSidebar,
+    applyMentionCounts: applyMentionCounts
   };
 
+  applyMentionCounts({{ mention_counts|tojson }});
   connectAccountRealtime();
 
   window.addEventListener('pagehide', function () {
