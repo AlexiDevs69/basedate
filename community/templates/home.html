@@ -1582,51 +1582,48 @@
 <style id="ah-verified-member-badge-style">
 .ah-verified-profile-badge{
   position:relative;
-  z-index:7;
-  display:inline-grid;
-  place-items:center;
-  width:19px;
-  height:19px;
+  z-index:40;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:20px;
+  height:20px;
   margin-left:6px;
   vertical-align:-4px;
   flex:0 0 auto;
-  color:#6f8cff;
+  color:#6d83f2;
   cursor:default;
-  filter:drop-shadow(0 1px 1px rgba(0,0,0,.42));
-  transition:transform .14s ease,filter .14s ease,color .14s ease;
+  filter:drop-shadow(0 1px 1px rgba(0,0,0,.38));
+  transition:transform .14s ease,color .14s ease,filter .14s ease;
+  overflow:visible!important;
 }
 .ah-verified-profile-badge svg{
-  width:19px;
-  height:19px;
+  width:20px;
+  height:20px;
   display:block;
   overflow:visible;
-  fill:none;
-  stroke:currentColor;
-  stroke-width:2.25;
-  stroke-linecap:round;
-  stroke-linejoin:round;
 }
 .ah-verified-profile-badge:hover,
 .ah-verified-profile-badge:focus-visible{
-  color:#8fa5ff;
-  transform:translateY(-1px) scale(1.08);
-  filter:drop-shadow(0 0 7px rgba(111,140,255,.48));
+  color:#8ea0ff;
+  transform:translateY(-1px) scale(1.07);
+  filter:drop-shadow(0 0 7px rgba(109,131,242,.48));
   outline:none;
 }
 .ah-verified-profile-badge::after{
   content:attr(data-title);
   position:absolute;
-  left:50%;
-  bottom:calc(100% + 10px);
-  transform:translateX(-50%) translateY(4px);
+  z-index:99999;
+  left:0;
+  bottom:calc(100% + 9px);
   width:max-content;
-  max-width:220px;
+  max-width:min(240px,calc(100vw - 24px));
   padding:7px 9px;
-  border:1px solid rgba(255,255,255,.09);
-  border-radius:7px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:6px;
   background:#111214;
   color:#fff;
-  box-shadow:0 10px 28px rgba(0,0,0,.46);
+  box-shadow:0 10px 30px rgba(0,0,0,.5);
   font-size:11px;
   font-weight:850;
   line-height:1.2;
@@ -1634,19 +1631,21 @@
   opacity:0;
   visibility:hidden;
   pointer-events:none;
+  transform:translateY(4px);
   transition:opacity .12s ease,transform .12s ease,visibility .12s ease;
 }
 .ah-verified-profile-badge::before{
   content:'';
   position:absolute;
-  left:50%;
+  z-index:99998;
+  left:6px;
   bottom:calc(100% + 5px);
   width:8px;
   height:8px;
   background:#111214;
-  border-right:1px solid rgba(255,255,255,.09);
-  border-bottom:1px solid rgba(255,255,255,.09);
-  transform:translateX(-50%) rotate(45deg);
+  border-right:1px solid rgba(255,255,255,.08);
+  border-bottom:1px solid rgba(255,255,255,.08);
+  transform:rotate(45deg);
   opacity:0;
   visibility:hidden;
   pointer-events:none;
@@ -1661,7 +1660,19 @@
 }
 .ah-verified-profile-badge:hover::after,
 .ah-verified-profile-badge:focus-visible::after{
-  transform:translateX(-50%) translateY(0);
+  transform:translateY(0);
+}
+
+/* In narrow cards the tooltip opens to the right, never behind the card edge. */
+.profile-card,
+.ah-v3-card,
+.ah-v3-full-card,
+.ah-mini-card,
+.mini-profile,
+.full-profile-card,
+.profile-popover,
+.right-profile{
+  overflow:visible!important;
 }
 .ah-v3-name + .ah-verified-profile-badge,
 #ah-v3-name + .ah-verified-profile-badge,
@@ -1669,7 +1680,6 @@
 .ah-profile-live-name + .ah-verified-profile-badge,
 .profile-name + .ah-verified-profile-badge,
 .right-profile h2 + .ah-verified-profile-badge{
-  position:relative;
   top:1px;
 }
 @media(max-width:700px){
@@ -3689,13 +3699,11 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     const title='Верифицированный участник AlexiHub';
     return '<span class="ah-verified-profile-badge" data-title="'+esc(title)+'" title="'+esc(title)+'" tabindex="0" aria-label="'+esc(title)+'">'
       +'<svg viewBox="0 0 24 24" aria-hidden="true">'
-      +'<path d="m4.2 19.8 7.1-7.1"/>'
-      +'<path d="m12.9 11.1 6.7-6.7"/>'
-      +'<path d="m17.1 2.8 4.1 4.1"/>'
-      +'<path d="m14.9 5 4.1 4.1"/>'
-      +'<path d="M3.4 3.4 20.6 20.6"/>'
-      +'<path d="m3.2 7.2 4-4 2.6 2.6-4 4"/>'
-      +'<path d="m14.2 18.2 4-4 2.6 2.6-4 4"/>'
+      +'<g fill="currentColor">'
+      +'<path d="M14.68 3.03a5.02 5.02 0 0 0-5.43 6.55L3.53 15.3a2.45 2.45 0 0 0 3.47 3.47l5.73-5.72a5.02 5.02 0 0 0 6.53-5.45l-2.72 2.72-2.85-.76-.76-2.85 2.75-2.68Z"/>'
+      +'<path d="m4.14 4.08 1.4-1.4 3.03 2.14-.63.63 2.37 2.37-1.82 1.82-2.37-2.37-.63.63-2.15-3.02.8-.8Z"/>'
+      +'<path d="m11.45 12.88 1.83-1.83 7.13 7.13a1.29 1.29 0 0 1-1.83 1.82l-7.13-7.12Z"/>'
+      +'</g>'
       +'</svg></span>';
   }
 
