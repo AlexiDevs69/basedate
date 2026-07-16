@@ -1480,38 +1480,39 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
   box-shadow:0 2px 7px rgba(0,0,0,.42);white-space:nowrap;
 }
 .ah-mention-count[hidden]{display:none!important;}
-.server-dot>.ah-mention-count{
+.server-dot>.server-mention-badge{
   position:absolute!important;
-  right:-4px!important;
-  bottom:-3px!important;
-  z-index:30!important;
+  right:-3px!important;
+  bottom:-2px!important;
+  z-index:40!important;
+  min-width:18px!important;
+  max-width:31px!important;
   width:auto!important;
-  min-width:17px!important;
-  max-width:30px!important;
-  height:17px!important;
+  height:18px!important;
   padding:0 4px!important;
+  margin:0!important;
   box-sizing:border-box!important;
   border:2px solid #08080a!important;
   border-radius:999px!important;
   background:#f23f42!important;
-  background-image:none!important;
   color:#fff!important;
-  font-size:9.5px!important;
-  font-weight:950!important;
-  font-variant-numeric:tabular-nums!important;
-  line-height:1!important;
-  letter-spacing:-.03em!important;
-  white-space:nowrap!important;
-  overflow:hidden!important;
-  box-shadow:0 2px 6px rgba(0,0,0,.48)!important;
-  pointer-events:none!important;
-}
-.server-dot>.ah-mention-count:not([hidden]){
   display:inline-flex!important;
   align-items:center!important;
   justify-content:center!important;
+  font-family:var(--font-sans,Arial,sans-serif)!important;
+  font-size:10px!important;
+  font-style:normal!important;
+  font-weight:950!important;
+  font-variant-numeric:tabular-nums!important;
+  line-height:1!important;
+  letter-spacing:-.035em!important;
+  text-decoration:none!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  box-shadow:0 2px 7px rgba(0,0,0,.52)!important;
+  pointer-events:none!important;
 }
-.server-dot>.ah-mention-count[hidden]{
+.server-dot>.server-mention-badge[hidden]{
   display:none!important;
 }
 .dm-row>.ah-mention-count{
@@ -1571,7 +1572,7 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
     {% for srv in servers %}
     <a href="/community/servers/{{ srv.id }}" data-mention-server-id="{{ srv.id }}" class="server-dot {{ 'active' if active_server_id == srv.id else '' }}" title="{{ srv.name }}">
       {% if srv.icon_url %}<span style="background-image:url('{{ srv.icon_url }}')"></span>{% else %}{{ srv.name[:1]|upper }}{% endif %}
-      {% set sc = mention_counts.server_by_id.get(srv.id, 0) %}<span class="ah-mention-count" {% if not sc %}hidden{% endif %}>{{ '99+' if sc > 99 else sc }}</span>
+      {% set sc = mention_counts.server_by_id.get(srv.id, 0) %}<b class="ah-mention-count server-mention-badge" {% if not sc %}hidden{% endif %}>{{ '99+' if sc > 99 else sc }}</b>
     </a>
     {% endfor %}
     <a href="/community/servers/new" class="server-dot plus" title="Створити сервер">+</a>
@@ -5594,8 +5595,13 @@ body .composer-wrap{
     count = Math.max(0, Number(count || 0));
     var badge = directMentionBadge(container);
     if (!badge && count > 0) {
-      badge = document.createElement('span');
-      badge.className = 'ah-mention-count';
+      if (container.classList && container.classList.contains('server-dot')) {
+        badge = document.createElement('b');
+        badge.className = 'ah-mention-count server-mention-badge';
+      } else {
+        badge = document.createElement('span');
+        badge.className = 'ah-mention-count';
+      }
       container.appendChild(badge);
     }
     if (!badge) return;
