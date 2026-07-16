@@ -1468,14 +1468,72 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
 }
 </style>
 
+
+<style id="ah-mentions-ui-css">
+.server-dot{overflow:visible!important;}
+.server-dot>span:not(.ah-mention-count){border-radius:inherit;}
+.ah-mention-count{
+  min-width:18px;height:18px;padding:0 5px;border-radius:999px;
+  display:inline-flex;align-items:center;justify-content:center;
+  background:#f23f42;color:#fff;border:2px solid #08080a;
+  font-size:10px;font-weight:950;line-height:1;letter-spacing:-.02em;
+  box-shadow:0 2px 7px rgba(0,0,0,.42);white-space:nowrap;
+}
+.ah-mention-count[hidden]{display:none!important;}
+.server-dot>.ah-mention-count{
+  position:absolute;right:-5px;bottom:-4px;z-index:8;
+}
+.dm-row>.ah-mention-count{
+  position:static;margin-left:auto;flex:0 0 auto;border-color:#111114;
+}
+.chan-link>.ah-mention-count{
+  position:static;margin-left:auto;flex:0 0 auto;border-width:0;height:17px;min-width:17px;
+}
+.ah-mention-token{
+  display:inline;padding:1px 2px;border-radius:3px;
+  background:rgba(88,101,242,.18);color:#c9cdfb;font-weight:700;
+}
+.ah-mention-token.is-self{
+  background:rgba(250,166,26,.22);color:#ffd38a;
+}
+.ah-mention-picker{
+  position:absolute;left:44px;right:48px;bottom:calc(100% + 8px);z-index:12000;
+  max-height:290px;overflow:auto;padding:7px;border:1px solid #3a3d45;border-radius:10px;
+  background:#2b2d31;color:#f2f3f5;box-shadow:0 18px 55px rgba(0,0,0,.52);
+  display:none;
+}
+.ah-mention-picker.open{display:block;animation:ahMentionPickerIn .12s ease both;}
+@keyframes ahMentionPickerIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.ah-mention-picker-head{
+  padding:4px 7px 7px;color:#949ba4;font-size:11px;font-weight:900;text-transform:uppercase;
+}
+.ah-mention-option{
+  width:100%;height:42px;border:0;border-radius:7px;background:transparent;color:#dbdee1;
+  display:flex;align-items:center;gap:10px;padding:5px 8px;text-align:left;cursor:pointer;font:inherit;
+}
+.ah-mention-option:hover,.ah-mention-option.active{background:#5865f2;color:#fff;}
+.ah-mention-avatar{
+  width:30px;height:30px;border-radius:50%;background:#41434a center/cover no-repeat;
+  display:grid;place-items:center;flex:0 0 auto;font-size:12px;font-weight:900;
+}
+.ah-mention-avatar.everyone{border-radius:9px;background:#4752c4;font-size:18px;}
+.ah-mention-option-meta{min-width:0;flex:1;}
+.ah-mention-option-meta b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;}
+.ah-mention-option-meta small{display:block;color:#b5bac1;font-size:11px;margin-top:1px;}
+.ah-mention-option.active .ah-mention-option-meta small,
+.ah-mention-option:hover .ah-mention-option-meta small{color:#fff;}
+.composer-wrap,.dm-composer-shell{position:relative;}
+</style>
+
 </head>
 <body data-current-account-id="{{ account.id }}">
   <aside class="server-rail">
-    <a href="/community" class="server-dot home-dot {{ 'active' if not active_server_id else '' }}" title="Direct Messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="21" height="21"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg></a>
+    <a href="/community" class="server-dot home-dot {{ 'active' if not active_server_id else '' }}" title="Direct Messages" data-mention-home="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="21" height="21"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg></a>
     <div class="rail-sep"></div>
     {% for srv in servers %}
-    <a href="/community/servers/{{ srv.id }}" class="server-dot {{ 'active' if active_server_id == srv.id else '' }}" title="{{ srv.name }}">
+    <a href="/community/servers/{{ srv.id }}" data-mention-server-id="{{ srv.id }}" class="server-dot {{ 'active' if active_server_id == srv.id else '' }}" title="{{ srv.name }}">
       {% if srv.icon_url %}<span style="background-image:url('{{ srv.icon_url }}')"></span>{% else %}{{ srv.name[:1]|upper }}{% endif %}
+      {% set sc = mention_counts.server_by_id.get(srv.id, 0) %}<span class="ah-mention-count" {% if not sc %}hidden{% endif %}>{{ sc }}</span>
     </a>
     {% endfor %}
     <a href="/community/servers/new" class="server-dot plus" title="Створити сервер">+</a>
@@ -1532,7 +1590,7 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
     {% endif %}
   </div>
 </div>
-    <div class="sidebar-scroll">{% if server.description %}<div class="server-desc">{{ server.description }}</div>{% endif %}<a href="/community/servers/{{ server.id }}" class="chan-link">⌂ Огляд</a><div class="sidebar-label-row"><div class="sidebar-label">Канали</div>{% if can_manage %}<button type="button" class="sidebar-plus" onclick="openModal('channel-modal')" title="Створити канал">+</button>{% endif %}</div>{% for ch in channels %}<div class="chan-row {{ 'active' if ch.id == channel.id else '' }}"><a href="/community/servers/{{ server.id }}/channel/{{ ch.id }}" class="chan-link {{ 'active' if ch.id == channel.id else '' }}"><span class="chan-symbol">#</span><span class="chan-name">{{ ch.name }}</span></a><div class="chan-actions"><button type="button" class="chan-action-btn" data-channel-id="{{ ch.id }}" data-channel-name="{{ ch.name }}" onclick="openChannelInviteModal(event, this)" title="Пригласить"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></button>{% if can_manage %}<a class="chan-action-btn" href="/community/servers/{{ server.id }}/channel/{{ ch.id }}/settings" onclick="event.stopPropagation()" title="Настройки канала"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.33 1.82 2 2 0 1 1-3.34 0A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.82-.33 2 2 0 1 1 0-3.34A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .33-1.82 2 2 0 1 1 3.34 0A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 .6 1 1.65 1.65 0 0 0 1.82.33 2 2 0 1 1 0 3.34A1.65 1.65 0 0 0 19.4 15Z"/></svg></a>{% endif %}</div></div>{% endfor %}</div>
+    <div class="sidebar-scroll">{% if server.description %}<div class="server-desc">{{ server.description }}</div>{% endif %}<a href="/community/servers/{{ server.id }}" class="chan-link">⌂ Огляд</a><div class="sidebar-label-row"><div class="sidebar-label">Канали</div>{% if can_manage %}<button type="button" class="sidebar-plus" onclick="openModal('channel-modal')" title="Створити канал">+</button>{% endif %}</div>{% for ch in channels %}<div class="chan-row {{ 'active' if ch.id == channel.id else '' }}"><a href="/community/servers/{{ server.id }}/channel/{{ ch.id }}" data-mention-channel-key="{{ server.id }}:{{ ch.id }}" class="chan-link {{ 'active' if ch.id == channel.id else '' }}"><span class="chan-symbol">#</span><span class="chan-name">{{ ch.name }}</span>{% set cc = mention_counts.channel_by_id.get((server.id|string) ~ ':' ~ (ch.id|string), 0) %}<span class="ah-mention-count" {% if not cc %}hidden{% endif %}>{{ cc }}</span></a><div class="chan-actions"><button type="button" class="chan-action-btn" data-channel-id="{{ ch.id }}" data-channel-name="{{ ch.name }}" onclick="openChannelInviteModal(event, this)" title="Пригласить"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></button>{% if can_manage %}<a class="chan-action-btn" href="/community/servers/{{ server.id }}/channel/{{ ch.id }}/settings" onclick="event.stopPropagation()" title="Настройки канала"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.33 1.82 2 2 0 1 1-3.34 0A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.82-.33 2 2 0 1 1 0-3.34A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .33-1.82 2 2 0 1 1 3.34 0A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 .6 1 1.65 1.65 0 0 0 1.82.33 2 2 0 1 1 0 3.34A1.65 1.65 0 0 0 19.4 15Z"/></svg></a>{% endif %}</div></div>{% endfor %}</div>
     <div class="account-panel mini-profile-trigger" data-mini-username="{{ account.username|e }}" data-mini-avatar="{{ account.avatar_url or '' }}" data-mini-banner="{{ account.banner_url or '' }}" data-mini-status="{{ account.account_status or 'online' }}" data-mini-role="{{ account.role_label or 'online' }}" data-mini-effect="{{ account.name_effect or 'none' }}" data-mini-font="{{ account.name_font or 'default' }}" data-mini-c1="{{ account.role_color_start or '#f5576c' }}" data-mini-c2="{{ account.role_color_end or '#7367f0' }}" data-mini-profile="/community/profile/{{ account.username }}" data-mini-bio="{{ account.bio or '' }}"><span class="account-avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}');"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}</span><span class="account-meta"><span class="visual-name account-name name-{{ account.name_effect or 'none' }} font-{{ account.name_font or 'default' }}" style="--name-c1: {{ account.role_color_start or '#f5576c' }}; --name-c2: {{ account.role_color_end or '#7367f0' }};">{{ account.username }}</span><span class="account-status">{{ {'online':'В мережі','idle':'Неактивний','dnd':'Не турбувати','invisible':'Невидимий'}.get(account.account_status or 'online', 'В мережі') }}</span><small class="account-username">@{{ account.username }}</small></span><span class="account-actions"><button class="voice-control" data-audio-kind="mic" type="button" onclick="event.stopPropagation();toggleAudioControl(this,'mic')" title="Mute"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button><button class="voice-control" data-audio-kind="headphones" type="button" onclick="event.stopPropagation();toggleAudioControl(this,'headphones')" title="Deafen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg></button><button type="button" onclick="event.stopPropagation();openUserSettings()" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.4 1.08V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.08-.4H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6A1.65 1.65 0 0 0 10.4 3V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 16 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.15.32.36.6.6 1 .26.25.64.4 1.08.4H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51.6z"/></svg></button></span></div>
   </aside>
   <aside class="members-sidebar">
@@ -5486,6 +5544,54 @@ body .composer-wrap{
     animateRowToTop(row, isNew);
   }
 
+  function directMentionBadge(container) {
+    if (!container) return null;
+    return Array.prototype.find.call(container.children || [], function (child) {
+      return child.classList && child.classList.contains('ah-mention-count');
+    }) || null;
+  }
+
+  function setMentionBadge(container, count, kind, key) {
+    if (!container) return;
+    count = Math.max(0, Number(count || 0));
+    var badge = directMentionBadge(container);
+    if (!badge && count > 0) {
+      badge = document.createElement('span');
+      badge.className = 'ah-mention-count';
+      container.appendChild(badge);
+    }
+    if (!badge) return;
+    badge.hidden = count <= 0;
+    badge.textContent = count > 999 ? '999+' : String(count);
+    badge.title = count + ' непрочитаних згадок';
+    if (kind === 'thread') badge.dataset.mentionThreadId = String(key || '');
+    if (kind === 'server') badge.dataset.mentionServerId = String(key || '');
+    if (kind === 'channel') badge.dataset.mentionChannelId = String(key || '');
+  }
+
+  function applyMentionCounts(counts) {
+    counts = counts || {};
+    var dm = counts.dm_by_thread || {};
+    var serversMap = counts.server_by_id || {};
+    var channelsMap = counts.channel_by_id || {};
+
+    document.querySelectorAll('[data-thread-id]').forEach(function (row) {
+      var key = String(row.dataset.threadId || '');
+      setMentionBadge(row, dm[key] || dm[Number(key)] || 0, 'thread', key);
+    });
+    document.querySelectorAll('[data-mention-server-id]').forEach(function (dot) {
+      var key = String(dot.dataset.mentionServerId || '');
+      setMentionBadge(dot, serversMap[key] || serversMap[Number(key)] || 0, 'server', key);
+    });
+    document.querySelectorAll('[data-mention-channel-key]').forEach(function (link) {
+      var key = String(link.dataset.mentionChannelKey || '');
+      setMentionBadge(link, channelsMap[key] || 0, 'channel', key);
+    });
+    document.querySelectorAll('[data-mention-home]').forEach(function (dot) {
+      setMentionBadge(dot, counts.dm_total || 0, 'home', 'dm');
+    });
+  }
+
   function watchedAccountIds() {
     var ids = [];
     var seen = new Set();
@@ -5519,6 +5625,10 @@ body .composer-wrap{
     if (data.type === 'dm_sidebar_update') {
       upsertDmSidebar(data);
       setTimeout(sendWatchList, 0);
+      return;
+    }
+    if (data.type === 'mention_snapshot' || data.type === 'mention_counts') {
+      applyMentionCounts(data.counts || {});
     }
   }
 
@@ -5556,9 +5666,11 @@ body .composer-wrap{
   window.AlexiHubAccountRealtime = {
     refreshPresenceWatch: sendWatchList,
     updatePresence: updatePresence,
-    upsertDmSidebar: upsertDmSidebar
+    upsertDmSidebar: upsertDmSidebar,
+    applyMentionCounts: applyMentionCounts
   };
 
+  applyMentionCounts({{ mention_counts|tojson }});
   connectAccountRealtime();
 
   window.addEventListener('pagehide', function () {
@@ -5571,6 +5683,171 @@ body .composer-wrap{
       }
     } catch (error) {}
   });
+})();
+</script>
+
+
+<script id="ah-mentions-feature-js">
+(function(){
+  'use strict';
+  const textarea=document.querySelector('#composer-textarea');
+  const host=document.querySelector('#composer-form');
+  if(!textarea||!host)return;
+
+  const users=[
+    {% for item in members %}{% if item.account %}
+    {username: {{ item.account.username|tojson }}, avatar_url: {{ (item.account.avatar_url or '')|tojson }}},
+    {% endif %}{% endfor %}
+  ];
+  const allowEveryone=true;
+  const currentUsername={{ account.username|tojson }};
+  let picker=null;
+  let options=[];
+  let selected=0;
+  let tokenStart=-1;
+
+  function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  function ensurePicker(){
+    if(picker)return picker;
+    picker=document.createElement('div');
+    picker.className='ah-mention-picker';
+    picker.innerHTML='<div class="ah-mention-picker-head">Згадки</div><div class="ah-mention-picker-list"></div>';
+    host.appendChild(picker);
+    picker.addEventListener('mousedown',e=>e.preventDefault());
+    return picker;
+  }
+  function closePicker(){
+    if(picker)picker.classList.remove('open');
+    options=[];selected=0;tokenStart=-1;
+  }
+  function tokenAtCaret(){
+    const caret=textarea.selectionStart??textarea.value.length;
+    const before=textarea.value.slice(0,caret);
+    const match=before.match(/(^|\s)@([^\s@]*)$/);
+    if(!match)return null;
+    return {query:(match[2]||'').toLowerCase(),start:caret-(match[2]||'').length-1,end:caret};
+  }
+  function choose(index){
+    const item=options[index];
+    if(!item||tokenStart<0)return;
+    const caret=textarea.selectionStart??textarea.value.length;
+    const before=textarea.value.slice(0,tokenStart);
+    const after=textarea.value.slice(caret);
+    textarea.value=before+'@'+item.username+' '+after;
+    const next=before.length+item.username.length+2;
+    textarea.focus();
+    textarea.setSelectionRange(next,next);
+    textarea.dispatchEvent(new Event('input',{bubbles:true}));
+    closePicker();
+  }
+  function renderPicker(){
+    const token=tokenAtCaret();
+    if(!token){closePicker();return;}
+    tokenStart=token.start;
+    const q=token.query;
+    const found=[];
+    if(allowEveryone&&'everyone'.startsWith(q)){
+      found.push({username:'everyone',everyone:true,description:'Сповістити всіх учасників сервера'});
+    }
+    users.forEach(user=>{
+      if(!user||!user.username)return;
+      if(String(user.username).toLowerCase().startsWith(q)) found.push(user);
+    });
+    options=found.slice(0,9);
+    if(!options.length){closePicker();return;}
+    selected=Math.min(selected,options.length-1);
+    const root=ensurePicker();
+    const list=root.querySelector('.ah-mention-picker-list');
+    list.innerHTML=options.map((item,index)=>{
+      const avatar=item.avatar_url
+        ? 'style="background-image:url(\''+esc(item.avatar_url).replace(/'/g,'&#39;')+'\')"'
+        : '';
+      const letter=item.everyone?'@':esc(String(item.username).slice(0,1).toUpperCase());
+      return '<button type="button" class="ah-mention-option '+(index===selected?'active':'')+'" data-index="'+index+'">'
+        +'<span class="ah-mention-avatar '+(item.everyone?'everyone':'')+'" '+avatar+'>'+letter+'</span>'
+        +'<span class="ah-mention-option-meta"><b>@'+esc(item.username)+'</b><small>'
+        +esc(item.description||(item.everyone?'Усі учасники':'Учасник'))+'</small></span></button>';
+    }).join('');
+    list.querySelectorAll('.ah-mention-option').forEach(button=>{
+      button.addEventListener('mouseenter',()=>{selected=Number(button.dataset.index||0);renderPicker();});
+      button.addEventListener('click',()=>choose(Number(button.dataset.index||0)));
+    });
+    root.classList.add('open');
+  }
+
+  textarea.addEventListener('input',renderPicker);
+  textarea.addEventListener('click',renderPicker);
+  textarea.addEventListener('keydown',function(event){
+    if(!picker||!picker.classList.contains('open'))return;
+    if(event.key==='ArrowDown'){
+      event.preventDefault();event.stopImmediatePropagation();
+      selected=(selected+1)%options.length;renderPicker();
+    }else if(event.key==='ArrowUp'){
+      event.preventDefault();event.stopImmediatePropagation();
+      selected=(selected-1+options.length)%options.length;renderPicker();
+    }else if(event.key==='Enter'||event.key==='Tab'){
+      event.preventDefault();event.stopImmediatePropagation();choose(selected);
+    }else if(event.key==='Escape'){
+      event.preventDefault();event.stopImmediatePropagation();closePicker();
+    }
+  },true);
+  document.addEventListener('click',event=>{
+    if(picker&&!picker.contains(event.target)&&event.target!==textarea)closePicker();
+  });
+
+  // Mention highlighting that survives custom emoji rendering and realtime edits.
+  const knownNames=new Set(users.map(x=>String(x.username||'').toLowerCase()).filter(Boolean));
+  if(allowEveryone)knownNames.add('everyone');
+  function isBoundary(char){return !char||/[\s.,!?;:()[\]{}<>]/.test(char);}
+  function wrapTextNode(node){
+    const raw=node.nodeValue||'';
+    if(!raw.includes('@'))return;
+    const regex=/@([^\s@]+)/g;
+    let match,last=0,changed=false;
+    const frag=document.createDocumentFragment();
+    while((match=regex.exec(raw))){
+      let token=match[1].replace(/[.,!?;:()[\]{}<>»”’"']+$/g,'');
+      const full='@'+token;
+      const start=match.index;
+      const end=start+full.length;
+      const lower=token.toLowerCase();
+      if(!knownNames.has(lower)||!isBoundary(raw[start-1])||!isBoundary(raw[end]))continue;
+      changed=true;
+      if(start>last)frag.appendChild(document.createTextNode(raw.slice(last,start)));
+      const span=document.createElement('span');
+      span.className='ah-mention-token'+((lower===String(currentUsername).toLowerCase()||lower==='everyone')?' is-self':'');
+      span.textContent=full;
+      frag.appendChild(span);
+      last=end;
+      regex.lastIndex=end;
+    }
+    if(!changed)return;
+    if(last<raw.length)frag.appendChild(document.createTextNode(raw.slice(last)));
+    node.replaceWith(frag);
+  }
+  function renderMentions(root){
+    (root||document).querySelectorAll('.dm-message-text,.message-content-text').forEach(el=>{
+      const walker=document.createTreeWalker(el,NodeFilter.SHOW_TEXT,{
+        acceptNode(node){
+          if(node.parentElement?.closest('.ah-mention-token'))return NodeFilter.FILTER_REJECT;
+          return node.nodeValue&&node.nodeValue.includes('@')?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT;
+        }
+      });
+      const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
+      nodes.forEach(wrapTextNode);
+    });
+  }
+  const messageRoot=document.getElementById('messages')||document.querySelector('.messages');
+  if(messageRoot){
+    const observer=new MutationObserver(mutations=>{
+      mutations.forEach(m=>{
+        const root=m.target.nodeType===1?m.target:m.target.parentElement;
+        if(root)renderMentions(root.closest('.msg,.message')||root);
+      });
+    });
+    observer.observe(messageRoot,{childList:true,subtree:true,characterData:true});
+  }
+  [0,80,350,1000].forEach(delay=>setTimeout(()=>renderMentions(document),delay));
 })();
 </script>
 
