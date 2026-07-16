@@ -964,31 +964,39 @@
   box-shadow:0 2px 7px rgba(0,0,0,.42);white-space:nowrap;
 }
 .ah-mention-count[hidden]{display:none!important;}
-.server-dot .ah-mention-count{display:none!important;}
-.server-dot[data-ah-mention-count]:not([data-ah-mention-count=""]):not([data-ah-mention-count="0"])::after{
-  content:attr(data-ah-mention-count)!important;
+.server-dot>.ah-mention-count{
   position:absolute!important;
-  right:-5px!important;
-  bottom:-4px!important;
-  z-index:20!important;
-  min-width:18px!important;
-  height:18px!important;
-  padding:0 5px!important;
+  right:-4px!important;
+  bottom:-3px!important;
+  z-index:30!important;
+  width:auto!important;
+  min-width:17px!important;
+  max-width:30px!important;
+  height:17px!important;
+  padding:0 4px!important;
   box-sizing:border-box!important;
-  display:inline-flex!important;
-  align-items:center!important;
-  justify-content:center!important;
   border:2px solid #08080a!important;
   border-radius:999px!important;
   background:#f23f42!important;
+  background-image:none!important;
   color:#fff!important;
-  font-size:10px!important;
+  font-size:9.5px!important;
   font-weight:950!important;
+  font-variant-numeric:tabular-nums!important;
   line-height:1!important;
-  letter-spacing:-.02em!important;
+  letter-spacing:-.03em!important;
   white-space:nowrap!important;
-  box-shadow:0 2px 7px rgba(0,0,0,.42)!important;
+  overflow:hidden!important;
+  box-shadow:0 2px 6px rgba(0,0,0,.48)!important;
   pointer-events:none!important;
+}
+.server-dot>.ah-mention-count:not([hidden]){
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+}
+.server-dot>.ah-mention-count[hidden]{
+  display:none!important;
 }
 .dm-row>.ah-mention-count{
   position:static;margin-left:auto;flex:0 0 auto;border-color:#111114;
@@ -999,11 +1007,8 @@
 .ah-mention-token,
 .ah-mention-token.is-self{
   display:inline;padding:1px 2px;border-radius:3px;
-  background:rgba(88,101,242,.30);color:#c9cdfb;font-weight:700;
-}
-.ah-mention-token:hover,
-.ah-mention-token.is-self:hover{
-  background:#5865f2;color:#fff;
+  background:rgba(88,101,242,.30);color:#dee0fc;font-weight:700;
+  box-shadow:inset 0 0 0 1px rgba(146,156,255,.10);
 }
 .ah-mention-picker{
   position:absolute;left:44px;right:48px;bottom:calc(100% + 8px);z-index:12000;
@@ -1022,8 +1027,16 @@
 }
 .ah-mention-option:hover,.ah-mention-option.active{background:#5865f2;color:#fff;}
 .ah-mention-avatar{
-  width:30px;height:30px;border-radius:50%;background:#41434a center/cover no-repeat;
-  display:grid;place-items:center;flex:0 0 auto;font-size:12px;font-weight:900;
+  position:relative;width:30px;height:30px;border-radius:50%;overflow:hidden;
+  background:#41434a;display:grid;place-items:center;flex:0 0 auto;
+  font-size:12px;font-weight:900;color:#fff;
+}
+.ah-mention-avatar-fallback{
+  position:relative;z-index:1;display:grid;place-items:center;width:100%;height:100%;
+}
+.ah-mention-avatar img{
+  position:absolute;inset:0;z-index:2;width:100%;height:100%;
+  display:block;object-fit:cover;object-position:center;border-radius:inherit;
 }
 .ah-mention-avatar.everyone{border-radius:9px;background:#4752c4;font-size:18px;}
 .ah-mention-option-meta{min-width:0;flex:1;}
@@ -1060,9 +1073,9 @@
 
   <div class="app">
     <aside class="server-rail">
-      <a class="server-dot active home-dot" href="/community" title="Direct Messages" data-mention-home="1" data-ah-mention-count="{{ mention_counts.dm_total or '' }}"><svg class="icon"><use href="#i-message"></use></svg></a>
+      <a class="server-dot active home-dot" href="/community" title="Direct Messages" data-mention-home="1"><svg class="icon"><use href="#i-message"></use></svg></a>
       <div class="server-sep"></div>
-      {% for srv in servers %}<a class="server-dot" data-mention-server-id="{{ srv.id }}" data-ah-mention-count="{{ mention_counts.server_by_id.get(srv.id, '') or '' }}" href="/community/servers/{{ srv.id }}" title="{{ srv.name }}" {% if srv.icon_url %}style="background-image:url('{{ srv.icon_url }}')"{% endif %}>{% if not srv.icon_url %}{{ srv.name[:1]|upper }}{% endif %}</a>{% endfor %}
+      {% for srv in servers %}<a class="server-dot" data-mention-server-id="{{ srv.id }}" href="/community/servers/{{ srv.id }}" title="{{ srv.name }}" {% if srv.icon_url %}style="background-image:url('{{ srv.icon_url }}')"{% endif %}>{% if not srv.icon_url %}{{ srv.name[:1]|upper }}{% endif %}{% set sc = mention_counts.server_by_id.get(srv.id, 0) %}<span class="ah-mention-count" {% if not sc %}hidden{% endif %}>{{ '99+' if sc > 99 else sc }}</span></a>{% endfor %}
       <a class="server-dot plus" href="/community/servers/new" title="Create server"><svg class="icon"><use href="#i-plus"></use></svg></a>
     </aside>
 
@@ -1091,7 +1104,7 @@
       <div class="dm-list" id="dm-list">
         {% for item in dm_threads %}{% set u = item.other %}{% if u %}
         {% set u_status = u.account_status or 'online' %}{% set u_visible = u.id in online_ids and u_status != 'invisible' %}
-        <a class="dm-row {{ 'active' if u.id == other.id else '' }}" href="/community/dm/{{ u.username }}" data-name="{{ u.username|lower }}" data-thread-id="{{ item.thread.id }}" data-account-id="{{ u.id }}" data-mini-username="{{ u.username }}" data-mini-avatar="{{ u.avatar_url or '' }}" data-mini-banner="{{ u.banner_url or '' }}" data-mini-status="{{ u_status if u_visible else 'offline' }}" data-mini-role="{{ u.role_label or 'member' }}" data-mini-c1="{{ u.role_color_start or '#5865f2' }}" data-mini-c2="{{ u.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ u.username }}" data-mini-bio="{{ u.bio or '' }}"><span class="avatar" {% if u.avatar_url %}style="background-image:url('{{ u.avatar_url }}')"{% endif %}>{% if not u.avatar_url %}{{ u.username[:1]|upper }}{% endif %}{% if u_visible %}<span class="presence status-{{ u_status }}"></span>{% endif %}</span><span class="dm-meta"><span class="dm-name">{{ u.username }}</span></span>{% set dc = mention_counts.dm_by_thread.get(item.thread.id, 0) %}<span class="ah-mention-count" {% if not dc %}hidden{% endif %}>{{ dc }}</span></a>
+        <a class="dm-row {{ 'active' if u.id == other.id else '' }}" href="/community/dm/{{ u.username }}" data-name="{{ u.username|lower }}" data-thread-id="{{ item.thread.id }}" data-account-id="{{ u.id }}" data-mini-username="{{ u.username }}" data-mini-avatar="{{ u.avatar_url or '' }}" data-mini-banner="{{ u.banner_url or '' }}" data-mini-status="{{ u_status if u_visible else 'offline' }}" data-mini-role="{{ u.role_label or 'member' }}" data-mini-c1="{{ u.role_color_start or '#5865f2' }}" data-mini-c2="{{ u.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ u.username }}" data-mini-bio="{{ u.bio or '' }}"><span class="avatar" {% if u.avatar_url %}style="background-image:url('{{ u.avatar_url }}')"{% endif %}>{% if not u.avatar_url %}{{ u.username[:1]|upper }}{% endif %}{% if u_visible %}<span class="presence status-{{ u_status }}"></span>{% endif %}</span><span class="dm-meta"><span class="dm-name">{{ u.username }}</span></span>{% set dc = mention_counts.dm_by_thread.get(item.thread.id, 0) %}<span class="ah-mention-count" {% if not dc %}hidden{% endif %}>{{ '99+' if dc > 99 else dc }}</span></a>
         {% endif %}{% endfor %}
       </div>
       <div class="user-panel mini-profile-trigger" data-mini-username="{{ account.username }}" data-mini-avatar="{{ account.avatar_url or '' }}" data-mini-banner="{{ account.banner_url or '' }}" data-mini-status="{{ account.account_status or 'online' }}" data-mini-role="{{ account.role_label or 'online' }}" data-mini-c1="{{ account.role_color_start or '#5865f2' }}" data-mini-c2="{{ account.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ account.username }}" data-mini-bio="{{ account.bio or '' }}">
@@ -4711,30 +4724,14 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
 
   function directMentionBadge(container) {
     if (!container) return null;
-    var badges = Array.prototype.filter.call(container.children || [], function (child) {
+    return Array.prototype.find.call(container.children || [], function (child) {
       return child.classList && child.classList.contains('ah-mention-count');
-    });
-    var primary = badges.shift() || null;
-    badges.forEach(function (extra) { extra.remove(); });
-    return primary;
+    }) || null;
   }
 
   function setMentionBadge(container, count, kind, key) {
     if (!container) return;
     count = Math.max(0, Number(count || 0));
-
-    // Server rail uses one CSS pseudo-badge only. Removing DOM badges here
-    // prevents the server-rendered count and realtime count from appearing twice.
-    if (container.classList && container.classList.contains('server-dot')) {
-      container.querySelectorAll('.ah-mention-count').forEach(function (extra) { extra.remove(); });
-      if (count > 0) {
-        container.setAttribute('data-ah-mention-count', count > 999 ? '999+' : String(count));
-        container.title = container.title || '';
-      } else {
-        container.removeAttribute('data-ah-mention-count');
-      }
-      return;
-    }
     var badge = directMentionBadge(container);
     if (!badge && count > 0) {
       badge = document.createElement('span');
@@ -4743,7 +4740,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     }
     if (!badge) return;
     badge.hidden = count <= 0;
-    badge.textContent = count > 999 ? '999+' : String(count);
+    badge.textContent = count > 99 ? '99+' : String(count);
     badge.title = count + ' непрочитаних згадок';
     if (kind === 'thread') badge.dataset.mentionThreadId = String(key || '');
     if (kind === 'server') badge.dataset.mentionServerId = String(key || '');
@@ -4844,15 +4841,6 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     });
   }
 
-  var mentionRail = document.querySelector('.server-rail');
-  if (mentionRail) {
-    var mentionRailObserver = new MutationObserver(function () {
-      mentionRail.querySelectorAll('.server-dot .ah-mention-count').forEach(function (extra) { extra.remove(); });
-    });
-    mentionRailObserver.observe(mentionRail, { childList: true, subtree: true });
-    mentionRail.querySelectorAll('.server-dot .ah-mention-count').forEach(function (extra) { extra.remove(); });
-  }
-
   window.AlexiHubAccountRealtime = {
     refreshPresenceWatch: sendWatchList,
     updatePresence: updatePresence,
@@ -4923,7 +4911,10 @@ document.addEventListener('DOMContentLoaded', async function(){
     host.appendChild(picker);
     picker.addEventListener('pointerdown',event=>{
       const button=event.target.closest('.ah-mention-option');
-      if(!button)return;
+      if(!button){
+        event.preventDefault();
+        return;
+      }
       event.preventDefault();
       event.stopPropagation();
       choose(Number(button.dataset.index||0));
@@ -4973,22 +4964,33 @@ document.addEventListener('DOMContentLoaded', async function(){
     const root=ensurePicker();
     const list=root.querySelector('.ah-mention-picker-list');
     list.innerHTML=options.map((item,index)=>{
-      const avatar=item.avatar_url
-        ? 'style="background-image:url(\''+esc(item.avatar_url).replace(/'/g,'&#39;')+'\')"'
-        : '';
-      const letter=item.everyone?'@':(item.avatar_url?'':esc(String(item.username).slice(0,1).toUpperCase()));
+      const letter=item.everyone?'@':esc(String(item.username).slice(0,1).toUpperCase());
+      const avatarMarkup=item.everyone
+        ? '<span class="ah-mention-avatar everyone"><span class="ah-mention-avatar-fallback">@</span></span>'
+        : '<span class="ah-mention-avatar">'
+          +'<span class="ah-mention-avatar-fallback">'+letter+'</span>'
+          +(item.avatar_url?'<img src="'+esc(item.avatar_url)+'" alt="" draggable="false">':'')
+          +'</span>';
       return '<button type="button" class="ah-mention-option '+(index===selected?'active':'')+'" data-index="'+index+'">'
-        +'<span class="ah-mention-avatar '+(item.everyone?'everyone':'')+'" '+avatar+'>'+letter+'</span>'
+        +avatarMarkup
         +'<span class="ah-mention-option-meta"><b>@'+esc(item.username)+'</b><small>'
         +esc(item.description||(item.everyone?'Усі учасники':'Учасник'))+'</small></span></button>';
     }).join('');
-    list.querySelectorAll('.ah-mention-option').forEach(button=>{
-      button.addEventListener('mouseenter',()=>{
-        selected=Number(button.dataset.index||0);
-        list.querySelectorAll('.ah-mention-option').forEach((option,index)=>{
-          option.classList.toggle('active',index===selected);
-        });
+
+    const setSelected=index=>{
+      if(!options.length)return;
+      selected=Math.max(0,Math.min(Number(index)||0,options.length-1));
+      list.querySelectorAll('.ah-mention-option').forEach((button,buttonIndex)=>{
+        button.classList.toggle('active',buttonIndex===selected);
       });
+      list.querySelector('.ah-mention-option.active')?.scrollIntoView({block:'nearest'});
+    };
+
+    list.querySelectorAll('.ah-mention-option').forEach(button=>{
+      button.addEventListener('mouseenter',()=>setSelected(Number(button.dataset.index||0)));
+    });
+    list.querySelectorAll('.ah-mention-avatar img').forEach(img=>{
+      img.addEventListener('error',()=>img.remove(),{once:true});
     });
     root.classList.add('open');
   }
@@ -4999,10 +5001,18 @@ document.addEventListener('DOMContentLoaded', async function(){
     if(!picker||!picker.classList.contains('open'))return;
     if(event.key==='ArrowDown'){
       event.preventDefault();event.stopImmediatePropagation();
-      selected=(selected+1)%options.length;renderPicker();
+      selected=(selected+1)%options.length;
+      picker.querySelectorAll('.ah-mention-option').forEach((button,index)=>{
+        button.classList.toggle('active',index===selected);
+      });
+      picker.querySelector('.ah-mention-option.active')?.scrollIntoView({block:'nearest'});
     }else if(event.key==='ArrowUp'){
       event.preventDefault();event.stopImmediatePropagation();
-      selected=(selected-1+options.length)%options.length;renderPicker();
+      selected=(selected-1+options.length)%options.length;
+      picker.querySelectorAll('.ah-mention-option').forEach((button,index)=>{
+        button.classList.toggle('active',index===selected);
+      });
+      picker.querySelector('.ah-mention-option.active')?.scrollIntoView({block:'nearest'});
     }else if(event.key==='Enter'||event.key==='Tab'){
       event.preventDefault();event.stopImmediatePropagation();choose(selected);
     }else if(event.key==='Escape'){
@@ -5034,7 +5044,7 @@ document.addEventListener('DOMContentLoaded', async function(){
       changed=true;
       if(start>last)frag.appendChild(document.createTextNode(raw.slice(last,start)));
       const span=document.createElement('span');
-      span.className='ah-mention-token';
+      span.className='ah-mention-token'+((lower===String(currentUsername).toLowerCase()||lower==='everyone')?' is-self':'');
       span.textContent=full;
       frag.appendChild(span);
       last=end;
