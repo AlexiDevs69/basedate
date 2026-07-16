@@ -1396,6 +1396,349 @@ async def list_forward_targets(db: AsyncSession, account_id: int) -> dict:
 
     return {"dms": dm_targets, "channels": channel_targets}
 
+
+
+# ============================================================================
+# Persistent message mentions: @username + server-only @everyone
+# ============================================================================
+
+_MENTION_TABLE_READY = False
+_MENTION_TRAILING = ".,!?;:)]}>»”’\"'"
+
+
+async def ensure_mention_table(db: AsyncSession) -> None:
+    """Create the polymorphic mention table without requiring Alembic.
+
+    A row represents one mentioned account in one message. The message itself
+    may belong to either a DM thread or a server channel.
+    """
+    global _MENTION_TABLE_READY
+    if _MENTION_TABLE_READY:
+        return
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_message_mentions (
+            id BIGSERIAL PRIMARY KEY,
+            target_account_id INTEGER NOT NULL REFERENCES community_accounts(id) ON DELETE CASCADE,
+            author_id INTEGER NOT NULL REFERENCES community_accounts(id) ON DELETE CASCADE,
+            message_kind VARCHAR(16) NOT NULL,
+            message_id INTEGER NOT NULL,
+            thread_id INTEGER,
+            server_id INTEGER,
+            channel_id INTEGER,
+            mention_type VARCHAR(16) NOT NULL DEFAULT 'user',
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+            read_at TIMESTAMP WITH TIME ZONE
+        )
+    """))
+    await db.execute(text("""
+        CREATE UNIQUE INDEX IF NOT EXISTS uq_community_message_mentions_target_message
+        ON community_message_mentions (target_account_id, message_kind, message_id)
+    """))
+    await db.execute(text("""
+        CREATE INDEX IF NOT EXISTS ix_community_message_mentions_target_unread
+        ON community_message_mentions (target_account_id, read_at)
+    """))
+    await db.execute(text("""
+        CREATE INDEX IF NOT EXISTS ix_community_message_mentions_dm_scope
+        ON community_message_mentions (target_account_id, thread_id, read_at)
+    """))
+    await db.execute(text("""
+        CREATE INDEX IF NOT EXISTS ix_community_message_mentions_server_scope
+        ON community_message_mentions (target_account_id, server_id, channel_id, read_at)
+    """))
+    await db.commit()
+    _MENTION_TABLE_READY = True
+
+
+def extract_mention_names(content: str | None) -> set[str]:
+    """Return case-folded names found after @.
+
+    Registration currently permits a broad set of usernames, so parsing stops
+    at whitespace and strips only normal sentence punctuation from the end.
+    """
+    found: set[str] = set()
+    for match in re.finditer(r"(?<![\w@])@([^\s@]{1,80})", content or "", flags=re.UNICODE):
+        name = (match.group(1) or "").rstrip(_MENTION_TRAILING).strip()
+        if name:
+            found.add(name.casefold())
+    return found
+
+
+async def _sync_message_mentions(
+    db: AsyncSession,
+    *,
+    message_kind: str,
+    message_id: int,
+    author_id: int,
+    target_types: dict[int, str],
+    thread_id: int | None = None,
+    server_id: int | None = None,
+    channel_id: int | None = None,
+) -> tuple[list[int], list[int]]:
+    """Synchronize recipients while preserving read state for unchanged targets.
+
+    Returns:
+      mentioned_targets: recipients present in the new message content
+      affected_targets: union of old and new recipients, useful for live counts
+    """
+    await ensure_mention_table(db)
+    existing_result = await db.execute(
+        text("""
+            SELECT target_account_id, mention_type
+            FROM community_message_mentions
+            WHERE message_kind = :message_kind AND message_id = :message_id
+        """),
+        {"message_kind": message_kind, "message_id": int(message_id)},
+    )
+    existing = {int(row[0]): str(row[1] or "user") for row in existing_result.fetchall()}
+    new_targets = {int(uid): str(kind or "user") for uid, kind in target_types.items() if int(uid) != int(author_id)}
+    affected = set(existing) | set(new_targets)
+
+    removed = set(existing) - set(new_targets)
+    for target_id in removed:
+        await db.execute(
+            text("""
+                DELETE FROM community_message_mentions
+                WHERE message_kind = :message_kind
+                  AND message_id = :message_id
+                  AND target_account_id = :target_account_id
+            """),
+            {
+                "message_kind": message_kind,
+                "message_id": int(message_id),
+                "target_account_id": int(target_id),
+            },
+        )
+
+    for target_id, mention_type in new_targets.items():
+        await db.execute(
+            text("""
+                INSERT INTO community_message_mentions (
+                    target_account_id, author_id, message_kind, message_id,
+                    thread_id, server_id, channel_id, mention_type
+                )
+                VALUES (
+                    :target_account_id, :author_id, :message_kind, :message_id,
+                    :thread_id, :server_id, :channel_id, :mention_type
+                )
+                ON CONFLICT (target_account_id, message_kind, message_id)
+                DO UPDATE SET
+                    author_id = EXCLUDED.author_id,
+                    thread_id = EXCLUDED.thread_id,
+                    server_id = EXCLUDED.server_id,
+                    channel_id = EXCLUDED.channel_id,
+                    mention_type = EXCLUDED.mention_type
+            """),
+            {
+                "target_account_id": target_id,
+                "author_id": int(author_id),
+                "message_kind": message_kind,
+                "message_id": int(message_id),
+                "thread_id": int(thread_id) if thread_id else None,
+                "server_id": int(server_id) if server_id else None,
+                "channel_id": int(channel_id) if channel_id else None,
+                "mention_type": mention_type,
+            },
+        )
+
+    await db.commit()
+    return sorted(new_targets), sorted(affected)
+
+
+async def sync_dm_mentions(
+    db: AsyncSession,
+    message: DirectMessage,
+) -> tuple[list[int], list[int]]:
+    await ensure_mention_table(db)
+    thread = await get_dm_thread_by_id(db, int(message.thread_id))
+    if not thread:
+        return [], []
+
+    tokens = extract_mention_names(message.content)
+    tokens.discard("everyone")  # @everyone is intentionally server-only.
+
+    target_types: dict[int, str] = {}
+    for account_id in (int(thread.user_low_id), int(thread.user_high_id)):
+        if account_id == int(message.author_id):
+            continue
+        account = await get_account_by_id(db, account_id)
+        if account and (account.username or "").casefold() in tokens:
+            target_types[account_id] = "user"
+
+    return await _sync_message_mentions(
+        db,
+        message_kind="dm",
+        message_id=int(message.id),
+        author_id=int(message.author_id),
+        thread_id=int(message.thread_id),
+        target_types=target_types,
+    )
+
+
+async def sync_server_mentions(
+    db: AsyncSession,
+    message: ServerMessage,
+) -> tuple[list[int], list[int]]:
+    await ensure_mention_table(db)
+    tokens = extract_mention_names(message.content)
+    members = await list_server_members(db, int(message.server_id))
+
+    target_types: dict[int, str] = {}
+    if "everyone" in tokens:
+        for item in members:
+            account = item.get("account")
+            if account and int(account.id) != int(message.author_id):
+                target_types[int(account.id)] = "everyone"
+
+    for item in members:
+        account = item.get("account")
+        if not account or int(account.id) == int(message.author_id):
+            continue
+        if (account.username or "").casefold() in tokens:
+            target_types[int(account.id)] = "user"
+
+    return await _sync_message_mentions(
+        db,
+        message_kind="server",
+        message_id=int(message.id),
+        author_id=int(message.author_id),
+        server_id=int(message.server_id),
+        channel_id=int(message.channel_id),
+        target_types=target_types,
+    )
+
+
+async def delete_message_mentions(
+    db: AsyncSession,
+    message_kind: str,
+    message_id: int,
+) -> list[int]:
+    await ensure_mention_table(db)
+    result = await db.execute(
+        text("""
+            SELECT target_account_id
+            FROM community_message_mentions
+            WHERE message_kind = :message_kind AND message_id = :message_id
+        """),
+        {"message_kind": message_kind, "message_id": int(message_id)},
+    )
+    affected = sorted({int(row[0]) for row in result.fetchall()})
+    await db.execute(
+        text("""
+            DELETE FROM community_message_mentions
+            WHERE message_kind = :message_kind AND message_id = :message_id
+        """),
+        {"message_kind": message_kind, "message_id": int(message_id)},
+    )
+    await db.commit()
+    return affected
+
+
+async def mark_dm_mentions_read(db: AsyncSession, account_id: int, thread_id: int) -> bool:
+    await ensure_mention_table(db)
+    result = await db.execute(
+        text("""
+            UPDATE community_message_mentions
+            SET read_at = NOW()
+            WHERE target_account_id = :account_id
+              AND message_kind = 'dm'
+              AND thread_id = :thread_id
+              AND read_at IS NULL
+        """),
+        {"account_id": int(account_id), "thread_id": int(thread_id)},
+    )
+    await db.commit()
+    return bool(getattr(result, "rowcount", 0))
+
+
+async def mark_server_channel_mentions_read(
+    db: AsyncSession,
+    account_id: int,
+    server_id: int,
+    channel_id: int,
+) -> bool:
+    await ensure_mention_table(db)
+    result = await db.execute(
+        text("""
+            UPDATE community_message_mentions
+            SET read_at = NOW()
+            WHERE target_account_id = :account_id
+              AND message_kind = 'server'
+              AND server_id = :server_id
+              AND channel_id = :channel_id
+              AND read_at IS NULL
+        """),
+        {
+            "account_id": int(account_id),
+            "server_id": int(server_id),
+            "channel_id": int(channel_id),
+        },
+    )
+    await db.commit()
+    return bool(getattr(result, "rowcount", 0))
+
+
+async def unread_mention_summary(db: AsyncSession, account_id: int) -> dict:
+    await ensure_mention_table(db)
+
+    dm_result = await db.execute(
+        text("""
+            SELECT thread_id, COUNT(*)
+            FROM community_message_mentions
+            WHERE target_account_id = :account_id
+              AND message_kind = 'dm'
+              AND read_at IS NULL
+              AND thread_id IS NOT NULL
+            GROUP BY thread_id
+        """),
+        {"account_id": int(account_id)},
+    )
+    dm_by_thread = {int(row[0]): int(row[1]) for row in dm_result.fetchall()}
+
+    server_result = await db.execute(
+        text("""
+            SELECT server_id, COUNT(*)
+            FROM community_message_mentions
+            WHERE target_account_id = :account_id
+              AND message_kind = 'server'
+              AND read_at IS NULL
+              AND server_id IS NOT NULL
+            GROUP BY server_id
+        """),
+        {"account_id": int(account_id)},
+    )
+    server_by_id = {int(row[0]): int(row[1]) for row in server_result.fetchall()}
+
+    channel_result = await db.execute(
+        text("""
+            SELECT server_id, channel_id, COUNT(*)
+            FROM community_message_mentions
+            WHERE target_account_id = :account_id
+              AND message_kind = 'server'
+              AND read_at IS NULL
+              AND server_id IS NOT NULL
+              AND channel_id IS NOT NULL
+            GROUP BY server_id, channel_id
+        """),
+        {"account_id": int(account_id)},
+    )
+    channel_by_id = {
+        f"{int(row[0])}:{int(row[1])}": int(row[2])
+        for row in channel_result.fetchall()
+    }
+
+    dm_total = sum(dm_by_thread.values())
+    server_total = sum(server_by_id.values())
+    return {
+        "total": dm_total + server_total,
+        "dm_total": dm_total,
+        "server_total": server_total,
+        "dm_by_thread": dm_by_thread,
+        "server_by_id": server_by_id,
+        "channel_by_id": channel_by_id,
+    }
+
+
 # ============================================================================
 # Gifts
 # ============================================================================
