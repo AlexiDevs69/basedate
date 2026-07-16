@@ -1333,6 +1333,7 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
 .server-dot>.ah-mention-count[hidden]{
   display:none!important;
 }
+.server-dot>.ah-mention-count~.ah-mention-count{display:none!important;}
 .dm-row>.ah-mention-count{
   position:static;margin-left:auto;flex:0 0 auto;border-color:#111114;
 }
@@ -3572,9 +3573,12 @@ if (typeof window.openSelfProfileSettings !== 'function') {
 
   function directMentionBadge(container) {
     if (!container) return null;
-    return Array.prototype.find.call(container.children || [], function (child) {
+    var badges = Array.prototype.filter.call(container.children || [], function (child) {
       return child.classList && child.classList.contains('ah-mention-count');
-    }) || null;
+    });
+    var primary = badges.shift() || null;
+    badges.forEach(function (extra) { extra.remove(); });
+    return primary;
   }
 
   function setMentionBadge(container, count, kind, key) {
