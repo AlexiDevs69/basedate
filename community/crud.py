@@ -1686,6 +1686,7 @@ NITRO_TIER_LABELS = {
     "platinum": "Платина Nitro",
     "diamond": "Алмаз Nitro",
     "emerald": "Изумруд Nitro",
+    "ruby": "Рубин Nitro",
 }
 
 NITRO_GIFTER_BADGE_LABELS = {
@@ -1729,7 +1730,9 @@ def nitro_gifter_badge_from_count(claimed_gifts: int | float | None) -> dict:
 def nitro_tier_from_duration(duration_days: int | float | None) -> tuple[str, str]:
     """Return one canonical Nitro tier for the full uninterrupted credit period."""
     days = max(0, int(duration_days or 0))
-    if days >= 200:
+    if days >= 500:
+        tier = "ruby"
+    elif days >= 200:
         tier = "emerald"
     elif days >= 101:
         tier = "diamond"
