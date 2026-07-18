@@ -2215,6 +2215,9 @@ function openChannelInviteModal(event, btn) {
     var myAccountId = {{ account.id }};
     var socket = null;
     var reconnectTimer = null;
+    var reconnectDelay = 900;
+    var pageClosing = false;
+    var pendingServerSend = null;
     var lastTypingAt = 0;
     var typingStopTimer = null;
     var typingHideTimer = null;
@@ -2443,7 +2446,12 @@ function openChannelInviteModal(event, btn) {
       actions.innerHTML = '<button type="button" class="message-more-btn" onclick="openMessageMenu(event)" title="More"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>';
       article.appendChild(actions);
 
-      messagesEl.appendChild(article);
+      var nextMessage = Array.from(messagesEl.querySelectorAll('.message[data-message-id]')).find(function (row) {
+        return Number(row.dataset.messageId || 0) > Number(msg.id || 0);
+      });
+      if (nextMessage) messagesEl.insertBefore(article, nextMessage);
+      else messagesEl.appendChild(article);
+      if (String(msg.content || '').includes('[[ah:emoji:') && window.__ahReloadCustomMedia) window.__ahReloadCustomMedia();
       var searchInput = document.querySelector('.discord-search input');
       if (searchInput && searchInput.value) filterChannelMessages(searchInput.value);
       if (shouldStick) messagesEl.scrollTop = messagesEl.scrollHeight;
@@ -2490,28 +2498,114 @@ function openChannelInviteModal(event, btn) {
       });
     }
 
-    function connectRealtime() {
+    function latestServerMessageId() {
+      var latest = 0;
+      document.querySelectorAll('.message[data-message-id]').forEach(function (row) {
+        var id = Number(row.dataset.messageId || 0);
+        if (id > latest) latest = id;
+      });
+      return latest;
+    }
+
+    function setServerComposerBusy(busy) {
+      if (textarea) textarea.readOnly = !!busy;
+      var submit = composerForm && composerForm.querySelector('button[type="submit"]');
+      if (submit) submit.disabled = !!busy;
+    }
+
+    function finishServerSend(clearComposer) {
+      if (pendingServerSend && pendingServerSend.timer) clearTimeout(pendingServerSend.timer);
+      pendingServerSend = null;
+      setServerComposerBusy(false);
+      if (!clearComposer) return;
+      textarea.value = '';
+      textarea.style.height = 'auto';
+      if (imageInput) imageInput.value = '';
+      clearComposerImage();
+      clearReply();
+      delete textarea.dataset.ahWireValue;
+      delete textarea.dataset.ahDisplayValue;
+    }
+
+    function acknowledgeServerSend(data) {
+      if (!pendingServerSend) return;
+      var msg = data && data.message || {};
+      var author = data && data.author || {};
+      if (Number(author.id || msg.author_id) !== Number(myAccountId)) return;
+      var nonceMatches = data.client_nonce && data.client_nonce === pendingServerSend.nonce;
+      var contentMatches = !data.client_nonce && String(msg.content || '') === pendingServerSend.content && String(msg.image_url || '') === pendingServerSend.image_url;
+      if (nonceMatches || contentMatches) finishServerSend(true);
+    }
+
+    function removeServerMessage(messageId) {
+      var id = Number(messageId || 0);
+      var row = id ? document.getElementById('message-' + id) : null;
+      if (row) row.remove();
+      if (window.__serverPinsApi) window.__serverPinsApi.removeServerPin(id);
+    }
+
+    function handleServerRealtimeData(data) {
+      if (!data || typeof data !== 'object') return;
+      if (data.type === 'message') {
+        acknowledgeServerSend(data);
+        appendMessage(data.message || {}, data.author || {});
+      }
+      if (data.type === 'message_sync') {
+        (Array.isArray(data.events) ? data.events : []).forEach(handleServerRealtimeData);
+        if (data.has_more) sendSocket({ type: 'sync', after_id: latestServerMessageId() });
+        else if (pendingServerSend) finishServerSend(false);
+      }
+      if (data.type === 'message_error') {
+        finishServerSend(false);
+        if (window.showActionToast) showActionToast(data.error === 'media_not_allowed' ? 'Це емоджі або стікер тут недоступне.' : 'Повідомлення не відправлено.');
+      }
+      if (data.type === 'message_edit') applyServerMessageEdit(data.message || {});
+      if (data.type === 'message_delete') removeServerMessage(data.message_id);
+      if (data.type === 'typing') renderTyping(data.users || []);
+      if (data.type === 'presence') updateMemberPresence(data.account_id, data.status, data.online);
+      if (data.type === 'pin_add' && data.pin && window.__serverPinsApi) window.__serverPinsApi.upsertServerPin(data.pin);
+      if (data.type === 'pin_remove' && window.__serverPinsApi) window.__serverPinsApi.removeServerPin(data.message_id);
+      if (data.type === 'reaction_update' && window.AlexiHubReactions) window.AlexiHubReactions.handleRealtime(data.message_id);
+    }
+
+    function scheduleRealtimeReconnect() {
+      if (pageClosing) return;
       clearTimeout(reconnectTimer);
-      try { socket = new WebSocket(wsUrl()); } catch (e) { setWsStatus('offline', 'offline'); return; }
+      var jitter = Math.round(Math.random() * 250);
+      reconnectTimer = setTimeout(connectRealtime, reconnectDelay + jitter);
+      reconnectDelay = Math.min(8000, Math.round(reconnectDelay * 1.6));
+    }
+
+    function connectRealtime() {
+      if (pageClosing) return;
+      clearTimeout(reconnectTimer);
+      var nextSocket;
+      try { nextSocket = new WebSocket(wsUrl()); } catch (e) { setWsStatus('offline', 'offline'); scheduleRealtimeReconnect(); return; }
+      socket = nextSocket;
       setWsStatus('', 'connecting');
 
-      socket.addEventListener('open', function () { setWsStatus('live', 'live'); });
-      socket.addEventListener('message', function (event) {
+      nextSocket.addEventListener('open', function () {
+        if (socket !== nextSocket) return;
+        reconnectDelay = 900;
+        setWsStatus('live', 'live');
+        sendSocket({ type: 'sync', after_id: latestServerMessageId() });
+      });
+      nextSocket.addEventListener('message', function (event) {
+        if (socket !== nextSocket) return;
         var data;
         try { data = JSON.parse(event.data); } catch (e) { return; }
-        if (data.type === 'message') appendMessage(data.message, data.author || {});
-        if (data.type === 'message_edit') applyServerMessageEdit(data.message || {});
-        if (data.type === 'typing') renderTyping(data.users || []);
-        if (data.type === 'presence') updateMemberPresence(data.account_id, data.status, data.online);
-        if (data.type === 'pin_add' && data.pin && window.__serverPinsApi) window.__serverPinsApi.upsertServerPin(data.pin);
-        if (data.type === 'pin_remove' && window.__serverPinsApi) window.__serverPinsApi.removeServerPin(data.message_id);
-        if (data.type === 'reaction_update' && window.AlexiHubReactions) window.AlexiHubReactions.handleRealtime(data.message_id);
+        handleServerRealtimeData(data);
       });
-      socket.addEventListener('close', function () {
+      nextSocket.addEventListener('close', function () {
+        if (socket === nextSocket) socket = null;
+        if (pageClosing) return;
         setWsStatus('offline', 'reconnecting');
-        reconnectTimer = setTimeout(connectRealtime, 1700);
+        scheduleRealtimeReconnect();
       });
-      socket.addEventListener('error', function () { setWsStatus('offline', 'offline'); });
+      nextSocket.addEventListener('error', function () {
+        setWsStatus('offline', 'offline');
+        try { nextSocket.close(); } catch (e) {}
+      });
     }
 
     function sendSocket(payload) {
@@ -2534,28 +2628,32 @@ function openChannelInviteModal(event, btn) {
 
     function sendCurrentMessage() {
       if (!textarea || !composerForm) return;
+      if (pendingServerSend) return;
       var content = textarea.value.trim();
       var imageUrl = imageInput ? imageInput.value.trim() : '';
       if (!content && !imageUrl) return;
 
       var replyInput = document.getElementById('reply-to-id');
       var replyToId = replyInput ? replyInput.value.trim() : '';
-      var ok = sendSocket({ type: 'message', content: content, image_url: imageUrl, reply_to_id: replyToId });
+      var clientNonce = (window.crypto && window.crypto.randomUUID) ? window.crypto.randomUUID() : String(Date.now()) + '-' + Math.random().toString(16).slice(2);
+      pendingServerSend = { nonce: clientNonce, content: content, image_url: imageUrl, timer: null };
+      var ok = sendSocket({ type: 'message', content: content, image_url: imageUrl, reply_to_id: replyToId, client_nonce: clientNonce });
       if (!ok) {
+        pendingServerSend = null;
         HTMLFormElement.prototype.submit.call(composerForm);
         return;
       }
-      textarea.value = '';
-      textarea.style.height = 'auto';
-      if (imageInput) imageInput.value = '';
-      clearComposerImage();
-      clearReply();
+      setServerComposerBusy(true);
+      pendingServerSend.timer = setTimeout(function(){ finishServerSend(false); }, 12000);
       sendSocket({ type: 'typing_stop' });
     }
 
     connectRealtime();
 
     window.addEventListener('pagehide', function () {
+      pageClosing = true;
+      clearTimeout(reconnectTimer);
+      clearTimeout(typingStopTimer);
       try {
         if (socket && socket.readyState === WebSocket.OPEN) {
           socket.send(JSON.stringify({ type: 'leave' }));
@@ -3817,7 +3915,7 @@ if (typeof window.openSelfProfileSettings !== 'function') {
   async function loadServerPinMediaLibrary(){
     if(serverPinMediaLibrary) return serverPinMediaLibrary;
     if(serverPinMediaLoading) return serverPinMediaLoading;
-    serverPinMediaLoading = fetch('/community/api/media/library?context=server&server_id={{ server.id }}', {credentials:'same-origin'})
+    serverPinMediaLoading = fetch('/community/api/media/library?context=server&server_id={{ server.id }}&channel_id={{ channel.id }}', {credentials:'same-origin'})
       .then(r => r.json())
       .then(data => {
         serverPinMediaLibrary = data && data.ok !== false ? data : {emojis:[], stickers:[]};
@@ -3845,6 +3943,13 @@ if (typeof window.openSelfProfileSettings !== 'function') {
         const pattern = new RegExp(serverPinEscapeRegExp(serverPinEscape(token)), 'gi');
         html = html.replace(pattern, '<img class="ah-custom-emoji server-pin-emoji" src="' + serverPinEscape(item.image_url) + '" alt="' + serverPinEscape(token) + '" title="' + serverPinEscape(token) + '">');
       });
+    });
+    const emojiById = new Map((emojis || []).map(item => [String(item.id), item]));
+    html = html.replace(/\[\[ah:emoji:(\d+)\]\]/g, (marker, id) => {
+      const item = emojiById.get(String(id));
+      if(!item || !item.image_url) return marker;
+      const token = ':' + serverPinCleanMediaName(item.name) + ':';
+      return '<img class="ah-custom-emoji server-pin-emoji" src="' + serverPinEscape(item.image_url) + '" alt="' + serverPinEscape(token) + '" title="' + serverPinEscape(token) + '">';
     });
     return html;
   }
@@ -4631,7 +4736,7 @@ if (typeof window.openSelfProfileSettings !== 'function') {
     p.querySelector('.ah-media-search').addEventListener('input',render);
     return p;
   }
-  async function load(){try{const url='/community/api/media/library?context='+encodeURIComponent(context)+(serverId?'&server_id='+encodeURIComponent(serverId):'');lib=await (await fetch(url,{credentials:'same-origin'})).json();}catch(e){lib={ok:false,nitro:false,emojis:[],stickers:[]};}render();renderCustomMedia(document);}
+  async function load(){try{const url='/community/api/media/library?context='+encodeURIComponent(context)+(serverId?'&server_id='+encodeURIComponent(serverId)+'&channel_id={{ channel.id }}':'');lib=await (await fetch(url,{credentials:'same-origin'})).json();}catch(e){lib={ok:false,nitro:false,emojis:[],stickers:[]};}render();renderCustomMedia(document);}
   function groupItems(items){const out=[],map=new Map();items.forEach(i=>{const key=String(i.server_id||'0');if(!map.has(key)){map.set(key,{server_id:key,server_name:i.server_name||'Сервер',server_icon_url:i.server_icon_url||'',items:[]});out.push(map.get(key));}map.get(key).items.push(i);});return out;}
   function railHtml(groups){return `<div class="ah-media-rail"><button type="button" class="ah-media-rail-btn" title="Часто"><svg class="ah-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/></svg></button>${groups.map(g=>{const locked=g.items.some(x=>!x.allowed);const style=g.server_icon_url?`style="background-image:url('${esc(g.server_icon_url)}')"`:'';const initials=!g.server_icon_url?esc((g.server_name||'S').slice(0,2).toUpperCase()):'';return `<button type="button" class="ah-media-rail-btn ${locked?'locked':''}" ${style} title="${esc(g.server_name)}">${initials}</button>`;}).join('')}</div>`;}
   function render(){const p=ensure(),body=p.querySelector('.ah-media-body'),q=(p.querySelector('.ah-media-search').value||'').toLowerCase().trim();if(tab==='gifs'){body.innerHTML='<div class="ah-media-empty">GIF поки заглушка</div>';p.querySelector('.ah-media-footer span').textContent='GIF';return;}const all=(tab==='stickers'?(lib.stickers||[]):(lib.emojis||[])).filter(i=>(i.name||'').toLowerCase().includes(q));const groups=groupItems(all);if(!all.length){body.innerHTML='<div class="ah-media-empty">Пусто</div>';return;}const typeClass=tab==='stickers'?'stickers':'emojis';body.innerHTML=`<div class="ah-media-layout">${railHtml(groups)}<div class="ah-media-scroll">${groups.map(g=>{const locked=g.items.some(x=>!x.allowed);return `<section class="ah-media-group ${locked?'locked':''}">${locked?'<div class="ah-media-lock-pill"><svg class="ah-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>':''}<div class="ah-media-group-head"><span class="server-mini" ${g.server_icon_url?`style="background-image:url('${esc(g.server_icon_url)}')"`:''}>${g.server_icon_url?'':esc((g.server_name||'S').slice(0,2).toUpperCase())}</span><span>${esc(g.server_name)}</span></div>${locked?'<div class="ah-media-group-note">Потрібен Nitro, щоб юзати це в ЛС або на іншому сервері.</div>':''}<div class="ah-media-grid ${typeClass}">${g.items.map(i=>`<button type="button" class="ah-media-item ${i.allowed?'':'locked'}" data-id="${esc(i.id)}" data-type="${esc(i.type)}" title="${esc(i.name)}"><img src="${esc(i.image_url)}" alt="${esc(i.name)}"></button>`).join('')}</div></section>`;}).join('')}</div></div>`;body.querySelectorAll('.ah-media-item').forEach(btn=>btn.addEventListener('mouseenter',()=>{const item=all.find(i=>String(i.id)===btn.dataset.id&&String(i.type)===btn.dataset.type);if(!item)return;p.querySelector('.ah-media-footer').innerHTML=`<img src="${esc(item.image_url)}" alt=""><span>${item.type==='emoji'?':'+esc(item.name)+':':esc(item.name)}</span>`;}));body.querySelectorAll('.ah-media-item').forEach(btn=>btn.addEventListener('click',()=>{const item=all.find(i=>String(i.id)===btn.dataset.id&&String(i.type)===btn.dataset.type);use(item);}));}
@@ -4725,7 +4830,7 @@ if (typeof window.openSelfProfileSettings !== 'function') {
     const isServer = location.pathname.includes('/servers/');
     const m = location.pathname.match(/\/servers\/(\d+)/);
     const serverId = m ? m[1] : '';
-    return '/community/api/media/library?context=' + encodeURIComponent(isServer ? 'server' : 'dm') + (serverId ? '&server_id=' + encodeURIComponent(serverId) : '');
+    return '/community/api/media/library?context=' + encodeURIComponent(isServer ? 'server' : 'dm') + (serverId ? '&server_id=' + encodeURIComponent(serverId) + '&channel_id={{ channel.id }}' : '');
   }
 
   async function loadMediaLib(){
@@ -4777,6 +4882,13 @@ if (typeof window.openSelfProfileSettings !== 'function') {
         html = html.replace(pattern, '<img class="ah-custom-emoji" src="' + esc(item.image_url) + '" alt=":' + esc(name) + ':" title=":' + esc(name) + ':">');
       });
     });
+    const emojiById = new Map((emojis || []).map(function(item){ return [String(item.id), item]; }));
+    html = html.replace(/\[\[ah:emoji:(\d+)\]\]/g, function(marker, id){
+      const item = emojiById.get(String(id));
+      if(!item || !item.image_url) return marker;
+      const name = cleanName(item.name);
+      return '<img class="ah-custom-emoji" src="' + esc(item.image_url) + '" alt=":' + esc(name) + ':" title=":' + esc(name) + ':">';
+    });
     el.innerHTML = html;
     if(el.dataset) el.dataset.mediaRendered = '1'; // legacy observer must skip already-rendered emoji images
   }
@@ -4811,6 +4923,11 @@ if (typeof window.openSelfProfileSettings !== 'function') {
       renderSavedCustomMedia();
     }
   }
+
+  window.__ahReloadCustomMedia = async function(){
+    mediaLib = null;
+    await forceRenderSavedCustomMedia();
+  };
 
   function svgSmile(){
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8.5 14.2c1.6 1.4 5.4 1.4 7 0"/><path d="M9 9h.01"/><path d="M15 9h.01"/></svg>';
@@ -5034,18 +5151,20 @@ body .composer-wrap{
 
   // Let the original first media system handle normal clicks, but protect the textarea value
   // in case another later handler/composer preview steals focus or clears the selected token.
-  let pendingToken = '';
+  let pendingSelections = [];
   document.addEventListener('click', function(e){
     const item = e.target && e.target.closest ? e.target.closest('#ah-media-picker .ah-media-item') : null;
     if(!item || item.classList.contains('locked')) return;
     const type = item.dataset.type || '';
     if(type !== 'emoji') return;
     const title = item.getAttribute('title') || item.dataset.name || '';
-    const token = ':' + cleanName(title) + ':';
-    pendingToken = token;
+    const itemId = String(item.dataset.id || '').trim();
+    const displayToken = ':' + cleanName(title) + ':';
+    const wireToken = itemId ? '[[ah:emoji:' + itemId + ']]' : displayToken;
+    pendingSelections.push({displayToken, wireToken});
     setTimeout(function(){
       const ta = textarea();
-      if(ta && token && !ta.value.includes(token)) insertAtCursor(ta, token + ' ');
+      if(ta && displayToken && !ta.value.includes(displayToken)) insertAtCursor(ta, displayToken + ' ');
       schedulePosition();
     }, 0);
   }, true);
@@ -5054,10 +5173,26 @@ body .composer-wrap{
     const form = e.target && e.target.closest ? e.target.closest('#dm-form,#server-message-form,#composer-form,form.composer-wrap') : null;
     if(!form) return;
     const ta = form.querySelector('textarea[name="content"]') || textarea();
-    if(ta && pendingToken && !ta.value.includes(pendingToken)){
-      insertAtCursor(ta, pendingToken + ' ');
+    let displayValue = ta ? ta.value : '';
+    if(ta && pendingSelections.length){
+      pendingSelections.forEach(function(selection){
+        const index = ta.value.lastIndexOf(selection.displayToken);
+        if(index >= 0){
+          ta.value = ta.value.slice(0,index) + selection.wireToken + ta.value.slice(index + selection.displayToken.length);
+        }
+      });
+    }else if(ta && ta.dataset.ahDisplayValue === ta.value && ta.dataset.ahWireValue){
+      ta.value = ta.dataset.ahWireValue;
     }
-    pendingToken = '';
+    pendingSelections = [];
+    const wireValue = ta ? ta.value : '';
+    if(ta){
+      ta.dataset.ahDisplayValue = displayValue;
+      ta.dataset.ahWireValue = wireValue;
+    }
+    setTimeout(function(){
+      if(ta && ta.value === wireValue && displayValue !== wireValue) ta.value = displayValue;
+    }, 0);
     setTimeout(function(){
       if(window.AlexiHubMediaPicker && typeof window.AlexiHubMediaPicker.renderCustomMedia === 'function'){
         try{ window.AlexiHubMediaPicker.renderCustomMedia(document); }catch(e){}
@@ -5330,7 +5465,7 @@ body .composer-wrap{
     return cfg.context==='dm'?'/community/api/dm/'+encodeURIComponent(cfg.otherUsername)+'/reactions'+q:'/community/api/servers/'+cfg.serverId+'/channel/'+cfg.channelId+'/reactions'+q;
   }
   function toggleUrl(id){return cfg.context==='dm'?'/community/api/dm/'+encodeURIComponent(cfg.otherUsername)+'/messages/'+id+'/reactions/toggle':'/community/api/servers/'+cfg.serverId+'/channel/'+cfg.channelId+'/messages/'+id+'/reactions/toggle';}
-  function libraryUrl(){return '/community/api/media/library?context='+encodeURIComponent(cfg.context)+(cfg.context==='server'?'&server_id='+encodeURIComponent(cfg.serverId):'');}
+  function libraryUrl(){return '/community/api/media/library?context='+encodeURIComponent(cfg.context)+(cfg.context==='server'?'&server_id='+encodeURIComponent(cfg.serverId)+'&channel_id={{ channel.id }}':'');}
 
   async function loadAll(){
     install(document);const ids=Array.from(document.querySelectorAll(cfg.context==='dm'?'.msg[data-message-id],.msg[data-id]':'.message[data-message-id]')).map(messageId).filter(Boolean);if(!ids.length)return;
