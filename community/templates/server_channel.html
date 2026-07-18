@@ -1563,9 +1563,9 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
 .ah-mention-option:hover .ah-mention-option-meta small{color:#fff;}
 .composer-wrap,.dm-composer-shell{position:relative;}
 </style>
-<script src="/static/js/message_rate_limit.js?v=20260718-1"></script>
 </head>
 <body data-current-account-id="{{ account.id }}">
+  {% include "_message_rate_limit.html" %}
   <aside class="server-rail">
     <a href="/community" class="server-dot home-dot {{ 'active' if not active_server_id else '' }}" title="Direct Messages" data-mention-home="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="21" height="21"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg></a>
     <div class="rail-sep"></div>
@@ -2641,8 +2641,7 @@ function openChannelInviteModal(event, btn) {
     function sendCurrentMessage() {
       if (!textarea || !composerForm) return;
       if (pendingServerSend) return;
-      if (window.AlexiHubMessageRateLimit && window.AlexiHubMessageRateLimit.isBlocked()) {
-        window.AlexiHubMessageRateLimit.show(window.AlexiHubMessageRateLimit.remainingMs());
+      if (window.AlexiHubMessageRateLimit && !window.AlexiHubMessageRateLimit.checkAndRecord()) {
         return;
       }
       var content = textarea.value.trim();
