@@ -315,9 +315,17 @@ class RealtimeChannelManager:
         if dead:
             async with self.lock:
                 users = self.connections.get(key, {})
-                for account_sockets in users.values():
+                for account_id, account_sockets in list(users.items()):
                     for ws in dead:
                         account_sockets.discard(ws)
+                    if not account_sockets:
+                        users.pop(account_id, None)
+                        if key in self.typing:
+                            self.typing[key].pop(account_id, None)
+                if not users:
+                    self.connections.pop(key, None)
+                if key in self.typing and not self.typing[key]:
+                    self.typing.pop(key, None)
 
     async def set_typing(self, key: tuple[int, int], account_id: int, profile: dict) -> None:
         expires_at = time.monotonic() + 3.0
@@ -648,6 +656,105 @@ def _reply_payload(message, author) -> dict | None:
         "image_url": message.image_url,
         "author": _account_payload(author) if author else {"id": None, "username": "видалений юзер", "avatar_url": ""},
     }
+
+
+def _missing_author_payload(author_id: int | None) -> dict:
+    return {
+        "id": int(author_id or 0),
+        "username": "видалений юзер",
+        "avatar_url": "",
+        "banner_url": "",
+        "role_label": "member",
+        "role_color_start": "#f5576c",
+        "role_color_end": "#7367f0",
+        "name_effect": "none",
+        "name_font": "default",
+        "account_status": "offline",
+        "bio": "",
+        "is_verified": False,
+        "language": DEFAULT_LANGUAGE,
+    }
+
+
+async def _server_message_realtime_event(
+    db: AsyncSession,
+    message,
+    *,
+    client_nonce: str | None = None,
+) -> dict:
+    author = await crud.get_account_by_id(db, int(message.author_id))
+    reply = None
+    reply_id = getattr(message, "reply_to_id", None)
+    if reply_id:
+        reply_message = await crud.get_server_message(
+            db, int(message.server_id), int(message.channel_id), int(reply_id)
+        )
+        if reply_message:
+            reply_author = await crud.get_account_by_id(db, int(reply_message.author_id))
+            reply = _reply_payload(reply_message, reply_author)
+    payload = {
+        "type": "message",
+        "message": {
+            "id": int(message.id),
+            "server_id": int(message.server_id),
+            "channel_id": int(message.channel_id),
+            "author_id": int(message.author_id),
+            "content": message.content or "",
+            "image_url": message.image_url or None,
+            "created_at": message.created_at.isoformat(),
+            "edited_at": (
+                message.edited_at.isoformat()
+                if getattr(message, "edited_at", None)
+                else None
+            ),
+            "reply_to_id": int(reply_id) if reply_id else None,
+            "reply": reply,
+            "is_forwarded": bool(getattr(message, "is_forwarded", False)),
+        },
+        "author": _account_payload(author) if author else _missing_author_payload(message.author_id),
+    }
+    if client_nonce:
+        payload["client_nonce"] = client_nonce
+    return payload
+
+
+async def _dm_message_realtime_event(
+    db: AsyncSession,
+    message,
+    *,
+    client_nonce: str | None = None,
+) -> dict:
+    author = await crud.get_account_by_id(db, int(message.author_id))
+    reply = None
+    reply_id = getattr(message, "reply_to_id", None)
+    if reply_id:
+        reply_message = await crud.get_dm_message(db, int(message.thread_id), int(reply_id))
+        if reply_message:
+            reply_author = await crud.get_account_by_id(db, int(reply_message.author_id))
+            reply = _reply_payload(reply_message, reply_author)
+    payload = {
+        "type": "message",
+        "message": {
+            "id": int(message.id),
+            "thread_id": int(message.thread_id),
+            "author_id": int(message.author_id),
+            "content": message.content or "",
+            "image_url": message.image_url or None,
+            "created_at": message.created_at.isoformat(),
+            "edited_at": (
+                message.edited_at.isoformat()
+                if getattr(message, "edited_at", None)
+                else None
+            ),
+            "reply_to_id": int(reply_id) if reply_id else None,
+            "reply": reply,
+            "is_forwarded": bool(getattr(message, "is_forwarded", False)),
+        },
+        "author": _account_payload(author) if author else _missing_author_payload(message.author_id),
+    }
+    if client_nonce:
+        payload["client_nonce"] = client_nonce
+    return payload
 
 
 @router.websocket("/ws/account")
@@ -1319,6 +1426,7 @@ async def server_message_submit(
     content, image_url, _media_item = await _prepare_custom_media_message(
         db, account.id, content, image_url, context="server", server_id=server_id
     )
+    realtime_payload = None
     if channel and (content.strip() or image_url.strip()):
         reply_id = _parse_optional_int(reply_to_id)
         if reply_id:
@@ -1327,7 +1435,12 @@ async def server_message_submit(
                 reply_id = None
         msg = await crud.create_server_message(db, server_id, channel_id, account.id, content.strip(), image_url.strip(), reply_to_id=reply_id)
         mention_affected = await _sync_server_message_mentions(db, msg)
+        realtime_payload = await _server_message_realtime_event(db, msg)
         await _broadcast_mention_counts(mention_affected)
+    if realtime_payload:
+        # The HTML form is the WebSocket fallback. Other connected members must
+        # still receive the message even though the sender is about to redirect.
+        await realtime_channels.broadcast((server_id, channel_id), realtime_payload)
     return RedirectResponse(url=f"/community/servers/{server_id}/channel/{channel_id}", status_code=303)
 
 
@@ -1386,6 +1499,10 @@ async def server_message_delete_submit(
         mention_affected = await crud.delete_message_mentions(db, "server", message.id)
         await crud.delete_server_message(db, message)
         await _broadcast_mention_counts(mention_affected)
+        await realtime_channels.broadcast(
+            (server_id, channel_id),
+            {"type": "message_delete", "message_id": int(message_id)},
+        )
     return RedirectResponse(url=f"/community/servers/{server_id}/channel/{channel_id}", status_code=303)
 
 
@@ -2178,6 +2295,7 @@ async def api_toggle_server_reaction(
 
 
 _MEDIA_SEND_RE = re.compile(r"^\s*\[\[ah:(emoji|sticker):(\d+)\]\]\s*$")
+_MEDIA_TOKEN_RE = re.compile(r"\[\[ah:(emoji|sticker):(\d+)\]\]")
 
 async def _prepare_custom_media_message(
     db: AsyncSession,
@@ -2191,25 +2309,46 @@ async def _prepare_custom_media_message(
     """Normalize custom emoji/sticker messages and enforce Nitro/server-scope rules."""
     clean_content = (content or "").strip()
     clean_image = (image_url or "").strip()
-    match = _MEDIA_SEND_RE.match(clean_content)
-    if not match:
+    matches = list(_MEDIA_TOKEN_RE.finditer(clean_content))
+    if not matches:
         return clean_content, clean_image, None
 
-    kind = match.group(1)
-    item_id = int(match.group(2))
-    item = await crud.get_media_item_for_send(
-        db,
-        account_id=int(account_id),
-        kind=kind,
-        item_id=item_id,
-        current_server_id=server_id if context == "server" else None,
-        context=context,
-    )
-    if not item or not item.get("allowed"):
+    exact = _MEDIA_SEND_RE.match(clean_content)
+    # Stickers are standalone messages. Keeping that invariant avoids a hidden
+    # image URL being attached to arbitrary text or to multiple sticker tokens.
+    if any(match.group(1) == "sticker" for match in matches) and not (
+        exact and exact.group(1) == "sticker" and len(matches) == 1
+    ):
         return "", "", None
-    if kind == "sticker":
-        return f"[[ah:sticker:{item_id}]]", item.get("image_url") or "", item
-    return f":{item.get('name') or 'emoji'}:", "", item
+
+    resolved: dict | None = None
+    checked: set[tuple[str, int]] = set()
+    for match in matches:
+        kind = match.group(1)
+        item_id = int(match.group(2))
+        key = (kind, item_id)
+        if key in checked:
+            continue
+        checked.add(key)
+        item = await crud.get_media_item_for_send(
+            db,
+            account_id=int(account_id),
+            kind=kind,
+            item_id=item_id,
+            current_server_id=server_id if context == "server" else None,
+            context=context,
+        )
+        if not item or not item.get("allowed"):
+            return "", "", None
+        resolved = resolved or item
+
+    if exact and exact.group(1) == "sticker":
+        sticker_id = int(exact.group(2))
+        return f"[[ah:sticker:{sticker_id}]]", (resolved or {}).get("image_url") or "", resolved
+
+    # Persist the unambiguous IDs. The client renders these markers as images;
+    # unlike :name: codes, same-named emoji from different servers cannot clash.
+    return clean_content, clean_image, resolved
 
 # --- Custom server emoji/sticker media --------------------------------------
 async def _media_upload_url(file: UploadFile | None, account_id: int, kind: str) -> tuple[str | None, str | None]:
@@ -2271,11 +2410,55 @@ async def api_delete_server_sticker(server_id:int, sticker_id:int, request:Reque
     return JSONResponse({'ok':True,'removed':await crud.delete_server_sticker(db, server_id, sticker_id)})
 
 @router.get('/api/media/library')
-async def api_media_library(request:Request, context:str='server', server_id:int|None=None, db:AsyncSession=Depends(get_db)):
-    account=await current_account(request, db)
-    if not account: return JSONResponse({'ok':False,'error':'not_logged_in','emojis':[],'stickers':[]}, status_code=401)
-    if context == 'server' and server_id and not await crud.is_server_member(db, server_id, account.id): return JSONResponse({'ok':False,'error':'forbidden','emojis':[],'stickers':[]}, status_code=403)
-    lib=await crud.media_library_for_account(db, account.id, current_server_id=server_id, context=context); lib['ok']=True
+async def api_media_library(
+    request: Request,
+    context: str = 'server',
+    server_id: int | None = None,
+    channel_id: int | None = None,
+    thread_id: int | None = None,
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse(
+            {'ok': False, 'error': 'not_logged_in', 'emojis': [], 'stickers': []},
+            status_code=401,
+        )
+
+    clean_context = 'dm' if context == 'dm' else 'server'
+    if clean_context == 'server' and server_id:
+        if not await crud.is_server_member(db, server_id, account.id):
+            return JSONResponse(
+                {'ok': False, 'error': 'forbidden', 'emojis': [], 'stickers': []},
+                status_code=403,
+            )
+        if channel_id and not await crud.get_server_channel(db, server_id, channel_id):
+            return JSONResponse(
+                {'ok': False, 'error': 'channel_not_found', 'emojis': [], 'stickers': []},
+                status_code=404,
+            )
+    if clean_context == 'dm' and thread_id:
+        if not await crud.is_dm_participant(db, thread_id, account.id):
+            return JSONResponse(
+                {'ok': False, 'error': 'forbidden', 'emojis': [], 'stickers': []},
+                status_code=403,
+            )
+
+    lib = await crud.media_library_for_account(
+        db, account.id, current_server_id=server_id, context=clean_context
+    )
+    referenced = await crud.list_referenced_message_emojis(
+        db,
+        context=clean_context,
+        thread_id=thread_id,
+        server_id=server_id,
+        channel_id=channel_id,
+    )
+    known_ids = {int(item.get('id') or 0) for item in lib.get('emojis', [])}
+    lib.setdefault('emojis', []).extend(
+        item for item in referenced if int(item.get('id') or 0) not in known_ids
+    )
+    lib['ok'] = True
     return JSONResponse(lib)
 
 @router.websocket("/ws/servers/{server_id}/channel/{channel_id}")
@@ -2307,10 +2490,34 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
     try:
         while True:
             data = await websocket.receive_json()
-            event_type = data.get("type")
+            if not isinstance(data, dict):
+                continue
+            event_type = str(data.get("type") or "").strip().lower()
 
             if event_type in {"leave", "disconnect", "close"}:
                 break
+
+            if event_type == "sync":
+                try:
+                    after_id = max(0, int(data.get("after_id") or 0))
+                except Exception:
+                    after_id = 0
+                async with AsyncSessionLocal() as db:
+                    if not await crud.is_server_member(db, server_id, account_id):
+                        await websocket.close(code=1008)
+                        return
+                    missed = await crud.list_server_messages_after(
+                        db, server_id, channel_id, after_id, limit=201
+                    )
+                    has_more = len(missed) > 200
+                    events = [
+                        await _server_message_realtime_event(db, message)
+                        for message in missed[:200]
+                    ]
+                await websocket.send_json(
+                    {"type": "message_sync", "events": events, "has_more": has_more}
+                )
+                continue
 
             if event_type == "typing":
                 await realtime_channels.set_typing(key, account_id, profile)
@@ -2359,6 +2566,7 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
 
             content = (data.get("content") or "").strip()
             image_url = (data.get("image_url") or "").strip()
+            client_nonce = str(data.get("client_nonce") or "").strip()[:64] or None
             reply_to_id = _parse_optional_int(data.get("reply_to_id"))
             if not content and not image_url:
                 await realtime_channels.clear_typing(key, account_id)
@@ -2376,44 +2584,30 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
                 if not channel:
                     await websocket.close(code=1008)
                     return
+                requested_custom_media = bool(_MEDIA_TOKEN_RE.search(content))
                 content, image_url, _media_item = await _prepare_custom_media_message(
                     db, account_id, content, image_url, context="server", server_id=server_id
                 )
                 if not content and not image_url:
                     await realtime_channels.clear_typing(key, account_id)
+                    if requested_custom_media:
+                        await websocket.send_json(
+                            {"type": "message_error", "error": "media_not_allowed"}
+                        )
                     continue
-                reply_payload = None
                 reply_id = None
                 if reply_to_id:
                     reply_msg = await crud.get_server_message(db, server_id, channel_id, reply_to_id)
                     if reply_msg:
                         reply_id = reply_msg.id
-                        reply_author = await crud.get_account_by_id(db, reply_msg.author_id)
-                        reply_payload = _reply_payload(reply_msg, reply_author)
                 msg = await crud.create_server_message(db, server_id, channel_id, account_id, content, image_url, reply_to_id=reply_id)
                 mention_affected = await _sync_server_message_mentions(db, msg)
-                created_at = msg.created_at.isoformat()
+                realtime_event = await _server_message_realtime_event(
+                    db, msg, client_nonce=client_nonce
+                )
 
             await realtime_channels.clear_typing(key, account_id)
-            await realtime_channels.broadcast(
-                key,
-                {
-                    "type": "message",
-                    "message": {
-                        "id": msg.id,
-                        "server_id": server_id,
-                        "channel_id": channel_id,
-                        "author_id": account_id,
-                        "content": content,
-                        "image_url": image_url or None,
-                        "created_at": created_at,
-                        "reply_to_id": reply_id,
-                        "reply": reply_payload,
-                        "is_forwarded": False,
-                    },
-                    "author": profile,
-                },
-            )
+            await realtime_channels.broadcast(key, realtime_event)
             await _broadcast_mention_counts(mention_affected)
 
     except WebSocketDisconnect:
@@ -2497,6 +2691,7 @@ async def dm_message_submit(
     content, image_url, _media_item = await _prepare_custom_media_message(
         db, account.id, content, image_url, context="dm", server_id=None
     )
+    realtime_payload = None
     if thread and (content.strip() or image_url.strip()):
         reply_id = _parse_optional_int(reply_to_id)
         if reply_id:
@@ -2505,8 +2700,11 @@ async def dm_message_submit(
                 reply_id = None
         msg = await crud.create_dm_message(db, thread.id, account.id, content.strip(), image_url.strip(), reply_to_id=reply_id)
         mention_affected = await _sync_dm_message_mentions(db, msg)
+        realtime_payload = await _dm_message_realtime_event(db, msg)
         await _broadcast_mention_counts(mention_affected)
         await _emit_dm_sidebar_update(int(thread.id), int(msg.id))
+    if realtime_payload:
+        await realtime_channels.broadcast((0, int(thread.id)), realtime_payload)
     return RedirectResponse(url=f"/community/dm/{other.username}", status_code=303)
 
 
@@ -2574,6 +2772,10 @@ async def dm_message_delete_submit(
             mention_affected = await crud.delete_message_mentions(db, "dm", message.id)
             await crud.delete_dm_message(db, message)
             await _broadcast_mention_counts(mention_affected)
+            await realtime_channels.broadcast(
+                (0, int(thread.id)),
+                {"type": "message_delete", "message_id": int(message_id)},
+            )
     return RedirectResponse(url=f"/community/dm/{other.username}", status_code=303)
 
 
@@ -2607,10 +2809,34 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
     try:
         while True:
             data = await websocket.receive_json()
-            event_type = data.get("type")
+            if not isinstance(data, dict):
+                continue
+            event_type = str(data.get("type") or "").strip().lower()
 
             if event_type in {"leave", "disconnect", "close"}:
                 break
+
+            if event_type == "sync":
+                try:
+                    after_id = max(0, int(data.get("after_id") or 0))
+                except Exception:
+                    after_id = 0
+                async with AsyncSessionLocal() as db:
+                    if not await crud.is_dm_participant(db, thread_id, account_id):
+                        await websocket.close(code=1008)
+                        return
+                    missed = await crud.list_dm_messages_after(
+                        db, thread_id, after_id, limit=201
+                    )
+                    has_more = len(missed) > 200
+                    events = [
+                        await _dm_message_realtime_event(db, message)
+                        for message in missed[:200]
+                    ]
+                await websocket.send_json(
+                    {"type": "message_sync", "events": events, "has_more": has_more}
+                )
+                continue
 
             if event_type == "typing":
                 await realtime_channels.set_typing(key, account_id, profile)
@@ -2664,6 +2890,7 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
 
             content = (data.get("content") or "").strip()
             image_url = (data.get("image_url") or "").strip()
+            client_nonce = str(data.get("client_nonce") or "").strip()[:64] or None
             reply_to_id = _parse_optional_int(data.get("reply_to_id"))
             if not content and not image_url:
                 await realtime_channels.clear_typing(key, account_id)
@@ -2677,43 +2904,30 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
                 if not await crud.is_dm_participant(db, thread_id, account_id):
                     await websocket.close(code=1008)
                     return
+                requested_custom_media = bool(_MEDIA_TOKEN_RE.search(content))
                 content, image_url, _media_item = await _prepare_custom_media_message(
                     db, account_id, content, image_url, context="dm", server_id=None
                 )
                 if not content and not image_url:
                     await realtime_channels.clear_typing(key, account_id)
+                    if requested_custom_media:
+                        await websocket.send_json(
+                            {"type": "message_error", "error": "media_not_allowed"}
+                        )
                     continue
-                reply_payload = None
                 reply_id = None
                 if reply_to_id:
                     reply_msg = await crud.get_dm_message(db, thread_id, reply_to_id)
                     if reply_msg:
                         reply_id = reply_msg.id
-                        reply_author = await crud.get_account_by_id(db, reply_msg.author_id)
-                        reply_payload = _reply_payload(reply_msg, reply_author)
                 msg = await crud.create_dm_message(db, thread_id, account_id, content, image_url, reply_to_id=reply_id)
                 mention_affected = await _sync_dm_message_mentions(db, msg)
-                created_at = msg.created_at.isoformat()
+                realtime_event = await _dm_message_realtime_event(
+                    db, msg, client_nonce=client_nonce
+                )
 
             await realtime_channels.clear_typing(key, account_id)
-            await realtime_channels.broadcast(
-                key,
-                {
-                    "type": "message",
-                    "message": {
-                        "id": msg.id,
-                        "thread_id": thread_id,
-                        "author_id": account_id,
-                        "content": content,
-                        "image_url": image_url or None,
-                        "created_at": created_at,
-                        "reply_to_id": reply_id,
-                        "reply": reply_payload,
-                        "is_forwarded": False,
-                    },
-                    "author": profile,
-                },
-            )
+            await realtime_channels.broadcast(key, realtime_event)
             await _broadcast_mention_counts(mention_affected)
             await _emit_dm_sidebar_update(thread_id, int(msg.id))
 
