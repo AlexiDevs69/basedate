@@ -919,6 +919,29 @@ async def list_server_messages(db: AsyncSession, server_id: int, channel_id: int
     return list(reversed(list(result.scalars().all())))
 
 
+async def list_server_messages_after(
+    db: AsyncSession,
+    server_id: int,
+    channel_id: int,
+    after_id: int,
+    limit: int = 201,
+) -> list[ServerMessage]:
+    """Return messages missed by a temporarily disconnected channel client."""
+    await ensure_message_meta_columns(db)
+    safe_limit = max(1, min(int(limit or 201), 501))
+    result = await db.execute(
+        select(ServerMessage)
+        .where(
+            ServerMessage.server_id == int(server_id),
+            ServerMessage.channel_id == int(channel_id),
+            ServerMessage.id > max(0, int(after_id or 0)),
+        )
+        .order_by(ServerMessage.id.asc())
+        .limit(safe_limit)
+    )
+    return list(result.scalars().all())
+
+
 async def get_server_feed(db: AsyncSession, server_id: int, channel_id: int, limit: int = 80) -> list[dict]:
     messages = await list_server_messages(db, server_id, channel_id, limit=limit)
     feed = []
@@ -1257,6 +1280,27 @@ async def list_dm_messages(db: AsyncSession, thread_id: int, limit: int = 80) ->
                 reply = {"message": reply_msg, "author": reply_author}
         feed.append({"message": message, "author": author, "reply": reply})
     return feed
+
+
+async def list_dm_messages_after(
+    db: AsyncSession,
+    thread_id: int,
+    after_id: int,
+    limit: int = 201,
+) -> list[DirectMessage]:
+    """Return DM messages missed while the thread WebSocket was reconnecting."""
+    await ensure_message_meta_columns(db)
+    safe_limit = max(1, min(int(limit or 201), 501))
+    result = await db.execute(
+        select(DirectMessage)
+        .where(
+            DirectMessage.thread_id == int(thread_id),
+            DirectMessage.id > max(0, int(after_id or 0)),
+        )
+        .order_by(DirectMessage.id.asc())
+        .limit(safe_limit)
+    )
+    return list(result.scalars().all())
 
 
 async def get_dm_message(db: AsyncSession, thread_id: int, message_id: int) -> DirectMessage | None:
@@ -2712,6 +2756,84 @@ async def media_library_for_account(db: AsyncSession, account_id: int, current_s
     for r in rows_s:
         it=_sticker_payload(r, allowed=allow(r['server_id']), local=bool(current_server_id and int(r['server_id'])==int(current_server_id))); it['server_name']=r['server_name']; it['server_icon_url']=r['server_icon_url']; stickers.append(it)
     return {'nitro':nitro,'emojis':emojis,'stickers':stickers}
+
+
+_CUSTOM_EMOJI_MARKER_RE = re.compile(r"\[\[ah:emoji:(\d+)\]\]")
+
+
+async def list_referenced_message_emojis(
+    db: AsyncSession,
+    *,
+    context: str,
+    thread_id: int | None = None,
+    server_id: int | None = None,
+    channel_id: int | None = None,
+) -> list[dict]:
+    """Resolve emoji IDs already stored in a chat so every viewer can render them.
+
+    These records are display-only. Sending still goes through
+    ``get_media_item_for_send`` and its membership/Nitro checks.
+    """
+    await ensure_server_media_tables(db)
+    if context == "dm" and thread_id:
+        result = await db.execute(
+            select(DirectMessage.content)
+            .where(
+                DirectMessage.thread_id == int(thread_id),
+                DirectMessage.content.contains("[[ah:emoji:"),
+            )
+            .order_by(DirectMessage.id.desc())
+            .limit(2000)
+        )
+    elif context == "server" and server_id and channel_id:
+        result = await db.execute(
+            select(ServerMessage.content)
+            .where(
+                ServerMessage.server_id == int(server_id),
+                ServerMessage.channel_id == int(channel_id),
+                ServerMessage.content.contains("[[ah:emoji:"),
+            )
+            .order_by(ServerMessage.id.desc())
+            .limit(2000)
+        )
+    else:
+        return []
+
+    emoji_ids: set[int] = set()
+    for content in result.scalars().all():
+        for match in _CUSTOM_EMOJI_MARKER_RE.finditer(content or ""):
+            emoji_ids.add(int(match.group(1)))
+            if len(emoji_ids) >= 500:
+                break
+        if len(emoji_ids) >= 500:
+            break
+    if not emoji_ids:
+        return []
+
+    rows = (
+        await db.execute(
+            text(
+                """
+                SELECT e.id, e.server_id, e.name, e.image_url, e.content_type,
+                       e.created_at, s.name AS server_name,
+                       s.icon_url AS server_icon_url
+                FROM community_server_emojis e
+                JOIN community_servers s ON s.id = e.server_id
+                WHERE e.id = ANY(:ids)
+                ORDER BY e.id ASC
+                """
+            ),
+            {"ids": sorted(emoji_ids)},
+        )
+    ).mappings().all()
+    items: list[dict] = []
+    for row in rows:
+        item = _emoji_payload(row, allowed=False, local=False)
+        item["server_name"] = row["server_name"]
+        item["server_icon_url"] = row["server_icon_url"]
+        item["reference_only"] = True
+        items.append(item)
+    return items
 
 
 async def get_media_item_for_send(
