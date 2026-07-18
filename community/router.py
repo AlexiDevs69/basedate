@@ -10,6 +10,7 @@ never collide with the admin dashboard's routes.
 import asyncio
 import json
 import hashlib
+import math
 import os
 import re
 import time
@@ -358,6 +359,117 @@ class RealtimeChannelManager:
 
 
 realtime_channels = RealtimeChannelManager()
+
+
+class MessageRateLimiter:
+    """Small server-side anti-spam guard shared by DM and server messages.
+
+    The limiter is deliberately global per account, so switching channels or
+    using the HTTP fallback cannot bypass it.  State is kept in memory because
+    this app currently runs a single realtime process; a multi-worker deploy
+    should move the same counters to Redis.
+    """
+
+    BURST_SIZE = 5
+    BURST_WINDOW_SECONDS = 5.0
+    VIOLATION_WINDOW_SECONDS = 10 * 60.0
+    COOLDOWN_SECONDS = (5, 30, 120)
+    IDLE_TTL_SECONDS = 60 * 60.0
+
+    def __init__(self) -> None:
+        self.activity: dict[int, list[float]] = {}
+        self.violations: dict[int, list[float]] = {}
+        self.blocked_until: dict[int, float] = {}
+        self.last_seen: dict[int, float] = {}
+        self.lock = asyncio.Lock()
+        self._last_cleanup = time.monotonic()
+
+    def _cleanup_unlocked(self, now: float) -> None:
+        if now - self._last_cleanup < 300.0:
+            return
+        cutoff = now - self.IDLE_TTL_SECONDS
+        stale = [account_id for account_id, seen_at in self.last_seen.items() if seen_at < cutoff]
+        for account_id in stale:
+            self.activity.pop(account_id, None)
+            self.violations.pop(account_id, None)
+            self.blocked_until.pop(account_id, None)
+            self.last_seen.pop(account_id, None)
+        self._last_cleanup = now
+
+    async def check(self, account_id: int) -> int:
+        """Record one attempted message and return cooldown milliseconds.
+
+        A zero return value means the message is allowed.  Repeated bursts in
+        ten minutes escalate from 5 seconds to 30 seconds and then 2 minutes.
+        Attempts during an active cooldown do not extend it.
+        """
+        account_id = int(account_id)
+        now = time.monotonic()
+        async with self.lock:
+            self._cleanup_unlocked(now)
+            self.last_seen[account_id] = now
+
+            blocked_until = self.blocked_until.get(account_id, 0.0)
+            if blocked_until > now:
+                return max(1, math.ceil((blocked_until - now) * 1000.0))
+            self.blocked_until.pop(account_id, None)
+
+            activity_cutoff = now - self.BURST_WINDOW_SECONDS
+            recent = [stamp for stamp in self.activity.get(account_id, []) if stamp > activity_cutoff]
+            if len(recent) >= self.BURST_SIZE:
+                violation_cutoff = now - self.VIOLATION_WINDOW_SECONDS
+                violations = [
+                    stamp for stamp in self.violations.get(account_id, []) if stamp > violation_cutoff
+                ]
+                cooldown = self.COOLDOWN_SECONDS[min(len(violations), len(self.COOLDOWN_SECONDS) - 1)]
+                violations.append(now)
+                self.violations[account_id] = violations
+                self.activity[account_id] = []
+                self.blocked_until[account_id] = now + cooldown
+                return cooldown * 1000
+
+            recent.append(now)
+            self.activity[account_id] = recent
+            return 0
+
+
+message_rate_limiter = MessageRateLimiter()
+
+
+def _message_rate_limit_payload(retry_after_ms: int) -> dict:
+    retry_after_ms = max(1, int(retry_after_ms))
+    return {
+        "type": "rate_limited",
+        "error": "message_rate_limited",
+        "retry_after_ms": retry_after_ms,
+        "retry_after_seconds": max(1, math.ceil(retry_after_ms / 1000.0)),
+        "message": "Ви надсилаєте повідомлення надто швидко.",
+    }
+
+
+def _message_rate_limit_redirect(url: str, retry_after_ms: int) -> RedirectResponse:
+    seconds = max(1, math.ceil(int(retry_after_ms) / 1000.0))
+    separator = "&" if "?" in url else "?"
+    return RedirectResponse(
+        url=f"{url}{separator}rate_limited={seconds}",
+        status_code=303,
+        headers={"Retry-After": str(seconds)},
+    )
+
+
+def _message_rate_limit_json_response(
+    retry_after_ms: int, *, sent: list | None = None
+) -> JSONResponse:
+    payload = _message_rate_limit_payload(retry_after_ms)
+    payload["ok"] = False
+    if sent is not None:
+        payload["sent"] = sent
+        payload["count"] = len(sent)
+    return JSONResponse(
+        payload,
+        status_code=429,
+        headers={"Retry-After": str(payload["retry_after_seconds"])},
+    )
 
 
 class AccountRealtimeManager:
@@ -1428,6 +1540,11 @@ async def server_message_submit(
     )
     realtime_payload = None
     if channel and (content.strip() or image_url.strip()):
+        retry_after_ms = await message_rate_limiter.check(account.id)
+        if retry_after_ms:
+            return _message_rate_limit_redirect(
+                f"/community/servers/{server_id}/channel/{channel_id}", retry_after_ms
+            )
         reply_id = _parse_optional_int(reply_to_id)
         if reply_id:
             reply_msg = await crud.get_server_message(db, server_id, channel_id, reply_id)
@@ -1600,6 +1717,11 @@ async def server_invite_submit(
         target_id = int(target.id)
         author_payload = _account_payload(account)
 
+        retry_after_ms = await message_rate_limiter.check(account_id)
+        if retry_after_ms:
+            safe_redirect = redirect_to if redirect_to.startswith("/community/") else f"/community/servers/{server_id}"
+            return _message_rate_limit_redirect(safe_redirect, retry_after_ms)
+
         invite = await crud.invite_friend_to_server(db, server_id, account_id, target_id)
         if invite:
             invite_code = str(getattr(invite, "code", None) or invite.id)
@@ -1750,6 +1872,9 @@ async def api_forward_message(request: Request, db: AsyncSession = Depends(get_d
             if not thread:
                 continue
             thread_id = int(thread.id)
+            retry_after_ms = await message_rate_limiter.check(account_id)
+            if retry_after_ms:
+                return _message_rate_limit_json_response(retry_after_ms, sent=sent)
             msg = await crud.create_dm_message(db, thread_id, account_id, source_content, source_image_url, is_forwarded=True)
             mention_affected = await _sync_dm_message_mentions(db, msg)
             await _broadcast_mention_counts(mention_affected)
@@ -1785,6 +1910,9 @@ async def api_forward_message(request: Request, db: AsyncSession = Depends(get_d
             if not channel:
                 continue
 
+            retry_after_ms = await message_rate_limiter.check(account_id)
+            if retry_after_ms:
+                return _message_rate_limit_json_response(retry_after_ms, sent=sent)
             msg = await crud.create_server_message(db, server_id, channel_id, account_id, source_content, source_image_url, is_forwarded=True)
             mention_affected = await _sync_server_message_mentions(db, msg)
             await _broadcast_mention_counts(mention_affected)
@@ -2595,6 +2723,11 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
                             {"type": "message_error", "error": "media_not_allowed"}
                         )
                     continue
+                retry_after_ms = await message_rate_limiter.check(account_id)
+                if retry_after_ms:
+                    await realtime_channels.clear_typing(key, account_id)
+                    await websocket.send_json(_message_rate_limit_payload(retry_after_ms))
+                    continue
                 reply_id = None
                 if reply_to_id:
                     reply_msg = await crud.get_server_message(db, server_id, channel_id, reply_to_id)
@@ -2693,6 +2826,11 @@ async def dm_message_submit(
     )
     realtime_payload = None
     if thread and (content.strip() or image_url.strip()):
+        retry_after_ms = await message_rate_limiter.check(account.id)
+        if retry_after_ms:
+            return _message_rate_limit_redirect(
+                f"/community/dm/{other.username}", retry_after_ms
+            )
         reply_id = _parse_optional_int(reply_to_id)
         if reply_id:
             reply_msg = await crud.get_dm_message(db, thread.id, reply_id)
@@ -2914,6 +3052,11 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
                         await websocket.send_json(
                             {"type": "message_error", "error": "media_not_allowed"}
                         )
+                    continue
+                retry_after_ms = await message_rate_limiter.check(account_id)
+                if retry_after_ms:
+                    await realtime_channels.clear_typing(key, account_id)
+                    await websocket.send_json(_message_rate_limit_payload(retry_after_ms))
                     continue
                 reply_id = None
                 if reply_to_id:
