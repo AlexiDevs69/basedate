@@ -1046,7 +1046,7 @@
 .ah-mention-option:hover .ah-mention-option-meta small{color:#fff;}
 .composer-wrap,.dm-composer-shell{position:relative;}
 </style>
-
+<script src="/static/js/message_rate_limit.js?v=20260718-1"></script>
 </head>
 <body data-current-account-id="{{ account.id }}" data-active-dm-account-id="{{ other.id }}">
   <svg style="display:none" aria-hidden="true">
@@ -1339,6 +1339,12 @@ async function submitForwardMessage(){
   try{
     const res = await fetch('/community/api/messages/forward', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({source_type: ahForwardSource.type, message_id: ahForwardSource.id, targets})});
     const data = await res.json().catch(()=>({}));
+    if(res.status === 429 && window.AlexiHubMessageRateLimit){
+      closeForwardModal();
+      window.AlexiHubMessageRateLimit.show(data.retry_after_ms || 1000);
+      if(data.count && window.showActionToast) showActionToast('Переслано: ' + data.count);
+      return;
+    }
     if(!res.ok || !data.ok) throw new Error(data.error || 'forward_failed');
     closeForwardModal();
     if(window.showActionToast) showActionToast('Переслано: ' + (data.count || 0));
@@ -1654,6 +1660,10 @@ function handleDmRealtimeData(data){
     finishDmSend(false);
     if(typeof showActionToast==='function')showActionToast(data.error==='media_not_allowed'?'Це емоджі або стікер тут недоступне.':'Повідомлення не відправлено.');
   }
+  if(data.type==='rate_limited'){
+    finishDmSend(false);
+    if(window.AlexiHubMessageRateLimit)window.AlexiHubMessageRateLimit.show(data.retry_after_ms||1000);
+  }
   if(data.type==='message_edit'){
     applyDmMessageEdit(data.message||{});
     const edited=document.getElementById('dm-message-'+(data.message&&data.message.id));
@@ -1727,6 +1737,11 @@ input.addEventListener('input',()=>{
 });
 
 form.addEventListener('submit',(e)=>{
+  if(window.AlexiHubMessageRateLimit&&window.AlexiHubMessageRateLimit.isBlocked()){
+    e.preventDefault();
+    window.AlexiHubMessageRateLimit.show(window.AlexiHubMessageRateLimit.remainingMs());
+    return;
+  }
   if(ws&&ws.readyState===1){
     e.preventDefault();
     if(pendingDmSend)return;
