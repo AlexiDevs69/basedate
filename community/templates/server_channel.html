@@ -1563,7 +1563,7 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
 .ah-mention-option:hover .ah-mention-option-meta small{color:#fff;}
 .composer-wrap,.dm-composer-shell{position:relative;}
 </style>
-
+<script src="/static/js/message_rate_limit.js?v=20260718-1"></script>
 </head>
 <body data-current-account-id="{{ account.id }}">
   <aside class="server-rail">
@@ -2102,6 +2102,12 @@ function openChannelInviteModal(event, btn) {
       try{
         const res = await fetch('/community/api/messages/forward', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({source_type: ahForwardSource.type, message_id: ahForwardSource.id, targets})});
         const data = await res.json().catch(()=>({}));
+        if(res.status === 429 && window.AlexiHubMessageRateLimit){
+          closeForwardModal();
+          window.AlexiHubMessageRateLimit.show(data.retry_after_ms || 1000);
+          if(data.count && window.showActionToast) showActionToast('Переслано: ' + data.count);
+          return;
+        }
         if(!res.ok || !data.ok) throw new Error(data.error || 'forward_failed');
         closeForwardModal();
         if(window.showActionToast) showActionToast('Переслано: ' + (data.count || 0));
@@ -2559,6 +2565,12 @@ function openChannelInviteModal(event, btn) {
         finishServerSend(false);
         if (window.showActionToast) showActionToast(data.error === 'media_not_allowed' ? 'Це емоджі або стікер тут недоступне.' : 'Повідомлення не відправлено.');
       }
+      if (data.type === 'rate_limited') {
+        finishServerSend(false);
+        if (window.AlexiHubMessageRateLimit) {
+          window.AlexiHubMessageRateLimit.show(data.retry_after_ms || 1000);
+        }
+      }
       if (data.type === 'message_edit') applyServerMessageEdit(data.message || {});
       if (data.type === 'message_delete') removeServerMessage(data.message_id);
       if (data.type === 'typing') renderTyping(data.users || []);
@@ -2629,6 +2641,10 @@ function openChannelInviteModal(event, btn) {
     function sendCurrentMessage() {
       if (!textarea || !composerForm) return;
       if (pendingServerSend) return;
+      if (window.AlexiHubMessageRateLimit && window.AlexiHubMessageRateLimit.isBlocked()) {
+        window.AlexiHubMessageRateLimit.show(window.AlexiHubMessageRateLimit.remainingMs());
+        return;
+      }
       var content = textarea.value.trim();
       var imageUrl = imageInput ? imageInput.value.trim() : '';
       if (!content && !imageUrl) return;
