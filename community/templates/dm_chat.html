@@ -1046,9 +1046,9 @@
 .ah-mention-option:hover .ah-mention-option-meta small{color:#fff;}
 .composer-wrap,.dm-composer-shell{position:relative;}
 </style>
-<script src="/static/js/message_rate_limit.js?v=20260718-1"></script>
 </head>
 <body data-current-account-id="{{ account.id }}" data-active-dm-account-id="{{ other.id }}">
+  {% include "_message_rate_limit.html" %}
   <svg style="display:none" aria-hidden="true">
     <symbol id="i-message" viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></symbol>
     <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
@@ -1737,9 +1737,8 @@ input.addEventListener('input',()=>{
 });
 
 form.addEventListener('submit',(e)=>{
-  if(window.AlexiHubMessageRateLimit&&window.AlexiHubMessageRateLimit.isBlocked()){
+  if(window.AlexiHubMessageRateLimit&&!window.AlexiHubMessageRateLimit.checkAndRecord()){
     e.preventDefault();
-    window.AlexiHubMessageRateLimit.show(window.AlexiHubMessageRateLimit.remainingMs());
     return;
   }
   if(ws&&ws.readyState===1){
