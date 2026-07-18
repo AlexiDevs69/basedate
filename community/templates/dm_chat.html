@@ -1048,7 +1048,54 @@
 </style>
 </head>
 <body data-current-account-id="{{ account.id }}" data-active-dm-account-id="{{ other.id }}">
-  {% include "_message_rate_limit.html" %}
+  <style id="ah-message-rate-limit-style">
+    #ah-message-rate-limit{position:fixed;inset:0;z-index:2147483000;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.76);backdrop-filter:blur(2px)}
+    #ah-message-rate-limit.ah-open{display:flex}
+    #ah-message-rate-limit .ah-rate-card{position:relative;width:min(400px,calc(100vw - 32px));padding:24px;border:1px solid rgba(255,255,255,.08);border-radius:14px;background:#242429;color:#f2f3f5;box-shadow:0 18px 55px rgba(0,0,0,.55);font-family:inherit}
+    #ah-message-rate-limit .ah-rate-close{position:absolute;top:13px;right:13px;width:34px;height:34px;border:0;border-radius:8px;background:transparent;color:#b5bac1;font-size:28px;line-height:28px;cursor:pointer}
+    #ah-message-rate-limit .ah-rate-close:hover{color:#fff;background:rgba(255,255,255,.07)}
+    #ah-message-rate-limit .ah-rate-title{margin:0 38px 8px 0;font-size:20px;font-weight:800}
+    #ah-message-rate-limit .ah-rate-text{margin:0 0 20px;color:#b5bac1;font-size:15px;line-height:1.45}
+    #ah-message-rate-limit .ah-rate-action{width:100%;min-height:42px;border:0;border-radius:8px;background:#5865f2;color:#fff;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer}
+    #ah-message-rate-limit .ah-rate-action:disabled{cursor:not-allowed;opacity:.72}
+  </style>
+  <div id="ah-message-rate-limit" data-language="{{ account.language if account and account.language else 'ru' }}" role="dialog" aria-modal="true">
+    <div class="ah-rate-card">
+      <button type="button" class="ah-rate-close" aria-label="Закрити">&times;</button>
+      <h2 class="ah-rate-title">Обережно, не поспішай!</h2>
+      <p class="ah-rate-text">Ви надсилаєте повідомлення надто швидко.</p>
+      <button type="button" class="ah-rate-action"></button>
+    </div>
+  </div>
+  <script id="ah-message-rate-limit-js">
+  (function(){
+    if(window.__ahMessageRateLimitInlineReady)return;
+    window.__ahMessageRateLimitInlineReady=true;
+    const overlay=document.getElementById('ah-message-rate-limit');
+    const title=overlay.querySelector('.ah-rate-title');
+    const text=overlay.querySelector('.ah-rate-text');
+    const action=overlay.querySelector('.ah-rate-action');
+    let cooldownUntil=0,timer=null,lastFocus=null,attempts=[],violations=[];
+    const copies={
+      uk:{title:'Обережно, не поспішай!',wait:s=>'Ви надсилаєте повідомлення надто швидко. Зробіть коротку перерву — ще '+s+' с.',button:s=>'Зачекайте '+s+' с',ready:'Перерва завершилась — повідомлення знову можна надсилати.',back:'Повернутися до чату'},
+      ru:{title:'Осторожно, не спеши!',wait:s=>'Вы отправляете сообщения слишком быстро. Сделайте короткий перерыв — ещё '+s+' с.',button:s=>'Подождите '+s+' с',ready:'Перерыв завершён — сообщения снова можно отправлять.',back:'Вернуться в чат'},
+      en:{title:'Whoa, slow down!',wait:s=>'You are sending messages too quickly. Take a short break — '+s+'s remaining.',button:s=>'Wait '+s+'s',ready:'The break is over — you can send messages again.',back:'Return to chat'}
+    };
+    function copy(){let stored='';try{stored=localStorage.getItem('alexihub_language')||''}catch(e){}const lang=String(stored||overlay.dataset.language||document.documentElement.lang||'uk').toLowerCase().split('-')[0];return copies[lang]||copies.uk}
+    function remainingMs(){return Math.max(0,cooldownUntil-Date.now())}
+    function render(){const c=copy(),seconds=Math.ceil(remainingMs()/1000);title.textContent=c.title;if(seconds>0){text.textContent=c.wait(seconds);action.textContent=c.button(seconds);action.disabled=true;return}text.textContent=c.ready;action.textContent=c.back;action.disabled=false;if(timer){clearInterval(timer);timer=null}}
+    function close(){overlay.classList.remove('ah-open');if(lastFocus&&lastFocus.focus)lastFocus.focus()}
+    function show(ms){cooldownUntil=Math.max(cooldownUntil,Date.now()+Math.max(1000,Number(ms)||0));lastFocus=document.activeElement;overlay.classList.add('ah-open');render();if(!timer)timer=setInterval(render,250)}
+    function checkAndRecord(){const now=Date.now();if(remainingMs()>0){show(remainingMs());return false}attempts=attempts.filter(stamp=>now-stamp<5000);if(attempts.length>=5){violations=violations.filter(stamp=>now-stamp<600000);const waits=[5000,30000,120000];const wait=waits[Math.min(violations.length,waits.length-1)];violations.push(now);attempts=[];show(wait);return false}attempts.push(now);return true}
+    overlay.querySelector('.ah-rate-close').addEventListener('click',close);
+    action.addEventListener('click',()=>{if(remainingMs()<=0)close()});
+    overlay.addEventListener('click',event=>{if(event.target===overlay)close()});
+    document.addEventListener('keydown',event=>{if(event.key==='Escape'&&overlay.classList.contains('ah-open'))close()});
+    window.AlexiHubMessageRateLimit={show,remainingMs,isBlocked:()=>remainingMs()>0,checkAndRecord};
+    const url=new URL(location.href),seconds=Number(url.searchParams.get('rate_limited')||0);
+    if(seconds>0){url.searchParams.delete('rate_limited');history.replaceState({},'',url.pathname+url.search+url.hash);show(seconds*1000)}
+  })();
+  </script>
   <svg style="display:none" aria-hidden="true">
     <symbol id="i-message" viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></symbol>
     <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
