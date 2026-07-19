@@ -23,6 +23,7 @@ from fastapi import APIRouter, Depends, File, Form, Request, UploadFile, WebSock
 from fastapi.responses import JSONResponse, RedirectResponse, PlainTextResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from community import auth, crud
@@ -286,6 +287,28 @@ class RealtimeChannelManager:
     async def is_account_connected(self, key: tuple[int, int], account_id: int) -> bool:
         async with self.lock:
             return bool(self.connections.get(key, {}).get(int(account_id)))
+
+    async def close_account(self, account_id: int) -> None:
+        account_id = int(account_id)
+        sockets: list[WebSocket] = []
+        affected_keys: list[tuple[int, int]] = []
+        async with self.lock:
+            for key, users in list(self.connections.items()):
+                sockets.extend(users.pop(account_id, set()))
+                if key in self.typing and account_id in self.typing[key]:
+                    self.typing[key].pop(account_id, None)
+                    affected_keys.append(key)
+                    if not self.typing[key]:
+                        self.typing.pop(key, None)
+                if not users:
+                    self.connections.pop(key, None)
+        for websocket in sockets:
+            try:
+                await websocket.close(code=4001, reason="session_revoked")
+            except Exception:
+                pass
+        for key in affected_keys:
+            await self.broadcast_typing(key)
 
     async def broadcast_presence_for_scope(self, key: tuple[int, int], payload: dict) -> None:
         # Server presence must update every open channel of the same server,
@@ -585,6 +608,19 @@ class AccountRealtimeManager:
                 if not group:
                     self.connections.pop(int(account_id), None)
 
+    async def close_account(self, account_id: int) -> None:
+        account_id = int(account_id)
+        async with self.lock:
+            sockets = list(self.connections.pop(account_id, set()))
+            task = self.offline_tasks.pop(account_id, None)
+        if task:
+            task.cancel()
+        for websocket in sockets:
+            try:
+                await websocket.close(code=4001, reason="session_revoked")
+            except Exception:
+                pass
+
     async def set_profile_and_broadcast(self, profile: dict) -> None:
         account_id = int(profile.get("id") or 0)
         if not account_id:
@@ -731,6 +767,18 @@ def _ws_account_id(websocket: WebSocket) -> int | None:
             if value:
                 return int(value)
         return None
+
+
+def _ws_session_matches_account(websocket: WebSocket, account) -> bool:
+    if not account:
+        return False
+    session = getattr(websocket, "session", {}) or {}
+    try:
+        session_version = max(1, int(session.get(auth.SESSION_VERSION_KEY) or 1))
+        account_version = max(1, int(getattr(account, "session_version", 1) or 1))
+        return session_version == account_version
+    except (TypeError, ValueError):
+        return False
 
 
 def _account_payload(account) -> dict:
@@ -880,7 +928,7 @@ async def ws_account_realtime(websocket: WebSocket):
     async with AsyncSessionLocal() as db:
         await crud.touch_last_seen(db, int(account_id))
         account = await crud.get_account_by_id(db, int(account_id))
-        if not account or account.is_banned:
+        if not account or account.is_banned or not _ws_session_matches_account(websocket, account):
             await websocket.close(code=1008)
             return
         profile = _account_payload(account)
@@ -925,7 +973,17 @@ async def current_account(request: Request, db: AsyncSession):
     account_id = auth.get_logged_in_account_id(request)
     if not account_id:
         return None
-    return await crud.get_account_by_id(db, account_id)
+    account = await crud.get_account_by_id(db, account_id)
+    if not account:
+        auth.log_out(request)
+        return None
+    account_version = max(1, int(getattr(account, "session_version", 1) or 1))
+    if auth.get_logged_in_session_version(request) != account_version:
+        auth.log_out(request)
+        return None
+    if auth.SESSION_VERSION_KEY not in request.session:
+        request.session[auth.SESSION_VERSION_KEY] = account_version
+    return account
 
 
 @router.get("/api/i18n")
@@ -1039,7 +1097,7 @@ async def register_submit(
     account = await crud.create_account(
         db, username=username, email=email, password_hash=auth.hash_password(password)
     )
-    auth.log_in(request, account.id)
+    auth.log_in(request, account.id, getattr(account, "session_version", 1))
     return RedirectResponse(url="/community", status_code=303)
 
 
@@ -1082,7 +1140,7 @@ async def login_submit(
     if account.is_banned:
         return error("Цей акаунт заблоковано.", 403)
 
-    auth.log_in(request, account.id)
+    auth.log_in(request, account.id, getattr(account, "session_version", 1))
     return RedirectResponse(url="/community", status_code=303)
 
 
@@ -1123,7 +1181,7 @@ async def telegram_callback(request: Request, db: AsyncSession = Depends(get_db)
     if account.is_banned:
         return RedirectResponse(url="/community/login?error=banned", status_code=303)
 
-    auth.log_in(request, account.id)
+    auth.log_in(request, account.id, getattr(account, "session_version", 1))
     return RedirectResponse(url="/community", status_code=303)
 
 
@@ -2607,7 +2665,7 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
         account = await crud.get_account_by_id(db, account_id)
         channel = await crud.get_server_channel(db, server_id, channel_id)
         is_member = await crud.is_server_member(db, server_id, account_id)
-        if not account or not channel or not is_member:
+        if not account or not channel or not is_member or not _ws_session_matches_account(websocket, account):
             await websocket.close(code=1008)
             return
         profile = _account_payload(account)
@@ -2935,7 +2993,12 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
     async with AsyncSessionLocal() as db:
         account = await crud.get_account_by_id(db, account_id)
         thread = await crud.get_dm_thread_by_id(db, thread_id)
-        if not account or not thread or account_id not in {thread.user_low_id, thread.user_high_id}:
+        if (
+            not account
+            or not thread
+            or account_id not in {thread.user_low_id, thread.user_high_id}
+            or not _ws_session_matches_account(websocket, account)
+        ):
             await websocket.close(code=1008)
             return
         profile = _account_payload(account)
@@ -3115,6 +3178,149 @@ async def presence_status_update(request: Request, db: AsyncSession = Depends(ge
     # global account-socket event.
     await realtime_channels.broadcast_presence_everywhere(presence_payload)
     return JSONResponse({"ok": True, "status": final_status})
+
+
+# --- Account settings and security -----------------------------------------
+
+_SETTINGS_USERNAME_RE = re.compile(r"^[A-Za-z0-9_.]{2,32}$")
+_SETTINGS_EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+
+
+async def _settings_json(request: Request) -> dict:
+    try:
+        payload = await request.json()
+    except Exception:
+        payload = {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def _settings_error(message: str, status_code: int = 400, code: str = "invalid_request") -> JSONResponse:
+    return JSONResponse(
+        {"ok": False, "error": code, "message": message},
+        status_code=status_code,
+    )
+
+
+def _current_password_is_valid(account, current_password: str) -> bool:
+    password_hash = getattr(account, "password_hash", None)
+    if not password_hash:
+        return True
+    return bool(current_password) and auth.verify_password(current_password, password_hash)
+
+
+@router.post("/api/settings/password")
+async def api_settings_change_password(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return _settings_error("Потрібно знову увійти в акаунт.", 401, "not_authenticated")
+
+    data = await _settings_json(request)
+    current_password = str(data.get("current_password") or "")
+    new_password = str(data.get("new_password") or "")
+    confirm_password = str(data.get("confirm_password") or "")
+    revoke_other_sessions = bool(data.get("revoke_other_sessions", True))
+
+    if not _current_password_is_valid(account, current_password):
+        return _settings_error("Поточний пароль неправильний.", 401, "invalid_current_password")
+    if new_password != confirm_password:
+        return _settings_error("Новий пароль і підтвердження не збігаються.", 400, "password_mismatch")
+    if len(new_password) < 8:
+        return _settings_error("Новий пароль повинен містити щонайменше 8 символів.", 400, "password_too_short")
+    if len(new_password) > 128 or len(new_password.encode("utf-8")) > 72:
+        return _settings_error("Пароль задовгий. Максимум — 72 байти для безпечного bcrypt-хешу.", 400, "password_too_long")
+    if not any(ch.isalpha() for ch in new_password) or not any(ch.isdigit() for ch in new_password):
+        return _settings_error("Додай до пароля хоча б одну літеру та одну цифру.", 400, "password_too_weak")
+    if getattr(account, "password_hash", None) and auth.verify_password(new_password, account.password_hash):
+        return _settings_error("Новий пароль не повинен збігатися зі старим.", 400, "password_unchanged")
+
+    updated = await crud.update_account_password(
+        db,
+        account.id,
+        auth.hash_password(new_password),
+        revoke_other_sessions=revoke_other_sessions,
+    )
+    if not updated:
+        return _settings_error("Не вдалося оновити акаунт.", 404, "account_not_found")
+    auth.log_in(request, updated.id, getattr(updated, "session_version", 1))
+    if revoke_other_sessions:
+        await asyncio.gather(
+            realtime_channels.close_account(updated.id),
+            account_realtime.close_account(updated.id),
+        )
+    return JSONResponse({
+        "ok": True,
+        "message": "Пароль успішно змінено.",
+        "other_sessions_revoked": revoke_other_sessions,
+    })
+
+
+@router.post("/api/settings/identity")
+async def api_settings_change_identity(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return _settings_error("Потрібно знову увійти в акаунт.", 401, "not_authenticated")
+
+    data = await _settings_json(request)
+    field = str(data.get("field") or "").strip().lower()
+    value = str(data.get("value") or "").strip()
+    current_password = str(data.get("current_password") or "")
+    if not _current_password_is_valid(account, current_password):
+        return _settings_error("Поточний пароль неправильний.", 401, "invalid_current_password")
+
+    username = None
+    email = None
+    if field == "username":
+        if not _SETTINGS_USERNAME_RE.fullmatch(value):
+            return _settings_error(
+                "Username: 2–32 символи, лише латинські літери, цифри, крапка та _."
+            )
+        existing = await crud.get_account_by_username_ci(db, value)
+        if existing and int(existing.id) != int(account.id):
+            return _settings_error("Цей username уже зайнятий.", 409, "username_taken")
+        username = value
+    elif field == "email":
+        value = value.lower()
+        if len(value) > 255 or not _SETTINGS_EMAIL_RE.fullmatch(value):
+            return _settings_error("Введи коректну електронну адресу.")
+        existing = await crud.get_account_by_email(db, value)
+        if existing and int(existing.id) != int(account.id):
+            return _settings_error("Ця електронна адреса вже використовується.", 409, "email_taken")
+        email = value
+    else:
+        return _settings_error("Невідоме поле налаштувань.")
+
+    try:
+        updated = await crud.update_account_identity(
+            db, account.id, username=username, email=email
+        )
+    except IntegrityError:
+        await db.rollback()
+        return _settings_error("Таке значення вже використовується.", 409, "identity_taken")
+    if not updated:
+        return _settings_error("Не вдалося оновити акаунт.", 404, "account_not_found")
+    return JSONResponse({
+        "ok": True,
+        "field": field,
+        "username": updated.username,
+        "email": updated.email,
+        "message": "Дані акаунта оновлено.",
+    })
+
+
+@router.post("/api/settings/sessions/revoke")
+async def api_settings_revoke_sessions(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return _settings_error("Потрібно знову увійти в акаунт.", 401, "not_authenticated")
+    updated = await crud.bump_account_session_version(db, account.id)
+    if not updated:
+        return _settings_error("Не вдалося оновити сесії.", 404, "account_not_found")
+    auth.log_in(request, updated.id, getattr(updated, "session_version", 1))
+    await asyncio.gather(
+        realtime_channels.close_account(updated.id),
+        account_realtime.close_account(updated.id),
+    )
+    return JSONResponse({"ok": True, "message": "Інші сесії завершено."})
 
 
 # --- Public profiles ---------------------------------------------------------
