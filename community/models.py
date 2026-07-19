@@ -177,6 +177,24 @@ class ServerMember(Base):
     joined_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
 
 
+class ServerBan(Base):
+    __tablename__ = "community_server_bans"
+    __table_args__ = (UniqueConstraint("server_id", "account_id", name="uq_community_server_ban"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    server_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("community_servers.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    account_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("community_accounts.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    banned_by_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("community_accounts.id", ondelete="SET NULL"), nullable=True
+    )
+    reason: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
 class ServerChannel(Base):
     __tablename__ = "community_server_channels"
 
