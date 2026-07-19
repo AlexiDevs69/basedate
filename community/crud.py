@@ -82,6 +82,8 @@ async def ensure_account_visual_columns(db: AsyncSession) -> None:
     await db.execute(text("UPDATE community_accounts SET account_status = 'online' WHERE account_status IS NULL OR account_status = ''"))
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS language VARCHAR(8) DEFAULT 'ru' NOT NULL"))
     await db.execute(text("UPDATE community_accounts SET language = 'ru' WHERE language IS NULL OR language = ''"))
+    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS session_version INTEGER DEFAULT 1 NOT NULL"))
+    await db.execute(text("UPDATE community_accounts SET session_version = 1 WHERE session_version IS NULL OR session_version < 1"))
     await db.commit()
 
 
@@ -165,6 +167,13 @@ async def get_account_by_username(db: AsyncSession, username: str) -> Account | 
     return result.scalar_one_or_none()
 
 
+async def get_account_by_username_ci(db: AsyncSession, username: str) -> Account | None:
+    result = await db.execute(
+        select(Account).where(func.lower(Account.username) == username.strip().lower())
+    )
+    return result.scalar_one_or_none()
+
+
 async def get_account_by_telegram_id(db: AsyncSession, telegram_id: int) -> Account | None:
     result = await db.execute(select(Account).where(Account.telegram_id == telegram_id))
     return result.scalar_one_or_none()
@@ -186,6 +195,55 @@ async def create_account(
         telegram_username=telegram_username,
     )
     db.add(account)
+    await db.commit()
+    await db.refresh(account)
+    return account
+
+
+async def update_account_password(
+    db: AsyncSession,
+    account_id: int,
+    password_hash: str,
+    *,
+    revoke_other_sessions: bool = True,
+) -> Account | None:
+    await ensure_account_visual_columns(db)
+    account = await get_account_by_id(db, account_id)
+    if not account:
+        return None
+    account.password_hash = password_hash
+    if revoke_other_sessions:
+        account.session_version = max(1, int(getattr(account, "session_version", 1) or 1)) + 1
+    await db.commit()
+    await db.refresh(account)
+    return account
+
+
+async def update_account_identity(
+    db: AsyncSession,
+    account_id: int,
+    *,
+    username: str | None = None,
+    email: str | None = None,
+) -> Account | None:
+    account = await get_account_by_id(db, account_id)
+    if not account:
+        return None
+    if username is not None:
+        account.username = username.strip()
+    if email is not None:
+        account.email = email.strip().lower() or None
+    await db.commit()
+    await db.refresh(account)
+    return account
+
+
+async def bump_account_session_version(db: AsyncSession, account_id: int) -> Account | None:
+    await ensure_account_visual_columns(db)
+    account = await get_account_by_id(db, account_id)
+    if not account:
+        return None
+    account.session_version = max(1, int(getattr(account, "session_version", 1) or 1)) + 1
     await db.commit()
     await db.refresh(account)
     return account
