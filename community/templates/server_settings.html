@@ -874,6 +874,49 @@
 .close-mini:after{transform:translate(-50%,-50%) rotate(-45deg);}
 </style>
 
+<style id="ah-server-members-css">
+  .members-settings-page,.bans-settings-page{max-width:1100px}
+  .members-page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:22px}
+  .members-page-head .settings-desc{max-width:720px;margin-bottom:0}
+  .members-card{background:#18191d;border:1px solid #26282e;border-radius:12px;overflow:visible;box-shadow:0 12px 34px rgba(0,0,0,.14)}
+  .members-toolbar{min-height:54px;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px 12px;border-bottom:1px solid #292b31}
+  .members-toolbar strong{font-size:15px;white-space:nowrap}
+  .members-tools{display:flex;align-items:center;gap:8px;min-width:0}
+  .members-search{width:min(320px,34vw);height:34px;border:1px solid #35373e;border-radius:7px;background:#111214;color:#f2f3f5;padding:0 11px;outline:0}
+  .members-search:focus{border-color:#5865f2}
+  .members-tool-btn{height:34px;border-radius:7px;background:#2b2d31;color:#f2f3f5;padding:0 12px;font-weight:800;cursor:pointer;white-space:nowrap}
+  .members-tool-btn:hover{background:#35373e}
+  .members-tool-btn.clear{color:#ff7777}
+  .members-table-wrap{overflow:visible}
+  .members-table{width:100%;border-collapse:collapse;table-layout:fixed}
+  .members-table th{height:48px;padding:0 12px;text-align:left;color:#f2f3f5;font-size:11px;text-transform:uppercase;letter-spacing:.035em;border-bottom:1px solid #26282e}
+  .members-table td{height:58px;padding:7px 12px;border-bottom:1px solid #292b31;color:#dbdee1;vertical-align:middle}
+  .members-table tbody tr:hover{background:#202126}
+  .members-table tbody tr:last-child td{border-bottom:0}
+  .members-col-user{width:42%}.members-col-joined{width:21%}.members-col-role{width:22%}.members-col-action{width:62px;text-align:right!important}
+  .settings-member{display:flex;align-items:center;gap:10px;min-width:0}
+  .settings-member-avatar{width:36px;height:36px;flex:0 0 36px;border-radius:50%;background:#313338 center/cover no-repeat;display:grid;place-items:center;color:#fff;font-weight:900;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+  .settings-member-copy{min-width:0}.settings-member-name-line{display:flex;align-items:center;gap:6px;min-width:0}.settings-member-name{font-weight:850;color:#f2f3f5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.settings-member-handle{display:block;color:#8e929b;font-size:12px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .settings-owner-crown{position:relative;width:17px;height:17px;flex:0 0 17px;display:inline-grid;place-items:center;color:#f0b232;cursor:default}
+  .settings-owner-crown svg{width:17px;height:17px;fill:#f0b232;stroke:#f0b232;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+  .settings-owner-crown::after{content:'Власник сервера';position:absolute;left:50%;bottom:calc(100% + 9px);transform:translate(-50%,4px);padding:7px 9px;border-radius:6px;background:#111214;color:#fff;font-size:12px;font-weight:800;white-space:nowrap;box-shadow:0 9px 24px rgba(0,0,0,.48);opacity:0;visibility:hidden;transition:.12s;z-index:100}
+  .settings-owner-crown:hover::after{opacity:1;visibility:visible;transform:translate(-50%,0)}
+  .member-role-pill{display:inline-flex;align-items:center;min-height:24px;border-radius:999px;padding:3px 9px;background:#2b2d31;color:#b5bac1;font-size:11px;font-weight:850;text-transform:uppercase;letter-spacing:.035em}
+  .member-role-pill.owner{background:rgba(240,178,50,.12);color:#f0b232}.member-role-pill.admin{background:rgba(88,101,242,.14);color:#aeb4ff}
+  .member-menu-button{width:32px;height:32px;border-radius:7px;background:transparent;color:#b5bac1;font-size:22px;line-height:1;cursor:pointer;display:inline-grid;place-items:center}
+  .member-menu-button:hover,.member-menu-button.active{background:#35373e;color:#fff}
+  .member-action-menu{position:fixed;z-index:250;display:none;width:244px;background:#2b2d31;border:1px solid #3a3c43;border-radius:9px;padding:7px;box-shadow:0 18px 48px rgba(0,0,0,.52)}
+  .member-action-menu.open{display:block}
+  .member-action-menu button{width:100%;min-height:36px;border-radius:5px;background:transparent;color:#dbdee1;padding:8px 9px;display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;font-weight:750;cursor:pointer}
+  .member-action-menu button:hover{background:#5865f2;color:#fff}.member-action-menu button.danger{color:#ff7777}.member-action-menu button.danger:hover{background:#da373c;color:#fff}
+  .member-action-menu .menu-separator{height:1px;background:#3a3c43;margin:6px 4px}.member-action-menu .id-badge{font-size:10px;border-radius:3px;background:#4e5058;padding:2px 4px;color:#fff}
+  .members-empty{padding:32px;text-align:center;color:#8e929b}.members-card-foot{padding:12px;color:#8e929b;font-size:12px;border-top:1px solid #292b31}
+  .moderation-confirm{position:fixed;inset:0;z-index:300;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.72)}
+  .moderation-confirm.open{display:flex}.moderation-confirm-card{width:min(440px,100%);background:#2b2d31;border:1px solid #41434a;border-radius:12px;box-shadow:0 24px 80px rgba(0,0,0,.62);overflow:hidden}.moderation-confirm-body{padding:22px}.moderation-confirm-body h2{font-size:20px;margin-bottom:8px}.moderation-confirm-body p{color:#b5bac1;line-height:1.45}.moderation-reason{display:none;width:100%;height:40px;margin-top:16px;border:1px solid #41434a;border-radius:7px;background:#111214;color:#fff;padding:0 11px;outline:0}.moderation-reason.show{display:block}.moderation-confirm-actions{display:flex;justify-content:flex-end;gap:9px;padding:14px 22px;background:#24252a}.moderation-confirm-actions button{height:38px;border-radius:6px;padding:0 14px;color:#fff;font-weight:850;cursor:pointer}.moderation-cancel{background:transparent}.moderation-accept{background:#da373c}
+  .ban-list{display:grid;gap:8px}.ban-row{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#18191d;border:1px solid #292b31;border-radius:10px;padding:12px 14px}.ban-meta{display:flex;align-items:center;gap:10px;min-width:0}.ban-meta small{display:block;color:#8e929b;margin-top:3px}.ban-empty{padding:36px;border:1px dashed #3a3c43;border-radius:12px;text-align:center;color:#8e929b;background:#18191d}
+  @media(max-width:900px){.settings-main{padding-right:78px}.members-col-joined{display:none}.members-col-user{width:52%}.members-col-role{width:32%}.members-tools{flex-wrap:wrap}.members-search{width:220px}}
+  @media(max-width:650px){.members-page-head,.members-toolbar{align-items:stretch;flex-direction:column}.members-tools{display:grid;grid-template-columns:1fr 1fr}.members-search{grid-column:1/-1;width:100%}.members-col-role{display:none}.members-col-user{width:auto}.members-table th,.members-table td{padding-left:8px;padding-right:8px}}
+</style>
 </head>
 
 <body>
@@ -895,7 +938,7 @@
 
         <div class="side-sep"></div>
         <div class="side-kicker">Люди</div>
-        <button class="side-item" type="button" data-tab="members">Участники <span class="external">↗</span></button>
+        <button class="side-item" type="button" data-tab="members">Учасники</button>
         <button class="side-item" type="button" data-tab="roles">Роли</button>
         <button class="side-item" type="button" data-tab="invites">Приглашения</button>
         <button class="side-item" type="button" data-tab="access">Доступ</button>
@@ -1090,12 +1133,80 @@
         </div>
       </section>
 
+      <section id="page-members" class="settings-page members-settings-page">
+        <div class="members-page-head">
+          <div>
+            <h1 class="settings-title">Учасники сервера</h1>
+            <p class="settings-desc">Керуй ролями та доступом учасників. Власник позначений золотою коронкою; передати власність може лише поточний власник.</p>
+          </div>
+        </div>
+
+        <div class="members-card">
+          <div class="members-toolbar">
+            <strong>Учасники — <span id="visible-members-count">{{ members|length }}</span></strong>
+            <div class="members-tools">
+              <input id="member-search" class="members-search" type="search" placeholder="Пошук за іменем або роллю" autocomplete="off" />
+              <button id="member-sort" class="members-tool-btn" type="button">⇅ Сортувати</button>
+              <button id="member-clear" class="members-tool-btn clear" type="button">Очистити</button>
+            </div>
+          </div>
+          <div class="members-table-wrap">
+            <table class="members-table">
+              <thead><tr><th class="members-col-user">Учасник</th><th class="members-col-joined">На сервері з</th><th class="members-col-role">Роль</th><th class="members-col-action" aria-label="Дії"></th></tr></thead>
+              <tbody id="members-table-body">
+              {% for item in members %}
+                {% set m = item.account %}
+                {% if m %}
+                <tr class="settings-member-row" data-member-id="{{ m.id }}" data-member-name="{{ m.username|e }}" data-member-role="{{ item.member.role }}" data-member-joined="{{ item.member.joined_at.isoformat() if item.member.joined_at else '' }}">
+                  <td class="members-col-user">
+                    <div class="settings-member">
+                      <span class="settings-member-avatar" {% if m.avatar_url %}style="background-image:url('{{ m.avatar_url }}')"{% endif %}>{% if not m.avatar_url %}{{ m.username[:1]|upper }}{% endif %}</span>
+                      <span class="settings-member-copy"><span class="settings-member-name-line"><span class="settings-member-name">{{ m.username }}</span>{% if m.id == server.owner_id %}<span class="settings-owner-crown" aria-label="Власник сервера"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.3 7.2 7.7 11l4.1-6 4.3 6 4.6-3.8-1.8 10.1H5.1L3.3 7.2Zm2.3 12.1h12.8"/></svg></span>{% endif %}</span><span class="settings-member-handle">@{{ m.username }} · ID {{ m.id }}</span></span>
+                    </div>
+                  </td>
+                  <td class="members-col-joined">{{ item.member.joined_at.strftime('%d.%m.%Y') if item.member.joined_at else '—' }}</td>
+                  <td class="members-col-role"><span class="member-role-pill {{ item.member.role }}">{{ {'owner':'Власник','admin':'Адміністратор','member':'Учасник'}.get(item.member.role, item.member.role) }}</span></td>
+                  <td class="members-col-action"><button class="member-menu-button" type="button" aria-label="Дії для {{ m.username }}" data-id="{{ m.id }}" data-username="{{ m.username|e }}" data-role="{{ item.member.role }}" data-owner="{{ '1' if m.id == server.owner_id else '0' }}" data-self="{{ '1' if m.id == account.id else '0' }}" onclick="openMemberMenu(event,this)">⋮</button></td>
+                </tr>
+                {% endif %}
+              {% endfor %}
+              </tbody>
+            </table>
+            <div id="members-empty" class="members-empty" {% if members %}hidden{% endif %}>Учасників не знайдено.</div>
+          </div>
+          <div class="members-card-foot">Показано <span id="members-foot-count">{{ members|length }}</span> учасників</div>
+        </div>
+      </section>
+
+      <section id="page-bans" class="settings-page bans-settings-page">
+        <h1 class="settings-title">Бани</h1>
+        <p class="settings-desc">Заблоковані користувачі не можуть повернутися на сервер навіть за старим запрошенням. Після розбану їх потрібно запросити повторно.</p>
+        {% if banned_members %}
+        <div class="ban-list">
+          {% for item in banned_members %}{% set banned = item.account %}
+          {% if banned %}<div class="ban-row">
+            <div class="ban-meta"><span class="settings-member-avatar" {% if banned.avatar_url %}style="background-image:url('{{ banned.avatar_url }}')"{% endif %}>{% if not banned.avatar_url %}{{ banned.username[:1]|upper }}{% endif %}</span><div><strong>{{ banned.username }}</strong><small>{% if item.ban.reason %}Причина: {{ item.ban.reason }} · {% endif %}ID {{ banned.id }}</small></div></div>
+            <button class="gray-btn" type="button" data-id="{{ banned.id }}" data-username="{{ banned.username|e }}" onclick="requestMemberAction('unban',{id:Number(this.dataset.id),username:this.dataset.username,role:'banned'})">Розбанити</button>
+          </div>{% endif %}
+          {% endfor %}
+        </div>
+        {% else %}<div class="ban-empty">На цьому сервері немає заблокованих користувачів.</div>{% endif %}
+      </section>
+
       <section id="page-placeholder" class="settings-page placeholder-page">
         <h1 id="placeholder-title" class="settings-title">Налаштування</h1>
         <p id="placeholder-desc" class="settings-desc">Цей розділ поки в процесі.</p>
         <div class="placeholder-box">Тут буде нормальна сторінка налаштувань. Я залишив вкладки як у Discord, щоб меню не ламалось і не виглядало обрізаним.</div>
       </section>
     </main>
+  </div>
+
+  <div id="member-action-menu" class="member-action-menu" role="menu"></div>
+  <div id="moderation-confirm" class="moderation-confirm" role="dialog" aria-modal="true" aria-labelledby="moderation-confirm-title">
+    <div class="moderation-confirm-card">
+      <div class="moderation-confirm-body"><h2 id="moderation-confirm-title">Підтвердити дію</h2><p id="moderation-confirm-text"></p><input id="moderation-reason" class="moderation-reason" maxlength="255" placeholder="Причина бану, необов’язково" /></div>
+      <div class="moderation-confirm-actions"><button class="moderation-cancel" type="button" onclick="closeModerationConfirm()">Скасувати</button><button id="moderation-confirm-accept" class="moderation-accept" type="button">Підтвердити</button></div>
+    </div>
   </div>
 
   <div id="media-upload" class="upload-backdrop">
@@ -1178,6 +1289,218 @@
       setTimeout(() => toast.classList.remove('show'), 1600);
     }
 
+    const VIEWER_IS_OWNER = {{ 'true' if viewer_is_owner else 'false' }};
+    const VIEWER_ROLE = '{{ viewer_member.role if viewer_member else "member" }}';
+    let activeMember = null;
+    let activeMemberButton = null;
+    let pendingModeration = null;
+    let memberSortMode = 'role';
+
+    function closeMemberMenu() {
+      const menu = document.getElementById('member-action-menu');
+      menu?.classList.remove('open');
+      if (activeMemberButton) activeMemberButton.classList.remove('active');
+      activeMemberButton = null;
+    }
+
+    function memberMenuButton(action, label, extraClass = '', suffix = '') {
+      return `<button type="button" role="menuitem" class="${extraClass}" data-member-action="${action}"><span>${label}</span>${suffix}</button>`;
+    }
+
+    function openMemberMenu(event, button) {
+      event.preventDefault();
+      event.stopPropagation();
+      const menu = document.getElementById('member-action-menu');
+      if (!menu) return;
+      const member = {
+        id: Number(button.dataset.id || 0),
+        username: button.dataset.username || 'user',
+        role: button.dataset.role || 'member',
+        isOwner: button.dataset.owner === '1',
+        isSelf: button.dataset.self === '1',
+      };
+      activeMember = member;
+      if (activeMemberButton && activeMemberButton !== button) activeMemberButton.classList.remove('active');
+      activeMemberButton = button;
+      button.classList.add('active');
+
+      const items = [memberMenuButton('profile', 'Профіль')];
+      if (!member.isSelf) items.push(memberMenuButton('message', 'Написати повідомлення'));
+
+      const canModerate = !member.isOwner && !member.isSelf && (
+        VIEWER_IS_OWNER || (VIEWER_ROLE === 'admin' && member.role === 'member')
+      );
+      if (canModerate) {
+        items.push('<div class="menu-separator"></div>');
+        if (VIEWER_IS_OWNER) {
+          const nextRole = member.role === 'admin' ? 'member' : 'admin';
+          const roleLabel = member.role === 'admin' ? 'Зняти адміністратора' : 'Зробити адміністратором';
+          items.push(memberMenuButton(`set_role:${nextRole}`, roleLabel));
+        }
+        items.push(memberMenuButton('kick', `Вигнати ${escapeHtml(member.username)}`, 'danger'));
+        items.push(memberMenuButton('ban', `Забанити ${escapeHtml(member.username)}`, 'danger'));
+        if (VIEWER_IS_OWNER) {
+          items.push('<div class="menu-separator"></div>');
+          items.push(memberMenuButton('transfer_ownership', 'Передати права на сервер', 'danger'));
+        }
+      }
+      items.push('<div class="menu-separator"></div>');
+      items.push(memberMenuButton('copy_id', 'Копіювати ID користувача', '', '<span class="id-badge">ID</span>'));
+      menu.innerHTML = items.join('');
+      menu.querySelectorAll('[data-member-action]').forEach(item => item.addEventListener('click', () => {
+        const command = item.dataset.memberAction || '';
+        closeMemberMenu();
+        if (command === 'profile') location.href = `/community/profile/${encodeURIComponent(member.username)}`;
+        else if (command === 'message') location.href = `/community/dm/${encodeURIComponent(member.username)}`;
+        else if (command === 'copy_id') copyMemberId(member.id);
+        else if (command.startsWith('set_role:')) requestMemberAction('set_role', member, {role: command.split(':')[1]});
+        else requestMemberAction(command, member);
+      }));
+
+      menu.classList.add('open');
+      menu.style.visibility = 'hidden';
+      const rect = button.getBoundingClientRect();
+      const width = menu.offsetWidth;
+      const height = menu.offsetHeight;
+      const left = Math.max(8, Math.min(window.innerWidth - width - 8, rect.right - width));
+      const below = rect.bottom + 5;
+      const top = below + height <= window.innerHeight - 8 ? below : Math.max(8, rect.top - height - 5);
+      menu.style.left = `${left}px`;
+      menu.style.top = `${top}px`;
+      menu.style.visibility = 'visible';
+    }
+
+    async function copyMemberId(id) {
+      const value = String(id || '');
+      try {
+        await navigator.clipboard.writeText(value);
+      } catch (error) {
+        const input = document.createElement('textarea');
+        input.value = value;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        input.remove();
+      }
+      showToast('ID користувача скопійовано');
+    }
+
+    function requestMemberAction(action, member, extra = {}) {
+      if (!member || !member.id) return;
+      if (action === 'set_role' || action === 'unban') {
+        performMemberAction(action, member, extra);
+        return;
+      }
+      const titles = {
+        kick: `Вигнати ${member.username}?`,
+        ban: `Забанити ${member.username}?`,
+        transfer_ownership: 'Передати права на сервер?',
+      };
+      const texts = {
+        kick: 'Користувача буде видалено із сервера. Повернутися він зможе лише за новим запрошенням.',
+        ban: 'Користувача буде видалено та заблоковано. Старі запрошення більше не спрацюють.',
+        transfer_ownership: `Після підтвердження ${member.username} стане новим власником сервера, а ти залишишся адміністратором.`,
+      };
+      pendingModeration = {action, member, extra};
+      document.getElementById('moderation-confirm-title').textContent = titles[action] || 'Підтвердити дію';
+      document.getElementById('moderation-confirm-text').textContent = texts[action] || '';
+      const reason = document.getElementById('moderation-reason');
+      reason.value = '';
+      reason.classList.toggle('show', action === 'ban');
+      document.getElementById('moderation-confirm').classList.add('open');
+      if (action === 'ban') setTimeout(() => reason.focus(), 30);
+    }
+
+    function closeModerationConfirm() {
+      document.getElementById('moderation-confirm')?.classList.remove('open');
+      pendingModeration = null;
+    }
+
+    async function performMemberAction(action, member, extra = {}) {
+      const payload = {action, ...extra};
+      if (action === 'ban') payload.reason = document.getElementById('moderation-reason')?.value || '';
+      try {
+        const response = await fetch(`/community/api/servers/${SERVER_ID}/members/${member.id}/moderate`, {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(payload),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.ok) {
+          const labels = {
+            forbidden: 'Недостатньо прав для цієї дії', owner_only: 'Це може зробити лише власник',
+            member_not_found: 'Учасника вже немає на сервері', ban_not_found: 'Бан уже знято',
+            owner_role_locked: 'Роль власника не можна змінити', invalid_role: 'Невідома роль',
+          };
+          showToast(labels[data.error] || 'Не вдалося виконати дію');
+          return;
+        }
+        const success = {
+          set_role: 'Роль учасника оновлено', kick: 'Учасника вигнано', ban: 'Учасника забанено',
+          unban: 'Користувача розбанено', transfer_ownership: 'Власність сервера передано',
+        };
+        showToast(success[action] || 'Готово');
+        location.hash = action === 'unban' ? 'bans' : 'members';
+        setTimeout(() => location.reload(), 450);
+      } catch (error) {
+        showToast('Помилка з’єднання із сервером');
+      }
+    }
+
+    function applyMemberFilters() {
+      const body = document.getElementById('members-table-body');
+      if (!body) return;
+      const query = (document.getElementById('member-search')?.value || '').trim().toLowerCase();
+      const rows = Array.from(body.querySelectorAll('.settings-member-row'));
+      const rank = {owner: 0, admin: 1, member: 2};
+      rows.sort((a, b) => {
+        if (memberSortMode === 'name') return a.dataset.memberName.localeCompare(b.dataset.memberName, undefined, {sensitivity:'base'});
+        if (memberSortMode === 'joined') return (b.dataset.memberJoined || '').localeCompare(a.dataset.memberJoined || '');
+        return (rank[a.dataset.memberRole] ?? 9) - (rank[b.dataset.memberRole] ?? 9);
+      });
+      rows.forEach(row => body.appendChild(row));
+      let visible = 0;
+      rows.forEach(row => {
+        const matches = !query || `${row.dataset.memberName} ${row.dataset.memberRole}`.toLowerCase().includes(query);
+        row.hidden = !matches;
+        if (matches) visible += 1;
+      });
+      const empty = document.getElementById('members-empty');
+      if (empty) empty.hidden = visible !== 0;
+      ['visible-members-count','members-foot-count'].forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = String(visible);
+      });
+    }
+
+    document.getElementById('member-search')?.addEventListener('input', applyMemberFilters);
+    document.getElementById('member-sort')?.addEventListener('click', event => {
+      memberSortMode = memberSortMode === 'role' ? 'name' : memberSortMode === 'name' ? 'joined' : 'role';
+      event.currentTarget.textContent = memberSortMode === 'name' ? 'А–Я Ім’я' : memberSortMode === 'joined' ? 'Нові спочатку' : 'За роллю';
+      applyMemberFilters();
+    });
+    document.getElementById('member-clear')?.addEventListener('click', () => {
+      const search = document.getElementById('member-search');
+      if (search) search.value = '';
+      memberSortMode = 'role';
+      const sort = document.getElementById('member-sort');
+      if (sort) sort.textContent = '⇅ Сортувати';
+      applyMemberFilters();
+    });
+    document.getElementById('moderation-confirm-accept')?.addEventListener('click', () => {
+      if (!pendingModeration) return;
+      const task = pendingModeration;
+      document.getElementById('moderation-confirm')?.classList.remove('open');
+      pendingModeration = null;
+      performMemberAction(task.action, task.member, task.extra);
+    });
+    document.addEventListener('click', event => {
+      if (!event.target.closest('#member-action-menu') && !event.target.closest('.member-menu-button')) closeMemberMenu();
+      if (event.target.id === 'moderation-confirm') closeModerationConfirm();
+    });
+    window.addEventListener('resize', closeMemberMenu);
+
     function escapeHtml(value) {
       return String(value || '').replace(/[&<>"']/g, char => ({
         '&': '&amp;',
@@ -1248,7 +1571,7 @@
     }
 
     function switchTab(tab) {
-      const known = ['profile', 'emojis', 'stickers'];
+      const known = ['profile', 'emojis', 'stickers', 'members', 'bans'];
       const page = known.includes(tab) ? tab : 'placeholder';
       document.querySelectorAll('.settings-page').forEach(section => {
         section.classList.toggle('active', section.id === `page-${page}`);
@@ -1265,6 +1588,7 @@
 
       if (tab === 'emojis') loadEmojis();
       if (tab === 'stickers') loadStickers();
+      if (tab === 'members') applyMemberFilters();
       location.hash = page === 'profile' ? '' : tab;
     }
 
@@ -1470,7 +1794,11 @@
 
     window.addEventListener('keydown', event => {
       if (event.key === 'Escape') {
-        if (document.getElementById('media-upload').classList.contains('open')) {
+        if (document.getElementById('moderation-confirm').classList.contains('open')) {
+          closeModerationConfirm();
+        } else if (document.getElementById('member-action-menu').classList.contains('open')) {
+          closeMemberMenu();
+        } else if (document.getElementById('media-upload').classList.contains('open')) {
           closeMediaUpload();
         } else {
           location.href = '/community/servers/{{ server.id }}';
