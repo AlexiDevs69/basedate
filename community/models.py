@@ -73,6 +73,11 @@ class Account(Base):
     # Values: ru, uk, en.
     language: Mapped[str] = mapped_column(String(8), default="ru", nullable=False)
 
+    # Incrementing this invalidates every previously issued signed community
+    # session. The browser that performs a sensitive action receives the new
+    # version immediately, while other devices must sign in again.
+    session_version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
 
 
