@@ -23,6 +23,7 @@ from community.models import (
     Post,
     PostLike,
     ServerChannel,
+    ServerBan,
     ServerInvite,
     ServerMember,
     ServerMessage,
@@ -702,6 +703,47 @@ async def get_server_member(db: AsyncSession, server_id: int, account_id: int) -
     return result.scalar_one_or_none()
 
 
+_SERVER_MODERATION_TABLES_READY = False
+
+
+async def ensure_server_moderation_tables(db: AsyncSession) -> None:
+    """Create the server-ban storage on existing Render/PostgreSQL databases."""
+    global _SERVER_MODERATION_TABLES_READY
+    if _SERVER_MODERATION_TABLES_READY:
+        return
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_server_bans (
+            id SERIAL PRIMARY KEY,
+            server_id INTEGER NOT NULL REFERENCES community_servers(id) ON DELETE CASCADE,
+            account_id INTEGER NOT NULL REFERENCES community_accounts(id) ON DELETE CASCADE,
+            banned_by_id INTEGER REFERENCES community_accounts(id) ON DELETE SET NULL,
+            reason VARCHAR(255),
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+        )
+    """))
+    await db.execute(text(
+        "CREATE UNIQUE INDEX IF NOT EXISTS uq_community_server_ban "
+        "ON community_server_bans (server_id, account_id)"
+    ))
+    await db.execute(text(
+        "CREATE INDEX IF NOT EXISTS ix_community_server_bans_server_created "
+        "ON community_server_bans (server_id, created_at DESC)"
+    ))
+    await db.commit()
+    _SERVER_MODERATION_TABLES_READY = True
+
+
+async def is_server_banned(db: AsyncSession, server_id: int, account_id: int) -> bool:
+    await ensure_server_moderation_tables(db)
+    result = await db.execute(
+        select(ServerBan.id).where(
+            ServerBan.server_id == int(server_id),
+            ServerBan.account_id == int(account_id),
+        )
+    )
+    return result.scalar_one_or_none() is not None
+
+
 async def is_server_member(db: AsyncSession, server_id: int, account_id: int) -> bool:
     return await get_server_member(db, server_id, account_id) is not None
 
@@ -726,6 +768,8 @@ async def accept_server_invite_by_code(db: AsyncSession, invite_code: str | int,
         return None
 
     server_id = int(invite.server_id)
+    if await is_server_banned(db, server_id, account_id):
+        return None
     invite.status = "accepted"
     invite.is_used = True
     invite.responded_at = datetime.now(timezone.utc)
@@ -739,8 +783,11 @@ async def accept_server_invite_by_code(db: AsyncSession, invite_code: str | int,
 
 
 async def can_manage_server(db: AsyncSession, server_id: int, account_id: int) -> bool:
+    server = await get_server_by_id(db, server_id)
+    if server and int(server.owner_id) == int(account_id):
+        return True
     member = await get_server_member(db, server_id, account_id)
-    return bool(member and member.role in {"owner", "admin"})
+    return bool(member and member.role == "admin")
 
 
 async def create_server(
@@ -802,6 +849,7 @@ async def leave_server(db: AsyncSession, server_id: int, account_id: int) -> boo
 
 
 async def delete_server(db: AsyncSession, server_id: int) -> bool:
+    await ensure_server_moderation_tables(db)
     server = await get_server_by_id(db, server_id)
     if not server:
         return False
@@ -809,6 +857,7 @@ async def delete_server(db: AsyncSession, server_id: int) -> bool:
     for model, column in [
         (ServerMessage, ServerMessage.server_id),
         (ServerInvite, ServerInvite.server_id),
+        (ServerBan, ServerBan.server_id),
         (ServerMember, ServerMember.server_id),
         (ServerChannel, ServerChannel.server_id),
     ]:
@@ -1018,13 +1067,200 @@ async def get_server_feed(db: AsyncSession, server_id: int, channel_id: int, lim
 
 async def list_server_members(db: AsyncSession, server_id: int) -> list[dict]:
     result = await db.execute(
-        select(ServerMember).where(ServerMember.server_id == server_id).order_by(ServerMember.role.asc(), ServerMember.joined_at.asc())
+        select(ServerMember).where(ServerMember.server_id == server_id).order_by(ServerMember.joined_at.asc())
     )
     members = []
     for member in result.scalars().all():
         account = await get_account_by_id(db, member.account_id)
         members.append({"member": member, "account": account})
+    role_rank = {"owner": 0, "admin": 1, "member": 2}
+    members.sort(key=lambda item: (
+        role_rank.get(item["member"].role, 9),
+        item["member"].joined_at.isoformat() if item["member"].joined_at else "",
+    ))
     return members
+
+
+async def list_server_bans(db: AsyncSession, server_id: int) -> list[dict]:
+    await ensure_server_moderation_tables(db)
+    result = await db.execute(
+        select(ServerBan)
+        .where(ServerBan.server_id == int(server_id))
+        .order_by(ServerBan.created_at.desc())
+    )
+    bans = []
+    for ban in result.scalars().all():
+        bans.append({
+            "ban": ban,
+            "account": await get_account_by_id(db, ban.account_id),
+            "banned_by": await get_account_by_id(db, ban.banned_by_id) if ban.banned_by_id else None,
+        })
+    return bans
+
+
+def _can_act_on_member(server: CommunityServer, actor: ServerMember | None, target: ServerMember) -> bool:
+    if not actor or int(actor.account_id) == int(target.account_id):
+        return False
+    if int(server.owner_id) == int(target.account_id):
+        return False
+    if int(server.owner_id) == int(actor.account_id):
+        return True
+    return actor.role == "admin" and target.role == "member"
+
+
+async def _get_server_for_moderation(db: AsyncSession, server_id: int) -> CommunityServer | None:
+    result = await db.execute(
+        select(CommunityServer)
+        .where(CommunityServer.id == int(server_id))
+        .with_for_update()
+    )
+    return result.scalar_one_or_none()
+
+
+async def update_server_member_role(
+    db: AsyncSession,
+    server_id: int,
+    actor_id: int,
+    target_id: int,
+    role: str,
+) -> tuple[bool, str]:
+    clean_role = (role or "").strip().lower()
+    if clean_role not in {"admin", "member"}:
+        return False, "invalid_role"
+    server = await _get_server_for_moderation(db, server_id)
+    actor = await get_server_member(db, server_id, actor_id)
+    target = await get_server_member(db, server_id, target_id)
+    if not server or not actor or not target:
+        return False, "member_not_found"
+    if int(server.owner_id) != int(actor_id):
+        return False, "owner_only"
+    if int(target_id) in {int(actor_id), int(server.owner_id)}:
+        return False, "owner_role_locked"
+    target.role = clean_role
+    await db.commit()
+    await db.refresh(target)
+    return True, clean_role
+
+
+async def kick_server_member(
+    db: AsyncSession,
+    server_id: int,
+    actor_id: int,
+    target_id: int,
+) -> tuple[bool, str]:
+    server = await _get_server_for_moderation(db, server_id)
+    actor = await get_server_member(db, server_id, actor_id)
+    target = await get_server_member(db, server_id, target_id)
+    if not server or not target:
+        return False, "member_not_found"
+    if not _can_act_on_member(server, actor, target):
+        return False, "forbidden"
+    pending = await db.execute(
+        select(ServerInvite).where(
+            ServerInvite.server_id == int(server_id),
+            ServerInvite.invitee_id == int(target_id),
+            ServerInvite.status == "pending",
+        )
+    )
+    for invite in pending.scalars().all():
+        invite.status = "declined"
+        invite.is_used = True
+        invite.responded_at = datetime.now(timezone.utc)
+    await db.delete(target)
+    await db.commit()
+    return True, "kicked"
+
+
+async def ban_server_member(
+    db: AsyncSession,
+    server_id: int,
+    actor_id: int,
+    target_id: int,
+    reason: str | None = None,
+) -> tuple[bool, str]:
+    await ensure_server_moderation_tables(db)
+    server = await _get_server_for_moderation(db, server_id)
+    actor = await get_server_member(db, server_id, actor_id)
+    target = await get_server_member(db, server_id, target_id)
+    if not server or not target:
+        return False, "member_not_found"
+    if not _can_act_on_member(server, actor, target):
+        return False, "forbidden"
+    existing = await db.execute(
+        select(ServerBan).where(
+            ServerBan.server_id == int(server_id),
+            ServerBan.account_id == int(target_id),
+        )
+    )
+    if not existing.scalar_one_or_none():
+        db.add(ServerBan(
+            server_id=int(server_id),
+            account_id=int(target_id),
+            banned_by_id=int(actor_id),
+            reason=(reason or "").strip()[:255] or None,
+        ))
+    pending = await db.execute(
+        select(ServerInvite).where(
+            ServerInvite.server_id == int(server_id),
+            ServerInvite.invitee_id == int(target_id),
+            ServerInvite.status == "pending",
+        )
+    )
+    for invite in pending.scalars().all():
+        invite.status = "declined"
+        invite.is_used = True
+        invite.responded_at = datetime.now(timezone.utc)
+    await db.delete(target)
+    await db.commit()
+    return True, "banned"
+
+
+async def unban_server_member(
+    db: AsyncSession,
+    server_id: int,
+    actor_id: int,
+    target_id: int,
+) -> tuple[bool, str]:
+    await ensure_server_moderation_tables(db)
+    if not await can_manage_server(db, server_id, actor_id):
+        return False, "forbidden"
+    result = await db.execute(
+        select(ServerBan).where(
+            ServerBan.server_id == int(server_id),
+            ServerBan.account_id == int(target_id),
+        )
+    )
+    ban = result.scalar_one_or_none()
+    if not ban:
+        return False, "ban_not_found"
+    await db.delete(ban)
+    await db.commit()
+    return True, "unbanned"
+
+
+async def transfer_server_ownership(
+    db: AsyncSession,
+    server_id: int,
+    actor_id: int,
+    target_id: int,
+) -> tuple[bool, str]:
+    # All moderation mutations lock the same server row, so a role change and
+    # an ownership transfer cannot race and leave inconsistent owner roles.
+    server = await _get_server_for_moderation(db, server_id)
+    actor = await get_server_member(db, server_id, actor_id)
+    target = await get_server_member(db, server_id, target_id)
+    if not server or not actor or not target:
+        return False, "member_not_found"
+    if int(server.owner_id) != int(actor_id):
+        return False, "owner_only"
+    if int(actor_id) == int(target_id):
+        return False, "already_owner"
+    server.owner_id = int(target_id)
+    actor.role = "admin"
+    target.role = "owner"
+    await db.commit()
+    await db.refresh(server)
+    return True, "transferred"
 
 
 async def invite_friend_to_server(
@@ -1039,6 +1275,8 @@ async def invite_friend_to_server(
     if not await is_server_member(db, server_id, inviter_id):
         return None
     if await is_server_member(db, server_id, invitee_id):
+        return None
+    if await is_server_banned(db, server_id, invitee_id):
         return None
 
     # Only friends can be invited, keeps random spam out.
