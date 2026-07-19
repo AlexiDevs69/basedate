@@ -19,6 +19,7 @@ from config import get_settings
 settings = get_settings()
 
 SESSION_KEY = "community_account_id"
+SESSION_VERSION_KEY = "community_session_version"
 
 
 # --- Passwords ---------------------------------------------------------
@@ -69,14 +70,22 @@ def verify_telegram_login(data: dict) -> bool:
 
 # --- Session helpers -------------------------------------------------------
 
-def log_in(request: Request, account_id: int) -> None:
+def log_in(request: Request, account_id: int, session_version: int = 1) -> None:
     request.session[SESSION_KEY] = account_id
+    request.session[SESSION_VERSION_KEY] = max(1, int(session_version or 1))
 
 
 def log_out(request: Request) -> None:
     request.session.pop(SESSION_KEY, None)
+    request.session.pop(SESSION_VERSION_KEY, None)
 
 
 def get_logged_in_account_id(request: Request) -> int | None:
     return request.session.get(SESSION_KEY)
 
+
+def get_logged_in_session_version(request: Request) -> int:
+    try:
+        return max(1, int(request.session.get(SESSION_VERSION_KEY) or 1))
+    except (TypeError, ValueError):
+        return 1
