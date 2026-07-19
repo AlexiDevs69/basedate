@@ -1096,6 +1096,108 @@
     if(seconds>0){url.searchParams.delete('rate_limited');history.replaceState({},'',url.pathname+url.search+url.hash);show(seconds*1000)}
   })();
   </script>
+  <style id="ah-message-time-style">
+    .message-time,.msg-time{cursor:default}
+    #ah-message-time-tooltip{position:fixed;z-index:2147482000;max-width:min(320px,calc(100vw - 24px));padding:9px 12px;border:1px solid rgba(255,255,255,.08);border-radius:8px;background:#2b2d31;color:#f2f3f5;box-shadow:0 8px 22px rgba(0,0,0,.42);font-family:inherit;font-size:13px;font-weight:700;line-height:1.35;text-align:center;white-space:pre-line;pointer-events:none;opacity:0;visibility:hidden;transform:translateY(3px);transition:opacity .1s ease,transform .1s ease}
+    #ah-message-time-tooltip.ah-open{opacity:1;visibility:visible;transform:translateY(0)}
+    #ah-message-time-tooltip:after{content:'';position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);border:6px solid transparent;border-top-color:#2b2d31;border-bottom:0}
+    #ah-message-time-tooltip.ah-below:after{top:-6px;bottom:auto;border-top:0;border-bottom:6px solid #2b2d31}
+  </style>
+  <script id="ah-message-time-js">
+  (function(){
+    if(window.AlexiHubMessageTime)return;
+    let tooltip=null,activeElement=null;
+    function locale(){
+      let stored='';
+      try{stored=localStorage.getItem('alexihub_language')||''}catch(e){}
+      const modal=document.getElementById('ah-message-rate-limit');
+      const lang=String(stored||(modal&&modal.dataset.language)||document.documentElement.lang||'uk').toLowerCase().split('-')[0];
+      return lang==='ru'?'ru-RU':(lang==='en'?'en-GB':'uk-UA');
+    }
+    function parse(value){
+      if(value instanceof Date)return isNaN(value.getTime())?null:value;
+      let raw=String(value||'').trim();
+      if(!raw)return null;
+      if(/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}/.test(raw))raw=raw.replace(/\s+/,'T');
+      raw=raw.replace(/(\.\d{3})\d+(?=Z|[+-]\d{2}:?\d{2}$|$)/,'$1');
+      if(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?$/.test(raw))raw+='Z';
+      const date=new Date(raw);
+      return isNaN(date.getTime())?null:date;
+    }
+    function sameDay(a,b){return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate()}
+    function format(value){
+      const date=parse(value);
+      if(!date)return String(value||'');
+      const lang=locale(),time=date.toLocaleTimeString(lang,{hour:'2-digit',minute:'2-digit'}),now=new Date(),yesterday=new Date();
+      yesterday.setDate(now.getDate()-1);
+      if(sameDay(date,now))return (lang==='ru-RU'?'Сегодня, в ':lang==='en-GB'?'Today at ':'Сьогодні о ')+time;
+      if(sameDay(date,yesterday))return (lang==='ru-RU'?'Вчера, в ':lang==='en-GB'?'Yesterday at ':'Учора о ')+time;
+      return date.toLocaleDateString(lang,{day:'2-digit',month:'2-digit',year:'numeric'})+' '+time;
+    }
+    function full(value){
+      const date=parse(value);
+      if(!date)return String(value||'');
+      const lang=locale();
+      return date.toLocaleDateString(lang,{weekday:'long',day:'numeric',month:'long',year:'numeric'})+'\n'+date.toLocaleTimeString(lang,{hour:'2-digit',minute:'2-digit'});
+    }
+    function ensureTooltip(){
+      if(tooltip)return tooltip;
+      tooltip=document.createElement('div');
+      tooltip.id='ah-message-time-tooltip';
+      tooltip.setAttribute('role','tooltip');
+      document.body.appendChild(tooltip);
+      return tooltip;
+    }
+    function hide(){
+      if(tooltip)tooltip.classList.remove('ah-open');
+      activeElement=null;
+    }
+    function position(element){
+      const tip=ensureTooltip(),rect=element.getBoundingClientRect(),box=tip.getBoundingClientRect();
+      let top=rect.top-box.height-10,below=false;
+      if(top<8){top=rect.bottom+10;below=true}
+      let left=rect.left+(rect.width-box.width)/2;
+      left=Math.max(8,Math.min(left,window.innerWidth-box.width-8));
+      tip.style.left=Math.round(left)+'px';
+      tip.style.top=Math.round(top)+'px';
+      tip.classList.toggle('ah-below',below);
+    }
+    function show(element){
+      const value=element&&element.dataset.fullTimestamp;
+      if(!value)return;
+      activeElement=element;
+      const tip=ensureTooltip();
+      tip.textContent=value;
+      tip.classList.add('ah-open');
+      requestAnimationFrame(()=>{if(activeElement===element)position(element)});
+    }
+    function decorate(element,value){
+      if(!element)return;
+      const raw=String(value||element.dataset.messageTimestamp||element.textContent||'').trim();
+      if(!raw)return;
+      element.dataset.messageTimestamp=raw;
+      element.dataset.fullTimestamp=full(raw);
+      element.textContent=format(raw);
+      element.setAttribute('aria-label',element.dataset.fullTimestamp);
+      if(element.dataset.ahTimestampReady==='1')return;
+      element.dataset.ahTimestampReady='1';
+      element.addEventListener('mouseenter',()=>show(element));
+      element.addEventListener('mouseleave',hide);
+      element.addEventListener('focus',()=>show(element));
+      element.addEventListener('blur',hide);
+    }
+    function hydrate(root){
+      const scope=root||document,nodes=[];
+      if(scope.matches&&scope.matches('.message-time,.msg-time'))nodes.push(scope);
+      if(scope.querySelectorAll)scope.querySelectorAll('.message-time,.msg-time').forEach(node=>nodes.push(node));
+      nodes.forEach(node=>decorate(node,node.dataset.messageTimestamp));
+    }
+    window.AlexiHubMessageTime={parse,format,full,decorate,hydrate,hide};
+    document.addEventListener('DOMContentLoaded',()=>hydrate(document),{once:true});
+    window.addEventListener('resize',hide);
+    document.addEventListener('scroll',hide,true);
+  })();
+  </script>
   <svg style="display:none" aria-hidden="true">
     <symbol id="i-message" viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></symbol>
     <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
@@ -1686,6 +1788,7 @@ function appendDmRealtimeMessage(data){
   else messagesEl.insertAdjacentHTML('beforeend',messageHtml(msg,data.author||{}));
   const added=document.getElementById('dm-message-'+msg.id);
   if(added){
+    if(window.AlexiHubMessageTime)window.AlexiHubMessageTime.hydrate(added);
     cacheDmReplyFromRow(added);
     hydrateDmInviteCard(added);
     if(window.AlexiHubNitroGifts)window.AlexiHubNitroGifts.hydrate(added);
@@ -3243,7 +3346,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
       message_id: Number(row.dataset.messageId || row.dataset.id || 0),
       content: row.dataset.messageContent || '',
       image_url: img || '',
-      created_at: timeNode ? timeNode.textContent.trim() : '',
+      created_at: timeNode ? (timeNode.dataset.messageTimestamp || timeNode.textContent.trim()) : '',
       author: { username: row.dataset.messageAuthor || '?', avatar_url: row.dataset.messageAvatar || '' }
     };
   }
