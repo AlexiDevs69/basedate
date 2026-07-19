@@ -6225,5 +6225,196 @@ body .composer-wrap{
 })();
 </script>
 
+<style id="ah-account-security-style">
+.ah-security-form{display:grid;gap:15px;max-width:620px}.ah-security-field{display:grid;gap:7px}.ah-security-field label{font-size:12px;font-weight:850;color:#b5bac1}.ah-security-field input{width:100%;height:42px;border:1px solid #3b3d45;border-radius:8px;background:#111214;color:#f2f3f5;padding:0 12px;font:inherit;outline:none}.ah-security-field input:focus{border-color:#5865f2;box-shadow:0 0 0 1px #5865f2}.ah-security-help{font-size:12px;color:#8e929b;line-height:1.4}.ah-security-strength{height:5px;border-radius:999px;background:#15161a;overflow:hidden}.ah-security-strength>i{display:block;width:0;height:100%;border-radius:inherit;background:#ed4245;transition:.18s}.ah-security-check{display:flex;align-items:flex-start;gap:10px;color:#dbdee1;font-size:13px;cursor:pointer}.ah-security-check input{margin-top:2px;accent-color:#5865f2}.ah-security-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.ah-security-status{min-height:18px;color:#b5bac1;font-size:12px;font-weight:750}.ah-security-status.error{color:#ff7b7b}.ah-security-status.success{color:#57f287}.ah-security-session{margin-top:22px;display:flex;align-items:center;justify-content:space-between;gap:18px}.ah-security-session-meta{display:flex;align-items:center;gap:12px}.ah-security-session-icon{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:rgba(35,165,90,.14);color:#57f287;font-size:18px}.ah-security-session b{display:block}.ah-security-session span{display:block;margin-top:3px;color:#9ca3af;font-size:12px}.ah-identity-dialog{position:fixed;inset:0;z-index:29000;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.72)}.ah-identity-dialog.open{display:flex}.ah-identity-card{width:min(440px,100%);border:1px solid #3b3d45;border-radius:14px;background:#24252b;color:#f2f3f5;padding:22px;box-shadow:0 22px 70px rgba(0,0,0,.55)}.ah-identity-card h2{margin:0 0 6px;font-size:21px}.ah-identity-card>p{margin:0 0 18px;color:#aeb3bd;font-size:13px}.ah-identity-form{display:grid;gap:14px}.ah-identity-buttons{display:flex;justify-content:flex-end;gap:9px;margin-top:4px}@media(max-width:700px){.ah-security-session{align-items:flex-start;flex-direction:column}.ah-security-session .ah-settings-btn{width:100%}.ah-identity-buttons .ah-settings-btn{flex:1}}
+</style>
+<script id="ah-account-security-js">
+(function(){
+  if(window.__ahAccountSecurityReady)return;
+  window.__ahAccountSecurityReady=true;
+  const cfg={username:{{ account.username|tojson }},email:{{ (account.email or '')|tojson }},hasPassword:{{ 'true' if account.password_hash else 'false' }}};
+  let identityField='username';
+
+  function toast(message){
+    if(window.settingsToast)window.settingsToast(message);
+  }
+  function setStatus(element,message,type){
+    if(!element)return;
+    element.textContent=message||'';
+    element.className='ah-security-status'+(type?' '+type:'');
+  }
+  async function postJson(url,body){
+    const response=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(body||{})});
+    const data=await response.json().catch(function(){return{}});
+    if(!response.ok||!data.ok){
+      const error=new Error(data.message||'Не вдалося зберегти зміни.');
+      error.status=response.status;
+      throw error;
+    }
+    return data;
+  }
+  function openSecurity(focusPassword){
+    if(window.showSettingsTab)window.showSettingsTab('security');
+    setTimeout(function(){
+      const target=document.getElementById(focusPassword?'ah-new-password':'ah-security-sessions');
+      if(target){target.scrollIntoView({behavior:'smooth',block:'center'});if(target.focus)target.focus()}
+    },80);
+  }
+  function identityDialog(){
+    let dialog=document.getElementById('ah-identity-dialog');
+    if(dialog)return dialog;
+    dialog=document.createElement('div');
+    dialog.id='ah-identity-dialog';
+    dialog.className='ah-identity-dialog';
+    dialog.innerHTML=[
+      '<div class="ah-identity-card" role="dialog" aria-modal="true" aria-labelledby="ah-identity-title">',
+      '<h2 id="ah-identity-title">Змінити дані</h2><p id="ah-identity-description"></p>',
+      '<form id="ah-identity-form" class="ah-identity-form">',
+      '<div class="ah-security-field"><label id="ah-identity-value-label" for="ah-identity-value">Нове значення</label><input id="ah-identity-value" required maxlength="255"></div>',
+      '<div class="ah-security-field" id="ah-identity-password-wrap"><label for="ah-identity-password">Поточний пароль</label><input id="ah-identity-password" type="password" autocomplete="current-password"><div class="ah-security-help">Потрібен для підтвердження зміни.</div></div>',
+      '<div id="ah-identity-status" class="ah-security-status" aria-live="polite"></div>',
+      '<div class="ah-identity-buttons"><button class="ah-settings-btn" type="button" id="ah-identity-cancel">Скасувати</button><button class="ah-settings-btn primary" type="submit">Зберегти</button></div>',
+      '</form></div>'
+    ].join('');
+    document.body.appendChild(dialog);
+    dialog.addEventListener('click',function(event){if(event.target===dialog)closeIdentity()});
+    dialog.querySelector('#ah-identity-cancel').addEventListener('click',closeIdentity);
+    dialog.querySelector('#ah-identity-form').addEventListener('submit',submitIdentity);
+    return dialog;
+  }
+  function closeIdentity(){
+    const dialog=document.getElementById('ah-identity-dialog');
+    if(dialog)dialog.classList.remove('open');
+  }
+  function openIdentity(field){
+    identityField=field==='email'?'email':'username';
+    const dialog=identityDialog(),title=dialog.querySelector('#ah-identity-title'),description=dialog.querySelector('#ah-identity-description'),label=dialog.querySelector('#ah-identity-value-label'),input=dialog.querySelector('#ah-identity-value'),password=dialog.querySelector('#ah-identity-password'),passwordWrap=dialog.querySelector('#ah-identity-password-wrap');
+    title.textContent=identityField==='email'?'Змінити електронну адресу':'Змінити username';
+    description.textContent=identityField==='email'?'Нова адреса використовуватиметься для входу в AlexiHub.':'Посилання на профіль і згадки оновляться після збереження.';
+    label.textContent=identityField==='email'?'Нова електронна адреса':'Новий username';
+    input.type=identityField==='email'?'email':'text';
+    input.maxLength=identityField==='email'?255:32;
+    input.value=identityField==='email'?(cfg.email||''):(cfg.username||'');
+    password.value='';
+    passwordWrap.style.display=cfg.hasPassword?'grid':'none';
+    setStatus(dialog.querySelector('#ah-identity-status'),'');
+    dialog.classList.add('open');
+    setTimeout(function(){input.focus();input.select()},30);
+  }
+  async function submitIdentity(event){
+    event.preventDefault();
+    const form=event.currentTarget,button=form.querySelector('button[type="submit"]'),input=form.querySelector('#ah-identity-value'),password=form.querySelector('#ah-identity-password'),status=form.querySelector('#ah-identity-status');
+    button.disabled=true;
+    setStatus(status,'Зберігаємо...');
+    try{
+      const data=await postJson('/community/api/settings/identity',{field:identityField,value:input.value.trim(),current_password:password.value});
+      cfg.username=data.username||cfg.username;
+      cfg.email=data.email||cfg.email;
+      setStatus(status,data.message||'Збережено.','success');
+      toast('Дані акаунта оновлено');
+      setTimeout(function(){location.reload()},550);
+    }catch(error){
+      if(error.status===401&&error.message.indexOf('увійти')!==-1){location.href='/community/login';return}
+      setStatus(status,error.message,'error');
+    }finally{button.disabled=false}
+  }
+  function securityMarkup(){
+    return [
+      '<h1>Пароль і безпека</h1>',
+      '<div class="ah-settings-card">',
+      '<h3>'+(cfg.hasPassword?'Змінити пароль':'Створити пароль')+'</h3>',
+      '<p>'+(cfg.hasPassword?'Підтвердь поточний пароль і задай новий.':'Цей акаунт ще не має пароля. Створи його для входу через email.')+'</p>',
+      '<form id="ah-password-form" class="ah-security-form" style="margin-top:18px">',
+      cfg.hasPassword?'<div class="ah-security-field"><label for="ah-current-password">Поточний пароль</label><input id="ah-current-password" type="password" autocomplete="current-password" required></div>':'',
+      '<div class="ah-security-field"><label for="ah-new-password">Новий пароль</label><input id="ah-new-password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required><div class="ah-security-strength"><i id="ah-password-strength-bar"></i></div><div id="ah-password-strength-label" class="ah-security-help">Мінімум 8 символів, хоча б одна літера та цифра.</div></div>',
+      '<div class="ah-security-field"><label for="ah-confirm-password">Підтверди новий пароль</label><input id="ah-confirm-password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required></div>',
+      '<label class="ah-security-check"><input id="ah-show-passwords" type="checkbox"><span>Показати введені паролі</span></label>',
+      '<label class="ah-security-check"><input id="ah-revoke-on-change" type="checkbox" checked><span><b>Вийти на інших пристроях</b><br><small class="ah-security-help">Поточний браузер залишиться авторизованим.</small></span></label>',
+      '<div id="ah-password-status" class="ah-security-status" aria-live="polite"></div>',
+      '<div class="ah-security-actions"><button class="ah-settings-btn primary" type="submit">'+(cfg.hasPassword?'Змінити пароль':'Створити пароль')+'</button></div>',
+      '</form></div>',
+      '<div id="ah-security-sessions" class="ah-settings-card ah-security-session">',
+      '<div class="ah-security-session-meta"><div class="ah-security-session-icon">✓</div><div><b>Поточний браузер активний</b><span>Можна завершити всі інші підписані сесії одним натисканням.</span></div></div>',
+      '<button id="ah-revoke-sessions-btn" class="ah-settings-btn danger" type="button">Завершити інші сесії</button>',
+      '</div>'
+    ].join('');
+  }
+  function passwordStrength(value){
+    let score=0;
+    if(value.length>=8)score++;
+    if(value.length>=12)score++;
+    if(/[A-Za-zА-Яа-яІіЇїЄє]/.test(value)&&/\d/.test(value))score++;
+    if(/[^A-Za-zА-Яа-яІіЇїЄє0-9]/.test(value))score++;
+    return Math.min(4,score);
+  }
+  function updateStrength(input){
+    const bar=document.getElementById('ah-password-strength-bar'),label=document.getElementById('ah-password-strength-label'),score=passwordStrength(input.value),names=['Дуже слабкий','Слабкий','Нормальний','Сильний','Дуже сильний'],colors=['#ed4245','#ed4245','#faa61a','#23a55a','#57f287'];
+    if(bar){bar.style.width=(score*25)+'%';bar.style.background=colors[score]}
+    if(label)label.textContent=input.value?names[score]:'Мінімум 8 символів, хоча б одна літера та цифра.';
+  }
+  async function submitPassword(event){
+    event.preventDefault();
+    const form=event.currentTarget,button=form.querySelector('button[type="submit"]'),current=document.getElementById('ah-current-password'),next=document.getElementById('ah-new-password'),confirm=document.getElementById('ah-confirm-password'),status=document.getElementById('ah-password-status');
+    if(next.value!==confirm.value){setStatus(status,'Новий пароль і підтвердження не збігаються.','error');return}
+    button.disabled=true;
+    setStatus(status,'Оновлюємо пароль...');
+    try{
+      const data=await postJson('/community/api/settings/password',{current_password:current?current.value:'',new_password:next.value,confirm_password:confirm.value,revoke_other_sessions:document.getElementById('ah-revoke-on-change').checked});
+      setStatus(status,data.message||'Пароль змінено.','success');
+      toast('Пароль успішно змінено');
+      form.reset();
+      cfg.hasPassword=true;
+      setTimeout(function(){location.reload()},700);
+    }catch(error){
+      if(error.status===401&&error.message.indexOf('увійти')!==-1){location.href='/community/login';return}
+      setStatus(status,error.message,'error');
+    }finally{button.disabled=false}
+  }
+  async function revokeSessions(){
+    const button=document.getElementById('ah-revoke-sessions-btn'),status=document.getElementById('ah-password-status');
+    if(!button)return;
+    button.disabled=true;
+    const old=button.textContent;
+    button.textContent='Завершуємо...';
+    try{
+      const data=await postJson('/community/api/settings/sessions/revoke',{});
+      setStatus(status,data.message||'Інші сесії завершено.','success');
+      toast('Інші сесії завершено');
+    }catch(error){
+      if(error.status===401){location.href='/community/login';return}
+      setStatus(status,error.message,'error');
+    }finally{button.disabled=false;button.textContent=old}
+  }
+  function initSecurityPage(){
+    const page=document.querySelector('[data-settings-page="security"]');
+    if(!page)return;
+    page.innerHTML=securityMarkup();
+    const form=document.getElementById('ah-password-form'),next=document.getElementById('ah-new-password'),show=document.getElementById('ah-show-passwords'),revoke=document.getElementById('ah-revoke-sessions-btn');
+    form.addEventListener('submit',submitPassword);
+    next.addEventListener('input',function(){updateStrength(next)});
+    show.addEventListener('change',function(){page.querySelectorAll('input[type="password"],input[type="text"]').forEach(function(input){if(input.id.indexOf('password')!==-1)input.type=show.checked?'text':'password'})});
+    revoke.addEventListener('click',revokeSessions);
+  }
+  function initAccountButtons(){
+    const page=document.querySelector('[data-settings-page="account"]');
+    if(!page)return;
+    page.querySelectorAll('.ah-settings-row').forEach(function(row){
+      const label=(row.querySelector('.label')||{}).textContent||'',button=row.querySelector('button.ah-settings-btn');
+      if(!button)return;
+      if(/пользователя|username|користувача/i.test(label)){button.removeAttribute('onclick');button.onclick=function(){openIdentity('username')}}
+      if(/почта|email|пошта/i.test(label)){button.removeAttribute('onclick');button.onclick=function(){openIdentity('email')}}
+    });
+    page.querySelectorAll('.ah-settings-action').forEach(function(row){
+      const label=(row.querySelector('b')||{}).textContent||'',button=row.querySelector('button.ah-settings-btn'),description=row.querySelector('span');
+      if(!button)return;
+      if(/парол/i.test(label)){if(description)description.textContent=cfg.hasPassword?'Оновити пароль і захистити інші сесії.':'Пароль ще не встановлено.';button.removeAttribute('onclick');button.onclick=function(){openSecurity(true)}}
+      if(/сес/i.test(label)){if(description)description.textContent='Керування входами на інших пристроях.';button.removeAttribute('onclick');button.onclick=function(){openSecurity(false)}}
+    });
+  }
+  initSecurityPage();
+  initAccountButtons();
+  document.addEventListener('keydown',function(event){if(event.key==='Escape')closeIdentity()});
+})();
+</script>
 </body>
 </html>
