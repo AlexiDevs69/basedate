@@ -365,6 +365,30 @@ class RealtimeChannelManager:
                     self.typing.pop(key, None)
         await self.broadcast_typing(key)
 
+    async def disconnect_server_account(self, server_id: int, account_id: int) -> None:
+        """Immediately remove a kicked/banned member from every live server channel."""
+        sockets: list[WebSocket] = []
+        affected_keys: list[tuple[int, int]] = []
+        async with self.lock:
+            for key, users in list(self.connections.items()):
+                if int(key[0]) != int(server_id):
+                    continue
+                sockets.extend(users.pop(int(account_id), set()))
+                if key in self.typing:
+                    self.typing[key].pop(int(account_id), None)
+                    if not self.typing[key]:
+                        self.typing.pop(key, None)
+                if not users:
+                    self.connections.pop(key, None)
+                affected_keys.append(key)
+        for socket in sockets:
+            try:
+                await socket.close(code=1008)
+            except Exception:
+                pass
+        for key in affected_keys:
+            await self.broadcast_typing(key)
+
     async def broadcast_typing(self, key: tuple[int, int]) -> None:
         now = time.monotonic()
         async with self.lock:
@@ -1700,6 +1724,8 @@ async def server_settings_page(
     if not server:
         return RedirectResponse(url="/community", status_code=303)
     members = await crud.list_server_members(db, server_id)
+    banned_members = await crud.list_server_bans(db, server_id)
+    viewer_member = await crud.get_server_member(db, server_id, account.id)
     banner_color = await _get_server_banner_color(db, server_id)
     rail = await server_rail_context(db, account.id, active_server_id=server_id)
     return templates.TemplateResponse(
@@ -1708,7 +1734,11 @@ async def server_settings_page(
             "request": request,
             "account": account,
             "server": server,
+            "members": members,
             "members_count": len(members),
+            "banned_members": banned_members,
+            "viewer_member": viewer_member,
+            "viewer_is_owner": int(server.owner_id) == int(account.id),
             "banner_color": banner_color,
             **rail,
         },
@@ -1736,6 +1766,55 @@ async def server_settings_submit(
         await _set_server_banner_color(db, server_id, banner_color)
     safe_redirect = redirect_to if redirect_to.startswith("/community/") else f"/community/servers/{server_id}"
     return RedirectResponse(url=safe_redirect, status_code=303)
+
+
+@router.post("/api/servers/{server_id}/members/{target_id}/moderate")
+async def api_moderate_server_member(
+    server_id: int,
+    target_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    actor = await current_account(request, db)
+    if not actor:
+        return JSONResponse({"ok": False, "error": "unauthorized"}, status_code=401)
+    if not await crud.can_manage_server(db, server_id, actor.id):
+        return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
+
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    action = str(body.get("action") or "").strip().lower()
+
+    if action == "set_role":
+        ok, result = await crud.update_server_member_role(
+            db, server_id, actor.id, target_id, str(body.get("role") or "")
+        )
+    elif action == "kick":
+        ok, result = await crud.kick_server_member(db, server_id, actor.id, target_id)
+    elif action == "ban":
+        ok, result = await crud.ban_server_member(
+            db, server_id, actor.id, target_id, str(body.get("reason") or "")
+        )
+    elif action == "unban":
+        ok, result = await crud.unban_server_member(db, server_id, actor.id, target_id)
+    elif action == "transfer_ownership":
+        ok, result = await crud.transfer_server_ownership(
+            db, server_id, actor.id, target_id
+        )
+    else:
+        return JSONResponse({"ok": False, "error": "invalid_action"}, status_code=400)
+
+    if not ok:
+        status = 404 if result in {"member_not_found", "ban_not_found"} else 403
+        if result in {"invalid_role", "already_owner"}:
+            status = 400
+        return JSONResponse({"ok": False, "error": result}, status_code=status)
+
+    if action in {"kick", "ban"}:
+        await realtime_channels.disconnect_server_account(server_id, target_id)
+    return JSONResponse({"ok": True, "result": result, "action": action, "target_id": target_id})
 
 
 @router.post("/servers/{server_id}/leave")
