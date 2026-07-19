@@ -1478,5 +1478,29 @@
       }
     });
   </script>
+<style id="ah-discord-scrollbars">
+  /* Thin Discord-like thumb with a fully transparent track. */
+  :root, body, body * {
+    scrollbar-width: thin;
+    scrollbar-color: #4e5058 transparent;
+  }
+  *::-webkit-scrollbar { width: 12px; height: 12px; }
+  *::-webkit-scrollbar-track,
+  *::-webkit-scrollbar-track-piece {
+    background: transparent !important;
+    border: 0 !important;
+  }
+  *::-webkit-scrollbar-thumb {
+    min-height: 40px;
+    background-color: #4e5058 !important;
+    background-clip: padding-box !important;
+    border: 3px solid transparent !important;
+    border-radius: 999px !important;
+  }
+  *::-webkit-scrollbar-thumb:hover { background-color: #6d6f78 !important; }
+  *::-webkit-scrollbar-thumb:active { background-color: #7f818a !important; }
+  *::-webkit-scrollbar-corner { background: transparent !important; }
+  *::-webkit-scrollbar-button { width: 0; height: 0; display: none; }
+</style>
 </body>
 </html>
