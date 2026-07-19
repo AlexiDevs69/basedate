@@ -1451,11 +1451,11 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
     {% for item in members %}
       {% set m = item.account %}
       {% if m %}
-      <a href="/community/profile/{{ m.username }}" class="member-row mini-profile-trigger profile-click" data-account-id="{{ m.id }}" data-mini-username="{{ m.username|e }}" data-mini-avatar="{{ m.avatar_url or '' }}" data-mini-banner="{{ m.banner_url or '' }}" data-mini-status="{{ account.account_status if m.id == account.id else (m.account_status or 'offline') }}" data-mini-role="{{ m.role_label or item.role }}" data-mini-effect="{{ m.name_effect or 'none' }}" data-mini-font="{{ m.name_font or 'default' }}" data-mini-c1="{{ m.role_color_start or '#f5576c' }}" data-mini-c2="{{ m.role_color_end or '#7367f0' }}" data-mini-profile="/community/profile/{{ m.username }}" data-mini-bio="{{ m.bio or '' }}">
+      <a href="/community/profile/{{ m.username }}" class="member-row mini-profile-trigger profile-click" data-account-id="{{ m.id }}" data-mini-username="{{ m.username|e }}" data-mini-avatar="{{ m.avatar_url or '' }}" data-mini-banner="{{ m.banner_url or '' }}" data-mini-status="{{ account.account_status if m.id == account.id else (m.account_status or 'offline') }}" data-mini-role="{{ m.role_label or item.member.role }}" data-mini-effect="{{ m.name_effect or 'none' }}" data-mini-font="{{ m.name_font or 'default' }}" data-mini-c1="{{ m.role_color_start or '#f5576c' }}" data-mini-c2="{{ m.role_color_end or '#7367f0' }}" data-mini-profile="/community/profile/{{ m.username }}" data-mini-bio="{{ m.bio or '' }}">
         <span class="member-avatar-wrap"><span class="member-avatar" {% if m.avatar_url %}style="background-image:url('{{ m.avatar_url }}');"{% endif %}>{% if not m.avatar_url %}{{ m.username[:1]|upper }}{% endif %}</span><span class="member-presence status-{{ account.account_status if m.id == account.id else (m.account_status or 'offline') }}"></span></span>
         <span class="member-info">
-          <span class="visual-name member-name name-{{ m.name_effect or 'none' }} font-{{ m.name_font or 'default' }}" style="--name-c1: {{ m.role_color_start or '#f5576c' }}; --name-c2: {{ m.role_color_end or '#7367f0' }};">{{ m.username }}</span>
-          <span class="member-role">{{ item.role }}</span>
+          <span class="member-name-line"><span class="visual-name member-name name-{{ m.name_effect or 'none' }} font-{{ m.name_font or 'default' }}" style="--name-c1: {{ m.role_color_start or '#f5576c' }}; --name-c2: {{ m.role_color_end or '#7367f0' }};">{{ m.username }}</span>{% if m.id == server.owner_id %}<span class="server-owner-crown" aria-label="Власник сервера" data-tooltip="Власник сервера"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.3 7.2 7.7 11l4.1-6 4.3 6 4.6-3.8-1.8 10.1H5.1L3.3 7.2Zm2.3 12.1h12.8"/></svg></span>{% endif %}</span>
+          <span class="member-role">{{ {'owner':'Власник','admin':'Адміністратор','member':'Учасник'}.get(item.member.role, item.member.role) }}</span>
         </span>
       </a>
       {% endif %}
@@ -3912,6 +3912,16 @@ if (typeof window.openSelfProfileSettings !== 'function') {
   document.addEventListener('keydown',function(event){if(event.key==='Escape')closeIdentity()});
 })();
 </script>
+<style id="ah-server-owner-crown-css">
+  .member-name-line{display:flex;align-items:center;gap:5px;min-width:0;max-width:100%;overflow:visible}
+  .member-name-line .member-name{min-width:0;max-width:145px}
+  .server-owner-crown{position:relative;display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;flex:0 0 16px;color:#f0b232;cursor:default;z-index:12}
+  .server-owner-crown svg{width:16px;height:16px;display:block;fill:#f0b232;stroke:#f0b232;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+  .server-owner-crown::after{content:attr(data-tooltip);position:absolute;right:-8px;bottom:calc(100% + 9px);padding:7px 9px;border-radius:6px;background:#111214;color:#f2f3f5;font-size:12px;font-weight:800;line-height:1;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.5);opacity:0;visibility:hidden;transform:translateY(4px);transition:.12s ease;pointer-events:none}
+  .server-owner-crown::before{content:'';position:absolute;right:4px;bottom:calc(100% + 4px);width:8px;height:8px;background:#111214;transform:rotate(45deg) translateY(4px);opacity:0;visibility:hidden;transition:.12s ease;pointer-events:none}
+  .server-owner-crown:hover::after,.server-owner-crown:hover::before{opacity:1;visibility:visible;transform:translateY(0)}
+  .server-owner-crown:hover::before{transform:rotate(45deg)}
+</style>
 <style id="ah-discord-scrollbars">
   /* Thin Discord-like thumb with a fully transparent track. */
   :root, body, body * {
