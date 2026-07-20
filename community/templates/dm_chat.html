@@ -1046,6 +1046,7 @@
 .ah-mention-option:hover .ah-mention-option-meta small{color:#fff;}
 .composer-wrap,.dm-composer-shell{position:relative;}
 </style>
+  <link rel="stylesheet" href="/static/community-blocking.css?v=1">
 </head>
 <body data-current-account-id="{{ account.id }}" data-active-dm-account-id="{{ other.id }}">
   <style id="ah-message-rate-limit-style">
@@ -1808,11 +1809,18 @@ function handleDmRealtimeData(data){
   }
   if(data.type==='message_error'){
     finishDmSend(false);
-    if(typeof showActionToast==='function')showActionToast(data.error==='media_not_allowed'?'Це емоджі або стікер тут недоступне.':'Повідомлення не відправлено.');
+    if(typeof showActionToast==='function')showActionToast(
+      data.error==='media_not_allowed'
+        ?'Це емоджі або стікер тут недоступне.'
+        :(data.error==='blocked_relationship'?(data.message||'Особисті повідомлення з цим користувачем недоступні.'):'Повідомлення не відправлено.')
+    );
   }
   if(data.type==='rate_limited'){
     finishDmSend(false);
     if(window.AlexiHubMessageRateLimit)window.AlexiHubMessageRateLimit.show(data.retry_after_ms||1000);
+  }
+  if(data.type==='relationship_block'&&window.AlexiHubBlocking){
+    window.AlexiHubBlocking.refreshDm();
   }
   if(data.type==='message_edit'){
     applyDmMessageEdit(data.message||{});
@@ -5765,5 +5773,6 @@ document.addEventListener('DOMContentLoaded', async function(){
   *::-webkit-scrollbar-corner { background: transparent !important; }
   *::-webkit-scrollbar-button { width: 0; height: 0; display: none; }
 </style>
+<script src="/static/community-blocking.js?v=1"></script>
 </body>
 </html>
