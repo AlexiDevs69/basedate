@@ -247,6 +247,7 @@ async def community_schema_startup() -> None:
         await _ensure_server_visual_columns(db)
         await crud.ensure_reaction_tables(db)
         await crud.ensure_mention_table(db)
+        await crud.ensure_user_blocks_table(db)
 
 
 # --- Lightweight realtime layer --------------------------------------------
@@ -2001,6 +2002,8 @@ async def api_forward_message(request: Request, db: AsyncSession = Depends(get_d
             target_account = await crud.get_account_by_username(db, username)
             if not target_account or target_account.id == account_id:
                 continue
+            if await crud.is_blocked_between(db, account_id, target_account.id):
+                continue
             # Forwarding to a DM is intentionally limited to friends, like the modal list.
             if await crud.friendship_status(db, account_id, target_account.id) != "friends":
                 continue
@@ -2230,6 +2233,12 @@ async def api_send_dm_nitro_gift(username: str, request: Request, db: AsyncSessi
 
     sender_id = int(sender.id)
     recipient_id = int(recipient.id)
+    if await crud.is_blocked_between(db, sender_id, recipient_id):
+        return JSONResponse({
+            "ok": False,
+            "error": "blocked_relationship",
+            "message": "Подарунок не можна надіслати, поки один із користувачів заблокував іншого.",
+        }, status_code=403)
     author_payload = _account_payload(sender)
     thread = await crud.get_or_create_dm_thread(db, sender_id, recipient_id)
     if not thread:
@@ -2957,6 +2966,12 @@ async def dm_message_submit(
     if not other or other.id == account.id:
         return RedirectResponse(url="/community", status_code=303)
 
+    if await crud.is_blocked_between(db, account.id, other.id):
+        return RedirectResponse(
+            url=f"/community/dm/{other.username}?blocked=1",
+            status_code=303,
+        )
+
     thread = await crud.get_or_create_dm_thread(db, account.id, other.id)
     content, image_url, _media_item = await _prepare_custom_media_message(
         db, account.id, content, image_url, context="dm", server_id=None
@@ -3184,6 +3199,20 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
                 if not await crud.is_dm_participant(db, thread_id, account_id):
                     await websocket.close(code=1008)
                     return
+                current_thread = await crud.get_dm_thread_by_id(db, thread_id)
+                other_id = (
+                    current_thread.user_high_id
+                    if current_thread and current_thread.user_low_id == account_id
+                    else current_thread.user_low_id if current_thread else 0
+                )
+                if not other_id or await crud.is_blocked_between(db, account_id, other_id):
+                    await realtime_channels.clear_typing(key, account_id)
+                    await websocket.send_json({
+                        "type": "message_error",
+                        "error": "blocked_relationship",
+                        "message": "Повідомлення недоступні, поки один із користувачів заблокував іншого.",
+                    })
+                    continue
                 requested_custom_media = bool(_MEDIA_TOKEN_RE.search(content))
                 content, image_url, _media_item = await _prepare_custom_media_message(
                     db, account_id, content, image_url, context="dm", server_id=None
@@ -3402,6 +3431,101 @@ async def api_settings_revoke_sessions(request: Request, db: AsyncSession = Depe
     return JSONResponse({"ok": True, "message": "Інші сесії завершено."})
 
 
+def _blocked_account_payload(account, created_at=None) -> dict:
+    return {
+        "id": int(account.id),
+        "username": account.username,
+        "avatar_url": account.avatar_url or "",
+        "banner_url": account.banner_url or "",
+        "bio": account.bio or "",
+        "created_at": created_at.isoformat() if created_at else None,
+    }
+
+
+@router.get("/api/blocks")
+async def api_list_blocks(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return _settings_error("Потрібно знову увійти в акаунт.", 401, "not_authenticated")
+    rows = await crud.list_blocked_accounts(db, account.id)
+    return JSONResponse({
+        "ok": True,
+        "users": [_blocked_account_payload(user, created_at) for user, created_at in rows],
+    })
+
+
+@router.get("/api/blocks/{username}")
+async def api_block_status(username: str, request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return _settings_error("Потрібно знову увійти в акаунт.", 401, "not_authenticated")
+    target = await crud.get_account_by_username_ci(db, username)
+    if not target:
+        return _settings_error("Користувача не знайдено.", 404, "not_found")
+    status = await crud.block_status(db, account.id, target.id) if target.id != account.id else {
+        "blocked_by_me": False,
+        "blocked_me": False,
+    }
+    return JSONResponse({
+        "ok": True,
+        "user": _blocked_account_payload(target),
+        "is_self": int(target.id) == int(account.id),
+        **status,
+    })
+
+
+@router.post("/api/blocks/{username}")
+async def api_block_account(username: str, request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return _settings_error("Потрібно знову увійти в акаунт.", 401, "not_authenticated")
+    target = await crud.get_account_by_username_ci(db, username)
+    if not target:
+        return _settings_error("Користувача не знайдено.", 404, "not_found")
+    if int(target.id) == int(account.id):
+        return _settings_error("Не можна заблокувати самого себе.", 400, "cannot_block_self")
+
+    account_id = int(account.id)
+    target_id = int(target.id)
+    target_username = target.username
+    if not await crud.block_account(db, account_id, target_id):
+        return _settings_error("Не вдалося заблокувати користувача.", 400, "block_failed")
+    thread = await crud.get_dm_thread_between(db, account_id, target_id)
+    if thread:
+        await realtime_channels.broadcast(
+            (0, int(thread.id)),
+            {"type": "relationship_block", "blocked_by": account_id},
+        )
+    status = await crud.block_status(db, account_id, target_id)
+    return JSONResponse({
+        "ok": True,
+        "user": {"id": target_id, "username": target_username},
+        **status,
+        "message": f"@{target_username} заблоковано.",
+    })
+
+
+@router.delete("/api/blocks/{username}")
+async def api_unblock_account(username: str, request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return _settings_error("Потрібно знову увійти в акаунт.", 401, "not_authenticated")
+    target = await crud.get_account_by_username_ci(db, username)
+    if not target:
+        return _settings_error("Користувача не знайдено.", 404, "not_found")
+    account_id = int(account.id)
+    target_id = int(target.id)
+    target_username = target.username
+    await crud.unblock_account(db, account_id, target_id)
+    status = await crud.block_status(db, account_id, target_id)
+    return JSONResponse({
+        "ok": True,
+        "user": {"id": target_id, "username": target_username},
+        **status,
+        "message": f"@{target_username} розблоковано.",
+    })
+
+
 # --- Public profiles ---------------------------------------------------------
 
 @router.get("/profile/{username}")
@@ -3479,6 +3603,13 @@ async def api_send_friend_request(username: str, request: Request, db: AsyncSess
     target = await crud.get_account_by_username(db, username)
     if not target:
         return JSONResponse({"error": "not_found"}, status_code=404)
+    if target.id == viewer.id:
+        return JSONResponse({"error": "cannot_friend_self"}, status_code=400)
+    if await crud.is_blocked_between(db, viewer.id, target.id):
+        return JSONResponse(
+            {"error": "blocked_relationship", "message": "Спочатку розблокуйте користувача."},
+            status_code=409,
+        )
 
     await crud.send_friend_request(db, viewer.id, target.id)
     status = await crud.friendship_status(db, viewer.id, target.id)
@@ -3510,7 +3641,12 @@ async def api_friend_status(username: str, request: Request, db: AsyncSession = 
 
     friendship = await crud.get_friendship_between(db, viewer.id, target.id)
     status = await crud.friendship_status(db, viewer.id, target.id)
-    return JSONResponse({"status": status, "friendship_id": friendship.id if friendship else None})
+    block = await crud.block_status(db, viewer.id, target.id)
+    return JSONResponse({
+        "status": status,
+        "friendship_id": friendship.id if friendship else None,
+        **block,
+    })
 
 
 @router.post("/api/friends/remove/{username}")
