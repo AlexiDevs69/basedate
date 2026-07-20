@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 import re
 import secrets
 
-from sqlalchemy import and_, func, or_, select, text
+from sqlalchemy import and_, delete, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -27,6 +27,7 @@ from community.models import (
     ServerInvite,
     ServerMember,
     ServerMessage,
+    UserBlock,
 )
 
 # A member counts as "online" if we've seen a request from them in the
@@ -86,6 +87,31 @@ async def ensure_account_visual_columns(db: AsyncSession) -> None:
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS session_version INTEGER DEFAULT 1 NOT NULL"))
     await db.execute(text("UPDATE community_accounts SET session_version = 1 WHERE session_version IS NULL OR session_version < 1"))
     await db.commit()
+
+
+_USER_BLOCKS_TABLE_READY = False
+
+
+async def ensure_user_blocks_table(db: AsyncSession) -> None:
+    """Create the directed block table on existing Render databases."""
+    global _USER_BLOCKS_TABLE_READY
+    if _USER_BLOCKS_TABLE_READY:
+        return
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_user_blocks (
+            blocker_id INTEGER NOT NULL REFERENCES community_accounts(id) ON DELETE CASCADE,
+            blocked_id INTEGER NOT NULL REFERENCES community_accounts(id) ON DELETE CASCADE,
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+            PRIMARY KEY (blocker_id, blocked_id),
+            CONSTRAINT ck_community_user_blocks_not_self CHECK (blocker_id <> blocked_id)
+        )
+    """))
+    await db.execute(text(
+        "CREATE INDEX IF NOT EXISTS ix_community_user_blocks_blocked_id "
+        "ON community_user_blocks (blocked_id)"
+    ))
+    await db.commit()
+    _USER_BLOCKS_TABLE_READY = True
 
 
 # Server invite safety guard.
@@ -407,6 +433,83 @@ async def remove_friendship(db: AsyncSession, viewer_id: int, other_id: int) -> 
     await db.delete(friendship)
     await db.commit()
     return True
+
+
+# ============================================================================
+# Account blocking
+# ============================================================================
+
+async def block_account(db: AsyncSession, blocker_id: int, blocked_id: int) -> bool:
+    """Block an account and remove any friendship/request between the pair."""
+    await ensure_user_blocks_table(db)
+    if blocker_id == blocked_id:
+        return False
+    if not await get_account_by_id(db, blocked_id):
+        return False
+
+    await db.execute(
+        delete(Friendship).where(
+            or_(
+                and_(Friendship.requester_id == blocker_id, Friendship.addressee_id == blocked_id),
+                and_(Friendship.requester_id == blocked_id, Friendship.addressee_id == blocker_id),
+            )
+        )
+    )
+    await db.execute(
+        text("""
+            INSERT INTO community_user_blocks (blocker_id, blocked_id)
+            VALUES (:blocker_id, :blocked_id)
+            ON CONFLICT (blocker_id, blocked_id) DO NOTHING
+        """),
+        {"blocker_id": blocker_id, "blocked_id": blocked_id},
+    )
+    await db.commit()
+    return True
+
+
+async def unblock_account(db: AsyncSession, blocker_id: int, blocked_id: int) -> bool:
+    await ensure_user_blocks_table(db)
+    result = await db.execute(
+        delete(UserBlock).where(
+            UserBlock.blocker_id == blocker_id,
+            UserBlock.blocked_id == blocked_id,
+        )
+    )
+    await db.commit()
+    return bool(result.rowcount)
+
+
+async def block_status(db: AsyncSession, viewer_id: int, other_id: int) -> dict[str, bool]:
+    await ensure_user_blocks_table(db)
+    result = await db.execute(
+        select(UserBlock.blocker_id, UserBlock.blocked_id).where(
+            or_(
+                and_(UserBlock.blocker_id == viewer_id, UserBlock.blocked_id == other_id),
+                and_(UserBlock.blocker_id == other_id, UserBlock.blocked_id == viewer_id),
+            )
+        )
+    )
+    pairs = {(int(row.blocker_id), int(row.blocked_id)) for row in result.all()}
+    return {
+        "blocked_by_me": (int(viewer_id), int(other_id)) in pairs,
+        "blocked_me": (int(other_id), int(viewer_id)) in pairs,
+    }
+
+
+async def is_blocked_between(db: AsyncSession, account_a_id: int, account_b_id: int) -> bool:
+    status = await block_status(db, account_a_id, account_b_id)
+    return bool(status["blocked_by_me"] or status["blocked_me"])
+
+
+async def list_blocked_accounts(db: AsyncSession, blocker_id: int) -> list[tuple[Account, datetime]]:
+    await ensure_user_blocks_table(db)
+    result = await db.execute(
+        select(Account, UserBlock.created_at)
+        .join(UserBlock, UserBlock.blocked_id == Account.id)
+        .where(UserBlock.blocker_id == blocker_id)
+        .order_by(UserBlock.created_at.desc())
+    )
+    return [(row[0], row[1]) for row in result.all()]
 
 
 async def list_pending_requests_with_requester(db: AsyncSession, account_id: int) -> list[dict]:
