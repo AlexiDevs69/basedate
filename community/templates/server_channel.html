@@ -1598,6 +1598,33 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
 .ah-dm-block-notice{margin:0 16px 10px;padding:11px 14px;border:1px solid rgba(242,63,66,.32);border-radius:9px;background:rgba(242,63,66,.09);color:#dbdee1;font-size:13px;line-height:1.4}.ah-dm-block-notice b{color:#fff}.ah-dm-block-notice button{border:0;background:transparent;color:#ff7b7b;font-weight:900;cursor:pointer;padding:0;margin-left:5px}.ah-dm-block-notice button:hover{text-decoration:underline}
 
 @media(max-width:700px){.ah-profile-action-menu{width:min(254px,calc(100vw - 42px))}.ah-blocked-row{grid-template-columns:38px minmax(0,1fr);padding:10px}.ah-blocked-avatar{width:36px;height:36px}.ah-unblock-btn{grid-column:2;justify-self:start}.ah-block-by-name{flex-direction:column}.ah-block-by-name button{width:100%}}
+
+/* Final Discord-accurate polish for profile actions and blocked accounts. */
+.ah-profile-more-btn{right:9px!important;top:9px!important;width:28px!important;height:28px!important;background:rgba(17,18,20,.72)!important;font-size:18px!important;font-weight:800!important;letter-spacing:0!important;box-shadow:none!important;transform:none!important}
+.ah-profile-more-btn:hover,.ah-profile-more-btn[aria-expanded="true"]{background:#111214!important;transform:none!important}
+.ah-v3-mini.self .ah-profile-more-btn,.ah-v3-mini.self .ah-profile-action-menu{display:none!important}
+.ah-profile-action-menu{right:8px!important;top:43px!important;width:248px!important;border-radius:7px!important;background:#24252b!important}
+.ah-content-settings{max-width:700px!important;margin:4px auto 0}
+.ah-content-settings>h1{margin-bottom:28px!important}
+.ah-content-settings .ah-privacy-card{padding:0 0 28px!important;margin:0 0 38px!important;border:0!important;border-bottom:1px solid #35373d!important;border-radius:0!important;background:transparent!important}
+.ah-content-settings .ah-privacy-card h3{font-size:20px!important;margin-bottom:8px!important;color:#f2f3f5}
+.ah-content-settings .ah-privacy-card p{max-width:620px;color:#b5bac1!important;line-height:1.5!important}
+.ah-blocked-heading{display:block!important;margin:0 0 18px!important}
+.ah-blocked-heading h2{font-size:22px!important;line-height:1.25!important;margin:0 0 7px!important;color:#f2f3f5}
+.ah-blocked-heading p{max-width:650px;margin:0;color:#aeb3bd;font-size:13px;line-height:1.45}
+.ah-blocked-card{overflow:hidden;border:1px solid #303238;border-radius:10px;background:#191a1e}
+.ah-blocked-card-head{min-height:72px;display:flex;align-items:center;gap:12px;padding:12px 16px;background:#2b2d31}
+.ah-blocked-card-icon{width:40px;height:40px;flex:0 0 auto;border-radius:50%;display:grid;place-items:center;background:#3a3c43;color:#b5bac1;font-size:28px;font-weight:500;line-height:1}
+.ah-blocked-card-title{min-width:0}.ah-blocked-card-title b,.ah-blocked-card-title span{display:block}.ah-blocked-card-title b{color:#f2f3f5;font-size:15px}.ah-blocked-card-title span{margin-top:2px;color:#b5bac1;font-size:12px;font-weight:700;text-transform:none;letter-spacing:0}
+.ah-blocked-list{overflow:hidden!important;border:0!important;border-radius:0!important;background:#191a1e!important}
+.ah-blocked-row{min-height:72px!important;grid-template-columns:42px minmax(0,1fr) 144px!important;gap:12px!important;padding:10px 16px!important;border-bottom:1px solid #2b2d31!important}
+.ah-blocked-row:hover{background:#1f2025!important}
+.ah-blocked-avatar{width:40px!important;height:40px!important}
+.ah-blocked-name b{font-size:14px!important}.ah-blocked-name span{font-size:12px!important;color:#b5bac1!important}
+.ah-unblock-btn{width:144px!important;height:40px!important;border-radius:7px!important;background:#3f4147!important;font-size:13px!important;padding:0 12px!important}
+.ah-unblock-btn:hover{background:#4e5058!important}
+.ah-blocked-loading,.ah-blocked-empty,.ah-blocked-error{min-height:120px!important;background:#191a1e}
+@media(max-width:700px){.ah-blocked-row{grid-template-columns:38px minmax(0,1fr)!important}.ah-unblock-btn{grid-column:2;width:auto!important;min-width:120px}.ah-content-settings{padding:0 2px}}
   </style>
 </head>
 <body data-current-account-id="{{ account.id }}">
@@ -6535,7 +6562,7 @@ body .composer-wrap{
     const c=text();
     const button=document.createElement('button');
     button.id='ah-profile-more-btn'; button.className='ah-profile-more-btn'; button.type='button';
-    button.setAttribute('aria-label','More'); button.setAttribute('aria-expanded','false'); button.textContent='•••';
+    button.setAttribute('aria-label','More'); button.setAttribute('aria-expanded','false'); button.textContent='⋯';
     banner.appendChild(button);
     const menu=document.createElement('div');
     menu.id='ah-profile-action-menu'; menu.className='ah-profile-action-menu'; menu.setAttribute('aria-hidden','true');
@@ -6600,6 +6627,9 @@ body .composer-wrap{
     notify(data.message||text().unblockedOk); await loadBlockedUsers(); applyDmBlockState(username,currentStatus); return data;
   }
 
+  function contentSettingsMarkup(c){
+    return `<div class="ah-content-settings"><h1>${esc(c.content)}</h1><div class="ah-privacy-card"><h3>${esc(c.privacyTitle)}</h3><p>${esc(c.privacyText)}</p></div><div class="ah-blocked-heading"><h2>${esc(c.blocked)}</h2><p>${esc(c.intro)}</p></div><div class="ah-blocked-card"><div class="ah-blocked-card-head"><span class="ah-blocked-card-icon">⊘</span><div class="ah-blocked-card-title"><b>${esc(c.blocked)}</b><span id="ah-blocked-count"></span></div></div><div id="ah-blocked-list" class="ah-blocked-list"><div class="ah-blocked-loading">${esc(c.loading)}</div></div></div></div>`;
+  }
   function ensureSettings(){
     const sidebar=document.querySelector('#ah-user-settings .ah-settings-sidebar');
     const main=document.querySelector('#ah-user-settings .ah-settings-main');
@@ -6611,7 +6641,7 @@ body .composer-wrap{
     nav.addEventListener('click',()=>window.showSettingsTab?.('content'));
     (privacy?.parentElement||sidebar).insertBefore(nav,privacy||null);
     const page=document.createElement('section'); page.className='ah-settings-page'; page.dataset.settingsPage='content';
-    page.innerHTML=`<div class="ah-content-settings"><h1>${esc(c.content)}</h1><p class="ah-content-intro">${esc(c.intro)}</p><div class="ah-privacy-card"><h3>${esc(c.privacyTitle)}</h3><p>${esc(c.privacyText)}</p></div><div class="ah-blocked-heading"><h2>${esc(c.blocked)}</h2><span id="ah-blocked-count" class="ah-blocked-count"></span></div><form id="ah-block-by-name" class="ah-block-by-name"><input autocomplete="off" maxlength="32" placeholder="${esc(c.placeholder)}"><button type="submit">${esc(c.block)}</button></form><div id="ah-blocked-list" class="ah-blocked-list"><div class="ah-blocked-loading">${esc(c.loading)}</div></div></div>`;
+    page.innerHTML=contentSettingsMarkup(c);
     main.appendChild(page);
     const original=window.showSettingsTab;
     if(typeof original==='function'&&!original.__blockingWrapped){
