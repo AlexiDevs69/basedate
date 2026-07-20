@@ -103,6 +103,22 @@ class Friendship(Base):
     responded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
+class UserBlock(Base):
+    """A directed account block: ``blocker`` no longer accepts DMs from ``blocked``."""
+
+    __tablename__ = "community_user_blocks"
+
+    blocker_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("community_accounts.id", ondelete="CASCADE"), primary_key=True
+    )
+    blocked_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("community_accounts.id", ondelete="CASCADE"), primary_key=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, nullable=False
+    )
+
+
 # ============================================================================
 # Forum: Discord-style channels + Telegram-style flat posts + Reddit-style
 # likes and single-level comments.
