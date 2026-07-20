@@ -1046,7 +1046,42 @@
 .ah-mention-option:hover .ah-mention-option-meta small{color:#fff;}
 .composer-wrap,.dm-composer-shell{position:relative;}
 </style>
-  <link rel="stylesheet" href="/static/community-blocking.css?v=1">
+  <style id="ah-community-blocking-inline">
+/* Shared Discord-like account blocking UI for home, DMs and server pages. */
+.ah-v3-banner{isolation:isolate}
+.ah-v3-banner::after{z-index:1;pointer-events:none}
+.ah-profile-more-btn{position:absolute;z-index:4;right:12px;top:12px;width:34px;height:34px;border:0;border-radius:50%;display:grid;place-items:center;background:rgba(17,18,20,.78);color:#f2f3f5;cursor:pointer;font-size:18px;font-weight:950;line-height:1;letter-spacing:1px;box-shadow:0 4px 14px rgba(0,0,0,.3);transition:background .14s ease,transform .14s ease}
+.ah-profile-more-btn:hover,.ah-profile-more-btn[aria-expanded="true"]{background:#111214;transform:translateY(-1px)}
+.ah-v3-mini.ah-profile-menu-open{overflow:visible!important}
+.ah-profile-action-menu{position:absolute;z-index:20;right:10px;top:52px;width:254px;display:none;padding:7px;background:#24252b;border:1px solid #3a3c45;border-radius:8px;box-shadow:0 18px 48px rgba(0,0,0,.58);color:#dbdee1}
+.ah-profile-action-menu.open{display:block;animation:ahBlockMenuIn .11s ease-out both}
+.ah-profile-menu-item{width:100%;min-height:34px;border:0;border-radius:4px;background:transparent;color:#dbdee1;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 9px;text-align:left;font:inherit;font-size:13px;font-weight:750;cursor:pointer;text-decoration:none}
+.ah-profile-menu-item:hover{background:#5865f2;color:#fff}
+.ah-profile-menu-item.danger{color:#ff6b6f}
+.ah-profile-menu-item.danger:hover{background:#da373c;color:#fff}
+.ah-profile-menu-item[hidden]{display:none!important}
+.ah-profile-menu-separator{height:1px;background:#3a3c43;margin:5px}
+.ah-profile-menu-id{font-size:10px;border-radius:3px;background:#4e5058;color:#d6d8dc;padding:2px 4px}
+@keyframes ahBlockMenuIn{from{opacity:0;transform:translateY(-4px) scale(.985)}to{opacity:1;transform:none}}
+
+.ah-block-modal{position:fixed;z-index:2147483600;inset:0;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.72);backdrop-filter:blur(3px)}
+.ah-block-modal.open{display:flex;animation:ahBlockFade .12s ease both}
+.ah-block-dialog{width:min(440px,calc(100vw - 32px));overflow:hidden;border:1px solid #3b3d45;border-radius:12px;background:#313338;color:#f2f3f5;box-shadow:0 28px 90px rgba(0,0,0,.65)}
+.ah-block-dialog-main{padding:22px 22px 18px}.ah-block-dialog h2{margin:0 0 10px;font-size:21px;line-height:1.2}.ah-block-dialog p{margin:0;color:#b5bac1;font-size:14px;line-height:1.5}.ah-block-dialog strong{color:#fff}
+.ah-block-dialog-actions{display:flex;justify-content:flex-end;align-items:center;gap:10px;padding:16px 22px;background:#2b2d31}
+.ah-block-dialog-actions button{min-height:38px;border:0;border-radius:5px;padding:0 16px;color:#fff;font-weight:850;cursor:pointer}.ah-block-cancel{background:transparent}.ah-block-cancel:hover{text-decoration:underline}.ah-block-confirm{background:#da373c}.ah-block-confirm:hover{background:#a12828}.ah-block-confirm:disabled{opacity:.55;cursor:not-allowed}
+@keyframes ahBlockFade{from{opacity:0}to{opacity:1}}
+
+.ah-content-settings{max-width:760px}.ah-content-intro{margin:-20px 0 28px;color:#b5bac1;line-height:1.5}.ah-privacy-card{padding:18px;border:1px solid #353741;border-radius:12px;background:#2b2d31;margin-bottom:26px}.ah-privacy-card h3{margin:0 0 6px;font-size:16px}.ah-privacy-card p{margin:0;color:#aeb3bd;font-size:13px;line-height:1.45}
+.ah-blocked-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:12px}.ah-blocked-heading h2{margin:0;font-size:21px}.ah-blocked-count{color:#949ba4;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.045em}
+.ah-blocked-list{overflow:hidden;border:1px solid #353741;border-radius:12px;background:#1b1c20}.ah-blocked-loading,.ah-blocked-empty,.ah-blocked-error{min-height:138px;padding:24px;display:grid;place-items:center;text-align:center;color:#949ba4;line-height:1.45}.ah-blocked-error{color:#ff7b7b}
+.ah-blocked-row{min-height:68px;display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid #2b2d31}.ah-blocked-row:last-child{border-bottom:0}.ah-blocked-row:hover{background:#23242a}.ah-blocked-avatar{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:#313338 center/cover no-repeat;color:#fff;font-weight:950}.ah-blocked-name{min-width:0}.ah-blocked-name b,.ah-blocked-name span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ah-blocked-name b{color:#f2f3f5;font-size:14px}.ah-blocked-name span{margin-top:2px;color:#949ba4;font-size:12px}.ah-unblock-btn{min-height:34px;border:0;border-radius:6px;background:#4e5058;color:#fff;padding:0 12px;font-weight:850;cursor:pointer}.ah-unblock-btn:hover{background:#5d606a}.ah-unblock-btn:disabled{opacity:.55}
+.ah-block-by-name{display:flex;gap:8px;margin:0 0 14px}.ah-block-by-name input{min-width:0;flex:1;height:38px;border:1px solid #3b3d45;border-radius:7px;background:#111214;color:#f2f3f5;padding:0 11px;outline:none}.ah-block-by-name input:focus{border-color:#5865f2}.ah-block-by-name button{height:38px;border:0;border-radius:7px;background:#4e5058;color:#fff;padding:0 14px;font-weight:850;cursor:pointer}.ah-block-by-name button:hover{background:#5d606a}
+
+.ah-dm-block-notice{margin:0 16px 10px;padding:11px 14px;border:1px solid rgba(242,63,66,.32);border-radius:9px;background:rgba(242,63,66,.09);color:#dbdee1;font-size:13px;line-height:1.4}.ah-dm-block-notice b{color:#fff}.ah-dm-block-notice button{border:0;background:transparent;color:#ff7b7b;font-weight:900;cursor:pointer;padding:0;margin-left:5px}.ah-dm-block-notice button:hover{text-decoration:underline}
+
+@media(max-width:700px){.ah-profile-action-menu{width:min(254px,calc(100vw - 42px))}.ah-blocked-row{grid-template-columns:38px minmax(0,1fr);padding:10px}.ah-blocked-avatar{width:36px;height:36px}.ah-unblock-btn{grid-column:2;justify-self:start}.ah-block-by-name{flex-direction:column}.ah-block-by-name button{width:100%}}
+  </style>
 </head>
 <body data-current-account-id="{{ account.id }}" data-active-dm-account-id="{{ other.id }}">
   <style id="ah-message-rate-limit-style">
@@ -5773,6 +5808,188 @@ document.addEventListener('DOMContentLoaded', async function(){
   *::-webkit-scrollbar-corner { background: transparent !important; }
   *::-webkit-scrollbar-button { width: 0; height: 0; display: none; }
 </style>
-<script src="/static/community-blocking.js?v=1"></script>
+<script id="ah-community-blocking-inline-js">
+(function(){
+  'use strict';
+  if(window.__alexiHubBlockingReady) return;
+  window.__alexiHubBlockingReady = true;
+
+  const STRINGS = {
+    uk:{content:'Контент і спілкування',intro:'Керуйте небажаними взаємодіями та переглядайте заблоковані облікові записи.',privacyTitle:'Особисті повідомлення',privacyText:'Заблоковані користувачі не можуть обмінюватися з вами особистими повідомленнями або надсилати запити дружби.',blocked:'Заблоковані облікові записи',loading:'Завантаження…',empty:'Ви ще нікого не заблокували.',loadError:'Не вдалося завантажити список.',unblock:'Розблокувати',block:'Заблокувати',full:'Повний профіль',message:'Написати повідомлення',copy:'Скопіювати ID користувача',copied:'ID скопійовано',confirmTitle:'Заблокувати користувача?',confirmText:'Ви впевнені, що хочете заблокувати',confirmHint:'Ви не зможете обмінюватися особистими повідомленнями, а дружбу буде видалено.',cancel:'Скасувати',blocking:'Блокування…',blockedOk:'Користувача заблоковано',unblockedOk:'Користувача розблоковано',actionError:'Не вдалося виконати дію',placeholder:'Username користувача',count:'заблоковано',blockedByMe:'Ви заблокували цього користувача. Особисті повідомлення вимкнено.',blockedMe:'Особисті повідомлення з цим користувачем недоступні.'},
+    ru:{content:'Контент и общение',intro:'Управляйте нежелательными взаимодействиями и просматривайте заблокированные учётные записи.',privacyTitle:'Личные сообщения',privacyText:'Заблокированные пользователи не могут обмениваться с вами личными сообщениями или отправлять запросы дружбы.',blocked:'Заблокированные учётные записи',loading:'Загрузка…',empty:'Вы ещё никого не заблокировали.',loadError:'Не удалось загрузить список.',unblock:'Разблокировать',block:'Заблокировать',full:'Полный профиль',message:'Написать сообщение',copy:'Копировать ID пользователя',copied:'ID скопирован',confirmTitle:'Заблокировать пользователя?',confirmText:'Вы уверены, что хотите заблокировать',confirmHint:'Вы не сможете обмениваться личными сообщениями, а дружба будет удалена.',cancel:'Отмена',blocking:'Блокировка…',blockedOk:'Пользователь заблокирован',unblockedOk:'Пользователь разблокирован',actionError:'Не удалось выполнить действие',placeholder:'Username пользователя',count:'заблокировано',blockedByMe:'Вы заблокировали этого пользователя. Личные сообщения отключены.',blockedMe:'Личные сообщения с этим пользователем недоступны.'},
+    en:{content:'Content & Social',intro:'Control unwanted interactions and review the accounts you have blocked.',privacyTitle:'Direct messages',privacyText:'Blocked users cannot exchange direct messages with you or send friend requests.',blocked:'Blocked accounts',loading:'Loading…',empty:'You have not blocked anyone yet.',loadError:'Could not load the list.',unblock:'Unblock',block:'Block',full:'Full profile',message:'Message',copy:'Copy user ID',copied:'User ID copied',confirmTitle:'Block user?',confirmText:'Are you sure you want to block',confirmHint:'You will no longer be able to exchange direct messages and the friendship will be removed.',cancel:'Cancel',blocking:'Blocking…',blockedOk:'User blocked',unblockedOk:'User unblocked',actionError:'Could not complete the action',placeholder:'User’s username',count:'blocked',blockedByMe:'You blocked this user. Direct messages are disabled.',blockedMe:'Direct messages with this user are unavailable.'}
+  };
+
+  function language(){
+    let value='';
+    try{ value=localStorage.getItem('alexihub_language')||localStorage.getItem('alexihub-language')||''; }catch(e){}
+    value=(value||document.documentElement.lang||'uk').toLowerCase();
+    return value.startsWith('ru')?'ru':value.startsWith('en')?'en':'uk';
+  }
+  function text(){ return STRINGS[language()]||STRINGS.uk; }
+  function esc(value){ return String(value||'').replace(/[&<>'"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch])); }
+  function safeImage(value){ const v=String(value||'').trim(); return /^(https?:\/\/|\/static\/)/i.test(v)?v:''; }
+  function usernameFromMini(){ return (document.getElementById('ah-v3-handle')?.textContent||'').trim().replace(/^@/,''); }
+  function notify(message){
+    if(typeof window.showActionToast==='function') return window.showActionToast(message);
+    if(typeof window.settingsToast==='function') return window.settingsToast(message);
+  }
+  async function api(url, options){
+    const response=await fetch(url,Object.assign({credentials:'same-origin',headers:{Accept:'application/json'}},options||{}));
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok||!data.ok) throw new Error(data.message||data.error||'request_failed');
+    return data;
+  }
+
+  let selectedUser=null;
+  let currentStatus=null;
+
+  function ensureProfileMenu(){
+    const mini=document.getElementById('ah-v3-mini');
+    const banner=document.getElementById('ah-v3-banner');
+    if(!mini||!banner||document.getElementById('ah-profile-more-btn')) return;
+    const c=text();
+    const button=document.createElement('button');
+    button.id='ah-profile-more-btn'; button.className='ah-profile-more-btn'; button.type='button';
+    button.setAttribute('aria-label','More'); button.setAttribute('aria-expanded','false'); button.textContent='•••';
+    banner.appendChild(button);
+    const menu=document.createElement('div');
+    menu.id='ah-profile-action-menu'; menu.className='ah-profile-action-menu'; menu.setAttribute('aria-hidden','true');
+    menu.innerHTML=`<button type="button" class="ah-profile-menu-item" data-block-action="full">${esc(c.full)}<span>›</span></button><button type="button" class="ah-profile-menu-item" data-block-action="message">${esc(c.message)}</button><div class="ah-profile-menu-separator"></div><button type="button" class="ah-profile-menu-item danger" data-block-action="toggle">${esc(c.block)}</button><div class="ah-profile-menu-separator"></div><button type="button" class="ah-profile-menu-item" data-block-action="copy">${esc(c.copy)}<span class="ah-profile-menu-id">ID</span></button>`;
+    mini.appendChild(menu);
+  }
+  function closeProfileMenu(){
+    const menu=document.getElementById('ah-profile-action-menu');
+    const button=document.getElementById('ah-profile-more-btn');
+    const mini=document.getElementById('ah-v3-mini');
+    menu?.classList.remove('open'); menu?.setAttribute('aria-hidden','true');
+    button?.setAttribute('aria-expanded','false'); mini?.classList.remove('ah-profile-menu-open');
+  }
+  async function openProfileMenu(){
+    ensureProfileMenu();
+    const menu=document.getElementById('ah-profile-action-menu');
+    const button=document.getElementById('ah-profile-more-btn');
+    const mini=document.getElementById('ah-v3-mini');
+    if(menu?.classList.contains('open')) return closeProfileMenu();
+    const username=usernameFromMini(); if(!username) return;
+    menu?.classList.add('open'); menu?.setAttribute('aria-hidden','false');
+    button?.setAttribute('aria-expanded','true'); mini?.classList.add('ah-profile-menu-open');
+    try{
+      currentStatus=await api('/community/api/blocks/'+encodeURIComponent(username));
+      selectedUser=currentStatus.user;
+      const own=!!currentStatus.is_self;
+      const toggle=menu?.querySelector('[data-block-action="toggle"]');
+      const direct=menu?.querySelector('[data-block-action="message"]');
+      const copy=menu?.querySelector('[data-block-action="copy"]');
+      if(toggle){ toggle.hidden=own; toggle.textContent=currentStatus.blocked_by_me?text().unblock:text().block; }
+      if(direct) direct.hidden=own||currentStatus.blocked_by_me||currentStatus.blocked_me;
+      if(copy) copy.hidden=own;
+    }catch(e){
+      closeProfileMenu(); notify(e.message||text().actionError);
+    }
+  }
+
+  function ensureConfirmModal(){
+    if(document.getElementById('ah-block-modal')) return;
+    const c=text();
+    const modal=document.createElement('div'); modal.id='ah-block-modal'; modal.className='ah-block-modal'; modal.setAttribute('aria-hidden','true');
+    modal.innerHTML=`<div class="ah-block-dialog" role="dialog" aria-modal="true"><div class="ah-block-dialog-main"><h2>${esc(c.confirmTitle)}</h2><p><span id="ah-block-confirm-copy"></span><br><br>${esc(c.confirmHint)}</p></div><div class="ah-block-dialog-actions"><button type="button" class="ah-block-cancel">${esc(c.cancel)}</button><button type="button" class="ah-block-confirm">${esc(c.block)}</button></div></div>`;
+    document.body.appendChild(modal);
+  }
+  function openConfirm(){
+    ensureConfirmModal(); closeProfileMenu();
+    const username=selectedUser?.username||usernameFromMini(); if(!username) return;
+    const modal=document.getElementById('ah-block-modal');
+    const copy=document.getElementById('ah-block-confirm-copy');
+    if(copy) copy.innerHTML=esc(text().confirmText)+' <strong>@'+esc(username)+'</strong>?';
+    modal?.classList.add('open'); modal?.setAttribute('aria-hidden','false');
+  }
+  function closeConfirm(){ const m=document.getElementById('ah-block-modal'); m?.classList.remove('open');m?.setAttribute('aria-hidden','true'); }
+  async function blockUser(username){
+    const data=await api('/community/api/blocks/'+encodeURIComponent(username),{method:'POST'});
+    currentStatus=Object.assign({},currentStatus||{},data,{blocked_by_me:true});
+    notify(data.message||text().blockedOk); await loadBlockedUsers(); applyDmBlockState(username,currentStatus); return data;
+  }
+  async function unblockUser(username){
+    const data=await api('/community/api/blocks/'+encodeURIComponent(username),{method:'DELETE'});
+    currentStatus=Object.assign({},currentStatus||{},data,{blocked_by_me:false});
+    notify(data.message||text().unblockedOk); await loadBlockedUsers(); applyDmBlockState(username,currentStatus); return data;
+  }
+
+  function ensureSettings(){
+    const sidebar=document.querySelector('#ah-user-settings .ah-settings-sidebar');
+    const main=document.querySelector('#ah-user-settings .ah-settings-main');
+    if(!sidebar||!main||document.querySelector('[data-settings-tab="content"]')) return;
+    const c=text();
+    const privacy=document.querySelector('[data-settings-tab="privacy"]');
+    const nav=document.createElement('button'); nav.type='button'; nav.className='ah-settings-nav'; nav.dataset.settingsTab='content';
+    nav.innerHTML=`<svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="none" stroke="currentColor" stroke-width="2"/><path d="m9 12 2 2 4-5" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>${esc(c.content)}</span>`;
+    nav.addEventListener('click',()=>window.showSettingsTab?.('content'));
+    (privacy?.parentElement||sidebar).insertBefore(nav,privacy||null);
+    const page=document.createElement('section'); page.className='ah-settings-page'; page.dataset.settingsPage='content';
+    page.innerHTML=`<div class="ah-content-settings"><h1>${esc(c.content)}</h1><p class="ah-content-intro">${esc(c.intro)}</p><div class="ah-privacy-card"><h3>${esc(c.privacyTitle)}</h3><p>${esc(c.privacyText)}</p></div><div class="ah-blocked-heading"><h2>${esc(c.blocked)}</h2><span id="ah-blocked-count" class="ah-blocked-count"></span></div><form id="ah-block-by-name" class="ah-block-by-name"><input autocomplete="off" maxlength="32" placeholder="${esc(c.placeholder)}"><button type="submit">${esc(c.block)}</button></form><div id="ah-blocked-list" class="ah-blocked-list"><div class="ah-blocked-loading">${esc(c.loading)}</div></div></div>`;
+    main.appendChild(page);
+    const original=window.showSettingsTab;
+    if(typeof original==='function'&&!original.__blockingWrapped){
+      const wrapped=function(tab){ original(tab); if(tab==='content') loadBlockedUsers(); };
+      wrapped.__blockingWrapped=true; window.showSettingsTab=wrapped;
+    }
+  }
+  async function loadBlockedUsers(){
+    const list=document.getElementById('ah-blocked-list'); if(!list) return;
+    const c=text(); list.innerHTML=`<div class="ah-blocked-loading">${esc(c.loading)}</div>`;
+    try{
+      const data=await api('/community/api/blocks'); const users=Array.isArray(data.users)?data.users:[];
+      const count=document.getElementById('ah-blocked-count'); if(count) count.textContent=users.length+' '+c.count;
+      if(!users.length){ list.innerHTML=`<div class="ah-blocked-empty">${esc(c.empty)}</div>`; return; }
+      list.innerHTML=users.map(user=>{ const avatar=safeImage(user.avatar_url); return `<div class="ah-blocked-row" data-blocked-username="${esc(user.username)}"><div class="ah-blocked-avatar"${avatar?` style="background-image:url('${esc(avatar)}')"`:''}>${avatar?'':esc(String(user.username||'?').slice(0,1).toUpperCase())}</div><div class="ah-blocked-name"><b>${esc(user.username)}</b><span>@${esc(user.username)} · ID ${esc(user.id)}</span></div><button type="button" class="ah-unblock-btn" data-unblock-user="${esc(user.username)}">${esc(c.unblock)}</button></div>`; }).join('');
+    }catch(e){ list.innerHTML=`<div class="ah-blocked-error">${esc(c.loadError)}</div>`; }
+  }
+
+  function dmUsername(){ const match=location.pathname.match(/^\/community\/dm\/([^/?#]+)/); try{return match?decodeURIComponent(match[1]):'';}catch(e){return match?match[1]:'';} }
+  function applyDmBlockState(username,status){
+    const dm=dmUsername(); if(!dm||dm.toLowerCase()!==String(username||'').toLowerCase()) return;
+    const blocked=!!(status?.blocked_by_me||status?.blocked_me);
+    document.querySelectorAll('.composer textarea,.composer button,.composer-wrap textarea,.composer-wrap button').forEach(el=>{
+      if(blocked){ if(!el.disabled) el.dataset.ahBlockDisabled='1'; el.disabled=true; }
+      else if(el.dataset.ahBlockDisabled==='1'){ el.disabled=false; delete el.dataset.ahBlockDisabled; }
+    });
+    let notice=document.getElementById('ah-dm-block-notice');
+    if(!blocked){ notice?.remove(); return; }
+    if(!notice){ notice=document.createElement('div');notice.id='ah-dm-block-notice';notice.className='ah-dm-block-notice'; const wrap=document.querySelector('.composer-wrap'); wrap?.parentElement?.insertBefore(notice,wrap); }
+    if(notice){ notice.innerHTML='<b>'+esc(status.blocked_by_me?text().blockedByMe:text().blockedMe)+'</b>'+(status.blocked_by_me?' <button type="button" data-inline-unblock="'+esc(username)+'">'+esc(text().unblock)+'</button>':''); }
+  }
+  async function hydrateDmBlockState(){ const username=dmUsername(); if(!username)return; try{const status=await api('/community/api/blocks/'+encodeURIComponent(username));applyDmBlockState(username,status);}catch(e){} }
+
+  document.addEventListener('click',async function(event){
+    const more=event.target.closest('#ah-profile-more-btn');
+    if(more){event.preventDefault();event.stopPropagation();return openProfileMenu();}
+    const action=event.target.closest('[data-block-action]');
+    if(action){
+      event.preventDefault();event.stopPropagation();const kind=action.dataset.blockAction;const username=selectedUser?.username||usernameFromMini();
+      if(kind==='full'){closeProfileMenu();document.getElementById('ah-v3-open-full')?.click();}
+      if(kind==='message'&&username) location.href='/community/dm/'+encodeURIComponent(username);
+      if(kind==='toggle'&&username){currentStatus?.blocked_by_me?unblockUser(username).then(closeProfileMenu).catch(e=>notify(e.message||text().actionError)):openConfirm();}
+      if(kind==='copy'&&selectedUser?.id){try{await navigator.clipboard.writeText(String(selectedUser.id));notify(text().copied);}catch(e){}closeProfileMenu();}
+      return;
+    }
+    if(!event.target.closest('#ah-profile-action-menu')) closeProfileMenu();
+    if(event.target.closest('.ah-block-cancel')||event.target===document.getElementById('ah-block-modal')) return closeConfirm();
+    const confirm=event.target.closest('.ah-block-confirm');
+    if(confirm){const username=selectedUser?.username||usernameFromMini();if(!username)return;confirm.disabled=true;confirm.textContent=text().blocking;try{await blockUser(username);closeConfirm();document.getElementById('ah-v3-mini')?.classList.remove('open');}catch(e){notify(e.message||text().actionError);}finally{confirm.disabled=false;confirm.textContent=text().block;}return;}
+    const unblock=event.target.closest('[data-unblock-user],[data-inline-unblock]');
+    if(unblock){const username=unblock.dataset.unblockUser||unblock.dataset.inlineUnblock;unblock.disabled=true;try{await unblockUser(username);}catch(e){notify(e.message||text().actionError);}finally{unblock.disabled=false;}return;}
+  },true);
+  document.addEventListener('submit',async function(event){
+    if(event.target.id!=='ah-block-by-name') return;event.preventDefault();const input=event.target.querySelector('input');const username=(input?.value||'').trim();if(!username)return;
+    const button=event.target.querySelector('button');button.disabled=true;try{await blockUser(username);input.value='';}catch(e){notify(e.message||text().actionError);}finally{button.disabled=false;}
+  });
+  document.addEventListener('keydown',event=>{if(event.key==='Escape'){closeProfileMenu();closeConfirm();}});
+
+  function init(){ensureProfileMenu();ensureSettings();ensureConfirmModal();hydrateDmBlockState();}
+  window.AlexiHubBlocking={refreshDm:hydrateDmBlockState,refreshList:loadBlockedUsers};
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+})();
+</script>
 </body>
 </html>
