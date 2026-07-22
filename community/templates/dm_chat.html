@@ -2272,6 +2272,43 @@ document.addEventListener('DOMContentLoaded',()=>{
 <style id="ah-image-cropper-css">
 .ah-image-editor-backdrop{position:fixed;inset:0;z-index:12000;display:none;place-items:center;padding:20px;background:rgba(0,0,0,.78);backdrop-filter:blur(2px)}.ah-image-editor-backdrop.open{display:grid}.ah-image-editor{width:min(500px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:auto;background:#24252b;border:1px solid #3b3d46;border-radius:16px;box-shadow:0 24px 70px rgba(0,0,0,.62);color:#f2f3f5}.ah-image-editor-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:22px 24px 14px}.ah-image-editor-head h2{margin:0;font-size:21px;font-weight:950}.ah-image-editor-head p{margin:6px 0 0;color:#a8adb7;font-size:13px;line-height:1.4}.ah-image-editor-close{width:32px;height:32px;flex:0 0 32px;border:0;border-radius:50%;background:transparent;color:#b5bac1;font-size:26px;line-height:1;cursor:pointer}.ah-image-editor-close:hover{background:#35373f;color:#fff}.ah-image-editor-stage{padding:12px 24px 0}.ah-image-editor-viewport{position:relative;width:100%;aspect-ratio:1;overflow:hidden;background:#111217;cursor:grab;touch-action:none;user-select:none}.ah-image-editor-viewport.dragging{cursor:grabbing}.ah-image-editor-viewport.banner{aspect-ratio:5/2;border-radius:6px}.ah-image-editor-image{position:absolute;max-width:none!important;max-height:none!important;pointer-events:none;user-select:none;-webkit-user-drag:none}.ah-image-editor-viewport.avatar:after{content:"";position:absolute;inset:0;border:4px solid #fff;border-radius:50%;box-shadow:0 0 0 999px rgba(0,0,0,.5);pointer-events:none}.ah-image-editor-viewport.banner:after{content:"";position:absolute;inset:0;border:3px solid rgba(255,255,255,.9);border-radius:6px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.25);pointer-events:none}.ah-image-editor-controls{display:grid;grid-template-columns:24px 1fr 24px;align-items:center;gap:10px;padding:18px 2px 10px;color:#b5bac1}.ah-image-editor-controls span{display:grid;place-items:center;font-size:17px;font-weight:900}.ah-image-editor-zoom{width:100%;height:4px;margin:0;accent-color:#fff;cursor:pointer}.ah-image-editor-hint{margin:0 24px 18px;text-align:center;color:#949ba4;font-size:12px}.ah-image-editor-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:16px 24px 22px;border-top:1px solid #363840}.ah-image-editor-actions .reset{margin-right:auto;background:transparent;color:#aeb4ff}.ah-image-editor-actions button{min-height:40px;border:0;border-radius:7px;padding:0 18px;background:#383a43;color:#fff;font-weight:850;cursor:pointer}.ah-image-editor-actions button:hover{filter:brightness(1.1)}.ah-image-editor-actions .save{background:#5865f2}.ah-image-editor-actions button:disabled{opacity:.55;cursor:wait}@media(max-width:560px){.ah-image-editor-backdrop{padding:8px}.ah-image-editor{width:100%;border-radius:12px}.ah-image-editor-head,.ah-image-editor-stage{padding-left:16px;padding-right:16px}.ah-image-editor-actions{padding:14px 16px 18px}.ah-image-editor-hint{margin-left:16px;margin-right:16px}}
 </style>
+<style id="ah-image-cropper-discord-fix">
+.ah-image-editor-backdrop{z-index:30000!important;background:rgba(0,0,0,.72)!important}
+.ah-image-editor{width:min(480px,calc(100vw - 32px))!important;border-radius:16px!important;background:#24252b!important;border-color:#3b3d45!important}
+.ah-image-editor-head{padding:24px 24px 13px!important}
+.ah-image-editor-head h2{font-size:20px!important;line-height:1.2!important}
+.ah-image-editor-stage{padding:12px 24px 0!important}
+.ah-image-editor-viewport{width:100%!important;height:min(350px,calc(100vw - 80px))!important;aspect-ratio:auto!important;border-radius:4px!important;background:#111217!important}
+.ah-image-editor-viewport.is-banner{height:auto!important;aspect-ratio:5/2!important;border-radius:4px!important}
+.ah-image-editor-viewport.is-avatar:after{content:"";position:absolute;width:min(350px,100%);height:auto;aspect-ratio:1;inset:auto;left:50%;top:50%;transform:translate(-50%,-50%);border:4px solid #fff;border-radius:50%;box-shadow:0 0 0 999px rgba(0,0,0,.48);pointer-events:none}
+.ah-image-editor-viewport.is-banner:after{content:"";position:absolute;inset:0;border:3px solid rgba(255,255,255,.9);border-radius:4px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.25);pointer-events:none}
+.ah-image-editor-controls{grid-template-columns:20px minmax(0,1fr) 24px 34px!important;gap:10px!important;padding:18px 4px 14px!important}
+.ah-image-editor-zoom-icon{display:block;width:18px;height:18px;color:#b5bac1;fill:none;stroke:currentColor;stroke-width:1.8}
+.ah-image-editor-zoom-icon.large{width:22px;height:22px}
+.ah-image-editor-reset-icon{width:32px;height:32px;border:0;border-radius:5px;background:transparent;color:#b5bac1;display:grid;place-items:center;cursor:pointer;padding:0}
+.ah-image-editor-reset-icon:hover{background:#35373f;color:#fff}
+.ah-image-editor-reset-icon svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ah-image-editor-zoom{-webkit-appearance:none;appearance:none;height:4px!important;border:0;border-radius:999px;background:#4e5058;outline:0}
+.ah-image-editor-zoom::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;border:0;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+.ah-image-editor-zoom::-moz-range-track{height:4px;border:0;border-radius:999px;background:#4e5058}
+.ah-image-editor-zoom::-moz-range-progress{height:4px;border-radius:999px;background:#fff}
+.ah-image-editor-zoom::-moz-range-thumb{width:16px;height:16px;border:0;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+.ah-image-editor-nitro{min-height:60px;margin:0 24px 14px;padding:10px 12px 10px 16px;border:1px solid #3a3c44;border-radius:7px;background:#2b2d31;display:flex;align-items:center;justify-content:space-between;gap:14px}
+.ah-image-editor-nitro span{max-width:210px;color:#f2f3f5;font-size:12px;font-weight:750;line-height:1.35}
+.ah-image-editor-nitro span b{color:#00a8fc}
+.ah-image-editor-nitro button{min-height:34px;padding:0 14px;border:0;border-radius:7px;background:#fff;color:#111214;font-weight:900;white-space:nowrap;cursor:pointer;box-shadow:0 0 10px #59d5ff,0 0 18px rgba(181,92,255,.72)}
+.ah-image-editor-nitro button:hover{background:#f0f1f3}
+.ah-image-editor-hint{display:none!important}
+.ah-image-editor-actions{padding:16px 24px 24px!important;background:#24252b}
+.ah-image-editor-actions .reset{padding-left:0!important;color:#aeb4ff!important}
+.ah-image-editor-actions button{min-height:40px!important;border-radius:7px!important;padding:0 16px!important}
+@media(max-width:560px){
+  .ah-image-editor-head,.ah-image-editor-stage{padding-left:16px!important;padding-right:16px!important}
+  .ah-image-editor-nitro{margin-left:16px;margin-right:16px;align-items:flex-start;flex-direction:column}
+  .ah-image-editor-nitro button{width:100%}
+  .ah-image-editor-actions{padding-left:16px!important;padding-right:16px!important}
+}
+</style>
 
 <div id="ah-image-editor-backdrop" class="ah-image-editor-backdrop" aria-hidden="true">
   <div class="ah-image-editor" role="dialog" aria-modal="true" aria-labelledby="ah-image-editor-title">
@@ -2280,14 +2317,19 @@ document.addEventListener('DOMContentLoaded',()=>{
       <button class="ah-image-editor-close" type="button" data-ah-image-editor-cancel aria-label="Закрити">×</button>
     </div>
     <div class="ah-image-editor-stage">
-      <div id="ah-image-editor-viewport" class="ah-image-editor-viewport avatar">
+      <div id="ah-image-editor-viewport" class="ah-image-editor-viewport is-avatar">
         <img id="ah-image-editor-image" class="ah-image-editor-image" alt="">
       </div>
       <div class="ah-image-editor-controls">
-        <span aria-hidden="true">▧</span>
+        <svg class="ah-image-editor-zoom-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"></rect><path d="m6.5 16 4-4 3 3 2.5-2.5 2 2"></path><circle cx="15.5" cy="9" r="1.2"></circle></svg>
         <input id="ah-image-editor-zoom" class="ah-image-editor-zoom" type="range" min="1" max="3" value="1" step="0.01" aria-label="Масштаб зображення">
-        <span aria-hidden="true">▣</span>
+        <svg class="ah-image-editor-zoom-icon large" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="m5.5 17 5-5 3.5 3.5 3-3 2.5 2.5"></path><circle cx="16" cy="8.5" r="1.4"></circle></svg>
+        <button id="ah-image-editor-center" class="ah-image-editor-reset-icon" type="button" aria-label="Скинути позицію"><svg viewBox="0 0 24 24"><path d="M4 8V4h4"></path><path d="M5.4 5.4A8 8 0 1 1 4 14"></path><rect x="8" y="8" width="8" height="8" rx="1.5"></rect></svg></button>
       </div>
+    </div>
+    <div class="ah-image-editor-nitro">
+      <span id="ah-image-editor-nitro-text">Додайте анімований аватар із підпискою <b>Nitro</b></span>
+      <button id="ah-image-editor-nitro-button" type="button">Підписатися на Nitro</button>
     </div>
     <p class="ah-image-editor-hint">Затисни зображення та рухай його, щоб налаштувати позицію.</p>
     <div class="ah-image-editor-actions">
@@ -2701,6 +2743,9 @@ document.addEventListener('DOMContentLoaded',()=>{
   const description = document.getElementById('ah-image-editor-description');
   const saveButton = document.getElementById('ah-image-editor-save');
   const resetButton = document.getElementById('ah-image-editor-reset');
+  const centerButton = document.getElementById('ah-image-editor-center');
+  const nitroText = document.getElementById('ah-image-editor-nitro-text');
+  const nitroButton = document.getElementById('ah-image-editor-nitro-button');
   const state = {
     open:false, kind:'avatar', input:null, sourceUrl:'', naturalWidth:0,
     naturalHeight:0, baseScale:1, zoom:1, offsetX:0, offsetY:0,
@@ -2717,31 +2762,40 @@ document.addEventListener('DOMContentLoaded',()=>{
     return {width:viewport.clientWidth || 1,height:viewport.clientHeight || 1};
   }
 
-  function constrain(){
+  function cropBox(){
     const box = dimensions();
+    if(state.kind === 'banner') return {x:0,y:0,width:box.width,height:box.height};
+    const size = Math.min(350,box.width,box.height);
+    return {x:(box.width-size)/2,y:(box.height-size)/2,width:size,height:size};
+  }
+
+  function constrain(){
+    const crop = cropBox();
     const drawWidth = state.naturalWidth * state.baseScale * state.zoom;
     const drawHeight = state.naturalHeight * state.baseScale * state.zoom;
-    state.offsetX = clamp(state.offsetX,-Math.max(0,(drawWidth-box.width)/2),Math.max(0,(drawWidth-box.width)/2));
-    state.offsetY = clamp(state.offsetY,-Math.max(0,(drawHeight-box.height)/2),Math.max(0,(drawHeight-box.height)/2));
+    state.offsetX = clamp(state.offsetX,-Math.max(0,(drawWidth-crop.width)/2),Math.max(0,(drawWidth-crop.width)/2));
+    state.offsetY = clamp(state.offsetY,-Math.max(0,(drawHeight-crop.height)/2),Math.max(0,(drawHeight-crop.height)/2));
   }
 
   function render(){
     if(!state.naturalWidth || !state.naturalHeight) return;
     constrain();
-    const box = dimensions();
+    const crop = cropBox();
     const drawWidth = state.naturalWidth * state.baseScale * state.zoom;
     const drawHeight = state.naturalHeight * state.baseScale * state.zoom;
     image.style.width = drawWidth + 'px';
     image.style.height = drawHeight + 'px';
-    image.style.left = ((box.width-drawWidth)/2 + state.offsetX) + 'px';
-    image.style.top = ((box.height-drawHeight)/2 + state.offsetY) + 'px';
+    image.style.left = (crop.x+(crop.width-drawWidth)/2 + state.offsetX) + 'px';
+    image.style.top = (crop.y+(crop.height-drawHeight)/2 + state.offsetY) + 'px';
     zoomInput.value = String(state.zoom);
+    const zoomPercent = ((state.zoom-1)/2)*100;
+    zoomInput.style.background = 'linear-gradient(to right,#fff 0%,#fff '+zoomPercent+'%,#4e5058 '+zoomPercent+'%,#4e5058 100%)';
   }
 
   function resetPosition(){
     if(!state.naturalWidth || !state.naturalHeight) return;
-    const box = dimensions();
-    state.baseScale = Math.max(box.width/state.naturalWidth,box.height/state.naturalHeight);
+    const crop = cropBox();
+    state.baseScale = Math.max(crop.width/state.naturalWidth,crop.height/state.naturalHeight);
     state.zoom = 1;
     state.offsetX = 0;
     state.offsetY = 0;
@@ -2776,12 +2830,20 @@ document.addEventListener('DOMContentLoaded',()=>{
     state.naturalWidth = 0;
     state.naturalHeight = 0;
     state.sourceUrl = URL.createObjectURL(file);
-    viewport.classList.toggle('avatar',kind === 'avatar');
-    viewport.classList.toggle('banner',kind === 'banner');
+    viewport.classList.toggle('is-avatar',kind === 'avatar');
+    viewport.classList.toggle('is-banner',kind === 'banner');
+    const settings = document.getElementById('ah-user-settings');
+    if(settings){
+      settings.classList.add('open');
+      settings.setAttribute('aria-hidden','false');
+    }
     title.textContent = kind === 'avatar' ? 'Редагувати аватар' : 'Редагувати банер';
     description.textContent = kind === 'avatar'
       ? 'Вибери частину фото, яка буде видима в круглому аватарі.'
       : 'Вибери частину фото, яка буде видима у широкому банері.';
+    if(nitroText) nitroText.innerHTML = kind === 'avatar'
+      ? 'Додайте анімований аватар із підпискою <b>Nitro</b>'
+      : 'Додайте анімований банер із підпискою <b>Nitro</b>';
     backdrop.classList.add('open');
     backdrop.setAttribute('aria-hidden','false');
     image.onload = function(){
@@ -2824,7 +2886,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     const token = state.token;
     saveButton.disabled = true;
     saveButton.textContent = 'Обробка...';
-    const box = dimensions();
+    const crop = cropBox();
     const output = state.kind === 'avatar'
       ? {width:512,height:512,type:'image/png',extension:'png',quality:0.96}
       : {width:1500,height:600,type:'image/jpeg',extension:'jpg',quality:0.92};
@@ -2846,14 +2908,14 @@ document.addEventListener('DOMContentLoaded',()=>{
     }
     const drawWidth = state.naturalWidth * state.baseScale * state.zoom;
     const drawHeight = state.naturalHeight * state.baseScale * state.zoom;
-    const left = (box.width-drawWidth)/2 + state.offsetX;
-    const top = (box.height-drawHeight)/2 + state.offsetY;
+    const left = crop.x+(crop.width-drawWidth)/2 + state.offsetX;
+    const top = crop.y+(crop.height-drawHeight)/2 + state.offsetY;
     context.drawImage(
       image,
-      left * output.width/box.width,
-      top * output.height/box.height,
-      drawWidth * output.width/box.width,
-      drawHeight * output.height/box.height
+      (left-crop.x) * output.width/crop.width,
+      (top-crop.y) * output.height/crop.height,
+      drawWidth * output.width/crop.width,
+      drawHeight * output.height/crop.height
     );
     canvas.toBlob(function(blob){
       if(!state.open || token !== state.token) return;
@@ -2925,6 +2987,13 @@ document.addEventListener('DOMContentLoaded',()=>{
   viewport.addEventListener('pointercancel',finishDrag);
 
   resetButton.addEventListener('click',resetPosition);
+  if(centerButton) centerButton.addEventListener('click',resetPosition);
+  if(nitroButton) nitroButton.addEventListener('click',function(){
+    closeEditor(true);
+    if(typeof window.closeUserSettings === 'function') window.closeUserSettings();
+    if(typeof window.openNitroSubscriptionSettings === 'function') window.openNitroSubscriptionSettings();
+    else window.location.href = '/community';
+  });
   saveButton.addEventListener('click',applyCrop);
   document.querySelectorAll('[data-ah-image-editor-cancel]').forEach(function(button){
     button.addEventListener('click',function(){ closeEditor(true); });
