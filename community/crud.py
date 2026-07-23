@@ -25,6 +25,8 @@ from community.models import (
     ServerChannel,
     ServerBan,
     ServerCategory,
+    ServerEvent,
+    ServerEventInterest,
     ServerInvite,
     ServerMember,
     ServerMessage,
@@ -42,6 +44,8 @@ PRESENCE_STATUSES = {"online", "idle", "dnd", "invisible"}
 SUPPORTED_LANGUAGES = {"ru", "uk", "en"}
 DEFAULT_LANGUAGE = "ru"
 SERVER_CHANNEL_TYPES = {"text", "voice", "forum", "announcement", "stage"}
+SERVER_EVENT_LOCATION_TYPES = {"stage", "voice", "external"}
+SERVER_EVENT_RECURRENCES = {"none", "weekly", "biweekly", "monthly", "yearly", "daily", "weekdays"}
 
 
 def normalize_language(value: str | None) -> str:
@@ -895,6 +899,54 @@ async def ensure_server_category_schema(db: AsyncSession) -> None:
     _SERVER_CATEGORY_SCHEMA_READY = True
 
 
+_SERVER_EVENT_SCHEMA_READY = False
+
+
+async def ensure_server_event_schema(db: AsyncSession) -> None:
+    """Create event and interested tables on existing Render/PostgreSQL databases."""
+    global _SERVER_EVENT_SCHEMA_READY
+    if _SERVER_EVENT_SCHEMA_READY:
+        return
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_server_events (
+            id SERIAL PRIMARY KEY,
+            server_id INTEGER NOT NULL REFERENCES community_servers(id) ON DELETE CASCADE,
+            creator_id INTEGER REFERENCES community_accounts(id) ON DELETE SET NULL,
+            title VARCHAR(100) NOT NULL,
+            description TEXT,
+            location_type VARCHAR(16) NOT NULL DEFAULT 'external',
+            location VARCHAR(255) NOT NULL,
+            cover_url VARCHAR(512),
+            start_at TIMESTAMP WITH TIME ZONE NOT NULL,
+            end_at TIMESTAMP WITH TIME ZONE NOT NULL,
+            recurrence VARCHAR(16) NOT NULL DEFAULT 'none',
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+        )
+    """))
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_server_event_interests (
+            id SERIAL PRIMARY KEY,
+            event_id INTEGER NOT NULL REFERENCES community_server_events(id) ON DELETE CASCADE,
+            account_id INTEGER NOT NULL REFERENCES community_accounts(id) ON DELETE CASCADE,
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+        )
+    """))
+    await db.execute(text(
+        "CREATE INDEX IF NOT EXISTS ix_community_server_events_server_start "
+        "ON community_server_events (server_id, start_at)"
+    ))
+    await db.execute(text(
+        "CREATE INDEX IF NOT EXISTS ix_community_server_event_interests_event "
+        "ON community_server_event_interests (event_id)"
+    ))
+    await db.execute(text(
+        "CREATE UNIQUE INDEX IF NOT EXISTS uq_community_server_event_interest "
+        "ON community_server_event_interests (event_id, account_id)"
+    ))
+    await db.commit()
+    _SERVER_EVENT_SCHEMA_READY = True
+
+
 async def is_server_banned(db: AsyncSession, server_id: int, account_id: int) -> bool:
     await ensure_server_moderation_tables(db)
     result = await db.execute(
@@ -1013,9 +1065,21 @@ async def leave_server(db: AsyncSession, server_id: int, account_id: int) -> boo
 async def delete_server(db: AsyncSession, server_id: int) -> bool:
     await ensure_server_moderation_tables(db)
     await ensure_server_category_schema(db)
+    await ensure_server_event_schema(db)
     server = await get_server_by_id(db, server_id)
     if not server:
         return False
+
+    event_result = await db.execute(
+        select(ServerEvent.id).where(ServerEvent.server_id == server_id)
+    )
+    event_ids = list(event_result.scalars().all())
+    if event_ids:
+        interests = await db.execute(
+            select(ServerEventInterest).where(ServerEventInterest.event_id.in_(event_ids))
+        )
+        for row in interests.scalars().all():
+            await db.delete(row)
 
     for model, column in [
         (ServerMessage, ServerMessage.server_id),
@@ -1024,6 +1088,7 @@ async def delete_server(db: AsyncSession, server_id: int) -> bool:
         (ServerMember, ServerMember.server_id),
         (ServerChannel, ServerChannel.server_id),
         (ServerCategory, ServerCategory.server_id),
+        (ServerEvent, ServerEvent.server_id),
     ]:
         result = await db.execute(select(model).where(column == server_id))
         for row in result.scalars().all():
@@ -1083,6 +1148,223 @@ async def create_server_category(
     await db.commit()
     await db.refresh(category)
     return category
+
+
+async def create_server_event(
+    db: AsyncSession,
+    server_id: int,
+    creator_id: int,
+    title: str,
+    description: str | None,
+    location_type: str,
+    location: str,
+    cover_url: str | None,
+    start_at: datetime,
+    end_at: datetime,
+    recurrence: str = "none",
+) -> ServerEvent:
+    await ensure_server_event_schema(db)
+    clean_location_type = (location_type or "external").strip().lower()
+    if clean_location_type not in SERVER_EVENT_LOCATION_TYPES:
+        clean_location_type = "external"
+    clean_recurrence = (recurrence or "none").strip().lower()
+    if clean_recurrence not in SERVER_EVENT_RECURRENCES:
+        clean_recurrence = "none"
+    event = ServerEvent(
+        server_id=server_id,
+        creator_id=creator_id,
+        title=re.sub(r"\s+", " ", title.strip())[:100],
+        description=(description or "").strip()[:4000] or None,
+        location_type=clean_location_type,
+        location=re.sub(r"\s+", " ", (location or "").strip())[:255],
+        cover_url=(cover_url or "").strip()[:512] or None,
+        start_at=start_at,
+        end_at=end_at,
+        recurrence=clean_recurrence,
+    )
+    db.add(event)
+    await db.flush()
+    db.add(ServerEventInterest(event_id=event.id, account_id=creator_id))
+    await db.commit()
+    await db.refresh(event)
+    return event
+
+
+async def get_server_event(
+    db: AsyncSession,
+    server_id: int,
+    event_id: int,
+) -> ServerEvent | None:
+    await ensure_server_event_schema(db)
+    result = await db.execute(
+        select(ServerEvent).where(
+            ServerEvent.server_id == int(server_id),
+            ServerEvent.id == int(event_id),
+        )
+    )
+    return result.scalar_one_or_none()
+
+
+async def _server_event_payload(
+    db: AsyncSession,
+    event: ServerEvent,
+    viewer_id: int,
+) -> dict:
+    creator = None
+    if event.creator_id:
+        creator_result = await db.execute(select(Account).where(Account.id == event.creator_id))
+        creator = creator_result.scalar_one_or_none()
+
+    interest_result = await db.execute(
+        select(ServerEventInterest, Account)
+        .join(Account, Account.id == ServerEventInterest.account_id)
+        .where(ServerEventInterest.event_id == event.id)
+        .order_by(ServerEventInterest.created_at.asc())
+    )
+    interested_rows = interest_result.all()
+    interested_accounts = [
+        {
+            "id": int(account.id),
+            "username": account.username,
+            "display_name": account.display_name or account.username,
+            "avatar_url": account.avatar_url or "",
+        }
+        for _, account in interested_rows
+    ]
+    return _compose_server_event_payload(event, creator, interested_accounts, viewer_id)
+
+
+def _compose_server_event_payload(
+    event: ServerEvent,
+    creator: Account | None,
+    interested_accounts: list[dict],
+    viewer_id: int,
+) -> dict:
+    return {
+        "id": int(event.id),
+        "server_id": int(event.server_id),
+        "title": event.title,
+        "description": event.description or "",
+        "location_type": event.location_type,
+        "location": event.location,
+        "cover_url": event.cover_url or "",
+        "start_at": event.start_at.isoformat(),
+        "end_at": event.end_at.isoformat(),
+        "recurrence": event.recurrence,
+        "creator": {
+            "id": int(creator.id),
+            "username": creator.username,
+            "display_name": creator.display_name or creator.username,
+            "avatar_url": creator.avatar_url or "",
+        } if creator else None,
+        "interest_count": len(interested_accounts),
+        "viewer_interested": any(item["id"] == int(viewer_id) for item in interested_accounts),
+        "interested": interested_accounts,
+    }
+
+
+async def get_server_event_payload(
+    db: AsyncSession,
+    server_id: int,
+    event_id: int,
+    viewer_id: int,
+) -> dict | None:
+    event = await get_server_event(db, server_id, event_id)
+    if not event:
+        return None
+    return await _server_event_payload(db, event, viewer_id)
+
+
+async def list_server_events(
+    db: AsyncSession,
+    server_id: int,
+    viewer_id: int,
+) -> list[dict]:
+    await ensure_server_event_schema(db)
+    result = await db.execute(
+        select(ServerEvent)
+        .where(ServerEvent.server_id == int(server_id))
+        .order_by(ServerEvent.start_at.asc(), ServerEvent.id.asc())
+        .limit(100)
+    )
+    events = list(result.scalars().all())
+    if not events:
+        return []
+
+    creator_ids = {int(event.creator_id) for event in events if event.creator_id}
+    creators: dict[int, Account] = {}
+    if creator_ids:
+        creator_result = await db.execute(select(Account).where(Account.id.in_(creator_ids)))
+        creators = {int(account.id): account for account in creator_result.scalars().all()}
+
+    event_ids = [int(event.id) for event in events]
+    interest_result = await db.execute(
+        select(ServerEventInterest, Account)
+        .join(Account, Account.id == ServerEventInterest.account_id)
+        .where(ServerEventInterest.event_id.in_(event_ids))
+        .order_by(ServerEventInterest.created_at.asc())
+    )
+    interested_by_event: dict[int, list[dict]] = {event_id: [] for event_id in event_ids}
+    for interest, account in interest_result.all():
+        interested_by_event.setdefault(int(interest.event_id), []).append({
+            "id": int(account.id),
+            "username": account.username,
+            "display_name": account.display_name or account.username,
+            "avatar_url": account.avatar_url or "",
+        })
+
+    return [
+        _compose_server_event_payload(
+            event,
+            creators.get(int(event.creator_id)) if event.creator_id else None,
+            interested_by_event.get(int(event.id), []),
+            viewer_id,
+        )
+        for event in events
+    ]
+
+
+async def toggle_server_event_interest(
+    db: AsyncSession,
+    server_id: int,
+    event_id: int,
+    account_id: int,
+) -> dict | None:
+    event = await get_server_event(db, server_id, event_id)
+    if not event:
+        return None
+    result = await db.execute(
+        select(ServerEventInterest).where(
+            ServerEventInterest.event_id == int(event_id),
+            ServerEventInterest.account_id == int(account_id),
+        )
+    )
+    existing = result.scalar_one_or_none()
+    interested = existing is None
+    if existing:
+        await db.delete(existing)
+    else:
+        db.add(ServerEventInterest(event_id=event_id, account_id=account_id))
+    await db.commit()
+    payload = await _server_event_payload(db, event, account_id)
+    return {
+        "interested": interested,
+        "count": payload["interest_count"],
+        "accounts": payload["interested"],
+    }
+
+
+async def delete_server_event(
+    db: AsyncSession,
+    server_id: int,
+    event_id: int,
+) -> bool:
+    event = await get_server_event(db, server_id, event_id)
+    if not event:
+        return False
+    await db.delete(event)
+    await db.commit()
+    return True
 
 
 async def list_server_channels(
