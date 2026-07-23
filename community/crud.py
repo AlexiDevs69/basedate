@@ -24,6 +24,7 @@ from community.models import (
     PostLike,
     ServerChannel,
     ServerBan,
+    ServerCategory,
     ServerInvite,
     ServerMember,
     ServerMessage,
@@ -40,6 +41,7 @@ VISUAL_NAME_FONTS = {"default", "mono", "serif", "rounded", "cyber", "display", 
 PRESENCE_STATUSES = {"online", "idle", "dnd", "invisible"}
 SUPPORTED_LANGUAGES = {"ru", "uk", "en"}
 DEFAULT_LANGUAGE = "ru"
+SERVER_CHANNEL_TYPES = {"text", "voice", "forum", "announcement", "stage"}
 
 
 def normalize_language(value: str | None) -> str:
@@ -847,6 +849,52 @@ async def ensure_server_moderation_tables(db: AsyncSession) -> None:
     _SERVER_MODERATION_TABLES_READY = True
 
 
+_SERVER_CATEGORY_SCHEMA_READY = False
+
+
+async def ensure_server_category_schema(db: AsyncSession) -> None:
+    """Add channel categories without invalidating existing Render databases."""
+    global _SERVER_CATEGORY_SCHEMA_READY
+    if _SERVER_CATEGORY_SCHEMA_READY:
+        return
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_server_categories (
+            id SERIAL PRIMARY KEY,
+            server_id INTEGER NOT NULL REFERENCES community_servers(id) ON DELETE CASCADE,
+            name VARCHAR(64) NOT NULL,
+            is_private BOOLEAN NOT NULL DEFAULT FALSE,
+            sort_order INTEGER NOT NULL DEFAULT 0,
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+        )
+    """))
+    await db.execute(text(
+        "CREATE INDEX IF NOT EXISTS ix_community_server_categories_server_id "
+        "ON community_server_categories (server_id)"
+    ))
+    await db.execute(text(
+        "ALTER TABLE community_server_channels "
+        "ADD COLUMN IF NOT EXISTS category_id INTEGER"
+    ))
+    await db.execute(text(
+        "ALTER TABLE community_server_channels "
+        "ADD COLUMN IF NOT EXISTS channel_type VARCHAR(16) NOT NULL DEFAULT 'text'"
+    ))
+    await db.execute(text(
+        "ALTER TABLE community_server_channels "
+        "ADD COLUMN IF NOT EXISTS is_private BOOLEAN NOT NULL DEFAULT FALSE"
+    ))
+    await db.execute(text(
+        "CREATE INDEX IF NOT EXISTS ix_community_server_channels_category_id "
+        "ON community_server_channels (category_id)"
+    ))
+    await db.execute(text(
+        "UPDATE community_server_channels SET channel_type = 'text' "
+        "WHERE channel_type IS NULL OR channel_type = ''"
+    ))
+    await db.commit()
+    _SERVER_CATEGORY_SCHEMA_READY = True
+
+
 async def is_server_banned(db: AsyncSession, server_id: int, account_id: int) -> bool:
     await ensure_server_moderation_tables(db)
     result = await db.execute(
@@ -964,6 +1012,7 @@ async def leave_server(db: AsyncSession, server_id: int, account_id: int) -> boo
 
 async def delete_server(db: AsyncSession, server_id: int) -> bool:
     await ensure_server_moderation_tables(db)
+    await ensure_server_category_schema(db)
     server = await get_server_by_id(db, server_id)
     if not server:
         return False
@@ -974,6 +1023,7 @@ async def delete_server(db: AsyncSession, server_id: int) -> bool:
         (ServerBan, ServerBan.server_id),
         (ServerMember, ServerMember.server_id),
         (ServerChannel, ServerChannel.server_id),
+        (ServerCategory, ServerCategory.server_id),
     ]:
         result = await db.execute(select(model).where(column == server_id))
         for row in result.scalars().all():
@@ -984,18 +1034,101 @@ async def delete_server(db: AsyncSession, server_id: int) -> bool:
     return True
 
 
-async def list_server_channels(db: AsyncSession, server_id: int) -> list[ServerChannel]:
+async def list_server_categories(
+    db: AsyncSession,
+    server_id: int,
+    include_private: bool = True,
+) -> list[ServerCategory]:
+    await ensure_server_category_schema(db)
+    query = select(ServerCategory).where(ServerCategory.server_id == server_id)
+    if not include_private:
+        query = query.where(ServerCategory.is_private.is_(False))
+    result = await db.execute(query.order_by(ServerCategory.sort_order.asc(), ServerCategory.id.asc()))
+    return list(result.scalars().all())
+
+
+async def get_server_category(
+    db: AsyncSession,
+    server_id: int,
+    category_id: int,
+) -> ServerCategory | None:
+    await ensure_server_category_schema(db)
     result = await db.execute(
-        select(ServerChannel).where(ServerChannel.server_id == server_id).order_by(ServerChannel.sort_order.asc(), ServerChannel.id.asc())
+        select(ServerCategory).where(
+            ServerCategory.server_id == server_id,
+            ServerCategory.id == category_id,
+        )
+    )
+    return result.scalar_one_or_none()
+
+
+async def create_server_category(
+    db: AsyncSession,
+    server_id: int,
+    name: str,
+    is_private: bool = False,
+) -> ServerCategory:
+    await ensure_server_category_schema(db)
+    clean_name = re.sub(r"\s+", " ", name.strip())[:64] or "Новая категория"
+    count_result = await db.execute(
+        select(func.count()).select_from(ServerCategory).where(ServerCategory.server_id == server_id)
+    )
+    category = ServerCategory(
+        server_id=server_id,
+        name=clean_name,
+        is_private=bool(is_private),
+        sort_order=int(count_result.scalar_one() or 0),
+    )
+    db.add(category)
+    await db.commit()
+    await db.refresh(category)
+    return category
+
+
+async def list_server_channels(
+    db: AsyncSession,
+    server_id: int,
+    include_private: bool = True,
+) -> list[ServerChannel]:
+    await ensure_server_category_schema(db)
+    query = select(ServerChannel).where(ServerChannel.server_id == server_id)
+    if not include_private:
+        query = (
+            query.outerjoin(ServerCategory, ServerCategory.id == ServerChannel.category_id)
+            .where(
+                ServerChannel.is_private.is_(False),
+                or_(ServerChannel.category_id.is_(None), ServerCategory.is_private.is_(False)),
+            )
+        )
+    result = await db.execute(
+        query.order_by(ServerChannel.sort_order.asc(), ServerChannel.id.asc())
     )
     return list(result.scalars().all())
 
 
 async def get_server_channel(db: AsyncSession, server_id: int, channel_id: int) -> ServerChannel | None:
+    await ensure_server_category_schema(db)
     result = await db.execute(
         select(ServerChannel).where(ServerChannel.server_id == server_id, ServerChannel.id == channel_id)
     )
     return result.scalar_one_or_none()
+
+
+async def can_access_server_channel(
+    db: AsyncSession,
+    server_id: int,
+    channel: ServerChannel,
+    account_id: int,
+) -> bool:
+    if await can_manage_server(db, server_id, account_id):
+        return True
+    if bool(channel.is_private):
+        return False
+    if channel.category_id:
+        category = await get_server_category(db, server_id, int(channel.category_id))
+        if category and bool(category.is_private):
+            return False
+    return True
 
 
 async def create_server_channel(
@@ -1003,16 +1136,36 @@ async def create_server_channel(
     server_id: int,
     name: str,
     description: str | None = None,
+    category_id: int | None = None,
+    channel_type: str = "text",
+    is_private: bool = False,
 ) -> ServerChannel:
+    await ensure_server_category_schema(db)
     clean_name = name.strip().lower().replace(" ", "-")[:64]
     if not clean_name:
         clean_name = "new-channel"
-    count_result = await db.execute(select(func.count()).select_from(ServerChannel).where(ServerChannel.server_id == server_id))
+    clean_type = (channel_type or "text").strip().lower()
+    if clean_type not in SERVER_CHANNEL_TYPES:
+        clean_type = "text"
+    valid_category_id: int | None = None
+    if category_id is not None:
+        category = await get_server_category(db, server_id, int(category_id))
+        if category:
+            valid_category_id = int(category.id)
+    count_query = select(func.count()).select_from(ServerChannel).where(ServerChannel.server_id == server_id)
+    if valid_category_id is None:
+        count_query = count_query.where(ServerChannel.category_id.is_(None))
+    else:
+        count_query = count_query.where(ServerChannel.category_id == valid_category_id)
+    count_result = await db.execute(count_query)
     order = int(count_result.scalar_one() or 0)
     channel = ServerChannel(
         server_id=server_id,
+        category_id=valid_category_id,
         name=clean_name,
         description=description.strip()[:255] if description else None,
+        channel_type=clean_type,
+        is_private=bool(is_private),
         sort_order=order,
     )
     db.add(channel)
