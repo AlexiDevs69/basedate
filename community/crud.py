@@ -1281,9 +1281,16 @@ async def list_server_events(
     viewer_id: int,
 ) -> list[dict]:
     await ensure_server_event_schema(db)
+    now = datetime.now(timezone.utc)
     result = await db.execute(
         select(ServerEvent)
-        .where(ServerEvent.server_id == int(server_id))
+        .where(
+            ServerEvent.server_id == int(server_id),
+            or_(
+                ServerEvent.end_at > now,
+                ServerEvent.recurrence != "none",
+            ),
+        )
         .order_by(ServerEvent.start_at.asc(), ServerEvent.id.asc())
         .limit(100)
     )
@@ -1365,6 +1372,21 @@ async def delete_server_event(
     await db.delete(event)
     await db.commit()
     return True
+
+
+async def end_server_event(
+    db: AsyncSession,
+    server_id: int,
+    event_id: int,
+) -> ServerEvent | None:
+    event = await get_server_event(db, server_id, event_id)
+    if not event:
+        return None
+    event.end_at = datetime.now(timezone.utc)
+    event.recurrence = "none"
+    await db.commit()
+    await db.refresh(event)
+    return event
 
 
 async def list_server_channels(
