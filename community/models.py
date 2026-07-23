@@ -215,13 +215,31 @@ class ServerBan(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
 
 
+class ServerCategory(Base):
+    __tablename__ = "community_server_categories"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    server_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("community_servers.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    name: Mapped[str] = mapped_column(String(64), nullable=False)
+    is_private: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    sort_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
 class ServerChannel(Base):
     __tablename__ = "community_server_channels"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     server_id: Mapped[int] = mapped_column(Integer, ForeignKey("community_servers.id"), nullable=False, index=True)
+    category_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("community_server_categories.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     name: Mapped[str] = mapped_column(String(64), nullable=False)
     description: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    channel_type: Mapped[str] = mapped_column(String(16), default="text", nullable=False)
+    is_private: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     sort_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
 
