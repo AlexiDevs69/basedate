@@ -248,6 +248,7 @@ async def community_schema_startup() -> None:
         await crud.ensure_reaction_tables(db)
         await crud.ensure_mention_table(db)
         await crud.ensure_user_blocks_table(db)
+        await crud.ensure_server_category_schema(db)
 
 
 # --- Lightweight realtime layer --------------------------------------------
@@ -1443,11 +1444,12 @@ async def server_home(server_id: int, request: Request, db: AsyncSession = Depen
     if not server:
         return RedirectResponse(url="/community", status_code=303)
 
-    channels = await crud.list_server_channels(db, server.id)
+    can_manage = await crud.can_manage_server(db, server.id, account.id)
+    categories = await crud.list_server_categories(db, server.id, include_private=can_manage)
+    channels = await crud.list_server_channels(db, server.id, include_private=can_manage)
     members = await crud.list_server_members(db, server.id)
     friends = await crud.list_friends(db, account.id)
     rail = await server_rail_context(db, account.id, active_server_id=server.id)
-    can_manage = await crud.can_manage_server(db, server.id, account.id)
 
     return templates.TemplateResponse(
         "server_home.html",
@@ -1456,6 +1458,7 @@ async def server_home(server_id: int, request: Request, db: AsyncSession = Depen
             "account": account,
             "server": server,
             "channels": channels,
+            "categories": categories,
             "members": members,
             "friends": friends,
             "can_manage": can_manage,
@@ -1464,12 +1467,33 @@ async def server_home(server_id: int, request: Request, db: AsyncSession = Depen
     )
 
 
+@router.post("/servers/{server_id}/categories/create")
+async def server_category_create_submit(
+    server_id: int,
+    request: Request,
+    name: str = Form(...),
+    is_private: bool = Form(False),
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return RedirectResponse(url="/community/login", status_code=303)
+    if not await crud.can_manage_server(db, server_id, account.id):
+        return _forbidden_response()
+    if await crud.get_server_by_id(db, server_id) and name.strip():
+        await crud.create_server_category(db, server_id, name, is_private=is_private)
+    return RedirectResponse(url=f"/community/servers/{server_id}", status_code=303)
+
+
 @router.post("/servers/{server_id}/channels/create")
 async def server_channel_create_submit(
     server_id: int,
     request: Request,
     name: str = Form(...),
     description: str = Form(""),
+    category_id: str = Form(""),
+    channel_type: str = Form("text"),
+    is_private: bool = Form(False),
     db: AsyncSession = Depends(get_db),
 ):
     account = await current_account(request, db)
@@ -1480,7 +1504,19 @@ async def server_channel_create_submit(
 
     new_channel = None
     if name.strip():
-        new_channel = await crud.create_server_channel(db, server_id, name.strip(), description.strip())
+        parsed_category_id = _parse_optional_int(category_id)
+        clean_type = (channel_type or "text").strip().lower()
+        if clean_type != "text":
+            clean_type = "text"
+        new_channel = await crud.create_server_channel(
+            db,
+            server_id,
+            name.strip(),
+            description.strip(),
+            category_id=parsed_category_id,
+            channel_type=clean_type,
+            is_private=is_private,
+        )
     if new_channel:
         return RedirectResponse(url=f"/community/servers/{server_id}/channel/{new_channel.id}", status_code=303)
     return RedirectResponse(url=f"/community/servers/{server_id}", status_code=303)
@@ -1499,8 +1535,12 @@ async def server_channel_view(server_id: int, channel_id: int, request: Request,
     channel = await crud.get_server_channel(db, server_id, channel_id)
     if not server or not channel:
         return RedirectResponse(url=f"/community/servers/{server_id}", status_code=303)
+    if not await crud.can_access_server_channel(db, server_id, channel, account.id):
+        return _forbidden_response()
 
-    channels = await crud.list_server_channels(db, server_id)
+    can_manage = await crud.can_manage_server(db, server_id, account.id)
+    categories = await crud.list_server_categories(db, server_id, include_private=can_manage)
+    channels = await crud.list_server_channels(db, server_id, include_private=can_manage)
     members = await crud.list_server_members(db, server_id)
     friends = await crud.list_friends(db, account.id)
     feed = await crud.get_server_feed(db, server_id, channel_id)
@@ -1510,8 +1550,6 @@ async def server_channel_view(server_id: int, channel_id: int, request: Request,
     rail = await server_rail_context(db, account.id, active_server_id=server_id)
     if mentions_were_read:
         await _broadcast_mention_counts([account.id])
-    can_manage = await crud.can_manage_server(db, server_id, account.id)
-
     return templates.TemplateResponse(
         "server_channel.html",
         {
@@ -1520,6 +1558,7 @@ async def server_channel_view(server_id: int, channel_id: int, request: Request,
             "server": server,
             "channel": channel,
             "channels": channels,
+            "categories": categories,
             "members": members,
             "friends": friends,
             "can_manage": can_manage,
@@ -1621,11 +1660,15 @@ async def server_message_submit(
         return _forbidden_response()
 
     channel = await crud.get_server_channel(db, server_id, channel_id)
+    if not channel:
+        return RedirectResponse(url=f"/community/servers/{server_id}", status_code=303)
+    if not await crud.can_access_server_channel(db, server_id, channel, account.id):
+        return _forbidden_response()
     content, image_url, _media_item = await _prepare_custom_media_message(
         db, account.id, content, image_url, context="server", server_id=server_id
     )
     realtime_payload = None
-    if channel and (content.strip() or image_url.strip()):
+    if content.strip() or image_url.strip():
         retry_after_ms = await message_rate_limiter.check(account.id)
         if retry_after_ms:
             return _message_rate_limit_redirect(
@@ -2361,6 +2404,8 @@ async def api_list_server_pins(server_id: int, channel_id: int, request: Request
     channel = await crud.get_server_channel(db, server_id, channel_id)
     if not channel:
         return JSONResponse({"ok": False, "error": "not_found", "pins": []}, status_code=404)
+    if not await crud.can_access_server_channel(db, server_id, channel, account.id):
+        return JSONResponse({"ok": False, "error": "forbidden", "pins": []}, status_code=403)
     pins = await crud.list_server_pins(db, server_id, channel_id)
     return JSONResponse({"ok": True, "pins": pins})
 
@@ -2375,6 +2420,8 @@ async def api_pin_server_message(server_id: int, channel_id: int, message_id: in
     channel = await crud.get_server_channel(db, server_id, channel_id)
     if not channel:
         return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
+    if not await crud.can_access_server_channel(db, server_id, channel, account.id):
+        return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
     pin, created = await crud.pin_server_message(db, server_id, channel_id, message_id, account.id)
     if not pin:
         return JSONResponse({"ok": False, "error": "message_not_found"}, status_code=404)
@@ -2393,6 +2440,8 @@ async def api_unpin_server_message(server_id: int, channel_id: int, message_id: 
     channel = await crud.get_server_channel(db, server_id, channel_id)
     if not channel:
         return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
+    if not await crud.can_access_server_channel(db, server_id, channel, account.id):
+        return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
     removed = await crud.unpin_server_message(db, server_id, channel_id, message_id)
     if removed:
         await realtime_channels.broadcast((int(server_id), int(channel_id)), {"type": "pin_remove", "message_id": int(message_id), "actor": _account_payload(account)})
@@ -2514,6 +2563,8 @@ async def api_server_reactions(
     channel = await crud.get_server_channel(db, server_id, channel_id)
     if not channel:
         return JSONResponse({"ok": False, "error": "not_found", "reactions": {}}, status_code=404)
+    if not await crud.can_access_server_channel(db, server_id, channel, account.id):
+        return JSONResponse({"ok": False, "error": "forbidden", "reactions": {}}, status_code=403)
     summaries = await crud.list_server_reaction_summaries(
         db,
         server_id,
@@ -2536,6 +2587,11 @@ async def api_toggle_server_reaction(
     if not account:
         return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
     if not await crud.is_server_member(db, server_id, account.id):
+        return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
+    channel = await crud.get_server_channel(db, server_id, channel_id)
+    if not channel:
+        return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
+    if not await crud.can_access_server_channel(db, server_id, channel, account.id):
         return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
     message = await crud.get_server_message(db, server_id, channel_id, message_id)
     if not message:
@@ -2708,11 +2764,18 @@ async def api_media_library(
                 {'ok': False, 'error': 'forbidden', 'emojis': [], 'stickers': []},
                 status_code=403,
             )
-        if channel_id and not await crud.get_server_channel(db, server_id, channel_id):
-            return JSONResponse(
-                {'ok': False, 'error': 'channel_not_found', 'emojis': [], 'stickers': []},
-                status_code=404,
-            )
+        if channel_id:
+            channel = await crud.get_server_channel(db, server_id, channel_id)
+            if not channel:
+                return JSONResponse(
+                    {'ok': False, 'error': 'channel_not_found', 'emojis': [], 'stickers': []},
+                    status_code=404,
+                )
+            if not await crud.can_access_server_channel(db, server_id, channel, account.id):
+                return JSONResponse(
+                    {'ok': False, 'error': 'forbidden', 'emojis': [], 'stickers': []},
+                    status_code=403,
+                )
     if clean_context == 'dm' and thread_id:
         if not await crud.is_dm_participant(db, thread_id, account.id):
             return JSONResponse(
@@ -2755,7 +2818,10 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
         account = await crud.get_account_by_id(db, account_id)
         channel = await crud.get_server_channel(db, server_id, channel_id)
         is_member = await crud.is_server_member(db, server_id, account_id)
-        if not account or not channel or not is_member or not _ws_session_matches_account(websocket, account):
+        can_access = bool(
+            channel and account and await crud.can_access_server_channel(db, server_id, channel, account_id)
+        )
+        if not account or not channel or not is_member or not can_access or not _ws_session_matches_account(websocket, account):
             await websocket.close(code=1008)
             return
         profile = _account_payload(account)
