@@ -252,6 +252,7 @@ async def community_schema_startup() -> None:
         await crud.ensure_user_blocks_table(db)
         await crud.ensure_server_category_schema(db)
         await crud.ensure_server_event_schema(db)
+        await crud.ensure_server_boost_tables(db)
 
 
 # --- Lightweight realtime layer --------------------------------------------
@@ -884,6 +885,9 @@ async def _server_message_realtime_event(
         if reply_message:
             reply_author = await crud.get_account_by_id(db, int(reply_message.author_id))
             reply = _reply_payload(reply_message, reply_author)
+    author_payload = _account_payload(author) if author else _missing_author_payload(message.author_id)
+    active_tags = await crud.list_account_active_server_tags(db, [int(message.author_id)])
+    author_payload["server_tag"] = active_tags.get(int(message.author_id))
     payload = {
         "type": "message",
         "message": {
@@ -903,7 +907,7 @@ async def _server_message_realtime_event(
             "reply": reply,
             "is_forwarded": bool(getattr(message, "is_forwarded", False)),
         },
-        "author": _account_payload(author) if author else _missing_author_payload(message.author_id),
+        "author": author_payload,
     }
     if client_nonce:
         payload["client_nonce"] = client_nonce
@@ -1087,6 +1091,30 @@ async def server_rail_context(db: AsyncSession, account_id: int, active_server_i
         "active_server_id": active_server_id,
         "mention_counts": await crud.unread_mention_summary(db, account_id),
     }
+
+
+async def _decorate_server_tags(
+    db: AsyncSession,
+    members: list[dict],
+    feed: list[dict] | None = None,
+) -> None:
+    """Attach each account's selected, currently unlocked server tag in-place."""
+    account_ids = {
+        int(item["account"].id)
+        for item in members
+        if item.get("account")
+    }
+    for item in feed or []:
+        author = item.get("author")
+        if author:
+            account_ids.add(int(author.id))
+    tags = await crud.list_account_active_server_tags(db, account_ids)
+    for item in members:
+        account = item.get("account")
+        item["server_tag"] = tags.get(int(account.id)) if account else None
+    for item in feed or []:
+        author = item.get("author")
+        item["server_tag"] = tags.get(int(author.id)) if author else None
 
 
 # --- Registration -----------------------------------------------------------
@@ -1451,8 +1479,10 @@ async def server_home(server_id: int, request: Request, db: AsyncSession = Depen
     categories = await crud.list_server_categories(db, server.id, include_private=can_manage)
     channels = await crud.list_server_channels(db, server.id, include_private=can_manage)
     members = await crud.list_server_members(db, server.id)
+    await _decorate_server_tags(db, members)
     friends = await crud.list_friends(db, account.id)
     events = await crud.list_server_events(db, server.id, account.id)
+    boost_status = await crud.get_server_boost_status(db, server.id, account.id)
     rail = await server_rail_context(db, account.id, active_server_id=server.id)
 
     return templates.TemplateResponse(
@@ -1466,6 +1496,7 @@ async def server_home(server_id: int, request: Request, db: AsyncSession = Depen
             "members": members,
             "friends": friends,
             "events": events,
+            "boost_status": boost_status,
             "can_manage": can_manage,
             **rail,
         },
@@ -1743,6 +1774,8 @@ async def server_channel_view(server_id: int, channel_id: int, request: Request,
     friends = await crud.list_friends(db, account.id)
     events = await crud.list_server_events(db, server_id, account.id)
     feed = await crud.get_server_feed(db, server_id, channel_id)
+    await _decorate_server_tags(db, members, feed)
+    boost_status = await crud.get_server_boost_status(db, server.id, account.id)
     mentions_were_read = await crud.mark_server_channel_mentions_read(
         db, account.id, server_id, channel_id
     )
@@ -1763,6 +1796,7 @@ async def server_channel_view(server_id: int, channel_id: int, request: Request,
             "events": events,
             "can_manage": can_manage,
             "feed": feed,
+            "boost_status": boost_status,
             **rail,
         },
     )
@@ -1974,6 +2008,7 @@ async def server_settings_page(
     banned_members = await crud.list_server_bans(db, server_id)
     viewer_member = await crud.get_server_member(db, server_id, account.id)
     banner_color = await _get_server_banner_color(db, server_id)
+    boost_status = await crud.get_server_boost_status(db, server_id, account.id)
     rail = await server_rail_context(db, account.id, active_server_id=server_id)
     return templates.TemplateResponse(
         "server_settings.html",
@@ -1987,6 +2022,11 @@ async def server_settings_page(
             "viewer_member": viewer_member,
             "viewer_is_owner": int(server.owner_id) == int(account.id),
             "banner_color": banner_color,
+            "boost_status": boost_status,
+            "server_tag_icons": [
+                {"id": key, "glyph": glyph}
+                for key, glyph in crud.SERVER_TAG_ICONS.items()
+            ],
             **rail,
         },
     )
@@ -2013,6 +2053,104 @@ async def server_settings_submit(
         await _set_server_banner_color(db, server_id, banner_color)
     safe_redirect = redirect_to if redirect_to.startswith("/community/") else f"/community/servers/{server_id}"
     return RedirectResponse(url=safe_redirect, status_code=303)
+
+
+@router.get("/api/boosts/me")
+async def api_my_server_boosts(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    return JSONResponse(await crud.get_account_boost_center(db, account.id))
+
+
+@router.post("/api/boosts/tag-selection")
+async def api_select_server_tag(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    server_id = _parse_optional_int(body.get("server_id"))
+    result = await crud.set_account_server_tag(db, account.id, server_id)
+    status_code = 200 if result.get("ok") else 400
+    if result.get("error") == "not_a_member":
+        status_code = 403
+    return JSONResponse(result, status_code=status_code)
+
+
+@router.get("/api/servers/{server_id}/boosts")
+async def api_server_boosts(
+    server_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    if not await crud.is_server_member(db, server_id, account.id):
+        return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
+    return JSONResponse({
+        "ok": True,
+        "status": await crud.get_server_boost_status(db, server_id, account.id),
+    })
+
+
+@router.post("/api/servers/{server_id}/boosts")
+async def api_change_server_boosts(
+    server_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    try:
+        delta = int(body.get("delta") or 0)
+    except (TypeError, ValueError):
+        delta = 0
+    if delta not in {-1, 1}:
+        return JSONResponse({"ok": False, "error": "bad_delta"}, status_code=400)
+    result = await crud.change_server_boost_allocation(db, server_id, account.id, delta)
+    status_codes = {
+        "not_a_member": 403,
+        "nitro_required": 402,
+        "no_boosts_left": 409,
+        "nothing_to_remove": 409,
+    }
+    return JSONResponse(
+        result,
+        status_code=200 if result.get("ok") else status_codes.get(result.get("error"), 400),
+    )
+
+
+@router.post("/api/servers/{server_id}/tag")
+async def api_update_server_tag(
+    server_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    if not await crud.can_manage_server(db, server_id, account.id):
+        return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    result = await crud.update_server_tag(
+        db,
+        server_id,
+        str(body.get("tag_text") or ""),
+        str(body.get("tag_icon") or "gem"),
+    )
+    return JSONResponse(result, status_code=200 if result.get("ok") else 400)
 
 
 @router.post("/api/servers/{server_id}/members/{target_id}/moderate")
