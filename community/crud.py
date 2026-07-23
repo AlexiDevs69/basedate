@@ -2941,6 +2941,34 @@ NITRO_TIER_LABELS = {
     "ruby": "Рубин Nitro",
 }
 
+NITRO_TIER_BOOSTS = {
+    "basic": 2,
+    "gold": 4,
+    "platinum": 6,
+    "diamond": 8,
+    "emerald": 10,
+    "ruby": 12,
+}
+
+SERVER_BOOST_LEVELS = (
+    {"level": 1, "required": 2},
+    {"level": 2, "required": 5},
+    {"level": 3, "required": 7},
+)
+SERVER_TAG_REQUIRED_BOOSTS = 3
+SERVER_TAG_ICONS = {
+    "gem": "◆",
+    "crown": "♛",
+    "star": "★",
+    "shield": "⬡",
+    "flame": "♨",
+    "leaf": "❧",
+    "bolt": "ϟ",
+    "heart": "♥",
+    "moon": "☾",
+    "skull": "☠",
+}
+
 NITRO_GIFTER_BADGE_LABELS = {
     "legend": "Легенда",
     "philanthropist": "Филантроп",
@@ -3274,6 +3302,431 @@ async def nitro_profile_payload(db: AsyncSession, account_id: int) -> dict:
         "tier": sub.get('tier') or 'basic',
         "tier_label": sub.get('tier_label') or NITRO_TIER_LABELS['basic'],
         "gifting": gifting,
+    }
+
+
+# ============================================================================
+# Nitro-backed server boosts + Discord-style primary server tags.
+# ============================================================================
+
+_SERVER_BOOST_TABLES_READY = False
+
+
+async def ensure_server_boost_tables(db: AsyncSession) -> None:
+    """Create boost storage without requiring a destructive ORM migration."""
+    global _SERVER_BOOST_TABLES_READY
+    if _SERVER_BOOST_TABLES_READY:
+        return
+    await ensure_nitro_tables(db)
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_server_boost_allocations (
+            id SERIAL PRIMARY KEY,
+            server_id INTEGER NOT NULL REFERENCES community_servers(id) ON DELETE CASCADE,
+            account_id INTEGER NOT NULL REFERENCES community_accounts(id) ON DELETE CASCADE,
+            amount INTEGER NOT NULL DEFAULT 1 CHECK (amount > 0),
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+            updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+            UNIQUE (server_id, account_id)
+        )
+    """))
+    await db.execute(text("""
+        CREATE INDEX IF NOT EXISTS ix_community_server_boosts_server
+        ON community_server_boost_allocations (server_id, updated_at DESC)
+    """))
+    await db.execute(text("""
+        CREATE INDEX IF NOT EXISTS ix_community_server_boosts_account
+        ON community_server_boost_allocations (account_id, updated_at ASC)
+    """))
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_server_boost_settings (
+            server_id INTEGER PRIMARY KEY REFERENCES community_servers(id) ON DELETE CASCADE,
+            tag_text VARCHAR(4),
+            tag_icon VARCHAR(16) NOT NULL DEFAULT 'gem',
+            updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+        )
+    """))
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_account_server_tags (
+            account_id INTEGER PRIMARY KEY REFERENCES community_accounts(id) ON DELETE CASCADE,
+            server_id INTEGER NOT NULL REFERENCES community_servers(id) ON DELETE CASCADE,
+            updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+        )
+    """))
+    await db.execute(text("""
+        CREATE INDEX IF NOT EXISTS ix_community_account_server_tags_server
+        ON community_account_server_tags (server_id)
+    """))
+    await db.commit()
+    _SERVER_BOOST_TABLES_READY = True
+
+
+def nitro_boost_capacity(subscription: dict | None) -> int:
+    if not subscription or not subscription.get("active"):
+        return 0
+    return int(NITRO_TIER_BOOSTS.get(str(subscription.get("tier") or "basic"), 2))
+
+
+def _server_boost_level(total_boosts: int | float | None) -> dict:
+    total = max(0, int(total_boosts or 0))
+    level = 0
+    for item in SERVER_BOOST_LEVELS:
+        if total >= int(item["required"]):
+            level = int(item["level"])
+    next_item = next((item for item in SERVER_BOOST_LEVELS if total < int(item["required"])), None)
+    if next_item:
+        previous_required = next(
+            (int(item["required"]) for item in reversed(SERVER_BOOST_LEVELS) if int(item["level"]) == level),
+            0,
+        )
+        span = max(1, int(next_item["required"]) - previous_required)
+        progress = max(0.0, min(1.0, (total - previous_required) / span))
+        next_level = int(next_item["level"])
+        next_required = int(next_item["required"])
+    else:
+        progress = 1.0
+        next_level = None
+        next_required = None
+    return {
+        "level": level,
+        "next_level": next_level,
+        "next_required": next_required,
+        "progress_percent": round(progress * 100, 2),
+        "maxed": next_item is None,
+    }
+
+
+def _server_tag_payload(tag_text: str | None, tag_icon: str | None, *, unlocked: bool) -> dict:
+    clean_text = (tag_text or "").strip().upper()[:4]
+    clean_icon = (tag_icon or "gem").strip().lower()
+    if clean_icon not in SERVER_TAG_ICONS:
+        clean_icon = "gem"
+    active = bool(unlocked and clean_text)
+    return {
+        "active": active,
+        "unlocked": bool(unlocked),
+        "text": clean_text,
+        "icon": clean_icon,
+        "icon_glyph": SERVER_TAG_ICONS[clean_icon],
+        "required_boosts": SERVER_TAG_REQUIRED_BOOSTS,
+    }
+
+
+async def reconcile_account_server_boosts(db: AsyncSession, account_id: int) -> dict:
+    """Trim newest allocations when a Nitro subscription expires or loses a tier."""
+    await ensure_server_boost_tables(db)
+    subscription = await get_nitro_subscription(db, account_id)
+    capacity = nitro_boost_capacity(subscription)
+    rows = (await db.execute(text("""
+        SELECT server_id, amount
+        FROM community_server_boost_allocations
+        WHERE account_id = :account_id
+        ORDER BY updated_at ASC, id ASC
+    """), {"account_id": int(account_id)})).mappings().all()
+    allocated = sum(max(0, int(row["amount"] or 0)) for row in rows)
+    excess = max(0, allocated - capacity)
+    if excess:
+        for row in reversed(rows):
+            if excess <= 0:
+                break
+            amount = max(0, int(row["amount"] or 0))
+            remove = min(amount, excess)
+            remaining = amount - remove
+            if remaining:
+                await db.execute(text("""
+                    UPDATE community_server_boost_allocations
+                    SET amount = :amount, updated_at = NOW()
+                    WHERE account_id = :account_id AND server_id = :server_id
+                """), {
+                    "amount": remaining,
+                    "account_id": int(account_id),
+                    "server_id": int(row["server_id"]),
+                })
+            else:
+                await db.execute(text("""
+                    DELETE FROM community_server_boost_allocations
+                    WHERE account_id = :account_id AND server_id = :server_id
+                """), {
+                    "account_id": int(account_id),
+                    "server_id": int(row["server_id"]),
+                })
+            excess -= remove
+        await db.commit()
+        allocated = capacity
+    return {
+        "subscription": subscription,
+        "capacity": capacity,
+        "allocated": allocated,
+        "remaining": max(0, capacity - allocated),
+    }
+
+
+async def _reconcile_server_boosters(db: AsyncSession, server_id: int) -> None:
+    await ensure_server_boost_tables(db)
+    account_ids = (await db.execute(text("""
+        SELECT account_id
+        FROM community_server_boost_allocations
+        WHERE server_id = :server_id
+    """), {"server_id": int(server_id)})).scalars().all()
+    for account_id in account_ids:
+        await reconcile_account_server_boosts(db, int(account_id))
+
+
+async def get_server_boost_status(
+    db: AsyncSession,
+    server_id: int,
+    viewer_id: int | None = None,
+) -> dict:
+    await ensure_server_boost_tables(db)
+    await _reconcile_server_boosters(db, server_id)
+    viewer = (
+        await reconcile_account_server_boosts(db, int(viewer_id))
+        if viewer_id
+        else {"subscription": {}, "capacity": 0, "allocated": 0, "remaining": 0}
+    )
+    total = int((await db.execute(text("""
+        SELECT COALESCE(SUM(amount), 0)
+        FROM community_server_boost_allocations
+        WHERE server_id = :server_id
+    """), {"server_id": int(server_id)})).scalar_one() or 0)
+    level_info = _server_boost_level(total)
+    settings_row = (await db.execute(text("""
+        SELECT tag_text, tag_icon
+        FROM community_server_boost_settings
+        WHERE server_id = :server_id
+        LIMIT 1
+    """), {"server_id": int(server_id)})).mappings().first()
+    tag = _server_tag_payload(
+        settings_row["tag_text"] if settings_row else "",
+        settings_row["tag_icon"] if settings_row else "gem",
+        unlocked=total >= SERVER_TAG_REQUIRED_BOOSTS,
+    )
+    allocated_here = 0
+    if viewer_id:
+        allocated_here = int((await db.execute(text("""
+            SELECT COALESCE(amount, 0)
+            FROM community_server_boost_allocations
+            WHERE account_id = :account_id AND server_id = :server_id
+            LIMIT 1
+        """), {"account_id": int(viewer_id), "server_id": int(server_id)})).scalar_one_or_none() or 0)
+    activity_rows = (await db.execute(text("""
+        SELECT b.account_id, b.amount, b.updated_at,
+               a.username, a.display_name, a.avatar_url
+        FROM community_server_boost_allocations b
+        JOIN community_accounts a ON a.id = b.account_id
+        WHERE b.server_id = :server_id
+        ORDER BY b.updated_at DESC
+        LIMIT 30
+    """), {"server_id": int(server_id)})).mappings().all()
+    return {
+        "server_id": int(server_id),
+        "total_boosts": total,
+        **level_info,
+        "levels": [dict(item, active=total >= int(item["required"])) for item in SERVER_BOOST_LEVELS],
+        "tag": tag,
+        "viewer": {
+            "capacity": int(viewer["capacity"]),
+            "allocated_total": int(viewer["allocated"]),
+            "remaining": int(viewer["remaining"]),
+            "allocated_here": allocated_here,
+            "nitro_active": bool(viewer["subscription"].get("active")),
+            "nitro_tier": viewer["subscription"].get("tier") or "basic",
+            "nitro_label": viewer["subscription"].get("tier_label") or NITRO_TIER_LABELS["basic"],
+        },
+        "activity": [
+            {
+                "account_id": int(row["account_id"]),
+                "username": row["username"],
+                "display_name": row["display_name"] or row["username"],
+                "avatar_url": row["avatar_url"] or "",
+                "amount": int(row["amount"] or 0),
+                "updated_at": row["updated_at"].isoformat() if row["updated_at"] else None,
+            }
+            for row in activity_rows
+        ],
+    }
+
+
+async def change_server_boost_allocation(
+    db: AsyncSession,
+    server_id: int,
+    account_id: int,
+    delta: int,
+) -> dict:
+    await ensure_server_boost_tables(db)
+    if not await is_server_member(db, server_id, account_id):
+        return {"ok": False, "error": "not_a_member"}
+    delta = 1 if int(delta or 0) > 0 else -1
+    # Lock the subscription row so two simultaneous clicks cannot spend the
+    # same remaining boost.
+    await db.execute(text("""
+        SELECT account_id
+        FROM community_nitro_subscriptions
+        WHERE account_id = :account_id
+        FOR UPDATE
+    """), {"account_id": int(account_id)})
+    viewer = await reconcile_account_server_boosts(db, account_id)
+    current = int((await db.execute(text("""
+        SELECT COALESCE(amount, 0)
+        FROM community_server_boost_allocations
+        WHERE account_id = :account_id AND server_id = :server_id
+        LIMIT 1
+    """), {"account_id": int(account_id), "server_id": int(server_id)})).scalar_one_or_none() or 0)
+    if delta > 0:
+        if not viewer["subscription"].get("active"):
+            await db.rollback()
+            return {"ok": False, "error": "nitro_required"}
+        if int(viewer["remaining"]) <= 0:
+            await db.rollback()
+            return {"ok": False, "error": "no_boosts_left"}
+        await db.execute(text("""
+            INSERT INTO community_server_boost_allocations
+                (server_id, account_id, amount, created_at, updated_at)
+            VALUES (:server_id, :account_id, 1, NOW(), NOW())
+            ON CONFLICT (server_id, account_id)
+            DO UPDATE SET amount = community_server_boost_allocations.amount + 1,
+                          updated_at = NOW()
+        """), {"server_id": int(server_id), "account_id": int(account_id)})
+    else:
+        if current <= 0:
+            await db.rollback()
+            return {"ok": False, "error": "nothing_to_remove"}
+        if current == 1:
+            await db.execute(text("""
+                DELETE FROM community_server_boost_allocations
+                WHERE account_id = :account_id AND server_id = :server_id
+            """), {"account_id": int(account_id), "server_id": int(server_id)})
+        else:
+            await db.execute(text("""
+                UPDATE community_server_boost_allocations
+                SET amount = amount - 1, updated_at = NOW()
+                WHERE account_id = :account_id AND server_id = :server_id
+            """), {"account_id": int(account_id), "server_id": int(server_id)})
+    await db.commit()
+    return {"ok": True, "status": await get_server_boost_status(db, server_id, account_id)}
+
+
+async def update_server_tag(
+    db: AsyncSession,
+    server_id: int,
+    tag_text: str | None,
+    tag_icon: str | None,
+) -> dict:
+    status = await get_server_boost_status(db, server_id)
+    if not status["tag"]["unlocked"]:
+        return {"ok": False, "error": "tag_locked", "required_boosts": SERVER_TAG_REQUIRED_BOOSTS}
+    clean_text = re.sub(r"[^A-Z0-9]", "", (tag_text or "").strip().upper())[:4]
+    if len(clean_text) < 2:
+        return {"ok": False, "error": "bad_tag"}
+    clean_icon = (tag_icon or "gem").strip().lower()
+    if clean_icon not in SERVER_TAG_ICONS:
+        return {"ok": False, "error": "bad_icon"}
+    await db.execute(text("""
+        INSERT INTO community_server_boost_settings (server_id, tag_text, tag_icon, updated_at)
+        VALUES (:server_id, :tag_text, :tag_icon, NOW())
+        ON CONFLICT (server_id)
+        DO UPDATE SET tag_text = EXCLUDED.tag_text,
+                      tag_icon = EXCLUDED.tag_icon,
+                      updated_at = NOW()
+    """), {
+        "server_id": int(server_id),
+        "tag_text": clean_text,
+        "tag_icon": clean_icon,
+    })
+    await db.commit()
+    return {"ok": True, "tag": _server_tag_payload(clean_text, clean_icon, unlocked=True)}
+
+
+async def set_account_server_tag(
+    db: AsyncSession,
+    account_id: int,
+    server_id: int | None,
+) -> dict:
+    await ensure_server_boost_tables(db)
+    if not server_id:
+        await db.execute(text("""
+            DELETE FROM community_account_server_tags WHERE account_id = :account_id
+        """), {"account_id": int(account_id)})
+        await db.commit()
+        return {"ok": True, "tag": None, "server_id": None}
+    if not await is_server_member(db, int(server_id), account_id):
+        return {"ok": False, "error": "not_a_member"}
+    status = await get_server_boost_status(db, int(server_id), account_id)
+    if not status["tag"]["active"]:
+        return {"ok": False, "error": "tag_unavailable"}
+    await db.execute(text("""
+        INSERT INTO community_account_server_tags (account_id, server_id, updated_at)
+        VALUES (:account_id, :server_id, NOW())
+        ON CONFLICT (account_id)
+        DO UPDATE SET server_id = EXCLUDED.server_id, updated_at = NOW()
+    """), {"account_id": int(account_id), "server_id": int(server_id)})
+    await db.commit()
+    return {"ok": True, "tag": status["tag"], "server_id": int(server_id)}
+
+
+async def list_account_active_server_tags(
+    db: AsyncSession,
+    account_ids: list[int] | tuple[int, ...] | set[int],
+) -> dict[int, dict]:
+    await ensure_server_boost_tables(db)
+    clean_ids = sorted({int(account_id) for account_id in account_ids if account_id})
+    if not clean_ids:
+        return {}
+    rows = (await db.execute(text("""
+        SELECT t.account_id, t.server_id, s.name AS server_name
+        FROM community_account_server_tags t
+        JOIN community_servers s ON s.id = t.server_id
+        WHERE t.account_id = ANY(:account_ids)
+    """), {"account_ids": clean_ids})).mappings().all()
+    statuses: dict[int, dict] = {}
+    for server_id in {int(row["server_id"]) for row in rows}:
+        statuses[server_id] = await get_server_boost_status(db, server_id)
+    result: dict[int, dict] = {}
+    for row in rows:
+        status = statuses.get(int(row["server_id"])) or {}
+        tag = (status.get("tag") or {}).copy()
+        if tag.get("active"):
+            tag["server_id"] = int(row["server_id"])
+            tag["server_name"] = row["server_name"]
+            result[int(row["account_id"])] = tag
+    return result
+
+
+async def get_account_boost_center(db: AsyncSession, account_id: int) -> dict:
+    await ensure_server_boost_tables(db)
+    viewer = await reconcile_account_server_boosts(db, account_id)
+    selected_server_id = (await db.execute(text("""
+        SELECT server_id
+        FROM community_account_server_tags
+        WHERE account_id = :account_id
+        LIMIT 1
+    """), {"account_id": int(account_id)})).scalar_one_or_none()
+    servers = await list_servers_for_account(db, account_id)
+    server_payloads = []
+    for server in servers:
+        status = await get_server_boost_status(db, int(server.id), account_id)
+        server_payloads.append({
+            "id": int(server.id),
+            "name": server.name,
+            "icon_url": server.icon_url or "",
+            "total_boosts": status["total_boosts"],
+            "level": status["level"],
+            "allocated_here": status["viewer"]["allocated_here"],
+            "tag": status["tag"],
+            "tag_selected": int(selected_server_id or 0) == int(server.id),
+        })
+    return {
+        "ok": True,
+        "subscription": viewer["subscription"],
+        "capacity": int(viewer["capacity"]),
+        "allocated": int(viewer["allocated"]),
+        "remaining": int(viewer["remaining"]),
+        "selected_tag_server_id": int(selected_server_id) if selected_server_id else None,
+        "servers": server_payloads,
+        "tier_boosts": dict(NITRO_TIER_BOOSTS),
+        "tag_icons": [
+            {"id": key, "glyph": glyph}
+            for key, glyph in SERVER_TAG_ICONS.items()
+        ],
     }
 
 
