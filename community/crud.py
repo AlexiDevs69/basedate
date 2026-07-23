@@ -75,6 +75,7 @@ async def ensure_account_visual_columns(db: AsyncSession) -> None:
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(512)"))
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS banner_url VARCHAR(512)"))
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS bio TEXT"))
+    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS display_name VARCHAR(32)"))
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS name_effect VARCHAR(32)"))
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS name_color_start VARCHAR(16)"))
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS name_color_end VARCHAR(16)"))
@@ -331,6 +332,7 @@ async def list_online_accounts(db: AsyncSession, limit: int = 50) -> list[Accoun
 async def update_own_profile(
     db: AsyncSession,
     account_id: int,
+    display_name: str | None,
     avatar_url: str | None,
     banner_url: str | None,
     bio: str | None,
@@ -341,6 +343,15 @@ async def update_own_profile(
     admin dashboard, not by the account owner.
     """
     account = await get_account_by_id(db, account_id)
+    clean_display_name = "".join(
+        char for char in (display_name or "").strip()
+        if char >= " " and char != "\x7f"
+    )[:32].strip()
+    account.display_name = (
+        clean_display_name
+        if clean_display_name and clean_display_name.casefold() != account.username.casefold()
+        else None
+    )
     account.avatar_url = avatar_url or None
     account.banner_url = banner_url or None
     account.bio = bio or None
@@ -1793,10 +1804,8 @@ async def list_forward_targets(db: AsyncSession, account_id: int) -> dict:
     DMs are limited to friends. Channel targets are every text channel in every
     server where the current user is a member.
 
-    Important: the current Account model does NOT always have display_name.
-    The previous version used friend.display_name directly and could throw
-    AttributeError, which made /api/forward-targets return 500 and the modal
-    show "Не удалось загрузить список".
+    getattr() keeps this endpoint compatible during rolling deploys where an
+    older worker may still use the pre-display-name model.
     """
     friends = await list_friends(db, account_id)
     servers = await list_servers_for_account(db, account_id)
