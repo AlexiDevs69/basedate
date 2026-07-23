@@ -917,6 +917,9 @@
   @media(max-width:900px){.settings-main{padding-right:78px}.members-col-joined{display:none}.members-col-user{width:52%}.members-col-role{width:32%}.members-tools{flex-wrap:wrap}.members-search{width:220px}}
   @media(max-width:650px){.members-page-head,.members-toolbar{align-items:stretch;flex-direction:column}.members-tools{display:grid;grid-template-columns:1fr 1fr}.members-search{grid-column:1/-1;width:100%}.members-col-role{display:none}.members-col-user{width:auto}.members-table th,.members-table td{padding-left:8px;padding-right:8px}}
 </style>
+<style id="server-boost-settings-style">
+  .boost-settings-shell{max-width:1120px}.boost-settings-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:28px}.boost-settings-copy{max-width:650px}.boost-crystal{width:42px;height:42px;border-radius:13px;background:linear-gradient(145deg,#ff5fe7,#8b2cff);box-shadow:0 0 30px rgba(225,76,255,.3);display:grid;place-items:center;color:#fff;font-size:23px;flex:0 0 auto}.boost-summary-card{border:1px solid #3a3c43;background:#18191d;border-radius:14px;padding:17px 18px;display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:20px}.boost-summary-count{font-size:26px;font-weight:900}.boost-summary-count span{color:#eb6bea}.boost-levels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:18px}.boost-level-card{position:relative;min-height:300px;padding:22px 16px 18px;border:1px solid #3f4149;border-radius:14px;background:#24252b;display:flex;flex-direction:column;overflow:hidden}.boost-level-card.active{border-color:#28754d}.boost-level-line{height:6px;background:#5c5e67;border-radius:99px;position:absolute;left:48px;right:0;top:31px}.boost-level-card.active .boost-level-line{background:linear-gradient(90deg,#ff66e5,#d94cff)}.boost-level-gem{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#676973;color:#fff;position:relative;z-index:2;margin-bottom:19px}.boost-level-card.active .boost-level-gem{background:#e85ddd}.boost-level-card h3{font-size:17px;margin:0 0 16px}.boost-perks{display:grid;gap:10px;color:#e6e7ea;font-size:13px;line-height:1.35}.boost-level-foot{margin-top:auto;padding-top:18px;font-weight:800;font-size:13px;color:#b5bac1}.boost-level-card.active .boost-level-foot{color:#36ba73}.boost-settings-actions{display:flex;gap:10px;align-items:center}.boost-btn-purple{border:0;border-radius:8px;padding:11px 16px;background:#5865f2;color:#fff;font-weight:850;cursor:pointer}.boost-btn-purple:hover{background:#6875f5}.boost-btn-purple:disabled{opacity:.45;cursor:not-allowed}.boost-activity{margin-top:28px}.boost-activity-list{display:grid;gap:8px;margin-top:12px}.boost-activity-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;background:#23242a}.boost-activity-avatar{width:34px;height:34px;border-radius:50%;background:#35363e center/cover no-repeat;display:grid;place-items:center;font-weight:900}.boost-activity-row strong{min-width:0;overflow:hidden;text-overflow:ellipsis}.boost-activity-row span:last-child{margin-left:auto;color:#e85ddd;font-weight:850}.server-tag-settings{max-width:760px}.server-tag-lock{padding:22px;border:1px solid #3a3c43;border-radius:14px;background:#202126;display:flex;gap:15px;align-items:flex-start}.server-tag-editor{margin-top:20px;padding:22px;border:1px solid #3a3c43;border-radius:14px;background:#202126}.server-tag-preview{height:98px;border-radius:11px;background:linear-gradient(135deg,#292b32,#1b1c20);display:flex;align-items:center;justify-content:center;margin-bottom:20px}.server-tag-user{display:flex;align-items:center;gap:10px;font-weight:900}.server-tag-avatar{width:38px;height:38px;border-radius:50%;background:#3a3c44 center/cover no-repeat;display:grid;place-items:center}.server-tag-badge,.member-server-tag,.message-server-tag{display:inline-flex;align-items:center;gap:3px;height:20px;padding:0 6px;border:1px solid #4b4d55;border-radius:4px;background:#2b2d32;color:#e7e8ea;font-size:11px;font-weight:900;line-height:1;white-space:nowrap}.server-tag-badge b,.member-server-tag b,.message-server-tag b{color:#d66af0;font-size:11px}.server-tag-fields{display:grid;grid-template-columns:170px 1fr;gap:16px}.server-tag-icon-grid{display:grid;grid-template-columns:repeat(5,42px);gap:8px}.server-tag-icon{width:42px;height:42px;border:1px solid #454750;border-radius:8px;background:#2b2d32;color:#e8e9ed;font-size:19px;cursor:pointer}.server-tag-icon.active{border-color:#5865f2;box-shadow:0 0 0 1px #5865f2;background:#34364a}.server-tag-help{font-size:13px;color:#b5bac1;line-height:1.45;margin-top:8px}.server-tag-save{display:flex;justify-content:flex-end;margin-top:20px}.boost-mini-progress{height:8px;border-radius:99px;background:#3b2d41;overflow:hidden;margin-top:10px}.boost-mini-progress span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#c04ccf,#ed70e4)}@media(max-width:900px){.boost-levels{grid-template-columns:1fr}.server-tag-fields{grid-template-columns:1fr}.boost-settings-hero{flex-direction:column}}
+</style>
 </head>
 
 <body>
@@ -1129,6 +1132,76 @@
             </div>
 
             <div id="sticker-list" class="media-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-boosts" class="settings-page">
+        <div class="boost-settings-shell">
+          <div class="boost-settings-hero">
+            <div style="display:flex;gap:14px">
+              <div class="boost-crystal">◇</div>
+              <div class="boost-settings-copy">
+                <h1 class="settings-title">Бусты сервера</h1>
+                <p class="settings-desc">Бусты открывают бонусы для всех участников. Каждый активный уровень Nitro даёт ещё два доступных буста.</p>
+              </div>
+            </div>
+          </div>
+          <div class="boost-summary-card">
+            <div>
+              <div class="boost-summary-count"><span>◇</span> <b id="settings-boost-total">{{ boost_status.total_boosts }}</b> бустов</div>
+              <div id="settings-boost-level-label" class="hint" style="margin-top:5px">{{ boost_status.level }}-й уровень сервера</div>
+              <div class="boost-mini-progress"><span id="settings-boost-progress" style="width:{{ boost_status.progress_percent }}%"></span></div>
+            </div>
+            <div class="boost-settings-actions">
+              <button id="settings-remove-boost" class="gray-btn" type="button" {% if not boost_status.viewer.allocated_here %}hidden{% endif %}>Забрать 1 буст</button>
+              <button id="settings-add-boost" class="boost-btn-purple" type="button" {% if not boost_status.viewer.remaining %}disabled{% endif %}>◇ Дать буст</button>
+            </div>
+          </div>
+          <div class="boost-levels">
+            <article class="boost-level-card {{ 'active' if boost_status.total_boosts >= 2 else '' }}">
+              <div class="boost-level-line"></div><div class="boost-level-gem">◇</div><h3>1-й уровень</h3>
+              <div class="boost-perks"><span>☺ 100 слотов для эмодзи</span><span>◒ 15 слотов для стикеров</span><span>GIF Анимированный значок сервера</span><span>◉ Более высокое качество звука</span></div>
+              <div class="boost-level-foot">◇ 2 буста · {{ 'Активировано' if boost_status.total_boosts >= 2 else 'Неактивно' }}</div>
+            </article>
+            <article class="boost-level-card {{ 'active' if boost_status.total_boosts >= 5 else '' }}">
+              <div class="boost-level-line"></div><div class="boost-level-gem">◇</div><h3>2-й уровень</h3>
+              <div class="boost-perks"><span>↗ Стримы в разрешении HD</span><span>↑ Загрузка файлов до 50 МБ</span><span>⬡ Значки пользовательских ролей</span><span>▣ Баннер сервера</span></div>
+              <div class="boost-level-foot">◇ 5 бустов · {{ 'Активировано' if boost_status.total_boosts >= 5 else 'Неактивно' }}</div>
+            </article>
+            <article class="boost-level-card {{ 'active' if boost_status.total_boosts >= 7 else '' }}">
+              <div class="boost-level-line"></div><div class="boost-level-gem">◇</div><h3>3-й уровень</h3>
+              <div class="boost-perks"><span>★ Пользовательская ссылка-приглашение</span><span>↑ Загрузка файлов до 100 МБ</span><span>◉ Лучшее качество звука</span><span>GIF Анимированный баннер</span></div>
+              <div class="boost-level-foot">◇ 7 бустов · {{ 'Активировано' if boost_status.total_boosts >= 7 else 'Неактивно' }}</div>
+            </article>
+          </div>
+          <div class="boost-activity">
+            <h2>Недавняя активность</h2>
+            <div id="settings-boost-activity" class="boost-activity-list">
+              {% for item in boost_status.activity %}
+              <div class="boost-activity-row"><span class="boost-activity-avatar" {% if item.avatar_url %}style="background-image:url('{{ item.avatar_url }}')"{% endif %}>{% if not item.avatar_url %}{{ item.username[:1]|upper }}{% endif %}</span><strong>{{ item.display_name }}</strong><span>◇ {{ item.amount }}</span></div>
+              {% else %}<div class="hint">Пока никто не дал серверу буст.</div>{% endfor %}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-tag" class="settings-page">
+        <div class="server-tag-settings">
+          <h1 class="settings-title">Тег сервера</h1>
+          <p class="settings-desc">Короткий тег выбранного сервера отображается рядом с именем участника в чатах и списке участников.</p>
+          {% if not boost_status.tag.unlocked %}
+          <div class="server-tag-lock"><div class="boost-crystal">◇</div><div><h2 style="margin:0 0 7px">Нужно 3 буста</h2><p class="settings-desc" style="margin:0">Сейчас у сервера {{ boost_status.total_boosts }}. Разблокируйте бонус «Тег сервера», чтобы настроить его.</p></div></div>
+          {% endif %}
+          <div class="server-tag-editor" {% if not boost_status.tag.unlocked %}style="opacity:.45;pointer-events:none"{% endif %}>
+            <div class="server-tag-preview">
+              <div class="server-tag-user"><span class="server-tag-avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}')"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}</span><span>{{ account.display_name or account.username }}</span><span class="server-tag-badge"><b id="server-tag-preview-icon">{{ boost_status.tag.icon_glyph }}</b><span id="server-tag-preview-text">{{ boost_status.tag.text or 'TAG' }}</span></span></div>
+            </div>
+            <div class="server-tag-fields">
+              <div class="field"><label>Тег</label><input id="server-tag-text" maxlength="4" value="{{ boost_status.tag.text }}" placeholder="TAG" autocomplete="off"><div class="server-tag-help">2–4 латинских буквы или цифры.</div></div>
+              <div><div class="field"><label>Значок</label></div><div id="server-tag-icons" class="server-tag-icon-grid">{% for icon in server_tag_icons %}<button class="server-tag-icon {{ 'active' if icon.id == boost_status.tag.icon else '' }}" type="button" data-icon="{{ icon.id }}" data-glyph="{{ icon.glyph }}">{{ icon.glyph }}</button>{% endfor %}</div></div>
+            </div>
+            <div class="server-tag-save"><button id="server-tag-save" class="boost-btn-purple" type="button">Сохранить тег</button></div>
           </div>
         </div>
       </section>
@@ -1571,7 +1644,7 @@
     }
 
     function switchTab(tab) {
-      const known = ['profile', 'emojis', 'stickers', 'members', 'bans'];
+      const known = ['profile', 'tag', 'boosts', 'emojis', 'stickers', 'members', 'bans'];
       const page = known.includes(tab) ? tab : 'placeholder';
       document.querySelectorAll('.settings-page').forEach(section => {
         section.classList.toggle('active', section.id === `page-${page}`);
@@ -1788,6 +1861,105 @@
       await fetch(`/community/api/servers/${SERVER_ID}/stickers/${id}`, { method: 'DELETE', credentials: 'same-origin' });
       loadStickers();
     }
+
+    let settingsBoostStatus = {{ boost_status|tojson }};
+    let selectedServerTagIcon = {{ boost_status.tag.icon|tojson }};
+
+    function renderSettingsBoosts(status) {
+      settingsBoostStatus = status;
+      const total = document.getElementById('settings-boost-total');
+      const label = document.getElementById('settings-boost-level-label');
+      const progress = document.getElementById('settings-boost-progress');
+      const add = document.getElementById('settings-add-boost');
+      const remove = document.getElementById('settings-remove-boost');
+      if (total) total.textContent = String(status.total_boosts || 0);
+      if (label) label.textContent = `${status.level || 0}-й уровень сервера`;
+      if (progress) progress.style.width = `${status.progress_percent || 0}%`;
+      if (add) add.disabled = Number(status.viewer?.remaining || 0) < 1;
+      if (remove) remove.hidden = Number(status.viewer?.allocated_here || 0) < 1;
+      document.querySelectorAll('.boost-level-card').forEach((card, index) => {
+        const required = [2, 5, 7][index];
+        const active = Number(status.total_boosts || 0) >= required;
+        card.classList.toggle('active', active);
+        const foot = card.querySelector('.boost-level-foot');
+        if (foot) foot.textContent = `◇ ${required} буст${required === 2 ? 'а' : 'ов'} · ${active ? 'Активировано' : 'Неактивно'}`;
+      });
+      const activity = document.getElementById('settings-boost-activity');
+      if (activity) {
+        activity.innerHTML = (status.activity || []).length ? status.activity.map(item => `
+          <div class="boost-activity-row">
+            <span class="boost-activity-avatar" style="${item.avatar_url ? `background-image:url('${escapeHtml(item.avatar_url)}')` : ''}">${item.avatar_url ? '' : escapeHtml((item.username || '?').slice(0,1).toUpperCase())}</span>
+            <strong>${escapeHtml(item.display_name || item.username)}</strong><span>◇ ${Number(item.amount || 0)}</span>
+          </div>`).join('') : '<div class="hint">Пока никто не дал серверу буст.</div>';
+      }
+    }
+
+    async function changeSettingsBoost(delta) {
+      const button = delta > 0 ? document.getElementById('settings-add-boost') : document.getElementById('settings-remove-boost');
+      if (button) button.disabled = true;
+      try {
+        const response = await fetch(`/community/api/servers/${SERVER_ID}/boosts`, {
+          method: 'POST', credentials: 'same-origin',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({delta}),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.ok) {
+          const messages = {
+            nitro_required: 'Для бустов нужна активная подписка Nitro',
+            no_boosts_left: 'Все доступные бусты уже распределены',
+            nothing_to_remove: 'На этом сервере нет вашего буста',
+          };
+          showToast(messages[data.error] || 'Не удалось изменить буст');
+          return;
+        }
+        renderSettingsBoosts(data.status);
+        showToast(delta > 0 ? 'Сервер получил буст' : 'Буст возвращён');
+      } catch (error) {
+        showToast('Ошибка соединения');
+      } finally {
+        renderSettingsBoosts(settingsBoostStatus);
+      }
+    }
+
+    document.getElementById('settings-add-boost')?.addEventListener('click', () => changeSettingsBoost(1));
+    document.getElementById('settings-remove-boost')?.addEventListener('click', () => changeSettingsBoost(-1));
+
+    document.querySelectorAll('.server-tag-icon').forEach(button => {
+      button.addEventListener('click', () => {
+        selectedServerTagIcon = button.dataset.icon || 'gem';
+        document.querySelectorAll('.server-tag-icon').forEach(item => item.classList.toggle('active', item === button));
+        const preview = document.getElementById('server-tag-preview-icon');
+        if (preview) preview.textContent = button.dataset.glyph || '◆';
+      });
+    });
+    document.getElementById('server-tag-text')?.addEventListener('input', event => {
+      const clean = String(event.target.value || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4);
+      event.target.value = clean;
+      const preview = document.getElementById('server-tag-preview-text');
+      if (preview) preview.textContent = clean || 'TAG';
+    });
+    document.getElementById('server-tag-save')?.addEventListener('click', async event => {
+      const tagText = document.getElementById('server-tag-text')?.value || '';
+      event.currentTarget.disabled = true;
+      try {
+        const response = await fetch(`/community/api/servers/${SERVER_ID}/tag`, {
+          method:'POST', credentials:'same-origin',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({tag_text:tagText, tag_icon:selectedServerTagIcon}),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.ok) {
+          showToast(data.error === 'tag_locked' ? 'Нужно минимум 3 буста' : 'Тег: 2–4 латинские буквы или цифры');
+          return;
+        }
+        showToast('Тег сервера сохранён');
+      } catch (error) {
+        showToast('Ошибка соединения');
+      } finally {
+        event.currentTarget.disabled = false;
+      }
+    });
 
     const initialTab = location.hash ? location.hash.slice(1) : 'profile';
     switchTab(initialTab || 'profile');
