@@ -1489,7 +1489,7 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
     <button type="button" class="menu-item" onclick="openChannelCreateModal()"><span>Создать канал</span><span class="menu-ico"><svg class="menu-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg></span></button>
     <button type="button" class="menu-item" onclick="openCategoryCreateModal()"><span>Создать категорию</span><span class="menu-ico"><svg class="menu-svg" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M12 11v6M9 14h6"/></svg></span></button>
     {% endif %}
-    <button type="button" class="menu-item" onclick="showActionToast('События поки заглушка')"><span>Создать событие</span><span class="menu-ico"><svg class="menu-svg" viewBox="0 0 24 24"><path d="M8 2v4M16 2v4M3 10h18"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M12 14v4M10 16h4"/></svg></span></button>
+    {% if can_manage %}<button type="button" class="menu-item" onclick="openEventWizard()"><span>Создать событие</span><span class="menu-ico"><svg class="menu-svg" viewBox="0 0 24 24"><path d="M8 2v4M16 2v4M3 10h18"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M12 14v4M10 16h4"/></svg></span></button>{% endif %}
     <button type="button" class="menu-item" onclick="showActionToast('Каталог приложений поки заглушка')"><span>Каталог приложений</span><span class="menu-ico"><svg class="menu-svg" viewBox="0 0 24 24"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg></span></button>
     <div class="menu-divider"></div>
     <button type="button" class="menu-item" onclick="showActionToast('Список каналів показаний')"><span>Показать все каналы</span><span class="menu-ico checked"><svg class="menu-svg" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12l3 3 5-6"/></svg></span></button>
@@ -4949,5 +4949,6 @@ if (typeof window.openSelfProfileSettings !== 'function') {
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
 })();
 </script>
+{% include "_server_events_component.html" %}
 </body>
 </html>
