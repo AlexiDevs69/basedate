@@ -31,6 +31,10 @@ class Account(Base):
     # (/community/profile/<username>).
     username: Mapped[str] = mapped_column(String(32), unique=True, index=True, nullable=False)
 
+    # Public nickname shown in chats and profile cards. ``username`` remains
+    # the stable @handle used for login, search, mentions, DMs and profile URLs.
+    display_name: Mapped[str | None] = mapped_column(String(32), nullable=True)
+
     # --- Email + password login (both nullable -- a Telegram-only account
     # simply never sets these) ---
     email: Mapped[str | None] = mapped_column(String(255), unique=True, index=True, nullable=True)
