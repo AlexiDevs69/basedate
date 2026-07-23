@@ -5017,9 +5017,16 @@ if (typeof window.openSelfProfileSettings !== 'function') {
   .ah-event-detail-dialog{width:min(680px,calc(100vw - 32px));display:flex;flex-direction:column}.ah-event-detail-header{display:flex;align-items:center;padding:18px 24px 14px}.ah-event-detail-header h2{min-width:0;margin:0;font-size:19px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ah-event-detail-cover{margin:0 24px;height:240px;border-radius:8px;background:linear-gradient(135deg,#30323a,#111214) center/cover no-repeat}.ah-event-tabs{display:flex;gap:52px;margin-top:18px;padding:0 24px;border-bottom:1px solid #3a3c43}.ah-event-tab{height:44px;border:0;border-bottom:2px solid transparent;background:transparent;color:#b5bac1;font-weight:800;cursor:pointer}.ah-event-tab.active{border-color:#f2f3f5;color:#f2f3f5}.ah-event-detail-body{min-height:260px;max-height:390px;overflow:auto;padding:20px 24px}.ah-event-detail-pane{display:none}.ah-event-detail-pane.active{display:block}.ah-event-detail-time{display:flex;align-items:center;gap:9px;color:#8190ff;font-weight:800}.ah-event-detail-time .ah-event-icon{width:21px;height:21px}.ah-event-detail-body h3{margin:16px 0 13px;font-size:18px}.ah-event-detail-meta{display:grid;gap:10px;color:#dbdee1}.ah-event-detail-meta-row{display:flex;align-items:center;gap:9px}.ah-event-detail-meta-row .ah-event-icon{width:19px;height:19px;color:#949ba4}.ah-event-detail-description{margin-top:16px;color:#dbdee1;line-height:1.5;white-space:pre-wrap}.ah-event-attendee{display:flex;align-items:center;gap:10px;padding:8px 0}.ah-event-attendee .ah-event-avatar{width:32px;height:32px;border:0}.ah-event-detail-foot{display:flex;justify-content:flex-end;gap:9px;padding:14px 24px 24px}.ah-event-more{width:41px;padding:0}.ah-event-more-wrap{position:relative}.ah-event-more-menu{position:absolute;right:0;bottom:46px;display:none;width:174px;padding:6px;border:1px solid #454750;border-radius:7px;background:#2b2d31;box-shadow:0 12px 32px rgba(0,0,0,.55)}.ah-event-more-menu.open{display:block}.ah-event-delete{width:100%;height:34px;border:0;border-radius:4px;background:transparent;color:#ff6b6f;text-align:left;padding:0 9px;font-weight:750;cursor:pointer}.ah-event-delete:hover{background:#da373c;color:#fff}
   .ah-event-confetti{position:fixed;z-index:2147483640;width:9px;height:17px;border-radius:2px;pointer-events:none;animation:ahEventConfetti 1.8s cubic-bezier(.12,.72,.16,1) forwards}
   .ah-event-sidebar-entry{width:100%;margin:2px 0 8px!important;border:0;background:transparent;text-align:left;font:inherit;cursor:pointer}.ah-event-sidebar-entry svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.ah-event-sidebar-count{margin-left:auto;color:#b5bac1;font-size:12px}
+  .ah-event-now-panel{margin:-10px -8px 10px;padding:12px 18px 10px;border-bottom:1px solid #24262c;background:#111114;color:#f2f3f5;animation:ahEventNowIn .16s ease both}
+  .ah-event-now-head{height:24px;display:flex;align-items:center;gap:7px;color:#23a55a;font-size:12px;font-weight:850}.ah-event-now-dot{width:10px;height:10px;flex:0 0 auto;border-radius:50%;background:#23a55a;box-shadow:0 0 0 3px rgba(35,165,90,.1)}
+  .ah-event-now-close{width:26px;height:26px;margin-left:auto;border:0;border-radius:5px;background:transparent;color:#949ba4;font:400 24px/1 var(--font-sans,'Inter',sans-serif);cursor:pointer}.ah-event-now-close:hover{background:#2b2d31;color:#dbdee1}
+  .ah-event-now-title{margin:7px 0 8px;overflow:hidden;color:#f2f3f5;font-size:15px;font-weight:850;line-height:1.25;text-overflow:ellipsis;white-space:nowrap}
+  .ah-event-now-location{min-width:0;display:flex;align-items:center;gap:7px;overflow:hidden;color:#949ba4;font-size:12px;line-height:18px;white-space:nowrap}.ah-event-now-location .ah-event-icon{width:17px;height:17px;flex:0 0 auto}.ah-event-now-location span:last-child{overflow:hidden;text-overflow:ellipsis}
+  .ah-event-now-details{width:100%;height:40px;margin-top:10px;border:0;border-radius:8px;background:#248046;color:#fff;font:850 13px/1 var(--font-sans,'Inter',sans-serif);cursor:pointer}.ah-event-now-details:hover{background:#1a6334}.ah-event-now-details:active{transform:translateY(1px)}
   @keyframes ahEventFade{from{opacity:0}to{opacity:1}}@keyframes ahEventStepIn{from{opacity:0;transform:translateX(8px)}to{opacity:1;transform:none}}@keyframes ahEventDrop{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}@keyframes ahEventConfetti{0%{opacity:1;transform:translate(0,0) rotate(0)}70%{opacity:1}100%{opacity:0;transform:translate(var(--tx),var(--ty)) rotate(var(--rot))}}
+  @keyframes ahEventNowIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
   @media(max-width:560px){.ah-event-backdrop{padding:0;align-items:flex-end}.ah-event-dialog{width:100%;max-height:92vh;border-radius:14px 14px 0 0}.ah-event-date-grid{grid-template-columns:1fr}.ah-event-detail-cover{height:180px;margin:0 15px}.ah-event-detail-header,.ah-event-tabs,.ah-event-detail-body,.ah-event-detail-foot{padding-left:15px;padding-right:15px}.ah-event-card-cover{height:112px}}
-  @media(prefers-reduced-motion:reduce){.ah-event-backdrop.open,.ah-event-step.active,.ah-event-select.open .ah-event-select-menu{animation:none}.ah-event-confetti{display:none}}
+  @media(prefers-reduced-motion:reduce){.ah-event-backdrop.open,.ah-event-step.active,.ah-event-select.open .ah-event-select-menu,.ah-event-now-panel{animation:none}.ah-event-confetti{display:none}}
 </style>
 
 <div id="ah-event-list-modal" class="ah-event-backdrop" aria-hidden="true">
@@ -5144,7 +5151,7 @@ if (typeof window.openSelfProfileSettings !== 'function') {
   const CAN_MANAGE={{ 'true' if can_manage else 'false' }};
   const CURRENT_ACCOUNT={id:{{ account.id }},username:{{ account.username|tojson }},display_name:{{ (account.display_name or account.username)|tojson }},avatar_url:{{ (account.avatar_url or '')|tojson }}};
   let EVENTS={{ events|tojson }};
-  let currentEventId=null,currentStep=1,eventCoverFile=null,eventCoverUrl="";
+  let currentEventId=null,currentStep=1,eventCoverFile=null,eventCoverUrl="",dismissedOngoingEventId=null;
   const recurrenceLabels={none:"Не повторяется",weekly:"Еженедельно",biweekly:"Раз в две недели",monthly:"Ежемесячно",yearly:"Ежегодно",daily:"Каждый день",weekdays:"Каждый будний день"};
   const $=(s,r=document)=>r.querySelector(s);
   const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
@@ -5175,8 +5182,22 @@ if (typeof window.openSelfProfileSettings !== 'function') {
     updateSidebarEventEntry();
   }
   function updateSidebarEventEntry(){
-    const entry=$(".ah-event-sidebar-entry");if(!entry)return;const count=$(".ah-event-sidebar-count",entry);if(count)count.textContent=EVENTS.length?String(EVENTS.length):"";
-    const label=$(".ah-event-sidebar-label",entry);if(label)label.textContent=EVENTS.length===1?"1 событие":EVENTS.length>1?EVENTS.length+" событий":"Мероприятия";
+    const entry=$(".ah-event-sidebar-entry");if(entry){const count=$(".ah-event-sidebar-count",entry);if(count)count.textContent=EVENTS.length?String(EVENTS.length):"";
+    const label=$(".ah-event-sidebar-label",entry);if(label)label.textContent=EVENTS.length===1?"1 событие":EVENTS.length>1?EVENTS.length+" событий":"Мероприятия"}
+    renderOngoingEventPanel();
+  }
+  function getOngoingEvent(){
+    const now=Date.now();
+    return EVENTS.filter(item=>{const start=localDate(item.start_at),end=localDate(item.end_at);return start&&end&&start.getTime()<=now&&end.getTime()>now}).sort((a,b)=>new Date(a.start_at)-new Date(b.start_at))[0]||null;
+  }
+  function renderOngoingEventPanel(){
+    const tree=$(".server-channel-tree");if(!tree)return;const active=getOngoingEvent();let panel=$(".ah-event-now-panel",tree);
+    if(!active||Number(active.id)===Number(dismissedOngoingEventId)){panel?.remove();return}
+    if(!panel){panel=document.createElement("section");panel.className="ah-event-now-panel";tree.prepend(panel)}
+    panel.dataset.eventId=String(active.id);
+    panel.innerHTML='<div class="ah-event-now-head"><span class="ah-event-now-dot"></span><span>Происходит сейчас</span><button class="ah-event-now-close" type="button" aria-label="Скрыть">×</button></div><div class="ah-event-now-title">'+esc(active.title)+'</div><div class="ah-event-now-location">'+iconLocation+'<span>'+esc(active.location||"Место не указано")+'</span></div><button class="ah-event-now-details" type="button">Сведения о событии</button>';
+    $(".ah-event-now-close",panel).onclick=()=>{dismissedOngoingEventId=Number(active.id);panel.remove()};
+    $(".ah-event-now-details",panel).onclick=()=>openEventDetail(active.id);
   }
   function injectSidebarEventEntry(){
     const tree=$(".server-channel-tree");if(!tree||$(".ah-event-sidebar-entry",tree))return;
@@ -5271,6 +5292,7 @@ if (typeof window.openSelfProfileSettings !== 'function') {
 
   function init(){
     injectSidebarEventEntry();renderEventList();
+    window.setInterval(renderOngoingEventPanel,15000);
     $("#ah-event-next")?.addEventListener("click",nextEventStep);$("#ah-event-back")?.addEventListener("click",previousEventStep);
     $("#ah-event-location")?.addEventListener("input",e=>$("#ah-event-location-hidden").value=e.target.value.trim());
     $$(".ah-event-select-option").forEach(option=>option.addEventListener("click",()=>{$("#ah-event-recurrence-hidden").value=option.dataset.value;$("#ah-event-recurrence-label").textContent=recurrenceLabels[option.dataset.value]||option.textContent;$$(".ah-event-select-option").forEach(o=>o.classList.toggle("active",o===option));$("#ah-event-recurrence-select").classList.remove("open")}));
