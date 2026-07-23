@@ -546,6 +546,7 @@ class AccountRealtimeManager:
             "type": "presence",
             "account_id": account_id,
             "username": profile.get("username") or "",
+            "display_name": profile.get("display_name") or profile.get("username") or "",
             "online": visible,
             "status": raw_status if visible else "offline",
         }
@@ -810,6 +811,7 @@ def _account_payload(account) -> dict:
     return {
         "id": account.id,
         "username": account.username,
+        "display_name": (getattr(account, "display_name", None) or account.username),
         "avatar_url": account.avatar_url,
         "banner_url": account.banner_url,
         "role_label": account.role_label,
@@ -847,6 +849,7 @@ def _missing_author_payload(author_id: int | None) -> dict:
     return {
         "id": int(author_id or 0),
         "username": "видалений юзер",
+        "display_name": "видалений юзер",
         "avatar_url": "",
         "banner_url": "",
         "role_label": "member",
@@ -1913,8 +1916,7 @@ async def api_forward_targets(request: Request, db: AsyncSession = Depends(get_d
         return JSONResponse({"error": "not_logged_in", "dms": [], "channels": []}, status_code=401)
 
     # Keep this endpoint bulletproof: the forward modal should never break the page.
-    # The real bug was an AttributeError in crud.list_forward_targets() when an
-    # Account has no display_name column/attribute. If another edge case appears,
+    # A legacy deployment once missed the display_name migration. If another edge case appears,
     # return an empty list and print traceback to Render logs instead of throwing
     # an HTML 500 that makes fetch().json() explode.
     try:
@@ -3435,6 +3437,7 @@ def _blocked_account_payload(account, created_at=None) -> dict:
     return {
         "id": int(account.id),
         "username": account.username,
+        "display_name": getattr(account, "display_name", None) or account.username,
         "avatar_url": account.avatar_url or "",
         "banner_url": account.banner_url or "",
         "bio": account.bio or "",
@@ -3567,6 +3570,7 @@ async def settings_form(request: Request, db: AsyncSession = Depends(get_db)):
 @router.post("/settings")
 async def settings_submit(
     request: Request,
+    display_name: str = Form(""),
     avatar_url: str = Form(""),
     banner_url: str = Form(""),
     bio: str = Form(""),
@@ -3582,12 +3586,14 @@ async def settings_submit(
     avatar_final = await _profile_image_url_from_form(avatar_file, avatar_url, account.id, "avatar")
     banner_final = await _profile_image_url_from_form(banner_file, banner_url, account.id, "banner")
 
-    await crud.update_own_profile(
+    updated = await crud.update_own_profile(
         db, account.id,
+        display_name=display_name,
         avatar_url=avatar_final,
         banner_url=banner_final,
         bio=bio.strip(),
     )
+    await account_realtime.set_profile_and_broadcast(_account_payload(updated))
     target = _safe_next_url(next_url, "/community")
     return RedirectResponse(url=target, status_code=303)
 
