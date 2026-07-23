@@ -1509,17 +1509,17 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
   </div>
 </div>
     <div class="sidebar-scroll">{% if server.description %}<div class="server-desc">{{ server.description }}</div>{% endif %}<a href="/community/servers/{{ server.id }}" class="chan-link active">⌂ Огляд</a><div class="sidebar-label-row"><div class="sidebar-label">Канали</div>{% if can_manage %}<button type="button" class="sidebar-plus" onclick="openModal('channel-modal')" title="Створити канал">+</button>{% endif %}</div>{% for ch in channels %}<div class="chan-row "><a href="/community/servers/{{ server.id }}/channel/{{ ch.id }}" data-mention-channel-key="{{ server.id }}:{{ ch.id }}" class="chan-link "><span class="chan-symbol">#</span><span class="chan-name">{{ ch.name }}</span>{% set cc = mention_counts.channel_by_id.get((server.id|string) ~ ':' ~ (ch.id|string), 0) %}<span class="ah-mention-count" {% if not cc %}hidden{% endif %}>{{ '99+' if cc > 99 else cc }}</span></a><div class="chan-actions"><button type="button" class="chan-action-btn" data-channel-id="{{ ch.id }}" data-channel-name="{{ ch.name }}" onclick="openChannelInviteModal(event, this)" title="Пригласить"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></button>{% if can_manage %}<a class="chan-action-btn" href="/community/servers/{{ server.id }}/channel/{{ ch.id }}/settings" onclick="event.stopPropagation()" title="Настройки канала"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.33 1.82 2 2 0 1 1-3.34 0A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.82-.33 2 2 0 1 1 0-3.34A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .33-1.82 2 2 0 1 1 3.34 0A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 .6 1 1.65 1.65 0 0 0 1.82.33 2 2 0 1 1 0 3.34A1.65 1.65 0 0 0 19.4 15Z"/></svg></a>{% endif %}</div></div>{% endfor %}</div>
-    <div class="account-panel mini-profile-trigger" data-mini-username="{{ account.username|e }}" data-mini-avatar="{{ account.avatar_url or '' }}" data-mini-banner="{{ account.banner_url or '' }}" data-mini-status="{{ account.account_status or 'online' }}" data-mini-role="{{ account.role_label or 'online' }}" data-mini-effect="{{ account.name_effect or 'none' }}" data-mini-font="{{ account.name_font or 'default' }}" data-mini-c1="{{ account.role_color_start or '#f5576c' }}" data-mini-c2="{{ account.role_color_end or '#7367f0' }}" data-mini-profile="/community/profile/{{ account.username }}" data-mini-bio="{{ account.bio or '' }}"><span class="account-avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}');"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}</span><span class="account-meta"><span class="visual-name account-name name-{{ account.name_effect or 'none' }} font-{{ account.name_font or 'default' }}" style="--name-c1: {{ account.role_color_start or '#f5576c' }}; --name-c2: {{ account.role_color_end or '#7367f0' }};">{{ account.username }}</span><span class="account-status">{{ {'online':'В мережі','idle':'Неактивний','dnd':'Не турбувати','invisible':'Невидимий'}.get(account.account_status or 'online', 'В мережі') }}</span><small class="account-username">@{{ account.username }}</small></span><span class="account-actions"><button class="voice-control" data-audio-kind="mic" type="button" onclick="event.stopPropagation();toggleAudioControl(this,'mic')" title="Mute"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button><button class="voice-control" data-audio-kind="headphones" type="button" onclick="event.stopPropagation();toggleAudioControl(this,'headphones')" title="Deafen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg></button><button type="button" onclick="event.stopPropagation();openUserSettings()" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.4 1.08V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.08-.4H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6A1.65 1.65 0 0 0 10.4 3V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 16 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.15.32.36.6.6 1 .26.25.64.4 1.08.4H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51.6z"/></svg></button></span></div>
+    <div class="account-panel mini-profile-trigger" data-mini-username="{{ account.username|e }}" data-mini-display="{{ account.display_name or account.username }}" data-mini-avatar="{{ account.avatar_url or '' }}" data-mini-banner="{{ account.banner_url or '' }}" data-mini-status="{{ account.account_status or 'online' }}" data-mini-role="{{ account.role_label or 'online' }}" data-mini-effect="{{ account.name_effect or 'none' }}" data-mini-font="{{ account.name_font or 'default' }}" data-mini-c1="{{ account.role_color_start or '#f5576c' }}" data-mini-c2="{{ account.role_color_end or '#7367f0' }}" data-mini-profile="/community/profile/{{ account.username }}" data-mini-bio="{{ account.bio or '' }}"><span class="account-avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}');"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}</span><span class="account-meta"><span class="visual-name account-name name-{{ account.name_effect or 'none' }} font-{{ account.name_font or 'default' }}" style="--name-c1: {{ account.role_color_start or '#f5576c' }}; --name-c2: {{ account.role_color_end or '#7367f0' }};">{{ account.display_name or account.username }}</span><span class="account-status">{{ {'online':'В мережі','idle':'Неактивний','dnd':'Не турбувати','invisible':'Невидимий'}.get(account.account_status or 'online', 'В мережі') }}</span><small class="account-username">@{{ account.username }}</small></span><span class="account-actions"><button class="voice-control" data-audio-kind="mic" type="button" onclick="event.stopPropagation();toggleAudioControl(this,'mic')" title="Mute"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button><button class="voice-control" data-audio-kind="headphones" type="button" onclick="event.stopPropagation();toggleAudioControl(this,'headphones')" title="Deafen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg></button><button type="button" onclick="event.stopPropagation();openUserSettings()" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.4 1.08V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.08-.4H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6A1.65 1.65 0 0 0 10.4 3V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 16 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.15.32.36.6.6 1 .26.25.64.4 1.08.4H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51.6z"/></svg></button></span></div>
   </aside>
   <aside class="members-sidebar">
     <div class="members-title">Учасники — {{ members|length }}</div>
     {% for item in members %}
       {% set m = item.account %}
       {% if m %}
-      <a href="/community/profile/{{ m.username }}" class="member-row mini-profile-trigger profile-click" data-account-id="{{ m.id }}" data-mini-username="{{ m.username|e }}" data-mini-avatar="{{ m.avatar_url or '' }}" data-mini-banner="{{ m.banner_url or '' }}" data-mini-status="{{ account.account_status if m.id == account.id else (m.account_status or 'offline') }}" data-mini-role="{{ m.role_label or item.member.role }}" data-mini-effect="{{ m.name_effect or 'none' }}" data-mini-font="{{ m.name_font or 'default' }}" data-mini-c1="{{ m.role_color_start or '#f5576c' }}" data-mini-c2="{{ m.role_color_end or '#7367f0' }}" data-mini-profile="/community/profile/{{ m.username }}" data-mini-bio="{{ m.bio or '' }}">
+      <a href="/community/profile/{{ m.username }}" class="member-row mini-profile-trigger profile-click" data-account-id="{{ m.id }}" data-mini-username="{{ m.username|e }}" data-mini-display="{{ m.display_name or m.username }}" data-mini-avatar="{{ m.avatar_url or '' }}" data-mini-banner="{{ m.banner_url or '' }}" data-mini-status="{{ account.account_status if m.id == account.id else (m.account_status or 'offline') }}" data-mini-role="{{ m.role_label or item.member.role }}" data-mini-effect="{{ m.name_effect or 'none' }}" data-mini-font="{{ m.name_font or 'default' }}" data-mini-c1="{{ m.role_color_start or '#f5576c' }}" data-mini-c2="{{ m.role_color_end or '#7367f0' }}" data-mini-profile="/community/profile/{{ m.username }}" data-mini-bio="{{ m.bio or '' }}">
         <span class="member-avatar-wrap"><span class="member-avatar" {% if m.avatar_url %}style="background-image:url('{{ m.avatar_url }}');"{% endif %}>{% if not m.avatar_url %}{{ m.username[:1]|upper }}{% endif %}</span><span class="member-presence status-{{ account.account_status if m.id == account.id else (m.account_status or 'offline') }}"></span></span>
         <span class="member-info">
-          <span class="member-name-line"><span class="visual-name member-name name-{{ m.name_effect or 'none' }} font-{{ m.name_font or 'default' }}" style="--name-c1: {{ m.role_color_start or '#f5576c' }}; --name-c2: {{ m.role_color_end or '#7367f0' }};">{{ m.username }}</span>{% if m.id == server.owner_id %}<span class="server-owner-crown" aria-label="Власник сервера" data-tooltip="Власник сервера"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.3 7.2 7.7 11l4.1-6 4.3 6 4.6-3.8-1.8 10.1H5.1L3.3 7.2Zm2.3 12.1h12.8"/></svg></span>{% endif %}</span>
+          <span class="member-name-line"><span class="visual-name member-name name-{{ m.name_effect or 'none' }} font-{{ m.name_font or 'default' }}" style="--name-c1: {{ m.role_color_start or '#f5576c' }}; --name-c2: {{ m.role_color_end or '#7367f0' }};">{{ m.display_name or m.username }}</span>{% if m.id == server.owner_id %}<span class="server-owner-crown" aria-label="Власник сервера" data-tooltip="Власник сервера"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.3 7.2 7.7 11l4.1-6 4.3 6 4.6-3.8-1.8 10.1H5.1L3.3 7.2Zm2.3 12.1h12.8"/></svg></span>{% endif %}</span>
           <span class="member-role">{{ {'owner':'Власник','admin':'Адміністратор','member':'Учасник'}.get(item.member.role, item.member.role) }}</span>
         </span>
       </a>
@@ -1775,6 +1775,13 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(!name && dm) name=clean(txt($('.dm-name,.visual-name',dm)));
     if(!name && panel) name=selfName();
     if(!name) name=clean(txt(el))||selfName();
+    let display=el.dataset.miniDisplay||'';
+    if(!display && msg) display=clean(txt($('.msg-name,.message-head .visual-name,.comment-author,.post-name',msg)));
+    if(!display && mem) display=clean(txt($('.member-name,.visual-name',mem)));
+    if(!display && dm) display=clean(txt($('.dm-name,.visual-name',dm)));
+    if(!display && panel) display=clean(txt($('.account-name,.user-info b',panel)));
+    if(!display && clean(name).toLowerCase()===clean(CURRENT_USER).toLowerCase()) display={{ (account.display_name or account.username)|tojson }};
+    if(!display) display=name;
     let avatar=el.dataset.miniAvatar||'';
     if(!avatar && msg) avatar=bg($('.msg-avatar,.avatar,.post-avatar,.comment-avatar',msg));
     if(!avatar && mem) avatar=bg($('.member-avatar,.avatar',mem));
@@ -1807,12 +1814,12 @@ document.addEventListener('DOMContentLoaded',()=>{
       bio = ((bi && bi.value) || (bp && bp.textContent) || '').trim();
       if(/Ваш вайб|Додай опис/i.test(bio)) bio='';
     }
-    let isSelf = clean(name).toLowerCase() === clean(selfName()).toLowerCase();
+    let isSelf = clean(name).toLowerCase() === clean(CURRENT_USER).toLowerCase();
     let status=(el.dataset && el.dataset.miniStatus) || ((el.closest && el.closest('[data-mini-status]')) ? el.closest('[data-mini-status]').dataset.miniStatus : '') || 'offline';
     let html=(el.outerHTML||'')+(mem?mem.outerHTML:'')+(panel?panel.outerHTML:'');
     let st=html.match(/status-(online|idle|dnd|invisible|offline)/); if(st && (!status || status==='offline')) status=st[1];
     if(isSelf){ let d=$('#my-avatar-status,#modal-avatar-status'); if(d){ let cls=[...d.classList].find(x=>x.startsWith('status-')); if(cls) status=cls.replace('status-',''); } }
-    return {name:clean(name)||'user',avatar,banner,role,c1,c2,profile,isSelf,status,bio};
+    return {name:clean(name)||'user',display:clean(display)||clean(name)||'user',avatar,banner,role,c1,c2,profile,isSelf,status,bio};
   }
   function setAvatar(el,textEl,url,name){ if(!el)return; el.style.backgroundImage=url?`url('${safeUrl(url)}')`:''; if(textEl) textEl.textContent=url?'':(name||'?').slice(0,1).toUpperCase(); }
   function tintFromBanner(url,target){
@@ -1843,10 +1850,10 @@ document.addEventListener('DOMContentLoaded',()=>{
   function openMini(el,e){
     active=dataFrom(el); let pop=$('#ah-v3-mini'); if(!pop)return;
     pop.classList.toggle('self',!!active.isSelf); pop.style.setProperty('--ah-c1',active.c1); pop.style.setProperty('--ah-c2',active.c2); setBanner($('#ah-v3-banner'), active.banner, active.c1, active.c2);
-    setAvatar($('#ah-v3-avatar'),$('#ah-v3-avatar-text'),active.avatar,active.name); $('#ah-v3-name').textContent=active.name; $('#ah-v3-handle').textContent='@'+active.name; $('#ah-v3-role').textContent=active.role||'member'; const bioText=(active.bio||'').trim(); const noteTitle=$('#ah-v3-mini .ah-v3-note b'); if(noteTitle) noteTitle.textContent=bioText?'Опис профілю':'Міні-профіль'; $('#ah-v3-note-text').textContent=bioText || (active.isSelf?'Звідси можна змінити статус. Натисни на аватарку для повної картки.':'Натисни на аватарку, щоб відкрити повну картку профілю.'); let st=$('#ah-v3-status'); if(st) st.className='ah-v3-status '+(active.status||'offline'); let msg=$('#ah-v3-message'); if(msg){msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; msg.textContent=active.isSelf?'Редактировать профиль':'Message'} place(pop,e);
+    setAvatar($('#ah-v3-avatar'),$('#ah-v3-avatar-text'),active.avatar,active.display); $('#ah-v3-name').textContent=active.display; $('#ah-v3-handle').textContent='@'+active.name; $('#ah-v3-role').textContent=active.role||'member'; const bioText=(active.bio||'').trim(); const noteTitle=$('#ah-v3-mini .ah-v3-note b'); if(noteTitle) noteTitle.textContent=bioText?'Опис профілю':'Міні-профіль'; $('#ah-v3-note-text').textContent=bioText || (active.isSelf?'Звідси можна змінити статус. Натисни на аватарку для повної картки.':'Натисни на аватарку, щоб відкрити повну картку профілю.'); let st=$('#ah-v3-status'); if(st) st.className='ah-v3-status '+(active.status||'offline'); let msg=$('#ah-v3-message'); if(msg){msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; msg.textContent=active.isSelf?'Редактировать профиль':'Message'} place(pop,e);
   }
   function closeMini(){let p=$('#ah-v3-mini'); if(p)p.classList.remove('open')}
-  function openFull(){ if(!active)return; let ov=$('#ah-v3-overlay'); if(!ov)return; ov.style.setProperty('--ah-c1',active.c1); ov.style.setProperty('--ah-c2',active.c2); setBanner($('#ah-v3-full-banner'), active.banner, active.c1, active.c2); setAvatar($('#ah-v3-full-avatar'),$('#ah-v3-full-avatar-text'),active.avatar,active.name); $('#ah-v3-full-name').textContent=active.name; $('#ah-v3-full-handle').textContent='@'+active.name; $('#ah-v3-full-meta').textContent=active.isSelf?'Твоя картка AlexiHub.':'Картка користувача AlexiHub.'; $('#ah-v3-full-about').textContent=(active.bio||'').trim() || (active.isSelf?'Тут буде повний профіль, активність, ігри, інтеграції та нотатки.':'Швидкий перегляд профілю поверх поточної сторінки, без переходу зі сторінки.'); let msg=$('#ah-v3-full-message'); if(msg){ msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; } let op=$('#ah-v3-full-open'); if(op) op.href=active.profile; closeMini(); ov.classList.add('open'); }
+  function openFull(){ if(!active)return; let ov=$('#ah-v3-overlay'); if(!ov)return; ov.style.setProperty('--ah-c1',active.c1); ov.style.setProperty('--ah-c2',active.c2); setBanner($('#ah-v3-full-banner'), active.banner, active.c1, active.c2); setAvatar($('#ah-v3-full-avatar'),$('#ah-v3-full-avatar-text'),active.avatar,active.display); $('#ah-v3-full-name').textContent=active.display; $('#ah-v3-full-handle').textContent='@'+active.name; $('#ah-v3-full-meta').textContent=active.isSelf?'Твоя картка AlexiHub.':'Картка користувача AlexiHub.'; $('#ah-v3-full-about').textContent=(active.bio||'').trim() || (active.isSelf?'Тут буде повний профіль, активність, ігри, інтеграції та нотатки.':'Швидкий перегляд профілю поверх поточної сторінки, без переходу зі сторінки.'); let msg=$('#ah-v3-full-message'); if(msg){ msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; } let op=$('#ah-v3-full-open'); if(op) op.href=active.profile; closeMini(); ov.classList.add('open'); }
   function closeFull(){let ov=$('#ah-v3-overlay'); if(ov)ov.classList.remove('open')}
   document.addEventListener('click',function(e){
     if(e.target.closest('#ah-v3-mini,#ah-v3-overlay')) return;
@@ -1963,12 +1970,33 @@ document.addEventListener('DOMContentLoaded',()=>{
   </div>
 </div>
 
+<style id="ah-display-name-editor-css">
+.ah-profile-live-name.ah-display-name-editor{position:relative;display:block;width:max-content;max-width:100%;margin-top:10px;letter-spacing:0}
+.ah-display-name-view{min-width:0;max-width:100%;min-height:40px;margin-left:-8px;padding:3px 8px;border:1px solid transparent;border-radius:5px;background:transparent;color:#fff;display:flex;align-items:center;gap:7px;font:950 25px/1.15 var(--font-sans,Inter,system-ui,sans-serif);letter-spacing:-.04em;cursor:text;text-align:left;transition:border-color .12s ease,background .12s ease,box-shadow .12s ease}
+.ah-display-name-view span{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ah-display-name-view svg{width:16px;height:16px;flex:0 0 16px;fill:none;stroke:#b5bac1;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;opacity:0;transform:translateX(-3px);transition:.12s ease}
+.ah-display-name-view:hover,.ah-display-name-view:focus-visible{border-color:#4e5058;background:rgba(17,18,20,.22);outline:0}
+.ah-display-name-view:hover svg,.ah-display-name-view:focus-visible svg{opacity:1;transform:none}
+.ah-display-name-input{display:none;width:min(100%,350px);height:40px;margin-left:-8px;padding:0 9px;border:2px solid #5865f2;border-radius:6px;background:rgba(30,31,34,.94);color:#fff;outline:0;font:850 20px/1 var(--font-sans,Inter,system-ui,sans-serif);box-shadow:0 0 0 1px rgba(88,101,242,.2)}
+.ah-display-name-editor.editing{width:100%}.ah-display-name-editor.editing .ah-display-name-view{display:none}.ah-display-name-editor.editing .ah-display-name-input{display:block}
+.ah-profile-unsaved-bar{position:fixed;z-index:27500;left:50%;bottom:18px;width:min(500px,calc(100vw - 32px));min-height:58px;padding:10px 12px 10px 17px;border:1px solid #3a3c44;border-radius:9px;background:#111214;color:#f2f3f5;display:flex;align-items:center;gap:10px;box-shadow:0 18px 48px rgba(0,0,0,.55);opacity:0;visibility:hidden;pointer-events:none;transform:translate(-50%,24px) scale(.98)}
+.ah-profile-unsaved-bar strong{margin-right:auto;font-size:13px;font-weight:900}
+.ah-profile-unsaved-bar.show{visibility:visible;pointer-events:auto;animation:ahUnsavedSlide .2s cubic-bezier(.2,.8,.2,1) forwards}
+.ah-profile-unsaved-bar:not(.show){transition:opacity .13s ease,transform .13s ease,visibility 0s linear .13s}
+.ah-profile-unsaved-bar.shake{animation:ahUnsavedShake .38s ease both!important}
+.ah-profile-unsaved-bar .ah-settings-btn{min-height:38px;padding:0 14px;margin:0}
+@keyframes ahUnsavedSlide{from{opacity:0;transform:translate(-50%,24px) scale(.98)}to{opacity:1;transform:translate(-50%,0) scale(1)}}
+@keyframes ahUnsavedShake{0%,100%{opacity:1;transform:translate(-50%,0)}20%{transform:translate(calc(-50% - 8px),0)}40%{transform:translate(calc(-50% + 7px),0)}60%{transform:translate(calc(-50% - 5px),0)}80%{transform:translate(calc(-50% + 3px),0)}}
+@media(max-width:560px){.ah-profile-unsaved-bar{bottom:8px;min-height:54px;padding-left:12px}.ah-profile-unsaved-bar strong{font-size:11px}.ah-profile-unsaved-bar .ah-settings-btn{padding:0 10px;font-size:12px}}
+@media(prefers-reduced-motion:reduce){.ah-profile-unsaved-bar.show,.ah-profile-unsaved-bar.shake{animation:none!important;opacity:1;transform:translate(-50%,0)}}
+</style>
+
 <div id="ah-user-settings" class="ah-settings-backdrop" onclick="if(event.target===this)closeUserSettings()" aria-hidden="true">
   <div class="ah-settings-shell" role="dialog" aria-modal="true" aria-label="User settings">
     <aside class="ah-settings-sidebar">
       <div class="ah-settings-me">
         <div class="ah-settings-avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}')"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}</div>
-        <div><strong>{{ account.username }}</strong><span data-i18n="settings.edit_profile">Редагувати профіль</span></div>
+        <div><strong>{{ account.display_name or account.username }}</strong><span data-i18n="settings.edit_profile">Редагувати профіль</span></div>
       </div>
       <input class="ah-settings-search" placeholder="Пошук" data-i18n-placeholder="settings.search_placeholder" oninput="ahSettingsFilter(this.value)">
       <div class="ah-settings-group">
@@ -2026,7 +2054,13 @@ document.addEventListener('DOMContentLoaded',()=>{
                   {% if not account.avatar_url %}<span>{{ account.username[:1]|upper }}</span>{% endif %}
                   <b>✎</b>
                 </label>
-                <div class="ah-profile-live-name">{{ account.username }}</div>
+                <div class="ah-profile-live-name ah-display-name-editor" id="ah-display-name-editor">
+                  <button id="ah-display-name-view" class="ah-display-name-view" type="button" aria-label="Редагувати відображуване ім’я">
+                    <span id="ah-display-name-preview">{{ account.display_name or account.username }}</span>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16-.8 4 4-.8L18.5 7.9l-3.4-3.4L4 16Z"></path><path d="m13.8 5.8 3.4 3.4"></path></svg>
+                  </button>
+                  <input id="ah-display-name-input" class="ah-display-name-input" name="display_name" value="{{ account.display_name or account.username }}" maxlength="32" autocomplete="off" aria-label="Відображуване ім’я">
+                </div>
                 <div class="ah-profile-live-handle">@{{ account.username }}</div>
                 <div class="ah-profile-live-bio" id="ah-profile-bio-preview">{{ account.bio or 'Ваш вайб у пʼяти словах. Додай опис профілю, щоб міні-картка виглядала живо.' }}</div>
                 <div class="ah-profile-live-note">Клік по аватарці або банеру відкриває вибір файлу з пристрою.</div>
@@ -2055,7 +2089,11 @@ document.addEventListener('DOMContentLoaded',()=>{
               </details>
 
               <div class="ah-settings-formline wide"><label>Опис</label><textarea id="ah-profile-bio-input" class="ah-settings-textarea" name="bio" maxlength="280" placeholder="Розкажи трохи про себе...">{{ account.bio or '' }}</textarea></div>
-              <div class="ah-profile-savebar"><button class="ah-settings-btn primary" type="submit">Зберегти зміни</button><button class="ah-settings-btn" type="button" onclick="closeUserSettings()">Скасувати</button></div>
+              <div id="ah-profile-unsaved-bar" class="ah-profile-unsaved-bar" aria-hidden="true">
+                <strong>Не забудьте зберегти зміни!</strong>
+                <button id="ah-profile-reset" class="ah-settings-btn" type="button">Скинути</button>
+                <button class="ah-settings-btn primary" type="submit">Зберегти</button>
+              </div>
             </div>
           </div>
         </form>
@@ -2556,6 +2594,8 @@ document.addEventListener('DOMContentLoaded',()=>{
         transfer.items.add(croppedFile);
         state.input.files = transfer.files;
         updatePreview(blob);
+        const profileForm = document.getElementById('ah-profile-edit-form');
+        if(profileForm) profileForm.dispatchEvent(new Event('input',{bubbles:true}));
         closeEditor(false);
         notify(state.kind === 'avatar' ? 'Позицію аватара збережено' : 'Позицію банера збережено');
       }catch(error){
@@ -2725,6 +2765,149 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
 })();
 </script>
 
+
+<script id="ah-display-name-editor-js">
+(function(){
+  if(window.__ahDisplayNameEditorReady) return;
+  window.__ahDisplayNameEditorReady = true;
+
+  const form = document.getElementById('ah-profile-edit-form');
+  const editor = document.getElementById('ah-display-name-editor');
+  const view = document.getElementById('ah-display-name-view');
+  const preview = document.getElementById('ah-display-name-preview');
+  const input = document.getElementById('ah-display-name-input');
+  const bioInput = document.getElementById('ah-profile-bio-input');
+  const bar = document.getElementById('ah-profile-unsaved-bar');
+  const resetButton = document.getElementById('ah-profile-reset');
+  if(!form || !editor || !view || !preview || !input || !bar) return;
+
+  const INITIAL = {
+    username: {{ account.username|tojson }},
+    display: {{ (account.display_name or account.username)|tojson }},
+    bio: {{ (account.bio or '')|tojson }},
+    avatar: {{ (account.avatar_url or '')|tojson }},
+    banner: {{ (account.banner_url or '')|tojson }}
+  };
+  let dirty = false;
+
+  function cleanName(value){
+    return String(value || '').replace(/[\u0000-\u001f\u007f]/g,'').trim().slice(0,32);
+  }
+  function shownName(value){ return cleanName(value) || INITIAL.username; }
+  function updateNamePreview(){ preview.textContent = shownName(input.value); }
+
+  function isDirty(){
+    const avatarUrl = form.querySelector('[name="avatar_url"]');
+    const bannerUrl = form.querySelector('[name="banner_url"]');
+    const avatarFile = document.getElementById('ah-avatar-file');
+    const bannerFile = document.getElementById('ah-banner-file');
+    return cleanName(input.value) !== cleanName(INITIAL.display)
+      || String(bioInput ? bioInput.value : '').trim() !== INITIAL.bio.trim()
+      || String(avatarUrl ? avatarUrl.value : '').trim() !== INITIAL.avatar
+      || String(bannerUrl ? bannerUrl.value : '').trim() !== INITIAL.banner
+      || Boolean(avatarFile && avatarFile.files && avatarFile.files.length)
+      || Boolean(bannerFile && bannerFile.files && bannerFile.files.length);
+  }
+
+  function setDirty(next){
+    dirty = Boolean(next);
+    bar.classList.toggle('show',dirty);
+    bar.setAttribute('aria-hidden',dirty ? 'false' : 'true');
+    if(!dirty) bar.classList.remove('shake');
+  }
+  function refreshDirty(){ setDirty(isDirty()); }
+
+  function startEditing(){
+    editor.classList.add('editing');
+    input.focus();
+    input.setSelectionRange(input.value.length,input.value.length);
+  }
+  function finishEditing(){
+    input.value = cleanName(input.value);
+    updateNamePreview();
+    editor.classList.remove('editing');
+    refreshDirty();
+  }
+  function shakeBar(){
+    setDirty(true);
+    bar.classList.remove('shake');
+    void bar.offsetWidth;
+    bar.classList.add('shake');
+    window.setTimeout(function(){ bar.classList.remove('shake'); },420);
+  }
+  function setBackground(element,url){
+    if(!element) return;
+    element.style.backgroundImage = url ? 'url("' + String(url).replace(/"/g,'%22') + '")' : '';
+    element.style.backgroundSize = 'cover';
+    element.style.backgroundPosition = 'center';
+  }
+
+  function resetProfile(){
+    form.reset();
+    input.value = INITIAL.display;
+    updateNamePreview();
+    editor.classList.remove('editing');
+    if(bioInput){
+      bioInput.value = INITIAL.bio;
+      const bioPreview = document.getElementById('ah-profile-bio-preview');
+      if(bioPreview) bioPreview.textContent = INITIAL.bio || 'Ваш вайб у пʼяти словах. Додай опис профілю, щоб міні-картка виглядала живо.';
+    }
+    const avatarInput = document.getElementById('ah-avatar-file');
+    const bannerInput = document.getElementById('ah-banner-file');
+    if(avatarInput) avatarInput.value = '';
+    if(bannerInput) bannerInput.value = '';
+    const avatarPreview = document.getElementById('ah-profile-preview-avatar');
+    setBackground(avatarPreview,INITIAL.avatar);
+    if(avatarPreview){
+      const fallback = avatarPreview.querySelector('span');
+      if(fallback) fallback.textContent = INITIAL.avatar ? '' : INITIAL.username.slice(0,1).toUpperCase();
+    }
+    document.querySelectorAll('#ah-profile-preview-banner,.self-profile-banner').forEach(function(node){
+      setBackground(node,INITIAL.banner);
+    });
+    document.querySelectorAll('.account-panel[data-mini-username],.user-panel[data-mini-username]').forEach(function(panel){
+      panel.dataset.miniBanner = INITIAL.banner;
+    });
+    setDirty(false);
+  }
+
+  view.addEventListener('click',startEditing);
+  input.addEventListener('input',function(){ updateNamePreview(); refreshDirty(); });
+  input.addEventListener('keydown',function(event){
+    if(event.key === 'Enter'){
+      event.preventDefault();
+      finishEditing();
+    }else if(event.key === 'Escape'){
+      event.preventDefault();
+      event.stopPropagation();
+      input.value = INITIAL.display;
+      finishEditing();
+    }
+  });
+  input.addEventListener('blur',function(){
+    window.setTimeout(function(){ if(document.activeElement !== input) finishEditing(); },0);
+  });
+  form.addEventListener('input',refreshDirty);
+  form.addEventListener('change',refreshDirty);
+  form.addEventListener('submit',function(){
+    input.value = cleanName(input.value);
+    setDirty(false);
+  });
+  if(resetButton) resetButton.addEventListener('click',resetProfile);
+
+  const originalClose = window.closeUserSettings;
+  window.closeUserSettings = function(force){
+    if(dirty && force !== true){
+      shakeBar();
+      return false;
+    }
+    if(typeof originalClose === 'function') return originalClose.apply(this,arguments);
+  };
+
+  window.ahMarkProfileDirty = refreshDirty;
+  window.ahResetProfileChanges = resetProfile;
+})();
+</script>
 
 <script id="ah-banner-live-sync-fix">
 (function(){
@@ -3832,7 +4015,7 @@ if (typeof window.openSelfProfileSettings !== 'function') {
       letter.hidden = true;
     } else {
       avatar.style.backgroundImage = '';
-      letter.textContent = String(profile.username || '?').slice(0, 1).toUpperCase();
+      letter.textContent = String(profile.display_name || profile.username || '?').slice(0, 1).toUpperCase();
       letter.hidden = false;
     }
   }
@@ -3874,7 +4057,7 @@ if (typeof window.openSelfProfileSettings !== 'function') {
     }
   }
 
-  function updatePresence(accountId, status, online, username) {
+  function updatePresence(accountId, status, online, username, displayName) {
     accountId = Number(accountId || 0);
     if (!accountId || accountId === currentAccountId) return;
     document.querySelectorAll('[data-account-id]').forEach(function (element) {
@@ -3885,6 +4068,15 @@ if (typeof window.openSelfProfileSettings !== 'function') {
         element.dataset.miniStatus = normalizedPresence(status, online);
       }
     });
+    if (username && displayName) {
+      document.querySelectorAll('[data-mini-username]').forEach(function (element) {
+        if (String(element.dataset.miniUsername || '').toLowerCase() !== String(username).toLowerCase()) return;
+        element.dataset.miniDisplay = displayName;
+        if (element.matches('.msg-name,.visual-name')) element.textContent = displayName;
+        var label = element.querySelector && element.querySelector('.dm-name,.member-name');
+        if (label) label.textContent = displayName;
+      });
+    }
   }
 
   function makeDmRow(profile, threadId) {
@@ -3893,8 +4085,8 @@ if (typeof window.openSelfProfileSettings !== 'function') {
     row.href = '/community/dm/' + encodeURIComponent(profile.username || '');
     row.dataset.threadId = String(threadId || '');
     row.dataset.accountId = String(profile.id || '');
-    row.dataset.name = String(profile.username || '').toLowerCase();
-    row.dataset.miniUsername = profile.username || '';
+    row.dataset.name = (String(profile.display_name || '') + ' ' + String(profile.username || '')).trim().toLowerCase();
+    row.dataset.miniUsername = profile.username || ''; row.dataset.miniDisplay = profile.display_name || profile.username || '';
     row.dataset.miniAvatar = profile.avatar_url || '';
     row.dataset.miniBanner = profile.banner_url || '';
     row.dataset.miniStatus = 'offline';
@@ -3912,7 +4104,7 @@ if (typeof window.openSelfProfileSettings !== 'function') {
     meta.className = 'dm-meta';
     var name = document.createElement('span');
     name.className = 'dm-name';
-    name.textContent = profile.username || 'User';
+    name.textContent = profile.display_name || profile.username || 'User';
     var snippet = document.createElement('span');
     snippet.className = 'dm-snippet';
 
@@ -3965,8 +4157,8 @@ if (typeof window.openSelfProfileSettings !== 'function') {
 
     row.dataset.threadId = String(threadId);
     row.dataset.accountId = String(accountId);
-    row.dataset.name = String(profile.username || '').toLowerCase();
-    row.dataset.miniUsername = profile.username || '';
+    row.dataset.name = (String(profile.display_name || '') + ' ' + String(profile.username || '')).trim().toLowerCase();
+    row.dataset.miniUsername = profile.username || ''; row.dataset.miniDisplay = profile.display_name || profile.username || '';
     row.dataset.miniAvatar = profile.avatar_url || '';
     row.dataset.miniBanner = profile.banner_url || '';
     row.dataset.miniRole = profile.role_label || 'member';
@@ -3979,7 +4171,7 @@ if (typeof window.openSelfProfileSettings !== 'function') {
     row.href = '/community/dm/' + encodeURIComponent(profile.username || '');
 
     var name = row.querySelector('.dm-name');
-    if (name) name.textContent = profile.username || 'User';
+    if (name) name.textContent = profile.display_name || profile.username || 'User';
     var avatar = row.querySelector('.avatar');
     setAvatarContent(avatar, profile);
 
@@ -4069,12 +4261,12 @@ if (typeof window.openSelfProfileSettings !== 'function') {
     var data;
     try { data = JSON.parse(event.data); } catch (error) { return; }
     if (data.type === 'presence') {
-      updatePresence(data.account_id, data.status, data.online, data.username);
+      updatePresence(data.account_id, data.status, data.online, data.username, data.display_name);
       return;
     }
     if (data.type === 'presence_snapshot') {
       (data.accounts || []).forEach(function (item) {
-        updatePresence(item.account_id, item.status, item.online, item.username);
+        updatePresence(item.account_id, item.status, item.online, item.username, item.display_name);
       });
       return;
     }
