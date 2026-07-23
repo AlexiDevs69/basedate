@@ -3201,10 +3201,10 @@ document.addEventListener('DOMContentLoaded',()=>{
   function openMini(el,e){
     active=dataFrom(el); let pop=$('#ah-v3-mini'); if(!pop)return;
     pop.classList.toggle('self',!!active.isSelf); pop.style.setProperty('--ah-c1',active.c1); pop.style.setProperty('--ah-c2',active.c2); setBanner($('#ah-v3-banner'), active.banner, active.c1, active.c2);
-    setAvatar($('#ah-v3-avatar'),$('#ah-v3-avatar-text'),active.avatar,active.display); $('#ah-v3-name').textContent=active.display; $('#ah-v3-handle').textContent='@'+active.name; $('#ah-v3-role').textContent=active.role||'member'; const bioText=(active.bio||'').trim(); const noteTitle=$('#ah-v3-mini .ah-v3-note b'); if(noteTitle) noteTitle.textContent=bioText?'Опис профілю':'Міні-профіль'; $('#ah-v3-note-text').textContent=bioText || (active.isSelf?'Звідси можна змінити статус. Натисни на аватарку для повної картки.':'Натисни на аватарку, щоб відкрити повну картку профілю.'); let st=$('#ah-v3-status'); if(st) st.className='ah-v3-status '+(active.status||'offline'); let msg=$('#ah-v3-message'); if(msg){msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; msg.textContent=active.isSelf?'Редактировать профиль':'Message'} place(pop,e);
+    setAvatar($('#ah-v3-avatar'),$('#ah-v3-avatar-text'),active.avatar,active.display); const miniNameNode=$('#ah-v3-name'); if(miniNameNode){miniNameNode.dataset.profileUsername=active.name; miniNameNode.textContent=active.display;} $('#ah-v3-handle').textContent='@'+active.name; $('#ah-v3-role').textContent=active.role||'member'; const bioText=(active.bio||'').trim(); const noteTitle=$('#ah-v3-mini .ah-v3-note b'); if(noteTitle) noteTitle.textContent=bioText?'Опис профілю':'Міні-профіль'; $('#ah-v3-note-text').textContent=bioText || (active.isSelf?'Звідси можна змінити статус. Натисни на аватарку для повної картки.':'Натисни на аватарку, щоб відкрити повну картку профілю.'); let st=$('#ah-v3-status'); if(st) st.className='ah-v3-status '+(active.status||'offline'); let msg=$('#ah-v3-message'); if(msg){msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; msg.textContent=active.isSelf?'Редактировать профиль':'Message'} place(pop,e);
   }
   function closeMini(){let p=$('#ah-v3-mini'); if(p)p.classList.remove('open')}
-  function openFull(){ if(!active)return; let ov=$('#ah-v3-overlay'); if(!ov)return; ov.style.setProperty('--ah-c1',active.c1); ov.style.setProperty('--ah-c2',active.c2); setBanner($('#ah-v3-full-banner'), active.banner, active.c1, active.c2); setAvatar($('#ah-v3-full-avatar'),$('#ah-v3-full-avatar-text'),active.avatar,active.display); $('#ah-v3-full-name').textContent=active.display; $('#ah-v3-full-handle').textContent='@'+active.name; $('#ah-v3-full-meta').textContent=active.isSelf?'Твоя картка AlexiHub.':'Картка користувача AlexiHub.'; $('#ah-v3-full-about').textContent=(active.bio||'').trim() || (active.isSelf?'Тут буде повний профіль, активність, ігри, інтеграції та нотатки.':'Швидкий перегляд профілю поверх поточної сторінки, без переходу зі сторінки.'); let msg=$('#ah-v3-full-message'); if(msg){ msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; } let op=$('#ah-v3-full-open'); if(op) op.href=active.profile; closeMini(); ov.classList.add('open'); }
+  function openFull(){ if(!active)return; let ov=$('#ah-v3-overlay'); if(!ov)return; ov.style.setProperty('--ah-c1',active.c1); ov.style.setProperty('--ah-c2',active.c2); setBanner($('#ah-v3-full-banner'), active.banner, active.c1, active.c2); setAvatar($('#ah-v3-full-avatar'),$('#ah-v3-full-avatar-text'),active.avatar,active.display); const fullNameNode=$('#ah-v3-full-name'); if(fullNameNode){fullNameNode.dataset.profileUsername=active.name; fullNameNode.textContent=active.display;} $('#ah-v3-full-handle').textContent='@'+active.name; $('#ah-v3-full-meta').textContent=active.isSelf?'Твоя картка AlexiHub.':'Картка користувача AlexiHub.'; $('#ah-v3-full-about').textContent=(active.bio||'').trim() || (active.isSelf?'Тут буде повний профіль, активність, ігри, інтеграції та нотатки.':'Швидкий перегляд профілю поверх поточної сторінки, без переходу зі сторінки.'); let msg=$('#ah-v3-full-message'); if(msg){ msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; } let op=$('#ah-v3-full-open'); if(op) op.href=active.profile; closeMini(); ov.classList.add('open'); }
   function closeFull(){let ov=$('#ah-v3-overlay'); if(ov)ov.classList.remove('open')}
   document.addEventListener('click',function(e){
     if(e.target.closest('#ah-v3-mini,#ah-v3-overlay')) return;
@@ -5019,12 +5019,28 @@ if (typeof window.openSelfProfileSettings !== 'function') {
     html+=gifterBadgeHtml(nitro);
     if(html)el.insertAdjacentHTML('afterend',html);
   }
+  function profileUsernameForName(el){
+    if(!el)return '';
+    const own=String(el.dataset&&el.dataset.profileUsername||'').trim();
+    if(own)return own.replace(/^@/,'');
+    const carrier=el.closest&&el.closest('[data-mini-username]');
+    const carried=String(carrier&&carrier.dataset&&carrier.dataset.miniUsername||'').trim();
+    if(carried)return carried.replace(/^@/,'');
+    const scope=el.parentElement;
+    const handle=scope&&scope.querySelector('.ah-v3-handle,.ah-v3-full-handle,.profile-handle,.account-username');
+    const handled=String(handle&&handle.textContent||'').trim().replace(/^@/,'');
+    if(handled)return handled;
+    const link=el.closest&&el.closest('a[href*="/community/profile/"]');
+    const match=link&&String(link.getAttribute('href')||'').match(/\/community\/profile\/([^/?#]+)/);
+    if(match)return decodeURIComponent(match[1]);
+    return String(el.textContent||'').replace(/\s+/g,' ').trim().replace(/^@/,'');
+  }
   async function hydrateStaticProfileCards(){
     const cards = Array.from(document.querySelectorAll('.profile-body h2, .right-profile h2, .right-profile .profile-name'));
     for(const h of cards){
       const clone = h.cloneNode(true);
       clone.querySelectorAll('.ah-verified-profile-badge,.ah-nitro-profile-badge,.ah-gifter-profile-badge').forEach(x=>x.remove());
-      const username = (clone.textContent || '').replace(/\s+/g,' ').trim();
+      const username = profileUsernameForName(h) || (clone.textContent || '').replace(/\s+/g,' ').trim();
       if(username) setBadgeAfter(h, await fetchUserNitro(username));
     }
   }
@@ -5032,14 +5048,14 @@ if (typeof window.openSelfProfileSettings !== 'function') {
   async function hydrateVisibleProfileBadge(){
     const miniName = document.getElementById('ah-v3-name');
     if(miniName && miniName.offsetParent !== null){
-      const username = (miniName.textContent || '').replace(/\s+/g,' ').trim();
-      if(username){ setBadgeAfter(miniName, await fetchUserNitro(username)); }
+      const username = profileUsernameForName(miniName);
+      if(username){ const nitro=await fetchUserNitro(username); if(profileUsernameForName(miniName).toLowerCase()===username.toLowerCase())setBadgeAfter(miniName,nitro); }
     }
     const fullName = document.getElementById('ah-v3-full-name');
     const overlay = document.getElementById('ah-v3-overlay');
     if(fullName && overlay && overlay.classList.contains('open')){
-      const username = (fullName.textContent || '').replace(/\s+/g,' ').trim();
-      if(username){ setBadgeAfter(fullName, await fetchUserNitro(username)); }
+      const username = profileUsernameForName(fullName);
+      if(username){ const nitro=await fetchUserNitro(username); if(profileUsernameForName(fullName).toLowerCase()===username.toLowerCase())setBadgeAfter(fullName,nitro); }
     }
   }
   function refreshSelfNitroBadges(sub){
@@ -6367,6 +6383,16 @@ body .composer-wrap{
     }
   }
 
+  function setDisplayTextPreservingBadges(element, value) {
+    if (!element) return;
+    const badgeSelector = '.ah-verified-profile-badge,.ah-nitro-profile-badge,.ah-gifter-profile-badge';
+    const badges = Array.from(element.children || []).filter(function(child){ return child.matches(badgeSelector); });
+    if (!badges.length) { element.textContent = value; return; }
+    let textNode = Array.from(element.childNodes).find(function(node){ return node.nodeType === Node.TEXT_NODE; });
+    if (!textNode) { textNode = document.createTextNode(''); element.insertBefore(textNode, element.firstChild); }
+    textNode.nodeValue = value;
+  }
+
   function updatePresence(accountId, status, online, username, displayName) {
     accountId = Number(accountId || 0);
     if (!accountId || accountId === currentAccountId) return;
@@ -6382,9 +6408,9 @@ body .composer-wrap{
       document.querySelectorAll('[data-mini-username]').forEach(function (element) {
         if (String(element.dataset.miniUsername || '').toLowerCase() !== String(username).toLowerCase()) return;
         element.dataset.miniDisplay = displayName;
-        if (element.matches('.msg-name,.visual-name')) element.textContent = displayName;
+        if (element.matches('.msg-name,.visual-name')) setDisplayTextPreservingBadges(element, displayName);
         var label = element.querySelector && element.querySelector('.dm-name,.member-name');
-        if (label) label.textContent = displayName;
+        if (label) setDisplayTextPreservingBadges(label, displayName);
       });
     }
   }
