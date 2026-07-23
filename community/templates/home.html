@@ -1840,6 +1840,29 @@
 .ah-blocked-loading,.ah-blocked-empty,.ah-blocked-error{min-height:120px!important;background:#191a1e}
 @media(max-width:700px){.ah-blocked-row{grid-template-columns:38px minmax(0,1fr)!important}.ah-unblock-btn{grid-column:2;width:auto!important;min-width:120px}.ah-content-settings{padding:0 2px}}
   </style>
+  <style id="ah-user-boost-settings-css">
+  [data-settings-page="boosts"]{max-width:760px;padding-top:58px}
+  .ah-user-boost-head{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:28px;align-items:center;margin-bottom:30px}
+  .ah-user-boost-head h1{margin:0 0 10px!important;font-size:27px!important}
+  .ah-user-boost-head p{margin:0;color:#b5bac1;font-size:14px;line-height:1.5;max-width:430px}
+  .ah-boost-gem{color:#f05de9;text-shadow:0 0 14px rgba(240,93,233,.5)}
+  .ah-user-boost-art{height:168px;border:1px solid #43308c;border-radius:12px;background:radial-gradient(circle at 50% 34%,rgba(207,68,255,.48),transparent 19%),linear-gradient(135deg,#291267,#170c47 62%,#35156e);position:relative;overflow:hidden;display:grid;place-items:center}
+  .ah-user-boost-art:before,.ah-user-boost-art:after{content:"";position:absolute;width:120px;height:74px;border-radius:50%;background:linear-gradient(140deg,transparent,#8154ff);opacity:.4;transform:rotate(-18deg)}
+  .ah-user-boost-art:before{left:-38px;bottom:-22px}.ah-user-boost-art:after{right:-32px;top:-20px}
+  .ah-user-boost-art span{font-size:58px;color:#ef53df;filter:drop-shadow(0 10px 24px #eb47da);z-index:1}.ah-user-boost-art i,.ah-user-boost-art b{position:absolute;width:6px;height:6px;border-radius:50%;background:#6fe9ff;box-shadow:74px 38px #ff7bdc,-76px 43px #ffce55}.ah-user-boost-art i{left:42%;top:22%}.ah-user-boost-art b{right:31%;bottom:19%}
+  .ah-user-boost-summary{min-height:66px;padding:12px 14px;border:1px solid #3b2f6b;border-radius:12px;background:linear-gradient(90deg,rgba(97,32,151,.42),rgba(51,52,62,.55));display:flex;align-items:center;gap:12px;margin-bottom:30px}
+  .ah-user-boost-summary-icon{width:42px;height:42px;border-radius:12px;background:linear-gradient(145deg,#6b29d4,#dd45df);display:grid;place-items:center;color:#fff;font-size:24px;box-shadow:0 0 18px rgba(181,59,224,.35)}
+  .ah-user-boost-summary strong,.ah-user-boost-summary span{display:block}.ah-user-boost-summary strong{color:#f2f3f5;font-size:14px}.ah-user-boost-summary span{color:#b5bac1;font-size:12px;margin-top:3px}
+  .ah-user-boost-subtitle{font-size:16px;margin:0 0 12px;color:#f2f3f5}.ah-user-boost-list{display:grid;gap:8px}
+  .ah-user-boost-row{display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:12px;min-height:64px;padding:9px 12px;background:#24252a;border:1px solid #303238;border-radius:12px}
+  .ah-user-boost-server-icon{width:42px;height:42px;border-radius:13px;background:#17181c center/cover no-repeat;display:grid;place-items:center;color:#fff;font-weight:900;font-size:12px;overflow:hidden}
+  .ah-user-boost-server-copy{min-width:0}.ah-user-boost-server-copy b,.ah-user-boost-server-copy span{display:block}.ah-user-boost-server-copy b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#f2f3f5;font-size:14px}.ah-user-boost-server-copy span{color:#b5bac1;font-size:12px;margin-top:3px}
+  .ah-user-boost-actions{display:flex;gap:6px;align-items:center}.ah-user-boost-btn{height:36px;border:0;border-radius:7px;background:#4e5058;color:#fff;font-weight:850;padding:0 12px;cursor:pointer}.ah-user-boost-btn:hover{background:#5b5d66}.ah-user-boost-btn.primary{background:#5865f2}.ah-user-boost-btn.primary:hover{background:#4752c4}.ah-user-boost-btn:disabled{opacity:.45;cursor:not-allowed}.ah-user-tag-btn{min-width:42px;font-size:16px}
+  .ah-user-server-tag{display:inline-flex!important;align-items:center;gap:4px;width:max-content;margin-top:5px!important;padding:2px 6px;border-radius:4px;background:#34363d;color:#e6e8ec!important;font-size:11px!important;font-weight:900}.ah-user-server-tag.selected{background:#4b3b79;color:#fff!important;box-shadow:0 0 0 1px #7d67c8 inset}
+  .ah-user-boost-loading{min-height:90px;border:1px dashed #3c3e46;border-radius:12px;display:grid;place-items:center;color:#949ba4}.ah-user-boost-empty{padding:22px;border:1px solid #303238;border-radius:12px;background:#24252a;color:#b5bac1;text-align:center}
+  .ah-user-boost-levels{margin-top:38px;display:grid;grid-template-columns:1.5fr repeat(3,1fr);border-top:1px solid #35373d;color:#b5bac1;font-size:13px}.ah-user-boost-levels>div,.ah-user-boost-levels>strong{padding:15px;border-bottom:1px solid #35373d}.ah-user-boost-levels>div:nth-child(-n+4){color:#f2f3f5;font-size:15px}.ah-user-boost-levels>div span{display:block;font-size:11px;color:#949ba4;margin-top:3px}.ah-user-boost-levels>strong{text-align:center;color:#f2f3f5}
+  @media(max-width:760px){.ah-user-boost-head{grid-template-columns:1fr}.ah-user-boost-art{display:none}.ah-user-boost-levels{grid-template-columns:1fr}.ah-user-boost-levels>strong{text-align:left}.ah-user-boost-row{grid-template-columns:38px minmax(0,1fr)}.ah-user-boost-actions{grid-column:2;flex-wrap:wrap}.ah-user-boost-btn{height:34px}}
+  </style>
 </head>
 <body data-current-account-id="{{ account.id }}">
   <svg style="display:none" aria-hidden="true">
@@ -2802,6 +2825,7 @@ document.addEventListener('DOMContentLoaded',()=>{
       <div class="ah-settings-group">
         <div class="ah-settings-label">AlexiHub</div>
         <button class="ah-settings-nav" data-settings-tab="servers" onclick="showSettingsTab('servers')"><svg><use href="#i-server"></use></svg><span data-i18n="settings.servers">Серверы</span></button>
+        <button class="ah-settings-nav" data-settings-tab="boosts" onclick="showSettingsTab('boosts');loadMyBoostSettings()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 7 5v10l-7 5-7-5V7l7-5Zm0 5-3 5 3 5 3-5-3-5Z" fill="currentColor"/></svg><span>Буст сервера</span></button>
         <button class="ah-settings-nav" data-settings-tab="gifts" onclick="showSettingsTab('gifts')"><svg><use href="#i-gift"></use></svg><span data-i18n="settings.gifts">Подарки</span></button>
         <button class="ah-settings-nav" data-settings-tab="developer" onclick="showSettingsTab('developer')"><svg><use href="#i-code"></use></svg><span data-i18n="settings.developer">Разработчик</span></button>
       </div>
@@ -2917,6 +2941,27 @@ document.addEventListener('DOMContentLoaded',()=>{
         </div>
       </section>
       <section class="ah-settings-page" data-settings-page="servers"><h1>Серверы</h1><div class="ah-settings-placeholder">Поки заглушка. Тут можна буде керувати своїми серверами.</div></section>
+      <section class="ah-settings-page" data-settings-page="boosts">
+        <div class="ah-user-boost-head">
+          <div>
+            <h1><span class="ah-boost-gem">◆</span> Буст сервера</h1>
+            <p>Бусты дают доступ к бонусам всем участникам сервера. Распределяйте доступные бусты между своими серверами.</p>
+          </div>
+          <div class="ah-user-boost-art" aria-hidden="true"><span>◆</span><i></i><b></b></div>
+        </div>
+        <div id="ah-user-boost-summary" class="ah-user-boost-summary">
+          <div class="ah-user-boost-summary-icon">◆</div>
+          <div><strong>Загрузка бустов…</strong><span>Проверяем вашу подписку Nitro.</span></div>
+        </div>
+        <h2 class="ah-user-boost-subtitle">Этим серверам не помешает буст</h2>
+        <div id="ah-user-boost-list" class="ah-user-boost-list"><div class="ah-user-boost-loading">Загрузка серверов…</div></div>
+        <div class="ah-user-boost-levels">
+          <div><b>Бонусы</b></div><div><b>1-й уровень</b><span>2 буста</span></div><div><b>2-й уровень</b><span>5 бустов</span></div><div><b>3-й уровень</b><span>7 бустов</span></div>
+          <div>Слоты для эмодзи</div><strong>100</strong><strong>150</strong><strong>250</strong>
+          <div>Размер загрузки</div><strong>25 МБ</strong><strong>50 МБ</strong><strong>100 МБ</strong>
+          <div>Тег сервера</div><strong>3 буста</strong><strong>Доступен</strong><strong>Доступен</strong>
+        </div>
+      </section>
       <section class="ah-settings-page" data-settings-page="gifts"><h1>Подарки</h1><div class="ah-settings-placeholder">Поки заглушка. Тут потім можна показати отримані gifts.</div></section>
       <section class="ah-settings-page" data-settings-page="developer"><h1>Разработчик</h1><div class="ah-settings-placeholder">Поки заглушка. Тут можна буде додати API/debug info.</div></section>
     </main>
@@ -6079,6 +6124,63 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   function init(){ensureProfileMenu();ensureSettings();ensureConfirmModal();hydrateDmBlockState();}
   window.AlexiHubBlocking={refreshDm:hydrateDmBlockState,refreshList:loadBlockedUsers};
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+})();
+</script>
+<script id="ah-home-server-boost-settings-js">
+(function(){
+  if(window.__ahHomeBoostSettingsReady) return;
+  window.__ahHomeBoostSettingsReady=true;
+  const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  const notify=message=>window.settingsToast?.(message);
+  async function boostApi(url,options){
+    const response=await fetch(url,Object.assign({headers:{'Content-Type':'application/json','Accept':'application/json'}},options||{}));
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok||data.ok===false) throw new Error(data.error||data.detail||'Не вдалося виконати дію');
+    return data;
+  }
+  function boostError(error){
+    const code=String(error?.message||error||'');
+    return ({nitro_required:'Для бустів потрібна активна підписка Nitro.',no_boosts_left:'Усі доступні бусти вже використані.',nothing_to_remove:'На цьому сервері немає вашого буста.',tag_unavailable:'Тег цього сервера ще не відкритий.'})[code]||code||'Не вдалося виконати дію';
+  }
+  function renderBoostSettings(data){
+    const summary=document.getElementById('ah-user-boost-summary');
+    const list=document.getElementById('ah-user-boost-list');
+    if(!summary||!list) return;
+    const active=!!data.subscription?.active;
+    const label=data.subscription?.tier_label||'Nitro';
+    summary.innerHTML=`<div class="ah-user-boost-summary-icon">◆</div><div><strong>${active?esc(label)+' — '+esc(data.capacity)+' бустів':'Отримайте 2 бусти з Nitro!'}</strong><span>${active?`Використано ${esc(data.allocated)} · доступно ${esc(data.remaining)}`:'Активуйте Nitro, щоб підтримувати улюблені сервери.'}</span></div>`;
+    const servers=Array.isArray(data.servers)?data.servers:[];
+    if(!servers.length){list.innerHTML='<div class="ah-user-boost-empty">Ви ще не приєдналися до жодного сервера.</div>';return;}
+    list.innerHTML=servers.map(server=>{
+      const icon=server.icon_url?`style="background-image:url('${esc(server.icon_url)}')"`:'';
+      const tag=server.tag?.active?`<span class="ah-user-server-tag${server.tag_selected?' selected':''}">${esc(server.tag.glyph)} ${esc(server.tag.text)}${server.tag_selected?' · вибрано':''}</span>`:'';
+      return `<div class="ah-user-boost-row"><div class="ah-user-boost-server-icon" ${icon}>${server.icon_url?'':esc(String(server.name||'?').slice(0,2).toUpperCase())}</div><div class="ah-user-boost-server-copy"><b>${esc(server.name)}</b><span>◆ ${esc(server.total_boosts)} бустів · ${server.level?esc(server.level)+'-й рівень':'рівень не відкритий'} · ваших: ${esc(server.allocated_here)}</span>${tag}</div><div class="ah-user-boost-actions"><button class="ah-user-boost-btn" type="button" onclick="changeMyServerBoost(${server.id},-1)" ${server.allocated_here<1?'disabled':''}>−</button><button class="ah-user-boost-btn primary" type="button" onclick="changeMyServerBoost(${server.id},1)" ${data.remaining<1?'disabled':''}>◆ Дати буст</button>${server.tag?.active?`<button class="ah-user-boost-btn ah-user-tag-btn" type="button" title="${server.tag_selected?'Прибрати тег':'Показувати цей тег біля імені'}" onclick="selectMyServerTag(${server.tag_selected?'null':server.id})">${server.tag_selected?'✓':'🏷'}</button>`:''}</div></div>`;
+    }).join('');
+  }
+  window.loadMyBoostSettings=async function(){
+    const list=document.getElementById('ah-user-boost-list');
+    if(list) list.innerHTML='<div class="ah-user-boost-loading">Загрузка серверов…</div>';
+    try{renderBoostSettings(await boostApi('/community/api/boosts/me'));}catch(error){if(list)list.innerHTML=`<div class="ah-user-boost-empty">${esc(boostError(error))}</div>`;}
+  };
+  window.changeMyServerBoost=async function(serverId,delta){
+    try{
+      await boostApi(`/community/api/servers/${serverId}/boosts`,{method:'POST',body:JSON.stringify({delta:Number(delta)})});
+      notify(delta>0?'Сервер отримав буст.':'Буст повернуто до доступних.');
+      await window.loadMyBoostSettings();
+    }catch(error){notify(boostError(error));}
+  };
+  window.selectMyServerTag=async function(serverId){
+    try{
+      await boostApi('/community/api/boosts/tag-selection',{method:'POST',body:JSON.stringify({server_id:serverId})});
+      notify(serverId?'Тег сервера тепер відображається біля вашого імені.':'Тег сервера вимкнено.');
+      await window.loadMyBoostSettings();
+    }catch(error){notify(boostError(error));}
+  };
+  const oldShow=window.showSettingsTab;
+  if(typeof oldShow==='function'&&!oldShow.__homeBoostWrapped){
+    const wrapped=function(tab){oldShow(tab);if(tab==='boosts')window.loadMyBoostSettings();};
+    wrapped.__homeBoostWrapped=true;window.showSettingsTab=wrapped;
+  }
 })();
 </script>
 </body>
