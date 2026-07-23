@@ -1617,6 +1617,52 @@ async def api_server_event_interest(
     return JSONResponse({"ok": True, **result})
 
 
+@router.post("/api/servers/{server_id}/events/{event_id}/end")
+async def api_server_event_end(
+    server_id: int,
+    event_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "unauthorized"}, status_code=401)
+    if not await crud.can_manage_server(db, server_id, account.id):
+        return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
+
+    event = await crud.get_server_event(db, server_id, event_id)
+    if not event:
+        return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
+
+    now = datetime.now(timezone.utc)
+    start_at = event.start_at
+    end_at = event.end_at
+    if start_at.tzinfo is None:
+        start_at = start_at.replace(tzinfo=timezone.utc)
+    if end_at.tzinfo is None:
+        end_at = end_at.replace(tzinfo=timezone.utc)
+    if now < start_at or now >= end_at:
+        return JSONResponse(
+            {
+                "ok": False,
+                "error": "not_ongoing",
+                "message": "Событие сейчас не проводится.",
+            },
+            status_code=409,
+        )
+
+    ended = await crud.end_server_event(db, server_id, event_id)
+    if not ended:
+        return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
+    return JSONResponse(
+        {
+            "ok": True,
+            "event_id": int(event_id),
+            "ended_at": ended.end_at.isoformat(),
+        }
+    )
+
+
 @router.post("/servers/{server_id}/events/{event_id}/delete")
 async def server_event_delete_submit(
     server_id: int,
