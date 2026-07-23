@@ -244,6 +244,47 @@ class ServerChannel(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
 
 
+class ServerEvent(Base):
+    """A scheduled server event with an optional Discord-style cover."""
+
+    __tablename__ = "community_server_events"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    server_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("community_servers.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    creator_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("community_accounts.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    title: Mapped[str] = mapped_column(String(100), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    location_type: Mapped[str] = mapped_column(String(16), default="external", nullable=False)
+    location: Mapped[str] = mapped_column(String(255), nullable=False)
+    cover_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    start_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    end_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    recurrence: Mapped[str] = mapped_column(String(16), default="none", nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
+class ServerEventInterest(Base):
+    """One interested mark per account and event."""
+
+    __tablename__ = "community_server_event_interests"
+    __table_args__ = (
+        UniqueConstraint("event_id", "account_id", name="uq_community_server_event_interest"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    event_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("community_server_events.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    account_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("community_accounts.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
 class ServerInvite(Base):
     __tablename__ = "community_server_invites"
     __table_args__ = (UniqueConstraint("server_id", "invitee_id", name="uq_community_server_invite"),)
