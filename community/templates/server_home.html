@@ -4949,6 +4949,338 @@ if (typeof window.openSelfProfileSettings !== 'function') {
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
 })();
 </script>
-{% include "_server_events_component.html" %}
+<style id="ah-server-events-styles">
+  .ah-event-backdrop{position:fixed;inset:0;z-index:150000;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.78);backdrop-filter:blur(2px)}
+  .ah-event-backdrop.open{display:flex;animation:ahEventFade .14s ease both}
+  .ah-event-dialog{width:min(604px,calc(100vw - 32px));max-height:min(760px,calc(100vh - 40px));overflow:hidden;border:1px solid #41434a;border-radius:13px;background:#24252b;color:#f2f3f5;box-shadow:0 28px 90px rgba(0,0,0,.7);font-family:var(--font-sans,'Inter',sans-serif)}
+  .ah-event-list-dialog{display:flex;flex-direction:column;min-height:398px}
+  .ah-event-head{min-height:70px;display:flex;align-items:center;gap:12px;padding:0 24px;border-bottom:1px solid rgba(255,255,255,.06)}
+  .ah-event-head-icon{width:23px;height:23px;display:grid;place-items:center;color:#b5bac1}
+  .ah-event-head-icon svg,.ah-event-icon svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .ah-event-head h2{margin:0;font-size:16px;font-weight:850;letter-spacing:-.01em}
+  .ah-event-head-sep{width:1px;height:26px;background:#3a3c43}
+  .ah-event-create-top{height:34px;border:0;border-radius:5px;padding:0 14px;background:#5865f2;color:#fff;font-weight:850;cursor:pointer}
+  .ah-event-create-top:hover{background:#4752c4}
+  .ah-event-close{margin-left:auto;width:34px;height:34px;border:0;border-radius:50%;background:transparent;color:#b5bac1;font-size:29px;line-height:1;cursor:pointer}
+  .ah-event-close:hover{color:#fff;background:#34363c}
+  .ah-event-list-body{min-height:310px;max-height:620px;overflow:auto;padding:18px 24px 24px}
+  .ah-event-empty{min-height:288px;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:32px}
+  .ah-event-empty-calendar{width:66px;height:66px;border-radius:50%;display:grid;place-items:center;background:#16171a;color:#fff;position:relative;margin-bottom:28px}
+  .ah-event-empty-calendar svg{width:34px;height:34px;fill:none;stroke:currentColor;stroke-width:2}
+  .ah-event-empty-calendar::before,.ah-event-empty-calendar::after{content:"✦";position:absolute;font-size:18px}.ah-event-empty-calendar::before{left:-13px;bottom:1px;color:#f0b232}.ah-event-empty-calendar::after{right:-13px;top:-7px;color:#42c8d7}
+  .ah-event-empty h3{margin:0 0 9px;font-size:22px}.ah-event-empty p{max-width:480px;margin:0;color:#b5bac1;font-size:13px;line-height:1.5}.ah-event-empty a{color:#00a8fc}
+  .ah-event-list{display:grid;gap:13px}
+  .ah-event-card{overflow:hidden;border:1px solid #3a3c43;border-radius:10px;background:#2b2d31;cursor:pointer;transition:transform .13s ease,border-color .13s ease,box-shadow .13s ease}
+  .ah-event-card:hover{transform:translateY(-1px);border-color:#52545d;box-shadow:0 8px 24px rgba(0,0,0,.28)}
+  .ah-event-card-cover{height:126px;background:linear-gradient(135deg,#313338,#111214);background-position:center;background-size:cover}
+  .ah-event-card-body{padding:14px 16px 12px}
+  .ah-event-card-time{display:flex;align-items:center;gap:9px;color:#f2f3f5;font-size:13px;font-weight:800}.ah-event-card-time .ah-event-icon{width:19px;height:19px;color:#7289ff}
+  .ah-event-card-title{margin:10px 0 4px;font-size:17px;font-weight:850;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ah-event-card-desc{height:18px;color:#b5bac1;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ah-event-card-foot{display:flex;align-items:center;gap:8px;padding:11px 16px;border-top:1px solid #3a3c43}
+  .ah-event-location{min-width:0;flex:1;display:flex;align-items:center;gap:8px;color:#dbdee1;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ah-event-location .ah-event-icon{width:18px;height:18px;color:#b5bac1;flex:0 0 auto}
+  .ah-event-small-btn{height:34px;border:0;border-radius:5px;background:#3c3e44;color:#f2f3f5;padding:0 12px;font-weight:800;cursor:pointer}.ah-event-small-btn:hover{background:#4a4c54}
+  .ah-event-small-btn.green{background:#248046}.ah-event-small-btn.green:hover{background:#1a6334}
+  .ah-event-avatar-stack{display:flex;align-items:center;margin-left:auto}.ah-event-avatar{width:24px;height:24px;border:2px solid #2b2d31;border-radius:50%;background:#5865f2 center/cover no-repeat;display:grid;place-items:center;font-size:10px;font-weight:900}.ah-event-count{height:22px;display:flex;align-items:center;gap:4px;border-radius:999px;background:#111214;padding:0 8px;font-size:11px;font-weight:800}
+
+  .ah-event-wizard-dialog{width:min(478px,calc(100vw - 32px));overflow:visible}
+  .ah-event-wizard-body{max-height:calc(100vh - 150px);overflow:auto;padding:16px 17px 8px}
+  .ah-event-progress{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px}
+  .ah-event-progress-part{min-width:0}.ah-event-progress-line{height:4px;border-radius:3px;background:#80848e;margin-bottom:8px}.ah-event-progress-part.active .ah-event-progress-line,.ah-event-progress-part.done .ah-event-progress-line{background:#8088ff}.ah-event-progress-part span{display:block;color:#949ba4;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ah-event-progress-part.active span{color:#9da3ff}
+  .ah-event-step{display:none}.ah-event-step.active{display:block;animation:ahEventStepIn .15s ease both}
+  .ah-event-step h2{margin:0 0 6px;font-size:23px;line-height:1.15;letter-spacing:-.02em}.ah-event-step-sub{margin:0 0 20px;color:#b5bac1;font-size:13px}
+  .ah-event-place-option{width:100%;display:grid;grid-template-columns:22px 26px minmax(0,1fr);gap:10px;align-items:start;padding:7px 0;border:0;background:transparent;color:#f2f3f5;text-align:left;font:inherit;cursor:pointer}
+  .ah-event-place-option.disabled{opacity:.45;cursor:not-allowed}.ah-event-place-radio{width:21px;height:21px;margin-top:1px;border:1.5px solid #80848e;border-radius:50%;display:grid;place-items:center}.ah-event-place-option.selected .ah-event-place-radio{background:#5865f2;border-color:#5865f2}.ah-event-place-option.selected .ah-event-place-radio::after{content:"";width:7px;height:7px;border-radius:50%;background:#fff}
+  .ah-event-place-icon{width:24px;height:24px;display:grid;place-items:center;font-size:21px}.ah-event-place-copy b{display:block;font-size:15px}.ah-event-place-copy small{display:block;margin-top:4px;color:#b5bac1;font-size:12.5px;line-height:1.35}
+  .ah-event-field{display:block;margin:16px 0 0!important;color:#f2f3f5!important;font-size:13px!important;font-weight:850!important;text-transform:none!important;letter-spacing:0!important}
+  .ah-event-field .required{color:#ed4245}.ah-event-control{width:100%!important;height:41px!important;margin-top:7px!important;border:1px solid #3f4147!important;border-radius:6px!important;background:#1e1f22!important;color:#f2f3f5!important;padding:0 12px!important;font:500 14px/1 var(--font-sans,'Inter',sans-serif)!important;outline:0!important}.ah-event-control:focus{border-color:#5865f2!important}
+  textarea.ah-event-control{height:90px!important;padding:11px 12px!important;line-height:1.45!important;resize:vertical}
+  .ah-event-date-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+  .ah-event-select{position:relative;margin-top:7px}.ah-event-select-button{width:100%;height:41px;border:1px solid #3f4147;border-radius:6px;background:#1e1f22;color:#f2f3f5;display:flex;align-items:center;justify-content:space-between;padding:0 12px;font:500 14px/1 var(--font-sans,'Inter',sans-serif);cursor:pointer}.ah-event-select.open .ah-event-select-button{border-color:#5865f2}.ah-event-select-button span:last-child{font-size:20px;transition:transform .12s ease}.ah-event-select.open .ah-event-select-button span:last-child{transform:rotate(180deg)}
+  .ah-event-select-menu{position:absolute;z-index:12;left:0;right:0;top:45px;display:none;max-height:208px;overflow:auto;padding:5px;border:1px solid #454750;border-radius:6px;background:#2b2d31;box-shadow:0 14px 40px rgba(0,0,0,.58)}.ah-event-select.open .ah-event-select-menu{display:block;animation:ahEventDrop .12s ease both}.ah-event-select-option{width:100%;min-height:39px;border:0;border-radius:4px;background:transparent;color:#f2f3f5;padding:8px 10px;text-align:left;font:500 13px/1.3 var(--font-sans,'Inter',sans-serif);cursor:pointer}.ah-event-select-option:hover,.ah-event-select-option.active{background:#404249}
+  .ah-event-upload-row{margin-top:16px}.ah-event-upload-row h4{margin:0 0 5px;font-size:14px}.ah-event-upload-row p{margin:0 0 8px;color:#b5bac1;font-size:12px;line-height:1.35}.ah-event-upload-btn{height:34px;border:0;border-radius:5px;background:#5865f2;color:#fff;padding:0 12px;font-weight:850;cursor:pointer}.ah-event-upload-btn:hover{background:#4752c4}
+  .ah-event-cover-preview{position:relative;display:none;overflow:hidden;margin-top:9px;border-radius:9px;background:#111214}.ah-event-cover-preview.visible{display:block}.ah-event-cover-preview img{display:block;width:100%;aspect-ratio:5/2;object-fit:cover}.ah-event-cover-edit{position:absolute;right:12px;top:12px;width:30px;height:30px;border:0;border-radius:50%;background:#fff;color:#313338;font-size:16px;cursor:pointer}.ah-event-cover-remove{margin-top:8px;height:32px;border:0;border-radius:5px;background:#5865f2;color:#fff;padding:0 11px;font-weight:800;cursor:pointer}
+  .ah-event-error{display:none;margin-top:13px;padding:9px 11px;border-radius:6px;background:rgba(242,63,66,.15);color:#ff8a8d;font-size:12px;font-weight:700}.ah-event-error.visible{display:block}
+  .ah-event-wizard-foot{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:15px 17px 17px}.ah-event-back{margin-right:auto;border:0;background:transparent;color:#f2f3f5;font-weight:800;cursor:pointer}.ah-event-cancel,.ah-event-next{height:40px;border:0;border-radius:5px;padding:0 17px;color:#fff;font-weight:850;cursor:pointer}.ah-event-cancel{background:#383a40}.ah-event-next{background:#5865f2}.ah-event-next:hover{background:#4752c4}.ah-event-next:disabled{background:#454d98;color:#9298bc;cursor:not-allowed}
+  .ah-event-preview-card{overflow:hidden;border:1px solid #3f4147;border-radius:8px;background:#313338}.ah-event-preview-cover{height:180px;background:linear-gradient(135deg,#30323a,#111214) center/cover no-repeat}.ah-event-preview-main{padding:14px 16px}.ah-event-preview-time{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800}.ah-event-preview-time .ah-event-icon{width:19px;height:19px;color:#7289ff}.ah-event-preview-title{margin:11px 0 5px;font-size:18px}.ah-event-preview-desc{color:#dbdee1;line-height:1.4;white-space:pre-wrap}.ah-event-preview-location{display:flex;align-items:center;gap:7px;margin-top:14px;padding-top:12px;border-top:1px solid #454750;color:#dbdee1}.ah-event-preview-location .ah-event-icon{width:18px;height:18px}
+  .ah-event-preview-note{text-align:center;padding:18px 5px 4px}.ah-event-preview-note h3{margin:0 0 6px;font-size:21px}.ah-event-preview-note p{margin:0;color:#b5bac1;font-size:13px}
+
+  .ah-event-crop-dialog{width:min(480px,calc(100vw - 30px));padding:0 0 16px}.ah-event-simple-head{height:66px;display:flex;align-items:center;padding:0 22px}.ah-event-simple-head h2{margin:0;font-size:20px}.ah-event-simple-head .ah-event-close{margin-left:auto}.ah-event-crop-wrap{margin:0 22px;border-radius:7px;background:#18191d;padding:12px}.ah-event-crop-canvas{display:block;width:100%;height:auto;max-height:350px;touch-action:none;cursor:grab}.ah-event-crop-canvas.dragging{cursor:grabbing}.ah-event-zoom-row{display:flex;align-items:center;gap:12px;padding:15px 26px 7px;color:#b5bac1}.ah-event-zoom-row input{flex:1;accent-color:#fff}.ah-event-crop-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:13px 22px 0}.ah-event-reset{margin-right:auto;border:0;background:transparent;color:#9da3ff;font-weight:800;cursor:pointer}
+
+  .ah-event-success-dialog{width:min(476px,calc(100vw - 32px));padding:26px 24px 24px;text-align:center;position:relative}.ah-event-success-dialog .ah-event-close{position:absolute;right:14px;top:14px}.ah-event-success-icon{width:64px;height:64px;margin:0 auto 24px;border-radius:50%;display:grid;place-items:center;background:#111214;color:#fff;font-size:31px;position:relative}.ah-event-success-icon::before,.ah-event-success-icon::after{content:"✦";position:absolute}.ah-event-success-icon::before{left:-11px;bottom:-3px;color:#f0b232}.ah-event-success-icon::after{right:-12px;top:-9px;color:#42c8d7}.ah-event-success-dialog h2{max-width:380px;margin:0 auto 10px;font-size:22px;line-height:1.25}.ah-event-success-dialog p{max-width:410px;margin:0 auto 18px;color:#dbdee1;line-height:1.45}.ah-event-share-row{height:42px;display:flex;border:1px solid #3f4147;border-radius:6px;background:#1e1f22;overflow:hidden}.ah-event-share-row input{min-width:0;flex:1;border:0!important;background:transparent!important;color:#f2f3f5!important;padding:0 11px!important}.ah-event-share-row button{border:0;background:#5865f2;color:#fff;padding:0 18px;font-weight:850;cursor:pointer}.ah-event-share-note{text-align:left;margin-top:8px;color:#b5bac1;font-size:11px}
+
+  .ah-event-detail-dialog{width:min(680px,calc(100vw - 32px));display:flex;flex-direction:column}.ah-event-detail-header{display:flex;align-items:center;padding:18px 24px 14px}.ah-event-detail-header h2{min-width:0;margin:0;font-size:19px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ah-event-detail-cover{margin:0 24px;height:240px;border-radius:8px;background:linear-gradient(135deg,#30323a,#111214) center/cover no-repeat}.ah-event-tabs{display:flex;gap:52px;margin-top:18px;padding:0 24px;border-bottom:1px solid #3a3c43}.ah-event-tab{height:44px;border:0;border-bottom:2px solid transparent;background:transparent;color:#b5bac1;font-weight:800;cursor:pointer}.ah-event-tab.active{border-color:#f2f3f5;color:#f2f3f5}.ah-event-detail-body{min-height:260px;max-height:390px;overflow:auto;padding:20px 24px}.ah-event-detail-pane{display:none}.ah-event-detail-pane.active{display:block}.ah-event-detail-time{display:flex;align-items:center;gap:9px;color:#8190ff;font-weight:800}.ah-event-detail-time .ah-event-icon{width:21px;height:21px}.ah-event-detail-body h3{margin:16px 0 13px;font-size:18px}.ah-event-detail-meta{display:grid;gap:10px;color:#dbdee1}.ah-event-detail-meta-row{display:flex;align-items:center;gap:9px}.ah-event-detail-meta-row .ah-event-icon{width:19px;height:19px;color:#949ba4}.ah-event-detail-description{margin-top:16px;color:#dbdee1;line-height:1.5;white-space:pre-wrap}.ah-event-attendee{display:flex;align-items:center;gap:10px;padding:8px 0}.ah-event-attendee .ah-event-avatar{width:32px;height:32px;border:0}.ah-event-detail-foot{display:flex;justify-content:flex-end;gap:9px;padding:14px 24px 24px}.ah-event-more{width:41px;padding:0}.ah-event-more-wrap{position:relative}.ah-event-more-menu{position:absolute;right:0;bottom:46px;display:none;width:174px;padding:6px;border:1px solid #454750;border-radius:7px;background:#2b2d31;box-shadow:0 12px 32px rgba(0,0,0,.55)}.ah-event-more-menu.open{display:block}.ah-event-delete{width:100%;height:34px;border:0;border-radius:4px;background:transparent;color:#ff6b6f;text-align:left;padding:0 9px;font-weight:750;cursor:pointer}.ah-event-delete:hover{background:#da373c;color:#fff}
+  .ah-event-confetti{position:fixed;z-index:2147483640;width:9px;height:17px;border-radius:2px;pointer-events:none;animation:ahEventConfetti 1.8s cubic-bezier(.12,.72,.16,1) forwards}
+  .ah-event-sidebar-entry{width:100%;margin:2px 0 8px!important;border:0;background:transparent;text-align:left;font:inherit;cursor:pointer}.ah-event-sidebar-entry svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.ah-event-sidebar-count{margin-left:auto;color:#b5bac1;font-size:12px}
+  @keyframes ahEventFade{from{opacity:0}to{opacity:1}}@keyframes ahEventStepIn{from{opacity:0;transform:translateX(8px)}to{opacity:1;transform:none}}@keyframes ahEventDrop{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}@keyframes ahEventConfetti{0%{opacity:1;transform:translate(0,0) rotate(0)}70%{opacity:1}100%{opacity:0;transform:translate(var(--tx),var(--ty)) rotate(var(--rot))}}
+  @media(max-width:560px){.ah-event-backdrop{padding:0;align-items:flex-end}.ah-event-dialog{width:100%;max-height:92vh;border-radius:14px 14px 0 0}.ah-event-date-grid{grid-template-columns:1fr}.ah-event-detail-cover{height:180px;margin:0 15px}.ah-event-detail-header,.ah-event-tabs,.ah-event-detail-body,.ah-event-detail-foot{padding-left:15px;padding-right:15px}.ah-event-card-cover{height:112px}}
+  @media(prefers-reduced-motion:reduce){.ah-event-backdrop.open,.ah-event-step.active,.ah-event-select.open .ah-event-select-menu{animation:none}.ah-event-confetti{display:none}}
+</style>
+
+<div id="ah-event-list-modal" class="ah-event-backdrop" aria-hidden="true">
+  <section class="ah-event-dialog ah-event-list-dialog" role="dialog" aria-modal="true" aria-labelledby="ah-event-list-title">
+    <header class="ah-event-head">
+      <span class="ah-event-head-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 2v6M16 2v6M3 10h18"/></svg></span>
+      <h2 id="ah-event-list-title">Мероприятия</h2><span class="ah-event-head-sep"></span>
+      {% if can_manage %}<button class="ah-event-create-top" type="button" onclick="openEventWizard()">Создать событие</button>{% endif %}
+      <button class="ah-event-close" type="button" onclick="closeEventModal('ah-event-list-modal')" aria-label="Закрыть">×</button>
+    </header>
+    <div id="ah-event-list-body" class="ah-event-list-body"></div>
+  </section>
+</div>
+
+{% if can_manage %}
+<div id="ah-event-wizard-modal" class="ah-event-backdrop" aria-hidden="true">
+  <form id="ah-event-form" class="ah-event-dialog ah-event-wizard-dialog" action="/community/servers/{{ server.id }}/events/create" method="post" enctype="multipart/form-data" autocomplete="off">
+    <input type="hidden" name="redirect_to" value="{{ request.url.path }}">
+    <input id="ah-event-location-type" type="hidden" name="location_type" value="">
+    <input id="ah-event-location-hidden" type="hidden" name="location" value="">
+    <input id="ah-event-start-hidden" type="hidden" name="start_at" value="">
+    <input id="ah-event-end-hidden" type="hidden" name="end_at" value="">
+    <input id="ah-event-recurrence-hidden" type="hidden" name="recurrence" value="none">
+    <input id="ah-event-cover-input" type="file" name="cover_file" accept="image/jpeg,image/png,image/webp" hidden>
+    <div class="ah-event-wizard-body">
+      <div class="ah-event-progress">
+        <div class="ah-event-progress-part active" data-event-progress="1"><div class="ah-event-progress-line"></div><span>Место</span></div>
+        <div class="ah-event-progress-part" data-event-progress="2"><div class="ah-event-progress-line"></div><span>Сведения о событии</span></div>
+        <div class="ah-event-progress-part" data-event-progress="3"><div class="ah-event-progress-line"></div><span>Просмотреть</span></div>
+      </div>
+      <section class="ah-event-step active" data-event-step="1">
+        <h2>Где пройдёт ваше событие?</h2><p class="ah-event-step-sub">Чтобы все знали, где его искать.</p>
+        <button class="ah-event-place-option disabled" type="button" disabled><span class="ah-event-place-radio"></span><span class="ah-event-place-icon">◉</span><span class="ah-event-place-copy"><b>Трибуна</b><small>Нет доступных сценических каналов.</small></span></button>
+        <button class="ah-event-place-option disabled" type="button" disabled><span class="ah-event-place-radio"></span><span class="ah-event-place-icon">🔊</span><span class="ah-event-place-copy"><b>Голосовой канал</b><small>Голосовые каналы появятся позже.</small></span></button>
+        <button id="ah-event-external-option" class="ah-event-place-option" type="button" onclick="selectEventLocation('external')"><span class="ah-event-place-radio"></span><span class="ah-event-place-icon">●</span><span class="ah-event-place-copy"><b>В другом месте</b><small>Текстовый канал, внешняя ссылка или место проведения.</small></span></button>
+        <label id="ah-event-location-label" class="ah-event-field" hidden>Укажите место <span class="required">*</span><input id="ah-event-location" class="ah-event-control" maxlength="255" placeholder="Введите место, ссылку, что-нибудь."></label>
+      </section>
+      <section class="ah-event-step" data-event-step="2">
+        <h2>Чему посвящено ваше событие?</h2><p class="ah-event-step-sub">Опишите подробнее своё событие.</p>
+        <label class="ah-event-field">Тема события <span class="required">*</span><input id="ah-event-title" class="ah-event-control" name="title" maxlength="100" placeholder="Чему посвящено ваше событие?"></label>
+        <div class="ah-event-date-grid">
+          <label class="ah-event-field">Дата начала <span class="required">*</span><input id="ah-event-start-date" class="ah-event-control" type="date"></label>
+          <label class="ah-event-field">Время начала <span class="required">*</span><input id="ah-event-start-time" class="ah-event-control" type="time" step="300"></label>
+          <label class="ah-event-field">Дата окончания <span class="required">*</span><input id="ah-event-end-date" class="ah-event-control" type="date"></label>
+          <label class="ah-event-field">Время окончания <span class="required">*</span><input id="ah-event-end-time" class="ah-event-control" type="time" step="300"></label>
+        </div>
+        <label class="ah-event-field">Частота события <span class="required">*</span></label>
+        <div id="ah-event-recurrence-select" class="ah-event-select">
+          <button class="ah-event-select-button" type="button" onclick="toggleEventRecurrence(event)"><span id="ah-event-recurrence-label">Не повторяется</span><span>⌄</span></button>
+          <div class="ah-event-select-menu">
+            <button class="ah-event-select-option active" type="button" data-value="none">Не повторяется</button>
+            <button class="ah-event-select-option" type="button" data-value="weekly">Еженедельно</button>
+            <button class="ah-event-select-option" type="button" data-value="biweekly">Раз в две недели</button>
+            <button class="ah-event-select-option" type="button" data-value="monthly">Ежемесячно</button>
+            <button class="ah-event-select-option" type="button" data-value="yearly">Ежегодно</button>
+            <button class="ah-event-select-option" type="button" data-value="daily">Каждый день</button>
+            <button class="ah-event-select-option" type="button" data-value="weekdays">Каждый будний день (с понедельника по пятницу)</button>
+          </div>
+        </div>
+        <label class="ah-event-field">Описание<textarea id="ah-event-description" class="ah-event-control" name="description" maxlength="4000" placeholder="Расскажите о своём событии подробнее. Поддерживаются разметка текста, перенос строк и ссылки."></textarea></label>
+        <div class="ah-event-upload-row"><h4>Обложка</h4><p>Рекомендуем использовать изображение размером не менее 800 пикселей в ширину и 320 пикселей в высоту.</p><button id="ah-event-upload-button" class="ah-event-upload-btn" type="button">Загрузить обложку</button></div>
+        <div id="ah-event-cover-preview" class="ah-event-cover-preview"><img id="ah-event-cover-image" alt="Обложка события"><button class="ah-event-cover-edit" type="button" title="Редактировать">✎</button></div>
+        <button id="ah-event-cover-remove" class="ah-event-cover-remove" type="button" hidden>Удалить изображение</button>
+      </section>
+      <section class="ah-event-step" data-event-step="3">
+        <div class="ah-event-preview-card">
+          <div id="ah-event-preview-cover" class="ah-event-preview-cover"></div>
+          <div class="ah-event-preview-main">
+            <div class="ah-event-preview-time"><span class="ah-event-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 2v6M16 2v6M3 10h18"/></svg></span><span id="ah-event-preview-time-text"></span></div>
+            <h3 id="ah-event-preview-title" class="ah-event-preview-title"></h3><div id="ah-event-preview-description" class="ah-event-preview-desc"></div>
+            <div class="ah-event-preview-location"><span class="ah-event-icon"><svg viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2"/></svg></span><span id="ah-event-preview-location"></span></div>
+          </div>
+        </div>
+        <div class="ah-event-preview-note"><h3>Предпросмотр вашего события.</h3><p>Это событие автоматически начнётся в назначенное время.</p></div>
+      </section>
+      <div id="ah-event-error" class="ah-event-error"></div>
+    </div>
+    <footer class="ah-event-wizard-foot">
+      <button id="ah-event-back" class="ah-event-back" type="button" hidden>Назад</button>
+      <button class="ah-event-cancel" type="button" onclick="closeEventModal('ah-event-wizard-modal')">Отмена</button>
+      <button id="ah-event-next" class="ah-event-next" type="button">Далее</button>
+    </footer>
+  </form>
+</div>
+
+<div id="ah-event-crop-modal" class="ah-event-backdrop" aria-hidden="true">
+  <section class="ah-event-dialog ah-event-crop-dialog" role="dialog" aria-modal="true">
+    <header class="ah-event-simple-head"><h2>Редактировать изображение</h2><button class="ah-event-close" type="button" onclick="cancelEventCoverCrop()">×</button></header>
+    <div class="ah-event-crop-wrap"><canvas id="ah-event-crop-canvas" class="ah-event-crop-canvas" width="430" height="350"></canvas></div>
+    <div class="ah-event-zoom-row"><span>▧</span><input id="ah-event-crop-zoom" type="range" min="1" max="3" step=".01" value="1"><span>▣</span></div>
+    <div class="ah-event-crop-actions"><button class="ah-event-reset" type="button" onclick="resetEventCoverCrop()">Сброс</button><button class="ah-event-cancel" type="button" onclick="cancelEventCoverCrop()">Отмена</button><button class="ah-event-next" type="button" onclick="applyEventCoverCrop()">Отправить</button></div>
+  </section>
+</div>
+{% endif %}
+
+<div id="ah-event-success-modal" class="ah-event-backdrop" aria-hidden="true">
+  <section class="ah-event-dialog ah-event-success-dialog" role="dialog" aria-modal="true">
+    <button class="ah-event-close" type="button" onclick="closeEventModal('ah-event-success-modal')">×</button>
+    <div class="ah-event-success-icon">▣</div><h2>Готово. А теперь расскажите кому-нибудь о своём событии!</h2><p>Скопируйте ссылку ниже, чтобы пригласить людей присоединиться к вашему событию.</p>
+    <div class="ah-event-share-row"><input id="ah-event-success-link" readonly><button type="button" onclick="copyEventShareLink()">Копировать</button></div><div class="ah-event-share-note">Ссылка работает для участников этого сервера.</div>
+  </section>
+</div>
+
+<div id="ah-event-detail-modal" class="ah-event-backdrop" aria-hidden="true">
+  <section class="ah-event-dialog ah-event-detail-dialog" role="dialog" aria-modal="true">
+    <header class="ah-event-detail-header"><h2 id="ah-event-detail-title"></h2><button class="ah-event-close" type="button" onclick="closeEventModal('ah-event-detail-modal')">×</button></header>
+    <div id="ah-event-detail-cover" class="ah-event-detail-cover"></div>
+    <nav class="ah-event-tabs"><button class="ah-event-tab active" type="button" data-event-tab="details">Сведения о событии</button><button id="ah-event-interested-tab" class="ah-event-tab" type="button" data-event-tab="interested">Интересуются: 0</button></nav>
+    <div class="ah-event-detail-body"><section id="ah-event-detail-details" class="ah-event-detail-pane active"></section><section id="ah-event-detail-interested" class="ah-event-detail-pane"></section></div>
+    <footer class="ah-event-detail-foot">
+      {% if can_manage %}<div class="ah-event-more-wrap"><button class="ah-event-small-btn ah-event-more" type="button" onclick="toggleEventMore(event)">•••</button><div id="ah-event-more-menu" class="ah-event-more-menu"><button class="ah-event-delete" type="button" onclick="deleteCurrentEvent()">Удалить событие</button></div></div>{% endif %}
+      <button class="ah-event-small-btn" type="button" onclick="copyCurrentEventLink()">🔗 Копировать ссылку</button><button id="ah-event-detail-interest" class="ah-event-small-btn green" type="button" onclick="toggleCurrentEventInterest()">✓ Интересно</button>
+    </footer>
+  </section>
+</div>
+
+<script id="ah-server-events-script">
+(function(){
+  if(window.__alexiHubServerEventsReady)return;window.__alexiHubServerEventsReady=true;
+  const SERVER_ID={{ server.id }};
+  const SERVER_NAME={{ server.name|tojson }};
+  const CAN_MANAGE={{ 'true' if can_manage else 'false' }};
+  const CURRENT_ACCOUNT={id:{{ account.id }},username:{{ account.username|tojson }},display_name:{{ (account.display_name or account.username)|tojson }},avatar_url:{{ (account.avatar_url or '')|tojson }}};
+  let EVENTS={{ events|tojson }};
+  let currentEventId=null,currentStep=1,eventCoverFile=null,eventCoverUrl="";
+  const recurrenceLabels={none:"Не повторяется",weekly:"Еженедельно",biweekly:"Раз в две недели",monthly:"Ежемесячно",yearly:"Ежегодно",daily:"Каждый день",weekdays:"Каждый будний день"};
+  const $=(s,r=document)=>r.querySelector(s);
+  const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+  const esc=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const iconCalendar='<span class="ah-event-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 2v6M16 2v6M3 10h18"/></svg></span>';
+  const iconLocation='<span class="ah-event-icon"><svg viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2"/></svg></span>';
+  function eventById(id){return EVENTS.find(e=>Number(e.id)===Number(id))}
+  function localDate(value){const date=new Date(value);return Number.isNaN(date.getTime())?null:date}
+  function formatEventDate(value,long=false){const d=localDate(value);if(!d)return"";const today=new Date(),tomorrow=new Date();tomorrow.setDate(today.getDate()+1);let day="";if(d.toDateString()===today.toDateString())day="Сегодня";else if(d.toDateString()===tomorrow.toDateString())day="Завтра";else day=new Intl.DateTimeFormat("ru-RU",{day:"numeric",month:long?"long":"short",year:d.getFullYear()!==today.getFullYear()?"numeric":undefined}).format(d);return day+", в "+new Intl.DateTimeFormat("ru-RU",{hour:"2-digit",minute:"2-digit"}).format(d)}
+  function eventLink(id){return location.origin+"/community/servers/"+SERVER_ID+"/events/"+id}
+  function avatarHtml(account){if(!account)return"";const style=account.avatar_url?" style=\"background-image:url('"+esc(account.avatar_url)+"')\"":"";return '<span class="ah-event-avatar"'+style+'>'+(account.avatar_url?"":esc((account.display_name||account.username||"?").slice(0,1).toUpperCase()))+"</span>"}
+  function openBackdrop(id){const m=document.getElementById(id);if(!m)return;m.classList.add("open");m.setAttribute("aria-hidden","false")}
+  function closeBackdrop(id){const m=document.getElementById(id);if(!m)return;m.classList.remove("open");m.setAttribute("aria-hidden","true")}
+  window.closeEventModal=closeBackdrop;
+
+  function renderEventList(){
+    const body=$("#ah-event-list-body");if(!body)return;
+    const heading=$("#ah-event-list-title");if(heading)heading.textContent=EVENTS.length===1?"1 событие":EVENTS.length>1?EVENTS.length+" событий":"Мероприятия";
+    if(!EVENTS.length){body.innerHTML='<div class="ah-event-empty"><div class="ah-event-empty-calendar">'+iconCalendar.replace('class="ah-event-icon"','')+'</div><h3>Нет предстоящих событий.</h3><p>Назначьте событие для любой запланированной деятельности на вашем сервере.'+(CAN_MANAGE?' Нажмите «Создать событие», чтобы начать.':'')+"</p></div>";}
+    else{body.innerHTML='<div class="ah-event-list">'+EVENTS.map(e=>{
+      const cover=e.cover_url?"background-image:url('"+esc(e.cover_url)+"')":"";
+      return '<article class="ah-event-card" data-event-id="'+e.id+'" tabindex="0"><div class="ah-event-card-cover" style="'+cover+'"></div><div class="ah-event-card-body"><div class="ah-event-card-time">'+iconCalendar+"<span>"+esc(formatEventDate(e.start_at))+"</span></div><div class=\"ah-event-card-title\">"+esc(e.title)+'</div><div class="ah-event-card-desc">'+esc(e.description||"")+'</div></div><div class="ah-event-card-foot"><div class="ah-event-location">'+iconLocation+"<span>"+esc(e.location)+"</span></div>"+avatarHtml(e.creator)+'<span class="ah-event-count">♟ <b data-event-count="'+e.id+'">'+Number(e.interest_count||0)+'</b></span><button class="ah-event-small-btn" type="button" data-event-copy="'+e.id+'" title="Копировать ссылку">🔗</button><button class="ah-event-small-btn '+(e.viewer_interested?"green":"")+'" type="button" data-event-interest="'+e.id+'">'+(e.viewer_interested?"✓ Интересно":"+ Интересно")+"</button></div></article>"
+    }).join("")+"</div>"}
+    $$(".ah-event-card",body).forEach(card=>{card.onclick=()=>openEventDetail(card.dataset.eventId);card.onkeydown=e=>{if(e.key==="Enter")openEventDetail(card.dataset.eventId)}})
+    $$("[data-event-copy]",body).forEach(button=>button.onclick=event=>{event.stopPropagation();copyText(eventLink(button.dataset.eventCopy))});
+    $$("[data-event-interest]",body).forEach(button=>button.onclick=event=>{event.stopPropagation();toggleEventInterest(button.dataset.eventInterest,false)});
+    updateSidebarEventEntry();
+  }
+  function updateSidebarEventEntry(){
+    const entry=$(".ah-event-sidebar-entry");if(!entry)return;const count=$(".ah-event-sidebar-count",entry);if(count)count.textContent=EVENTS.length?String(EVENTS.length):"";
+    const label=$(".ah-event-sidebar-label",entry);if(label)label.textContent=EVENTS.length===1?"1 событие":EVENTS.length>1?EVENTS.length+" событий":"Мероприятия";
+  }
+  function injectSidebarEventEntry(){
+    const tree=$(".server-channel-tree");if(!tree||$(".ah-event-sidebar-entry",tree))return;
+    const button=document.createElement("button");button.type="button";button.className="chan-link ah-event-sidebar-entry";button.innerHTML='<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 2v6M16 2v6M3 10h18"/></svg><span class="ah-event-sidebar-label">Мероприятия</span><span class="ah-event-sidebar-count"></span>';button.onclick=openEventList;
+    const firstLabel=$(".sidebar-label-row",tree);tree.insertBefore(button,firstLabel||tree.firstChild);updateSidebarEventEntry();
+  }
+  function openEventList(){closeServerMenu?.();renderEventList();openBackdrop("ah-event-list-modal")}
+  window.openEventList=openEventList;
+
+  function toInputDate(d){const p=n=>String(n).padStart(2,"0");return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())}
+  function toInputTime(d){const p=n=>String(n).padStart(2,"0");return p(d.getHours())+":"+p(d.getMinutes())}
+  function setDefaultEventTimes(){
+    const start=new Date();start.setMinutes(0,0,0);start.setHours(start.getHours()+1);const end=new Date(start.getTime()+2*60*60*1000);
+    $("#ah-event-start-date").value=toInputDate(start);$("#ah-event-start-time").value=toInputTime(start);$("#ah-event-end-date").value=toInputDate(end);$("#ah-event-end-time").value=toInputTime(end);
+  }
+  function resetEventWizard(){
+    const form=$("#ah-event-form");if(!form)return;form.reset();eventCoverFile=null;cropOriginalFile=null;if(eventCoverUrl)URL.revokeObjectURL(eventCoverUrl);eventCoverUrl="";$("#ah-event-cover-preview").classList.remove("visible");$("#ah-event-cover-remove").hidden=true;$("#ah-event-location-label").hidden=true;$("#ah-event-external-option").classList.remove("selected");$("#ah-event-location-type").value="";$("#ah-event-recurrence-hidden").value="none";$("#ah-event-recurrence-label").textContent=recurrenceLabels.none;$$(".ah-event-select-option").forEach(o=>o.classList.toggle("active",o.dataset.value==="none"));setDefaultEventTimes();updateEventRecurrenceLabels();setEventStep(1);showEventError("");
+  }
+  function openEventWizard(){
+    if(!CAN_MANAGE)return;closeServerMenu?.();closeBackdrop("ah-event-list-modal");resetEventWizard();openBackdrop("ah-event-wizard-modal")
+  }
+  window.openEventWizard=openEventWizard;
+  function selectEventLocation(type){$("#ah-event-location-type").value=type;$("#ah-event-external-option").classList.toggle("selected",type==="external");$("#ah-event-location-label").hidden=type!=="external";if(type==="external")setTimeout(()=>$("#ah-event-location")?.focus(),60)}
+  window.selectEventLocation=selectEventLocation;
+  function setEventStep(step){
+    currentStep=step;$$("[data-event-step]").forEach(el=>el.classList.toggle("active",Number(el.dataset.eventStep)===step));$$("[data-event-progress]").forEach(el=>{const n=Number(el.dataset.eventProgress);el.classList.toggle("active",n===step);el.classList.toggle("done",n<step)});
+    $("#ah-event-back").hidden=step===1;const next=$("#ah-event-next");next.textContent=step===3?"Создать событие":"Далее";next.disabled=false;
+  }
+  function eventDateTime(dateId,timeId){const d=$(dateId)?.value,t=$(timeId)?.value;if(!d||!t)return null;const value=new Date(d+"T"+t);return Number.isNaN(value.getTime())?null:value}
+  function showEventError(message){const box=$("#ah-event-error");if(!box)return;box.textContent=message||"";box.classList.toggle("visible",!!message)}
+  function validateEventStep(){
+    if(currentStep===1){if($("#ah-event-location-type").value!=="external")return"Выберите место события.";const place=$("#ah-event-location").value.trim();if(!place)return"Укажите место, ссылку или текстовый канал.";$("#ah-event-location-hidden").value=place;return""}
+    if(currentStep===2){const title=$("#ah-event-title").value.trim(),start=eventDateTime("#ah-event-start-date","#ah-event-start-time"),end=eventDateTime("#ah-event-end-date","#ah-event-end-time");if(!title)return"Укажите тему события.";if(!start||!end)return"Заполните дату и время.";if(end<=start)return"Окончание должно быть позже начала.";$("#ah-event-start-hidden").value=start.toISOString();$("#ah-event-end-hidden").value=end.toISOString();return""}
+    return"";
+  }
+  function fillEventPreview(){
+    const start=eventDateTime("#ah-event-start-date","#ah-event-start-time");$("#ah-event-preview-time-text").textContent=formatEventDate(start?.toISOString());$("#ah-event-preview-title").textContent=$("#ah-event-title").value.trim();$("#ah-event-preview-description").textContent=$("#ah-event-description").value.trim();$("#ah-event-preview-location").textContent=$("#ah-event-location-hidden").value;const cover=$("#ah-event-preview-cover");cover.style.backgroundImage=eventCoverUrl?"url('"+eventCoverUrl.replace(/'/g,"%27")+"')":"";
+  }
+  async function submitEvent(){
+    const button=$("#ah-event-next");button.disabled=true;button.textContent="Создание…";showEventError("");
+    const form=$("#ah-event-form"),data=new FormData(form);data.delete("cover_file");if(eventCoverFile)data.append("cover_file",eventCoverFile,eventCoverFile.name||"event-cover.jpg");
+    try{const response=await fetch(form.action,{method:"POST",headers:{"X-Requested-With":"XMLHttpRequest"},body:data});const payload=await response.json();if(!response.ok||!payload.ok)throw new Error(payload.message||"Не удалось создать событие.");EVENTS.push(payload.event);EVENTS.sort((a,b)=>new Date(a.start_at)-new Date(b.start_at));renderEventList();closeBackdrop("ah-event-wizard-modal");$("#ah-event-success-link").value=eventLink(payload.event.id);openBackdrop("ah-event-success-modal");launchEventConfetti()}
+    catch(error){showEventError(error.message||"Ошибка создания события.");setEventStep(2)}
+    finally{button.disabled=false;button.textContent=currentStep===3?"Создать событие":"Далее"}
+  }
+  async function nextEventStep(){showEventError("");const error=validateEventStep();if(error){showEventError(error);return}if(currentStep===1){setEventStep(2);return}if(currentStep===2){fillEventPreview();setEventStep(3);return}await submitEvent()}
+  function previousEventStep(){showEventError("");if(currentStep>1)setEventStep(currentStep-1)}
+  function toggleEventRecurrence(event){event?.stopPropagation();$("#ah-event-recurrence-select").classList.toggle("open")}
+  window.toggleEventRecurrence=toggleEventRecurrence;
+  function updateEventRecurrenceLabels(){
+    const date=eventDateTime("#ah-event-start-date","#ah-event-start-time");if(!date)return;
+    const weekdays=["воскресенье","понедельник","вторник","среда","четверг","пятница","суббота"],weekday=weekdays[date.getDay()],week=Math.ceil(date.getDate()/7),ordinals=["","первый","второй","третий","четвёртый","пятый"],annual=new Intl.DateTimeFormat("ru-RU",{day:"numeric",month:"short"}).format(date);
+    const labels={none:"Не повторяется",weekly:"Еженедельно ("+weekday+")",biweekly:"Раз в две недели ("+weekday+")",monthly:"Ежемесячно (каждый "+(ordinals[week]||week+"-й")+" "+weekday+")",yearly:"Ежегодно ("+annual+")",daily:"Каждый день",weekdays:"Каждый будний день (с понедельника по пятницу)"};
+    $$(".ah-event-select-option").forEach(option=>{option.textContent=labels[option.dataset.value]||option.textContent});
+    const selected=$("#ah-event-recurrence-hidden").value;$("#ah-event-recurrence-label").textContent=labels[selected]||labels.none;
+  }
+
+  let cropImage=null,cropScale=1,cropBaseScale=1,cropX=0,cropY=0,cropDrag=null,cropOriginalFile=null;
+  const cropFrame={x:25,y:98,w:380,h:152};
+  function constrainCrop(){if(!cropImage)return;const w=cropImage.naturalWidth*cropScale,h=cropImage.naturalHeight*cropScale;cropX=Math.min(cropFrame.x,Math.max(cropFrame.x+cropFrame.w-w,cropX));cropY=Math.min(cropFrame.y,Math.max(cropFrame.y+cropFrame.h-h,cropY))}
+  function drawCrop(){
+    const canvas=$("#ah-event-crop-canvas");if(!canvas||!cropImage)return;const ctx=canvas.getContext("2d");ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle="#111214";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(cropImage,cropX,cropY,cropImage.naturalWidth*cropScale,cropImage.naturalHeight*cropScale);ctx.fillStyle="rgba(0,0,0,.58)";ctx.fillRect(0,0,canvas.width,cropFrame.y);ctx.fillRect(0,cropFrame.y,cropFrame.x,cropFrame.h);ctx.fillRect(cropFrame.x+cropFrame.w,cropFrame.y,canvas.width-cropFrame.x-cropFrame.w,cropFrame.h);ctx.fillRect(0,cropFrame.y+cropFrame.h,canvas.width,canvas.height-cropFrame.y-cropFrame.h);ctx.strokeStyle="#fff";ctx.lineWidth=4;ctx.strokeRect(cropFrame.x,cropFrame.y,cropFrame.w,cropFrame.h)
+  }
+  function openEventCoverCrop(file){
+    if(!file||!file.type.startsWith("image/"))return;cropOriginalFile=file;const reader=new FileReader();reader.onload=()=>{const img=new Image();img.onload=()=>{cropImage=img;cropBaseScale=Math.max(cropFrame.w/img.naturalWidth,cropFrame.h/img.naturalHeight);cropScale=cropBaseScale;cropX=cropFrame.x+(cropFrame.w-img.naturalWidth*cropScale)/2;cropY=cropFrame.y+(cropFrame.h-img.naturalHeight*cropScale)/2;$("#ah-event-crop-zoom").value="1";drawCrop();openBackdrop("ah-event-crop-modal")};img.src=reader.result};reader.readAsDataURL(file)
+  }
+  function resetEventCoverCrop(){if(!cropImage)return;cropScale=cropBaseScale;cropX=cropFrame.x+(cropFrame.w-cropImage.naturalWidth*cropScale)/2;cropY=cropFrame.y+(cropFrame.h-cropImage.naturalHeight*cropScale)/2;$("#ah-event-crop-zoom").value="1";drawCrop()}
+  function cancelEventCoverCrop(){closeBackdrop("ah-event-crop-modal");$("#ah-event-cover-input").value=""}
+  function applyEventCoverCrop(){
+    if(!cropImage)return;const canvas=document.createElement("canvas");canvas.width=800;canvas.height=320;const ctx=canvas.getContext("2d"),sx=(cropFrame.x-cropX)/cropScale,sy=(cropFrame.y-cropY)/cropScale,sw=cropFrame.w/cropScale,sh=cropFrame.h/cropScale;ctx.drawImage(cropImage,sx,sy,sw,sh,0,0,800,320);canvas.toBlob(blob=>{if(!blob)return;eventCoverFile=new File([blob],"event-cover.jpg",{type:"image/jpeg",lastModified:Date.now()});if(eventCoverUrl)URL.revokeObjectURL(eventCoverUrl);eventCoverUrl=URL.createObjectURL(blob);$("#ah-event-cover-image").src=eventCoverUrl;$("#ah-event-cover-preview").classList.add("visible");$("#ah-event-cover-remove").hidden=false;closeBackdrop("ah-event-crop-modal");$("#ah-event-cover-input").value=""}, "image/jpeg",.92)
+  }
+  window.resetEventCoverCrop=resetEventCoverCrop;window.cancelEventCoverCrop=cancelEventCoverCrop;window.applyEventCoverCrop=applyEventCoverCrop;
+
+  function openEventDetail(id,tab="details"){
+    const e=eventById(id);if(!e)return;currentEventId=Number(e.id);$("#ah-event-detail-title").textContent=e.title;const cover=$("#ah-event-detail-cover");cover.style.backgroundImage=e.cover_url?"url('"+String(e.cover_url).replace(/'/g,"%27")+"')":"";$("#ah-event-interested-tab").textContent="Интересуются: "+Number(e.interest_count||0);
+    const creator=e.creator||{};$("#ah-event-detail-details").innerHTML='<div class="ah-event-detail-time">'+iconCalendar+"<span>"+esc(formatEventDate(e.start_at,true))+"</span></div><h3>"+esc(e.title)+'</h3><div class="ah-event-detail-meta"><div class="ah-event-detail-meta-row">◉ <span>'+esc(SERVER_NAME)+'</span></div><div class="ah-event-detail-meta-row">'+iconLocation+"<span>"+esc(e.location)+'</span></div><div class="ah-event-detail-meta-row">♟ <span>'+Number(e.interest_count||0)+" человек интересуется</span></div>"+(e.recurrence&&e.recurrence!=="none"?'<div class="ah-event-detail-meta-row">↻ <span>'+esc(recurrenceLabels[e.recurrence]||e.recurrence)+"</span></div>":"")+(creator.username?'<div class="ah-event-detail-meta-row">'+avatarHtml(creator)+"<span>Создано "+esc(creator.display_name||creator.username)+"</span></div>":"")+'</div><div class="ah-event-detail-description">'+esc(e.description||"")+"</div>";
+    $("#ah-event-detail-interested").innerHTML=e.interested?.length?e.interested.map(a=>'<div class="ah-event-attendee">'+avatarHtml(a)+"<b>"+esc(a.display_name||a.username)+"</b></div>").join(""):'<div style="color:#b5bac1">Пока никто не отметил «Интересно».</div>';
+    const interest=$("#ah-event-detail-interest");interest.classList.toggle("green",!!e.viewer_interested);interest.textContent=e.viewer_interested?"✓ Интересно":"+ Интересно";setEventDetailTab(tab);openBackdrop("ah-event-detail-modal")
+  }
+  window.openEventDetail=openEventDetail;
+  function setEventDetailTab(tab){$$(".ah-event-tab").forEach(b=>b.classList.toggle("active",b.dataset.eventTab===tab));$("#ah-event-detail-details").classList.toggle("active",tab==="details");$("#ah-event-detail-interested").classList.toggle("active",tab==="interested")}
+  async function toggleEventInterest(eventId,reopenDetail){const e=eventById(eventId);if(!e)return;const button=reopenDetail?$("#ah-event-detail-interest"):null;if(button)button.disabled=true;try{const response=await fetch("/community/api/servers/"+SERVER_ID+"/events/"+e.id+"/interest",{method:"POST"}),payload=await response.json();if(!response.ok||!payload.ok)throw new Error();e.viewer_interested=payload.interested;e.interest_count=payload.count;e.interested=payload.accounts||[];renderEventList();if(reopenDetail)openEventDetail(e.id,$(".ah-event-tab.active")?.dataset.eventTab||"details")}catch(error){showActionToast?.("Не вдалося оновити подію")}finally{if(button)button.disabled=false}}
+  async function toggleCurrentEventInterest(){if(currentEventId)await toggleEventInterest(currentEventId,true)}
+  window.toggleCurrentEventInterest=toggleCurrentEventInterest;
+  async function copyText(value){try{await navigator.clipboard.writeText(value);showActionToast?.("Ссылка скопирована")}catch(error){const temp=document.createElement("input");temp.value=value;document.body.appendChild(temp);temp.select();document.execCommand("copy");temp.remove()}}
+  function copyCurrentEventLink(){if(currentEventId)copyText(eventLink(currentEventId))}function copyEventShareLink(){const input=$("#ah-event-success-link");if(input)copyText(input.value)}
+  window.copyCurrentEventLink=copyCurrentEventLink;window.copyEventShareLink=copyEventShareLink;
+  function toggleEventMore(event){event?.stopPropagation();$("#ah-event-more-menu")?.classList.toggle("open")}window.toggleEventMore=toggleEventMore;
+  function deleteCurrentEvent(){const e=eventById(currentEventId);if(!e||!CAN_MANAGE||!confirm("Удалить событие «"+e.title+"»?"))return;const form=document.createElement("form");form.method="post";form.action="/community/servers/"+SERVER_ID+"/events/"+e.id+"/delete";form.innerHTML='<input type="hidden" name="redirect_to" value="'+esc(location.pathname)+'">';document.body.appendChild(form);form.submit()}window.deleteCurrentEvent=deleteCurrentEvent;
+  function launchEventConfetti(){if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;const colors=["#5865f2","#eb459e","#f0b232","#23a55a","#fff","#3ba55d"];for(let i=0;i<72;i++){const piece=document.createElement("i"),left=i%2===0;piece.className="ah-event-confetti";piece.style.background=colors[Math.floor(Math.random()*colors.length)];piece.style.left=left?"-14px":"auto";piece.style.right=left?"auto":"-14px";piece.style.top=(24+Math.random()*54)+"vh";piece.style.setProperty("--tx",(left?1:-1)*(30+Math.random()*58)+"vw");piece.style.setProperty("--ty",(-120+Math.random()*320)+"px");piece.style.setProperty("--rot",(-720+Math.random()*1440)+"deg");piece.style.animationDelay=(Math.random()*.22)+"s";document.body.appendChild(piece);setTimeout(()=>piece.remove(),2300)}}window.launchEventConfetti=launchEventConfetti;
+
+  function init(){
+    injectSidebarEventEntry();renderEventList();
+    $("#ah-event-next")?.addEventListener("click",nextEventStep);$("#ah-event-back")?.addEventListener("click",previousEventStep);
+    $("#ah-event-location")?.addEventListener("input",e=>$("#ah-event-location-hidden").value=e.target.value.trim());
+    $$(".ah-event-select-option").forEach(option=>option.addEventListener("click",()=>{$("#ah-event-recurrence-hidden").value=option.dataset.value;$("#ah-event-recurrence-label").textContent=recurrenceLabels[option.dataset.value]||option.textContent;$$(".ah-event-select-option").forEach(o=>o.classList.toggle("active",o===option));$("#ah-event-recurrence-select").classList.remove("open")}));
+    $("#ah-event-start-date")?.addEventListener("change",updateEventRecurrenceLabels);$("#ah-event-start-time")?.addEventListener("change",updateEventRecurrenceLabels);updateEventRecurrenceLabels();
+    $("#ah-event-upload-button")?.addEventListener("click",()=>$("#ah-event-cover-input").click());$("#ah-event-cover-edit")?.addEventListener("click",()=>cropOriginalFile?openEventCoverCrop(cropOriginalFile):$("#ah-event-cover-input").click());$("#ah-event-cover-input")?.addEventListener("change",e=>openEventCoverCrop(e.target.files?.[0]));
+    $("#ah-event-cover-remove")?.addEventListener("click",()=>{eventCoverFile=null;cropOriginalFile=null;if(eventCoverUrl)URL.revokeObjectURL(eventCoverUrl);eventCoverUrl="";$("#ah-event-cover-preview").classList.remove("visible");$("#ah-event-cover-remove").hidden=true});
+    const canvas=$("#ah-event-crop-canvas");canvas?.addEventListener("pointerdown",e=>{if(!cropImage)return;cropDrag={x:e.clientX,y:e.clientY,ox:cropX,oy:cropY};canvas.setPointerCapture(e.pointerId);canvas.classList.add("dragging")});canvas?.addEventListener("pointermove",e=>{if(!cropDrag)return;const rect=canvas.getBoundingClientRect(),ratio=canvas.width/rect.width;cropX=cropDrag.ox+(e.clientX-cropDrag.x)*ratio;cropY=cropDrag.oy+(e.clientY-cropDrag.y)*ratio;constrainCrop();drawCrop()});const stopDrag=()=>{cropDrag=null;canvas?.classList.remove("dragging")};canvas?.addEventListener("pointerup",stopDrag);canvas?.addEventListener("pointercancel",stopDrag);
+    $("#ah-event-crop-zoom")?.addEventListener("input",e=>{if(!cropImage)return;const oldScale=cropScale,centerX=cropFrame.x+cropFrame.w/2,centerY=cropFrame.y+cropFrame.h/2;cropScale=cropBaseScale*Number(e.target.value);cropX=centerX-(centerX-cropX)*(cropScale/oldScale);cropY=centerY-(centerY-cropY)*(cropScale/oldScale);constrainCrop();drawCrop()});
+    $$(".ah-event-tab").forEach(tab=>tab.addEventListener("click",()=>setEventDetailTab(tab.dataset.eventTab)));
+    $$(".ah-event-backdrop").forEach(modal=>modal.addEventListener("click",e=>{if(e.target===modal&&modal.id!=="ah-event-crop-modal")closeBackdrop(modal.id)}));
+    document.addEventListener("click",e=>{if(!e.target.closest("#ah-event-recurrence-select"))$("#ah-event-recurrence-select")?.classList.remove("open");if(!e.target.closest(".ah-event-more-wrap"))$("#ah-event-more-menu")?.classList.remove("open")});
+    document.addEventListener("keydown",e=>{if(e.key==="Escape"){const open=$$(".ah-event-backdrop.open").pop();if(open&&open.id!=="ah-event-crop-modal")closeBackdrop(open.id)}});
+    const params=new URLSearchParams(location.search),eventId=params.get("event");if(eventId&&eventById(eventId))setTimeout(()=>openEventDetail(eventId),80);if(params.get("event_created")){const e=eventById(params.get("event_created"));if(e){$("#ah-event-success-link").value=eventLink(e.id);setTimeout(()=>{openBackdrop("ah-event-success-modal");launchEventConfetti()},80)}}
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
+})();
+</script>
 </body>
 </html>
