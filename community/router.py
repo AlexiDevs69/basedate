@@ -15,7 +15,9 @@ import os
 import re
 import time
 import uuid
+from datetime import datetime, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import httpx
 
@@ -249,6 +251,7 @@ async def community_schema_startup() -> None:
         await crud.ensure_mention_table(db)
         await crud.ensure_user_blocks_table(db)
         await crud.ensure_server_category_schema(db)
+        await crud.ensure_server_event_schema(db)
 
 
 # --- Lightweight realtime layer --------------------------------------------
@@ -1449,6 +1452,7 @@ async def server_home(server_id: int, request: Request, db: AsyncSession = Depen
     channels = await crud.list_server_channels(db, server.id, include_private=can_manage)
     members = await crud.list_server_members(db, server.id)
     friends = await crud.list_friends(db, account.id)
+    events = await crud.list_server_events(db, server.id, account.id)
     rail = await server_rail_context(db, account.id, active_server_id=server.id)
 
     return templates.TemplateResponse(
@@ -1461,6 +1465,7 @@ async def server_home(server_id: int, request: Request, db: AsyncSession = Depen
             "categories": categories,
             "members": members,
             "friends": friends,
+            "events": events,
             "can_manage": can_manage,
             **rail,
         },
@@ -1483,6 +1488,153 @@ async def server_category_create_submit(
     if await crud.get_server_by_id(db, server_id) and name.strip():
         await crud.create_server_category(db, server_id, name, is_private=is_private)
     return RedirectResponse(url=f"/community/servers/{server_id}", status_code=303)
+
+
+def _parse_server_event_datetime(value: str) -> datetime | None:
+    """Accept browser ISO values and normalize them to UTC for PostgreSQL."""
+    clean = (value or "").strip()
+    if not clean:
+        return None
+    try:
+        parsed = datetime.fromisoformat(clean.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=ZoneInfo("Europe/Kyiv"))
+    return parsed.astimezone(timezone.utc)
+
+
+@router.post("/servers/{server_id}/events/create")
+async def server_event_create_submit(
+    server_id: int,
+    request: Request,
+    title: str = Form(...),
+    description: str = Form(""),
+    location_type: str = Form("external"),
+    location: str = Form(...),
+    start_at: str = Form(...),
+    end_at: str = Form(...),
+    recurrence: str = Form("none"),
+    redirect_to: str = Form(""),
+    cover_file: UploadFile | None = File(None),
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    wants_json = request.headers.get("x-requested-with", "").lower() == "xmlhttprequest"
+    if not account:
+        if wants_json:
+            return JSONResponse({"ok": False, "error": "unauthorized"}, status_code=401)
+        return RedirectResponse(url="/community/login", status_code=303)
+    if not await crud.can_manage_server(db, server_id, account.id):
+        if wants_json:
+            return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
+        return _forbidden_response()
+
+    clean_title = re.sub(r"\s+", " ", title.strip())[:100]
+    clean_location = re.sub(r"\s+", " ", location.strip())[:255]
+    start_dt = _parse_server_event_datetime(start_at)
+    end_dt = _parse_server_event_datetime(end_at)
+    error = ""
+    if not clean_title:
+        error = "Укажите тему события."
+    elif not clean_location:
+        error = "Укажите место события."
+    elif not start_dt or not end_dt:
+        error = "Проверьте дату и время события."
+    elif end_dt <= start_dt:
+        error = "Событие должно закончиться после начала."
+    elif (end_dt - start_dt).days > 366:
+        error = "Событие не может длиться больше года."
+
+    safe_redirect = _safe_next_url(redirect_to, f"/community/servers/{server_id}")
+    if error:
+        if wants_json:
+            return JSONResponse({"ok": False, "error": "validation", "message": error}, status_code=400)
+        separator = "&" if "?" in safe_redirect else "?"
+        return RedirectResponse(url=f"{safe_redirect}{separator}event_error=1", status_code=303)
+
+    cover_url = await _profile_image_url_from_form(
+        cover_file, "", account.id, f"server_event_{server_id}"
+    )
+    event = await crud.create_server_event(
+        db,
+        server_id=server_id,
+        creator_id=account.id,
+        title=clean_title,
+        description=description,
+        location_type=location_type,
+        location=clean_location,
+        cover_url=cover_url,
+        start_at=start_dt,
+        end_at=end_dt,
+        recurrence=recurrence,
+    )
+    payload = await crud.get_server_event_payload(db, server_id, event.id, account.id)
+    if wants_json:
+        return JSONResponse({"ok": True, "event": payload})
+    separator = "&" if "?" in safe_redirect else "?"
+    return RedirectResponse(url=f"{safe_redirect}{separator}event_created={event.id}", status_code=303)
+
+
+@router.get("/servers/{server_id}/events/{event_id}")
+async def server_event_open(
+    server_id: int,
+    event_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return RedirectResponse(url="/community/login", status_code=303)
+    if not await crud.is_server_member(db, server_id, account.id):
+        return _forbidden_response()
+    event = await crud.get_server_event(db, server_id, event_id)
+    if not event:
+        return RedirectResponse(url=f"/community/servers/{server_id}", status_code=303)
+    return RedirectResponse(
+        url=f"/community/servers/{server_id}?event={event_id}",
+        status_code=303,
+    )
+
+
+@router.post("/api/servers/{server_id}/events/{event_id}/interest")
+async def api_server_event_interest(
+    server_id: int,
+    event_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "unauthorized"}, status_code=401)
+    if not await crud.is_server_member(db, server_id, account.id):
+        return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
+    result = await crud.toggle_server_event_interest(
+        db, server_id, event_id, account.id
+    )
+    if result is None:
+        return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
+    return JSONResponse({"ok": True, **result})
+
+
+@router.post("/servers/{server_id}/events/{event_id}/delete")
+async def server_event_delete_submit(
+    server_id: int,
+    event_id: int,
+    request: Request,
+    redirect_to: str = Form(""),
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return RedirectResponse(url="/community/login", status_code=303)
+    if not await crud.can_manage_server(db, server_id, account.id):
+        return _forbidden_response()
+    await crud.delete_server_event(db, server_id, event_id)
+    return RedirectResponse(
+        url=_safe_next_url(redirect_to, f"/community/servers/{server_id}"),
+        status_code=303,
+    )
 
 
 @router.post("/servers/{server_id}/channels/create")
@@ -1543,6 +1695,7 @@ async def server_channel_view(server_id: int, channel_id: int, request: Request,
     channels = await crud.list_server_channels(db, server_id, include_private=can_manage)
     members = await crud.list_server_members(db, server_id)
     friends = await crud.list_friends(db, account.id)
+    events = await crud.list_server_events(db, server_id, account.id)
     feed = await crud.get_server_feed(db, server_id, channel_id)
     mentions_were_read = await crud.mark_server_channel_mentions_read(
         db, account.id, server_id, channel_id
@@ -1561,6 +1714,7 @@ async def server_channel_view(server_id: int, channel_id: int, request: Request,
             "categories": categories,
             "members": members,
             "friends": friends,
+            "events": events,
             "can_manage": can_manage,
             "feed": feed,
             **rail,
