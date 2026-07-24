@@ -2544,17 +2544,112 @@ document.addEventListener('DOMContentLoaded',()=>{
         <div id="ah-v3-full-avatar" class="ah-v3-full-avatar"><span id="ah-v3-full-avatar-text"></span></div>
         <div id="ah-v3-full-name" class="ah-v3-full-name">User</div>
         <div id="ah-v3-full-handle" class="ah-v3-full-handle">@user</div>
+        <div class="ah-v3-full-actions">
+          <a id="ah-v3-full-message" href="#">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 5.5A3.5 3.5 0 0 1 8 2h8a3.5 3.5 0 0 1 3.5 3.5v7A3.5 3.5 0 0 1 16 16H9l-4.5 4v-4.8a3.5 3.5 0 0 1-2-3.2V5.5Z"/></svg>
+            <span>Повідомлення</span>
+          </a>
+          <button id="ah-v3-friend-action" class="ah-v3-friend-action state-loading" type="button" aria-label="Перевіряємо статус дружби"><span class="ah-v3-friend-loading" aria-hidden="true"></span></button>
+          <button id="ah-v3-full-more" class="ah-v3-full-icon-button" type="button" aria-label="Додаткові дії" aria-expanded="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+          </button>
+        </div>
+        <div class="ah-v3-full-about-block">
+          <div class="ah-v3-full-section-title">Про мене</div>
+          <div id="ah-v3-full-about">Швидкий перегляд профілю поверх поточної сторінки.</div>
+        </div>
         <div id="ah-v3-full-meta" class="ah-v3-full-meta">AlexiHub profile card.</div>
       </div>
     </div>
     <div class="ah-v3-full-right">
-      <h3>Дошка</h3>
-      <div class="ah-v3-widget"><div class="ah-v3-widget-title">Про користувача</div><p id="ah-v3-full-about">Швидкий перегляд профілю поверх поточної сторінки.</p></div>
-      <div class="ah-v3-widget"><div class="ah-v3-widget-title">Дії</div><p><a id="ah-v3-full-message" href="#" style="color:#fff;text-decoration:none;font-weight:900;">Message</a> · <a id="ah-v3-full-open" href="#" style="color:#b5bac1;text-decoration:none;font-weight:900;">Open profile page</a></p></div>
+      <div class="ah-v3-full-tabs">
+        <span>Дошка</span>
+        <span id="ah-v3-mutual-tab" class="active">Спільні сервери</span>
+      </div>
+      <div id="ah-v3-mutual-list" class="ah-v3-mutual-list"></div>
     </div>
+    <div id="ah-v3-full-menu" class="ah-v3-full-menu" aria-hidden="true">
+      <a id="ah-v3-full-profile-link" class="ah-v3-full-menu-item" href="#">
+        <span>Основний профіль<small id="ah-v3-full-menu-username"></small></span>
+      </a>
+      <div class="ah-v3-full-menu-nested">
+        <button class="ah-v3-full-menu-item" type="button">
+          <span>Запросити на сервер</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>
+        </button>
+        <div id="ah-v3-invite-submenu" class="ah-v3-invite-submenu" aria-hidden="true"></div>
+      </div>
+      <div class="ah-v3-full-menu-separator"></div>
+      <button class="ah-v3-full-menu-item" type="button" data-full-profile-action="ignore">Ігнорувати</button>
+      <button class="ah-v3-full-menu-item danger" type="button" data-full-profile-action="block">Заблокувати</button>
+      <button class="ah-v3-full-menu-item danger" type="button" data-full-profile-action="report">Поскаржитися на профіль користувача</button>
+      <div class="ah-v3-full-menu-separator"></div>
+      <button class="ah-v3-full-menu-item" type="button" data-full-profile-action="copy">
+        <span>Скопіювати ID користувача</span><b>ID</b>
+      </button>
+    </div>
+    <div id="ah-v3-full-tooltip" class="ah-v3-full-tooltip" role="tooltip"></div>
   </div>
 </div>
 
+<style id="ah-profile-actions-style">
+.ah-v3-full-actions{display:flex;align-items:center;gap:8px;margin-top:18px}
+.ah-v3-full-actions>a,.ah-v3-full-actions>button{min-width:0;min-height:36px;border:0;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;color:#fff;text-decoration:none;font-size:12px;font-weight:900;cursor:pointer;transition:background .14s ease,filter .14s ease,transform .12s ease}
+#ah-v3-full-message{gap:7px;padding:0 14px;background:#5865f2}
+#ah-v3-full-message svg{width:16px;height:16px;fill:currentColor}
+#ah-v3-full-message:hover{background:#4752c4}
+.ah-v3-friend-action,.ah-v3-full-icon-button{height:36px;background:#4e5058}
+.ah-v3-friend-action{gap:7px;padding:0 11px}
+.ah-v3-friend-action svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ah-v3-friend-action.state-friends,.ah-v3-friend-action.state-pending_sent,.ah-v3-friend-action.state-loading{width:36px;padding:0}
+.ah-v3-friend-action.state-none,.ah-v3-friend-action.state-pending_received{padding:0 13px;background:#5865f2}
+.ah-v3-friend-action.state-none:hover,.ah-v3-friend-action.state-pending_received:hover{background:#4752c4}
+.ah-v3-friend-action.state-pending_sent:hover,.ah-v3-full-icon-button:hover{background:#5d606a}
+.ah-v3-friend-action:disabled{opacity:1;cursor:default}
+.ah-v3-friend-action[hidden],.ah-v3-full-icon-button[hidden]{display:none!important}
+.ah-v3-friend-loading{width:16px;height:16px;border:2px solid rgba(255,255,255,.28);border-top-color:#fff;border-radius:50%;animation:ah-v3-friend-spin .7s linear infinite}
+@keyframes ah-v3-friend-spin{to{transform:rotate(360deg)}}
+.ah-v3-full-icon-button{width:36px;padding:0}
+.ah-v3-full-icon-button svg{width:22px;height:22px;fill:currentColor}
+.ah-v3-full-actions>a:active,.ah-v3-full-actions>button:active{transform:translateY(1px)}
+.ah-v3-full-menu{position:fixed;z-index:2147483500;width:292px;display:none;padding:7px;border:1px solid #3b3d45;border-radius:8px;background:#24252b;color:#dbdee1;box-shadow:0 20px 55px rgba(0,0,0,.62)}
+.ah-v3-full-menu.open{display:block;animation:ahFullMenuIn .12s ease-out both}
+@keyframes ahFullMenuIn{from{opacity:0;transform:translateY(-5px) scale(.985)}to{opacity:1;transform:none}}
+.ah-v3-full-menu-item{width:100%;min-height:38px;padding:7px 10px;border:0;border-radius:5px;background:transparent;color:#dbdee1;display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;text-decoration:none;font:inherit;font-size:13px;font-weight:800;cursor:pointer}
+.ah-v3-full-menu-item span{min-width:0}.ah-v3-full-menu-item small{display:block;margin-top:2px;color:#949ba4;font-size:10px;font-weight:650}
+.ah-v3-full-menu-item>svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.ah-v3-full-menu-item>b{padding:2px 4px;border-radius:3px;background:#4e5058;color:#dbdee1;font-size:9px}
+.ah-v3-full-menu-item:hover,.ah-v3-full-menu-item:focus-visible{outline:0;background:#5865f2;color:#fff}.ah-v3-full-menu-item:hover small{color:#fff}
+.ah-v3-full-menu-item.danger{color:#ff6b6f}.ah-v3-full-menu-item.danger:hover{background:#da373c;color:#fff}
+.ah-v3-full-menu-separator{height:1px;margin:5px;background:#3a3c43}.ah-v3-full-menu-nested{position:relative}.ah-v3-full-menu-nested:after{content:"";position:absolute;left:100%;top:-7px;width:10px;height:calc(100% + 14px)}
+.ah-v3-invite-submenu{position:absolute;left:calc(100% + 8px);top:-7px;z-index:2;width:260px;max-height:340px;overflow-y:auto;display:none;padding:7px;border:1px solid #3b3d45;border-radius:8px;background:#2b2d31;box-shadow:0 20px 55px rgba(0,0,0,.62)}
+.ah-v3-full-menu-nested:hover>.ah-v3-invite-submenu,.ah-v3-full-menu-nested:focus-within>.ah-v3-invite-submenu{display:block;animation:ahInviteMenuIn .12s ease-out both}
+@keyframes ahInviteMenuIn{from{opacity:0;transform:translateX(-5px)}to{opacity:1;transform:none}}
+.ah-v3-invite-server{width:100%;min-height:44px;padding:5px 7px;border:0;border-radius:6px;background:transparent;color:#f2f3f5;display:grid;grid-template-columns:32px minmax(0,1fr) 16px;align-items:center;gap:9px;text-align:left;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+.ah-v3-invite-server:hover{background:#5865f2;color:#fff}.ah-v3-invite-server:disabled{opacity:.58;cursor:wait}.ah-v3-invite-server.sent{color:#57f287}
+.ah-v3-invite-server-icon{width:32px;height:32px;border-radius:10px;background:#3b3d45 center/cover no-repeat;display:grid;place-items:center;color:#fff;font-weight:950}
+.ah-v3-invite-server>span:nth-child(2){overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ah-v3-invite-server>svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;opacity:0;transition:opacity .12s ease}
+.ah-v3-invite-server:hover>svg,.ah-v3-invite-server.sent>svg{opacity:1}.ah-v3-invite-empty{padding:13px 10px;color:#b5bac1;font-size:12px;line-height:1.4;text-align:center}
+.ah-v3-full-tooltip{position:fixed;z-index:2147483600;display:none;padding:7px 10px;border-radius:5px;background:#111214;color:#f2f3f5;box-shadow:0 7px 18px rgba(0,0,0,.42);font-size:12px;font-weight:900;white-space:nowrap;pointer-events:none}
+.ah-v3-full-tooltip.show{display:block;animation:ahTooltipIn .1s ease-out both}.ah-v3-full-tooltip:after{content:"";position:absolute;left:50%;bottom:-5px;width:10px;height:10px;background:#111214;transform:translateX(-50%) rotate(45deg)}
+@keyframes ahTooltipIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+.ah-v3-full-about-block{margin-top:22px;padding-top:18px;border-top:1px solid rgba(255,255,255,.12)}
+.ah-v3-full-section-title{margin-bottom:7px;color:#fff;font-size:12px;font-weight:950;text-transform:uppercase;letter-spacing:.035em}
+#ah-v3-full-about{color:#e1e3e7;font-size:13px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+.ah-v3-full-meta{margin-top:22px!important;padding-top:18px;border-top:1px solid rgba(255,255,255,.12);color:#c2c5cc!important}
+.ah-v3-full-right{padding:54px 34px 28px!important;background:#17181c!important}
+.ah-v3-full-tabs{height:44px;display:flex;align-items:flex-end;gap:26px;border-bottom:1px solid rgba(255,255,255,.10);margin-bottom:12px}
+.ah-v3-full-tabs span{height:44px;display:flex;align-items:center;position:relative;color:#949ba4;font-size:13px;font-weight:850;white-space:nowrap}
+.ah-v3-full-tabs span.active{color:#f2f3f5}.ah-v3-full-tabs span.active:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;border-radius:4px;background:#f2f3f5}
+.ah-v3-mutual-list{display:grid;align-content:start}
+.ah-v3-mutual-row{min-height:62px;padding:8px 10px;margin:1px 0;border-radius:9px;color:#f2f3f5;text-decoration:none;display:grid;grid-template-columns:44px minmax(0,1fr) 18px;align-items:center;gap:11px;transition:background .14s ease,transform .14s ease}
+.ah-v3-mutual-row:hover{background:#24262c;transform:translateX(2px)}
+.ah-v3-mutual-server-icon{width:44px;height:44px;border-radius:14px;background:#2b2d31 center/cover no-repeat;color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:950}
+.ah-v3-mutual-server-copy{min-width:0}.ah-v3-mutual-server-copy b,.ah-v3-mutual-server-copy small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ah-v3-mutual-server-copy b{font-size:14px}.ah-v3-mutual-server-copy small{margin-top:3px;color:#949ba4;font-size:11px}
+.ah-v3-mutual-row>svg{width:16px;height:16px;fill:none;stroke:#80848e;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:0;transform:translateX(-4px);transition:opacity .14s ease,transform .14s ease}.ah-v3-mutual-row:hover>svg{opacity:1;transform:none}
+.ah-v3-mutual-empty{min-height:280px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#b5bac1}.ah-v3-mutual-empty>span{width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#2b2d31;color:#949ba4;font-size:30px;margin-bottom:12px}.ah-v3-mutual-empty b{color:#f2f3f5;font-size:16px}.ah-v3-mutual-empty small{max-width:280px;margin-top:6px;line-height:1.4;color:#949ba4}
+@media(max-width:820px){.ah-v3-full{grid-template-columns:1fr!important}.ah-v3-full-left{min-height:auto!important}.ah-v3-full-left-inner{padding:108px 20px 24px!important}.ah-v3-full-right{padding:20px!important}.ah-v3-full-menu{width:min(292px,calc(100vw - 20px))}.ah-v3-invite-submenu{position:fixed;left:10px;right:10px;top:auto;bottom:10px;width:auto;max-height:42vh}}
+</style>
 
 <script>
 (function(){
@@ -2659,7 +2754,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     setAvatar($('#ah-v3-avatar'),$('#ah-v3-avatar-text'),active.avatar,active.display); const miniNameNode=$('#ah-v3-name'); if(miniNameNode){miniNameNode.dataset.profileUsername=active.name; miniNameNode.textContent=active.display;} $('#ah-v3-handle').textContent='@'+active.name; $('#ah-v3-role').textContent=active.role||'member'; const bioText=(active.bio||'').trim(); const noteTitle=$('#ah-v3-mini .ah-v3-note b'); if(noteTitle) noteTitle.textContent=bioText?'Опис профілю':'Міні-профіль'; $('#ah-v3-note-text').textContent=bioText || (active.isSelf?'Звідси можна змінити статус. Натисни на аватарку для повної картки.':'Натисни на аватарку, щоб відкрити повну картку профілю.'); let st=$('#ah-v3-status'); if(st) st.className='ah-v3-status '+(active.status||'offline'); let msg=$('#ah-v3-message'); if(msg){msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; msg.textContent=active.isSelf?'Редактировать профиль':'Message'} place(pop,e);
   }
   function closeMini(){let p=$('#ah-v3-mini'); if(p)p.classList.remove('open')}
-  function openFull(){ if(!active)return; let ov=$('#ah-v3-overlay'); if(!ov)return; ov.style.setProperty('--ah-c1',active.c1); ov.style.setProperty('--ah-c2',active.c2); setBanner($('#ah-v3-full-banner'), active.banner, active.c1, active.c2); setAvatar($('#ah-v3-full-avatar'),$('#ah-v3-full-avatar-text'),active.avatar,active.display); const fullNameNode=$('#ah-v3-full-name'); if(fullNameNode){fullNameNode.dataset.profileUsername=active.name; fullNameNode.textContent=active.display;} $('#ah-v3-full-handle').textContent='@'+active.name; $('#ah-v3-full-meta').textContent=active.isSelf?'Твоя картка AlexiHub.':'Картка користувача AlexiHub.'; $('#ah-v3-full-about').textContent=(active.bio||'').trim() || (active.isSelf?'Тут буде повний профіль, активність, ігри, інтеграції та нотатки.':'Швидкий перегляд профілю поверх поточної сторінки, без переходу зі сторінки.'); let msg=$('#ah-v3-full-message'); if(msg){ msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; } let op=$('#ah-v3-full-open'); if(op) op.href=active.profile; closeMini(); ov.classList.add('open'); }
+  function openFull(){ if(!active)return; let ov=$('#ah-v3-overlay'); if(!ov)return; ov.style.setProperty('--ah-c1',active.c1); ov.style.setProperty('--ah-c2',active.c2); setBanner($('#ah-v3-full-banner'), active.banner, active.c1, active.c2); setAvatar($('#ah-v3-full-avatar'),$('#ah-v3-full-avatar-text'),active.avatar,active.display); const fullNameNode=$('#ah-v3-full-name'); if(fullNameNode){fullNameNode.dataset.profileUsername=active.name; fullNameNode.textContent=active.display;} $('#ah-v3-full-handle').textContent='@'+active.name; $('#ah-v3-full-meta').textContent=active.isSelf?'Твоя картка AlexiHub.':'Картка користувача AlexiHub.'; $('#ah-v3-full-about').textContent=(active.bio||'').trim() || (active.isSelf?'Тут буде повний профіль, активність, ігри, інтеграції та нотатки.':'Швидкий перегляд профілю поверх поточної сторінки, без переходу зі сторінки.'); let msg=$('#ah-v3-full-message'); if(msg){ msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; } closeMini(); ov.classList.add('open'); document.dispatchEvent(new CustomEvent('alexihub:full-profile-open',{detail:active})); }
   function closeFull(){let ov=$('#ah-v3-overlay'); if(ov)ov.classList.remove('open')}
   document.addEventListener('click',function(e){
     if(e.target.closest('#ah-v3-mini,#ah-v3-overlay')) return;
@@ -6047,6 +6142,19 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     currentStatus=Object.assign({},currentStatus||{},data,{blocked_by_me:false});
     notify(data.message||text().unblockedOk); await loadBlockedUsers(); applyDmBlockState(username,currentStatus); return data;
   }
+  async function openBlockFor(username){
+    try{
+      currentStatus=await api('/community/api/blocks/'+encodeURIComponent(username));
+      selectedUser=currentStatus.user;
+      if(currentStatus.blocked_by_me){
+        await unblockUser(username);
+        return;
+      }
+      openConfirm();
+    }catch(error){
+      notify(error.message||text().actionError);
+    }
+  }
 
   function contentSettingsMarkup(c){
     return `<div class="ah-content-settings"><h1>${esc(c.content)}</h1><div class="ah-privacy-card"><h3>${esc(c.privacyTitle)}</h3><p>${esc(c.privacyText)}</p></div><div class="ah-blocked-heading"><h2>${esc(c.blocked)}</h2><p>${esc(c.intro)}</p></div><div class="ah-blocked-card"><div class="ah-blocked-card-head"><span class="ah-blocked-card-icon">⊘</span><div class="ah-blocked-card-title"><b>${esc(c.blocked)}</b><span id="ah-blocked-count"></span></div></div><div id="ah-blocked-list" class="ah-blocked-list"><div class="ah-blocked-loading">${esc(c.loading)}</div></div></div></div>`;
@@ -6122,8 +6230,321 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   document.addEventListener('keydown',event=>{if(event.key==='Escape'){closeProfileMenu();closeConfirm();}});
 
   function init(){ensureProfileMenu();ensureSettings();ensureConfirmModal();hydrateDmBlockState();}
-  window.AlexiHubBlocking={refreshDm:hydrateDmBlockState,refreshList:loadBlockedUsers};
+  window.AlexiHubBlocking={refreshDm:hydrateDmBlockState,refreshList:loadBlockedUsers,openBlockFor};
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+})();
+</script>
+<script id="ah-profile-actions-script">
+(() => {
+  if (window.__ahProfileActionsReady) return;
+  window.__ahProfileActionsReady = true;
+
+  const CURRENT_USER = {{ account.username|tojson }};
+  const $ = (selector, root = document) => root.querySelector(selector);
+  const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[char]));
+  const safeUrl = value => String(value || '').replace(/'/g, '%27');
+  const notify = message => {
+    if (typeof window.showActionToast === 'function') window.showActionToast(message);
+    else if (typeof window.settingsToast === 'function') window.settingsToast(message);
+    else console.info(message);
+  };
+  const ICONS = {
+    friends: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-5"/></svg>',
+    none: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8" cy="7" r="4"/><path d="M19 8v6M16 11h6"/></svg>',
+    pending_sent: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="7" cy="7" r="4"/><circle cx="18" cy="15" r="4.5"/><path d="M18 12.7V15l1.6 1"/></svg>',
+    pending_received: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8" cy="7" r="4"/><path d="m16 11 2 2 4-5"/></svg>'
+  };
+  let active = null;
+  let requestVersion = 0;
+
+  function normalizeStatus(status) {
+    status = String(status || '').trim().toLowerCase();
+    if (status === 'accepted') return 'friends';
+    return ['self', 'none', 'pending_sent', 'pending_received', 'friends', 'loading'].includes(status)
+      ? status : 'loading';
+  }
+  function closeMenu() {
+    const menu = $('#ah-v3-full-menu');
+    menu?.classList.remove('open');
+    menu?.setAttribute('aria-hidden', 'true');
+    $('#ah-v3-full-more')?.setAttribute('aria-expanded', 'false');
+  }
+  function hideTooltip() {
+    $('#ah-v3-full-tooltip')?.classList.remove('show');
+  }
+  function renderFriend() {
+    const button = $('#ah-v3-friend-action');
+    const more = $('#ah-v3-full-more');
+    if (!button || !active) return;
+    const isSelf = !!active.isSelf || String(active.name || '').toLowerCase() === String(CURRENT_USER).toLowerCase();
+    button.hidden = isSelf;
+    if (more) more.hidden = isSelf;
+    if (isSelf) return;
+    const status = normalizeStatus(active.friendStatus);
+    button.className = 'ah-v3-friend-action state-' + status;
+    button.disabled = status === 'loading';
+    button.setAttribute('aria-disabled', status === 'friends' ? 'true' : 'false');
+    button.removeAttribute('data-tooltip');
+    button.removeAttribute('aria-busy');
+    if (status === 'loading') {
+      button.innerHTML = '<span class="ah-v3-friend-loading" aria-hidden="true"></span>';
+      button.setAttribute('aria-busy', 'true');
+      button.setAttribute('aria-label', 'Перевіряємо статус дружби');
+    } else if (status === 'friends') {
+      button.innerHTML = ICONS.friends;
+      button.dataset.tooltip = 'Друг';
+      button.setAttribute('aria-label', 'Друг');
+    } else if (status === 'pending_sent') {
+      button.innerHTML = ICONS.pending_sent;
+      button.dataset.tooltip = 'Вихідний запит дружби';
+      button.setAttribute('aria-label', 'Вихідний запит дружби');
+    } else if (status === 'pending_received') {
+      button.innerHTML = ICONS.pending_received + '<span>Прийняти запит</span>';
+      button.setAttribute('aria-label', 'Прийняти запит дружби');
+    } else {
+      button.innerHTML = ICONS.none + '<span>Додати в друзі</span>';
+      button.setAttribute('aria-label', 'Додати в друзі');
+    }
+  }
+  function renderInvites() {
+    const submenu = $('#ah-v3-invite-submenu');
+    if (!submenu || !active) return;
+    const servers = Array.isArray(active.inviteServers) ? active.inviteServers : [];
+    if (normalizeStatus(active.friendStatus) !== 'friends') {
+      submenu.innerHTML = '<div class="ah-v3-invite-empty">Спочатку додайте користувача в друзі</div>';
+      return;
+    }
+    if (!servers.length) {
+      submenu.innerHTML = '<div class="ah-v3-invite-empty">Немає доступних серверів</div>';
+      return;
+    }
+    submenu.innerHTML = servers.map(server => {
+      const name = String(server.name || 'Сервер');
+      const image = server.icon_url ? `style="background-image:url('${safeUrl(server.icon_url)}')"` : '';
+      return `<button type="button" class="ah-v3-invite-server" data-invite-server-id="${Number(server.id) || 0}"><span class="ah-v3-invite-server-icon" ${image}>${server.icon_url ? '' : escapeHtml(name.slice(0, 1).toUpperCase())}</span><span>${escapeHtml(name)}</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>`;
+    }).join('');
+  }
+  function renderMutualServers() {
+    const list = $('#ah-v3-mutual-list');
+    const tab = $('#ah-v3-mutual-tab');
+    if (!list || !active) return;
+    const servers = Array.isArray(active.mutualServers) ? active.mutualServers : [];
+    const count = servers.length;
+    if (tab) {
+      const ending = count % 10 === 1 && count % 100 !== 11 ? 'спільний сервер'
+        : ([2, 3, 4].includes(count % 10) && ![12, 13, 14].includes(count % 100) ? 'спільні сервери' : 'спільних серверів');
+      tab.textContent = count + ' ' + ending;
+    }
+    if (!servers.length) {
+      list.innerHTML = '<div class="ah-v3-mutual-empty"><span>⌁</span><b>Немає спільних серверів</b><small>Ви поки не перебуваєте разом на жодному сервері.</small></div>';
+      return;
+    }
+    list.innerHTML = servers.map(server => {
+      const name = String(server.name || 'Сервер');
+      const image = server.icon_url ? `style="background-image:url('${safeUrl(server.icon_url)}')"` : '';
+      const url = server.url || ('/community/servers/' + Number(server.id));
+      return `<a class="ah-v3-mutual-row" href="${escapeHtml(url)}"><span class="ah-v3-mutual-server-icon" ${image}>${server.icon_url ? '' : escapeHtml(name.slice(0, 1).toUpperCase())}</span><span class="ah-v3-mutual-server-copy"><b>${escapeHtml(name)}</b><small>Спільний сервер</small></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></a>`;
+    }).join('');
+  }
+  async function refresh() {
+    if (!active || active.isSelf) return false;
+    const version = ++requestVersion;
+    active.friendStatus = 'loading';
+    renderFriend();
+    try {
+      const response = await fetch('/community/api/friend-status/' + encodeURIComponent(active.name), {
+        credentials: 'same-origin',
+        headers: { Accept: 'application/json' }
+      });
+      const data = await response.json().catch(() => ({}));
+      if (version !== requestVersion || !response.ok || !data.ok) return false;
+      active.id = data.profile_id || active.id;
+      active.friendStatus = normalizeStatus(data.status);
+      active.friendshipId = data.friendship_id || null;
+      active.blockedByMe = !!data.blocked_by_me;
+      active.inviteServers = Array.isArray(data.invite_servers) ? data.invite_servers : [];
+      active.mutualServers = Array.isArray(data.mutual_servers) ? data.mutual_servers : [];
+      renderFriend();
+      renderInvites();
+      renderMutualServers();
+      const block = $('[data-full-profile-action="block"]');
+      if (block) block.textContent = active.blockedByMe ? 'Розблокувати' : 'Заблокувати';
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+  function openMenu() {
+    const menu = $('#ah-v3-full-menu');
+    const button = $('#ah-v3-full-more');
+    if (!menu || !button || !active || active.isSelf) return;
+    if (menu.classList.contains('open')) return closeMenu();
+    if (menu.parentElement !== document.body) document.body.appendChild(menu);
+    const profileLink = $('#ah-v3-full-profile-link');
+    if (profileLink) profileLink.href = active.profile || ('/community/profile/' + encodeURIComponent(active.name));
+    const username = $('#ah-v3-full-menu-username');
+    if (username) username.textContent = '(' + (active.display || active.name) + ')';
+    renderInvites();
+    menu.classList.add('open');
+    menu.setAttribute('aria-hidden', 'false');
+    button.setAttribute('aria-expanded', 'true');
+    const anchor = button.getBoundingClientRect();
+    const bounds = menu.getBoundingClientRect();
+    menu.style.left = Math.min(Math.max(10, anchor.left), window.innerWidth - bounds.width - 10) + 'px';
+    menu.style.top = Math.min(anchor.bottom + 7, window.innerHeight - bounds.height - 10) + 'px';
+  }
+  function showTooltip(button) {
+    const tooltip = $('#ah-v3-full-tooltip');
+    if (!tooltip || !button?.dataset.tooltip) return;
+    if (tooltip.parentElement !== document.body) document.body.appendChild(tooltip);
+    tooltip.textContent = button.dataset.tooltip;
+    tooltip.classList.add('show');
+    const anchor = button.getBoundingClientRect();
+    const bounds = tooltip.getBoundingClientRect();
+    tooltip.style.left = Math.max(8, anchor.left + (anchor.width - bounds.width) / 2) + 'px';
+    tooltip.style.top = Math.max(8, anchor.top - bounds.height - 8) + 'px';
+  }
+  async function friendAction() {
+    if (!active || active.isSelf) return;
+    const status = normalizeStatus(active.friendStatus);
+    if (status === 'loading') return refresh();
+    if (status === 'friends') return;
+    const button = $('#ah-v3-friend-action');
+    if (button) button.disabled = true;
+    try {
+      let response;
+      if (status === 'pending_sent' && active.friendshipId) {
+        response = await fetch('/community/api/friends/cancel/' + active.friendshipId, {
+          method: 'POST', credentials: 'same-origin', headers: { Accept: 'application/json' }
+        });
+        if (!response.ok) throw new Error('Не вдалося скасувати запит');
+        notify('Запит дружби скасовано');
+      } else if (status === 'pending_received' && active.friendshipId) {
+        response = await fetch('/community/api/friends/respond/' + active.friendshipId, {
+          method: 'POST', credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({ accept: true })
+        });
+        if (!response.ok) throw new Error('Не вдалося прийняти запит');
+        notify('Тепер ви друзі');
+      } else if (status === 'none') {
+        response = await fetch('/community/api/friends/request/' + encodeURIComponent(active.name), {
+          method: 'POST', credentials: 'same-origin', headers: { Accept: 'application/json' }
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || 'Не вдалося надіслати запит');
+        notify('Запит дружби надіслано');
+      }
+      await refresh();
+    } catch (error) {
+      notify(error.message || 'Не вдалося виконати дію');
+      await refresh();
+    }
+  }
+  async function invite(serverId, button) {
+    if (!active || !serverId) return;
+    button.disabled = true;
+    try {
+      const body = new FormData();
+      body.append('username', active.name);
+      body.append('redirect_to', location.pathname);
+      const response = await fetch('/community/servers/' + serverId + '/invite', {
+        method: 'POST', credentials: 'same-origin', headers: { Accept: 'application/json' }, body
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.ok) throw new Error(data.message || 'Не вдалося надіслати запрошення');
+      button.classList.add('sent');
+      const icon = button.querySelector('svg');
+      if (icon) icon.innerHTML = '<path d="m5 12 4 4L19 6"/>';
+      notify('Запрошення на сервер надіслано');
+    } catch (error) {
+      notify(error.message || 'Не вдалося надіслати запрошення');
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  document.addEventListener('alexihub:full-profile-open', event => {
+    const profile = event.detail || {};
+    active = {
+      ...profile,
+      name: String(profile.name || profile.username || '').replace(/^@/, ''),
+      display: profile.display || profile.name || profile.username || '',
+      profile: profile.profile || '',
+      isSelf: !!profile.isSelf || String(profile.name || profile.username || '').toLowerCase() === String(CURRENT_USER).toLowerCase(),
+      friendStatus: profile.isSelf ? 'self' : 'loading',
+      friendshipId: null,
+      inviteServers: [],
+      mutualServers: []
+    };
+    closeMenu();
+    hideTooltip();
+    renderFriend();
+    renderInvites();
+    renderMutualServers();
+    if (!active.isSelf) refresh();
+  });
+  document.addEventListener('click', async event => {
+    const friend = event.target.closest('#ah-v3-friend-action');
+    if (friend) {
+      event.preventDefault();
+      event.stopPropagation();
+      return friendAction();
+    }
+    const more = event.target.closest('#ah-v3-full-more');
+    if (more) {
+      event.preventDefault();
+      event.stopPropagation();
+      return openMenu();
+    }
+    const inviteButton = event.target.closest('[data-invite-server-id]');
+    if (inviteButton) {
+      event.preventDefault();
+      event.stopPropagation();
+      return invite(inviteButton.dataset.inviteServerId, inviteButton);
+    }
+    const action = event.target.closest('[data-full-profile-action]');
+    if (action) {
+      event.preventDefault();
+      event.stopPropagation();
+      const kind = action.dataset.fullProfileAction;
+      closeMenu();
+      if (kind === 'copy' && active) {
+        if (!active.id) await refresh();
+        try {
+          await navigator.clipboard.writeText(String(active.id || ''));
+          notify('ID користувача скопійовано');
+        } catch (error) {
+          notify('Не вдалося скопіювати ID');
+        }
+      } else if (kind === 'block' && active) {
+        if (window.AlexiHubBlocking?.openBlockFor) window.AlexiHubBlocking.openBlockFor(active.name);
+        else notify('Не вдалося відкрити блокування');
+      } else if (kind === 'ignore') {
+        notify('Ігнорування буде доступне в налаштуваннях спілкування');
+      } else if (kind === 'report') {
+        notify('Скарги будуть доступні в модулі модерації');
+      }
+      return;
+    }
+    if (!event.target.closest('#ah-v3-full-menu,#ah-v3-full-more')) closeMenu();
+  });
+  document.addEventListener('mouseover', event => {
+    const button = event.target.closest('#ah-v3-friend-action[data-tooltip]');
+    if (button) showTooltip(button);
+  });
+  document.addEventListener('mouseout', event => {
+    if (event.target.closest('#ah-v3-friend-action[data-tooltip]')) hideTooltip();
+  });
+  window.addEventListener('resize', closeMenu);
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+      closeMenu();
+      hideTooltip();
+    }
+  });
 })();
 </script>
 <script id="ah-home-server-boost-settings-js">
