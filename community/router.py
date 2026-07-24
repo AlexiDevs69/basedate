@@ -3376,6 +3376,16 @@ async def dm_chat_view(username: str, request: Request, db: AsyncSession = Depen
     friends = await crud.list_friends(db, account.id)
     dm_threads = await crud.list_dm_threads_for_account(db, account.id)
     messages = await crud.list_dm_messages(db, thread.id)
+    mutual_server_models = await crud.list_mutual_servers(db, account.id, other.id)
+    mutual_servers = [
+        {
+            "id": server.id,
+            "name": server.name,
+            "icon_url": server.icon_url or "",
+            "url": f"/community/servers/{server.id}",
+        }
+        for server in mutual_server_models
+    ]
     mentions_were_read = await crud.mark_dm_mentions_read(db, account.id, thread.id)
     rail = await server_rail_context(db, account.id)
     if mentions_were_read:
@@ -3394,6 +3404,7 @@ async def dm_chat_view(username: str, request: Request, db: AsyncSession = Depen
             "channels": channels,
             "friends": friends,
             "dm_threads": dm_threads,
+            "mutual_servers": mutual_servers,
             **rail,
         },
     )
