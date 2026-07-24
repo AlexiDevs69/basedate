@@ -84,6 +84,7 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 PROFILE_UPLOAD_DIR = ROOT_DIR / "static" / "uploads" / "profiles"
 ALLOWED_IMAGE_TYPES = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp", "image/gif": ".gif"}
 MAX_PROFILE_IMAGE_BYTES = 5 * 1024 * 1024
+SERVER_BANNER_REQUIRED_BOOSTS = 5
 
 
 def _safe_next_url(next_url: str | None, fallback: str = "/community") -> str:
@@ -117,9 +118,21 @@ def _clean_server_banner(value: str | None) -> str:
     return clean if clean in ALLOWED_SERVER_BANNERS else SERVER_BANNER_FALLBACK
 
 
+def _clean_server_banner_url(value: str | None) -> str:
+    clean = (value or "").strip()
+    if not clean:
+        return ""
+    if clean.startswith("/static/uploads/") and not clean.startswith("//"):
+        return clean[:512]
+    if re.fullmatch(r"https?://[^\s]{1,500}", clean, flags=re.IGNORECASE):
+        return clean[:512]
+    return ""
+
+
 async def _ensure_server_visual_columns(db: AsyncSession) -> None:
     # Safe Render migration: create_all does not add columns to old tables.
     await db.execute(text("ALTER TABLE community_servers ADD COLUMN IF NOT EXISTS banner_color VARCHAR(255)"))
+    await db.execute(text("ALTER TABLE community_servers ADD COLUMN IF NOT EXISTS banner_url VARCHAR(512)"))
     await db.execute(text("ALTER TABLE community_server_messages ADD COLUMN IF NOT EXISTS edited_at TIMESTAMP WITH TIME ZONE"))
     await db.execute(text("ALTER TABLE community_direct_messages ADD COLUMN IF NOT EXISTS edited_at TIMESTAMP WITH TIME ZONE"))
     await db.execute(text("ALTER TABLE community_server_messages ADD COLUMN IF NOT EXISTS reply_to_id INTEGER"))
@@ -143,6 +156,24 @@ async def _set_server_banner_color(db: AsyncSession, server_id: int, banner_colo
     await db.execute(
         text("UPDATE community_servers SET banner_color = :banner_color WHERE id = :server_id"),
         {"server_id": server_id, "banner_color": _clean_server_banner(banner_color)},
+    )
+    await db.commit()
+
+
+async def _get_server_banner_url(db: AsyncSession, server_id: int) -> str:
+    await _ensure_server_visual_columns(db)
+    result = await db.execute(
+        text("SELECT banner_url FROM community_servers WHERE id = :server_id"),
+        {"server_id": server_id},
+    )
+    return _clean_server_banner_url(result.scalar_one_or_none())
+
+
+async def _set_server_banner_url(db: AsyncSession, server_id: int, banner_url: str) -> None:
+    await _ensure_server_visual_columns(db)
+    await db.execute(
+        text("UPDATE community_servers SET banner_url = :banner_url WHERE id = :server_id"),
+        {"server_id": server_id, "banner_url": _clean_server_banner_url(banner_url) or None},
     )
     await db.commit()
 
@@ -1483,6 +1514,7 @@ async def server_home(server_id: int, request: Request, db: AsyncSession = Depen
     friends = await crud.list_friends(db, account.id)
     events = await crud.list_server_events(db, server.id, account.id)
     boost_status = await crud.get_server_boost_status(db, server.id, account.id)
+    server_banner_url = await _get_server_banner_url(db, server.id)
     rail = await server_rail_context(db, account.id, active_server_id=server.id)
 
     return templates.TemplateResponse(
@@ -1497,6 +1529,7 @@ async def server_home(server_id: int, request: Request, db: AsyncSession = Depen
             "friends": friends,
             "events": events,
             "boost_status": boost_status,
+            "server_banner_url": server_banner_url,
             "can_manage": can_manage,
             **rail,
         },
@@ -1776,6 +1809,7 @@ async def server_channel_view(server_id: int, channel_id: int, request: Request,
     feed = await crud.get_server_feed(db, server_id, channel_id)
     await _decorate_server_tags(db, members, feed)
     boost_status = await crud.get_server_boost_status(db, server.id, account.id)
+    server_banner_url = await _get_server_banner_url(db, server.id)
     mentions_were_read = await crud.mark_server_channel_mentions_read(
         db, account.id, server_id, channel_id
     )
@@ -1797,6 +1831,7 @@ async def server_channel_view(server_id: int, channel_id: int, request: Request,
             "can_manage": can_manage,
             "feed": feed,
             "boost_status": boost_status,
+            "server_banner_url": server_banner_url,
             **rail,
         },
     )
@@ -2008,6 +2043,7 @@ async def server_settings_page(
     banned_members = await crud.list_server_bans(db, server_id)
     viewer_member = await crud.get_server_member(db, server_id, account.id)
     banner_color = await _get_server_banner_color(db, server_id)
+    server_banner_url = await _get_server_banner_url(db, server_id)
     boost_status = await crud.get_server_boost_status(db, server_id, account.id)
     rail = await server_rail_context(db, account.id, active_server_id=server_id)
     return templates.TemplateResponse(
@@ -2022,6 +2058,8 @@ async def server_settings_page(
             "viewer_member": viewer_member,
             "viewer_is_owner": int(server.owner_id) == int(account.id),
             "banner_color": banner_color,
+            "server_banner_url": server_banner_url,
+            "server_banner_required_boosts": SERVER_BANNER_REQUIRED_BOOSTS,
             "boost_status": boost_status,
             "server_tag_icons": [
                 {"id": key, "glyph": glyph}
@@ -2039,6 +2077,8 @@ async def server_settings_submit(
     icon_url: str = Form(""),
     description: str = Form(""),
     banner_color: str = Form(""),
+    server_banner_url: str = Form(""),
+    remove_server_banner: str = Form(""),
     redirect_to: str = Form(""),
     db: AsyncSession = Depends(get_db),
 ):
@@ -2051,6 +2091,10 @@ async def server_settings_submit(
     if name.strip():
         await crud.update_server_settings(db, server_id, name.strip(), icon_url.strip(), description.strip())
         await _set_server_banner_color(db, server_id, banner_color)
+        boost_status = await crud.get_server_boost_status(db, server_id, account.id)
+        if int(boost_status.get("total_boosts") or 0) >= SERVER_BANNER_REQUIRED_BOOSTS:
+            next_banner_url = "" if remove_server_banner == "1" else server_banner_url
+            await _set_server_banner_url(db, server_id, next_banner_url)
     safe_redirect = redirect_to if redirect_to.startswith("/community/") else f"/community/servers/{server_id}"
     return RedirectResponse(url=safe_redirect, status_code=303)
 
