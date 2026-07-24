@@ -2101,8 +2101,14 @@ document.addEventListener('DOMContentLoaded',()=>{
         <div id="ah-v3-full-name" class="ah-v3-full-name">User</div>
         <div id="ah-v3-full-handle" class="ah-v3-full-handle">@user</div>
         <div class="ah-v3-full-actions">
-          <a id="ah-v3-full-message" href="#">Повідомлення</a>
-          <a id="ah-v3-full-open" href="#">Відкрити профіль</a>
+          <a id="ah-v3-full-message" href="#">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 5.5A3.5 3.5 0 0 1 8 2h8a3.5 3.5 0 0 1 3.5 3.5v7A3.5 3.5 0 0 1 16 16H9l-4.5 4v-4.8a3.5 3.5 0 0 1-2-3.2V5.5Z"/></svg>
+            <span>Повідомлення</span>
+          </a>
+          <button id="ah-v3-friend-action" class="ah-v3-friend-action" type="button"></button>
+          <button id="ah-v3-full-more" class="ah-v3-full-icon-button" type="button" aria-label="Додаткові дії" aria-expanded="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+          </button>
         </div>
         <div class="ah-v3-full-about-block">
           <div class="ah-v3-full-section-title">Про мене</div>
@@ -2118,6 +2124,27 @@ document.addEventListener('DOMContentLoaded',()=>{
       </div>
       <div id="ah-v3-mutual-list" class="ah-v3-mutual-list"></div>
     </div>
+    <div id="ah-v3-full-menu" class="ah-v3-full-menu" aria-hidden="true">
+      <a id="ah-v3-full-profile-link" class="ah-v3-full-menu-item" href="#">
+        <span>Основний профіль<small id="ah-v3-full-menu-username"></small></span>
+      </a>
+      <div id="ah-v3-invite-menu-item" class="ah-v3-full-menu-nested">
+        <button class="ah-v3-full-menu-item" type="button">
+          <span>Запросити на сервер</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>
+        </button>
+        <div id="ah-v3-invite-submenu" class="ah-v3-invite-submenu" aria-hidden="true"></div>
+      </div>
+      <div class="ah-v3-full-menu-separator"></div>
+      <button class="ah-v3-full-menu-item" type="button" data-full-profile-action="ignore">Ігнорувати</button>
+      <button class="ah-v3-full-menu-item danger" type="button" data-full-profile-action="block">Заблокувати</button>
+      <button class="ah-v3-full-menu-item danger" type="button" data-full-profile-action="report">Поскаржитися на профіль користувача</button>
+      <div class="ah-v3-full-menu-separator"></div>
+      <button class="ah-v3-full-menu-item" type="button" data-full-profile-action="copy">
+        <span>Скопіювати ID користувача</span><b>ID</b>
+      </button>
+    </div>
+    <div id="ah-v3-full-tooltip" class="ah-v3-full-tooltip" role="tooltip"></div>
   </div>
 </div>
 
@@ -2128,6 +2155,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   const CURRENT_USER = "{{ account.username if account else '' }}";
   const KNOWN_PROFILES = {
     {{ account.username|lower|tojson }}: {
+      id: {{ account.id|tojson }},
       username: {{ account.username|tojson }},
       avatar: {{ (account.avatar_url or '')|tojson }},
       banner: {{ (account.banner_url or '')|tojson }},
@@ -2135,9 +2163,13 @@ document.addEventListener('DOMContentLoaded',()=>{
       role: {{ (account.role_label or 'member')|tojson }},
       c1: {{ (account.role_color_start or '#5865f2')|tojson }},
       c2: {{ (account.role_color_end or '#9b5cf6')|tojson }},
-      bio: {{ (account.bio or '')|tojson }}
+      bio: {{ (account.bio or '')|tojson }},
+      friendStatus: "self",
+      friendshipId: null,
+      inviteServers: []
     },
     {{ other.username|lower|tojson }}: {
+      id: {{ other.id|tojson }},
       username: {{ other.username|tojson }},
       avatar: {{ (other.avatar_url or '')|tojson }},
       banner: {{ (other.banner_url or '')|tojson }},
@@ -2146,7 +2178,10 @@ document.addEventListener('DOMContentLoaded',()=>{
       c1: {{ (other.role_color_start or '#5865f2')|tojson }},
       c2: {{ (other.role_color_end or '#9b5cf6')|tojson }},
       bio: {{ (other.bio or '')|tojson }},
-      mutualServers: {{ mutual_servers|tojson }}
+      mutualServers: {{ mutual_servers|tojson }},
+      friendStatus: {{ friend_status|tojson }},
+      friendshipId: {{ friendship_id|tojson }},
+      inviteServers: {{ invite_servers|tojson }}
     }
   };
   function getKnownProfile(name){
@@ -2159,6 +2194,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   function bg(el){ if(!el)return''; let b=getComputedStyle(el).backgroundImage||''; let m=b.match(/url\(["']?([^"')]+)["']?\)/); return m?m[1]:''; }
   function clean(s){return (s||'').replace(/^@/,'').replace(/\s*(online|live|connecting|reconnecting|офлайн|в мережі|не турбувати|неактивний)\s*$/i,'').trim();}
   function safeUrl(v){return String(v||'').replace(/'/g,'%27')}
+  function escapeHtml(v){return String(v||'').replace(/[&<>"']/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]})}
   let active=null;
   function selfAvatar(){return bg($('.account-panel .account-avatar'))||bg($('.user-panel .avatar'))||bg($('.me-avatar'))||''}
   function selfName(){return clean(txt($('.account-panel .account-name'))||txt($('.user-panel .user-info b'))||CURRENT_USER||'user')}
@@ -2226,7 +2262,11 @@ document.addEventListener('DOMContentLoaded',()=>{
     let st=html.match(/status-(online|idle|dnd|invisible|offline)/); if(st && (!status || status==='offline')) status=st[1];
     if(isSelf){ let d=$('#my-avatar-status,#modal-avatar-status'); if(d){ let cls=[...d.classList].find(x=>x.startsWith('status-')); if(cls) status=cls.replace('status-',''); } }
     let mutualServers=(known&&Array.isArray(known.mutualServers))?known.mutualServers:[];
-    return {name:clean(name)||'user',display:clean(display)||clean(name)||'user',avatar,banner,role,c1,c2,profile,isSelf,status,bio,mutualServers};
+    let inviteServers=(known&&Array.isArray(known.inviteServers))?known.inviteServers:[];
+    let friendStatus=(known&&known.friendStatus)||'none';
+    let friendshipId=(known&&known.friendshipId)||null;
+    let id=(known&&known.id)||null;
+    return {id,name:clean(name)||'user',display:clean(display)||clean(name)||'user',avatar,banner,role,c1,c2,profile,isSelf,status,bio,mutualServers,inviteServers,friendStatus,friendshipId};
   }
   function setAvatar(el,textEl,url,name){ if(!el)return; el.style.backgroundImage=url?`url('${safeUrl(url)}')`:''; if(textEl) textEl.textContent=url?'':(name||'?').slice(0,1).toUpperCase(); }
   function tintFromBanner(url,target){
@@ -2282,8 +2322,185 @@ document.addEventListener('DOMContentLoaded',()=>{
       return `<a class="ah-v3-mutual-row" href="${server.url||('/community/servers/'+server.id)}"><span class="ah-v3-mutual-server-icon" ${icon}>${initial}</span><span class="ah-v3-mutual-server-copy"><b>${name.replace(/[&<>"']/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]})}</b><small>Общий сервер</small></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></a>`;
     }).join('');
   }
-  function openFull(){ if(!active)return; let ov=$('#ah-v3-overlay'); if(!ov)return; ov.style.setProperty('--ah-c1',active.c1); ov.style.setProperty('--ah-c2',active.c2); setBanner($('#ah-v3-full-banner'), active.banner, active.c1, active.c2); setAvatar($('#ah-v3-full-avatar'),$('#ah-v3-full-avatar-text'),active.avatar,active.display); const fullNameNode=$('#ah-v3-full-name'); if(fullNameNode){fullNameNode.dataset.profileUsername=active.name; fullNameNode.textContent=active.display;} $('#ah-v3-full-handle').textContent='@'+active.name; $('#ah-v3-full-meta').textContent=active.isSelf?'Твоя картка AlexiHub.':'В числе участников с собеседником.'; $('#ah-v3-full-about').textContent=(active.bio||'').trim() || (active.isSelf?'Тут буде повний профіль, активність, ігри, інтеграції та нотатки.':'Користувач поки що нічого про себе не розповів.'); renderMutualServers(active); let msg=$('#ah-v3-full-message'); if(msg){ msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; } let op=$('#ah-v3-full-open'); if(op) op.href=active.profile; closeMini(); ov.classList.add('open'); }
-  function closeFull(){let ov=$('#ah-v3-overlay'); if(ov)ov.classList.remove('open')}
+  const FRIEND_ICONS={
+    friends:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-5"/></svg>',
+    none:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8" cy="7" r="4"/><path d="M19 8v6M16 11h6"/></svg>',
+    pending_sent:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="7" cy="7" r="4"/><circle cx="18" cy="15" r="4.5"/><path d="M18 12.7V15l1.6 1"/></svg>',
+    pending_received:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8" cy="7" r="4"/><path d="m16 11 2 2 4-5"/></svg>'
+  };
+  function rememberFriendState(profile,status,id){
+    if(!profile)return;
+    profile.friendStatus=status||'none';
+    profile.friendshipId=id||null;
+    const known=getKnownProfile(profile.name);
+    if(known){known.friendStatus=profile.friendStatus;known.friendshipId=profile.friendshipId;}
+  }
+  function renderFriendAction(profile){
+    const button=$('#ah-v3-friend-action');
+    const more=$('#ah-v3-full-more');
+    if(!button||!profile)return;
+    const status=profile.friendStatus||'none';
+    button.hidden=!!profile.isSelf;
+    if(more)more.hidden=!!profile.isSelf;
+    button.className='ah-v3-friend-action state-'+status;
+    button.removeAttribute('data-tooltip');
+    button.disabled=false;
+    button.setAttribute('aria-disabled',status==='friends'?'true':'false');
+    if(status==='friends'){
+      button.innerHTML=FRIEND_ICONS.friends;
+      button.dataset.tooltip='Друг';
+      button.setAttribute('aria-label','Друг');
+    }else if(status==='pending_sent'){
+      button.innerHTML=FRIEND_ICONS.pending_sent;
+      button.dataset.tooltip='Вихідний запит дружби';
+      button.setAttribute('aria-label','Вихідний запит дружби');
+    }else if(status==='pending_received'){
+      button.innerHTML=FRIEND_ICONS.pending_received+'<span>Прийняти запит</span>';
+      button.setAttribute('aria-label','Прийняти запит дружби');
+    }else{
+      button.innerHTML=FRIEND_ICONS.none+'<span>Додати в друзі</span>';
+      button.setAttribute('aria-label','Додати в друзі');
+    }
+  }
+  function renderInviteServers(profile){
+    const submenu=$('#ah-v3-invite-submenu');
+    if(!submenu)return;
+    const servers=Array.isArray(profile&&profile.inviteServers)?profile.inviteServers:[];
+    if((profile&&profile.friendStatus)!=='friends'){
+      submenu.innerHTML='<div class="ah-v3-invite-empty">Спочатку додайте користувача в друзі</div>';
+      return;
+    }
+    if(!servers.length){
+      submenu.innerHTML='<div class="ah-v3-invite-empty">Немає доступних серверів</div>';
+      return;
+    }
+    submenu.innerHTML=servers.map(function(server){
+      const name=String(server.name||'Сервер');
+      const icon=server.icon_url?`style="background-image:url('${safeUrl(server.icon_url)}')"`:'';
+      return `<button type="button" class="ah-v3-invite-server" data-invite-server-id="${Number(server.id)||0}"><span class="ah-v3-invite-server-icon" ${icon}>${server.icon_url?'':escapeHtml(name.slice(0,1).toUpperCase())}</span><span>${escapeHtml(name)}</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>`;
+    }).join('');
+  }
+  async function refreshFriendState(profile){
+    if(!profile||profile.isSelf)return;
+    try{
+      const response=await fetch('/community/api/friend-status/'+encodeURIComponent(profile.name),{credentials:'same-origin',headers:{Accept:'application/json'}});
+      const data=await response.json();
+      if(!response.ok)return;
+      rememberFriendState(profile,data.status,data.friendship_id);
+      profile.blockedByMe=!!data.blocked_by_me;
+      renderFriendAction(profile);
+      renderInviteServers(profile);
+      const block=$('[data-full-profile-action="block"]');
+      if(block)block.textContent=profile.blockedByMe?'Розблокувати':'Заблокувати';
+    }catch(e){}
+  }
+  function closeFullMenu(){
+    const menu=$('#ah-v3-full-menu'), button=$('#ah-v3-full-more'), submenu=$('#ah-v3-invite-submenu');
+    menu?.classList.remove('open');menu?.setAttribute('aria-hidden','true');
+    submenu?.classList.remove('open');submenu?.setAttribute('aria-hidden','true');
+    button?.setAttribute('aria-expanded','false');
+  }
+  function openFullMenu(){
+    const menu=$('#ah-v3-full-menu'), button=$('#ah-v3-full-more');
+    if(!menu||!button||!active||active.isSelf)return;
+    if(menu.classList.contains('open'))return closeFullMenu();
+    if(menu.parentElement!==document.body)document.body.appendChild(menu);
+    renderInviteServers(active);
+    const profileLink=$('#ah-v3-full-profile-link');
+    const username=$('#ah-v3-full-menu-username');
+    if(profileLink)profileLink.href=active.profile||'#';
+    if(username)username.textContent='('+active.display+')';
+    const block=$('[data-full-profile-action="block"]');
+    if(block)block.textContent=active.blockedByMe?'Розблокувати':'Заблокувати';
+    menu.classList.add('open');menu.setAttribute('aria-hidden','false');button.setAttribute('aria-expanded','true');
+    const rect=button.getBoundingClientRect();
+    const menuRect=menu.getBoundingClientRect();
+    menu.style.left=Math.min(Math.max(10,rect.left),window.innerWidth-menuRect.width-10)+'px';
+    menu.style.top=Math.min(rect.bottom+7,window.innerHeight-menuRect.height-10)+'px';
+    refreshFriendState(active);
+  }
+  function showFullTooltip(button){
+    const tip=$('#ah-v3-full-tooltip'), label=button&&button.dataset?button.dataset.tooltip:'';
+    if(!tip||!label)return;
+    if(tip.parentElement!==document.body)document.body.appendChild(tip);
+    tip.textContent=label;tip.classList.add('show');
+    const rect=button.getBoundingClientRect(), tr=tip.getBoundingClientRect();
+    tip.style.left=Math.max(8,rect.left+(rect.width-tr.width)/2)+'px';
+    tip.style.top=Math.max(8,rect.top-tr.height-8)+'px';
+  }
+  function hideFullTooltip(){const tip=$('#ah-v3-full-tooltip');tip?.classList.remove('show')}
+  async function applyFriendAction(){
+    if(!active||active.isSelf)return;
+    const button=$('#ah-v3-friend-action');
+    if(button)button.disabled=true;
+    try{
+      let response;
+      if(active.friendStatus==='pending_sent'&&active.friendshipId){
+        response=await fetch('/community/api/friends/cancel/'+active.friendshipId,{method:'POST',credentials:'same-origin',headers:{Accept:'application/json'}});
+        if(!response.ok)throw new Error('Не вдалося скасувати запит');
+        rememberFriendState(active,'none',null);
+        showActionToast('Запит дружби скасовано');
+      }else if(active.friendStatus==='pending_received'&&active.friendshipId){
+        response=await fetch('/community/api/friends/respond/'+active.friendshipId,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({accept:true})});
+        if(!response.ok)throw new Error('Не вдалося прийняти запит');
+        rememberFriendState(active,'friends',active.friendshipId);
+        showActionToast('Тепер ви друзі');
+      }else if(active.friendStatus==='none'){
+        response=await fetch('/community/api/friends/request/'+encodeURIComponent(active.name),{method:'POST',credentials:'same-origin',headers:{Accept:'application/json'}});
+        const data=await response.json().catch(()=>({}));
+        if(!response.ok)throw new Error(data.message||'Не вдалося надіслати запит');
+        rememberFriendState(active,data.status||'pending_sent',data.friendship_id||null);
+        await refreshFriendState(active);
+        showActionToast('Запит дружби надіслано');
+      }
+    }catch(error){
+      showActionToast(error.message||'Не вдалося виконати дію');
+    }finally{
+      renderFriendAction(active);
+      renderInviteServers(active);
+    }
+  }
+  async function inviteToServer(serverId,button){
+    if(!active||!serverId)return;
+    button.disabled=true;
+    try{
+      const body=new FormData();
+      body.append('username',active.name);
+      body.append('redirect_to',location.pathname);
+      const response=await fetch('/community/servers/'+serverId+'/invite',{method:'POST',credentials:'same-origin',headers:{Accept:'application/json'},body});
+      const data=await response.json().catch(()=>({}));
+      if(!response.ok||!data.ok)throw new Error(data.message||'Не вдалося надіслати запрошення');
+      button.classList.add('sent');
+      button.querySelector('svg').innerHTML='<path d="m5 12 4 4L19 6"/>';
+      showActionToast('Запрошення на сервер надіслано');
+    }catch(error){
+      showActionToast(error.message||'Не вдалося надіслати запрошення');
+    }finally{button.disabled=false;}
+  }
+  function openFull(){
+    if(!active)return;
+    const ov=$('#ah-v3-overlay');
+    if(!ov)return;
+    ov.style.setProperty('--ah-c1',active.c1);
+    ov.style.setProperty('--ah-c2',active.c2);
+    setBanner($('#ah-v3-full-banner'),active.banner,active.c1,active.c2);
+    setAvatar($('#ah-v3-full-avatar'),$('#ah-v3-full-avatar-text'),active.avatar,active.display);
+    const fullNameNode=$('#ah-v3-full-name');
+    if(fullNameNode){fullNameNode.dataset.profileUsername=active.name;fullNameNode.textContent=active.display;}
+    $('#ah-v3-full-handle').textContent='@'+active.name;
+    $('#ah-v3-full-meta').textContent=active.isSelf?'Твоя картка AlexiHub.':'В числе участников с собеседником.';
+    $('#ah-v3-full-about').textContent=(active.bio||'').trim()||(active.isSelf?'Тут буде повний профіль, активність, ігри, інтеграції та нотатки.':'Користувач поки що нічого про себе не розповів.');
+    renderMutualServers(active);
+    renderFriendAction(active);
+    renderInviteServers(active);
+    const msg=$('#ah-v3-full-message');
+    if(msg){msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name);msg.dataset.self=active.isSelf?'1':'0';}
+    closeMini();
+    closeFullMenu();
+    ov.classList.add('open');
+    refreshFriendState(active);
+  }
+  function closeFull(){const ov=$('#ah-v3-overlay');if(ov)ov.classList.remove('open');closeFullMenu();hideFullTooltip()}
   document.addEventListener('click',function(e){
     if(e.target.closest('#ah-v3-mini,#ah-v3-overlay')) return;
     const mutualTrigger=e.target.closest('[data-mini-open-mutual]');
@@ -2316,13 +2533,48 @@ document.addEventListener('DOMContentLoaded',()=>{
   },true);
   document.addEventListener('DOMContentLoaded',function(){
     const av=$('#ah-v3-avatar'), full=$('#ah-v3-open-full'), close=$('#ah-v3-close'), overlay=$('#ah-v3-overlay');
+    const friendButton=$('#ah-v3-friend-action'), moreButton=$('#ah-v3-full-more');
     if(av) av.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();openFull();});
     if(full) full.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();openFull();});
     if(close) close.addEventListener('click',function(e){e.preventDefault();closeFull();});
     if(overlay) overlay.addEventListener('click',function(e){if(e.target===overlay)closeFull();});
+    if(friendButton){
+      friendButton.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();applyFriendAction();});
+      friendButton.addEventListener('mouseenter',function(){showFullTooltip(friendButton);});
+      friendButton.addEventListener('mouseleave',hideFullTooltip);
+      friendButton.addEventListener('focus',function(){showFullTooltip(friendButton);});
+      friendButton.addEventListener('blur',hideFullTooltip);
+    }
+    if(moreButton)moreButton.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();openFullMenu();});
     document.querySelectorAll('.ah-v3-status-btn').forEach(btn=>btn.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();let s=btn.dataset.presence;if(typeof setPresenceStatus==='function')setPresenceStatus(s); if(active)active.status=s; let st=$('#ah-v3-status'); if(st)st.className='ah-v3-status '+s;}));
   });
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeMini();closeFull();}});
+  document.addEventListener('click',async function(e){
+    const inviteButton=e.target.closest('[data-invite-server-id]');
+    if(inviteButton){e.preventDefault();e.stopPropagation();return inviteToServer(inviteButton.dataset.inviteServerId,inviteButton);}
+    const action=e.target.closest('[data-full-profile-action]');
+    if(action){
+      e.preventDefault();e.stopPropagation();
+      const kind=action.dataset.fullProfileAction;
+      closeFullMenu();
+      if(kind==='copy'&&active&&active.id){
+        try{await navigator.clipboard.writeText(String(active.id));showActionToast('ID користувача скопійовано');}catch(error){showActionToast('Не вдалося скопіювати ID');}
+      }else if(kind==='block'&&active){
+        if(window.AlexiHubBlocking&&typeof window.AlexiHubBlocking.openBlockFor==='function'){
+          window.AlexiHubBlocking.openBlockFor(active.name);
+        }else{
+          showActionToast('Не вдалося відкрити блокування');
+        }
+      }else if(kind==='ignore'){
+        showActionToast('Ігнорування буде доступне в налаштуваннях спілкування');
+      }else if(kind==='report'){
+        showActionToast('Скарги будуть доступні в модулі модерації');
+      }
+      return;
+    }
+    if(!e.target.closest('#ah-v3-full-menu,#ah-v3-full-more'))closeFullMenu();
+  });
+  window.addEventListener('resize',closeFullMenu);
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeMini();closeFull();closeFullMenu();}});
 })();
 </script>
 
@@ -6587,6 +6839,19 @@ document.addEventListener('DOMContentLoaded', async function(){
     currentStatus=Object.assign({},currentStatus||{},data,{blocked_by_me:false});
     notify(data.message||text().unblockedOk); await loadBlockedUsers(); applyDmBlockState(username,currentStatus); return data;
   }
+  async function openBlockFor(username){
+    try{
+      currentStatus=await api('/community/api/blocks/'+encodeURIComponent(username));
+      selectedUser=currentStatus.user;
+      if(currentStatus.blocked_by_me){
+        await unblockUser(username);
+        return;
+      }
+      openConfirm();
+    }catch(error){
+      notify(error.message||text().actionError);
+    }
+  }
 
   function contentSettingsMarkup(c){
     return `<div class="ah-content-settings"><h1>${esc(c.content)}</h1><div class="ah-privacy-card"><h3>${esc(c.privacyTitle)}</h3><p>${esc(c.privacyText)}</p></div><div class="ah-blocked-heading"><h2>${esc(c.blocked)}</h2><p>${esc(c.intro)}</p></div><div class="ah-blocked-card"><div class="ah-blocked-card-head"><span class="ah-blocked-card-icon">⊘</span><div class="ah-blocked-card-title"><b>${esc(c.blocked)}</b><span id="ah-blocked-count"></span></div></div><div id="ah-blocked-list" class="ah-blocked-list"><div class="ah-blocked-loading">${esc(c.loading)}</div></div></div></div>`;
@@ -6662,7 +6927,7 @@ document.addEventListener('DOMContentLoaded', async function(){
   document.addEventListener('keydown',event=>{if(event.key==='Escape'){closeProfileMenu();closeConfirm();}});
 
   function init(){ensureProfileMenu();ensureSettings();ensureConfirmModal();hydrateDmBlockState();}
-  window.AlexiHubBlocking={refreshDm:hydrateDmBlockState,refreshList:loadBlockedUsers};
+  window.AlexiHubBlocking={refreshDm:hydrateDmBlockState,refreshList:loadBlockedUsers,openBlockFor};
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
 })();
 </script>
@@ -6673,23 +6938,141 @@ document.addEventListener('DOMContentLoaded', async function(){
 }
 .ah-v3-full-left{min-height:620px!important}
 .ah-v3-full-left-inner{padding:124px 30px 30px!important}
-.ah-v3-full-actions{display:flex;gap:8px;margin-top:18px}
-.ah-v3-full-actions a{
+.ah-v3-full-actions{display:flex;align-items:center;gap:8px;margin-top:18px}
+.ah-v3-full-actions>a,.ah-v3-full-actions>button{
   min-width:0;
   min-height:36px;
-  padding:0 14px;
   border-radius:8px;
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  background:#5865f2;
   color:#fff;
   text-decoration:none;
   font-size:12px;
   font-weight:900;
+  border:0;
+  cursor:pointer;
+  transition:background .14s ease,filter .14s ease,transform .12s ease;
 }
-.ah-v3-full-actions a+ a{background:rgba(255,255,255,.10)}
-.ah-v3-full-actions a:hover{filter:brightness(1.1)}
+#ah-v3-full-message{gap:7px;padding:0 14px;background:#5865f2}
+#ah-v3-full-message svg{width:16px;height:16px;fill:currentColor}
+#ah-v3-full-message:hover{background:#4752c4}
+.ah-v3-friend-action,.ah-v3-full-icon-button{height:36px;background:#4e5058}
+.ah-v3-friend-action{gap:7px;padding:0 11px}
+.ah-v3-friend-action svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ah-v3-friend-action.state-friends,.ah-v3-friend-action.state-pending_sent{width:36px;padding:0}
+.ah-v3-friend-action.state-none,.ah-v3-friend-action.state-pending_received{padding:0 13px;background:#5865f2}
+.ah-v3-friend-action.state-none:hover,.ah-v3-friend-action.state-pending_received:hover{background:#4752c4}
+.ah-v3-friend-action.state-pending_sent:hover,.ah-v3-full-icon-button:hover{background:#5d606a}
+.ah-v3-friend-action:disabled{opacity:1;cursor:default}
+.ah-v3-friend-action[hidden],.ah-v3-full-icon-button[hidden]{display:none!important}
+.ah-v3-full-icon-button{width:36px;padding:0}
+.ah-v3-full-icon-button svg{width:22px;height:22px;fill:currentColor}
+.ah-v3-full-actions>a:active,.ah-v3-full-actions>button:active{transform:translateY(1px)}
+.ah-v3-full-menu{
+  position:fixed;
+  z-index:2147483500;
+  width:292px;
+  display:none;
+  padding:7px;
+  border:1px solid #3b3d45;
+  border-radius:8px;
+  background:#24252b;
+  color:#dbdee1;
+  box-shadow:0 20px 55px rgba(0,0,0,.62);
+}
+.ah-v3-full-menu.open{display:block;animation:ahFullMenuIn .12s ease-out both}
+@keyframes ahFullMenuIn{from{opacity:0;transform:translateY(-5px) scale(.985)}to{opacity:1;transform:none}}
+.ah-v3-full-menu-item{
+  width:100%;
+  min-height:38px;
+  padding:7px 10px;
+  border:0;
+  border-radius:5px;
+  background:transparent;
+  color:#dbdee1;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  text-align:left;
+  text-decoration:none;
+  font:inherit;
+  font-size:13px;
+  font-weight:800;
+  cursor:pointer;
+}
+.ah-v3-full-menu-item span{min-width:0}
+.ah-v3-full-menu-item small{display:block;margin-top:2px;color:#949ba4;font-size:10px;font-weight:650}
+.ah-v3-full-menu-item>svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.ah-v3-full-menu-item>b{padding:2px 4px;border-radius:3px;background:#4e5058;color:#dbdee1;font-size:9px}
+.ah-v3-full-menu-item:hover,.ah-v3-full-menu-item:focus-visible{outline:0;background:#5865f2;color:#fff}
+.ah-v3-full-menu-item:hover small{color:#fff}
+.ah-v3-full-menu-item.danger{color:#ff6b6f}
+.ah-v3-full-menu-item.danger:hover{background:#da373c;color:#fff}
+.ah-v3-full-menu-separator{height:1px;margin:5px;background:#3a3c43}
+.ah-v3-full-menu-nested{position:relative}
+.ah-v3-full-menu-nested:after{content:"";position:absolute;left:100%;top:-7px;width:10px;height:calc(100% + 14px)}
+.ah-v3-invite-submenu{
+  position:absolute;
+  left:calc(100% + 8px);
+  top:-7px;
+  z-index:2;
+  width:260px;
+  max-height:340px;
+  overflow-y:auto;
+  display:none;
+  padding:7px;
+  border:1px solid #3b3d45;
+  border-radius:8px;
+  background:#2b2d31;
+  box-shadow:0 20px 55px rgba(0,0,0,.62);
+}
+.ah-v3-full-menu-nested:hover>.ah-v3-invite-submenu,.ah-v3-full-menu-nested:focus-within>.ah-v3-invite-submenu{display:block;animation:ahInviteMenuIn .12s ease-out both}
+@keyframes ahInviteMenuIn{from{opacity:0;transform:translateX(-5px)}to{opacity:1;transform:none}}
+.ah-v3-invite-server{
+  width:100%;
+  min-height:44px;
+  padding:5px 7px;
+  border:0;
+  border-radius:6px;
+  background:transparent;
+  color:#f2f3f5;
+  display:grid;
+  grid-template-columns:32px minmax(0,1fr) 16px;
+  align-items:center;
+  gap:9px;
+  text-align:left;
+  font:inherit;
+  font-size:12px;
+  font-weight:800;
+  cursor:pointer;
+}
+.ah-v3-invite-server:hover{background:#5865f2;color:#fff}
+.ah-v3-invite-server:disabled{opacity:.58;cursor:wait}
+.ah-v3-invite-server.sent{color:#57f287}
+.ah-v3-invite-server-icon{width:32px;height:32px;border-radius:10px;background:#3b3d45 center/cover no-repeat;display:grid;place-items:center;color:#fff;font-weight:950}
+.ah-v3-invite-server>span:nth-child(2){overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ah-v3-invite-server>svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;opacity:0;transition:opacity .12s ease}
+.ah-v3-invite-server:hover>svg,.ah-v3-invite-server.sent>svg{opacity:1}
+.ah-v3-invite-empty{padding:13px 10px;color:#b5bac1;font-size:12px;line-height:1.4;text-align:center}
+.ah-v3-full-tooltip{
+  position:fixed;
+  z-index:2147483600;
+  display:none;
+  padding:7px 10px;
+  border-radius:5px;
+  background:#111214;
+  color:#f2f3f5;
+  box-shadow:0 7px 18px rgba(0,0,0,.42);
+  font-size:12px;
+  font-weight:900;
+  white-space:nowrap;
+  pointer-events:none;
+}
+.ah-v3-full-tooltip.show{display:block;animation:ahTooltipIn .1s ease-out both}
+.ah-v3-full-tooltip:after{content:"";position:absolute;left:50%;bottom:-5px;width:10px;height:10px;background:#111214;transform:translateX(-50%) rotate(45deg)}
+@keyframes ahTooltipIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
 .ah-v3-full-about-block{margin-top:22px;padding-top:18px;border-top:1px solid rgba(255,255,255,.12)}
 .ah-v3-full-section-title{margin-bottom:7px;color:#fff;font-size:12px;font-weight:950;text-transform:uppercase;letter-spacing:.035em}
 #ah-v3-full-about{color:#e1e3e7;font-size:13px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
@@ -6741,6 +7124,8 @@ document.addEventListener('DOMContentLoaded', async function(){
   .ah-v3-full-left{min-height:auto!important}
   .ah-v3-full-left-inner{padding:108px 20px 24px!important}
   .ah-v3-full-right{padding:20px!important}
+  .ah-v3-full-menu{width:min(292px,calc(100vw - 20px))}
+  .ah-v3-invite-submenu{position:fixed;left:10px;right:10px;top:auto;bottom:10px;width:auto;max-height:42vh}
 }
 </style>
 </body>
