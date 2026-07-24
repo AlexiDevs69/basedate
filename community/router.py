@@ -4158,10 +4158,33 @@ async def api_friend_status(username: str, request: Request, db: AsyncSession = 
     friendship = await crud.get_friendship_between(db, viewer.id, target.id)
     status = await crud.friendship_status(db, viewer.id, target.id)
     block = await crud.block_status(db, viewer.id, target.id)
+    mutual_server_models = await crud.list_mutual_servers(db, viewer.id, target.id)
+    mutual_servers = [
+        {
+            "id": int(server.id),
+            "name": server.name,
+            "icon_url": server.icon_url or "",
+            "url": f"/community/servers/{server.id}",
+        }
+        for server in mutual_server_models
+    ]
+    mutual_server_ids = {server["id"] for server in mutual_servers}
+    invite_servers = [
+        {
+            "id": int(server.id),
+            "name": server.name,
+            "icon_url": server.icon_url or "",
+        }
+        for server in await crud.list_servers_for_account(db, viewer.id)
+        if int(server.id) not in mutual_server_ids
+    ]
     return JSONResponse({
         "ok": True,
+        "profile_id": int(target.id),
         "status": status,
         "friendship_id": int(friendship.id) if friendship else None,
+        "mutual_servers": mutual_servers,
+        "invite_servers": invite_servers,
         **block,
     })
 
