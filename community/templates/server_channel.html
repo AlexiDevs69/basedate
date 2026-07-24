@@ -1656,6 +1656,15 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
 .ah-user-boost-server-copy small .ah-boost-crystal{margin-right:3px}
 @media(prefers-reduced-motion:reduce){.ah-boost-level,.ah-boost-level-gem,.ah-boost-level-foot,.ah-boost-level-activate{transition:none!important}.ah-boost-level:hover{transform:none!important}}
 </style>
+<style id="server-image-banner-style">
+.server-head.has-server-banner{height:130px!important;align-items:flex-start!important;padding:6px 10px 0!important;border-bottom:0!important;background:#111114!important;isolation:isolate}
+.server-banner-image{position:absolute;inset:0;z-index:0;overflow:hidden;background:#111114}
+.server-banner-image img{width:100%;height:100%;display:block;object-fit:cover;object-position:center}
+.server-banner-image::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.62) 0,rgba(0,0,0,.18) 44%,rgba(0,0,0,.04) 72%,rgba(0,0,0,.28) 100%);pointer-events:none}
+.server-head.has-server-banner .server-head-btn{position:relative;z-index:2;color:#fff!important;text-shadow:0 1px 3px rgba(0,0,0,.88);background:transparent!important}
+.server-head.has-server-banner .server-head-btn:hover,.server-head.has-server-banner .server-head-btn.open{background:rgba(0,0,0,.22)!important}
+.server-head.has-server-banner .server-menu{top:48px!important;z-index:4}
+</style>
 </head>
 <body data-current-account-id="{{ account.id }}">
   <style id="ah-message-rate-limit-style">
@@ -1838,7 +1847,8 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
   </div>
 
   <aside class="server-sidebar">
-    <div class="server-head">
+    <div class="server-head{% if boost_status.total_boosts >= 5 and server_banner_url %} has-server-banner{% endif %}">
+      {% if boost_status.total_boosts >= 5 and server_banner_url %}<div class="server-banner-image" aria-hidden="true"><img src="{{ server_banner_url }}" alt="" /></div>{% endif %}
   <button id="server-head-btn" type="button" class="server-head-btn" onclick="toggleServerMenu(event)">
     <span>{{ server.name }}</span><span class="server-arrow">⌄</span>
   </button>
