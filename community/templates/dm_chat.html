@@ -6,6 +6,9 @@
   <title>@{{ other.username }} // AlexiHub</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  {% if other.avatar_url %}<link rel="preload" as="image" href="{{ other.avatar_url }}">{% endif %}
+  {% if other.banner_url %}<link rel="preload" as="image" href="{{ other.banner_url }}">{% endif %}
+  {% for server in mutual_servers[:3] %}{% if server.icon_url %}<link rel="preload" as="image" href="{{ server.icon_url }}">{% endif %}{% endfor %}
   <style>
     :root{--app:#0b0b0d;--rail:#08080a;--side:#111114;--main:#18191d;--panel:#202127;--panel2:#26272e;--hover:#2e3038;--border:#2b2d34;--text:#f4f4f5;--muted:#9ca3af;--muted2:#6b7280;--accent:#5865f2;--green:#23a55a;--red:#ef4444;--yellow:#f0b232;--gray:#80848e;--font:'Inter',system-ui,sans-serif;--mono:'JetBrains Mono',monospace}
     *{box-sizing:border-box;margin:0;padding:0}html,body{height:100%}body{background:var(--app);color:var(--text);font-family:var(--font);font-size:14px;overflow:hidden}a{color:inherit;text-decoration:none}button,input,textarea{font:inherit}.app{display:grid;grid-template-columns:72px 240px 1fr 300px;height:100vh;min-width:0}.icon{width:20px;height:20px;display:inline-block;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}.icon-sm{width:16px;height:16px}.server-rail{background:var(--rail);padding:12px 10px;display:flex;flex-direction:column;align-items:center;gap:10px;overflow-y:auto;border-right:1px solid #111}.server-dot{width:48px;height:48px;border-radius:18px;background:var(--panel);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;position:relative;transition:.16s ease;background-size:cover;background-position:center}.server-dot:hover,.server-dot.active{border-radius:14px;background-color:var(--accent)}.server-dot.active:before{content:"";position:absolute;left:-10px;width:4px;height:34px;border-radius:0 6px 6px 0;background:#fff}.server-dot.home-dot{background:linear-gradient(135deg,#5865f2,#4752c4)}.server-sep{width:32px;height:2px;background:#24252b;border-radius:9px}.plus{color:var(--green)}.plus:hover{background:var(--green);color:#fff}.dm-sidebar{background:var(--side);display:flex;flex-direction:column;min-width:0;border-right:1px solid #111}.search-wrap{padding:12px 10px;border-bottom:1px solid #1f2026}.search{width:100%;height:36px;border:0;border-radius:8px;background:#08080a;color:var(--text);padding:0 12px;outline:none;font-size:13px}.search::placeholder{color:var(--muted2)}.nav{padding:10px 8px;display:flex;flex-direction:column;gap:2px}.nav-item{height:42px;border-radius:8px;display:flex;align-items:center;gap:12px;color:var(--muted);padding:0 10px;font-weight:700}.nav-item:hover,.nav-item.active{background:var(--hover);color:var(--text)}.nav-ico{width:22px;display:flex;align-items:center;justify-content:center}
@@ -1110,6 +1113,16 @@
 .ah-unblock-btn:hover{background:#4e5058!important}
 .ah-blocked-loading,.ah-blocked-empty,.ah-blocked-error{min-height:120px!important;background:#191a1e}
 @media(max-width:700px){.ah-blocked-row{grid-template-columns:38px minmax(0,1fr)!important}.ah-unblock-btn{grid-column:2;width:auto!important;min-width:120px}.ah-content-settings{padding:0 2px}}
+
+/* Critical DM mutual-server styles stay in <head> to prevent an unstyled flash. */
+.dm-mutual-summary{width:100%;min-height:34px;margin:10px 0 2px;padding:4px 2px;border:0;border-radius:8px;background:transparent;color:#b5bac1;display:flex;align-items:center;gap:8px;text-align:left;cursor:pointer;font:inherit}
+.dm-mutual-summary:hover{background:rgba(255,255,255,.065);color:#dbdee1}
+.dm-mutual-icons{display:flex;align-items:center;min-width:24px;padding-left:2px}
+.dm-mutual-icon{width:22px;height:22px;margin-left:-7px;border:2px solid #232428;border-radius:50%;background:#313338 center/cover no-repeat;color:#f2f3f5;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;box-sizing:border-box}
+.dm-mutual-icon:first-child{margin-left:0}
+.dm-mutual-icon-empty{font-size:15px;color:#949ba4}
+.dm-mutual-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:700;text-decoration:underline;text-underline-offset:2px}
+.dm-mutual-chevron{width:14px;height:14px;margin-left:auto;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;opacity:.72}
   </style>
 </head>
 <body data-current-account-id="{{ account.id }}" data-active-dm-account-id="{{ other.id }}">
@@ -6654,44 +6667,6 @@ document.addEventListener('DOMContentLoaded', async function(){
 })();
 </script>
 <style id="ah-dm-mutual-servers-style">
-.dm-mutual-summary{
-  width:100%;
-  min-height:34px;
-  margin:10px 0 2px;
-  padding:4px 2px;
-  border:0;
-  border-radius:8px;
-  background:transparent;
-  color:#b5bac1;
-  display:flex;
-  align-items:center;
-  gap:8px;
-  text-align:left;
-  cursor:pointer;
-  font:inherit;
-}
-.dm-mutual-summary:hover{background:rgba(255,255,255,.065);color:#dbdee1}
-.dm-mutual-icons{display:flex;align-items:center;min-width:24px;padding-left:2px}
-.dm-mutual-icon{
-  width:22px;
-  height:22px;
-  margin-left:-7px;
-  border:2px solid #232428;
-  border-radius:50%;
-  background:#313338 center/cover no-repeat;
-  color:#f2f3f5;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:10px;
-  font-weight:900;
-  box-sizing:border-box;
-}
-.dm-mutual-icon:first-child{margin-left:0}
-.dm-mutual-icon-empty{font-size:15px;color:#949ba4}
-.dm-mutual-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:700;text-decoration:underline;text-underline-offset:2px}
-.dm-mutual-chevron{width:14px;height:14px;margin-left:auto;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;opacity:.72}
-
 .ah-v3-full{
   width:min(960px,calc(100vw - 40px))!important;
   grid-template-columns:minmax(340px,400px) minmax(0,1fr)!important;
