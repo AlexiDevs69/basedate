@@ -1345,7 +1345,7 @@
     <main class="main">
       <header class="topbar">
         <div class="top-title"><span class="avatar" {% if other.avatar_url %}style="background-image:url('{{ other.avatar_url }}')"{% endif %}>{% if not other.avatar_url %}{{ other.username[:1]|upper }}{% endif %}{% if other_visible %}<span class="presence status-{{ other_status }}"></span>{% endif %}</span>{{ other.display_name or other.username }} <span id="live-status" class="live">connecting...</span></div>
-        <div class="top-actions"><button title="Call" onclick="showActionToast('Дзвінки додамо пізніше')"><svg class="icon"><use href="#i-phone"></use></svg></button><button title="Video" onclick="showActionToast('Відео додамо пізніше')"><svg class="icon"><use href="#i-video"></use></svg></button><button title="Pin" onclick="showActionToast('Закріплені повідомлення додамо пізніше')"><svg class="icon"><use href="#i-pin"></use></svg></button><button title="Add friend" onclick="showActionToast('Запит у друзі через профіль/пошук')"><svg class="icon"><use href="#i-invite"></use></svg></button><input class="top-search" id="message-search" placeholder="Пошук у @{{ other.username }}"><button title="Search" onclick="document.getElementById('message-search')?.focus()"><svg class="icon"><use href="#i-search"></use></svg></button></div>
+        <div class="top-actions"><button title="Call" onclick="showActionToast('Дзвінки додамо пізніше')"><svg class="icon"><use href="#i-phone"></use></svg></button><button title="Video" onclick="showActionToast('Відео додамо пізніше')"><svg class="icon"><use href="#i-video"></use></svg></button><button title="Pin" onclick="showActionToast('Закріплені повідомлення додамо пізніше')"><svg class="icon"><use href="#i-pin"></use></svg></button>{% if friend_status != 'friends' %}<button title="{% if friend_status == 'pending_sent' %}Запит дружби надіслано{% elif friend_status == 'pending_received' %}Прийняти запит дружби{% else %}Додати в друзі{% endif %}" onclick="showActionToast('Керування дружбою доступне в повному профілі')"><svg class="icon"><use href="#i-invite"></use></svg></button>{% endif %}<input class="top-search" id="message-search" placeholder="Пошук у @{{ other.username }}"><button title="Search" onclick="document.getElementById('message-search')?.focus()"><svg class="icon"><use href="#i-search"></use></svg></button></div>
       </header>
       <section id="messages" class="messages">
         <div class="dm-start"><span class="avatar" {% if other.avatar_url %}style="background-image:url('{{ other.avatar_url }}')"{% endif %}>{% if not other.avatar_url %}{{ other.username[:1]|upper }}{% endif %}{% if other_visible %}<span class="presence status-{{ other_status }}"></span>{% endif %}</span><h1>{{ other.display_name or other.username }}</h1><div class="profile-handle">@{{ other.username }}</div><p>Це початок вашого особистого діалогу.</p></div>
@@ -2157,6 +2157,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     {{ account.username|lower|tojson }}: {
       id: {{ account.id|tojson }},
       username: {{ account.username|tojson }},
+      display: {{ (account.display_name or account.username)|tojson }},
       avatar: {{ (account.avatar_url or '')|tojson }},
       banner: {{ (account.banner_url or '')|tojson }},
       status: {{ (account.account_status or 'online')|tojson }},
@@ -2166,11 +2167,13 @@ document.addEventListener('DOMContentLoaded',()=>{
       bio: {{ (account.bio or '')|tojson }},
       friendStatus: "self",
       friendshipId: null,
+      friendStatusKnown: true,
       inviteServers: []
     },
     {{ other.username|lower|tojson }}: {
       id: {{ other.id|tojson }},
       username: {{ other.username|tojson }},
+      display: {{ (other.display_name or other.username)|tojson }},
       avatar: {{ (other.avatar_url or '')|tojson }},
       banner: {{ (other.banner_url or '')|tojson }},
       status: {{ (other_status if other_visible else 'offline')|tojson }},
@@ -2181,12 +2184,17 @@ document.addEventListener('DOMContentLoaded',()=>{
       mutualServers: {{ mutual_servers|tojson }},
       friendStatus: {{ friend_status|tojson }},
       friendshipId: {{ friendship_id|tojson }},
+      friendStatusKnown: true,
       inviteServers: {{ invite_servers|tojson }}
     }
   };
   function getKnownProfile(name){
     const key=String(name||'').replace(/^@/,'').trim().toLowerCase();
-    return key ? (KNOWN_PROFILES[key] || null) : null;
+    if(!key)return null;
+    if(KNOWN_PROFILES[key])return KNOWN_PROFILES[key];
+    return Object.values(KNOWN_PROFILES).find(function(profile){
+      return String(profile.display||'').trim().toLowerCase()===key;
+    })||null;
   }
   window.getKnownProfile = getKnownProfile;
   const $=(s,r=document)=>r.querySelector(s);
@@ -2263,10 +2271,11 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(isSelf){ let d=$('#my-avatar-status,#modal-avatar-status'); if(d){ let cls=[...d.classList].find(x=>x.startsWith('status-')); if(cls) status=cls.replace('status-',''); } }
     let mutualServers=(known&&Array.isArray(known.mutualServers))?known.mutualServers:[];
     let inviteServers=(known&&Array.isArray(known.inviteServers))?known.inviteServers:[];
-    let friendStatus=(known&&known.friendStatus)||'none';
+    let friendStatus=known?normalizeFriendStatus(known.friendStatus):'loading';
     let friendshipId=(known&&known.friendshipId)||null;
+    let friendStatusKnown=!!(known&&known.friendStatusKnown);
     let id=(known&&known.id)||null;
-    return {id,name:clean(name)||'user',display:clean(display)||clean(name)||'user',avatar,banner,role,c1,c2,profile,isSelf,status,bio,mutualServers,inviteServers,friendStatus,friendshipId};
+    return {id,name:clean(name)||'user',display:clean(display)||clean(name)||'user',avatar,banner,role,c1,c2,profile,isSelf,status,bio,mutualServers,inviteServers,friendStatus,friendshipId,friendStatusKnown};
   }
   function setAvatar(el,textEl,url,name){ if(!el)return; el.style.backgroundImage=url?`url('${safeUrl(url)}')`:''; if(textEl) textEl.textContent=url?'':(name||'?').slice(0,1).toUpperCase(); }
   function tintFromBanner(url,target){
@@ -2328,25 +2337,37 @@ document.addEventListener('DOMContentLoaded',()=>{
     pending_sent:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="7" cy="7" r="4"/><circle cx="18" cy="15" r="4.5"/><path d="M18 12.7V15l1.6 1"/></svg>',
     pending_received:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8" cy="7" r="4"/><path d="m16 11 2 2 4-5"/></svg>'
   };
+  function normalizeFriendStatus(status){
+    const cleanStatus=String(status||'').trim().toLowerCase();
+    if(cleanStatus==='accepted')return 'friends';
+    if(['self','none','pending_sent','pending_received','friends','loading'].includes(cleanStatus))return cleanStatus;
+    return 'loading';
+  }
   function rememberFriendState(profile,status,id){
     if(!profile)return;
-    profile.friendStatus=status||'none';
+    profile.friendStatus=normalizeFriendStatus(status);
     profile.friendshipId=id||null;
+    profile.friendStatusKnown=profile.friendStatus!=='loading';
     const known=getKnownProfile(profile.name);
-    if(known){known.friendStatus=profile.friendStatus;known.friendshipId=profile.friendshipId;}
+    if(known){known.friendStatus=profile.friendStatus;known.friendshipId=profile.friendshipId;known.friendStatusKnown=profile.friendStatusKnown;}
   }
   function renderFriendAction(profile){
     const button=$('#ah-v3-friend-action');
     const more=$('#ah-v3-full-more');
     if(!button||!profile)return;
-    const status=profile.friendStatus||'none';
+    const status=profile.friendStatusKnown===false?'loading':normalizeFriendStatus(profile.friendStatus);
     button.hidden=!!profile.isSelf;
     if(more)more.hidden=!!profile.isSelf;
     button.className='ah-v3-friend-action state-'+status;
     button.removeAttribute('data-tooltip');
     button.disabled=false;
     button.setAttribute('aria-disabled',status==='friends'?'true':'false');
-    if(status==='friends'){
+    if(status==='loading'){
+      button.innerHTML='<span class="ah-v3-friend-loading" aria-hidden="true"></span>';
+      button.disabled=true;
+      button.setAttribute('aria-busy','true');
+      button.setAttribute('aria-label','Перевіряємо статус дружби');
+    }else if(status==='friends'){
       button.innerHTML=FRIEND_ICONS.friends;
       button.dataset.tooltip='Друг';
       button.setAttribute('aria-label','Друг');
@@ -2361,6 +2382,7 @@ document.addEventListener('DOMContentLoaded',()=>{
       button.innerHTML=FRIEND_ICONS.none+'<span>Додати в друзі</span>';
       button.setAttribute('aria-label','Додати в друзі');
     }
+    if(status!=='loading')button.removeAttribute('aria-busy');
   }
   function renderInviteServers(profile){
     const submenu=$('#ah-v3-invite-submenu');
@@ -2382,17 +2404,22 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
   async function refreshFriendState(profile){
     if(!profile||profile.isSelf)return;
+    if(!profile.friendStatusKnown){
+      profile.friendStatus='loading';
+      renderFriendAction(profile);
+    }
     try{
       const response=await fetch('/community/api/friend-status/'+encodeURIComponent(profile.name),{credentials:'same-origin',headers:{Accept:'application/json'}});
       const data=await response.json();
-      if(!response.ok)return;
+      if(!response.ok||!data.ok)return false;
       rememberFriendState(profile,data.status,data.friendship_id);
       profile.blockedByMe=!!data.blocked_by_me;
       renderFriendAction(profile);
       renderInviteServers(profile);
       const block=$('[data-full-profile-action="block"]');
       if(block)block.textContent=profile.blockedByMe?'Розблокувати':'Заблокувати';
-    }catch(e){}
+      return true;
+    }catch(e){return false;}
   }
   function closeFullMenu(){
     const menu=$('#ah-v3-full-menu'), button=$('#ah-v3-full-more'), submenu=$('#ah-v3-invite-submenu');
@@ -2431,6 +2458,11 @@ document.addEventListener('DOMContentLoaded',()=>{
   function hideFullTooltip(){const tip=$('#ah-v3-full-tooltip');tip?.classList.remove('show')}
   async function applyFriendAction(){
     if(!active||active.isSelf)return;
+    if(!active.friendStatusKnown||active.friendStatus==='loading'){
+      await refreshFriendState(active);
+      renderFriendAction(active);
+      return;
+    }
     const button=$('#ah-v3-friend-action');
     if(button)button.disabled=true;
     try{
@@ -6961,11 +6993,14 @@ document.addEventListener('DOMContentLoaded', async function(){
 .ah-v3-friend-action{gap:7px;padding:0 11px}
 .ah-v3-friend-action svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .ah-v3-friend-action.state-friends,.ah-v3-friend-action.state-pending_sent{width:36px;padding:0}
+.ah-v3-friend-action.state-loading{width:36px;padding:0;background:#4e5058}
 .ah-v3-friend-action.state-none,.ah-v3-friend-action.state-pending_received{padding:0 13px;background:#5865f2}
 .ah-v3-friend-action.state-none:hover,.ah-v3-friend-action.state-pending_received:hover{background:#4752c4}
 .ah-v3-friend-action.state-pending_sent:hover,.ah-v3-full-icon-button:hover{background:#5d606a}
 .ah-v3-friend-action:disabled{opacity:1;cursor:default}
 .ah-v3-friend-action[hidden],.ah-v3-full-icon-button[hidden]{display:none!important}
+.ah-v3-friend-loading{width:16px;height:16px;border:2px solid rgba(255,255,255,.28);border-top-color:#fff;border-radius:50%;animation:ah-v3-friend-spin .7s linear infinite}
+@keyframes ah-v3-friend-spin{to{transform:rotate(360deg)}}
 .ah-v3-full-icon-button{width:36px;padding:0}
 .ah-v3-full-icon-button svg{width:22px;height:22px;fill:currentColor}
 .ah-v3-full-actions>a:active,.ah-v3-full-actions>button:active{transform:translateY(1px)}
