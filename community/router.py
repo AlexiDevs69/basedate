@@ -4042,6 +4042,11 @@ async def public_profile(username: str, request: Request, db: AsyncSession = Dep
     friends = await crud.list_friends(db, profile_account.id)
     gifts = await crud.list_gifts_for_account(db, profile_account.id)
     profile_nitro = await crud.nitro_profile_payload(db, profile_account.id)
+    friendship = None
+    friend_status = "none"
+    if viewer:
+        friendship = await crud.get_friendship_between(db, viewer.id, profile_account.id)
+        friend_status = await crud.friendship_status(db, viewer.id, profile_account.id)
 
     return templates.TemplateResponse(
         "public_profile.html",
@@ -4053,6 +4058,8 @@ async def public_profile(username: str, request: Request, db: AsyncSession = Dep
             "friends": friends,
             "gifts": gifts,
             "nitro": profile_nitro,
+            "friend_status": friend_status,
+            "friendship_id": int(friendship.id) if friendship else None,
         },
     )
 
@@ -4142,16 +4149,19 @@ async def api_respond_friend_request(friendship_id: int, request: Request, db: A
 @router.get("/api/friend-status/{username}")
 async def api_friend_status(username: str, request: Request, db: AsyncSession = Depends(get_db)):
     viewer = await current_account(request, db)
-    target = await crud.get_account_by_username(db, username)
-    if not viewer or not target:
-        return JSONResponse({"status": "none"})
+    if not viewer:
+        return JSONResponse({"error": "not_logged_in"}, status_code=401)
+    target = await crud.get_account_by_username_ci(db, username)
+    if not target:
+        return JSONResponse({"error": "not_found"}, status_code=404)
 
     friendship = await crud.get_friendship_between(db, viewer.id, target.id)
     status = await crud.friendship_status(db, viewer.id, target.id)
     block = await crud.block_status(db, viewer.id, target.id)
     return JSONResponse({
+        "ok": True,
         "status": status,
-        "friendship_id": friendship.id if friendship else None,
+        "friendship_id": int(friendship.id) if friendship else None,
         **block,
     })
 
