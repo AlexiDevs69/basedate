@@ -1357,6 +1357,19 @@
           <div class="big-avatar" {% if other.avatar_url %}style="background-image:url('{{ other.avatar_url }}')"{% endif %}>{% if not other.avatar_url %}{{ other.username[:1]|upper }}{% endif %}</div>
           <h2>{{ other.display_name or other.username }}</h2><div class="profile-handle">@{{ other.username }}</div>
           <div class="profile-status">{% if other_visible %}<i class="status-dot status-{{ other_status }}"></i>{{ {'online':'В мережі','idle':'Неактивний','dnd':'Не турбувати','invisible':'Невидимий'}.get(other_status, 'В мережі') }}{% else %}<i class="status-dot status-invisible"></i>Не в мережі{% endif %}</div>
+          {% set mutual_count = mutual_servers|length %}
+          {% set mutual_mod10 = mutual_count % 10 %}
+          {% set mutual_mod100 = mutual_count % 100 %}
+          <button class="dm-mutual-summary" type="button" data-mini-open-mutual="1" aria-label="Відкрити спільні сервери">
+            <span class="dm-mutual-icons" aria-hidden="true">
+              {% for server in mutual_servers[:3] %}
+              <span class="dm-mutual-icon" title="{{ server.name }}" {% if server.icon_url %}style="background-image:url('{{ server.icon_url }}')"{% endif %}>{% if not server.icon_url %}{{ server.name[:1]|upper }}{% endif %}</span>
+              {% endfor %}
+              {% if not mutual_servers %}<span class="dm-mutual-icon dm-mutual-icon-empty">⌁</span>{% endif %}
+            </span>
+            <span class="dm-mutual-label">{{ mutual_count }} {% if mutual_mod10 == 1 and mutual_mod100 != 11 %}общий сервер{% elif mutual_mod10 in [2, 3, 4] and mutual_mod100 not in [12, 13, 14] %}общих сервера{% else %}общих серверов{% endif %}</span>
+            <svg class="dm-mutual-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>
+          </button>
           <p>{{ other.bio or 'Користувач AlexiHub.' }}</p>
           <a class="btn dm-right-full-profile"
              href="/community/profile/{{ other.username }}"
@@ -2074,13 +2087,23 @@ document.addEventListener('DOMContentLoaded',()=>{
         <div id="ah-v3-full-avatar" class="ah-v3-full-avatar"><span id="ah-v3-full-avatar-text"></span></div>
         <div id="ah-v3-full-name" class="ah-v3-full-name">User</div>
         <div id="ah-v3-full-handle" class="ah-v3-full-handle">@user</div>
+        <div class="ah-v3-full-actions">
+          <a id="ah-v3-full-message" href="#">Повідомлення</a>
+          <a id="ah-v3-full-open" href="#">Відкрити профіль</a>
+        </div>
+        <div class="ah-v3-full-about-block">
+          <div class="ah-v3-full-section-title">Про мене</div>
+          <div id="ah-v3-full-about">Швидкий перегляд профілю поверх поточної сторінки.</div>
+        </div>
         <div id="ah-v3-full-meta" class="ah-v3-full-meta">AlexiHub profile card.</div>
       </div>
     </div>
     <div class="ah-v3-full-right">
-      <h3>Дошка</h3>
-      <div class="ah-v3-widget"><div class="ah-v3-widget-title">Про користувача</div><p id="ah-v3-full-about">Швидкий перегляд профілю поверх поточної сторінки.</p></div>
-      <div class="ah-v3-widget"><div class="ah-v3-widget-title">Дії</div><p><a id="ah-v3-full-message" href="#" style="color:#fff;text-decoration:none;font-weight:900;">Message</a> · <a id="ah-v3-full-open" href="#" style="color:#b5bac1;text-decoration:none;font-weight:900;">Open profile page</a></p></div>
+      <div class="ah-v3-full-tabs">
+        <span>Дошка</span>
+        <span id="ah-v3-mutual-tab" class="active">Спільні сервери</span>
+      </div>
+      <div id="ah-v3-mutual-list" class="ah-v3-mutual-list"></div>
     </div>
   </div>
 </div>
@@ -2109,7 +2132,8 @@ document.addEventListener('DOMContentLoaded',()=>{
       role: {{ (other.role_label or 'member')|tojson }},
       c1: {{ (other.role_color_start or '#5865f2')|tojson }},
       c2: {{ (other.role_color_end or '#9b5cf6')|tojson }},
-      bio: {{ (other.bio or '')|tojson }}
+      bio: {{ (other.bio or '')|tojson }},
+      mutualServers: {{ mutual_servers|tojson }}
     }
   };
   function getKnownProfile(name){
@@ -2188,7 +2212,8 @@ document.addEventListener('DOMContentLoaded',()=>{
     let html=(el.outerHTML||'')+(mem?mem.outerHTML:'')+(panel?panel.outerHTML:'');
     let st=html.match(/status-(online|idle|dnd|invisible|offline)/); if(st && (!status || status==='offline')) status=st[1];
     if(isSelf){ let d=$('#my-avatar-status,#modal-avatar-status'); if(d){ let cls=[...d.classList].find(x=>x.startsWith('status-')); if(cls) status=cls.replace('status-',''); } }
-    return {name:clean(name)||'user',display:clean(display)||clean(name)||'user',avatar,banner,role,c1,c2,profile,isSelf,status,bio};
+    let mutualServers=(known&&Array.isArray(known.mutualServers))?known.mutualServers:[];
+    return {name:clean(name)||'user',display:clean(display)||clean(name)||'user',avatar,banner,role,c1,c2,profile,isSelf,status,bio,mutualServers};
   }
   function setAvatar(el,textEl,url,name){ if(!el)return; el.style.backgroundImage=url?`url('${safeUrl(url)}')`:''; if(textEl) textEl.textContent=url?'':(name||'?').slice(0,1).toUpperCase(); }
   function tintFromBanner(url,target){
@@ -2222,10 +2247,39 @@ document.addEventListener('DOMContentLoaded',()=>{
     setAvatar($('#ah-v3-avatar'),$('#ah-v3-avatar-text'),active.avatar,active.display); const miniNameNode=$('#ah-v3-name'); if(miniNameNode){miniNameNode.dataset.profileUsername=active.name; miniNameNode.textContent=active.display;} $('#ah-v3-handle').textContent='@'+active.name; $('#ah-v3-role').textContent=active.role||'member'; const bioText=(active.bio||'').trim(); const noteTitle=$('#ah-v3-mini .ah-v3-note b'); if(noteTitle) noteTitle.textContent=bioText?'Опис профілю':'Міні-профіль'; $('#ah-v3-note-text').textContent=bioText || (active.isSelf?'Звідси можна змінити статус. Натисни на аватарку для повної картки.':'Натисни на аватарку, щоб відкрити повну картку профілю.'); let st=$('#ah-v3-status'); if(st) st.className='ah-v3-status '+(active.status||'offline'); let msg=$('#ah-v3-message'); if(msg){msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; msg.textContent=active.isSelf?'Редактировать профиль':'Message'} place(pop,e);
   }
   function closeMini(){let p=$('#ah-v3-mini'); if(p)p.classList.remove('open')}
-  function openFull(){ if(!active)return; let ov=$('#ah-v3-overlay'); if(!ov)return; ov.style.setProperty('--ah-c1',active.c1); ov.style.setProperty('--ah-c2',active.c2); setBanner($('#ah-v3-full-banner'), active.banner, active.c1, active.c2); setAvatar($('#ah-v3-full-avatar'),$('#ah-v3-full-avatar-text'),active.avatar,active.display); const fullNameNode=$('#ah-v3-full-name'); if(fullNameNode){fullNameNode.dataset.profileUsername=active.name; fullNameNode.textContent=active.display;} $('#ah-v3-full-handle').textContent='@'+active.name; $('#ah-v3-full-meta').textContent=active.isSelf?'Твоя картка AlexiHub.':'Картка користувача AlexiHub.'; $('#ah-v3-full-about').textContent=(active.bio||'').trim() || (active.isSelf?'Тут буде повний профіль, активність, ігри, інтеграції та нотатки.':'Швидкий перегляд профілю поверх поточної сторінки, без переходу зі сторінки.'); let msg=$('#ah-v3-full-message'); if(msg){ msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; } let op=$('#ah-v3-full-open'); if(op) op.href=active.profile; closeMini(); ov.classList.add('open'); }
+  function mutualServerLabel(count){
+    const mod10=count%10, mod100=count%100;
+    if(mod10===1 && mod100!==11) return count+' общий сервер';
+    if([2,3,4].includes(mod10) && ![12,13,14].includes(mod100)) return count+' общих сервера';
+    return count+' общих серверов';
+  }
+  function renderMutualServers(profile){
+    const list=$('#ah-v3-mutual-list'), tab=$('#ah-v3-mutual-tab');
+    if(!list)return;
+    const servers=Array.isArray(profile&&profile.mutualServers)?profile.mutualServers:[];
+    if(tab) tab.textContent=mutualServerLabel(servers.length);
+    if(!servers.length){
+      list.innerHTML='<div class="ah-v3-mutual-empty"><span>⌁</span><b>Нет общих серверов</b><small>Вы пока не состоите вместе ни на одном сервере.</small></div>';
+      return;
+    }
+    list.innerHTML=servers.map(function(server){
+      const name=String(server.name||'Сервер');
+      const icon=server.icon_url?`style="background-image:url('${safeUrl(server.icon_url)}')"`:'';
+      const initial=server.icon_url?'':name.slice(0,1).toUpperCase();
+      return `<a class="ah-v3-mutual-row" href="${server.url||('/community/servers/'+server.id)}"><span class="ah-v3-mutual-server-icon" ${icon}>${initial}</span><span class="ah-v3-mutual-server-copy"><b>${name.replace(/[&<>"']/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]})}</b><small>Общий сервер</small></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></a>`;
+    }).join('');
+  }
+  function openFull(){ if(!active)return; let ov=$('#ah-v3-overlay'); if(!ov)return; ov.style.setProperty('--ah-c1',active.c1); ov.style.setProperty('--ah-c2',active.c2); setBanner($('#ah-v3-full-banner'), active.banner, active.c1, active.c2); setAvatar($('#ah-v3-full-avatar'),$('#ah-v3-full-avatar-text'),active.avatar,active.display); const fullNameNode=$('#ah-v3-full-name'); if(fullNameNode){fullNameNode.dataset.profileUsername=active.name; fullNameNode.textContent=active.display;} $('#ah-v3-full-handle').textContent='@'+active.name; $('#ah-v3-full-meta').textContent=active.isSelf?'Твоя картка AlexiHub.':'В числе участников с собеседником.'; $('#ah-v3-full-about').textContent=(active.bio||'').trim() || (active.isSelf?'Тут буде повний профіль, активність, ігри, інтеграції та нотатки.':'Користувач поки що нічого про себе не розповів.'); renderMutualServers(active); let msg=$('#ah-v3-full-message'); if(msg){ msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; } let op=$('#ah-v3-full-open'); if(op) op.href=active.profile; closeMini(); ov.classList.add('open'); }
   function closeFull(){let ov=$('#ah-v3-overlay'); if(ov)ov.classList.remove('open')}
   document.addEventListener('click',function(e){
     if(e.target.closest('#ah-v3-mini,#ah-v3-overlay')) return;
+    const mutualTrigger=e.target.closest('[data-mini-open-mutual]');
+    if(mutualTrigger){
+      e.preventDefault(); e.stopPropagation(); if(e.stopImmediatePropagation)e.stopImmediatePropagation();
+      active=dataFrom(mutualTrigger.closest('[data-mini-username]')||mutualTrigger);
+      openFull();
+      return;
+    }
     const bad=e.target.closest('.account-actions,.user-actions,.top-actions,.msg-actions,.server-menu,.modal-backdrop,form,input,textarea,select,button');
     if(bad) return;
 
@@ -6599,5 +6653,120 @@ document.addEventListener('DOMContentLoaded', async function(){
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
 })();
 </script>
+<style id="ah-dm-mutual-servers-style">
+.dm-mutual-summary{
+  width:100%;
+  min-height:34px;
+  margin:10px 0 2px;
+  padding:4px 2px;
+  border:0;
+  border-radius:8px;
+  background:transparent;
+  color:#b5bac1;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  text-align:left;
+  cursor:pointer;
+  font:inherit;
+}
+.dm-mutual-summary:hover{background:rgba(255,255,255,.065);color:#dbdee1}
+.dm-mutual-icons{display:flex;align-items:center;min-width:24px;padding-left:2px}
+.dm-mutual-icon{
+  width:22px;
+  height:22px;
+  margin-left:-7px;
+  border:2px solid #232428;
+  border-radius:50%;
+  background:#313338 center/cover no-repeat;
+  color:#f2f3f5;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:10px;
+  font-weight:900;
+  box-sizing:border-box;
+}
+.dm-mutual-icon:first-child{margin-left:0}
+.dm-mutual-icon-empty{font-size:15px;color:#949ba4}
+.dm-mutual-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:700;text-decoration:underline;text-underline-offset:2px}
+.dm-mutual-chevron{width:14px;height:14px;margin-left:auto;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;opacity:.72}
+
+.ah-v3-full{
+  width:min(960px,calc(100vw - 40px))!important;
+  grid-template-columns:minmax(340px,400px) minmax(0,1fr)!important;
+}
+.ah-v3-full-left{min-height:620px!important}
+.ah-v3-full-left-inner{padding:124px 30px 30px!important}
+.ah-v3-full-actions{display:flex;gap:8px;margin-top:18px}
+.ah-v3-full-actions a{
+  min-width:0;
+  min-height:36px;
+  padding:0 14px;
+  border-radius:8px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background:#5865f2;
+  color:#fff;
+  text-decoration:none;
+  font-size:12px;
+  font-weight:900;
+}
+.ah-v3-full-actions a+ a{background:rgba(255,255,255,.10)}
+.ah-v3-full-actions a:hover{filter:brightness(1.1)}
+.ah-v3-full-about-block{margin-top:22px;padding-top:18px;border-top:1px solid rgba(255,255,255,.12)}
+.ah-v3-full-section-title{margin-bottom:7px;color:#fff;font-size:12px;font-weight:950;text-transform:uppercase;letter-spacing:.035em}
+#ah-v3-full-about{color:#e1e3e7;font-size:13px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+.ah-v3-full-meta{margin-top:22px!important;padding-top:18px;border-top:1px solid rgba(255,255,255,.12);color:#c2c5cc!important}
+.ah-v3-full-right{padding:54px 34px 28px!important;background:#17181c!important}
+.ah-v3-full-tabs{height:44px;display:flex;align-items:flex-end;gap:26px;border-bottom:1px solid rgba(255,255,255,.10);margin-bottom:12px}
+.ah-v3-full-tabs span{height:44px;display:flex;align-items:center;position:relative;color:#949ba4;font-size:13px;font-weight:850;white-space:nowrap}
+.ah-v3-full-tabs span.active{color:#f2f3f5}
+.ah-v3-full-tabs span.active:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;border-radius:4px;background:#f2f3f5}
+.ah-v3-mutual-list{display:grid;align-content:start}
+.ah-v3-mutual-row{
+  min-height:62px;
+  padding:8px 10px;
+  margin:1px 0;
+  border-radius:9px;
+  color:#f2f3f5;
+  text-decoration:none;
+  display:grid;
+  grid-template-columns:44px minmax(0,1fr) 18px;
+  align-items:center;
+  gap:11px;
+  transition:background .14s ease,transform .14s ease;
+}
+.ah-v3-mutual-row:hover{background:#24262c;transform:translateX(2px)}
+.ah-v3-mutual-server-icon{
+  width:44px;
+  height:44px;
+  border-radius:14px;
+  background:#2b2d31 center/cover no-repeat;
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:16px;
+  font-weight:950;
+}
+.ah-v3-mutual-server-copy{min-width:0}
+.ah-v3-mutual-server-copy b,.ah-v3-mutual-server-copy small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ah-v3-mutual-server-copy b{font-size:14px}
+.ah-v3-mutual-server-copy small{margin-top:3px;color:#949ba4;font-size:11px}
+.ah-v3-mutual-row>svg{width:16px;height:16px;fill:none;stroke:#80848e;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:0;transform:translateX(-4px);transition:opacity .14s ease,transform .14s ease}
+.ah-v3-mutual-row:hover>svg{opacity:1;transform:none}
+.ah-v3-mutual-empty{min-height:280px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#b5bac1}
+.ah-v3-mutual-empty>span{width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#2b2d31;color:#949ba4;font-size:30px;margin-bottom:12px}
+.ah-v3-mutual-empty b{color:#f2f3f5;font-size:16px}
+.ah-v3-mutual-empty small{max-width:280px;margin-top:6px;line-height:1.4;color:#949ba4}
+@media(max-width:820px){
+  .ah-v3-full{grid-template-columns:1fr!important}
+  .ah-v3-full-left{min-height:auto!important}
+  .ah-v3-full-left-inner{padding:108px 20px 24px!important}
+  .ah-v3-full-right{padding:20px!important}
+}
+</style>
 </body>
 </html>
