@@ -8,7 +8,7 @@ import secrets
 
 from sqlalchemy import and_, delete, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import aliased, selectinload
 
 from community.models import (
     Account,
@@ -807,6 +807,27 @@ async def list_servers_for_account(db: AsyncSession, account_id: int) -> list[Co
         .join(ServerMember, ServerMember.server_id == CommunityServer.id)
         .where(ServerMember.account_id == account_id)
         .order_by(CommunityServer.created_at.asc())
+    )
+    return list(result.scalars().all())
+
+
+async def list_mutual_servers(
+    db: AsyncSession,
+    first_account_id: int,
+    second_account_id: int,
+) -> list[CommunityServer]:
+    """Return servers where both accounts are current members."""
+    first_membership = aliased(ServerMember)
+    second_membership = aliased(ServerMember)
+    result = await db.execute(
+        select(CommunityServer)
+        .join(first_membership, first_membership.server_id == CommunityServer.id)
+        .join(second_membership, second_membership.server_id == CommunityServer.id)
+        .where(
+            first_membership.account_id == first_account_id,
+            second_membership.account_id == second_account_id,
+        )
+        .order_by(CommunityServer.name.asc(), CommunityServer.id.asc())
     )
     return list(result.scalars().all())
 
