@@ -2268,13 +2268,19 @@ async def server_invite_submit(
     redirect_to: str = Form(""),
     db: AsyncSession = Depends(get_db),
 ):
+    wants_json = "application/json" in request.headers.get("accept", "").lower()
     account = await current_account(request, db)
     if not account:
+        if wants_json:
+            return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
         return RedirectResponse(url="/community/login", status_code=303)
     if not await crud.is_server_member(db, server_id, account.id):
+        if wants_json:
+            return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
         return _forbidden_response()
 
     target = await crud.get_account_by_username(db, username.strip())
+    invite_sent = False
     if target:
         # Capture primitive values BEFORE helper functions commit. AsyncSession can
         # expire ORM instances on commit; touching account.id/invite.id after that
@@ -2285,11 +2291,17 @@ async def server_invite_submit(
 
         retry_after_ms = await message_rate_limiter.check(account_id)
         if retry_after_ms:
+            if wants_json:
+                return JSONResponse(
+                    {"ok": False, "error": "rate_limited", "retry_after_ms": retry_after_ms},
+                    status_code=429,
+                )
             safe_redirect = redirect_to if redirect_to.startswith("/community/") else f"/community/servers/{server_id}"
             return _message_rate_limit_redirect(safe_redirect, retry_after_ms)
 
         invite = await crud.invite_friend_to_server(db, server_id, account_id, target_id)
         if invite:
+            invite_sent = True
             invite_code = str(getattr(invite, "code", None) or invite.id)
             invite_channel_id = _parse_optional_int(channel_id)
             if invite_channel_id:
@@ -2327,6 +2339,17 @@ async def server_invite_submit(
                     },
                 )
                 await _emit_dm_sidebar_update(thread_id, message_id)
+    if wants_json:
+        if invite_sent:
+            return JSONResponse({"ok": True, "status": "sent"})
+        return JSONResponse(
+            {
+                "ok": False,
+                "error": "invite_unavailable",
+                "message": "Запрошення недоступне: перевірте дружбу та участь користувача на сервері.",
+            },
+            status_code=409,
+        )
     safe_redirect = redirect_to if redirect_to.startswith("/community/") else f"/community/servers/{server_id}"
     return RedirectResponse(url=safe_redirect, status_code=303)
 
@@ -3377,6 +3400,9 @@ async def dm_chat_view(username: str, request: Request, db: AsyncSession = Depen
     dm_threads = await crud.list_dm_threads_for_account(db, account.id)
     messages = await crud.list_dm_messages(db, thread.id)
     mutual_server_models = await crud.list_mutual_servers(db, account.id, other.id)
+    friendship = await crud.get_friendship_between(db, account.id, other.id)
+    friend_status = await crud.friendship_status(db, account.id, other.id)
+    friendship_id = int(friendship.id) if friendship else None
     mutual_servers = [
         {
             "id": server.id,
@@ -3388,6 +3414,16 @@ async def dm_chat_view(username: str, request: Request, db: AsyncSession = Depen
     ]
     mentions_were_read = await crud.mark_dm_mentions_read(db, account.id, thread.id)
     rail = await server_rail_context(db, account.id)
+    mutual_server_ids = {int(server["id"]) for server in mutual_servers}
+    invite_servers = [
+        {
+            "id": server.id,
+            "name": server.name,
+            "icon_url": server.icon_url or "",
+        }
+        for server in rail.get("servers", [])
+        if int(server.id) not in mutual_server_ids
+    ]
     if mentions_were_read:
         await _broadcast_mention_counts([account.id])
 
@@ -3405,6 +3441,9 @@ async def dm_chat_view(username: str, request: Request, db: AsyncSession = Depen
             "friends": friends,
             "dm_threads": dm_threads,
             "mutual_servers": mutual_servers,
+            "invite_servers": invite_servers,
+            "friend_status": friend_status,
+            "friendship_id": friendship_id,
             **rail,
         },
     )
@@ -4076,9 +4115,12 @@ async def api_send_friend_request(username: str, request: Request, db: AsyncSess
             status_code=409,
         )
 
-    await crud.send_friend_request(db, viewer.id, target.id)
+    friendship = await crud.send_friend_request(db, viewer.id, target.id)
     status = await crud.friendship_status(db, viewer.id, target.id)
-    return JSONResponse({"status": status})
+    return JSONResponse({
+        "status": status,
+        "friendship_id": int(friendship.id) if friendship else None,
+    })
 
 
 @router.post("/api/friends/respond/{friendship_id}")
