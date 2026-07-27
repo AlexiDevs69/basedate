@@ -950,9 +950,13 @@
   .access-mode-card{position:relative;min-height:154px;border:1px solid transparent;border-radius:8px;background:transparent;color:#b5bac1;padding:14px 13px 12px;text-align:center;cursor:pointer;transition:background .14s ease,border-color .14s ease,color .14s ease}
   .access-mode-card:hover{background:#232428;color:#dbdee1}
   .access-mode-card.active{background:#2b2d31;border-color:#4e5058;color:#fff;box-shadow:0 1px 0 rgba(0,0,0,.18)}
+  .access-mode-card.locked{opacity:.5;cursor:not-allowed}
+  .access-mode-card.locked:hover{background:transparent;color:#b5bac1}
+  .access-mode-card.locked.active{background:#2b2d31;color:#fff}
   .access-mode-card svg{width:26px;height:26px;margin-bottom:8px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
   .access-mode-card strong{display:block;font-size:15px;line-height:1.25;margin-bottom:8px}
   .access-mode-card span{display:block;font-size:11px;line-height:1.35}
+  .access-boost-lock{display:inline-flex!important;align-items:center;justify-content:center;gap:4px;margin-top:8px;color:#f0b232!important;font-weight:850}
   .access-divider{height:1px;background:#34363d;margin:0 0 0}
   .access-option-row{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;padding:28px 0;border-bottom:1px solid #34363d}
   .access-option-copy{min-width:0}
@@ -1026,10 +1030,49 @@
   .access-save-actions button{height:36px;border-radius:6px;padding:0 13px;color:#fff;font-weight:800;cursor:pointer}
   .access-reset{background:transparent}.access-reset:hover{text-decoration:underline}
   .access-submit{background:#23a55a}.access-submit:hover{background:#1a8d4b}.access-submit:disabled{opacity:.5;cursor:not-allowed}
+  .community-settings-page,.onboarding-settings-page{max-width:800px;padding-bottom:100px}
+  .community-hero{position:relative;min-height:240px;border:1px solid #3a3c43;border-radius:16px;overflow:hidden;background:radial-gradient(circle at 82% 22%,rgba(143,105,255,.44),transparent 36%),linear-gradient(135deg,#1e1f24,#27233b);padding:34px}
+  .community-hero::after{content:'';position:absolute;right:-34px;bottom:-62px;width:250px;height:250px;border-radius:50%;border:42px solid rgba(88,101,242,.25);box-shadow:0 0 0 28px rgba(114,83,210,.12)}
+  .community-hero-copy{position:relative;z-index:1;max-width:520px}
+  .community-kicker{display:inline-flex;align-items:center;gap:7px;color:#c9cdfb;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px}
+  .community-hero h2{font-size:28px;line-height:1.12;margin:0 0 10px}
+  .community-hero p{max-width:500px;color:#c4c7ce;line-height:1.5}
+  .community-master{display:flex;align-items:center;justify-content:space-between;gap:24px;margin-top:24px;padding:20px;border:1px solid #3a3c43;border-radius:12px;background:#24252a}
+  .community-master strong{display:block;font-size:16px;margin-bottom:5px}
+  .community-master p{color:#b5bac1;font-size:13px;line-height:1.45}
+  .community-feature-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:18px}
+  .community-feature-card{min-height:178px;padding:18px;border:1px solid #34363d;border-radius:12px;background:#1e1f22}
+  .community-feature-icon{width:40px;height:40px;border-radius:12px;background:#313338;color:#aeb4ff;display:grid;place-items:center;margin-bottom:14px}
+  .community-feature-icon svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .community-feature-card h3{font-size:15px;margin-bottom:7px}
+  .community-feature-card p{color:#aeb1b8;font-size:12px;line-height:1.45}
+  .community-open-onboarding{height:42px;border-radius:7px;background:#5865f2;color:#fff;padding:0 16px;font-weight:850;cursor:pointer;margin-top:20px}
+  .community-open-onboarding:hover{background:#4752c4}
+  .onboarding-banner-preview{position:relative;min-height:220px;border-radius:14px;overflow:hidden;background:#18191d center/cover no-repeat;margin-bottom:24px}
+  .onboarding-banner-preview::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.16),rgba(0,0,0,.76))}
+  .onboarding-banner-preview-copy{position:absolute;z-index:1;left:24px;right:24px;bottom:22px;display:flex;align-items:center;gap:13px}
+  .onboarding-preview-icon{width:58px;height:58px;flex:0 0 58px;border:4px solid #232428;border-radius:17px;background:#5865f2 center/cover no-repeat;display:grid;place-items:center;color:#fff;font-size:22px;font-weight:900}
+  .onboarding-banner-preview-copy h2{font-size:22px;margin:0 0 4px}.onboarding-banner-preview-copy p{color:#d6d8dc;font-size:13px}
+  .onboarding-section{margin-top:18px;padding:20px;border:1px solid #34363d;border-radius:12px;background:#1e1f22}
+  .onboarding-section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:16px}
+  .onboarding-section-head h2{font-size:17px;margin-bottom:5px}.onboarding-section-head p{color:#aeb1b8;font-size:12px;line-height:1.4}
+  .onboarding-field{display:grid;gap:7px;margin-top:14px}.onboarding-field label{font-size:12px;color:#b5bac1;font-weight:850}
+  .onboarding-input,.onboarding-textarea{width:100%;border:1px solid #3f4148;border-radius:7px;background:#111214;color:#f2f3f5;padding:0 12px;outline:0}
+  .onboarding-input{height:42px}.onboarding-textarea{min-height:90px;padding-top:11px;resize:vertical;line-height:1.45}
+  .onboarding-input:focus,.onboarding-textarea:focus{border-color:#5865f2}
+  .onboarding-list{display:grid;gap:10px}
+  .onboarding-editor-row{display:grid;grid-template-columns:minmax(0,1fr) 128px 34px;gap:8px;align-items:center;padding:12px;border-radius:9px;background:#2b2d31}
+  .onboarding-editor-row.step{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) 34px}
+  .onboarding-editor-row .onboarding-input{background:#1e1f22}
+  .onboarding-multiple{height:42px;border:1px solid #454750;border-radius:7px;background:#1e1f22;color:#b5bac1;font-size:11px;font-weight:850;cursor:pointer}
+  .onboarding-multiple.active{background:rgba(88,101,242,.18);border-color:#5865f2;color:#fff}
+  .onboarding-empty{padding:18px;border:1px dashed #454750;border-radius:9px;text-align:center;color:#8e929b;font-size:13px}
+  .onboarding-help{margin-top:8px;color:#8e929b;font-size:11px;line-height:1.4}
   @media(max-width:900px){
     .access-mode-grid{grid-template-columns:1fr}
     .access-mode-card{min-height:112px}
     .access-save-bar{left:44px;right:78px;width:auto}
+    .community-feature-grid{grid-template-columns:1fr}
   }
   @media(max-width:650px){
     .access-settings-page{padding-bottom:110px}
@@ -1038,6 +1081,9 @@
     .access-save-actions{justify-content:flex-end}
     .access-question-row{grid-template-columns:minmax(0,1fr) 34px}
     .access-question-type{display:none}
+    .community-hero{padding:24px}.community-master{align-items:flex-start}
+    .onboarding-editor-row,.onboarding-editor-row.step{grid-template-columns:1fr 34px}
+    .onboarding-editor-row .onboarding-multiple,.onboarding-editor-row.step [data-onboarding-step-description]{grid-column:1/-1;grid-row:auto}
   }
 </style>
 </head>
@@ -1078,8 +1124,8 @@
         <button class="side-item" type="button" data-tab="bans">Баны</button>
 
         <div class="side-sep"></div>
-        <button class="side-item" type="button" data-tab="community">Обзор сообщества</button>
-        <button class="side-item" type="button" data-tab="adaptation">Адаптация</button>
+        <button class="side-item" type="button" data-tab="community">Спільнота</button>
+        <button class="side-item" type="button" data-tab="adaptation">Ознайомлення</button>
         <button class="side-item" type="button" data-tab="analytics">Аналитика сервера</button>
         <div class="side-sep"></div>
         <button class="side-item" type="button" data-tab="template">Шаблон сервера</button>
@@ -1422,10 +1468,11 @@
             <strong>По заявке</strong>
             <span>Чтобы присоединиться к серверу, нужно подать заявку и дождаться её одобрения</span>
           </button>
-          <button class="access-mode-card" type="button" data-access-mode="public" role="radio" aria-checked="false">
+          <button class="access-mode-card{% if boost_status.total_boosts < public_server_required_boosts %} locked{% endif %}" type="button" data-access-mode="public" data-public-locked="{{ '1' if boost_status.total_boosts < public_server_required_boosts else '0' }}" role="radio" aria-checked="false">
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg>
             <strong>Публичный</strong>
-            <span>Любой может присоединиться к вашему серверу напрямую, без заявки</span>
+            <span>Сервер з’явиться в «Путешествии», і будь-хто зможе вступити без заявки</span>
+            {% if boost_status.total_boosts < public_server_required_boosts %}<span class="access-boost-lock">◇ Потрібно {{ public_server_required_boosts }} бустів · зараз {{ boost_status.total_boosts }}</span>{% endif %}
           </button>
         </div>
 
@@ -1528,12 +1575,12 @@
           <div class="access-public-card">
             <div class="access-public-head">
               <span class="access-public-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg></span>
-              <div><h2>Публичный сервер без ограничений</h2><p>Этот режим доступен любому серверу AlexiHub.</p></div>
+              <div><h2>Публічний сервер у «Путешествии»</h2><p>Режим відкривається від {{ public_server_required_boosts }} бустів і показує сервер у каталозі спільнот.</p></div>
             </div>
             <div class="access-public-body">
               <div class="access-public-check">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.7 2.7L16.5 9"/></svg>
-                <div><strong>Присоединение без приглашения</strong><p>Пользователь сможет вступить сразу; ограничения по числу участников, возрасту сервера или активности отсутствуют.</p></div>
+                <div><strong>Приєднання без запрошення</strong><p>Користувач зможе знайти сервер за банером і описом та вступити одразу.</p></div>
               </div>
               <div class="access-public-check">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.7 2.7L16.5 9"/></svg>
@@ -1548,6 +1595,109 @@
           <div class="access-save-actions">
             <button id="access-reset" class="access-reset" type="button">Сброс</button>
             <button id="access-save" class="access-submit" type="button">Сохранить изменения</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-community" class="settings-page community-settings-page">
+        <h1 class="settings-title">Спільнота</h1>
+        <p class="settings-desc">Підготуйте сервер до нових учасників: налаштуйте вітання, вибір інтересів і перші кроки.</p>
+
+        <div class="community-hero">
+          <div class="community-hero-copy">
+            <span class="community-kicker">✦ Community Onboarding</span>
+            <h2>Допоможіть новим людям швидко освоїтися</h2>
+            <p>Ознайомлення зустрічає учасника на фоні банера сервера, пропонує потрібні ролі та показує короткий список перших дій.</p>
+          </div>
+        </div>
+
+        <div class="community-master">
+          <div>
+            <strong>Увімкнути режим «Спільнота»</strong>
+            <p>Відкриває налаштування вхідного онбордингу. Публічність сервера, як і раніше, керується у вкладці «Доступ».</p>
+          </div>
+          <button id="community-enabled-toggle" class="access-toggle" type="button" role="switch" aria-checked="false" aria-label="Увімкнути режим Спільнота"></button>
+        </div>
+
+        <div class="community-feature-grid">
+          <article class="community-feature-card">
+            <span class="community-feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12"/><path d="M8 9h8M8 13h5"/></svg></span>
+            <h3>Вітальне вікно</h3>
+            <p>Великий банер, коротке пояснення і чистий перший екран у стилі Discord.</p>
+          </article>
+          <article class="community-feature-card">
+            <span class="community-feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="10" r="2"/><path d="M3 19c.5-3.4 2.5-5 6-5s5.5 1.6 6 5M15 15c3.3 0 5.2 1.3 5.7 4"/></svg></span>
+            <h3>Вибір ролей</h3>
+            <p>Поставте до п’яти запитань, щоб учасник одразу обрав свої теми та інтереси.</p>
+          </article>
+          <article class="community-feature-card">
+            <span class="community-feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/><path d="M5 6h5M14 18h5"/></svg></span>
+            <h3>Перші кроки</h3>
+            <p>Дайте новачку зрозумілий чекліст: прочитати правила, представитися або відкрити канал.</p>
+          </article>
+        </div>
+        <button id="open-onboarding-settings" class="community-open-onboarding" type="button">Налаштувати ознайомлення</button>
+      </section>
+
+      <section id="page-adaptation" class="settings-page onboarding-settings-page">
+        <h1 class="settings-title">Ознайомлення із сервером</h1>
+        <p class="settings-desc">Створіть привітний вхід для нових учасників. Після вступу вони побачать цей сценарій поверх сервера.</p>
+
+        <div class="onboarding-banner-preview" style="{% if server_banner_url %}background-image:url('{{ server_banner_url }}'){% else %}background:{{ banner_color }}{% endif %}">
+          <div class="onboarding-banner-preview-copy">
+            <span class="onboarding-preview-icon" {% if server.icon_url %}style="background-image:url('{{ server.icon_url }}')"{% endif %}>{% if not server.icon_url %}{{ server.name[:1]|upper }}{% endif %}</span>
+            <div>
+              <h2 id="onboarding-preview-title">{{ onboarding_settings.welcome_title or ('Ласкаво просимо до ' ~ server.name) }}</h2>
+              <p id="onboarding-preview-text">{{ onboarding_settings.welcome_text or 'Оберіть свої інтереси та виконайте перші кроки.' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="community-master">
+          <div>
+            <strong>Увімкнути ознайомлення</strong>
+            <p>Нові учасники проходитимуть цей сценарій перед першим відкриттям каналів сервера.</p>
+          </div>
+          <button id="onboarding-enabled-toggle" class="access-toggle" type="button" role="switch" aria-checked="false" aria-label="Увімкнути ознайомлення"></button>
+        </div>
+
+        <div class="onboarding-section">
+          <div class="onboarding-section-head">
+            <div><h2>Вітальне повідомлення</h2><p>Цей текст показується поверх затемненого банера сервера.</p></div>
+          </div>
+          <div class="onboarding-field">
+            <label for="onboarding-welcome-title">Заголовок</label>
+            <input id="onboarding-welcome-title" class="onboarding-input" maxlength="100" placeholder="Ласкаво просимо до {{ server.name }}" />
+          </div>
+          <div class="onboarding-field">
+            <label for="onboarding-welcome-text">Опис</label>
+            <textarea id="onboarding-welcome-text" class="onboarding-textarea" maxlength="1000" placeholder="Розкажіть, що варто зробити новому учаснику."></textarea>
+          </div>
+        </div>
+
+        <div class="onboarding-section">
+          <div class="onboarding-section-head">
+            <div><h2>Запитання та ролі</h2><p>Варіанти вводяться через кому. Назва варіанта одночасно стане роллю учасника.</p></div>
+          </div>
+          <div id="onboarding-questions-list" class="onboarding-list"></div>
+          <button id="onboarding-add-question" class="access-add" type="button">＋ Додати запитання</button>
+          <div class="onboarding-help">До 5 запитань і до 8 варіантів у кожному. Для активного запитання потрібно щонайменше 2 варіанти.</div>
+        </div>
+
+        <div class="onboarding-section">
+          <div class="onboarding-section-head">
+            <div><h2>Перші кроки</h2><p>Короткий чекліст, який учасник побачить після вибору ролей.</p></div>
+          </div>
+          <div id="onboarding-steps-list" class="onboarding-list"></div>
+          <button id="onboarding-add-step" class="access-add" type="button">＋ Додати перший крок</button>
+          <div class="onboarding-help">До 8 пунктів. Кроки можна відмітити перед завершенням ознайомлення.</div>
+        </div>
+
+        <div id="onboarding-save-bar" class="access-save-bar" aria-live="polite">
+          <strong>Не забудьте зберегти зміни!</strong>
+          <div class="access-save-actions">
+            <button id="onboarding-reset" class="access-reset" type="button">Скинути</button>
+            <button id="onboarding-save" class="access-submit" type="button">Зберегти зміни</button>
           </div>
         </div>
       </section>
@@ -1632,9 +1782,14 @@
 
   <script>
     const SERVER_ID = {{ server.id }};
+    const SERVER_NAME = {{ server.name|tojson }};
+    const PUBLIC_SERVER_REQUIRED_BOOSTS = {{ public_server_required_boosts }};
+    const CURRENT_SERVER_BOOSTS = {{ boost_status.total_boosts }};
     let mediaMode = 'emoji';
     let accessSavedState = {{ access_settings|tojson }};
     let accessDraft = JSON.parse(JSON.stringify(accessSavedState));
+    let onboardingSavedState = {{ onboarding_settings|tojson }};
+    let onboardingDraft = JSON.parse(JSON.stringify(onboardingSavedState));
 
     const toast = document.getElementById('toast');
     const saveBar = document.querySelector('.save-bar');
@@ -2118,6 +2273,10 @@
 
     document.querySelectorAll('[data-access-mode]').forEach(card => {
       card.addEventListener('click', () => {
+        if (card.dataset.accessMode === 'public' && card.dataset.publicLocked === '1') {
+          showToast(`Публічний доступ відкривається від ${PUBLIC_SERVER_REQUIRED_BOOSTS} бустів`);
+          return;
+        }
         accessDraft.mode = card.dataset.accessMode;
         renderAccessSettings(false);
       });
@@ -2201,7 +2360,9 @@
         renderAccessSettings();
         showToast('Настройки доступа сохранены');
       } catch (error) {
-        showToast('Не удалось сохранить настройки');
+        showToast(error?.message === 'boosts_required'
+          ? `Потрібно щонайменше ${PUBLIC_SERVER_REQUIRED_BOOSTS} бустів`
+          : 'Не вдалося зберегти налаштування');
       } finally {
         button.disabled = false;
         button.textContent = 'Сохранить изменения';
@@ -2234,8 +2395,253 @@
       }
     }
 
+    function normalizeOnboardingState(value) {
+      const source = value && typeof value === 'object' ? value : {};
+      const questions = Array.isArray(source.questions) ? source.questions.slice(0, 5) : [];
+      const steps = Array.isArray(source.steps) ? source.steps.slice(0, 8) : [];
+      return {
+        community_enabled: Boolean(source.community_enabled),
+        onboarding_enabled: Boolean(source.community_enabled && source.onboarding_enabled),
+        welcome_title: String(source.welcome_title || '').slice(0, 100),
+        welcome_text: String(source.welcome_text || '').slice(0, 1000),
+        questions: questions.map(question => {
+          const item = question && typeof question === 'object' ? question : {};
+          const options = Array.isArray(item.options) ? item.options.slice(0, 8) : [];
+          return {
+            text: String(item.text || '').slice(0, 160),
+            multiple: Boolean(item.multiple),
+            options: options.map(option => {
+              const sourceOption = option && typeof option === 'object' ? option : {};
+              const label = String(sourceOption.label || option || '').slice(0, 48);
+              return {label, role: String(sourceOption.role || label).slice(0, 48)};
+            }),
+          };
+        }),
+        steps: steps.map(step => {
+          const item = step && typeof step === 'object' ? step : {};
+          return {
+            title: String(item.title || step || '').slice(0, 80),
+            description: String(item.description || '').slice(0, 180),
+          };
+        }),
+      };
+    }
+
+    function cloneOnboardingState(value) {
+      return JSON.parse(JSON.stringify(normalizeOnboardingState(value)));
+    }
+
+    function onboardingStateSignature(value) {
+      const state = normalizeOnboardingState(value);
+      state.welcome_title = state.welcome_title.trim();
+      state.welcome_text = state.welcome_text.trim();
+      state.questions = state.questions.map(question => ({
+        text: question.text.trim(),
+        multiple: question.multiple,
+        options: question.options
+          .map(option => ({label: option.label.trim(), role: (option.role || option.label).trim()}))
+          .filter(option => option.label),
+      }));
+      state.steps = state.steps.map(step => ({
+        title: step.title.trim(),
+        description: step.description.trim(),
+      }));
+      return JSON.stringify(state);
+    }
+
+    onboardingSavedState = normalizeOnboardingState(onboardingSavedState);
+    onboardingDraft = cloneOnboardingState(onboardingSavedState);
+
+    const onboardingSaveBar = document.getElementById('onboarding-save-bar');
+    const onboardingQuestionsList = document.getElementById('onboarding-questions-list');
+    const onboardingStepsList = document.getElementById('onboarding-steps-list');
+
+    function markOnboardingDirty() {
+      const dirty = onboardingStateSignature(onboardingDraft) !== onboardingStateSignature(onboardingSavedState);
+      onboardingSaveBar?.classList.toggle('dirty', dirty);
+    }
+
+    function renderOnboardingPreview() {
+      const title = onboardingDraft.welcome_title.trim() || `Ласкаво просимо до ${SERVER_NAME}`;
+      const text = onboardingDraft.welcome_text.trim() || 'Оберіть свої інтереси та виконайте перші кроки.';
+      const titleNode = document.getElementById('onboarding-preview-title');
+      const textNode = document.getElementById('onboarding-preview-text');
+      if (titleNode) titleNode.textContent = title;
+      if (textNode) textNode.textContent = text;
+    }
+
+    function renderOnboardingEditors() {
+      setAccessToggle(document.getElementById('community-enabled-toggle'), onboardingDraft.community_enabled);
+      setAccessToggle(document.getElementById('onboarding-enabled-toggle'), onboardingDraft.onboarding_enabled);
+
+      const titleInput = document.getElementById('onboarding-welcome-title');
+      const textInput = document.getElementById('onboarding-welcome-text');
+      if (titleInput && titleInput.value !== onboardingDraft.welcome_title) titleInput.value = onboardingDraft.welcome_title;
+      if (textInput && textInput.value !== onboardingDraft.welcome_text) textInput.value = onboardingDraft.welcome_text;
+
+      if (onboardingQuestionsList) {
+        onboardingQuestionsList.innerHTML = onboardingDraft.questions.length
+          ? onboardingDraft.questions.map((question, index) => `
+            <div class="onboarding-editor-row">
+              <div>
+                <input class="onboarding-input" data-onboarding-question-text="${index}" maxlength="160" value="${escapeHtml(question.text)}" placeholder="Що вам цікаво?" aria-label="Запитання ${index + 1}" />
+                <input class="onboarding-input" style="margin-top:7px" data-onboarding-question-options="${index}" maxlength="390" value="${escapeHtml(question.options.map(option => option.label).join(', '))}" placeholder="Новини, Ігри, Спілкування" aria-label="Варіанти запитання ${index + 1}" />
+              </div>
+              <button class="onboarding-multiple ${question.multiple ? 'active' : ''}" type="button" data-onboarding-question-multiple="${index}">${question.multiple ? 'Кілька відповідей' : 'Одна відповідь'}</button>
+              <button class="access-remove" type="button" data-remove-onboarding-question="${index}" aria-label="Видалити запитання">${accessRemoveIcon()}</button>
+            </div>
+          `).join('')
+          : '<div class="onboarding-empty">Додайте запитання, якщо хочете запропонувати новим учасникам ролі.</div>';
+      }
+
+      if (onboardingStepsList) {
+        onboardingStepsList.innerHTML = onboardingDraft.steps.length
+          ? onboardingDraft.steps.map((step, index) => `
+            <div class="onboarding-editor-row step">
+              <input class="onboarding-input" data-onboarding-step-title="${index}" maxlength="80" value="${escapeHtml(step.title)}" placeholder="Прочитайте правила" aria-label="Назва кроку ${index + 1}" />
+              <input class="onboarding-input" data-onboarding-step-description="${index}" maxlength="180" value="${escapeHtml(step.description)}" placeholder="Коротке пояснення, необов’язково" aria-label="Опис кроку ${index + 1}" />
+              <button class="access-remove" type="button" data-remove-onboarding-step="${index}" aria-label="Видалити крок">${accessRemoveIcon()}</button>
+            </div>
+          `).join('')
+          : '<div class="onboarding-empty">Додайте перший крок, щоб новачок не загубився на сервері.</div>';
+      }
+
+      const addQuestion = document.getElementById('onboarding-add-question');
+      const addStep = document.getElementById('onboarding-add-step');
+      if (addQuestion) addQuestion.disabled = onboardingDraft.questions.length >= 5;
+      if (addStep) addStep.disabled = onboardingDraft.steps.length >= 8;
+      renderOnboardingPreview();
+      markOnboardingDirty();
+    }
+
+    document.getElementById('community-enabled-toggle')?.addEventListener('click', () => {
+      onboardingDraft.community_enabled = !onboardingDraft.community_enabled;
+      if (!onboardingDraft.community_enabled) onboardingDraft.onboarding_enabled = false;
+      renderOnboardingEditors();
+      switchTab('adaptation');
+      showToast(onboardingDraft.community_enabled ? 'Спільноту ввімкнено — налаштуйте та збережіть' : 'Спільноту вимкнено — збережіть зміни');
+    });
+
+    document.getElementById('open-onboarding-settings')?.addEventListener('click', () => switchTab('adaptation'));
+
+    document.getElementById('onboarding-enabled-toggle')?.addEventListener('click', () => {
+      onboardingDraft.onboarding_enabled = !onboardingDraft.onboarding_enabled;
+      if (onboardingDraft.onboarding_enabled) onboardingDraft.community_enabled = true;
+      renderOnboardingEditors();
+    });
+
+    document.getElementById('onboarding-welcome-title')?.addEventListener('input', event => {
+      onboardingDraft.welcome_title = event.currentTarget.value.slice(0, 100);
+      renderOnboardingPreview();
+      markOnboardingDirty();
+    });
+
+    document.getElementById('onboarding-welcome-text')?.addEventListener('input', event => {
+      onboardingDraft.welcome_text = event.currentTarget.value.slice(0, 1000);
+      renderOnboardingPreview();
+      markOnboardingDirty();
+    });
+
+    document.getElementById('onboarding-add-question')?.addEventListener('click', () => {
+      if (onboardingDraft.questions.length >= 5) return;
+      onboardingDraft.questions.push({
+        text: '',
+        multiple: false,
+        options: [{label: 'Новини', role: 'Новини'}, {label: 'Спілкування', role: 'Спілкування'}],
+      });
+      renderOnboardingEditors();
+      requestAnimationFrame(() => onboardingQuestionsList?.querySelector(`[data-onboarding-question-text="${onboardingDraft.questions.length - 1}"]`)?.focus());
+    });
+
+    document.getElementById('onboarding-add-step')?.addEventListener('click', () => {
+      if (onboardingDraft.steps.length >= 8) return;
+      onboardingDraft.steps.push({title: '', description: ''});
+      renderOnboardingEditors();
+      requestAnimationFrame(() => onboardingStepsList?.querySelector(`[data-onboarding-step-title="${onboardingDraft.steps.length - 1}"]`)?.focus());
+    });
+
+    onboardingQuestionsList?.addEventListener('input', event => {
+      const questionInput = event.target.closest('[data-onboarding-question-text]');
+      const optionsInput = event.target.closest('[data-onboarding-question-options]');
+      if (questionInput) {
+        onboardingDraft.questions[Number(questionInput.dataset.onboardingQuestionText)].text = questionInput.value.slice(0, 160);
+      } else if (optionsInput) {
+        const options = optionsInput.value.split(',').map(value => value.trim()).filter(Boolean).slice(0, 8);
+        onboardingDraft.questions[Number(optionsInput.dataset.onboardingQuestionOptions)].options =
+          options.map(label => ({label: label.slice(0, 48), role: label.slice(0, 48)}));
+      } else {
+        return;
+      }
+      markOnboardingDirty();
+    });
+
+    onboardingQuestionsList?.addEventListener('click', event => {
+      const multiple = event.target.closest('[data-onboarding-question-multiple]');
+      const remove = event.target.closest('[data-remove-onboarding-question]');
+      if (multiple) {
+        const question = onboardingDraft.questions[Number(multiple.dataset.onboardingQuestionMultiple)];
+        question.multiple = !question.multiple;
+      } else if (remove) {
+        onboardingDraft.questions.splice(Number(remove.dataset.removeOnboardingQuestion), 1);
+      } else {
+        return;
+      }
+      renderOnboardingEditors();
+    });
+
+    onboardingStepsList?.addEventListener('input', event => {
+      const titleInput = event.target.closest('[data-onboarding-step-title]');
+      const descriptionInput = event.target.closest('[data-onboarding-step-description]');
+      if (titleInput) {
+        onboardingDraft.steps[Number(titleInput.dataset.onboardingStepTitle)].title = titleInput.value.slice(0, 80);
+      } else if (descriptionInput) {
+        onboardingDraft.steps[Number(descriptionInput.dataset.onboardingStepDescription)].description = descriptionInput.value.slice(0, 180);
+      } else {
+        return;
+      }
+      markOnboardingDirty();
+    });
+
+    onboardingStepsList?.addEventListener('click', event => {
+      const remove = event.target.closest('[data-remove-onboarding-step]');
+      if (!remove) return;
+      onboardingDraft.steps.splice(Number(remove.dataset.removeOnboardingStep), 1);
+      renderOnboardingEditors();
+    });
+
+    document.getElementById('onboarding-reset')?.addEventListener('click', () => {
+      onboardingDraft = cloneOnboardingState(onboardingSavedState);
+      renderOnboardingEditors();
+      showToast('Зміни скинуто');
+    });
+
+    document.getElementById('onboarding-save')?.addEventListener('click', async event => {
+      const button = event.currentTarget;
+      button.disabled = true;
+      button.textContent = 'Збереження...';
+      try {
+        const response = await fetch(`/community/api/servers/${SERVER_ID}/onboarding`, {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(onboardingDraft),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.ok) throw new Error(data.error || 'save_failed');
+        onboardingSavedState = normalizeOnboardingState(data.onboarding);
+        onboardingDraft = cloneOnboardingState(onboardingSavedState);
+        renderOnboardingEditors();
+        showToast('Ознайомлення збережено');
+      } catch (error) {
+        showToast('Не вдалося зберегти ознайомлення');
+      } finally {
+        button.disabled = false;
+        button.textContent = 'Зберегти зміни';
+      }
+    });
+
     function switchTab(tab) {
-      const known = ['profile', 'tag', 'boosts', 'emojis', 'stickers', 'members', 'access', 'bans'];
+      const known = ['profile', 'tag', 'boosts', 'emojis', 'stickers', 'members', 'access', 'community', 'adaptation', 'bans'];
       const page = known.includes(tab) ? tab : 'placeholder';
       document.querySelectorAll('.settings-page').forEach(section => {
         section.classList.toggle('active', section.id === `page-${page}`);
@@ -2254,6 +2660,7 @@
       if (tab === 'stickers') loadStickers();
       if (tab === 'members') applyMemberFilters();
       if (tab === 'access') renderAccessSettings(false);
+      if (tab === 'community' || tab === 'adaptation') renderOnboardingEditors();
       location.hash = page === 'profile' ? '' : tab;
     }
 
@@ -2265,6 +2672,7 @@
     setIconPreview(initialState.icon);
     setServerImageBannerPreview(initialState.serverImageBanner);
     renderAccessSettings();
+    renderOnboardingEditors();
 
     nameInput?.addEventListener('input', () => {
       previewName.textContent = nameInput.value || 'Server';
