@@ -283,6 +283,7 @@ async def community_schema_startup() -> None:
         await crud.ensure_user_blocks_table(db)
         await crud.ensure_server_category_schema(db)
         await crud.ensure_server_event_schema(db)
+        await crud.ensure_server_access_schema(db)
         await crud.ensure_server_boost_tables(db)
 
 
@@ -2045,6 +2046,8 @@ async def server_settings_page(
     banner_color = await _get_server_banner_color(db, server_id)
     server_banner_url = await _get_server_banner_url(db, server_id)
     boost_status = await crud.get_server_boost_status(db, server_id, account.id)
+    access_settings = await crud.get_server_access_settings(db, server_id)
+    join_applications = await crud.list_server_join_applications(db, server_id)
     rail = await server_rail_context(db, account.id, active_server_id=server_id)
     return templates.TemplateResponse(
         "server_settings.html",
@@ -2061,6 +2064,8 @@ async def server_settings_page(
             "server_banner_url": server_banner_url,
             "server_banner_required_boosts": SERVER_BANNER_REQUIRED_BOOSTS,
             "boost_status": boost_status,
+            "access_settings": access_settings,
+            "join_applications": join_applications,
             "server_tag_icons": [
                 {"id": key, "glyph": glyph}
                 for key, glyph in crud.SERVER_TAG_ICONS.items()
@@ -2097,6 +2102,158 @@ async def server_settings_submit(
             await _set_server_banner_url(db, server_id, next_banner_url)
     safe_redirect = redirect_to if redirect_to.startswith("/community/") else f"/community/servers/{server_id}"
     return RedirectResponse(url=safe_redirect, status_code=303)
+
+
+@router.get("/api/servers/{server_id}/access")
+async def api_server_access_preview(
+    server_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    server = await crud.get_server_by_id(db, server_id)
+    if not server:
+        return JSONResponse({"ok": False, "error": "server_not_found"}, status_code=404)
+    settings = await crud.get_server_access_settings(db, server_id)
+    application_row = (await db.execute(text("""
+        SELECT status
+        FROM community_server_join_applications
+        WHERE server_id = :server_id AND applicant_id = :account_id
+        LIMIT 1
+    """), {"server_id": int(server_id), "account_id": int(account.id)})).mappings().first()
+    return JSONResponse({
+        "ok": True,
+        "server": {
+            "id": int(server.id),
+            "name": server.name,
+            "icon_url": server.icon_url,
+            "description": server.description,
+        },
+        "access": settings,
+        "is_member": await crud.is_server_member(db, server_id, account.id),
+        "application_status": application_row.get("status") if application_row else None,
+    })
+
+
+@router.post("/api/servers/{server_id}/access")
+async def api_update_server_access(
+    server_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    if not await crud.can_manage_server(db, server_id, account.id):
+        return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    settings = await crud.update_server_access_settings(
+        db,
+        server_id,
+        mode=str(body.get("mode") or "invite"),
+        age_restricted=bool(body.get("age_restricted")),
+        rules_enabled=bool(body.get("rules_enabled")),
+        rules=body.get("rules"),
+        questions=body.get("questions"),
+        profile_apply_enabled=bool(body.get("profile_apply_enabled")),
+    )
+    if not settings:
+        return JSONResponse({"ok": False, "error": "server_not_found"}, status_code=404)
+    return JSONResponse({"ok": True, "access": settings})
+
+
+@router.post("/api/servers/{server_id}/access/join")
+async def api_join_public_server(
+    server_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    settings = await crud.get_server_access_settings(db, server_id)
+    if settings["rules_enabled"] and settings["rules"] and not bool(body.get("accept_rules")):
+        return JSONResponse({"ok": False, "error": "rules_not_accepted"}, status_code=400)
+    result = await crud.join_public_server(db, server_id, account.id)
+    status_code = 200 if result.get("ok") else 400
+    if result.get("error") == "server_not_found":
+        status_code = 404
+    if result.get("error") == "banned":
+        status_code = 403
+    return JSONResponse(result, status_code=status_code)
+
+
+@router.post("/api/servers/{server_id}/access/apply")
+async def api_apply_to_server(
+    server_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    settings = await crud.get_server_access_settings(db, server_id)
+    if settings["rules_enabled"] and settings["rules"] and not bool(body.get("accept_rules")):
+        return JSONResponse({"ok": False, "error": "rules_not_accepted"}, status_code=400)
+    result = await crud.submit_server_join_application(
+        db,
+        server_id,
+        account.id,
+        body.get("answers"),
+    )
+    status_code = 200 if result.get("ok") else 400
+    if result.get("error") == "server_not_found":
+        status_code = 404
+    if result.get("error") == "banned":
+        status_code = 403
+    return JSONResponse(result, status_code=status_code)
+
+
+@router.post("/api/servers/{server_id}/access/applications/{application_id}/respond")
+async def api_respond_server_application(
+    server_id: int,
+    application_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    if not await crud.can_manage_server(db, server_id, account.id):
+        return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    action = str(body.get("action") or "").strip().lower()
+    if action not in {"accept", "decline"}:
+        return JSONResponse({"ok": False, "error": "invalid_action"}, status_code=400)
+    result = await crud.respond_server_join_application(
+        db,
+        server_id,
+        application_id,
+        account.id,
+        action == "accept",
+    )
+    status_code = 200 if result.get("ok") else 400
+    if result.get("error") == "application_not_found":
+        status_code = 404
+    if result.get("error") == "banned":
+        status_code = 403
+    return JSONResponse(result, status_code=status_code)
 
 
 @router.get("/api/boosts/me")
