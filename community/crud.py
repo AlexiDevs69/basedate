@@ -48,6 +48,7 @@ SERVER_CHANNEL_TYPES = {"text", "voice", "forum", "announcement", "stage"}
 SERVER_EVENT_LOCATION_TYPES = {"stage", "voice", "external"}
 SERVER_EVENT_RECURRENCES = {"none", "weekly", "biweekly", "monthly", "yearly", "daily", "weekdays"}
 SERVER_ACCESS_MODES = {"invite", "application", "public"}
+PUBLIC_SERVER_REQUIRED_BOOSTS = 6
 
 
 def normalize_language(value: str | None) -> str:
@@ -1002,6 +1003,44 @@ async def ensure_server_access_schema(db: AsyncSession) -> None:
         "ALTER TABLE community_servers "
         "ADD COLUMN IF NOT EXISTS profile_apply_enabled BOOLEAN NOT NULL DEFAULT FALSE"
     ))
+    await db.execute(text(
+        "ALTER TABLE community_servers "
+        "ADD COLUMN IF NOT EXISTS community_enabled BOOLEAN NOT NULL DEFAULT FALSE"
+    ))
+    await db.execute(text(
+        "ALTER TABLE community_servers "
+        "ADD COLUMN IF NOT EXISTS onboarding_enabled BOOLEAN NOT NULL DEFAULT FALSE"
+    ))
+    await db.execute(text(
+        "ALTER TABLE community_servers "
+        "ADD COLUMN IF NOT EXISTS onboarding_welcome_title VARCHAR(100)"
+    ))
+    await db.execute(text(
+        "ALTER TABLE community_servers "
+        "ADD COLUMN IF NOT EXISTS onboarding_welcome_text TEXT"
+    ))
+    await db.execute(text(
+        "ALTER TABLE community_servers "
+        "ADD COLUMN IF NOT EXISTS onboarding_questions TEXT NOT NULL DEFAULT '[]'"
+    ))
+    await db.execute(text(
+        "ALTER TABLE community_servers "
+        "ADD COLUMN IF NOT EXISTS onboarding_steps TEXT NOT NULL DEFAULT '[]'"
+    ))
+    # Existing members are complete by default. A newly joined member is
+    # explicitly switched to FALSE only when onboarding is enabled.
+    await db.execute(text(
+        "ALTER TABLE community_server_members "
+        "ADD COLUMN IF NOT EXISTS onboarding_completed BOOLEAN NOT NULL DEFAULT TRUE"
+    ))
+    await db.execute(text(
+        "ALTER TABLE community_server_members "
+        "ADD COLUMN IF NOT EXISTS onboarding_roles TEXT NOT NULL DEFAULT '[]'"
+    ))
+    await db.execute(text(
+        "ALTER TABLE community_server_members "
+        "ADD COLUMN IF NOT EXISTS onboarding_steps_done TEXT NOT NULL DEFAULT '[]'"
+    ))
     await db.execute(text("""
         CREATE TABLE IF NOT EXISTS community_server_join_applications (
             id SERIAL PRIMARY KEY,
@@ -1092,6 +1131,14 @@ async def get_server_access_settings(db: AsyncSession, server_id: int) -> dict:
             "profile_apply_enabled": False,
         }
     mode = str(row.get("access_mode") or "invite").strip().lower()
+    if mode == "public":
+        boost_status = await get_server_boost_status(db, server_id)
+        if int(boost_status.get("total_boosts") or 0) < PUBLIC_SERVER_REQUIRED_BOOSTS:
+            mode = "invite"
+            await db.execute(text(
+                "UPDATE community_servers SET access_mode = 'invite' WHERE id = :server_id"
+            ), {"server_id": int(server_id)})
+            await db.commit()
     return {
         "mode": mode if mode in SERVER_ACCESS_MODES else "invite",
         "age_restricted": bool(row.get("is_age_restricted")),
@@ -1117,6 +1164,15 @@ async def update_server_access_settings(
     clean_mode = str(mode or "invite").strip().lower()
     if clean_mode not in SERVER_ACCESS_MODES:
         clean_mode = "invite"
+    if clean_mode == "public":
+        boost_status = await get_server_boost_status(db, server_id)
+        current_boosts = int(boost_status.get("total_boosts") or 0)
+        if current_boosts < PUBLIC_SERVER_REQUIRED_BOOSTS:
+            return {
+                "error": "boosts_required",
+                "required_boosts": PUBLIC_SERVER_REQUIRED_BOOSTS,
+                "current_boosts": current_boosts,
+            }
     clean_rules = _clean_access_rules(rules)
     clean_questions = _clean_join_questions(questions)
     await db.execute(text("""
@@ -1152,9 +1208,247 @@ async def join_public_server(db: AsyncSession, server_id: int, account_id: int) 
         return {"ok": False, "error": "banned"}
     if settings["mode"] != "public":
         return {"ok": False, "error": "not_public"}
+    boost_status = await get_server_boost_status(db, server_id)
+    if int(boost_status.get("total_boosts") or 0) < PUBLIC_SERVER_REQUIRED_BOOSTS:
+        return {
+            "ok": False,
+            "error": "boosts_required",
+            "required_boosts": PUBLIC_SERVER_REQUIRED_BOOSTS,
+        }
     db.add(ServerMember(server_id=int(server_id), account_id=int(account_id), role="member"))
     await db.commit()
+    await mark_server_onboarding_pending(db, server_id, account_id)
     return {"ok": True, "status": "joined", "server_id": int(server_id)}
+
+
+def _clean_onboarding_questions(values: object) -> list[dict]:
+    source = values if isinstance(values, list) else []
+    cleaned: list[dict] = []
+    for value in source[:5]:
+        if not isinstance(value, dict):
+            continue
+        question = re.sub(r"\s+", " ", str(value.get("text") or "")).strip()[:160]
+        if not question:
+            continue
+        options: list[dict] = []
+        for raw_option in (value.get("options") if isinstance(value.get("options"), list) else [])[:8]:
+            if isinstance(raw_option, dict):
+                label = re.sub(r"\s+", " ", str(raw_option.get("label") or "")).strip()[:48]
+                role = re.sub(r"\s+", " ", str(raw_option.get("role") or label)).strip()[:48]
+            else:
+                label = re.sub(r"\s+", " ", str(raw_option or "")).strip()[:48]
+                role = label
+            if label and not any(item["label"].casefold() == label.casefold() for item in options):
+                options.append({"label": label, "role": role or label})
+        if len(options) >= 2:
+            cleaned.append({
+                "text": question,
+                "multiple": bool(value.get("multiple")),
+                "options": options,
+            })
+    return cleaned
+
+
+def _clean_onboarding_steps(values: object) -> list[dict]:
+    source = values if isinstance(values, list) else []
+    cleaned: list[dict] = []
+    for value in source[:8]:
+        if isinstance(value, dict):
+            title = re.sub(r"\s+", " ", str(value.get("title") or "")).strip()[:80]
+            description = re.sub(r"\s+", " ", str(value.get("description") or "")).strip()[:180]
+        else:
+            title = re.sub(r"\s+", " ", str(value or "")).strip()[:80]
+            description = ""
+        if title:
+            cleaned.append({"title": title, "description": description})
+    return cleaned
+
+
+async def get_server_onboarding_settings(db: AsyncSession, server_id: int) -> dict:
+    await ensure_server_access_schema(db)
+    row = (await db.execute(text("""
+        SELECT community_enabled, onboarding_enabled, onboarding_welcome_title,
+               onboarding_welcome_text, onboarding_questions, onboarding_steps
+        FROM community_servers
+        WHERE id = :server_id
+        LIMIT 1
+    """), {"server_id": int(server_id)})).mappings().first()
+    if not row:
+        return {
+            "community_enabled": False,
+            "onboarding_enabled": False,
+            "welcome_title": "",
+            "welcome_text": "",
+            "questions": [],
+            "steps": [],
+        }
+    return {
+        "community_enabled": bool(row.get("community_enabled")),
+        "onboarding_enabled": bool(row.get("community_enabled") and row.get("onboarding_enabled")),
+        "welcome_title": str(row.get("onboarding_welcome_title") or "").strip()[:100],
+        "welcome_text": str(row.get("onboarding_welcome_text") or "").strip()[:1000],
+        "questions": _clean_onboarding_questions(_decode_access_list(row.get("onboarding_questions"))),
+        "steps": _clean_onboarding_steps(_decode_access_list(row.get("onboarding_steps"))),
+    }
+
+
+async def update_server_onboarding_settings(
+    db: AsyncSession,
+    server_id: int,
+    *,
+    community_enabled: bool,
+    onboarding_enabled: bool,
+    welcome_title: str,
+    welcome_text: str,
+    questions: object,
+    steps: object,
+) -> dict | None:
+    await ensure_server_access_schema(db)
+    clean_questions = _clean_onboarding_questions(questions)
+    clean_steps = _clean_onboarding_steps(steps)
+    enabled = bool(community_enabled)
+    onboarding = bool(enabled and onboarding_enabled)
+    result = await db.execute(text("""
+        UPDATE community_servers
+        SET community_enabled = :community_enabled,
+            onboarding_enabled = :onboarding_enabled,
+            onboarding_welcome_title = :welcome_title,
+            onboarding_welcome_text = :welcome_text,
+            onboarding_questions = :questions,
+            onboarding_steps = :steps
+        WHERE id = :server_id
+    """), {
+        "server_id": int(server_id),
+        "community_enabled": enabled,
+        "onboarding_enabled": onboarding,
+        "welcome_title": re.sub(r"\s+", " ", str(welcome_title or "")).strip()[:100] or None,
+        "welcome_text": str(welcome_text or "").strip()[:1000] or None,
+        "questions": json.dumps(clean_questions, ensure_ascii=False),
+        "steps": json.dumps(clean_steps, ensure_ascii=False),
+    })
+    if not result.rowcount:
+        await db.rollback()
+        return None
+    await db.commit()
+    return await get_server_onboarding_settings(db, server_id)
+
+
+async def mark_server_onboarding_pending(db: AsyncSession, server_id: int, account_id: int) -> bool:
+    settings = await get_server_onboarding_settings(db, server_id)
+    if not settings.get("onboarding_enabled"):
+        return False
+    await db.execute(text("""
+        UPDATE community_server_members
+        SET onboarding_completed = FALSE,
+            onboarding_roles = '[]',
+            onboarding_steps_done = '[]'
+        WHERE server_id = :server_id AND account_id = :account_id
+    """), {"server_id": int(server_id), "account_id": int(account_id)})
+    await db.commit()
+    return True
+
+
+async def needs_server_onboarding(db: AsyncSession, server_id: int, account_id: int) -> bool:
+    settings = await get_server_onboarding_settings(db, server_id)
+    if not settings.get("onboarding_enabled"):
+        return False
+    value = (await db.execute(text("""
+        SELECT onboarding_completed
+        FROM community_server_members
+        WHERE server_id = :server_id AND account_id = :account_id
+        LIMIT 1
+    """), {"server_id": int(server_id), "account_id": int(account_id)})).scalar_one_or_none()
+    return value is False
+
+
+async def complete_server_onboarding(
+    db: AsyncSession,
+    server_id: int,
+    account_id: int,
+    roles: object,
+    completed_steps: object,
+) -> dict:
+    settings = await get_server_onboarding_settings(db, server_id)
+    allowed_roles = {
+        option["role"]
+        for question in settings.get("questions", [])
+        for option in question.get("options", [])
+    }
+    clean_roles = []
+    for value in roles if isinstance(roles, list) else []:
+        role = re.sub(r"\s+", " ", str(value or "")).strip()[:48]
+        if role in allowed_roles and role not in clean_roles:
+            clean_roles.append(role)
+    max_steps = len(settings.get("steps", []))
+    source_steps = completed_steps if isinstance(completed_steps, list) else []
+    clean_steps = sorted({
+        int(value)
+        for value in source_steps
+        if str(value).isdigit() and 0 <= int(value) < max_steps
+    })
+    result = await db.execute(text("""
+        UPDATE community_server_members
+        SET onboarding_completed = TRUE,
+            onboarding_roles = :roles,
+            onboarding_steps_done = :steps
+        WHERE server_id = :server_id AND account_id = :account_id
+    """), {
+        "server_id": int(server_id),
+        "account_id": int(account_id),
+        "roles": json.dumps(clean_roles, ensure_ascii=False),
+        "steps": json.dumps(clean_steps),
+    })
+    await db.commit()
+    return {"ok": bool(result.rowcount), "roles": clean_roles, "completed_steps": clean_steps}
+
+
+async def list_public_servers(db: AsyncSession, search: str = "", limit: int = 60) -> list[dict]:
+    await ensure_server_access_schema(db)
+    await ensure_server_boost_tables(db)
+    query = re.sub(r"\s+", " ", str(search or "")).strip()[:80]
+    rows = (await db.execute(text("""
+        SELECT s.id, s.name, s.icon_url, s.description, s.banner_url, s.banner_color,
+               COUNT(DISTINCT member.id) AS member_count,
+               COALESCE(boosts.total_boosts, 0) AS total_boosts,
+               SUM(CASE WHEN account.last_seen IS NOT NULL
+                         AND account.last_seen >= NOW() - INTERVAL '3 minutes'
+                        THEN 1 ELSE 0 END) AS online_count
+        FROM community_servers s
+        LEFT JOIN community_server_members member ON member.server_id = s.id
+        LEFT JOIN community_accounts account ON account.id = member.account_id
+        LEFT JOIN (
+            SELECT server_id, SUM(amount) AS total_boosts
+            FROM community_server_boost_allocations
+            GROUP BY server_id
+        ) boosts ON boosts.server_id = s.id
+        WHERE s.access_mode = 'public'
+          AND COALESCE(boosts.total_boosts, 0) >= :required_boosts
+          AND (:query = '' OR LOWER(s.name) LIKE LOWER(:pattern)
+               OR LOWER(COALESCE(s.description, '')) LIKE LOWER(:pattern))
+        GROUP BY s.id, s.name, s.icon_url, s.description, s.banner_url, s.banner_color,
+                 boosts.total_boosts
+        ORDER BY COALESCE(boosts.total_boosts, 0) DESC, member_count DESC, s.name ASC
+        LIMIT :limit
+    """), {
+        "required_boosts": PUBLIC_SERVER_REQUIRED_BOOSTS,
+        "query": query,
+        "pattern": f"%{query}%",
+        "limit": max(1, min(100, int(limit))),
+    })).mappings().all()
+    return [
+        {
+            "id": int(row["id"]),
+            "name": row["name"],
+            "icon_url": row.get("icon_url") or "",
+            "description": row.get("description") or "Спільнота AlexiHub",
+            "banner_url": row.get("banner_url") or "",
+            "banner_color": row.get("banner_color") or "linear-gradient(135deg,#5865f2,#312e81)",
+            "member_count": int(row.get("member_count") or 0),
+            "online_count": int(row.get("online_count") or 0),
+            "total_boosts": int(row.get("total_boosts") or 0),
+        }
+        for row in rows
+    ]
 
 
 async def submit_server_join_application(
@@ -1262,11 +1556,13 @@ async def respond_server_join_application(
 
     applicant_id = int(row["applicant_id"])
     next_status = "accepted" if accept else "declined"
+    is_new_member = False
     if accept:
         if await is_server_banned(db, server_id, applicant_id):
             return {"ok": False, "error": "banned"}
         if not await is_server_member(db, server_id, applicant_id):
             db.add(ServerMember(server_id=int(server_id), account_id=applicant_id, role="member"))
+            is_new_member = True
     await db.execute(text("""
         UPDATE community_server_join_applications
         SET status = :status, reviewed_at = NOW(), reviewed_by_id = :reviewer_id
@@ -1278,6 +1574,8 @@ async def respond_server_join_application(
         "server_id": int(server_id),
     })
     await db.commit()
+    if is_new_member:
+        await mark_server_onboarding_pending(db, server_id, applicant_id)
     return {"ok": True, "status": next_status, "applicant_id": applicant_id}
 
 
@@ -1322,11 +1620,14 @@ async def accept_server_invite_by_code(db: AsyncSession, invite_code: str | int,
     invite.is_used = True
     invite.responded_at = datetime.now(timezone.utc)
 
-    if not await is_server_member(db, server_id, account_id):
+    is_new_member = not await is_server_member(db, server_id, account_id)
+    if is_new_member:
         db.add(ServerMember(server_id=server_id, account_id=account_id, role="member"))
 
     await db.commit()
     await db.refresh(invite)
+    if is_new_member:
+        await mark_server_onboarding_pending(db, server_id, account_id)
     return invite
 
 
@@ -2257,11 +2558,16 @@ async def respond_server_invite(
     invite.is_used = True
     invite.responded_at = datetime.now(timezone.utc)
 
-    if accept and not await is_server_member(db, invite.server_id, account_id):
+    is_new_member = bool(
+        accept and not await is_server_member(db, invite.server_id, account_id)
+    )
+    if is_new_member:
         db.add(ServerMember(server_id=invite.server_id, account_id=account_id, role="member"))
 
     await db.commit()
     await db.refresh(invite)
+    if is_new_member:
+        await mark_server_onboarding_pending(db, invite.server_id, account_id)
     return invite
 
 
