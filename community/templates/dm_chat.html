@@ -1304,6 +1304,7 @@
       <div class="server-sep"></div>
       {% for srv in servers %}<a class="server-dot" data-mention-server-id="{{ srv.id }}" href="/community/servers/{{ srv.id }}" title="{{ srv.name }}" {% if srv.icon_url %}style="background-image:url('{{ srv.icon_url }}')"{% endif %}>{% if not srv.icon_url %}{{ srv.name[:1]|upper }}{% endif %}{% set sc = mention_counts.server_by_id.get(srv.id, 0) %}<span class="ah-mention-count" {% if not sc %}hidden{% endif %}>{{ '99+' if sc > 99 else sc }}</span></a>{% endfor %}
       <a class="server-dot plus" href="/community/servers/new" title="Create server"><svg class="icon"><use href="#i-plus"></use></svg></a>
+      <a class="server-dot plus" href="/community/travel" title="Путешествие"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m15.8 8.2-2.1 5.5-5.5 2.1 2.1-5.5 5.5-2.1Z"></path></svg></a>
     </aside>
 
     <aside class="dm-sidebar">
