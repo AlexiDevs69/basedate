@@ -3,6 +3,7 @@ Query functions for the community module -- kept separate from the admin
 dashboard's crud.py so the two stay easy to reason about independently.
 """
 from datetime import datetime, timedelta, timezone
+import json
 import re
 import secrets
 
@@ -46,6 +47,7 @@ DEFAULT_LANGUAGE = "ru"
 SERVER_CHANNEL_TYPES = {"text", "voice", "forum", "announcement", "stage"}
 SERVER_EVENT_LOCATION_TYPES = {"stage", "voice", "external"}
 SERVER_EVENT_RECURRENCES = {"none", "weekly", "biweekly", "monthly", "yearly", "daily", "weekdays"}
+SERVER_ACCESS_MODES = {"invite", "application", "public"}
 
 
 def normalize_language(value: str | None) -> str:
@@ -966,6 +968,317 @@ async def ensure_server_event_schema(db: AsyncSession) -> None:
     ))
     await db.commit()
     _SERVER_EVENT_SCHEMA_READY = True
+
+
+_SERVER_ACCESS_SCHEMA_READY = False
+
+
+async def ensure_server_access_schema(db: AsyncSession) -> None:
+    """Create the Discord-like server access storage on old PostgreSQL databases."""
+    global _SERVER_ACCESS_SCHEMA_READY
+    if _SERVER_ACCESS_SCHEMA_READY:
+        return
+    await db.execute(text(
+        "ALTER TABLE community_servers "
+        "ADD COLUMN IF NOT EXISTS access_mode VARCHAR(16) NOT NULL DEFAULT 'invite'"
+    ))
+    await db.execute(text(
+        "ALTER TABLE community_servers "
+        "ADD COLUMN IF NOT EXISTS is_age_restricted BOOLEAN NOT NULL DEFAULT FALSE"
+    ))
+    await db.execute(text(
+        "ALTER TABLE community_servers "
+        "ADD COLUMN IF NOT EXISTS access_rules_enabled BOOLEAN NOT NULL DEFAULT FALSE"
+    ))
+    await db.execute(text(
+        "ALTER TABLE community_servers "
+        "ADD COLUMN IF NOT EXISTS access_rules TEXT NOT NULL DEFAULT '[]'"
+    ))
+    await db.execute(text(
+        "ALTER TABLE community_servers "
+        "ADD COLUMN IF NOT EXISTS join_questions TEXT NOT NULL DEFAULT '[]'"
+    ))
+    await db.execute(text(
+        "ALTER TABLE community_servers "
+        "ADD COLUMN IF NOT EXISTS profile_apply_enabled BOOLEAN NOT NULL DEFAULT FALSE"
+    ))
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_server_join_applications (
+            id SERIAL PRIMARY KEY,
+            server_id INTEGER NOT NULL REFERENCES community_servers(id) ON DELETE CASCADE,
+            applicant_id INTEGER NOT NULL REFERENCES community_accounts(id) ON DELETE CASCADE,
+            answers TEXT NOT NULL DEFAULT '[]',
+            status VARCHAR(16) NOT NULL DEFAULT 'pending',
+            submitted_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+            reviewed_at TIMESTAMP WITH TIME ZONE,
+            reviewed_by_id INTEGER REFERENCES community_accounts(id) ON DELETE SET NULL
+        )
+    """))
+    await db.execute(text(
+        "CREATE UNIQUE INDEX IF NOT EXISTS uq_community_server_join_application "
+        "ON community_server_join_applications (server_id, applicant_id)"
+    ))
+    await db.execute(text(
+        "CREATE INDEX IF NOT EXISTS ix_community_server_join_applications_pending "
+        "ON community_server_join_applications (server_id, status, submitted_at DESC)"
+    ))
+    await db.execute(text(
+        "UPDATE community_servers SET access_mode = 'invite' "
+        "WHERE access_mode IS NULL OR access_mode NOT IN ('invite','application','public')"
+    ))
+    await db.commit()
+    _SERVER_ACCESS_SCHEMA_READY = True
+
+
+def _decode_access_list(value: object) -> list:
+    if isinstance(value, list):
+        return value
+    try:
+        parsed = json.loads(str(value or "[]"))
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return []
+    return parsed if isinstance(parsed, list) else []
+
+
+def _clean_access_rules(values: object) -> list[str]:
+    source = values if isinstance(values, list) else []
+    cleaned: list[str] = []
+    seen: set[str] = set()
+    for value in source:
+        rule = re.sub(r"\s+", " ", str(value or "")).strip()[:200]
+        key = rule.casefold()
+        if not rule or key in seen:
+            continue
+        seen.add(key)
+        cleaned.append(rule)
+        if len(cleaned) >= 10:
+            break
+    return cleaned
+
+
+def _clean_join_questions(values: object) -> list[dict]:
+    source = values if isinstance(values, list) else []
+    cleaned: list[dict] = []
+    seen: set[str] = set()
+    for value in source:
+        raw = value.get("text") if isinstance(value, dict) else value
+        question = re.sub(r"\s+", " ", str(raw or "")).strip()[:200]
+        key = question.casefold()
+        if not question or key in seen:
+            continue
+        seen.add(key)
+        cleaned.append({"text": question, "type": "short"})
+        if len(cleaned) >= 5:
+            break
+    return cleaned
+
+
+async def get_server_access_settings(db: AsyncSession, server_id: int) -> dict:
+    await ensure_server_access_schema(db)
+    row = (await db.execute(text("""
+        SELECT access_mode, is_age_restricted, access_rules_enabled,
+               access_rules, join_questions, profile_apply_enabled
+        FROM community_servers
+        WHERE id = :server_id
+        LIMIT 1
+    """), {"server_id": int(server_id)})).mappings().first()
+    if not row:
+        return {
+            "mode": "invite",
+            "age_restricted": False,
+            "rules_enabled": False,
+            "rules": [],
+            "questions": [],
+            "profile_apply_enabled": False,
+        }
+    mode = str(row.get("access_mode") or "invite").strip().lower()
+    return {
+        "mode": mode if mode in SERVER_ACCESS_MODES else "invite",
+        "age_restricted": bool(row.get("is_age_restricted")),
+        "rules_enabled": bool(row.get("access_rules_enabled")),
+        "rules": _clean_access_rules(_decode_access_list(row.get("access_rules"))),
+        "questions": _clean_join_questions(_decode_access_list(row.get("join_questions"))),
+        "profile_apply_enabled": bool(row.get("profile_apply_enabled")),
+    }
+
+
+async def update_server_access_settings(
+    db: AsyncSession,
+    server_id: int,
+    *,
+    mode: str,
+    age_restricted: bool,
+    rules_enabled: bool,
+    rules: object,
+    questions: object,
+    profile_apply_enabled: bool,
+) -> dict | None:
+    await ensure_server_access_schema(db)
+    clean_mode = str(mode or "invite").strip().lower()
+    if clean_mode not in SERVER_ACCESS_MODES:
+        clean_mode = "invite"
+    clean_rules = _clean_access_rules(rules)
+    clean_questions = _clean_join_questions(questions)
+    await db.execute(text("""
+        UPDATE community_servers
+        SET access_mode = :mode,
+            is_age_restricted = :age_restricted,
+            access_rules_enabled = :rules_enabled,
+            access_rules = :rules,
+            join_questions = :questions,
+            profile_apply_enabled = :profile_apply_enabled
+        WHERE id = :server_id
+    """), {
+        "server_id": int(server_id),
+        "mode": clean_mode,
+        "age_restricted": bool(age_restricted),
+        "rules_enabled": bool(rules_enabled),
+        "rules": json.dumps(clean_rules, ensure_ascii=False),
+        "questions": json.dumps(clean_questions, ensure_ascii=False),
+        "profile_apply_enabled": bool(profile_apply_enabled),
+    })
+    await db.commit()
+    return await get_server_access_settings(db, server_id)
+
+
+async def join_public_server(db: AsyncSession, server_id: int, account_id: int) -> dict:
+    settings = await get_server_access_settings(db, server_id)
+    server = await get_server_by_id(db, server_id)
+    if not server:
+        return {"ok": False, "error": "server_not_found"}
+    if await is_server_member(db, server_id, account_id):
+        return {"ok": True, "status": "already_member", "server_id": int(server_id)}
+    if await is_server_banned(db, server_id, account_id):
+        return {"ok": False, "error": "banned"}
+    if settings["mode"] != "public":
+        return {"ok": False, "error": "not_public"}
+    db.add(ServerMember(server_id=int(server_id), account_id=int(account_id), role="member"))
+    await db.commit()
+    return {"ok": True, "status": "joined", "server_id": int(server_id)}
+
+
+async def submit_server_join_application(
+    db: AsyncSession,
+    server_id: int,
+    account_id: int,
+    answers: object,
+) -> dict:
+    settings = await get_server_access_settings(db, server_id)
+    server = await get_server_by_id(db, server_id)
+    if not server:
+        return {"ok": False, "error": "server_not_found"}
+    if await is_server_member(db, server_id, account_id):
+        return {"ok": False, "error": "already_member"}
+    if await is_server_banned(db, server_id, account_id):
+        return {"ok": False, "error": "banned"}
+    if settings["mode"] != "application":
+        return {"ok": False, "error": "applications_disabled"}
+
+    source = answers if isinstance(answers, list) else []
+    clean_answers = [re.sub(r"\s+", " ", str(value or "")).strip()[:1000] for value in source]
+    questions = settings["questions"]
+    if len(clean_answers) < len(questions) or any(not clean_answers[index] for index in range(len(questions))):
+        return {"ok": False, "error": "answers_required"}
+    clean_answers = clean_answers[:len(questions)]
+
+    await db.execute(text("""
+        INSERT INTO community_server_join_applications
+            (server_id, applicant_id, answers, status, submitted_at, reviewed_at, reviewed_by_id)
+        VALUES
+            (:server_id, :account_id, :answers, 'pending', NOW(), NULL, NULL)
+        ON CONFLICT (server_id, applicant_id)
+        DO UPDATE SET answers = EXCLUDED.answers,
+                      status = 'pending',
+                      submitted_at = NOW(),
+                      reviewed_at = NULL,
+                      reviewed_by_id = NULL
+    """), {
+        "server_id": int(server_id),
+        "account_id": int(account_id),
+        "answers": json.dumps(clean_answers, ensure_ascii=False),
+    })
+    await db.commit()
+    return {"ok": True, "status": "pending", "server_id": int(server_id)}
+
+
+async def list_server_join_applications(db: AsyncSession, server_id: int) -> list[dict]:
+    await ensure_server_access_schema(db)
+    settings = await get_server_access_settings(db, server_id)
+    rows = (await db.execute(text("""
+        SELECT app.id, app.applicant_id, app.answers, app.status, app.submitted_at,
+               account.username, account.display_name, account.avatar_url
+        FROM community_server_join_applications app
+        JOIN community_accounts account ON account.id = app.applicant_id
+        WHERE app.server_id = :server_id
+        ORDER BY
+            CASE WHEN app.status = 'pending' THEN 0 ELSE 1 END,
+            app.submitted_at DESC,
+            app.id DESC
+        LIMIT 100
+    """), {"server_id": int(server_id)})).mappings().all()
+    result: list[dict] = []
+    for row in rows:
+        answers = [str(value or "") for value in _decode_access_list(row.get("answers"))]
+        result.append({
+            "id": int(row["id"]),
+            "applicant_id": int(row["applicant_id"]),
+            "username": row["username"],
+            "display_name": row.get("display_name") or row["username"],
+            "avatar_url": row.get("avatar_url"),
+            "status": row.get("status") or "pending",
+            "submitted_at": row.get("submitted_at"),
+            "responses": [
+                {
+                    "question": question.get("text") or "",
+                    "answer": answers[index] if index < len(answers) else "",
+                }
+                for index, question in enumerate(settings["questions"])
+            ],
+        })
+    return result
+
+
+async def respond_server_join_application(
+    db: AsyncSession,
+    server_id: int,
+    application_id: int,
+    reviewer_id: int,
+    accept: bool,
+) -> dict:
+    await ensure_server_access_schema(db)
+    row = (await db.execute(text("""
+        SELECT id, applicant_id, status
+        FROM community_server_join_applications
+        WHERE id = :application_id AND server_id = :server_id
+        LIMIT 1
+    """), {
+        "application_id": int(application_id),
+        "server_id": int(server_id),
+    })).mappings().first()
+    if not row:
+        return {"ok": False, "error": "application_not_found"}
+    if row.get("status") != "pending":
+        return {"ok": False, "error": "already_reviewed"}
+
+    applicant_id = int(row["applicant_id"])
+    next_status = "accepted" if accept else "declined"
+    if accept:
+        if await is_server_banned(db, server_id, applicant_id):
+            return {"ok": False, "error": "banned"}
+        if not await is_server_member(db, server_id, applicant_id):
+            db.add(ServerMember(server_id=int(server_id), account_id=applicant_id, role="member"))
+    await db.execute(text("""
+        UPDATE community_server_join_applications
+        SET status = :status, reviewed_at = NOW(), reviewed_by_id = :reviewer_id
+        WHERE id = :application_id AND server_id = :server_id
+    """), {
+        "status": next_status,
+        "reviewer_id": int(reviewer_id),
+        "application_id": int(application_id),
+        "server_id": int(server_id),
+    })
+    await db.commit()
+    return {"ok": True, "status": next_status, "applicant_id": applicant_id}
 
 
 async def is_server_banned(db: AsyncSession, server_id: int, account_id: int) -> bool:
