@@ -85,6 +85,7 @@ PROFILE_UPLOAD_DIR = ROOT_DIR / "static" / "uploads" / "profiles"
 ALLOWED_IMAGE_TYPES = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp", "image/gif": ".gif"}
 MAX_PROFILE_IMAGE_BYTES = 5 * 1024 * 1024
 SERVER_BANNER_REQUIRED_BOOSTS = 5
+PUBLIC_SERVER_REQUIRED_BOOSTS = crud.PUBLIC_SERVER_REQUIRED_BOOSTS
 
 
 def _safe_next_url(next_url: str | None, fallback: str = "/community") -> str:
@@ -1406,6 +1407,29 @@ async def server_create_form(request: Request, db: AsyncSession = Depends(get_db
     )
 
 
+@router.get("/travel")
+async def public_server_discovery(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return RedirectResponse(url="/community/login", status_code=303)
+    query = (request.query_params.get("q") or "").strip()
+    public_servers = await crud.list_public_servers(db, query)
+    member_server_ids = {int(server.id) for server in await crud.list_servers_for_account(db, account.id)}
+    rail = await server_rail_context(db, account.id)
+    return templates.TemplateResponse(
+        "travel.html",
+        {
+            "request": request,
+            "account": account,
+            "public_servers": public_servers,
+            "member_server_ids": member_server_ids,
+            "query": query,
+            "public_server_required_boosts": PUBLIC_SERVER_REQUIRED_BOOSTS,
+            **rail,
+        },
+    )
+
+
 @router.post("/servers/new")
 async def server_create_submit(
     request: Request,
@@ -1501,6 +1525,8 @@ async def server_home(server_id: int, request: Request, db: AsyncSession = Depen
         return RedirectResponse(url="/community/login", status_code=303)
     if not await crud.is_server_member(db, server_id, account.id):
         return _forbidden_response()
+    if await crud.needs_server_onboarding(db, server_id, account.id):
+        return RedirectResponse(url=f"/community/servers/{server_id}/onboarding", status_code=303)
 
     await crud.touch_last_seen(db, account.id)
     server = await crud.get_server_by_id(db, server_id)
@@ -1535,6 +1561,63 @@ async def server_home(server_id: int, request: Request, db: AsyncSession = Depen
             **rail,
         },
     )
+
+
+@router.get("/servers/{server_id}/onboarding")
+async def server_onboarding_page(
+    server_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return RedirectResponse(url="/community/login", status_code=303)
+    if not await crud.is_server_member(db, server_id, account.id):
+        return _forbidden_response()
+    server = await crud.get_server_by_id(db, server_id)
+    if not server:
+        return RedirectResponse(url="/community", status_code=303)
+    onboarding = await crud.get_server_onboarding_settings(db, server_id)
+    if not onboarding.get("onboarding_enabled") or not await crud.needs_server_onboarding(db, server_id, account.id):
+        return RedirectResponse(url=f"/community/servers/{server_id}", status_code=303)
+    rail = await server_rail_context(db, account.id, active_server_id=server_id)
+    return templates.TemplateResponse(
+        "server_onboarding.html",
+        {
+            "request": request,
+            "account": account,
+            "server": server,
+            "onboarding": onboarding,
+            "server_banner_url": await _get_server_banner_url(db, server_id),
+            "banner_color": await _get_server_banner_color(db, server_id),
+            **rail,
+        },
+    )
+
+
+@router.post("/api/servers/{server_id}/onboarding/complete")
+async def api_complete_server_onboarding(
+    server_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    if not await crud.is_server_member(db, server_id, account.id):
+        return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    result = await crud.complete_server_onboarding(
+        db,
+        server_id,
+        account.id,
+        body.get("roles"),
+        body.get("completed_steps"),
+    )
+    return JSONResponse(result, status_code=200 if result.get("ok") else 404)
 
 
 @router.post("/servers/{server_id}/categories/create")
@@ -1792,6 +1875,8 @@ async def server_channel_view(server_id: int, channel_id: int, request: Request,
         return RedirectResponse(url="/community/login", status_code=303)
     if not await crud.is_server_member(db, server_id, account.id):
         return _forbidden_response()
+    if await crud.needs_server_onboarding(db, server_id, account.id):
+        return RedirectResponse(url=f"/community/servers/{server_id}/onboarding", status_code=303)
 
     await crud.touch_last_seen(db, account.id)
     server = await crud.get_server_by_id(db, server_id)
@@ -2047,6 +2132,7 @@ async def server_settings_page(
     server_banner_url = await _get_server_banner_url(db, server_id)
     boost_status = await crud.get_server_boost_status(db, server_id, account.id)
     access_settings = await crud.get_server_access_settings(db, server_id)
+    onboarding_settings = await crud.get_server_onboarding_settings(db, server_id)
     join_applications = await crud.list_server_join_applications(db, server_id)
     rail = await server_rail_context(db, account.id, active_server_id=server_id)
     return templates.TemplateResponse(
@@ -2065,6 +2151,8 @@ async def server_settings_page(
             "server_banner_required_boosts": SERVER_BANNER_REQUIRED_BOOSTS,
             "boost_status": boost_status,
             "access_settings": access_settings,
+            "onboarding_settings": onboarding_settings,
+            "public_server_required_boosts": PUBLIC_SERVER_REQUIRED_BOOSTS,
             "join_applications": join_applications,
             "server_tag_icons": [
                 {"id": key, "glyph": glyph}
@@ -2164,7 +2252,56 @@ async def api_update_server_access(
     )
     if not settings:
         return JSONResponse({"ok": False, "error": "server_not_found"}, status_code=404)
+    if settings.get("error") == "boosts_required":
+        return JSONResponse({"ok": False, **settings}, status_code=409)
     return JSONResponse({"ok": True, "access": settings})
+
+
+@router.get("/api/servers/{server_id}/onboarding")
+async def api_get_server_onboarding(
+    server_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    if not await crud.is_server_member(db, server_id, account.id):
+        return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
+    return JSONResponse({
+        "ok": True,
+        "onboarding": await crud.get_server_onboarding_settings(db, server_id),
+    })
+
+
+@router.post("/api/servers/{server_id}/onboarding")
+async def api_update_server_onboarding(
+    server_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    if not await crud.can_manage_server(db, server_id, account.id):
+        return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    onboarding = await crud.update_server_onboarding_settings(
+        db,
+        server_id,
+        community_enabled=bool(body.get("community_enabled")),
+        onboarding_enabled=bool(body.get("onboarding_enabled")),
+        welcome_title=str(body.get("welcome_title") or ""),
+        welcome_text=str(body.get("welcome_text") or ""),
+        questions=body.get("questions"),
+        steps=body.get("steps"),
+    )
+    if not onboarding:
+        return JSONResponse({"ok": False, "error": "server_not_found"}, status_code=404)
+    return JSONResponse({"ok": True, "onboarding": onboarding})
 
 
 @router.post("/api/servers/{server_id}/access/join")
