@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.5.15",
+      "date": "2026-07-29",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update profile template to remove prompt and show creation date."
+      ],
+      "source_sha": "175d1378f67dcde8701c9deae331e20d92d3c390"
+    },
+    {
       "version": "1.5.14",
       "date": "2026-07-29",
       "title": "Виправлення та стабільність",
