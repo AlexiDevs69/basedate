@@ -1408,14 +1408,20 @@ async def list_public_servers(db: AsyncSession, search: str = "", limit: int = 6
     query = re.sub(r"\s+", " ", str(search or "")).strip()[:80]
     rows = (await db.execute(text("""
         SELECT s.id, s.name, s.icon_url, s.description, s.banner_url, s.banner_color,
+               s.created_at, boost_settings.tag_text, boost_settings.tag_icon,
                COUNT(DISTINCT member.id) AS member_count,
                COALESCE(boosts.total_boosts, 0) AS total_boosts,
-               SUM(CASE WHEN account.last_seen_at IS NOT NULL
-                         AND account.last_seen_at >= NOW() - INTERVAL '3 minutes'
-                        THEN 1 ELSE 0 END) AS online_count
+               COUNT(DISTINCT CASE
+                   WHEN account.last_seen_at IS NOT NULL
+                    AND account.last_seen_at >= NOW() - INTERVAL '3 minutes'
+                    AND COALESCE(account.account_status, 'online') <> 'invisible'
+                   THEN account.id
+               END) AS online_count
         FROM community_servers s
         LEFT JOIN community_server_members member ON member.server_id = s.id
         LEFT JOIN community_accounts account ON account.id = member.account_id
+        LEFT JOIN community_server_boost_settings boost_settings
+               ON boost_settings.server_id = s.id
         LEFT JOIN (
             SELECT server_id, SUM(amount) AS total_boosts
             FROM community_server_boost_allocations
@@ -1426,6 +1432,7 @@ async def list_public_servers(db: AsyncSession, search: str = "", limit: int = 6
           AND (:query = '' OR LOWER(s.name) LIKE LOWER(:pattern)
                OR LOWER(COALESCE(s.description, '')) LIKE LOWER(:pattern))
         GROUP BY s.id, s.name, s.icon_url, s.description, s.banner_url, s.banner_color,
+                 s.created_at, boost_settings.tag_text, boost_settings.tag_icon,
                  boosts.total_boosts
         ORDER BY COALESCE(boosts.total_boosts, 0) DESC, member_count DESC, s.name ASC
         LIMIT :limit
@@ -1443,6 +1450,10 @@ async def list_public_servers(db: AsyncSession, search: str = "", limit: int = 6
             "description": row.get("description") or "Спільнота AlexiHub",
             "banner_url": row.get("banner_url") or "",
             "banner_color": row.get("banner_color") or "linear-gradient(135deg,#5865f2,#312e81)",
+            "created_at": row["created_at"].isoformat() if row.get("created_at") else "",
+            "tag_text": (row.get("tag_text") or "").strip().upper(),
+            "tag_icon": row.get("tag_icon") or "gem",
+            "tag_icon_glyph": SERVER_TAG_ICONS.get(row.get("tag_icon") or "gem", "◆"),
             "member_count": int(row.get("member_count") or 0),
             "online_count": int(row.get("online_count") or 0),
             "total_boosts": int(row.get("total_boosts") or 0),
