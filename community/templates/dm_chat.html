@@ -2751,7 +2751,11 @@ document.addEventListener('DOMContentLoaded',()=>{
       </div>
       <div class="ah-settings-divider"></div>
       <a class="ah-settings-nav danger" href="/community/logout"><svg><use href="#i-logout"></use></svg><span data-i18n="settings.logout">Выйти</span></a>
-      <div class="ah-settings-version">AlexiHub desktop settings panel<br>stable 1.0.0</div>
+      <button class="ah-settings-version" type="button" onclick="openReleaseNotes()" aria-label="Відкрити історію оновлень">
+        <span>Build date: {{ app_release.build_date_label or '—' }}</span>
+        <span class="ah-settings-version-link">Версія {{ app_release.version }} {{ app_release.architecture }}</span>
+        <span>{{ app_release.channel }}</span>
+      </button>
     </aside>
     <main class="ah-settings-main">
       <div class="ah-settings-top"><h2 id="ah-settings-heading">Учётная запись</h2><button class="ah-settings-close" onclick="closeUserSettings()" type="button">×</button></div>
@@ -2866,6 +2870,52 @@ document.addEventListener('DOMContentLoaded',()=>{
     </main>
   </div>
 </div>
+<style id="ah-release-notes-css">
+  .ah-settings-version{width:100%;border:0;background:transparent;border-radius:7px;color:#737985;padding:10px 8px 7px;line-height:1.45;text-align:left;font:inherit;font-size:10px;cursor:pointer;transition:background .15s ease,color .15s ease}
+  .ah-settings-version:hover{background:#2b2d31;color:#b5bac1}
+  .ah-settings-version span{display:block}
+  .ah-settings-version-link{color:#949cf7;text-decoration:underline;text-underline-offset:2px}
+  .ah-settings-version:hover .ah-settings-version-link{color:#c5c9ff}
+  .ah-release-backdrop{position:fixed;inset:0;z-index:28000;display:none;place-items:center;padding:18px;background:rgba(0,0,0,.72);backdrop-filter:blur(3px)}
+  .ah-release-backdrop.open{display:grid;animation:ahFade .14s ease both}
+  .ah-release-dialog{width:min(560px,calc(100vw - 36px));max-height:min(720px,calc(100vh - 36px));display:flex;flex-direction:column;overflow:hidden;border:1px solid #3f4149;border-radius:16px;background:#25262c;color:#f2f3f5;box-shadow:0 28px 90px rgba(0,0,0,.62);animation:ahReleaseIn .18s cubic-bezier(.2,.8,.2,1) both}
+  .ah-release-head{display:flex;align-items:center;gap:12px;padding:20px 22px 16px;border-bottom:1px solid #383a42}
+  .ah-release-logo{width:42px;height:42px;display:grid;place-items:center;flex:0 0 auto;border-radius:13px;background:linear-gradient(135deg,#5865f2,#8b5cf6);color:#fff;font-size:19px;font-weight:950;box-shadow:0 8px 22px rgba(88,101,242,.28)}
+  .ah-release-title{min-width:0;flex:1}.ah-release-title h2{margin:0;font-size:19px;line-height:1.2}.ah-release-title p{margin:4px 0 0;color:#aeb3bd;font-size:12px}
+  .ah-release-close{width:34px;height:34px;border:0;border-radius:9px;background:transparent;color:#b5bac1;font-size:24px;cursor:pointer}.ah-release-close:hover{background:#363840;color:#fff}
+  .ah-release-current{margin:16px 22px 4px;padding:13px 15px;display:flex;align-items:center;justify-content:space-between;gap:14px;border:1px solid rgba(88,101,242,.42);border-radius:11px;background:linear-gradient(135deg,rgba(88,101,242,.19),rgba(139,92,246,.08))}
+  .ah-release-current b{display:block;font-size:14px}.ah-release-current span{display:block;margin-top:2px;color:#b5bac1;font-size:11px}
+  .ah-release-channel{padding:5px 8px!important;margin:0!important;border-radius:999px;background:#5865f2;color:#fff!important;font-size:10px!important;font-weight:900;text-transform:uppercase}
+  .ah-release-list{padding:8px 22px 22px;overflow:auto}.ah-release-item{display:grid;grid-template-columns:84px 1fr;gap:16px;padding:18px 0;border-bottom:1px solid #383a42}.ah-release-item:last-child{border-bottom:0}
+  .ah-release-version{color:#fff;font-size:15px;font-weight:900}.ah-release-date{margin-top:4px;color:#878d98;font-size:11px}
+  .ah-release-copy h3{margin:0 0 8px;font-size:14px}.ah-release-copy ul{margin:0;padding-left:18px;color:#c8cbd0;font-size:13px;line-height:1.48}.ah-release-copy li+li{margin-top:5px}.ah-release-item.is-current .ah-release-version{color:#aeb4ff}
+  @keyframes ahReleaseIn{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
+  @media(max-width:560px){.ah-release-item{grid-template-columns:1fr;gap:8px}.ah-release-dialog{max-height:calc(100vh - 20px)}}
+</style>
+<div id="ah-release-notes" class="ah-release-backdrop" aria-hidden="true" onclick="if(event.target===this)closeReleaseNotes()">
+  <section class="ah-release-dialog" role="dialog" aria-modal="true" aria-labelledby="ah-release-title">
+    <header class="ah-release-head">
+      <div class="ah-release-logo">A</div>
+      <div class="ah-release-title"><h2 id="ah-release-title">Історія оновлень</h2><p>Що нового в AlexiHub Desktop</p></div>
+      <button class="ah-release-close" type="button" onclick="closeReleaseNotes()" aria-label="Закрити">×</button>
+    </header>
+    <div class="ah-release-current">
+      <div><b>AlexiHub {{ app_release.version }} {{ app_release.architecture }}</b><span>Збірка від {{ app_release.build_date_label or '—' }}</span></div>
+      <span class="ah-release-channel">{{ app_release.channel }}</span>
+    </div>
+    <div class="ah-release-list">
+      {% for release in app_release.releases %}
+      <article class="ah-release-item{% if release.version == app_release.version %} is-current{% endif %}">
+        <div><div class="ah-release-version">{{ release.version }}</div><div class="ah-release-date">{{ release.date_label }}</div></div>
+        <div class="ah-release-copy">
+          {% if release.title %}<h3>{{ release.title }}</h3>{% endif %}
+          <ul>{% for change in release.changes %}<li>{{ change }}</li>{% endfor %}</ul>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+</div>
 <div id="ah-settings-toast" class="ah-settings-toast"></div>
 
 <style id="ah-i18n-language-css">
@@ -2915,6 +2965,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   window.closeUserSettings = function(){
     var m=document.getElementById('ah-user-settings');
     if(!m) return;
+    if(window.closeReleaseNotes) window.closeReleaseNotes();
     m.classList.remove('open');
     m.setAttribute('aria-hidden','true');
   };
@@ -2933,13 +2984,34 @@ document.addEventListener('DOMContentLoaded',()=>{
       btn.style.display=ok?'flex':'none';
     });
   };
+  window.openReleaseNotes = function(){
+    var notes=document.getElementById('ah-release-notes');
+    if(!notes) return;
+    notes.classList.add('open');
+    notes.setAttribute('aria-hidden','false');
+    var list=notes.querySelector('.ah-release-list');
+    if(list) list.scrollTop=0;
+    var close=notes.querySelector('.ah-release-close');
+    if(close) close.focus();
+  };
+  window.closeReleaseNotes = function(){
+    var notes=document.getElementById('ah-release-notes');
+    if(!notes) return;
+    notes.classList.remove('open');
+    notes.setAttribute('aria-hidden','true');
+  };
   window.settingsToast = function(text){
     var t=document.getElementById('ah-settings-toast');
     if(!t) return;
     t.textContent=text || 'Поки заглушка';
     t.classList.remove('show'); void t.offsetWidth; t.classList.add('show');
   };
-  document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeUserSettings(); });
+  document.addEventListener('keydown',function(e){
+    if(e.key!=='Escape') return;
+    var notes=document.getElementById('ah-release-notes');
+    if(notes && notes.classList.contains('open')) closeReleaseNotes();
+    else closeUserSettings();
+  });
 })();
 </script>
 
