@@ -1444,17 +1444,67 @@ document.addEventListener('DOMContentLoaded',()=>{
 @media(prefers-reduced-motion:reduce){.ah-profile-unsaved-bar.show,.ah-profile-unsaved-bar.shake{animation:none!important;opacity:1;transform:translate(-50%,0)}}
 </style>
 
+<style id="ah-profile-customizer-css">
+.ah-settings-profile-entry{width:100%;min-width:0;margin:0 0 12px;padding:8px;border:1px solid transparent;border-radius:9px;background:transparent;color:inherit;display:flex;align-items:center;gap:10px;text-align:left;font:inherit;cursor:pointer;transition:background .14s ease,border-color .14s ease,box-shadow .14s ease,transform .14s ease}
+.ah-settings-profile-entry:hover,.ah-settings-profile-entry:focus-visible{background:#23252b;border-color:#4b4e57;box-shadow:0 0 0 1px rgba(255,255,255,.025);outline:0}
+.ah-settings-profile-entry:active{transform:scale(.985)}
+.ah-settings-profile-entry .ah-settings-avatar{width:42px;height:42px}
+.ah-settings-profile-entry>span{min-width:0;display:block}
+.ah-settings-profile-entry strong{display:block;max-width:154px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff;font-size:14px}
+.ah-settings-profile-entry small{display:flex;align-items:center;gap:5px;margin-top:2px;color:#b5bac1;font-size:12px}
+.ah-settings-profile-entry small svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ah-profile-customizer-backdrop{position:fixed;inset:0;z-index:29000;display:none;place-items:center;padding:32px;background:rgba(0,0,0,.72);backdrop-filter:blur(2px);color:#f2f3f5;font-family:var(--font-sans,Inter,system-ui,sans-serif)}
+.ah-profile-customizer-backdrop.open{display:grid;animation:ahProfileCustomizerFade .16s ease both}
+.ah-profile-customizer-shell{position:relative;width:min(1200px,calc(100vw - 72px));height:min(800px,calc(100vh - 72px));overflow:hidden;border:1px solid #3b3d45;border-radius:16px;background:#1b1c20;box-shadow:0 30px 100px rgba(0,0,0,.75)}
+.ah-profile-customizer-close{position:absolute;right:10px;top:10px;z-index:8;width:34px;height:34px;border:1px solid #3c3e46;border-radius:9px;background:#2b2d31;color:#b5bac1;font-size:23px;line-height:1;cursor:pointer}
+.ah-profile-customizer-close:hover{background:#35373f;color:#fff}
+.ah-profile-customizer-form{width:100%;height:100%;display:grid;grid-template-columns:240px minmax(340px,420px) minmax(390px,1fr);overflow:hidden}
+.ah-profile-customizer-tools{min-width:0;overflow:auto;padding:18px 14px 16px;background:#24252b;border-right:1px solid #35373e;scrollbar-width:thin;scrollbar-color:#676a74 transparent}
+.ah-customizer-profile-select{width:100%;height:40px;padding:0 0 12px;border:0;border-bottom:1px solid #35373e;background:transparent;color:#fff;display:flex;align-items:center;justify-content:space-between;font-weight:900;cursor:pointer}
+.ah-customizer-profile-select span:last-child{color:#b5bac1;font-size:23px;letter-spacing:-5px;transform:translateX(-3px)}
+.ah-customizer-tool-section{margin-top:17px}.ah-customizer-tool-section>h3{margin:0 0 9px;color:#f2f3f5;font-size:13px;font-weight:900}.ah-customizer-tool-section>p{margin:5px 0 0;color:#949ba4;font-size:11px;line-height:1.35}
+.ah-customizer-badge-row{height:42px;padding:6px 9px;border-radius:8px;background:#35373d;display:flex;align-items:center;gap:8px}
+.ah-customizer-badge-avatar{width:29px;height:29px;border-radius:50%;background:#5865f2;display:grid;place-items:center;font-size:15px}.ah-customizer-badge-line{height:13px;flex:1;border-radius:999px;background:#5d6068}.ah-customizer-plus{width:24px;height:24px;border:0;border-radius:50%;background:#fff;color:#2b2d31;display:grid;place-items:center;font-size:21px;font-weight:900;cursor:pointer}
+.ah-customizer-media-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.ah-customizer-media-tile{height:100px;border:1px solid transparent;border-radius:8px;background:#33353b center/cover no-repeat;position:relative;display:grid;place-items:center;overflow:hidden;color:#fff;cursor:pointer}.ah-customizer-media-tile:hover{border-color:#5865f2}.ah-customizer-media-tile.avatar{background-size:68px 68px;background-repeat:no-repeat}.ah-customizer-media-tile.banner{grid-column:1/-1;height:76px}.ah-customizer-media-tile .edit{position:absolute;right:7px;top:7px;width:26px;height:26px;border-radius:50%;background:rgba(17,18,20,.78);display:grid;place-items:center;font-size:14px}.ah-customizer-media-tile.placeholder{border-color:#454850;border-style:dashed}.ah-customizer-media-tile.placeholder:after{content:'+';width:34px;height:34px;border-radius:50%;background:#fff;color:#2b2d31;display:grid;place-items:center;font-size:27px;font-weight:900}
+.ah-customizer-color{width:100%;height:42px;border:1px solid #3f424a;border-radius:7px;background:#111214;display:block;cursor:pointer}
+.ah-customizer-effect{height:88px;border:1px solid #454850;border-radius:8px;background:linear-gradient(135deg,rgba(88,101,242,.45),rgba(127,76,255,.18)),#25262b;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer}.ah-customizer-effect span{font-size:13px;color:#c8cbd1}
+.ah-customizer-name-style{height:42px;border:0;border-radius:7px;background:#33353b;color:#b8bbc3;width:100%;padding:0 12px;text-align:left;font-size:19px;font-weight:900;cursor:pointer}.ah-customizer-name-style:hover{background:#3b3d44;color:#fff}
+.ah-customizer-url-fallback{margin-top:12px}.ah-customizer-url-fallback summary{color:#949ba4;font-size:11px;cursor:pointer}.ah-customizer-url-fallback .ah-settings-input{margin-top:7px;height:34px;padding:6px 8px;font-size:11px}
+.ah-customizer-nitro{margin-top:66px;padding:11px;border:1px solid #6648c7;border-radius:8px;background:linear-gradient(145deg,#63266d,#27295f 62%,#16718b);box-shadow:0 0 22px rgba(133,81,255,.3)}.ah-customizer-nitro strong{display:block;font-size:12px;line-height:1.3}.ah-customizer-nitro span{color:#4cc9ff}.ah-customizer-nitro button{width:100%;height:38px;margin-top:9px;border:0;border-radius:7px;background:#fff;color:#111214;font-weight:900;cursor:pointer;box-shadow:0 0 12px #5fd4ff,0 0 19px rgba(201,93,255,.8)}
+.ah-profile-customizer-preview{min-width:0;overflow:auto;padding:48px 20px 36px;background:#18191d;scrollbar-width:thin;scrollbar-color:#5d6069 transparent}
+.ah-custom-profile-card{width:100%;min-height:100%;overflow:hidden;border-radius:14px;background:#24252b;box-shadow:0 15px 44px rgba(0,0,0,.3)}
+.ah-custom-profile-banner{height:140px;background:linear-gradient(135deg,#20204d,#443b88);background-size:cover;background-position:center;display:block;position:relative;cursor:pointer}.ah-custom-profile-banner:after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 45%,rgba(36,37,43,.55))}
+.ah-custom-profile-banner .edit{position:absolute;right:10px;top:10px;z-index:1;width:31px;height:31px;border-radius:9px;background:rgba(17,18,20,.78);display:grid;place-items:center;color:#fff;font-size:15px;opacity:0;transition:.14s ease}.ah-custom-profile-banner:hover .edit{opacity:1}
+.ah-custom-profile-body{position:relative;padding:0 28px 28px}
+.ah-custom-profile-avatar{width:118px;height:118px;margin-top:-63px;border:8px solid #24252b;border-radius:50%;background:#2b2d31 center/cover no-repeat;display:grid;place-items:center;position:relative;color:#fff;font-size:34px;font-weight:950;cursor:pointer}.ah-custom-profile-avatar:after{content:'✎';position:absolute;right:-2px;top:-2px;width:30px;height:30px;border:4px solid #24252b;border-radius:50%;background:#111214;display:grid;place-items:center;font-size:13px;opacity:0;transition:.14s ease}.ah-custom-profile-avatar:hover:after{opacity:1}
+.ah-custom-profile-status{position:absolute;left:104px;top:-53px;width:13px;height:13px;border:5px solid #24252b;border-radius:50%;background:#777b86;box-sizing:content-box}
+.ah-custom-profile-prompt{position:absolute;left:153px;top:-41px;max-width:180px;padding:9px 12px;border:1px solid rgba(255,255,255,.06);border-radius:12px;background:rgba(72,68,108,.75);color:#c7c8d0;font-size:12px;font-style:italic}
+.ah-custom-profile-ident{margin-top:17px}.ah-custom-profile-ident .ah-profile-live-name{margin-top:0}.ah-custom-profile-meta{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:3px;color:#c3c6cc;font-size:12px}.ah-custom-profile-meta .dot{width:3px;height:3px;border-radius:50%;background:#949ba4}.ah-custom-role-pill{padding:4px 7px;border-radius:6px;background:#35373d;color:#eef0f3;font-size:10px;font-weight:850}
+.ah-custom-badges{display:flex;align-items:center;gap:5px;margin-top:11px}.ah-custom-badges span{width:18px;height:18px;border-radius:5px;background:#5865f2;display:grid;place-items:center;color:#fff;font-size:10px;font-weight:950}.ah-custom-badges span:nth-child(2){background:#00a8a8}.ah-custom-badges span:nth-child(3){background:#7c56d8}.ah-custom-badges span:nth-child(4){background:#216b9a}
+.ah-custom-profile-actions{display:flex;gap:8px;margin-top:25px}.ah-custom-profile-actions button{height:34px;border:0;border-radius:7px;background:#35373d;color:#fff;padding:0 13px;font-weight:850}.ah-custom-profile-actions .primary{background:#5865f2;flex:1}.ah-custom-profile-actions .icon{width:35px;padding:0}
+.ah-custom-bio-wrap{margin-top:27px}.ah-custom-bio-input{width:100%;min-height:56px;border:1px solid transparent;border-radius:7px;background:transparent;color:#dbdee1;padding:7px 8px;resize:none;font:italic 13px/1.45 inherit;outline:0}.ah-custom-bio-input:hover{border-color:#4e5058}.ah-custom-bio-input:focus{border-color:#5865f2;background:rgba(17,18,20,.28);font-style:normal}.ah-custom-bio-input::placeholder{color:#8e929b}
+.ah-custom-profile-info{margin-top:23px;color:#b5bac1;font-size:12px}.ah-custom-profile-info b{display:block;margin-bottom:8px;color:#8f949e;font-size:11px}.ah-custom-integration{display:flex;align-items:center;gap:9px;margin-top:10px;color:#eef0f3}.ah-custom-integration-icon{width:25px;height:25px;border-radius:7px;background:#fff;color:#111214;display:grid;place-items:center;font-weight:950}.ah-custom-note{margin-top:22px;color:#8e929b;font-size:11px;font-style:italic}
+.ah-profile-customizer-widgets{min-width:0;overflow:auto;padding:54px 28px 36px 10px;background:#18191d;scrollbar-width:thin;scrollbar-color:#5d6069 transparent}
+.ah-customizer-tabs{height:38px;border-bottom:1px solid #32343a;display:flex;gap:26px}.ah-customizer-tabs button{height:38px;border:0;border-bottom:2px solid transparent;background:transparent;color:#9ca0aa;font-weight:850;cursor:pointer}.ah-customizer-tabs button.active{border-bottom-color:#fff;color:#fff}
+.ah-customizer-widget-top{display:flex;align-items:center;justify-content:space-between;margin:17px 0 12px;color:#8f949e;font-size:11px}.ah-customizer-add-widget{height:33px;border:0;border-radius:8px;padding:0 14px;background:#303238;color:#fff;font-weight:850;cursor:pointer}
+.ah-customizer-widget-panel{display:none;animation:ahCustomizerPanelIn .18s ease both}.ah-customizer-widget-panel.active{display:block}
+.ah-customizer-widget{min-height:165px;margin-bottom:12px;padding:17px;border-radius:15px;background:#2b2d31;border:1px solid #35373e}.ah-customizer-widget-head{display:flex;align-items:center;justify-content:space-between}.ah-customizer-widget h4{margin:0;font-size:13px}.ah-customizer-widget p{margin:3px 0 0;color:#9ca3af;font-size:11px}.ah-customizer-game{display:flex;align-items:center;gap:14px;margin-top:13px}.ah-customizer-game-cover{width:86px;height:112px;border-radius:8px;background:linear-gradient(155deg,#303a40,#62716f 46%,#191b1e);display:flex;align-items:flex-end;padding:8px;font-weight:950}.ah-customizer-game-info strong{display:block}.ah-customizer-game-info em{display:block;margin-top:6px;color:#9ca3af;font-size:12px}.ah-customizer-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}.ah-customizer-tags span{padding:4px 7px;border-radius:999px;background:#35373d;color:#b5bac1;font-size:9px}.ah-customizer-empty{min-height:160px;display:grid;place-items:center;color:#949ba4;text-align:center}
+@keyframes ahProfileCustomizerFade{from{opacity:0}to{opacity:1}}@keyframes ahCustomizerPanelIn{from{opacity:0;transform:translateX(9px)}to{opacity:1;transform:none}}
+@media(max-width:1020px){.ah-profile-customizer-form{grid-template-columns:230px minmax(350px,410px)}.ah-profile-customizer-widgets{display:none}.ah-profile-customizer-shell{width:min(760px,calc(100vw - 48px))}}
+@media(max-width:700px){.ah-profile-customizer-backdrop{padding:0}.ah-profile-customizer-shell{width:100vw;height:100vh;border:0;border-radius:0;overflow:auto}.ah-profile-customizer-form{height:auto;min-height:100%;grid-template-columns:1fr;overflow:visible}.ah-profile-customizer-tools{overflow:visible;padding:55px 16px 20px}.ah-profile-customizer-preview{overflow:visible;padding:20px 14px 78px}.ah-customizer-nitro{margin-top:18px}.ah-custom-profile-card{min-height:auto}.ah-profile-unsaved-bar{z-index:29700}}
+@media(prefers-reduced-motion:reduce){.ah-profile-customizer-backdrop.open,.ah-customizer-widget-panel{animation:none!important}.ah-settings-profile-entry{transition:none}}
+</style>
+
 <div id="ah-user-settings" class="ah-settings-backdrop" onclick="if(event.target===this)closeUserSettings()" aria-hidden="true">
   <div class="ah-settings-shell" role="dialog" aria-modal="true" aria-label="User settings">
     <aside class="ah-settings-sidebar">
-      <div class="ah-settings-me">
+      <button class="ah-settings-profile-entry" type="button" onclick="openProfileCustomizer()" aria-label="Редагувати профіль">
         <div class="ah-settings-avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}')"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}</div>
-        <div><strong>{{ account.display_name or account.username }}</strong><span data-i18n="settings.edit_profile">Редагувати профіль</span></div>
-      </div>
+        <span><strong>{{ account.display_name or account.username }}</strong><small data-i18n="settings.edit_profile">Редагувати профіль <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16-.8 4 4-.8L18.5 7.9l-3.4-3.4L4 16Z"></path></svg></small></span>
+      </button>
       <input class="ah-settings-search" placeholder="Пошук" data-i18n-placeholder="settings.search_placeholder" oninput="ahSettingsFilter(this.value)">
       <div class="ah-settings-group">
         <button class="ah-settings-nav active" data-settings-tab="account" onclick="showSettingsTab('account')"><svg><use href="#i-user"></use></svg><span data-i18n="settings.account">Учётная запись</span></button>
-        <button class="ah-settings-nav" data-settings-tab="profile" onclick="showSettingsTab('profile')"><svg><use href="#i-edit"></use></svg><span data-i18n="settings.profile">Профіль</span></button>
         <button class="ah-settings-nav" data-settings-tab="security" onclick="showSettingsTab('security')"><svg><use href="#i-shield"></use></svg><span data-i18n="settings.security">Пароль и безопасность</span></button>
         <button class="ah-settings-nav" data-settings-tab="privacy" onclick="showSettingsTab('privacy')"><svg><use href="#i-users"></use></svg><span data-i18n="settings.privacy">Данные и конфиденциальность</span></button>
       </div>
@@ -1485,7 +1535,7 @@ document.addEventListener('DOMContentLoaded',()=>{
       <section class="ah-settings-page active" data-settings-page="account">
         <h1>Информация об учётной записи</h1>
         <div class="ah-settings-section">
-          <div class="ah-settings-row"><div class="label">Имя пользователя</div><div class="ah-settings-value">{{ account.username }}</div><button class="ah-settings-btn" type="button" onclick="showSettingsTab('profile')">Изменить</button></div>
+          <div class="ah-settings-row"><div class="label">Имя пользователя</div><div class="ah-settings-value">{{ account.username }}</div><button class="ah-settings-btn" type="button" onclick="openProfileCustomizer()">Изменить</button></div>
           <div class="ah-settings-row"><div class="label">Электронная почта</div><div class="ah-settings-value">{{ account.email or 'Не указана' }}</div><button class="ah-settings-btn" type="button" onclick="settingsToast('Пока заглушка: изменение email добавим отдельным патчем')">Изменить</button></div>
           <div class="ah-settings-row"><div class="label">Публичный профиль</div><div class="ah-settings-value">/community/profile/{{ account.username }}</div><a class="ah-settings-btn" style="text-decoration:none" href="/community/profile/{{ account.username }}">Открыть</a></div>
         </div>
@@ -1496,65 +1546,6 @@ document.addEventListener('DOMContentLoaded',()=>{
         </div>
         <h1>Репутация учётной записи</h1>
         <div class="ah-settings-good"><div class="dot">✓</div><div><b>У твоєї учётки нормальна репутація</b><p class="ah-settings-muted">Якщо будуть мут/бан/скарги — цей блок потім можна зробити реальним.</p></div></div>
-      </section>
-      <section class="ah-settings-page" data-settings-page="profile">
-        <h1 data-i18n="settings.profile">Профіль</h1>
-        <form id="ah-profile-edit-form" class="ah-settings-form ah-discord-profile-form" method="post" action="/community/settings" enctype="multipart/form-data">
-          <input type="hidden" name="next_url" value="{{ request.url.path }}">
-
-          <div class="ah-profile-edit-layout">
-            <div class="ah-profile-live-card">
-              <label class="ah-profile-live-banner" id="ah-profile-preview-banner" for="ah-banner-file" {% if account.banner_url %}style="background-image:url('{{ account.banner_url }}')"{% endif %}>
-                <span class="ah-profile-change-badge">Змінити банер</span>
-              </label>
-              <div class="ah-profile-live-body">
-                <label class="ah-profile-live-avatar" id="ah-profile-preview-avatar" for="ah-avatar-file" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}')"{% endif %}>
-                  {% if not account.avatar_url %}<span>{{ account.username[:1]|upper }}</span>{% endif %}
-                  <b>✎</b>
-                </label>
-                <div class="ah-profile-live-name ah-display-name-editor" id="ah-display-name-editor">
-                  <button id="ah-display-name-view" class="ah-display-name-view" type="button" aria-label="Редагувати відображуване ім’я">
-                    <span id="ah-display-name-preview">{{ account.display_name or account.username }}</span>
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16-.8 4 4-.8L18.5 7.9l-3.4-3.4L4 16Z"></path><path d="m13.8 5.8 3.4 3.4"></path></svg>
-                  </button>
-                  <input id="ah-display-name-input" class="ah-display-name-input" name="display_name" value="{{ account.display_name or account.username }}" maxlength="32" autocomplete="off" aria-label="Відображуване ім’я">
-                </div>
-                <div class="ah-profile-live-handle">@{{ account.username }}</div>
-                <div class="ah-profile-live-bio" id="ah-profile-bio-preview">{{ account.bio or 'Ваш вайб у пʼяти словах. Додай опис профілю, щоб міні-картка виглядала живо.' }}</div>
-                <div class="ah-profile-live-note">Клік по аватарці або банеру відкриває вибір файлу з пристрою.</div>
-              </div>
-            </div>
-
-            <div class="ah-profile-edit-panel">
-              <div class="ah-settings-card"><h3>Редагування профілю</h3><p>Тут тепер міняється аватарка, банер і опис профілю. Старий окремий редактор більше не потрібний.</p></div>
-
-              <input id="ah-avatar-file" class="ah-hidden-file" type="file" name="avatar_file" accept="image/png,image/jpeg,image/webp,image/gif">
-              <input id="ah-banner-file" class="ah-hidden-file" type="file" name="banner_file" accept="image/png,image/jpeg,image/webp,image/gif">
-
-              <div class="ah-upload-row">
-                <div><b>Аватар</b><span>PNG/JPG/WebP/GIF до 5 MB</span></div>
-                <label class="ah-settings-btn" for="ah-avatar-file">Завантажити</label>
-              </div>
-              <div class="ah-upload-row">
-                <div><b>Банер</b><span>Картинка для фону профілю</span></div>
-                <label class="ah-settings-btn" for="ah-banner-file">Завантажити</label>
-              </div>
-
-              <details class="ah-url-fallback">
-                <summary>Або вставити URL вручну</summary>
-                <div class="ah-settings-formline"><label>Avatar URL</label><input class="ah-settings-input" name="avatar_url" value="{{ account.avatar_url or '' }}" placeholder="https://..."></div>
-                <div class="ah-settings-formline"><label>Banner URL</label><input class="ah-settings-input" name="banner_url" value="{{ account.banner_url or '' }}" placeholder="https://..."></div>
-              </details>
-
-              <div class="ah-settings-formline wide"><label>Опис</label><textarea id="ah-profile-bio-input" class="ah-settings-textarea" name="bio" maxlength="280" placeholder="Розкажи трохи про себе...">{{ account.bio or '' }}</textarea></div>
-              <div id="ah-profile-unsaved-bar" class="ah-profile-unsaved-bar" aria-hidden="true">
-                <strong>Не забудьте зберегти зміни!</strong>
-                <button id="ah-profile-reset" class="ah-settings-btn" type="button">Скинути</button>
-                <button class="ah-settings-btn primary" type="submit">Зберегти</button>
-              </div>
-            </div>
-          </div>
-        </form>
       </section>
       <section class="ah-settings-page" data-settings-page="security"><h1>Пароль и безопасность</h1><div class="ah-settings-placeholder">Поки заглушка. Тут потім можна зробити зміну паролю, 2FA, активні сесії.</div></section>
       <section class="ah-settings-page" data-settings-page="privacy"><h1>Данные и конфиденциальность</h1><div class="ah-settings-placeholder">Поки заглушка. Тут будуть приватність, заблоковані користувачі, хто може писати в ЛС.</div></section>
@@ -1614,6 +1605,109 @@ document.addEventListener('DOMContentLoaded',()=>{
     </main>
   </div>
 </div>
+<div id="ah-profile-customizer" class="ah-profile-customizer-backdrop" aria-hidden="true">
+  <div class="ah-profile-customizer-shell" role="dialog" aria-modal="true" aria-label="Кастомізація профілю">
+    <button class="ah-profile-customizer-close" type="button" onclick="closeProfileCustomizer()" aria-label="Закрити">×</button>
+    <form id="ah-profile-edit-form" class="ah-profile-customizer-form" method="post" action="/community/settings" enctype="multipart/form-data">
+      <input type="hidden" name="next_url" value="{{ request.url.path }}">
+      <input id="ah-avatar-file" class="ah-hidden-file" type="file" name="avatar_file" accept="image/png,image/jpeg,image/webp,image/gif">
+      <input id="ah-banner-file" class="ah-hidden-file" type="file" name="banner_file" accept="image/png,image/jpeg,image/webp,image/gif">
+
+      <aside class="ah-profile-customizer-tools">
+        <button class="ah-customizer-profile-select" type="button" onclick="settingsToast('Налаштування окремих серверних профілів з’являться пізніше')"><span>Основний профіль⌄</span><span>»</span></button>
+
+        <section class="ah-customizer-tool-section">
+          <h3>Бейджик</h3>
+          <div class="ah-customizer-badge-row"><span class="ah-customizer-badge-avatar">☁</span><span class="ah-customizer-badge-line"></span><button class="ah-customizer-plus" type="button" onclick="settingsToast('Редактор бейджиків з’явиться пізніше')">+</button></div>
+        </section>
+
+        <section class="ah-customizer-tool-section">
+          <h3>Аватар і прикраси</h3>
+          <div class="ah-customizer-media-grid">
+            <label id="ah-customizer-avatar-tile" class="ah-customizer-media-tile avatar" for="ah-avatar-file" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}')"{% endif %}>{% if not account.avatar_url %}<b>{{ account.username[:1]|upper }}</b>{% endif %}<span class="edit">✎</span></label>
+            <button class="ah-customizer-media-tile placeholder" type="button" onclick="settingsToast('Прикраси аватара з’являться пізніше')" aria-label="Додати прикрасу"></button>
+            <label id="ah-customizer-banner-tile" class="ah-customizer-media-tile banner" for="ah-banner-file" {% if account.banner_url %}style="background-image:url('{{ account.banner_url }}')"{% endif %}><span class="edit">✎</span></label>
+          </div>
+        </section>
+
+        <section class="ah-customizer-tool-section">
+          <h3>Колір банера</h3>
+          <button class="ah-customizer-color" type="button" onclick="document.getElementById('ah-banner-file').click()" aria-label="Змінити банер"></button>
+        </section>
+
+        <section class="ah-customizer-tool-section">
+          <h3>Ефект профілю і рамка</h3>
+          <button class="ah-customizer-effect" type="button" onclick="settingsToast('Ефекти профілю з’являться пізніше')"><span>Додати ефект</span></button>
+        </section>
+
+        <section class="ah-customizer-tool-section">
+          <h3>Стиль відображуваного імені</h3>
+          <button id="ah-customizer-name-style" class="ah-customizer-name-style" type="button" onclick="focusProfileDisplayName()">{{ account.display_name or account.username }} +</button>
+        </section>
+
+        <details class="ah-customizer-url-fallback">
+          <summary>Вставити URL зображення вручну</summary>
+          <input class="ah-settings-input" name="avatar_url" value="{{ account.avatar_url or '' }}" placeholder="Avatar URL">
+          <input class="ah-settings-input" name="banner_url" value="{{ account.banner_url or '' }}" placeholder="Banner URL">
+        </details>
+
+        <div class="ah-customizer-nitro"><strong>Прокачайте свій вигляд із підпискою <span>Nitro</span></strong><button type="button" onclick="if(window.openNitroSubscriptionSettings)openNitroSubscriptionSettings()">◉ Підписатися на Nitro</button></div>
+      </aside>
+
+      <section class="ah-profile-customizer-preview">
+        <article class="ah-custom-profile-card">
+          <label class="ah-custom-profile-banner" id="ah-profile-preview-banner" for="ah-banner-file" {% if account.banner_url %}style="background-image:url('{{ account.banner_url }}')"{% endif %}><span class="edit">✎</span></label>
+          <div class="ah-custom-profile-body">
+            <label class="ah-custom-profile-avatar" id="ah-profile-preview-avatar" for="ah-avatar-file" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}')"{% endif %}>{% if not account.avatar_url %}<span>{{ account.username[:1]|upper }}</span>{% endif %}</label>
+            <span class="ah-custom-profile-status" aria-label="Статус"></span>
+            <div class="ah-custom-profile-prompt">＋ Який емодзі найкраще описує ваш день?</div>
+
+            <div class="ah-custom-profile-ident">
+              <div class="ah-profile-live-name ah-display-name-editor" id="ah-display-name-editor">
+                <button id="ah-display-name-view" class="ah-display-name-view" type="button" aria-label="Редагувати відображуване ім’я">
+                  <span id="ah-display-name-preview">{{ account.display_name or account.username }}</span>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16-.8 4 4-.8L18.5 7.9l-3.4-3.4L4 16Z"></path><path d="m13.8 5.8 3.4 3.4"></path></svg>
+                </button>
+                <input id="ah-display-name-input" class="ah-display-name-input" name="display_name" value="{{ account.display_name or account.username }}" maxlength="32" autocomplete="off" aria-label="Відображуване ім’я">
+              </div>
+              <div class="ah-custom-profile-meta"><span>{{ account.username }}</span><span class="dot"></span><span>Додайте займенники</span><span class="ah-custom-role-pill">☁ CODE⌄</span></div>
+              <div class="ah-custom-badges" aria-label="Бейджики профілю"><span>◆</span><span>#</span><span>✹</span><span>◇</span></div>
+            </div>
+
+            <div class="ah-custom-profile-actions"><button class="primary" type="button">● Повідомлення</button><button class="icon" type="button">♟</button><button class="icon" type="button">•••</button></div>
+            <div class="ah-custom-bio-wrap"><textarea id="ah-profile-bio-input" class="ah-custom-bio-input" name="bio" maxlength="280" placeholder="Розкажіть цікавий факт про себе">{{ account.bio or '' }}</textarea><div id="ah-profile-bio-preview" hidden>{{ account.bio or '' }}</div></div>
+            <div class="ah-custom-profile-info"><b>В числі учасників з</b><strong>1 трав. 2022 р.</strong></div>
+            <div class="ah-custom-profile-info"><b>Інтеграції</b><div class="ah-custom-integration"><span class="ah-custom-integration-icon">◈</span><span>Fioletlix ↗</span></div></div>
+            <div class="ah-custom-note"><b>Заметка (видна только вам)</b><br><br>Натисніть, щоб додати нотатку</div>
+          </div>
+        </article>
+      </section>
+
+      <section class="ah-profile-customizer-widgets">
+        <div class="ah-customizer-tabs">
+          <button class="active" type="button" data-customizer-tab="board" onclick="showProfileCustomizerTab('board')">Дошка</button>
+          <button type="button" data-customizer-tab="activity" onclick="showProfileCustomizerTab('activity')">Активність</button>
+          <button type="button" data-customizer-tab="wishlist" onclick="showProfileCustomizerTab('wishlist')">Вишлист</button>
+        </div>
+        <div class="ah-customizer-widget-top"><span>Ваші віджети</span><button class="ah-customizer-add-widget" type="button" onclick="settingsToast('Додавання віджетів з’явиться пізніше')">＋ Додати віджет</button></div>
+        <div class="ah-customizer-widget-panel active" data-customizer-panel="board">
+          <article class="ah-customizer-widget"><div class="ah-customizer-widget-head"><div><h4>Улюблена гра</h4><p>Виберіть 1 гру</p></div><b>＋</b></div><div class="ah-customizer-game"><div class="ah-customizer-game-cover">RUST</div><div class="ah-customizer-game-info"><strong>Rust</strong><em>✎ Розкажіть, чому вона улюблена</em><div class="ah-customizer-tags"><span>+ теги</span></div></div></div></article>
+          <article class="ah-customizer-widget"><div class="ah-customizer-widget-head"><div><h4>Поточні ігри</h4><p>Додайте до 5 ігор</p></div><b>＋</b></div><div class="ah-customizer-game"><div class="ah-customizer-game-cover">ROBLOX</div><div class="ah-customizer-game-info"><strong>ROBLOX</strong><div class="ah-customizer-tags"><span>+ теги</span></div></div></div></article>
+          <article class="ah-customizer-widget"><div class="ah-customizer-widget-head"><div><h4>Хочу пограти</h4><p>Додайте до 20 ігор</p></div><b>＋</b></div><div class="ah-customizer-game"><div class="ah-customizer-game-cover">CS2</div><div class="ah-customizer-game-info"><strong>Counter-Strike 2</strong></div></div></article>
+        </div>
+        <div class="ah-customizer-widget-panel" data-customizer-panel="activity"><div class="ah-customizer-widget ah-customizer-empty">Тут з’явиться ваша активність у спільнотах.</div></div>
+        <div class="ah-customizer-widget-panel" data-customizer-panel="wishlist"><div class="ah-customizer-widget ah-customizer-empty">Додайте ігри, у які хочете зіграти.</div></div>
+      </section>
+
+      <div id="ah-profile-unsaved-bar" class="ah-profile-unsaved-bar" aria-hidden="true">
+        <strong>Не забудьте зберегти зміни!</strong>
+        <button id="ah-profile-reset" class="ah-settings-btn" type="button">Скинути</button>
+        <button class="ah-settings-btn primary" type="submit">Зберегти</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <style id="ah-release-notes-css">
   .ah-settings-version{width:100%;border:0;background:transparent;border-radius:7px;color:#737985;padding:10px 8px 7px;line-height:1.45;text-align:left;font:inherit;font-size:10px;cursor:pointer;transition:background .15s ease,color .15s ease}
   .ah-settings-version:hover{background:#2b2d31;color:#b5bac1}
@@ -1699,22 +1793,71 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 <script>
 (function(){
+  window.openProfileCustomizer = function(){
+    var settings=document.getElementById('ah-user-settings');
+    if(settings && !settings.classList.contains('open')){
+      settings.classList.add('open');
+      settings.setAttribute('aria-hidden','false');
+      if(typeof window.showSettingsTab === 'function') window.showSettingsTab('account');
+    }
+    var modal=document.getElementById('ah-profile-customizer');
+    if(!modal) return;
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden','false');
+    var close=modal.querySelector('.ah-profile-customizer-close');
+    if(close) window.setTimeout(function(){ close.focus(); },0);
+  };
+  window.closeProfileCustomizer = function(force){
+    var modal=document.getElementById('ah-profile-customizer');
+    if(!modal || !modal.classList.contains('open')) return true;
+    if(force !== true && typeof window.ahProfileHasUnsavedChanges === 'function' && window.ahProfileHasUnsavedChanges()){
+      if(typeof window.ahShakeProfileUnsaved === 'function') window.ahShakeProfileUnsaved();
+      return false;
+    }
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden','true');
+    return true;
+  };
+  window.showProfileCustomizerTab = function(tab){
+    tab=tab || 'board';
+    document.querySelectorAll('[data-customizer-tab]').forEach(function(button){
+      button.classList.toggle('active',button.dataset.customizerTab===tab);
+    });
+    document.querySelectorAll('[data-customizer-panel]').forEach(function(panel){
+      panel.classList.toggle('active',panel.dataset.customizerPanel===tab);
+    });
+  };
+  window.focusProfileDisplayName = function(){
+    var view=document.getElementById('ah-display-name-view');
+    if(view) view.click();
+  };
   window.openUserSettings = function(tab){
     var m=document.getElementById('ah-user-settings');
     if(!m) return;
     m.classList.add('open');
     m.setAttribute('aria-hidden','false');
-    showSettingsTab(tab || 'account');
+    if(tab === 'profile'){
+      showSettingsTab('account');
+      window.requestAnimationFrame(window.openProfileCustomizer);
+    }else{
+      showSettingsTab(tab || 'account');
+    }
   };
-  window.closeUserSettings = function(){
+  window.closeUserSettings = function(force){
     var m=document.getElementById('ah-user-settings');
     if(!m) return;
+    if(typeof window.closeProfileCustomizer === 'function' && window.closeProfileCustomizer(force) === false) return false;
     if(window.closeReleaseNotes) window.closeReleaseNotes();
     m.classList.remove('open');
     m.setAttribute('aria-hidden','true');
+    return true;
   };
   window.showSettingsTab = function(tab){
     tab = tab || 'account';
+    if(tab === 'profile'){
+      window.openProfileCustomizer();
+      tab='account';
+    }
     document.querySelectorAll('[data-settings-tab]').forEach(function(b){b.classList.toggle('active', b.dataset.settingsTab===tab)});
     document.querySelectorAll('[data-settings-page]').forEach(function(p){p.classList.toggle('active', p.dataset.settingsPage===tab)});
     var active=document.querySelector('[data-settings-tab="'+tab+'"]');
@@ -1752,9 +1895,19 @@ document.addEventListener('DOMContentLoaded',()=>{
   };
   document.addEventListener('keydown',function(e){
     if(e.key!=='Escape') return;
+    var customizer=document.getElementById('ah-profile-customizer');
+    if(customizer && customizer.classList.contains('open')){
+      e.preventDefault();
+      closeProfileCustomizer();
+      return;
+    }
     var notes=document.getElementById('ah-release-notes');
     if(notes && notes.classList.contains('open')) closeReleaseNotes();
     else closeUserSettings();
+  });
+  var customizer=document.getElementById('ah-profile-customizer');
+  if(customizer) customizer.addEventListener('click',function(event){
+    if(event.target===customizer) closeProfileCustomizer();
   });
 })();
 </script>
@@ -2069,16 +2222,15 @@ document.addEventListener('DOMContentLoaded',()=>{
   function updatePreview(blob){
     const previewUrl = URL.createObjectURL(blob);
     if(state.kind === 'avatar'){
-      const target = document.getElementById('ah-profile-preview-avatar');
-      if(target){
+      document.querySelectorAll('#ah-profile-preview-avatar,#ah-customizer-avatar-tile').forEach(function(target){
         target.style.backgroundImage = 'url("' + previewUrl + '")';
         target.style.backgroundSize = 'cover';
         target.style.backgroundPosition = 'center';
-        const fallback = target.querySelector('span');
+        const fallback = target.querySelector('span:not(.edit),b');
         if(fallback) fallback.textContent = '';
-      }
+      });
     }else{
-      document.querySelectorAll('#ah-profile-preview-banner,.self-profile-banner').forEach(function(target){
+      document.querySelectorAll('#ah-profile-preview-banner,#ah-customizer-banner-tile,.self-profile-banner').forEach(function(target){
         target.style.backgroundImage = 'url("' + previewUrl + '")';
         target.style.backgroundSize = 'cover';
         target.style.backgroundPosition = 'center';
@@ -2233,12 +2385,15 @@ document.addEventListener('DOMContentLoaded',()=>{
     const f=input.files[0];
     if(!f.type || !f.type.startsWith('image/')) return;
     const url=URL.createObjectURL(f);
-    const target=$(targetSel);
-    if(target){ target.style.backgroundImage="url('"+url+"')"; const span=target.querySelector('span'); if(span && clearText) span.textContent=''; }
+    document.querySelectorAll(targetSel).forEach(function(target){
+      target.style.backgroundImage="url('"+url+"')";
+      const fallback=target.querySelector('span:not(.edit),b');
+      if(fallback && clearText) fallback.textContent='';
+    });
   }
   document.addEventListener('change',function(e){
-    if(e.target && e.target.id==='ah-avatar-file') previewFile(e.target,'#ah-profile-preview-avatar',true);
-    if(e.target && e.target.id==='ah-banner-file') previewFile(e.target,'#ah-profile-preview-banner',false);
+    if(e.target && e.target.id==='ah-avatar-file') previewFile(e.target,'#ah-profile-preview-avatar,#ah-customizer-avatar-tile',true);
+    if(e.target && e.target.id==='ah-banner-file') previewFile(e.target,'#ah-profile-preview-banner,#ah-customizer-banner-tile',false);
   });
   document.addEventListener('input',function(e){
     if(e.target && e.target.id==='ah-profile-bio-input'){
@@ -2251,8 +2406,8 @@ document.addEventListener('DOMContentLoaded',()=>{
     const full=document.getElementById('ah-v3-overlay'); if(full) full.classList.remove('open');
     const oldMini=document.getElementById('mini-profile-popover'); if(oldMini) oldMini.classList.remove('open');
     const self=document.getElementById('self-profile-modal'); if(self) self.classList.remove('open');
-    if(typeof openUserSettings==='function') openUserSettings();
-    if(typeof showSettingsTab==='function') showSettingsTab('profile');
+    if(typeof openUserSettings==='function') openUserSettings('account');
+    if(typeof openProfileCustomizer==='function') openProfileCustomizer();
   };
   document.addEventListener('click',function(e){
     const selfEdit=e.target.closest('[data-open-profile-settings], #ah-self-edit-profile');
@@ -2773,7 +2928,12 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     return String(value || '').replace(/[\u0000-\u001f\u007f]/g,'').trim().slice(0,32);
   }
   function shownName(value){ return cleanName(value) || INITIAL.username; }
-  function updateNamePreview(){ preview.textContent = shownName(input.value); }
+  function updateNamePreview(){
+    const nextName = shownName(input.value);
+    preview.textContent = nextName;
+    const stylePreview = document.getElementById('ah-customizer-name-style');
+    if(stylePreview) stylePreview.textContent = nextName + ' +';
+  }
 
   function isDirty(){
     const avatarUrl = form.querySelector('[name="avatar_url"]');
@@ -2814,6 +2974,8 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     bar.classList.add('shake');
     window.setTimeout(function(){ bar.classList.remove('shake'); },420);
   }
+  window.ahProfileHasUnsavedChanges = function(){ return dirty; };
+  window.ahShakeProfileUnsaved = shakeBar;
   function setBackground(element,url){
     if(!element) return;
     element.style.backgroundImage = url ? 'url("' + String(url).replace(/"/g,'%22') + '")' : '';
@@ -2835,13 +2997,12 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     const bannerInput = document.getElementById('ah-banner-file');
     if(avatarInput) avatarInput.value = '';
     if(bannerInput) bannerInput.value = '';
-    const avatarPreview = document.getElementById('ah-profile-preview-avatar');
-    setBackground(avatarPreview,INITIAL.avatar);
-    if(avatarPreview){
-      const fallback = avatarPreview.querySelector('span');
+    document.querySelectorAll('#ah-profile-preview-avatar,#ah-customizer-avatar-tile').forEach(function(avatarPreview){
+      setBackground(avatarPreview,INITIAL.avatar);
+      const fallback = avatarPreview.querySelector('span:not(.edit),b');
       if(fallback) fallback.textContent = INITIAL.avatar ? '' : INITIAL.username.slice(0,1).toUpperCase();
-    }
-    document.querySelectorAll('#ah-profile-preview-banner,.self-profile-banner').forEach(function(node){
+    });
+    document.querySelectorAll('#ah-profile-preview-banner,#ah-customizer-banner-tile,.self-profile-banner').forEach(function(node){
       setBackground(node,INITIAL.banner);
     });
     document.querySelectorAll('.account-panel[data-mini-username],.user-panel[data-mini-username]').forEach(function(panel){
@@ -2891,8 +3052,17 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
 <script id="ah-banner-live-sync-fix">
 (function(){
   if(window.__ahBannerLiveSyncFix) return; window.__ahBannerLiveSyncFix=true;
+  function setPreviewAvatar(url){
+    document.querySelectorAll('#ah-profile-preview-avatar,#ah-customizer-avatar-tile').forEach(el=>{
+      if(!el) return;
+      el.style.backgroundImage = url ? `url('${String(url).replace(/'/g,'%27')}')` : '';
+      el.style.backgroundSize='cover'; el.style.backgroundPosition='center';
+      const fallback=el.querySelector('span:not(.edit),b');
+      if(fallback) fallback.textContent=url ? '' : {{ account.username[:1]|upper|tojson }};
+    });
+  }
   function setPreviewBanner(url){
-    document.querySelectorAll('#ah-profile-preview-banner,.self-profile-banner').forEach(el=>{
+    document.querySelectorAll('#ah-profile-preview-banner,#ah-customizer-banner-tile,.self-profile-banner').forEach(el=>{
       if(!el) return;
       el.style.backgroundImage = url ? `url('${String(url).replace(/'/g,'%27')}')` : '';
       el.style.backgroundSize='cover'; el.style.backgroundPosition='center';
@@ -2901,10 +3071,12 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   }
   document.addEventListener('input',e=>{
     const el=e.target;
+    if(el && el.name==='avatar_url') setPreviewAvatar(el.value.trim());
     if(el && el.name==='banner_url') setPreviewBanner(el.value.trim());
   });
   document.addEventListener('change',e=>{
     const el=e.target;
+    if(el && el.name==='avatar_file' && el.files && el.files[0]) setPreviewAvatar(URL.createObjectURL(el.files[0]));
     if(el && el.name==='banner_file' && el.files && el.files[0]) setPreviewBanner(URL.createObjectURL(el.files[0]));
   });
 })();
