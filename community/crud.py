@@ -1410,8 +1410,8 @@ async def list_public_servers(db: AsyncSession, search: str = "", limit: int = 6
         SELECT s.id, s.name, s.icon_url, s.description, s.banner_url, s.banner_color,
                COUNT(DISTINCT member.id) AS member_count,
                COALESCE(boosts.total_boosts, 0) AS total_boosts,
-               SUM(CASE WHEN account.last_seen IS NOT NULL
-                         AND account.last_seen >= NOW() - INTERVAL '3 minutes'
+               SUM(CASE WHEN account.last_seen_at IS NOT NULL
+                         AND account.last_seen_at >= NOW() - INTERVAL '3 minutes'
                         THEN 1 ELSE 0 END) AS online_count
         FROM community_servers s
         LEFT JOIN community_server_members member ON member.server_id = s.id
