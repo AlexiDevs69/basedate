@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.5.2",
+      "date": "2026-07-28",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Виправлено: match travel user panel with home."
+      ],
+      "source_sha": "8885b176cd95f95b7de3556182f07f1822d30cab"
+    },
+    {
       "version": "1.5.1",
       "date": "2026-07-28",
       "title": "Виправлення та стабільність",
