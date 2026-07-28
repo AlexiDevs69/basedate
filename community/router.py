@@ -12,6 +12,7 @@ import json
 import hashlib
 import math
 import os
+import platform
 import re
 import time
 import uuid
@@ -37,6 +38,90 @@ router = APIRouter(prefix="/community", tags=["community"])
 
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+
+RELEASES_PATH = Path(__file__).resolve().parent / "releases.json"
+
+
+def _release_date_label(value: str) -> str:
+    try:
+        parsed = datetime.strptime(value, "%Y-%m-%d")
+        return parsed.strftime("%d.%m.%Y")
+    except (TypeError, ValueError):
+        return value
+
+
+def _load_release_info() -> dict:
+    """Load one release source for every community settings template."""
+    try:
+        payload = json.loads(RELEASES_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        payload = {}
+
+    releases = []
+    for item in payload.get("releases") or []:
+        if not isinstance(item, dict):
+            continue
+        version = str(item.get("version") or "").strip()
+        if not version:
+            continue
+        release_date = str(item.get("date") or "").strip()
+        changes = [
+            str(change).strip()
+            for change in item.get("changes") or []
+            if str(change).strip()
+        ]
+        releases.append(
+            {
+                "version": version,
+                "date": release_date,
+                "date_label": _release_date_label(release_date),
+                "title": str(item.get("title") or "").strip(),
+                "changes": changes,
+            }
+        )
+
+    if not releases:
+        releases = [
+            {
+                "version": "1.0.0",
+                "date": "",
+                "date_label": "",
+                "title": "Перший стабільний реліз",
+                "changes": ["Базові можливості AlexiHub."],
+            }
+        ]
+
+    configured_version = os.getenv("ALEXIHUB_VERSION", "").strip()
+    version = configured_version or releases[0]["version"]
+    current_release = next(
+        (release for release in releases if release["version"] == version),
+        releases[0],
+    )
+    build_date = (
+        os.getenv("ALEXIHUB_BUILD_DATE", "").strip()
+        or current_release["date"]
+    )
+    machine = os.getenv("ALEXIHUB_ARCH", "").strip() or platform.machine()
+    architecture = {
+        "amd64": "x64",
+        "x86_64": "x64",
+        "aarch64": "ARM64",
+        "arm64": "ARM64",
+    }.get(machine.lower(), machine or "x64")
+
+    return {
+        "version": version,
+        "channel": str(payload.get("channel") or "stable").strip(),
+        "architecture": architecture,
+        "build_date": build_date,
+        "build_date_label": _release_date_label(build_date),
+        "releases": releases,
+    }
+
+
+# Jinja globals keep the footer and the changelog identical on Home, DM and
+# server pages. Updating the first record in releases.json updates them all.
+templates.env.globals["app_release"] = _load_release_info()
 
 LOCALES_DIR = Path(__file__).resolve().parent / "locales"
 SUPPORTED_LANGUAGES = {"ru", "uk", "en"}
