@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.5.19",
+      "date": "2026-07-29",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update profile section by removing prompt and adding registration date."
+      ],
+      "source_sha": "a8be3b32a17d55363a070f4cb4519402a23ddfba"
+    },
+    {
       "version": "1.5.18",
       "date": "2026-07-29",
       "title": "Виправлення та стабільність",
