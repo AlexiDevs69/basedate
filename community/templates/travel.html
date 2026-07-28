@@ -31,24 +31,76 @@
     .side-nav{padding:12px 8px;display:grid;gap:4px}
     .side-link{height:48px;border-radius:8px;padding:0 12px;display:flex;align-items:center;gap:12px;color:var(--muted);font-size:16px;font-weight:600}
     .side-link:hover,.side-link.active{background:#2b2d31;color:white}.side-link svg{width:24px;height:24px}
-    .account-panel{height:58px;margin-top:auto;padding:.5rem .58rem;background:#18181a;border-top:1px solid #23242a;display:flex;align-items:center;gap:.62rem;position:relative;z-index:80;flex:0 0 auto;cursor:pointer}
-    .account-panel:hover{background:#202024}
-    .account-avatar{width:36px;height:36px;border-radius:50%;background:#16171b center/cover no-repeat;flex:0 0 36px;display:flex;align-items:center;justify-content:center;color:#b5bac1;font-weight:800}
-    .account-meta{position:relative;min-width:0;flex:1 1 auto;height:34px;overflow:hidden;display:block}
-    .account-name{position:absolute;left:0;right:0;top:1px;display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:800;line-height:15px}
-    .account-status,.account-username{position:absolute;left:0;right:0;top:18px;display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;font-weight:750;line-height:13px;color:#b5bac1;transition:transform .22s cubic-bezier(.2,.9,.2,1),opacity .18s ease}
-    .account-status{transform:translateY(0);opacity:1}.account-username{transform:translateY(15px);opacity:0}
-    .account-panel:hover .account-status{transform:translateY(-14px);opacity:0}.account-panel:hover .account-username{transform:translateY(0);opacity:1}
-    .account-panel[data-mini-status="online"] .account-status{color:#23a55a}.account-panel[data-mini-status="idle"] .account-status{color:#f0b232}.account-panel[data-mini-status="dnd"] .account-status{color:#f23f43}.account-panel[data-mini-status="invisible"] .account-status{color:#80848e}
-    .status-online{background:var(--green)}.status-idle{background:var(--yellow)}.status-dnd{background:var(--red)}.status-invisible{background:#80848e}
-    .account-actions{display:flex;align-items:center;gap:.25rem}
-    .account-actions button{width:28px;height:28px;border:0;border-radius:7px;background:transparent;color:#b5bac1;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
-    .account-actions button:hover{background:#2e3038;color:#fff}.account-actions svg{width:17px;height:17px;display:block;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-    .account-actions .voice-control{position:relative;transition:background .16s ease,color .16s ease,transform .12s ease}.account-actions .voice-control:active{transform:scale(.88)}
+    .user-panel{height:56px;margin-top:auto;padding:8px;background:#17181d;border-top:1px solid #22242b;display:flex;align-items:center;gap:8px;position:relative;z-index:80;flex:0 0 auto;cursor:pointer}
+    .user-panel:hover{background:#202024}
+    .user-panel .avatar{width:36px;height:36px;border-radius:50%;background:#16171b center/cover no-repeat;flex:0 0 36px;display:flex;align-items:center;justify-content:center;color:#b5bac1;font-weight:800;position:relative}
+    .user-panel .avatar .presence{position:absolute;right:-1px;bottom:-1px;width:12px;height:12px;border:3px solid #17181d;border-radius:50%;background:var(--green)}
+    .user-panel:hover .avatar .presence{border-color:#202024}
+    .user-info{position:relative;min-width:0;flex:1 1 auto;height:34px;overflow:hidden;display:block;padding:0}
+    .user-info>b{position:absolute;left:0;right:0;top:1px;display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:800;line-height:15px}
+    .user-info>span,.user-info>.account-username{position:absolute;left:0;right:0;top:18px;display:flex;align-items:center;gap:5px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;font-weight:750;line-height:13px;color:#b5bac1;transition:transform .22s cubic-bezier(.2,.9,.2,1),opacity .18s ease}
+    .user-info>span{transform:translateY(0);opacity:1}.user-info>.account-username{transform:translateY(15px);opacity:0}
+    .user-panel:hover .user-info>span{transform:translateY(-14px);opacity:0}.user-panel:hover .user-info>.account-username{transform:translateY(0);opacity:1}
+    .status-dot,.presence{width:9px;height:9px;border-radius:50%;background:var(--green);display:inline-block}.status-online{background:var(--green)!important}.status-idle{background:var(--yellow)!important}.status-dnd{background:var(--red)!important}.status-invisible{background:#80848e!important}
+    .user-actions{display:flex;align-items:center;gap:4px}
+    .user-actions button{width:28px;height:28px;border:0;border-radius:7px;background:transparent;color:#b5bac1;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+    .user-actions button:hover{background:#2e3038;color:#fff}.user-actions svg{width:17px;height:17px;display:block;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .user-actions .voice-control{position:relative;transition:background .16s ease,color .16s ease,transform .12s ease}.user-actions .voice-control:active{transform:scale(.88)}
     .voice-control.off{color:var(--red);background:rgba(242,63,67,.1);position:relative}.voice-control.off:after{content:"";position:absolute;width:20px;height:2px;border-radius:2px;background:currentColor;transform:rotate(-45deg)}
     .status-menu{position:absolute;left:8px;bottom:62px;width:214px;padding:6px;background:#24252b;border:1px solid #3b3d45;border-radius:8px;box-shadow:0 14px 32px rgba(0,0,0,.45);display:none;z-index:70}
     .status-menu.open{display:block;animation:menu-pop .14s ease}.status-menu button{width:100%;height:38px;border:0;border-radius:5px;background:transparent;color:#dbdee1;display:flex;align-items:center;gap:10px;padding:0 10px;text-align:left;cursor:pointer;font-weight:600}
     .status-menu button:hover{background:#35373e;color:#fff}.status-menu .status-choice-dot{width:10px;height:10px;border-radius:50%;flex:0 0 auto}.status-menu small{display:block;color:var(--dim);font-weight:500}
+    /* The same Discord-like self mini-profile used on Home, DM and server pages. */
+    .ah-v3-mini{position:fixed;z-index:2147483000;width:306px;display:none;background:#23242b;border:1px solid rgba(255,255,255,.12);border-radius:16px;box-shadow:0 24px 90px rgba(0,0,0,.62);overflow:hidden;color:#f4f4f5;transform-origin:bottom left;font-family:Inter,system-ui,-apple-system,sans-serif}
+    .ah-v3-mini.open{display:block;animation:ahv3pop .12s ease-out both}
+    .ah-v3-banner{height:96px;background:linear-gradient(135deg,var(--ah-c1,#5865f2),var(--ah-c2,#9b5cf6));background-size:cover;background-position:center;position:relative;overflow:hidden}
+    .ah-v3-banner:after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 78% 18%,rgba(255,255,255,.20),transparent 32%),linear-gradient(180deg,rgba(255,255,255,.02),rgba(0,0,0,.22))}
+    .ah-v3-body{padding:0 14px 14px;position:relative;background:#23242b}
+    .ah-v3-avatar{width:88px;height:88px;border-radius:50%;background:#111 center/cover no-repeat;border:6px solid #23242b;margin-top:-44px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:950;font-size:30px;position:relative;cursor:pointer;box-shadow:0 0 0 1px rgba(255,255,255,.08);padding:0;overflow:hidden}
+    .ah-v3-avatar:hover{filter:brightness(1.08)}
+    .ah-v3-status{position:absolute;right:2px;bottom:2px;width:19px;height:19px;border-radius:50%;border:4px solid #23242b;background:#23a55a}
+    .ah-v3-status.idle{background:#f0b232}.ah-v3-status.dnd{background:#f23f42}.ah-v3-status.invisible,.ah-v3-status.offline{background:#80848e}
+    .ah-v3-name{margin-top:10px;font-size:22px;line-height:1.06;font-weight:950;letter-spacing:-.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff}
+    .ah-v3-handle{margin-top:3px;font-size:12px;color:#b5bac1;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .ah-v3-role{margin-top:7px;display:inline-flex;max-width:100%;border-radius:7px;background:rgba(255,255,255,.08);padding:4px 7px;font-size:11px;font-weight:900;color:#d8dbe2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .ah-v3-note{margin-top:10px;border-radius:10px;background:rgba(255,255,255,.055);padding:10px;color:#bfc3cc;font-size:12px;line-height:1.35}
+    .ah-v3-note b{display:block;color:#fff;font-size:12px;margin-bottom:3px}
+    .ah-v3-actions{display:flex;gap:7px;margin-top:10px}
+    .ah-v3-actions a,.ah-v3-actions button{height:36px;min-width:0;flex:1;border:0;border-radius:8px;background:#5865f2;color:#fff;font-weight:950;font-size:12px;display:flex;align-items:center;justify-content:center;text-decoration:none;cursor:pointer}
+    .ah-v3-actions button{background:#30323a}.ah-v3-actions a:hover,.ah-v3-actions button:hover{filter:brightness(1.08)}
+    .ah-v3-status-menu{display:grid;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.09);gap:6px}
+    .ah-v3-status-btn{border:0;border-radius:9px;background:transparent;color:#f4f4f5;display:flex;align-items:center;gap:9px;text-align:left;padding:8px;cursor:pointer;font-weight:900}
+    .ah-v3-status-btn:hover,.ah-v3-status-btn.active{background:rgba(255,255,255,.075)}.ah-v3-status-btn small{display:block;color:#9499a6;font-size:11px;font-weight:700;margin-top:1px}
+    .ah-v3-dot{width:10px;height:10px;border-radius:50%;background:#23a55a;flex:0 0 auto}.ah-v3-dot.idle{background:#f0b232}.ah-v3-dot.dnd{background:#f23f42}.ah-v3-dot.invisible{background:#80848e}
+    /* Same settings overlay shell and navigation as Home. */
+    .ah-settings-backdrop{position:fixed;inset:0;z-index:2147483100;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.72);backdrop-filter:blur(3px);color:#f2f3f5;font-family:Inter,system-ui,sans-serif}
+    .ah-settings-backdrop.open{display:flex;animation:ahFade .14s ease both}
+    .ah-settings-shell{width:min(1180px,calc(100vw - 64px));height:min(760px,calc(100vh - 72px));background:#1e1f24;border:1px solid #313338;border-radius:18px;box-shadow:0 30px 100px rgba(0,0,0,.65);display:grid;grid-template-columns:260px 1fr;overflow:hidden;position:relative}
+    .ah-settings-sidebar{background:#191a1f;border-right:1px solid #2d2f36;padding:18px 12px;overflow:auto}
+    .ah-settings-me{display:flex;align-items:center;gap:10px;padding:0 8px 14px;border-bottom:1px solid #2b2d33;margin-bottom:12px}
+    .ah-settings-avatar{width:42px;height:42px;border-radius:50%;background:#2b2d31 center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-weight:900;border:2px solid #111214;flex:0 0 auto}
+    .ah-settings-me strong{display:block;font-size:14px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
+    .ah-settings-me span{display:block;font-size:12px;color:#9ca3af;margin-top:2px}
+    .ah-settings-search{height:36px;width:100%;border:1px solid #3b3d45;background:#111214;border-radius:8px;color:#dbdee1;padding:0 12px;margin:0 0 12px;outline:none}
+    .ah-settings-search:focus{border-color:#5865f2}.ah-settings-group{margin:14px 0}.ah-settings-label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#7d828c;font-weight:800;padding:0 8px 7px}
+    .ah-settings-nav{width:100%;height:34px;border:0;border-radius:7px;background:transparent;color:#b5bac1;padding:0 9px;display:flex;align-items:center;gap:10px;text-align:left;font-weight:650;font-size:14px;cursor:pointer;text-decoration:none}
+    .ah-settings-nav:hover{background:#2b2d31;color:#f2f3f5}.ah-settings-nav.active{background:#3a3c43;color:#fff}.ah-settings-nav.danger{color:#ff7b7b}.ah-settings-nav.danger:hover{background:rgba(242,63,66,.12);color:#ff8f8f}
+    .ah-settings-divider{height:1px;background:#2b2d33;margin:12px 8px}
+    .ah-settings-version{width:100%;border:0;background:transparent;border-radius:7px;color:#737985;padding:10px 8px 7px;line-height:1.45;text-align:left;font:inherit;font-size:10px;cursor:pointer}.ah-settings-version:hover{background:#2b2d31;color:#b5bac1}.ah-settings-version span{display:block}.ah-settings-version-link{color:#949cf7;text-decoration:underline;text-underline-offset:2px}
+    .ah-settings-main{overflow:auto;padding:0 0 42px;background:#1e1f24}
+    .ah-settings-top{height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;background:rgba(30,31,36,.94);backdrop-filter:blur(8px);z-index:2}
+    .ah-settings-top h2{font-size:15px;margin:0;font-weight:900}.ah-settings-close{width:34px;height:34px;border-radius:50%;border:1px solid #4a4d55;background:transparent;color:#b5bac1;font-size:22px;line-height:1;cursor:pointer}.ah-settings-close:hover{background:#2b2d31;color:#fff}
+    .ah-settings-page{display:none;max-width:760px;margin:0 auto;padding:58px 28px}.ah-settings-page.active{display:block}
+    .ah-settings-page h1{font-size:25px;line-height:1.15;margin:0 0 34px;color:#fff;letter-spacing:-.03em}.ah-settings-page h2{font-size:20px;margin:26px 0 12px}
+    .ah-settings-section{padding:0 0 28px;margin:0 0 28px;border-bottom:1px solid #303238}.ah-settings-row{display:grid;grid-template-columns:220px 1fr auto;gap:16px;align-items:center;min-height:56px}.ah-settings-row+.ah-settings-row{margin-top:6px}
+    .ah-settings-row label,.ah-settings-row .label{font-size:14px;font-weight:900;color:#f2f3f5}.ah-settings-value{color:#dbdee1;font-weight:700;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ah-settings-muted{color:#9ca3af;font-size:13px;line-height:1.45}
+    .ah-settings-btn{border:0;border-radius:7px;background:#4e5058;color:#fff;font-weight:850;padding:10px 14px;cursor:pointer;text-decoration:none;display:inline-flex;justify-content:center}.ah-settings-btn:hover{background:#5b5d66}.ah-settings-btn.primary{background:#5865f2}.ah-settings-btn.primary:hover{background:#4752c4}
+    .ah-settings-input,.ah-settings-textarea{width:100%;background:#111214;border:1px solid #3b3d45;border-radius:8px;color:#f2f3f5;padding:10px 12px;outline:none;font:inherit}.ah-settings-input:focus,.ah-settings-textarea:focus{border-color:#5865f2}.ah-settings-textarea{min-height:86px;resize:vertical}
+    .ah-settings-form{display:grid;gap:14px}.ah-settings-formline{display:grid;grid-template-columns:160px 1fr;gap:16px;align-items:center}.ah-settings-formline label{font-weight:800}
+    .ah-settings-action-list{display:grid;gap:10px}.ah-settings-action{display:flex;align-items:center;justify-content:space-between;gap:18px;background:#2b2d31;border:1px solid #353741;border-radius:12px;padding:14px 16px}.ah-settings-action b{display:block}.ah-settings-action span{display:block;color:#9ca3af;font-size:12px;margin-top:2px}
+    .ah-settings-placeholder{height:260px;border:1px dashed #3f424b;border-radius:14px;display:grid;place-items:center;color:#8b919d;text-align:center;padding:20px;background:#202126}
+    .ah-settings-save{display:flex;justify-content:flex-end;gap:10px;margin-top:8px}.ah-settings-toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);opacity:0;z-index:2147483300;background:#111214;border:1px solid #3b3d45;border-radius:12px;color:#fff;padding:12px 16px;font-weight:800;pointer-events:none}.ah-settings-toast.show{animation:ahToast 1.8s ease both}
+    .ah-release-backdrop{position:fixed;inset:0;z-index:2147483200;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.72);padding:24px}.ah-release-backdrop.open{display:flex}.ah-release-card{width:min(620px,100%);max-height:min(720px,calc(100vh - 48px));overflow:auto;background:#23242a;border:1px solid #41434b;border-radius:16px;box-shadow:0 30px 100px rgba(0,0,0,.7)}.ah-release-head{position:sticky;top:0;background:#23242a;padding:18px 20px;border-bottom:1px solid #373941;display:flex;align-items:center;justify-content:space-between}.ah-release-head h2{margin:0;font-size:20px}.ah-release-close{width:34px;height:34px;border:0;border-radius:9px;background:#34363d;color:#fff;font-size:22px;cursor:pointer}.ah-release-list{padding:18px;display:grid;gap:12px}.ah-release-item{background:#2b2d33;border:1px solid #3a3c44;border-radius:12px;padding:14px}.ah-release-item h3{margin:0 0 5px}.ah-release-item time{color:#9499a6;font-size:12px}.ah-release-item ul{margin:10px 0 0;padding-left:20px;color:#c7cad0}
     .content{min-width:0;overflow:auto;background:var(--main)}
     .top{height:50px;position:sticky;top:0;z-index:10;background:#15161a;border-bottom:1px solid #2b2d31;display:flex;align-items:center;padding:0 18px;gap:26px}
     .top-brand{font-size:18px;font-weight:800;display:flex;align-items:center;gap:9px}
@@ -89,10 +141,10 @@
     .preview-tag{display:inline-flex;align-items:center;height:21px;padding:0 6px;border-radius:4px;background:#3b3d44;color:#fff;font-size:10px;font-weight:800}.preview-stats{margin-top:8px;display:flex;gap:14px;color:var(--muted);font-size:11px}.preview-stats span{display:flex;align-items:center}.preview-created{margin-top:11px;color:var(--muted);font-size:11px}.preview-created b{display:block;color:#dbdee1;margin-bottom:2px}
     .preview-divider{height:1px;background:#3a3c43;margin:13px 0}.preview-description{margin:0;color:#dbdee1;font-size:12px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}.preview-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}.preview-chip{border:1px solid #42444c;border-radius:12px;padding:3px 7px;color:#c9cdd2;font-size:10px;background:#1e1f22}.preview-action{width:100%;height:38px;margin-top:14px;border:0;border-radius:5px;background:var(--green);color:#fff;font-weight:750;cursor:pointer}.preview-action:hover{background:#1a8f4c}
     .toast{position:fixed;left:50%;bottom:28px;z-index:200;transform:translate(-50%,20px);background:#111214;border:1px solid #3a3c45;border-radius:8px;padding:11px 16px;opacity:0;pointer-events:none;transition:.2s}.toast.show{opacity:1;transform:translate(-50%,0)}
-    @keyframes fade{from{opacity:0}to{opacity:1}}@keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}@keyframes menu-pop{from{opacity:0;transform:translateY(5px) scale(.98)}to{opacity:1;transform:none}}@keyframes preview-pop{from{opacity:0;transform:translateY(6px) scale(.97)}to{opacity:1;transform:none}}
-    @media(prefers-reduced-motion:reduce){.card,.quick-view,.toast,.account-status,.account-username{transition:none!important}.status-menu.open,.server-preview.open,.modal,.backdrop.open{animation:none!important}}
+    @keyframes fade{from{opacity:0}to{opacity:1}}@keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}@keyframes menu-pop{from{opacity:0;transform:translateY(5px) scale(.98)}to{opacity:1;transform:none}}@keyframes preview-pop{from{opacity:0;transform:translateY(6px) scale(.97)}to{opacity:1;transform:none}}@keyframes ahv3pop{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}@keyframes ahFade{from{opacity:0}to{opacity:1}}@keyframes ahToast{0%{opacity:0;transform:translateX(-50%) translateY(20px)}12%,82%{opacity:1;transform:translateX(-50%) translateY(0)}100%{opacity:0;transform:translateX(-50%) translateY(20px)}}
+    @media(prefers-reduced-motion:reduce){.card,.quick-view,.toast,.user-info>span,.account-username{transition:none!important}.server-preview.open,.modal,.backdrop.open{animation:none!important}}
     @media(max-width:1180px){.grid{grid-template-columns:repeat(3,minmax(210px,1fr))}.categories .category:nth-last-child(-n+2){display:none}}
-    @media(max-width:870px){.app{grid-template-columns:72px 1fr}.side{display:none}.grid{grid-template-columns:repeat(2,minmax(200px,1fr))}.hero h1{font-size:34px}}
+    @media(max-width:870px){.app{grid-template-columns:72px 1fr}.side{display:none}.grid{grid-template-columns:repeat(2,minmax(200px,1fr))}.hero h1{font-size:34px}.ah-settings-shell{width:100vw;height:100vh;border-radius:0;border:0;grid-template-columns:1fr}.ah-settings-sidebar{display:none}.ah-settings-main{height:100vh}.ah-settings-page{padding:32px 18px 80px}.ah-settings-row,.ah-settings-formline{grid-template-columns:1fr}.ah-settings-value{text-align:left}}
     @media(max-width:590px){.app{grid-template-columns:60px 1fr}.server-rail{padding-inline:6px}.server-dot{width:44px;height:44px;flex-basis:44px}.grid{grid-template-columns:1fr}.categories{display:none}.search{width:170px}.hero{height:240px}.hero-inner,.catalog{width:calc(100% - 28px)}.hero h1{font-size:29px}}
   </style>
 </head>
@@ -122,24 +174,18 @@
         <a class="side-link" href="#"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 3h10l1 3h3v3h-2.2A7 7 0 0 1 13.5 15v2H17v2H7v-2h3.5v-2A7 7 0 0 1 5.2 9H3V6h3l1-3Z"/></svg>Завдання</a>
       </nav>
       {% set my_status = account.account_status or 'online' %}
-      <div class="account-panel mini-profile-trigger" role="button" tabindex="0" aria-haspopup="menu" aria-expanded="false" data-mini-username="{{ account.username|e }}" data-mini-display="{{ account.display_name or account.username }}" data-mini-avatar="{{ account.avatar_url or '' }}" data-mini-banner="{{ account.banner_url or '' }}" data-mini-status="{{ my_status }}" data-mini-role="{{ account.role_label or 'online' }}" data-mini-c1="{{ account.role_color_start or '#f5576c' }}" data-mini-c2="{{ account.role_color_end or '#7367f0' }}" data-mini-profile="/community/profile/{{ account.username }}" data-mini-bio="{{ account.bio or '' }}" onclick="toggleStatusMenu(event)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleStatusMenu(event)}">
-        <span class="account-avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}');"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}</span>
-        <span class="account-meta">
-          <span class="account-name">{{ account.display_name or account.username }}</span>
-          <span id="my-status-label" class="account-status">{{ {'online':'В мережі','idle':'Неактивний','dnd':'Не турбувати','invisible':'Невидимий'}.get(my_status, 'В мережі') }}</span>
+      <div class="user-panel mini-profile-trigger" role="button" tabindex="0" aria-haspopup="dialog" aria-expanded="false" data-mini-username="{{ account.username|e }}" data-mini-display="{{ account.display_name or account.username }}" data-mini-avatar="{{ account.avatar_url or '' }}" data-mini-banner="{{ account.banner_url or '' }}" data-mini-status="{{ my_status }}" data-mini-role="{{ account.role_label or 'online' }}" data-mini-c1="{{ account.role_color_start or '#5865f2' }}" data-mini-c2="{{ account.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ account.username }}" data-mini-bio="{{ account.bio or '' }}">
+        <span class="avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}');"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}<i id="my-avatar-status" class="presence status-{{ my_status }}"></i></span>
+        <span class="user-info">
+          <b>{{ account.display_name or account.username }}</b>
+          <span><i id="my-status-dot" class="status-dot status-{{ my_status }}"></i><span id="my-status-label">{{ {'online':'В мережі','idle':'Неактивний','dnd':'Не турбувати','invisible':'Невидимий'}.get(my_status, 'В мережі') }}</span></span>
           <small class="account-username">@{{ account.username }}</small>
         </span>
-        <span class="account-actions">
+        <span class="user-actions">
           <button class="voice-control" data-audio-kind="mic" type="button" onclick="event.stopPropagation();toggleAudioControl(this,'mic',event)" title="Mute" aria-label="Вимкнути мікрофон"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button>
           <button class="voice-control" data-audio-kind="headphones" type="button" onclick="event.stopPropagation();toggleAudioControl(this,'headphones',event)" title="Deafen" aria-label="Вимкнути звук"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg></button>
           <button type="button" onclick="event.stopPropagation();openUserSettings()" title="Settings" aria-label="Відкрити налаштування"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.4 1.08V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.08-.4H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6A1.65 1.65 0 0 0 10.4 3V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 16 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.15.32.36.6.6 1 .26.25.64.4 1.08.4H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51.6z"/></svg></button>
         </span>
-        <div id="status-menu" class="status-menu" role="menu" aria-label="Статус">
-          <button type="button" role="menuitem" onclick="setPresenceStatus('online',event)"><i class="status-choice-dot status-online"></i><span>У мережі</span></button>
-          <button type="button" role="menuitem" onclick="setPresenceStatus('idle',event)"><i class="status-choice-dot status-idle"></i><span>Неактивний</span></button>
-          <button type="button" role="menuitem" onclick="setPresenceStatus('dnd',event)"><i class="status-choice-dot status-dnd"></i><span>Не турбувати<small>Сповіщення буде вимкнено</small></span></button>
-          <button type="button" role="menuitem" onclick="setPresenceStatus('invisible',event)"><i class="status-choice-dot status-invisible"></i><span>Невидимий<small>Ви відображатиметесь офлайн</small></span></button>
-        </div>
       </div>
     </aside>
 
@@ -191,6 +237,130 @@
     </main>
   </div>
 
+  <div id="ah-v3-mini" class="ah-v3-mini" aria-hidden="true">
+    <div id="ah-v3-banner" class="ah-v3-banner"></div>
+    <div class="ah-v3-body">
+      <button id="ah-v3-avatar" class="ah-v3-avatar" type="button" aria-label="Відкрити повний профіль">
+        <span id="ah-v3-avatar-text"></span>
+        <span id="ah-v3-status" class="ah-v3-status"></span>
+      </button>
+      <div id="ah-v3-name" class="ah-v3-name">{{ account.display_name or account.username }}</div>
+      <div id="ah-v3-handle" class="ah-v3-handle">@{{ account.username }}</div>
+      <div id="ah-v3-role" class="ah-v3-role">{{ account.role_label or 'online' }}</div>
+      <div class="ah-v3-note">
+        <b>Міні-профіль</b>
+        <span id="ah-v3-note-text">{{ account.bio or 'Натисни на аватарку, щоб відкрити повну картку профілю.' }}</span>
+      </div>
+      <div class="ah-v3-actions">
+        <a id="ah-v3-message" href="/community/profile/{{ account.username }}">Повний профіль</a>
+        <button id="ah-v3-open-full" type="button">Редагувати профіль</button>
+      </div>
+      <div class="ah-v3-status-menu" aria-label="Статус присутності">
+        <button class="ah-v3-status-btn" type="button" data-presence="online"><span class="ah-v3-dot"></span><span>В мережі<small>Показувати як онлайн</small></span></button>
+        <button class="ah-v3-status-btn" type="button" data-presence="idle"><span class="ah-v3-dot idle"></span><span>Неактивний<small>Жовтий статус</small></span></button>
+        <button class="ah-v3-status-btn" type="button" data-presence="dnd"><span class="ah-v3-dot dnd"></span><span>Не турбувати<small>Без зайвих сповіщень</small></span></button>
+        <button class="ah-v3-status-btn" type="button" data-presence="invisible"><span class="ah-v3-dot invisible"></span><span>Невидимий<small>Показувати як офлайн</small></span></button>
+      </div>
+    </div>
+  </div>
+
+  <div id="ah-user-settings" class="ah-settings-backdrop" aria-hidden="true" onclick="if(event.target===this)closeUserSettings()">
+    <section class="ah-settings-shell" role="dialog" aria-modal="true" aria-labelledby="ah-settings-heading">
+      <aside class="ah-settings-sidebar">
+        <div class="ah-settings-me">
+          <span class="ah-settings-avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}')"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}</span>
+          <span><strong>{{ account.display_name or account.username }}</strong><span>@{{ account.username }}</span></span>
+        </div>
+        <input class="ah-settings-search" type="search" placeholder="Пошук" oninput="ahSettingsFilter(this.value)" aria-label="Пошук у налаштуваннях">
+        <div class="ah-settings-group">
+          <button class="ah-settings-nav active" type="button" data-settings-tab="account" onclick="showSettingsTab('account')">Обліковий запис</button>
+          <button class="ah-settings-nav" type="button" data-settings-tab="profile" onclick="showSettingsTab('profile')">Профіль</button>
+          <button class="ah-settings-nav" type="button" data-settings-tab="security" onclick="showSettingsTab('security')">Пароль і безпека</button>
+          <button class="ah-settings-nav" type="button" data-settings-tab="privacy" onclick="showSettingsTab('privacy')">Дані та приватність</button>
+        </div>
+        <div class="ah-settings-group">
+          <div class="ah-settings-label">Взаємодія</div>
+          <button class="ah-settings-nav" type="button" data-settings-tab="voice" onclick="showSettingsTab('voice')">Голос і відео</button>
+          <button class="ah-settings-nav" type="button" data-settings-tab="appearance" onclick="showSettingsTab('appearance')">Зовнішній вигляд</button>
+          <button class="ah-settings-nav" type="button" data-settings-tab="notifications" onclick="showSettingsTab('notifications')">Сповіщення</button>
+          <button class="ah-settings-nav" type="button" data-settings-tab="language" onclick="showSettingsTab('language')">Мова й час</button>
+        </div>
+        <div class="ah-settings-group">
+          <div class="ah-settings-label">AlexiHub</div>
+          <button class="ah-settings-nav" type="button" data-settings-tab="servers" onclick="showSettingsTab('servers')">Сервери</button>
+          <button class="ah-settings-nav" type="button" data-settings-tab="boosts" onclick="showSettingsTab('boosts')">Буст сервера</button>
+          <button class="ah-settings-nav" type="button" data-settings-tab="gifts" onclick="showSettingsTab('gifts')">Подарунки</button>
+          <button class="ah-settings-nav" type="button" data-settings-tab="developer" onclick="showSettingsTab('developer')">Розробник</button>
+        </div>
+        <div class="ah-settings-divider"></div>
+        <a class="ah-settings-nav danger" href="/community/logout">Вийти</a>
+        <button class="ah-settings-version" type="button" onclick="openReleaseNotes()" aria-label="Відкрити історію оновлень">
+          <span>Build date: {{ app_release.build_date_label or '—' }}</span>
+          <span class="ah-settings-version-link">Версія {{ app_release.version }} {{ app_release.architecture }}</span>
+          <span>{{ app_release.channel }}</span>
+        </button>
+      </aside>
+      <main class="ah-settings-main">
+        <div class="ah-settings-top">
+          <h2 id="ah-settings-heading">Обліковий запис</h2>
+          <button class="ah-settings-close" type="button" onclick="closeUserSettings()" aria-label="Закрити налаштування">×</button>
+        </div>
+        <section class="ah-settings-page active" data-settings-page="account">
+          <h1>Інформація про обліковий запис</h1>
+          <div class="ah-settings-section">
+            <div class="ah-settings-row"><div class="label">Імʼя користувача</div><div class="ah-settings-value">{{ account.username }}</div><button class="ah-settings-btn" type="button" onclick="showSettingsTab('profile')">Змінити</button></div>
+            <div class="ah-settings-row"><div class="label">Електронна пошта</div><div class="ah-settings-value">{{ account.email or 'Не вказана' }}</div><button class="ah-settings-btn" type="button" onclick="settingsToast('Зміна електронної пошти поки недоступна')">Змінити</button></div>
+            <div class="ah-settings-row"><div class="label">Публічний профіль</div><div class="ah-settings-value">/community/profile/{{ account.username }}</div><a class="ah-settings-btn" href="/community/profile/{{ account.username }}">Відкрити</a></div>
+          </div>
+          <h2>Пароль і безпека</h2>
+          <div class="ah-settings-action-list">
+            <div class="ah-settings-action"><div><b>Пароль</b><span>Керуйте захистом свого облікового запису.</span></div><button class="ah-settings-btn" type="button" onclick="showSettingsTab('security')">Відкрити</button></div>
+            <div class="ah-settings-action"><div><b>Активні сесії</b><span>Перегляньте пристрої, де виконано вхід.</span></div><button class="ah-settings-btn" type="button" onclick="showSettingsTab('security')">Відкрити</button></div>
+          </div>
+        </section>
+        <section class="ah-settings-page" data-settings-page="profile">
+          <h1>Профіль</h1>
+          <form class="ah-settings-form" method="post" action="/community/settings" enctype="multipart/form-data">
+            <input type="hidden" name="next_url" value="{{ request.url.path }}">
+            <div class="ah-settings-formline"><label for="travel-display-name">Відображуване імʼя</label><input id="travel-display-name" class="ah-settings-input" name="display_name" maxlength="32" value="{{ account.display_name or account.username }}"></div>
+            <div class="ah-settings-formline"><label for="travel-avatar">Аватар</label><input id="travel-avatar" class="ah-settings-input" type="file" name="avatar_file" accept="image/png,image/jpeg,image/webp,image/gif"></div>
+            <div class="ah-settings-formline"><label for="travel-banner">Банер</label><input id="travel-banner" class="ah-settings-input" type="file" name="banner_file" accept="image/png,image/jpeg,image/webp,image/gif"></div>
+            <div class="ah-settings-formline"><label for="travel-bio">Про себе</label><textarea id="travel-bio" class="ah-settings-textarea" name="bio" maxlength="280">{{ account.bio or '' }}</textarea></div>
+            <div class="ah-settings-save"><button class="ah-settings-btn" type="reset">Скинути</button><button class="ah-settings-btn primary" type="submit">Зберегти</button></div>
+          </form>
+        </section>
+        <section class="ah-settings-page" data-settings-page="security"><h1>Пароль і безпека</h1><div class="ah-settings-placeholder">Зміна пароля, двофакторний захист і активні сесії відкриваються тут.</div></section>
+        <section class="ah-settings-page" data-settings-page="privacy"><h1>Дані та приватність</h1><div class="ah-settings-placeholder">Налаштування приватності, заблоковані користувачі й особисті повідомлення.</div></section>
+        <section class="ah-settings-page" data-settings-page="voice"><h1>Голос і відео</h1><div class="ah-settings-placeholder">Налаштування мікрофона, навушників і камери.</div></section>
+        <section class="ah-settings-page" data-settings-page="appearance"><h1>Зовнішній вигляд</h1><div class="ah-settings-placeholder">Тема, щільність інтерфейсу та анімації.</div></section>
+        <section class="ah-settings-page" data-settings-page="notifications"><h1>Сповіщення</h1><div class="ah-settings-placeholder">Звуки, desktop-сповіщення й приглушення серверів.</div></section>
+        <section class="ah-settings-page" data-settings-page="language"><h1>Мова й час</h1><div class="ah-settings-placeholder">Мова інтерфейсу та формат часу.</div></section>
+        <section class="ah-settings-page" data-settings-page="servers"><h1>Сервери</h1><div class="ah-settings-placeholder"><a class="ah-settings-btn" href="/community">Перейти до серверів</a></div></section>
+        <section class="ah-settings-page" data-settings-page="boosts"><h1>Буст сервера</h1><div class="ah-settings-placeholder"><a class="ah-settings-btn primary" href="/community/settings?tab=boosts">Керувати бустами</a></div></section>
+        <section class="ah-settings-page" data-settings-page="gifts"><h1>Подарунки</h1><div class="ah-settings-placeholder">Ваші отримані подарунки зʼявляться тут.</div></section>
+        <section class="ah-settings-page" data-settings-page="developer"><h1>Розробник</h1><div class="ah-settings-placeholder">API та технічна інформація облікового запису.</div></section>
+      </main>
+    </section>
+  </div>
+
+  <div id="ah-release-notes" class="ah-release-backdrop" aria-hidden="true" onclick="if(event.target===this)closeReleaseNotes()">
+    <section class="ah-release-card" role="dialog" aria-modal="true" aria-labelledby="ah-release-title">
+      <div class="ah-release-head"><h2 id="ah-release-title">Що нового в AlexiHub</h2><button class="ah-release-close" type="button" onclick="closeReleaseNotes()" aria-label="Закрити">×</button></div>
+      <div class="ah-release-list">
+        {% for release in app_release.releases %}
+          <article class="ah-release-item">
+            <h3>Версія {{ release.version }}</h3>
+            <time>{{ release.date_label or release.date or '' }}</time>
+            {% if release.changes %}<ul>{% for change in release.changes %}<li>{{ change }}</li>{% endfor %}</ul>{% endif %}
+          </article>
+        {% else %}
+          <article class="ah-release-item"><h3>Версія {{ app_release.version }}</h3><p>Історію змін поки не додано.</p></article>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+  <div id="ah-settings-toast" class="ah-settings-toast" role="status" aria-live="polite"></div>
+
   <section class="server-preview" id="server-preview" role="dialog" aria-label="Швидкий перегляд сервера" aria-hidden="true">
     <div class="preview-banner" id="preview-banner"><img id="preview-banner-img" alt=""></div>
     <div class="preview-icon" id="preview-icon"></div>
@@ -238,8 +408,10 @@
       const rulesList = document.getElementById('modal-rules-list');
       const toast = document.getElementById('toast');
       const content = document.querySelector('.content');
-      const statusMenu = document.getElementById('status-menu');
-      const accountPanel = document.querySelector('.account-panel');
+      const accountPanel = document.querySelector('.user-panel');
+      const miniProfile = document.getElementById('ah-v3-mini');
+      const userSettings = document.getElementById('ah-user-settings');
+      const releaseNotes = document.getElementById('ah-release-notes');
       const preview = document.getElementById('server-preview');
       const previewBanner = document.getElementById('preview-banner');
       const previewBannerImg = document.getElementById('preview-banner-img');
@@ -263,22 +435,73 @@
         dnd: 'Не турбувати',
         invisible: 'Невидимий'
       };
+      const setBackgroundImage = (element, url) => {
+        if (!element) return;
+        element.style.backgroundImage = url ? `url(${JSON.stringify(String(url))})` : '';
+      };
+      const closeMiniProfile = () => {
+        miniProfile.classList.remove('open');
+        miniProfile.setAttribute('aria-hidden', 'true');
+        accountPanel.setAttribute('aria-expanded', 'false');
+      };
+      const openMiniProfile = (event) => {
+        if (event) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        const data = accountPanel.dataset;
+        const status = Object.prototype.hasOwnProperty.call(statusLabels, data.miniStatus) ? data.miniStatus : 'online';
+        const avatar = document.getElementById('ah-v3-avatar');
+        const avatarText = document.getElementById('ah-v3-avatar-text');
+        const statusDot = document.getElementById('ah-v3-status');
+        const bannerElement = document.getElementById('ah-v3-banner');
+        setBackgroundImage(avatar, data.miniAvatar);
+        setBackgroundImage(bannerElement, data.miniBanner);
+        bannerElement.style.setProperty('--ah-c1', data.miniC1 || '#5865f2');
+        bannerElement.style.setProperty('--ah-c2', data.miniC2 || '#9b5cf6');
+        avatarText.textContent = data.miniAvatar ? '' : (data.miniDisplay || data.miniUsername || 'A').slice(0, 1).toUpperCase();
+        document.getElementById('ah-v3-name').textContent = data.miniDisplay || data.miniUsername || 'User';
+        document.getElementById('ah-v3-handle').textContent = `@${data.miniUsername || 'user'}`;
+        document.getElementById('ah-v3-role').textContent = data.miniRole || 'online';
+        document.getElementById('ah-v3-note-text').textContent = data.miniBio || 'Натисни на аватарку, щоб відкрити повну картку профілю.';
+        document.getElementById('ah-v3-message').href = data.miniProfile || '#';
+        statusDot.className = `ah-v3-status ${status}`;
+        miniProfile.querySelectorAll('[data-presence]').forEach((button) => {
+          const selected = button.dataset.presence === status;
+          button.classList.toggle('active', selected);
+          button.setAttribute('aria-pressed', String(selected));
+        });
+        miniProfile.classList.add('open');
+        miniProfile.setAttribute('aria-hidden', 'false');
+        accountPanel.setAttribute('aria-expanded', 'true');
+        const panelRect = accountPanel.getBoundingClientRect();
+        const width = miniProfile.offsetWidth;
+        const height = miniProfile.offsetHeight;
+        const margin = 8;
+        const left = Math.max(margin, Math.min(panelRect.left + margin, window.innerWidth - width - margin));
+        const top = Math.max(margin, Math.min(panelRect.top - height - margin, window.innerHeight - height - margin));
+        miniProfile.style.left = `${Math.round(left)}px`;
+        miniProfile.style.top = `${Math.round(top)}px`;
+      };
       const applyLocalStatus = (status) => {
         const safeStatus = Object.prototype.hasOwnProperty.call(statusLabels, status) ? status : 'online';
         const label = document.getElementById('my-status-label');
         if (label) label.textContent = statusLabels[safeStatus];
         accountPanel.dataset.miniStatus = safeStatus;
-        statusMenu.classList.remove('open');
-        accountPanel.setAttribute('aria-expanded', 'false');
-      };
-      window.toggleStatusMenu = (event) => {
-        event.stopPropagation();
-        const willOpen = !statusMenu.classList.contains('open');
-        statusMenu.classList.toggle('open', willOpen);
-        accountPanel.setAttribute('aria-expanded', String(willOpen));
+        const panelStatus = document.getElementById('my-avatar-status');
+        if (panelStatus) panelStatus.className = `presence status-${safeStatus}`;
+        const panelStatusDot = document.getElementById('my-status-dot');
+        if (panelStatusDot) panelStatusDot.className = `status-dot status-${safeStatus}`;
+        const miniStatus = document.getElementById('ah-v3-status');
+        if (miniStatus) miniStatus.className = `ah-v3-status ${safeStatus}`;
+        miniProfile.querySelectorAll('[data-presence]').forEach((button) => {
+          const selected = button.dataset.presence === safeStatus;
+          button.classList.toggle('active', selected);
+          button.setAttribute('aria-pressed', String(selected));
+        });
       };
       window.setPresenceStatus = (status, event) => {
-        event.stopPropagation();
+        if (event) event.stopPropagation();
         applyLocalStatus(status);
         fetch('/community/presence/status', {
           method: 'POST',
@@ -298,8 +521,54 @@
           ? (isOff ? 'Мікрофон вимкнено' : 'Мікрофон увімкнено')
           : (isOff ? 'Звук вимкнено' : 'Звук увімкнено'));
       };
-      window.openUserSettings = () => {
-        window.location.href = '/community/settings';
+      window.showSettingsTab = (tab = 'account') => {
+        document.querySelectorAll('[data-settings-tab]').forEach((button) => {
+          button.classList.toggle('active', button.dataset.settingsTab === tab);
+        });
+        document.querySelectorAll('[data-settings-page]').forEach((page) => {
+          page.classList.toggle('active', page.dataset.settingsPage === tab);
+        });
+        const activeTab = document.querySelector(`[data-settings-tab="${tab}"]`);
+        const heading = document.getElementById('ah-settings-heading');
+        if (activeTab && heading) heading.textContent = activeTab.textContent.trim();
+        const settingsMain = document.querySelector('.ah-settings-main');
+        if (settingsMain) settingsMain.scrollTop = 0;
+      };
+      window.ahSettingsFilter = (value) => {
+        const query = String(value || '').trim().toLowerCase();
+        document.querySelectorAll('[data-settings-tab]').forEach((button) => {
+          button.style.display = !query || button.textContent.toLowerCase().includes(query) ? 'flex' : 'none';
+        });
+      };
+      window.openUserSettings = (tab = 'account') => {
+        closeMiniProfile();
+        userSettings.classList.add('open');
+        userSettings.setAttribute('aria-hidden', 'false');
+        window.showSettingsTab(tab);
+        const closeButton = userSettings.querySelector('.ah-settings-close');
+        if (closeButton) closeButton.focus();
+      };
+      window.closeUserSettings = () => {
+        window.closeReleaseNotes();
+        userSettings.classList.remove('open');
+        userSettings.setAttribute('aria-hidden', 'true');
+      };
+      window.openReleaseNotes = () => {
+        releaseNotes.classList.add('open');
+        releaseNotes.setAttribute('aria-hidden', 'false');
+        const closeButton = releaseNotes.querySelector('.ah-release-close');
+        if (closeButton) closeButton.focus();
+      };
+      window.closeReleaseNotes = () => {
+        releaseNotes.classList.remove('open');
+        releaseNotes.setAttribute('aria-hidden', 'true');
+      };
+      window.settingsToast = (message) => {
+        const settingsToast = document.getElementById('ah-settings-toast');
+        settingsToast.textContent = message || 'Готово';
+        settingsToast.classList.remove('show');
+        void settingsToast.offsetWidth;
+        settingsToast.classList.add('show');
       };
       const closeQuickPreview = () => {
         preview.classList.remove('open');
@@ -469,20 +738,53 @@
       modal.querySelector('[data-close]').addEventListener('click', close);
       modal.addEventListener('click', (event) => { if (event.target === modal) close(); });
       joinButton.addEventListener('click', join);
-      document.addEventListener('click', () => {
+      accountPanel.addEventListener('click', (event) => {
+        if (event.target.closest('.user-actions')) return;
+        if (miniProfile.classList.contains('open')) closeMiniProfile();
+        else openMiniProfile(event);
+      });
+      accountPanel.addEventListener('keydown', (event) => {
+        if (event.target !== accountPanel || (event.key !== 'Enter' && event.key !== ' ')) return;
+        event.preventDefault();
+        if (miniProfile.classList.contains('open')) closeMiniProfile();
+        else openMiniProfile(event);
+      });
+      miniProfile.addEventListener('click', (event) => event.stopPropagation());
+      document.getElementById('ah-v3-avatar').addEventListener('click', () => {
+        location.href = accountPanel.dataset.miniProfile;
+      });
+      document.getElementById('ah-v3-open-full').addEventListener('click', () => {
+        window.openUserSettings('profile');
+      });
+      miniProfile.querySelectorAll('[data-presence]').forEach((button) => {
+        button.addEventListener('click', (event) => window.setPresenceStatus(button.dataset.presence, event));
+      });
+      document.addEventListener('click', (event) => {
         closeQuickPreview();
-        statusMenu.classList.remove('open');
-        accountPanel.setAttribute('aria-expanded', 'false');
+        if (!miniProfile.contains(event.target) && !accountPanel.contains(event.target)) closeMiniProfile();
       });
       document.addEventListener('keydown', (event) => {
         if (event.key !== 'Escape') return;
+        if (releaseNotes.classList.contains('open')) {
+          window.closeReleaseNotes();
+          return;
+        }
+        if (userSettings.classList.contains('open')) {
+          window.closeUserSettings();
+          return;
+        }
         closeQuickPreview();
-        statusMenu.classList.remove('open');
-        accountPanel.setAttribute('aria-expanded', 'false');
+        closeMiniProfile();
         close();
       });
-      content.addEventListener('scroll', closeQuickPreview, {passive:true});
-      window.addEventListener('resize', closeQuickPreview);
+      content.addEventListener('scroll', () => {
+        closeQuickPreview();
+        closeMiniProfile();
+      }, {passive:true});
+      window.addEventListener('resize', () => {
+        closeQuickPreview();
+        closeMiniProfile();
+      });
       document.querySelectorAll('.voice-control').forEach((button) => {
         const kind = button.dataset.audioKind;
         let isOff = false;
