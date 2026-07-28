@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.5.0",
+      "date": "2026-07-28",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано панель акаунта та швидкий перегляд серверів."
+      ],
+      "source_sha": "3ad1638823a5b5d845369885aab666d89d818d4e"
+    },
+    {
       "version": "1.4.2",
       "date": "2026-07-28",
       "title": "Оновлення AlexiHub",
