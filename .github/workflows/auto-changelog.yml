@@ -1,0 +1,92 @@
+name: Auto changelog
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - ".github/workflows/auto-changelog.yml"
+      - "community/releases.json"
+      - "RELEASES.md"
+      - "scripts/update_changelog.py"
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: "Тип версії (auto читає feat/fix/breaking)"
+        required: true
+        default: auto
+        type: choice
+        options:
+          - auto
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+
+concurrency:
+  group: auto-changelog-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  update-changelog:
+    if: >-
+      github.actor != 'github-actions[bot]' &&
+      !contains(github.event.head_commit.message || '', '[skip changelog]')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Detect changes and create release
+        id: changelog
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PUSH_BASE: ${{ github.event.before }}
+          RELEASE_TYPE: ${{ github.event.inputs.release_type || 'auto' }}
+        run: |
+          if [ "$EVENT_NAME" = "push" ]; then
+            BASE="$PUSH_BASE"
+          else
+            BASE="$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null || git rev-parse HEAD^)"
+          fi
+
+          python scripts/update_changelog.py \
+            --base "$BASE" \
+            --head "$GITHUB_SHA" \
+            --force-type "$RELEASE_TYPE"
+
+      - name: Commit changelog and version
+        if: steps.changelog.outputs.changed == 'true'
+        env:
+          VERSION: ${{ steps.changelog.outputs.version }}
+        run: |
+          git config user.name "alexihub-release-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add community/releases.json
+          git commit -m "chore(release): publish v${VERSION} [skip changelog]"
+          git tag -a "v${VERSION}" -m "AlexiHub ${VERSION}"
+          git push --atomic origin "HEAD:${GITHUB_REF_NAME}" "refs/tags/v${VERSION}"
+
+      - name: Summary
+        if: steps.changelog.outputs.changed == 'true'
+        env:
+          VERSION: ${{ steps.changelog.outputs.version }}
+          CHANGE_COUNT: ${{ steps.changelog.outputs.change_count }}
+        run: |
+          {
+            echo "## AlexiHub ${VERSION}"
+            echo ""
+            echo "Автоматично додано змін: ${CHANGE_COUNT}"
+            echo ""
+            echo "Оновлено community/releases.json і створено тег v${VERSION}."
+          } >> "$GITHUB_STEP_SUMMARY"
