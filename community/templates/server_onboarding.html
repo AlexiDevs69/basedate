@@ -7,16 +7,28 @@
   <style>
     :root{--brand:#5865f2;--green:#23a55a;--bg:#111214;--panel:#24252a;--panel2:#2b2d31;--border:#3b3d45;--text:#f2f3f5;--muted:#b5bac1}
     *{box-sizing:border-box}html,body{height:100%;margin:0}button{font:inherit}
-    body{overflow:hidden;background:#0d0e10;color:var(--text);font:14px/1.4 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
-    .scene{height:100vh;position:relative;display:grid;grid-template-columns:72px 1fr;background:#15161a}
+    body{overflow:hidden;background:#08090b;color:var(--text);font:14px/1.4 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+    .scene{height:100vh;position:relative;display:grid;grid-template-columns:72px 1fr;background:#15161a;opacity:0;transition:opacity .24s ease}
+    .scene.is-ready{opacity:1}
     .background{position:absolute;inset:0 0 0 72px;background:{{ banner_color }};overflow:hidden}
-    .background img{width:100%;height:100%;object-fit:cover;filter:saturate(.9)}
-    .background:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,9,11,.48),rgba(8,9,11,.82)),radial-gradient(circle at 50% 20%,transparent,rgba(0,0,0,.55))}
-    .rail{z-index:3;background:#090a0c;padding:12px 10px;display:flex;flex-direction:column;align-items:center;gap:9px;overflow:auto}
+    .background img{width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.085);filter:blur(10px) saturate(.72) brightness(.72);transition:opacity .65s ease,transform 1.35s cubic-bezier(.16,1,.3,1),filter 1s ease}
+    .scene.banner-ready .background img{opacity:1;transform:scale(1.025);filter:blur(0) saturate(.9) brightness(.92)}
+    .background:after{content:"";position:absolute;inset:0;opacity:0;background:linear-gradient(180deg,rgba(8,9,11,.42),rgba(8,9,11,.84)),radial-gradient(circle at 50% 18%,rgba(25,27,34,.04),rgba(0,0,0,.58));transition:opacity .7s ease}
+    .scene.is-ready .background:after{opacity:1}
+    .rail{z-index:3;background:#090a0c;padding:12px 10px;display:flex;flex-direction:column;align-items:center;gap:9px;overflow:auto;opacity:0;transform:translateX(-12px);transition:opacity .38s ease .08s,transform .48s cubic-bezier(.16,1,.3,1) .08s}
+    .scene.is-ready .rail{opacity:1;transform:translateX(0)}
     .server-dot{width:48px;height:48px;flex:0 0 auto;border-radius:18px;background:#24252b;color:#fff;display:grid;place-items:center;overflow:hidden;font-weight:800;text-decoration:none;transition:.16s}
     .server-dot:hover,.server-dot.active{border-radius:14px;background:#5865f2}.server-dot img{width:100%;height:100%;object-fit:cover}.separator{width:32px;height:2px;background:#27282e}
-    .stage{z-index:2;min-width:0;display:grid;place-items:center;padding:30px}
-    .window{width:min(570px,calc(100vw - 120px));height:min(640px,calc(100vh - 60px));min-height:520px;background:rgba(35,36,42,.98);border:1px solid #404249;border-radius:14px;box-shadow:0 28px 100px rgba(0,0,0,.6);overflow:hidden;display:flex;flex-direction:column}
+    .stage{z-index:2;min-width:0;display:grid;place-items:center;padding:30px;pointer-events:none}
+    .scene.is-ready .stage{pointer-events:auto}
+    .window{position:relative;isolation:isolate;width:min(570px,calc(100vw - 120px));height:min(640px,calc(100vh - 60px));min-height:520px;background:rgba(35,36,42,.98);border:1px solid #404249;border-radius:14px;box-shadow:0 28px 100px rgba(0,0,0,.6);overflow:hidden;display:flex;flex-direction:column;opacity:0;transform:translateY(22px) scale(.956);filter:blur(13px);transition:opacity .56s ease .1s,transform .74s cubic-bezier(.16,1,.3,1) .1s,filter .64s ease .1s,box-shadow .7s ease .1s}
+    .window:after{content:"";position:absolute;z-index:20;inset:-25%;pointer-events:none;opacity:0;background:radial-gradient(circle at 50% 42%,rgba(157,164,255,.22),transparent 34%),linear-gradient(115deg,transparent 30%,rgba(255,255,255,.12) 48%,transparent 66%);transform:scale(.76);filter:blur(20px)}
+    .scene.is-ready .window{opacity:1;transform:translateY(0) scale(1);filter:blur(0);box-shadow:0 32px 110px rgba(0,0,0,.72)}
+    .scene.is-ready .window:after{animation:onboarding-ghost .92s cubic-bezier(.2,.75,.25,1) .06s both}
+    .progress,.progress-labels,.viewport,.footer{opacity:0;transform:translateY(8px);transition:opacity .34s ease,transform .46s cubic-bezier(.16,1,.3,1)}
+    .scene.is-ready .progress,.scene.is-ready .progress-labels,.scene.is-ready .viewport,.scene.is-ready .footer{opacity:1;transform:translateY(0)}
+    .scene.is-ready .progress{transition-delay:.25s}.scene.is-ready .progress-labels{transition-delay:.29s}.scene.is-ready .viewport{transition-delay:.33s}.scene.is-ready .footer{transition-delay:.38s}
+    @keyframes onboarding-ghost{0%{opacity:0;transform:scale(.76) translateY(16px);filter:blur(24px)}28%{opacity:.72}72%{opacity:.24}100%{opacity:0;transform:scale(1.12) translateY(-7px);filter:blur(7px)}}
     .progress{height:66px;padding:20px 26px 0;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.track{height:4px;background:#62656f;border-radius:5px;position:relative}.track.active,.track.done{background:#949cf7}
     .progress-labels{padding:6px 26px 0;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;color:#9297a1;font-size:11px}.progress-labels span.active{color:#aeb4ff}
     .viewport{position:relative;flex:1;overflow:hidden}.slides{height:100%;display:flex;transition:transform .32s cubic-bezier(.2,.8,.2,1)}.slide{width:100%;height:100%;flex:0 0 100%;padding:25px 34px 20px;overflow:auto}
@@ -33,12 +45,18 @@
     .btn{height:40px;border:0;border-radius:6px;padding:0 18px;background:#3b3d44;color:white;font-weight:700;cursor:pointer}.btn:hover{background:#484a52}.btn.primary{background:var(--brand)}.btn.primary:hover{background:#4752c4}.btn.link{background:transparent;color:#c5c8ce}.btn.link:hover{text-decoration:underline}.btn:disabled{opacity:.45;cursor:not-allowed}
     .toast{position:fixed;left:calc(50% + 36px);bottom:25px;z-index:10;transform:translate(-50%,20px);opacity:0;background:#111214;border:1px solid #3e4048;border-radius:8px;padding:10px 15px;transition:.2s}.toast.show{transform:translate(-50%,0);opacity:1}
     @media(max-width:660px){.scene{grid-template-columns:0 1fr}.rail{display:none}.background{left:0}.stage{padding:12px}.window{width:100%;height:calc(100vh - 24px);min-height:0}.slide{padding:20px}.options{grid-template-columns:1fr}}
+    @media(prefers-reduced-motion:reduce){
+      .scene,.background img,.background:after,.rail,.window,.progress,.progress-labels,.viewport,.footer{transition:none!important;animation:none!important}
+      .scene{opacity:1}.rail,.window,.progress,.progress-labels,.viewport,.footer{opacity:1;transform:none;filter:none}
+      .background img{transform:none;filter:saturate(.9) brightness(.92)}
+      .window:after{display:none}
+    }
   </style>
 </head>
 <body>
   <div class="scene">
-    <div class="background">
-      {% if server_banner_url %}<img src="{{ server_banner_url }}" alt="">{% endif %}
+    <div class="background" aria-hidden="true">
+      {% if server_banner_url %}<img id="server-onboarding-banner" src="{{ server_banner_url }}" alt="" decoding="async" fetchpriority="high">{% endif %}
     </div>
     <aside class="rail">
       <a class="server-dot" href="/community" title="AlexiHub">AH</a>
@@ -95,9 +113,44 @@
       const nextButton = document.getElementById('next');
       const skipButton = document.getElementById('skip');
       const toast = document.getElementById('toast');
+      const scene = document.querySelector('.scene');
+      const bannerImage = document.getElementById('server-onboarding-banner');
       const selections = new Map();
       const completedSteps = new Set();
       let page = 0;
+
+      const revealScene = () => {
+        if (!scene || scene.classList.contains('is-ready')) return;
+        requestAnimationFrame(() => requestAnimationFrame(() => scene.classList.add('is-ready')));
+      };
+      const markBannerReady = () => {
+        scene?.classList.add('banner-ready');
+      };
+      const prepareEntrance = () => {
+        if (!bannerImage) {
+          revealScene();
+          return;
+        }
+        if (bannerImage.complete) {
+          if (bannerImage.naturalWidth > 0) markBannerReady();
+          if (typeof bannerImage.decode === 'function') {
+            Promise.race([
+              bannerImage.decode().catch(() => undefined),
+              new Promise((resolve) => setTimeout(resolve, 520))
+            ]).finally(revealScene);
+          } else {
+            revealScene();
+          }
+          return;
+        }
+        const finish = () => {
+          markBannerReady();
+          revealScene();
+        };
+        bannerImage.addEventListener('load', finish, {once: true});
+        bannerImage.addEventListener('error', revealScene, {once: true});
+        setTimeout(revealScene, 650);
+      };
 
       const showToast = (message) => {
         toast.textContent = message;
@@ -226,6 +279,7 @@
       renderQuestions();
       renderSteps();
       setPage(0);
+      prepareEntrance();
       nextButton.addEventListener('click', () => page < 2 ? setPage(page + 1) : complete(false));
       backButton.addEventListener('click', () => setPage(page - 1));
       skipButton.addEventListener('click', () => complete(true));
