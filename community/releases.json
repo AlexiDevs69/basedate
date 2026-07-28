@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.5.16",
+      "date": "2026-07-29",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: profile prompt and creation date handling."
+      ],
+      "source_sha": "f26a72ec23e777f60f0a314c2b4ab377f6dbe85d"
+    },
+    {
       "version": "1.5.15",
       "date": "2026-07-29",
       "title": "Виправлення та стабільність",
