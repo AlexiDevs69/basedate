@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.4.2",
+      "date": "2026-07-28",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: online_count calculation in SQL query."
+      ],
+      "source_sha": "af702d8eefaa4f8342f0379541a12fdf7cb401dc"
+    },
+    {
       "version": "1.4.1",
       "date": "2026-07-28",
       "title": "Виправлення та стабільність",
