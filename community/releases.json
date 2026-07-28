@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.5.3",
+      "date": "2026-07-28",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: user panel and audio control features."
+      ],
+      "source_sha": "d57ae5fb620659efd3703f0a2cc887da7c72f724"
+    },
+    {
       "version": "1.5.2",
       "date": "2026-07-28",
       "title": "Виправлення та стабільність",
