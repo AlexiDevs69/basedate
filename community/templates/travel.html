@@ -149,6 +149,11 @@
   </style>
 </head>
 <body>
+  <svg style="display:none" aria-hidden="true">
+    <symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></symbol>
+    <symbol id="i-headphones" viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.4 1.08V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.08-.4H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .4-1.08V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 16 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.15.32.36.6.6 1 .26.25.64.4 1.08.4H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51.6z"/></symbol>
+  </svg>
   <div class="app">
     <aside class="server-rail">
       <a class="server-dot home-dot" href="/community" title="Личні повідомлення">
@@ -174,18 +179,23 @@
         <a class="side-link" href="#"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 3h10l1 3h3v3h-2.2A7 7 0 0 1 13.5 15v2H17v2H7v-2h3.5v-2A7 7 0 0 1 5.2 9H3V6h3l1-3Z"/></svg>Завдання</a>
       </nav>
       {% set my_status = account.account_status or 'online' %}
-      <div class="user-panel mini-profile-trigger" role="button" tabindex="0" aria-haspopup="dialog" aria-expanded="false" data-mini-username="{{ account.username|e }}" data-mini-display="{{ account.display_name or account.username }}" data-mini-avatar="{{ account.avatar_url or '' }}" data-mini-banner="{{ account.banner_url or '' }}" data-mini-status="{{ my_status }}" data-mini-role="{{ account.role_label or 'online' }}" data-mini-c1="{{ account.role_color_start or '#5865f2' }}" data-mini-c2="{{ account.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ account.username }}" data-mini-bio="{{ account.bio or '' }}">
-        <span class="avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}');"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}<i id="my-avatar-status" class="presence status-{{ my_status }}"></i></span>
-        <span class="user-info">
+      <div class="user-panel mini-profile-trigger" data-mini-username="{{ account.username }}" data-mini-display="{{ account.display_name or account.username }}" data-mini-avatar="{{ account.avatar_url or '' }}" data-mini-banner="{{ account.banner_url or '' }}" data-mini-status="{{ account.account_status or 'online' }}" data-mini-role="{{ account.role_label or 'online' }}" data-mini-c1="{{ account.role_color_start or '#5865f2' }}" data-mini-c2="{{ account.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ account.username }}" data-mini-bio="{{ account.bio or '' }}">
+        <span class="avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}')"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}<span id="my-avatar-status" class="presence status-{{ my_status }}"></span></span>
+        <div class="user-info status-trigger" onclick="openSelfProfile()">
           <b>{{ account.display_name or account.username }}</b>
-          <span><i id="my-status-dot" class="status-dot status-{{ my_status }}"></i><span id="my-status-label">{{ {'online':'В мережі','idle':'Неактивний','dnd':'Не турбувати','invisible':'Невидимий'}.get(my_status, 'В мережі') }}</span></span>
-          <small class="account-username">@{{ account.username }}</small>
-        </span>
-        <span class="user-actions">
-          <button class="voice-control" data-audio-kind="mic" type="button" onclick="event.stopPropagation();toggleAudioControl(this,'mic',event)" title="Mute" aria-label="Вимкнути мікрофон"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button>
-          <button class="voice-control" data-audio-kind="headphones" type="button" onclick="event.stopPropagation();toggleAudioControl(this,'headphones',event)" title="Deafen" aria-label="Вимкнути звук"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg></button>
-          <button type="button" onclick="event.stopPropagation();openUserSettings()" title="Settings" aria-label="Відкрити налаштування"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.4 1.08V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.08-.4H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6A1.65 1.65 0 0 0 10.4 3V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 16 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.15.32.36.6.6 1 .26.25.64.4 1.08.4H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51.6z"/></svg></button>
-        </span>
+          <span><i id="my-status-dot" class="status-dot status-{{ my_status }}"></i><span id="my-status-label">{{ {'online':'В мережі','idle':'Неактивний','dnd':'Не турбувати','invisible':'Невидимий'}.get(my_status, 'В мережі') }}</span></span><small class="account-username">@{{ account.username }}</small>
+        </div>
+        <div class="user-actions">
+          <button class="voice-control" data-audio-kind="mic" title="Mute" onclick="toggleAudioControl(this,'mic')"><svg class="icon icon-sm"><use href="#i-mic"></use></svg></button>
+          <button class="voice-control" data-audio-kind="headphones" title="Deafen" onclick="toggleAudioControl(this,'headphones')"><svg class="icon icon-sm"><use href="#i-headphones"></use></svg></button>
+          <button title="Settings" onclick="openUserSettings()"><svg class="icon icon-sm"><use href="#i-settings"></use></svg></button>
+        </div>
+        <div id="status-menu" class="status-menu">
+          <button onclick="setPresenceStatus('online')"><i class="status-dot status-online"></i><span><b>В мережі</b><small>Тебе видно онлайн.</small></span></button>
+          <button onclick="setPresenceStatus('idle')"><i class="status-dot status-idle"></i><span><b>Неактивний</b><small>Жовтий статус.</small></span></button>
+          <button onclick="setPresenceStatus('dnd')"><i class="status-dot status-dnd"></i><span><b>Не турбувати</b><small>Червоний статус.</small></span></button>
+          <button onclick="setPresenceStatus('invisible')"><i class="status-dot status-invisible"></i><span><b>Невидимий</b><small>Не показувати онлайн.</small></span></button>
+        </div>
       </div>
     </aside>
 
@@ -509,17 +519,12 @@
           body: JSON.stringify({status})
         }).catch(() => showToast('Не вдалося оновити статус.'));
       };
-      window.toggleAudioControl = (button, kind, event) => {
-        event.stopPropagation();
-        const isOff = button.classList.toggle('off');
-        button.setAttribute('aria-pressed', String(isOff));
-        button.title = kind === 'mic'
-          ? (isOff ? 'Увімкнути мікрофон' : 'Вимкнути мікрофон')
-          : (isOff ? 'Увімкнути звук' : 'Вимкнути звук');
+      window.toggleAudioControl = (button, kind) => {
+        if (!button) return;
+        button.classList.toggle('off');
+        const isOff = button.classList.contains('off');
         try { localStorage.setItem(`alexihub-${kind}`, isOff ? 'off' : 'on'); } catch (_) {}
-        showToast(kind === 'mic'
-          ? (isOff ? 'Мікрофон вимкнено' : 'Мікрофон увімкнено')
-          : (isOff ? 'Звук вимкнено' : 'Звук увімкнено'));
+        showToast(`${kind === 'mic' ? 'Мікрофон' : 'Навушники'}${isOff ? ' вимкнено' : ' увімкнено'}`);
       };
       window.showSettingsTab = (tab = 'account') => {
         document.querySelectorAll('[data-settings-tab]').forEach((button) => {
@@ -740,15 +745,12 @@
       joinButton.addEventListener('click', join);
       accountPanel.addEventListener('click', (event) => {
         if (event.target.closest('.user-actions')) return;
-        if (miniProfile.classList.contains('open')) closeMiniProfile();
-        else openMiniProfile(event);
-      });
-      accountPanel.addEventListener('keydown', (event) => {
-        if (event.target !== accountPanel || (event.key !== 'Enter' && event.key !== ' ')) return;
         event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
         if (miniProfile.classList.contains('open')) closeMiniProfile();
         else openMiniProfile(event);
-      });
+      }, true);
       miniProfile.addEventListener('click', (event) => event.stopPropagation());
       document.getElementById('ah-v3-avatar').addEventListener('click', () => {
         location.href = accountPanel.dataset.miniProfile;
