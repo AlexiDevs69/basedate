@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.5.17",
+      "date": "2026-07-29",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update profile display and remove emoji prompt."
+      ],
+      "source_sha": "df3053b19cc0f03f3f757f883743afd6cd3fd3e8"
+    },
+    {
       "version": "1.5.16",
       "date": "2026-07-29",
       "title": "Оновлення AlexiHub",
