@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.9.0",
+      "date": "2026-07-31",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: add live profile statuses and server tags."
+      ],
+      "source_sha": "5afb1fe9493e9747da4d1d4b36a48cd2339d56ea"
+    },
+    {
       "version": "1.8.3",
       "date": "2026-07-31",
       "title": "Виправлення та стабільність",
