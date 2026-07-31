@@ -5054,7 +5054,9 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     return items;
   }
   function serverTagHtml(tag,compact){var data=tagParts(tag);return data?'<span class="ah-live-server-tag'+(compact?' compact':'')+'" data-ah-live-decoration="tag" title="'+esc(data.title)+'"><span class="glyph">'+esc(data.glyph)+'</span><span class="copy">'+esc(data.text)+'</span></span>':''}
-  function thoughtHtml(status){return statusActive(status)?'<div class="ah-profile-thought" data-ah-live-decoration="thought"><span class="emoji">'+esc(status.emoji||'💭')+'</span><span class="text">'+esc(status.text)+'</span></div>':''}
+  // The short "thought" bubble was rolled back. Keep the surrounding live
+  // profile synchronisation for presence, badges and server tags only.
+  function thoughtHtml(){return ''}
   function setPresenceCopy(container,status){var label=container&&container.querySelector('.profile-status');if(!label)return;var dot=label.querySelector('.status-dot'),copy=document.createTextNode(statusCopy(status));Array.from(label.childNodes).forEach(function(node){if(node!==dot)node.remove()});label.appendChild(copy)}
   function applyCarrier(node,profile){
     if(!node||!profile)return;
@@ -5142,5 +5144,13 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   fetchProfile(CURRENT_USER,true).then(function(result){if(!result)return;state.profile=result.profile;renderFriendRows(result.friends);updateCustomizerPrompt();syncPreview()});
 })();
 </script>
+<style id="ah-profile-thought-rollback">
+/* Restore the pre-thought profile layout everywhere on this page. */
+.ah-custom-profile-prompt,
+.ah-profile-thought,
+.ah-custom-status-backdrop,
+.ah-custom-status-preview-bubble{display:none!important}
+.ah-custom-profile-ident{margin-top:13px!important}
+</style>
 </body>
 </html>
