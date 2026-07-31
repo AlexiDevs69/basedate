@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.7.0",
+      "date": "2026-07-31",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: custom status fields and update methods."
+      ],
+      "source_sha": "1b3cebe27913aa8451145e0b7dd9da548632e017"
+    },
+    {
       "version": "1.6.1",
       "date": "2026-07-31",
       "title": "Виправлення та стабільність",
