@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.8.0",
+      "date": "2026-07-31",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: custom status button and update profile display."
+      ],
+      "source_sha": "207a5f10baa6744a3a6274146177c04518987704"
+    },
+    {
       "version": "1.7.0",
       "date": "2026-07-31",
       "title": "Нові можливості AlexiHub",
