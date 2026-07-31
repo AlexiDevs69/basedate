@@ -5018,6 +5018,24 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     const title=String(gifting.title||('Подарки, ур. «'+label+'»'));
     return '<span class="ah-gifter-profile-badge gifter-tier-'+esc(tier)+'" data-gifter-tier="'+esc(tier)+'" data-gifter-count="'+Number(gifting.count||0)+'" data-title="'+esc(title)+'" tabindex="0" aria-label="'+esc(title)+'"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="ah-gift-box" d="M5 12.2h14v8.3H5z"/><path class="ah-gift-lid" d="M3.7 8.3h16.6v4.4H3.7z"/><path class="ah-gift-ribbon" d="M12 8.5v12M12 8.5c-1.5-3.7-5.6-3.6-5.4-.8.1 1.6 2.1 2.1 5.4.8Zm0 0c1.5-3.7 5.6-3.6 5.4-.8-.1 1.6-2.1 2.1-5.4.8Z"/><path class="ah-gift-spark" d="m19.5 4 .55 1.45L21.5 6l-1.45.55L19.5 8l-.55-1.45L17.5 6l1.45-.55Z"/></svg></span>';
   }
+  function profileBadgeHost(el){
+    if(!el||!el.closest)return null;
+    const scope=el.closest('#ah-v3-mini,#ah-v3-overlay,.profile-card');
+    if(!scope)return null;
+    let handle=null;
+    if(el.id==='ah-v3-name')handle=scope.querySelector('#ah-v3-handle');
+    else if(el.id==='ah-v3-full-name')handle=scope.querySelector('#ah-v3-full-handle');
+    else handle=scope.querySelector('.profile-handle');
+    if(!handle)return null;
+    let host=scope.querySelector('.ah-v3-profile-badges');
+    if(!host){
+      host=document.createElement('div');
+      host.className='ah-v3-profile-badges';
+      const tag=handle.nextElementSibling&&handle.nextElementSibling.classList.contains('ah-live-server-tag')?handle.nextElementSibling:null;
+      (tag||handle).insertAdjacentElement('afterend',host);
+    }
+    return host;
+  }
   function setBadgeAfter(el, nitro){
     if(!el) return;
     let next=el.nextElementSibling;
@@ -5029,6 +5047,12 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     html+=verifiedBadgeHtml(nitro);
     if(nitro&&nitro.active)html+=badgeHtml(nitro);
     html+=gifterBadgeHtml(nitro);
+    const host=profileBadgeHost(el);
+    if(host){
+      if(html)host.innerHTML=html;
+      else host.remove();
+      return;
+    }
     if(html)el.insertAdjacentHTML('afterend',html);
   }
   function profileUsernameForName(el){
@@ -6959,8 +6983,9 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
 .ah-custom-status-save{min-width:106px;height:40px;border:0;border-radius:7px;background:#5865f2;color:#fff;font-weight:750;cursor:pointer}.ah-custom-status-save:hover{background:#4752c4}.ah-custom-status-save:disabled{opacity:.55;cursor:wait}
 @keyframes ahStatusFade{from{opacity:0}to{opacity:1}}@keyframes ahStatusPop{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:none}}@keyframes ahStatusMenu{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 @media(max-width:680px){.ah-custom-status-preview{margin-left:22px;margin-right:22px}.ah-custom-profile-prompt{left:122px!important}}
-/* Discord-style profile polish: one badge rail, compact actions, anchored status bubble. */
-.ah-custom-profile-badges{display:flex!important;flex-flow:row nowrap!important;align-items:center!important;justify-content:flex-start!important;gap:5px!important;width:auto!important;max-width:100%!important;min-height:18px!important;margin:7px 0 0!important;overflow:visible!important}
+/* Discord-style profile polish: original badge rows, compact actions, anchored status bubble. */
+.ah-v3-profile-badges{display:flex!important;flex-wrap:wrap!important;align-items:center!important;gap:5px!important;width:max-content;max-width:100%;min-height:18px;margin:6px 0 0!important}
+.ah-v3-profile-badges:empty{display:none!important}.ah-v3-profile-badges>span{flex:0 0 auto!important;margin:0!important;transform:none!important}
 .ah-custom-profile-actions{display:flex!important;align-items:center!important;gap:8px!important;margin-top:18px!important}
 .ah-custom-profile-actions button{height:34px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;border:0!important;border-radius:6px!important;padding:0 13px!important;color:#fff!important;font:700 13px var(--ah-profile-font)!important;cursor:pointer;transition:background-color .14s ease,transform .14s ease!important}
 .ah-custom-profile-actions button:active{transform:translateY(1px)}
@@ -6974,13 +6999,14 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
 .ah-custom-profile-prompt,.ah-profile-thought,.ah-custom-status-preview-bubble{overflow:visible!important}
 .ah-custom-profile-prompt:before,.ah-profile-thought:before,.ah-custom-status-preview-bubble:before{content:"";position:absolute;left:-13px;top:12px;width:9px;height:9px;border:1px solid rgba(255,255,255,.08);border-radius:50%;background:#35373d;box-sizing:border-box}
 .ah-custom-profile-prompt:after,.ah-profile-thought:after,.ah-custom-status-preview-bubble:after{content:"";position:absolute;left:-22px;top:4px;width:5px;height:5px;border-radius:50%;background:#4e5058}
-.ah-custom-profile-prompt{left:124px!important;right:auto!important;top:-43px!important;width:min(210px,calc(100% - 144px))!important;min-height:42px!important;padding:8px 11px!important;border-radius:10px!important;background:#2b2d31!important}
+.ah-custom-profile-prompt{left:145px!important;right:18px!important;top:-48px!important;width:auto!important;min-height:48px!important;padding:9px 12px!important;border-radius:12px!important;background:#2b2d31!important}
 .ah-custom-profile-prompt:before{background:#2b2d31}
 .ah-custom-status-preview-bubble{left:111px!important;top:80px!important;right:16px!important;min-height:44px!important;padding:8px 11px!important;border-radius:10px!important;background:rgba(53,55,62,.96)!important}.ah-custom-status-preview-bubble:before{background:#35373e}
 #ah-v3-mini .ah-v3-body,#ah-v3-overlay .ah-v3-full-left-inner{position:relative!important}
-#ah-v3-mini .ah-v3-body>.ah-profile-thought{position:absolute!important;top:-42px!important;left:93px!important;right:14px!important;min-height:42px!important;margin:0!important;border-radius:10px!important;background:#2b2d31!important}
-#ah-v3-overlay .ah-v3-full-left-inner>.ah-profile-thought{position:absolute!important;top:136px!important;left:146px!important;width:220px!important;margin:0!important;z-index:3!important;border-radius:10px!important}
-.profile-card .profile-body>.ah-profile-thought{top:88px!important;left:111px!important;right:12px!important;min-height:42px!important;border-radius:10px!important}
+#ah-v3-mini .ah-v3-body>.ah-profile-thought{position:absolute!important;top:-27px!important;left:116px!important;right:14px!important;min-height:42px!important;margin:0!important;border-radius:10px!important;background:#2b2d31!important}
+#ah-v3-overlay .ah-v3-full-left-inner>.ah-profile-thought{position:absolute!important;top:136px!important;left:146px!important;right:18px!important;width:auto!important;min-height:46px!important;margin:0!important;z-index:3!important;border-radius:10px!important}
+.profile-card .profile-body>.ah-profile-thought{top:92px!important;left:110px!important;right:12px!important;min-height:42px!important;border-radius:10px!important}
+@media(max-width:680px){.ah-custom-profile-prompt{left:122px!important;right:12px!important}}
 .ah-v3-handle,.ah-v3-full-handle,.profile-handle{display:inline-flex!important;align-items:center!important;vertical-align:middle!important}
 .ah-v3-handle+.ah-live-server-tag,.ah-v3-full-handle+.ah-live-server-tag,.profile-handle+.ah-live-server-tag{display:inline-flex!important;margin:0 0 0 5px!important;vertical-align:middle!important}
 .ah-live-server-tag.compact{height:18px!important;max-width:88px!important;margin:0 0 0 5px!important;padding:1px 5px!important;border-radius:4px!important;background:#2b2d31!important;font-size:9px!important;line-height:1!important;vertical-align:middle!important}
