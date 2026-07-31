@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.9.7",
+      "date": "2026-07-31",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: profile badge handling and styles."
+      ],
+      "source_sha": "21311566a6f11538b4a6f450b4af561ef7b71dd9"
+    },
+    {
       "version": "1.9.6",
       "date": "2026-07-31",
       "title": "Оновлення AlexiHub",
