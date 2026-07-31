@@ -34,6 +34,7 @@ class Account(Base):
     # Public nickname shown in chats and profile cards. ``username`` remains
     # the stable @handle used for login, search, mentions, DMs and profile URLs.
     display_name: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    pronouns: Mapped[str | None] = mapped_column(String(40), nullable=True)
 
     # --- Email + password login (both nullable -- a Telegram-only account
     # simply never sets these) ---
@@ -65,13 +66,21 @@ class Account(Base):
     # --- Moderation -- managed from the admin dashboard (next step). ---
     is_banned: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
-    # --- Presence -- updated on every request while logged in; "online"
-    # means last_seen_at is within the last few minutes (see crud.py). ---
+    # --- Presence -- last_seen_at is retained for activity metadata. Live
+    # online/offline state is driven by the active account WebSocket. ---
     last_seen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Manual presence status shown in the Discord-like user panel.
     # Values: online, idle, dnd, invisible.
     account_status: Mapped[str] = mapped_column(String(16), default="online", nullable=False)
+
+    # Short Discord-style profile thought.  Expiration is evaluated by the
+    # backend, so an expired thought never flashes back after a reload.
+    custom_status_text: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    custom_status_emoji: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    custom_status_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # UI language selected by the user. Used by the backend i18n JSON loader.
     # Values: ru, uk, en.
