@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.6.1",
+      "date": "2026-07-31",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance custom status and profile management."
+      ],
+      "source_sha": "29631e487cf29e187d55f38ea91709eab11f3939"
+    },
+    {
       "version": "1.6.0",
       "date": "2026-07-31",
       "title": "Нові можливості AlexiHub",
