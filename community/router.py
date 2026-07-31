@@ -16,7 +16,7 @@ import platform
 import re
 import time
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -672,6 +672,8 @@ class AccountRealtimeManager:
             "display_name": profile.get("display_name") or profile.get("username") or "",
             "online": visible,
             "status": raw_status if visible else "offline",
+            "custom_status": profile.get("custom_status"),
+            "server_tag": profile.get("server_tag"),
         }
 
     async def connect(self, account_id: int, websocket: WebSocket, profile: dict) -> None:
@@ -775,9 +777,11 @@ class AccountRealtimeManager:
         if not account_id:
             return
         async with self.lock:
-            self.profiles[account_id] = dict(profile)
+            merged = dict(self.profiles.get(account_id) or {})
+            merged.update(profile)
+            self.profiles[account_id] = merged
             connected = bool(self.connections.get(account_id))
-        await self.broadcast_all(self._public_presence_payload(profile, connected))
+        await self.broadcast_all(self._public_presence_payload(merged, connected))
 
     async def presence_snapshot_for(self, account_ids: list[int]) -> list[dict]:
         unique_ids = []
@@ -930,11 +934,29 @@ def _ws_session_matches_account(websocket: WebSocket, account) -> bool:
         return False
 
 
+def _custom_status_payload(account) -> dict | None:
+    text_value = str(getattr(account, "custom_status_text", None) or "").strip()
+    if not text_value:
+        return None
+    expires_at = getattr(account, "custom_status_expires_at", None)
+    if expires_at:
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        if expires_at <= datetime.now(timezone.utc):
+            return None
+    return {
+        "text": text_value,
+        "emoji": str(getattr(account, "custom_status_emoji", None) or "💭"),
+        "expires_at": expires_at.isoformat() if expires_at else None,
+    }
+
+
 def _account_payload(account) -> dict:
     return {
         "id": account.id,
         "username": account.username,
         "display_name": (getattr(account, "display_name", None) or account.username),
+        "pronouns": getattr(account, "pronouns", None) or "",
         "avatar_url": account.avatar_url,
         "banner_url": account.banner_url,
         "role_label": account.role_label,
@@ -943,6 +965,7 @@ def _account_payload(account) -> dict:
         "name_effect": account.name_effect or "none",
         "name_font": account.name_font or "default",
         "account_status": account.account_status or "online",
+        "custom_status": _custom_status_payload(account),
         "bio": account.bio or "",
         "is_verified": bool(getattr(account, "is_verified", False)),
         "language": getattr(account, "language", DEFAULT_LANGUAGE) or DEFAULT_LANGUAGE,
@@ -973,6 +996,7 @@ def _missing_author_payload(author_id: int | None) -> dict:
         "id": int(author_id or 0),
         "username": "видалений юзер",
         "display_name": "видалений юзер",
+        "pronouns": "",
         "avatar_url": "",
         "banner_url": "",
         "role_label": "member",
@@ -1086,6 +1110,9 @@ async def ws_account_realtime(websocket: WebSocket):
             await websocket.close(code=1008)
             return
         profile = _account_payload(account)
+        profile["server_tag"] = (
+            await crud.list_account_active_server_tags(db, [int(account_id)])
+        ).get(int(account_id))
 
     await account_realtime.connect(int(account_id), websocket, profile)
     try:
@@ -2484,6 +2511,118 @@ async def api_my_server_boosts(request: Request, db: AsyncSession = Depends(get_
     if not account:
         return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
     return JSONResponse(await crud.get_account_boost_center(db, account.id))
+
+
+@router.get("/api/profile/customizer")
+async def api_profile_customizer(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+
+    friends = await crud.list_friends(db, account.id)
+    servers = await crud.list_servers_for_account(db, account.id)
+    nitro = await crud.nitro_profile_payload(db, account.id)
+    boosts = await crud.get_account_boost_center(db, account.id)
+
+    all_profile_ids = [int(account.id), *[int(friend.id) for friend in friends]]
+    active_tags = await crud.list_account_active_server_tags(db, all_profile_ids)
+    live_statuses = await asyncio.gather(*[
+        account_realtime.public_status(int(friend.id), _account_payload(friend))
+        for friend in friends
+    ])
+    friend_items = []
+    for friend, (_online, status) in zip(friends, live_statuses):
+        friend_payload = _account_payload(friend)
+        friend_payload["account_status"] = status
+        friend_payload["server_tag"] = active_tags.get(int(friend.id))
+        friend_items.append({
+            **friend_payload,
+            "status": status,
+            "profile_url": f"/community/profile/{friend.username}",
+        })
+
+    boost_servers = {
+        int(item.get("id") or 0): item
+        for item in (boosts.get("servers") or [])
+    }
+    server_items = []
+    for server in servers:
+        boost_item = boost_servers.get(int(server.id)) or {}
+        server_items.append({
+            "id": int(server.id),
+            "name": server.name,
+            "icon_url": server.icon_url or "",
+            "url": f"/community/servers/{int(server.id)}",
+            "tag": boost_item.get("tag") or {},
+            "tag_selected": bool(boost_item.get("tag_selected")),
+        })
+
+    _own_online, own_live_status = await account_realtime.public_status(
+        int(account.id), _account_payload(account)
+    )
+    # This authenticated request itself proves the viewer is active.  On a
+    # cold page load it can beat the account WebSocket by a few milliseconds,
+    # so keep the saved visible state for the viewer until that socket arrives.
+    # Other users still use strict socket-backed presence above.
+    if not _own_online:
+        configured_status = str(account.account_status or "online").strip().lower()
+        own_live_status = (
+            "offline" if configured_status == "invisible" else configured_status
+        )
+    own_profile = _account_payload(account)
+    own_profile["account_status"] = own_live_status
+    own_profile["server_tag"] = active_tags.get(int(account.id))
+    return JSONResponse({
+        "ok": True,
+        "profile": own_profile,
+        "badges": {
+            "verified": bool(getattr(account, "is_verified", False)),
+            "nitro": nitro,
+        },
+        "friends": friend_items,
+        "servers": server_items,
+        "boosts": boosts,
+    })
+
+
+@router.post("/api/profile/custom-status")
+async def api_update_custom_status(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    status_text = str(body.get("text") or "")
+    status_emoji = str(body.get("emoji") or "💭")
+    raw_expiration = body.get("expires_in")
+    allowed_expirations = {1800, 3600, 14400, 86400}
+    expires_at = None
+    if raw_expiration not in (None, "", "never"):
+        try:
+            expiration_seconds = int(raw_expiration)
+        except (TypeError, ValueError):
+            return JSONResponse({"ok": False, "error": "invalid_expiration"}, status_code=400)
+        if expiration_seconds not in allowed_expirations:
+            return JSONResponse({"ok": False, "error": "invalid_expiration"}, status_code=400)
+        expires_at = datetime.now(timezone.utc) + timedelta(seconds=expiration_seconds)
+
+    updated = await crud.update_custom_status(
+        db,
+        int(account.id),
+        status_text=status_text,
+        status_emoji=status_emoji,
+        expires_at=expires_at,
+    )
+    if not updated:
+        return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
+    profile_payload = _account_payload(updated)
+    profile_payload["server_tag"] = (
+        await crud.list_account_active_server_tags(db, [int(account.id)])
+    ).get(int(account.id))
+    await account_realtime.set_profile_and_broadcast(profile_payload)
+    return JSONResponse({"ok": True, "custom_status": profile_payload.get("custom_status")})
 
 
 @router.post("/api/boosts/tag-selection")
@@ -4132,7 +4271,7 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
         except Exception:
             pass
     finally:
-        await realtime_channels.disconnect(key, account_id, websocket, profile)
+        await account_realtime.disconnect(int(account_id), websocket)
 
 
 @router.post("/presence/status")
@@ -4455,6 +4594,7 @@ async def settings_form(request: Request, db: AsyncSession = Depends(get_db)):
 async def settings_submit(
     request: Request,
     display_name: str = Form(""),
+    pronouns: str = Form(""),
     avatar_url: str = Form(""),
     banner_url: str = Form(""),
     bio: str = Form(""),
@@ -4473,6 +4613,7 @@ async def settings_submit(
     updated = await crud.update_own_profile(
         db, account.id,
         display_name=display_name,
+        pronouns=pronouns,
         avatar_url=avatar_final,
         banner_url=banner_final,
         bio=bio.strip(),
@@ -4557,6 +4698,15 @@ async def api_friend_status(username: str, request: Request, db: AsyncSession = 
         for server in await crud.list_servers_for_account(db, viewer.id)
         if int(server.id) not in mutual_server_ids
     ]
+    _is_online, live_status = await account_realtime.public_status(
+        int(target.id), _account_payload(target)
+    )
+    target_profile = _account_payload(target)
+    target_profile["account_status"] = live_status
+    target_profile["server_tag"] = (
+        await crud.list_account_active_server_tags(db, [int(target.id)])
+    ).get(int(target.id))
+    target_nitro = await crud.nitro_profile_payload(db, int(target.id))
     return JSONResponse({
         "ok": True,
         "profile_id": int(target.id),
@@ -4564,6 +4714,12 @@ async def api_friend_status(username: str, request: Request, db: AsyncSession = 
         "friendship_id": int(friendship.id) if friendship else None,
         "mutual_servers": mutual_servers,
         "invite_servers": invite_servers,
+        "profile": target_profile,
+        "presence": {"online": bool(_is_online), "status": live_status},
+        "badges": {
+            "verified": bool(getattr(target, "is_verified", False)),
+            "nitro": target_nitro,
+        },
         **block,
     })
 
