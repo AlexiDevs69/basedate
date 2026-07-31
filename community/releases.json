@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.9.5",
+      "date": "2026-07-31",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: profile actions and server tag UI."
+      ],
+      "source_sha": "888458adb6fb687df66300baf33256994448534c"
+    },
+    {
       "version": "1.9.4",
       "date": "2026-07-31",
       "title": "Виправлення та стабільність",
