@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.9.10",
+      "date": "2026-07-31",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Виправлено: restore badge layout and align status bubble."
+      ],
+      "source_sha": "d69e8b9413419610e282fb296c566f0d5758007a"
+    },
+    {
       "version": "1.9.9",
       "date": "2026-07-31",
       "title": "Оновлення AlexiHub",
