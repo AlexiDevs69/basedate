@@ -2861,6 +2861,9 @@ document.addEventListener('DOMContentLoaded',()=>{
               <span class="ah-avatar-fallback">{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}</span>
               <span class="ah-custom-profile-status status-{{ account.account_status or 'invisible' }}" aria-label="{{ {'online':'В мережі','idle':'Неактивний','dnd':'Не турбувати','invisible':'Невидимий'}.get(account.account_status or 'invisible', 'Невидимий') }}"></span>
             </label>
+            <button id="ah-custom-profile-prompt" class="ah-custom-profile-prompt" type="button" aria-label="Налаштувати власний статус">
+              <span class="ah-profile-thought-plus">+</span><span data-profile-thought-text>Поділіться, що у вас нового…</span>
+            </button>
             <div class="ah-custom-profile-ident">
               <div class="ah-custom-name-badge-row">
                 <div class="ah-profile-live-name ah-display-name-editor" id="ah-display-name-editor" data-profile-username="{{ account.username }}">
@@ -2870,7 +2873,6 @@ document.addEventListener('DOMContentLoaded',()=>{
                   </button>
                   <input id="ah-display-name-input" class="ah-display-name-input" name="display_name" value="{{ account.display_name or account.username }}" maxlength="32" autocomplete="off" aria-label="Відображуване ім’я">
                 </div>
-                <div id="ah-custom-profile-badges" class="ah-custom-profile-badges" aria-label="Справжні бейджі профілю"></div>
               </div>
 
               <div class="ah-custom-profile-meta">
@@ -2884,6 +2886,7 @@ document.addEventListener('DOMContentLoaded',()=>{
                   <span id="ah-server-tag-menu" class="ah-server-tag-menu" role="menu"></span>
                 </span>
               </div>
+              <div id="ah-custom-profile-badges" class="ah-custom-profile-badges" aria-label="Справжні бейджі профілю"></div>
             </div>
 
             <div class="ah-custom-profile-actions"><button class="primary" type="button">● Повідомлення</button><button class="icon" type="button" aria-label="Друзі">♟</button><button class="icon" type="button" aria-label="Інше">•••</button></div>
@@ -6550,11 +6553,13 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     try { data = JSON.parse(event.data); } catch (error) { return; }
     if (data.type === 'presence') {
       updatePresence(data.account_id, data.status, data.online, data.username, data.display_name);
+      document.dispatchEvent(new CustomEvent('alexihub:live-profile', { detail: data }));
       return;
     }
     if (data.type === 'presence_snapshot') {
       (data.accounts || []).forEach(function (item) {
         updatePresence(item.account_id, item.status, item.online, item.username, item.display_name);
+        document.dispatchEvent(new CustomEvent('alexihub:live-profile', { detail: item }));
       });
       return;
     }
@@ -7469,5 +7474,176 @@ document.addEventListener('DOMContentLoaded', async function(){
   .ah-v3-invite-submenu{position:fixed;left:10px;right:10px;top:auto;bottom:10px;width:auto;max-height:42vh}
 }
 </style>
+<style id="ah-live-profile-polish-css">
+:root{--ah-profile-font:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.ah-custom-profile-card,.ah-custom-status-card,.ah-profile-thought,.ah-live-server-tag{font-family:var(--ah-profile-font)}
+.ah-custom-name-badge-row{display:block!important}
+.ah-custom-name-badge-row .ah-display-name-editor{width:100%!important;max-width:100%!important}
+.ah-custom-profile-badges{display:flex!important;flex-wrap:wrap!important;align-content:flex-start;align-items:center!important;justify-content:flex-start;gap:5px!important;width:112px;max-width:112px;min-height:18px!important;margin:7px 0 0!important}
+.ah-custom-profile-badges:empty{display:none!important}
+.ah-custom-profile-badges>span{width:18px!important;height:18px!important;min-width:18px!important;min-height:18px!important;margin:0!important;transform:none!important}
+.ah-custom-bio-input,.ah-custom-profile-info,.ah-custom-profile-prompt,.ah-v3-note,.ah-v3-full-about-block,.profile-card .profile-body>p{font-family:var(--ah-profile-font)!important;letter-spacing:0!important}
+.ah-custom-bio-input{font-size:14px!important;line-height:1.45!important;font-style:normal!important}
+.ah-custom-profile-prompt{display:flex!important;position:absolute!important;left:145px!important;right:18px!important;top:-48px!important;min-height:48px;padding:9px 12px!important;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.08)!important;border-radius:12px!important;background:rgba(43,45,49,.94)!important;color:#b5bac1!important;font-size:12px!important;font-weight:500!important;font-style:italic;text-align:left;cursor:pointer;box-shadow:0 5px 16px rgba(0,0,0,.18);z-index:4}
+.ah-custom-profile-prompt:hover{background:#34363c!important;color:#dbdee1!important;border-color:rgba(255,255,255,.14)!important}
+.ah-profile-thought-plus{display:grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#b5bac1;color:#313338;font-size:16px;font-weight:900;font-style:normal;flex:0 0 auto}
+.ah-custom-profile-ident{margin-top:18px!important}
+.ah-live-server-tag{display:inline-flex;align-items:center;gap:4px;width:max-content;max-width:150px;margin-top:5px;padding:3px 7px;border-radius:6px;background:#2b2d31;color:#dbdee1;font-size:11px;font-weight:750;line-height:1.15}
+.ah-live-server-tag .glyph{color:#8ea1ff;font-size:12px}.ah-live-server-tag .copy{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ah-profile-thought{display:flex;align-items:center;gap:6px;max-width:230px;margin:8px 0;padding:8px 10px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:#2b2d31;color:#dbdee1;font-size:12px;font-style:italic;line-height:1.35;box-shadow:0 4px 12px rgba(0,0,0,.16)}
+.ah-profile-thought .emoji{font-style:normal;font-size:15px}.ah-profile-thought .text{overflow-wrap:anywhere}
+#ah-v3-mini .ah-profile-thought{position:absolute;top:14px;left:89px;right:14px;z-index:3;margin:0;background:rgba(43,45,49,.95)}
+#ah-v3-overlay .ah-v3-full-left-inner>.ah-profile-thought{margin:-38px 0 16px 118px;position:relative;z-index:3}
+.profile-card{position:relative}.profile-card .profile-body>.ah-profile-thought{position:absolute;z-index:5;top:99px;left:102px;right:12px;margin:0;background:rgba(43,45,49,.96)}
+.profile-card .profile-body>.ah-live-server-tag{margin:5px 0 2px}.ah-live-server-tag.compact{height:18px;max-width:88px;margin:0 0 0 4px;padding:1px 5px;border-radius:4px;font-size:9px;line-height:1;vertical-align:middle}
+.profile-card .profile-body>p,.ah-v3-note,.ah-v3-full-about-block{font-size:13px!important;line-height:1.45!important;color:#b5bac1!important;font-style:normal!important}
+.ah-custom-status-backdrop{position:fixed;inset:0;z-index:100040;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.72)}
+.ah-custom-status-backdrop.open{display:flex;animation:ahStatusFade .16s ease-out}
+.ah-custom-status-card{width:min(480px,calc(100vw - 32px));border:1px solid #3f4147;border-radius:14px;background:#24252b;color:#f2f3f5;box-shadow:0 20px 55px rgba(0,0,0,.55);overflow:visible;animation:ahStatusPop .18s cubic-bezier(.2,.8,.2,1)}
+.ah-custom-status-head{display:flex;align-items:center;justify-content:space-between;padding:20px 22px 12px}.ah-custom-status-head h2{margin:0;font-size:20px;line-height:1.2}.ah-custom-status-close{width:32px;height:32px;border:0;background:transparent;color:#b5bac1;font-size:30px;line-height:1;cursor:pointer}.ah-custom-status-close:hover{color:#fff}
+.ah-custom-status-preview{position:relative;height:236px;margin:8px 64px 30px;border-radius:8px;overflow:hidden;background:linear-gradient(145deg,#31255f,#202b5f);background-size:cover;background-position:center;box-shadow:0 7px 22px rgba(0,0,0,.28)}
+.ah-custom-status-preview:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 38%,rgba(22,23,27,.82) 72%,rgba(22,23,27,.97))}
+.ah-custom-status-preview-avatar{position:absolute;left:20px;top:62px;z-index:2;width:82px;height:82px;border:6px solid rgba(35,36,41,.92);border-radius:50%;background:#5865f2 center/cover no-repeat;display:grid;place-items:center;font-size:28px;font-weight:800}
+.ah-custom-status-preview-bubble{position:absolute;z-index:3;left:105px;top:82px;right:16px;min-height:48px;display:flex;align-items:center;gap:6px;padding:9px 11px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:rgba(53,55,62,.9);color:#d7d9dc;font-size:12px;font-style:italic}
+.ah-custom-status-preview-name{position:absolute;z-index:3;left:18px;bottom:33px;font-size:20px;font-weight:800}.ah-custom-status-preview-meta{position:absolute;z-index:3;left:18px;bottom:14px;color:#c5c7ca;font-size:12px}
+.ah-custom-status-field{padding:0 22px 16px}.ah-custom-status-field label{display:block;margin-bottom:7px;font-size:14px;font-weight:700}
+.ah-custom-status-input-wrap{display:flex;align-items:center;height:48px;border:1px solid #4a4d54;border-radius:9px;background:#1e1f22}.ah-custom-status-input-wrap:focus-within{border-color:#7289da;box-shadow:0 0 0 1px #7289da}
+.ah-custom-status-emoji{width:44px;border:0;background:transparent;color:#b5bac1;font-size:21px}.ah-custom-status-input{flex:1;min-width:0;border:0;outline:0;background:transparent;color:#f2f3f5;font:500 14px var(--ah-profile-font)}.ah-custom-status-clear{width:38px;border:0;background:transparent;color:#949ba4;font-size:18px;cursor:pointer}
+.ah-custom-status-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 22px 20px;border-top:1px solid #35363c}
+.ah-status-expiry{position:relative}.ah-status-expiry-trigger{border:0;background:transparent;color:#f2f3f5;font-weight:700;cursor:pointer;padding:8px 4px}.ah-status-expiry-trigger:after{content:"⌄";margin-left:8px;color:#b5bac1}
+.ah-status-expiry.open .ah-status-expiry-trigger:after{content:"⌃"}.ah-status-expiry-menu{position:absolute;left:0;bottom:42px;z-index:5;width:205px;display:none;padding:6px;border:1px solid #41434a;border-radius:8px;background:#2b2d31;box-shadow:0 12px 28px rgba(0,0,0,.45)}
+.ah-status-expiry.open .ah-status-expiry-menu{display:block;animation:ahStatusMenu .13s ease-out}.ah-status-expiry-menu button{display:flex;width:100%;align-items:center;justify-content:space-between;border:0;border-radius:5px;padding:10px 9px;background:transparent;color:#dbdee1;text-align:left;font:500 13px var(--ah-profile-font);cursor:pointer}.ah-status-expiry-menu button:hover,.ah-status-expiry-menu button.active{background:#404249;color:#fff}.ah-status-expiry-menu button.active:after{content:"✓";color:#8ea1ff;font-weight:900}
+.ah-custom-status-save{min-width:106px;height:40px;border:0;border-radius:7px;background:#5865f2;color:#fff;font-weight:750;cursor:pointer}.ah-custom-status-save:hover{background:#4752c4}.ah-custom-status-save:disabled{opacity:.55;cursor:wait}
+@keyframes ahStatusFade{from{opacity:0}to{opacity:1}}@keyframes ahStatusPop{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:none}}@keyframes ahStatusMenu{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+@media(max-width:680px){.ah-custom-status-preview{margin-left:22px;margin-right:22px}.ah-custom-profile-prompt{left:122px!important}}
+</style>
+<div id="ah-custom-status-modal" class="ah-custom-status-backdrop" aria-hidden="true">
+  <div class="ah-custom-status-card" role="dialog" aria-modal="true" aria-labelledby="ah-custom-status-title">
+    <div class="ah-custom-status-head"><h2 id="ah-custom-status-title">Налаштувати статус</h2><button id="ah-custom-status-close" class="ah-custom-status-close" type="button" aria-label="Закрити">×</button></div>
+    <div id="ah-custom-status-preview" class="ah-custom-status-preview" {% if account.banner_url %}style="background-image:url('{{ account.banner_url }}')"{% endif %}>
+      <div id="ah-custom-status-preview-avatar" class="ah-custom-status-preview-avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}')"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}</div>
+      <div class="ah-custom-status-preview-bubble"><span id="ah-custom-status-preview-emoji">💭</span><span id="ah-custom-status-preview-text">Поділіться, що у вас нового…</span></div>
+      <div class="ah-custom-status-preview-name">{{ account.display_name or account.username }}</div><div class="ah-custom-status-preview-meta">@{{ account.username }}</div>
+    </div>
+    <div class="ah-custom-status-field"><label for="ah-custom-status-input">Статус</label><div class="ah-custom-status-input-wrap"><button id="ah-custom-status-emoji" class="ah-custom-status-emoji" type="button" aria-label="Емодзі статусу">💭</button><input id="ah-custom-status-input" class="ah-custom-status-input" maxlength="128" autocomplete="off" placeholder="Що у вас нового?"><button id="ah-custom-status-clear" class="ah-custom-status-clear" type="button" aria-label="Очистити">×</button></div></div>
+    <div class="ah-custom-status-foot">
+      <div id="ah-status-expiry" class="ah-status-expiry"><button id="ah-status-expiry-trigger" class="ah-status-expiry-trigger" type="button" aria-haspopup="menu" aria-expanded="false">Видалити завтра</button><div class="ah-status-expiry-menu" role="menu"><button type="button" data-status-expiry="86400">24 год.</button><button type="button" data-status-expiry="14400">4 год.</button><button type="button" data-status-expiry="3600">1 год.</button><button type="button" data-status-expiry="1800">30 хв.</button><button type="button" data-status-expiry="">Не видаляти</button></div></div>
+      <button id="ah-custom-status-save" class="ah-custom-status-save" type="button">Зберегти</button>
+    </div>
+  </div>
+</div>
+<script id="ah-live-profile-polish-js">
+(function(){
+  if(window.__ahLiveProfilePolishReady)return;window.__ahLiveProfilePolishReady=true;
+  var CURRENT_USER={{ account.username|tojson }};
+  var modal=document.getElementById('ah-custom-status-modal'),input=document.getElementById('ah-custom-status-input'),emojiButton=document.getElementById('ah-custom-status-emoji'),previewText=document.getElementById('ah-custom-status-preview-text'),previewEmoji=document.getElementById('ah-custom-status-preview-emoji'),expiry=document.getElementById('ah-status-expiry'),expiryTrigger=document.getElementById('ah-status-expiry-trigger');
+  var state={text:'',emoji:'💭',expiresIn:86400,profile:null},cache=new Map();
+  var labels={86400:'Видалити завтра',14400:'Видалити через 4 год.',3600:'Видалити через 1 год.',1800:'Видалити через 30 хв.',never:'Не видаляти'};
+  function esc(value){return String(value==null?'':value).replace(/[&<>"']/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]})}
+  function cleanName(value){return String(value||'').replace(/^@/,'').trim()}
+  function liveStatus(value){value=String(value||'offline').toLowerCase();return ['online','idle','dnd'].indexOf(value)>=0?value:'offline'}
+  function statusCopy(value){return {online:'В мережі',idle:'Неактивний',dnd:'Не турбувати',offline:'Не в мережі'}[liveStatus(value)]}
+  function statusActive(status){if(!status||!status.text)return false;if(!status.expires_at)return true;var time=new Date(status.expires_at).getTime();return Number.isNaN(time)||time>Date.now()}
+  function tagParts(tag){if(!tag||tag.active===false)return null;var text=String(tag.text||tag.tag_text||'').trim();if(!text)return null;return {glyph:String(tag.icon_glyph||tag.glyph||'◆'),text:text,title:String(tag.server_name||'Тег сервера')}}
+  function setPresence(element,status){
+    var value=liveStatus(status);if(element.dataset)element.dataset.miniStatus=value;
+    element.querySelectorAll('.presence,.member-presence,.status-dot,.account-avatar-status,.self-status-dot,.ah-v3-status').forEach(function(dot){['online','idle','dnd','offline','invisible'].forEach(function(name){dot.classList.remove(name,'status-'+name)});dot.classList.add(value,'status-'+value)});
+    element.querySelectorAll('.account-status,[data-live-presence-label]').forEach(function(node){node.textContent=statusCopy(value)});
+  }
+  function usernameOfRow(row){var raw=(row.dataset&&(row.dataset.profileUsername||row.dataset.miniUsername||row.dataset.friendUsername))||'';if(raw)return cleanName(raw);var href=row.getAttribute('href')||'';var found=href.match(/\/(?:dm|profile)\/([^/?#]+)/);return found?decodeURIComponent(found[1]):''}
+  function matchingElements(username){
+    var wanted=cleanName(username).toLowerCase(),items=[];
+    document.querySelectorAll('[data-mini-username],[data-friend-username],[data-profile-username],[data-profile-list-item="friend"]').forEach(function(node){if(usernameOfRow(node).toLowerCase()===wanted)items.push(node)});
+    return items;
+  }
+  function serverTagHtml(tag,compact){var data=tagParts(tag);return data?'<span class="ah-live-server-tag'+(compact?' compact':'')+'" data-ah-live-decoration="tag" title="'+esc(data.title)+'"><span class="glyph">'+esc(data.glyph)+'</span><span class="copy">'+esc(data.text)+'</span></span>':''}
+  function thoughtHtml(status){return statusActive(status)?'<div class="ah-profile-thought" data-ah-live-decoration="thought"><span class="emoji">'+esc(status.emoji||'💭')+'</span><span class="text">'+esc(status.text)+'</span></div>':''}
+  function setPresenceCopy(container,status){var label=container&&container.querySelector('.profile-status');if(!label)return;var dot=label.querySelector('.status-dot'),copy=document.createTextNode(statusCopy(status));Array.from(label.childNodes).forEach(function(node){if(node!==dot)node.remove()});label.appendChild(copy)}
+  function applyCarrier(node,profile){
+    if(!node||!profile)return;
+    var card=node.matches&&node.matches('.profile-card')?node:node.closest&&node.closest('.profile-card');
+    if(card){card.querySelectorAll('[data-ah-live-decoration]').forEach(function(item){item.remove()});var avatar=card.querySelector('.big-avatar,.profile-avatar');if(statusActive(profile.custom_status)&&avatar)avatar.insertAdjacentHTML('afterend',thoughtHtml(profile.custom_status));var handle=card.querySelector('.profile-handle');if(handle&&tagParts(profile.server_tag))handle.insertAdjacentHTML('afterend',serverTagHtml(profile.server_tag,false));setPresence(card,profile.account_status);setPresenceCopy(card,profile.account_status)}
+    var label=node.matches&&node.matches('.msg-name,.visual-name,.member-name,.dm-name')?node:node.querySelector&&node.querySelector('.dm-name,.member-name');
+    if(label&&!label.closest('.profile-card')){
+      var parent=label.parentElement;
+      var old=parent&&parent.querySelector(':scope > [data-ah-live-decoration="tag"]');
+      var builtIn=parent&&parent.querySelector(':scope > .member-server-tag, :scope > .message-server-tag');
+      var tag=tagParts(profile.server_tag);
+      if(old)old.remove();
+      if(builtIn){
+        if(!tag){builtIn.remove()}
+        else{
+          builtIn.title=tag.title;
+          var glyph=builtIn.querySelector('b');
+          if(glyph)glyph.textContent=tag.glyph;
+          Array.from(builtIn.childNodes).forEach(function(child){if(child.nodeType===3)child.remove()});
+          builtIn.appendChild(document.createTextNode(tag.text));
+        }
+      }else if(tag){label.insertAdjacentHTML('afterend',serverTagHtml(profile.server_tag,true))}
+    }
+  }
+  function applyRoot(root,profile){
+    if(!root||!profile)return;
+    var thought=root.querySelector(':scope > .ah-profile-thought, .ah-v3-body > .ah-profile-thought, .ah-v3-full-left-inner > .ah-profile-thought');
+    if(thought)thought.remove();
+    var status=profile.custom_status||null,avatar=root.querySelector('#ah-v3-avatar,#ah-v3-full-avatar');
+    if(statusActive(status)&&avatar)avatar.insertAdjacentHTML('afterend',thoughtHtml(status));
+    var oldTag=root.querySelector('.ah-live-server-tag');if(oldTag)oldTag.remove();
+    var handle=root.querySelector('#ah-v3-handle,#ah-v3-full-handle');
+    if(handle&&tagParts(profile.server_tag))handle.insertAdjacentHTML('afterend',serverTagHtml(profile.server_tag));
+    setPresence(root,profile.account_status);
+  }
+  function applyProfile(username,profile,badges){
+    if(!profile)return;var name=cleanName(username||profile.username);cache.set(name.toLowerCase(),{profile:profile,badges:badges||{}});
+    matchingElements(name).forEach(function(node){setPresence(node,profile.account_status);applyCarrier(node,profile);if(node.dataset){node.dataset.miniStatus=liveStatus(profile.account_status);node.dataset.liveCustomStatus=profile.custom_status?JSON.stringify(profile.custom_status):'';node.dataset.liveServerTag=profile.server_tag?JSON.stringify(profile.server_tag):''}});
+    var mini=document.getElementById('ah-v3-mini'),miniHandle=document.getElementById('ah-v3-handle');if(mini&&mini.classList.contains('open')&&cleanName(miniHandle&&miniHandle.textContent).toLowerCase()===name.toLowerCase())applyRoot(mini,profile);
+    var overlay=document.getElementById('ah-v3-overlay'),fullHandle=document.getElementById('ah-v3-full-handle');if(overlay&&overlay.classList.contains('open')&&cleanName(fullHandle&&fullHandle.textContent).toLowerCase()===name.toLowerCase())applyRoot(overlay,profile);
+  }
+  async function fetchProfile(username,force){
+    var name=cleanName(username),key=name.toLowerCase(),saved=cache.get(key);if(saved&&!force)return saved;
+    var url=key===String(CURRENT_USER).toLowerCase()?'/community/api/profile/customizer':'/community/api/friend-status/'+encodeURIComponent(name);
+    try{var response=await fetch(url,{credentials:'same-origin',headers:{Accept:'application/json'},cache:'no-store'}),data=await response.json().catch(function(){return {}});if(!response.ok||!data.ok)return null;var profile=data.profile||null;if(profile){applyProfile(name,profile,data.badges||{});return {profile:profile,badges:data.badges||{},friends:data.friends||[]}}}catch(_e){}return null;
+  }
+  function renderFriendRows(friends){
+    (Array.isArray(friends)?friends:[]).forEach(function(friend){matchingElements(friend.username).forEach(function(row){setPresence(row,friend.account_status||friend.status);var copy=row.querySelector('.ah-profile-list-copy span');if(copy)copy.textContent='@'+friend.username+' · '+statusCopy(friend.account_status||friend.status)});applyProfile(friend.username,friend,{})});
+  }
+  function syncPreview(){
+    var text=String(input&&input.value||'').trim(),emoji=state.emoji||'💭';if(previewText)previewText.textContent=text||'Поділіться, що у вас нового…';if(previewEmoji)previewEmoji.textContent=emoji;if(emojiButton)emojiButton.textContent=emoji;
+    var sourceBanner=document.getElementById('ah-profile-preview-banner'),sourceAvatar=document.getElementById('ah-profile-preview-avatar'),preview=document.getElementById('ah-custom-status-preview'),previewAvatar=document.getElementById('ah-custom-status-preview-avatar');if(sourceBanner&&preview&&sourceBanner.style.backgroundImage)preview.style.backgroundImage=sourceBanner.style.backgroundImage;if(sourceAvatar&&previewAvatar&&sourceAvatar.style.backgroundImage)previewAvatar.style.backgroundImage=sourceAvatar.style.backgroundImage;
+  }
+  function setExpiry(value){
+    state.expiresIn=value===''?null:Number(value);var key=state.expiresIn==null?'never':String(state.expiresIn);if(expiryTrigger)expiryTrigger.textContent=labels[key]||labels[86400];
+    document.querySelectorAll('[data-status-expiry]').forEach(function(button){button.classList.toggle('active',String(button.dataset.statusExpiry||'')===String(value==null?'':value))});if(expiry){expiry.classList.remove('open');expiryTrigger&&expiryTrigger.setAttribute('aria-expanded','false')}
+  }
+  function openModal(){
+    var status=state.profile&&statusActive(state.profile.custom_status)?state.profile.custom_status:null;state.text=status&&status.text||'';state.emoji=status&&status.emoji||'💭';if(input)input.value=state.text;setExpiry(86400);syncPreview();modal&&modal.classList.add('open');modal&&modal.setAttribute('aria-hidden','false');setTimeout(function(){input&&input.focus()},30)
+  }
+  function closeModal(){modal&&modal.classList.remove('open');modal&&modal.setAttribute('aria-hidden','true');expiry&&expiry.classList.remove('open')}
+  async function saveStatus(){
+    var save=document.getElementById('ah-custom-status-save');if(save)save.disabled=true;
+    try{var response=await fetch('/community/api/profile/custom-status',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({text:String(input&&input.value||'').trim(),emoji:state.emoji,expires_in:state.expiresIn})}),data=await response.json().catch(function(){return {}});if(!response.ok||!data.ok)throw new Error();if(!state.profile)state.profile={username:CURRENT_USER};state.profile.custom_status=data.custom_status||null;applyProfile(CURRENT_USER,state.profile,{});updateCustomizerPrompt();closeModal();if(typeof window.settingsToast==='function')window.settingsToast(data.custom_status?'Статус збережено':'Статус очищено')}catch(_e){if(typeof window.settingsToast==='function')window.settingsToast('Не вдалося зберегти статус')}finally{if(save)save.disabled=false}
+  }
+  function updateCustomizerPrompt(){
+    var trigger=document.getElementById('ah-custom-profile-prompt'),copy=trigger&&trigger.querySelector('[data-profile-thought-text]'),status=state.profile&&state.profile.custom_status;if(copy)copy.textContent=statusActive(status)?String(status.emoji||'💭')+' '+status.text:'Поділіться, що у вас нового…';
+  }
+  document.addEventListener('click',function(event){
+    var thought=event.target.closest('#ah-custom-profile-prompt');if(thought){event.preventDefault();openModal();return}
+    var carrier=event.target.closest('[data-mini-username],[data-friend-username],a[href*="/community/profile/"]');if(carrier){var username=usernameOfRow(carrier);if(username)setTimeout(function(){fetchProfile(username,true)},60)}
+  },true);
+  document.addEventListener('alexihub:full-profile-open',function(event){var profile=event.detail||{},name=cleanName(profile.name||profile.username);if(name)setTimeout(function(){fetchProfile(name,true)},20)});
+  document.addEventListener('alexihub:live-profile',function(event){var live=event.detail||{},name=cleanName(live.username);if(!name)return;var saved=cache.get(name.toLowerCase()),profile=Object.assign({},saved&&saved.profile||{},{username:name,display_name:live.display_name||name,account_status:live.online===false?'offline':live.status||'offline'});if(Object.prototype.hasOwnProperty.call(live,'custom_status'))profile.custom_status=live.custom_status;if(Object.prototype.hasOwnProperty.call(live,'server_tag'))profile.server_tag=live.server_tag;applyProfile(name,profile,saved&&saved.badges||{})});
+  document.getElementById('ah-custom-status-close')&&document.getElementById('ah-custom-status-close').addEventListener('click',closeModal);
+  modal&&modal.addEventListener('click',function(event){if(event.target===modal)closeModal()});
+  input&&input.addEventListener('input',syncPreview);
+  document.getElementById('ah-custom-status-clear')&&document.getElementById('ah-custom-status-clear').addEventListener('click',function(){if(input)input.value='';syncPreview();input&&input.focus()});
+  emojiButton&&emojiButton.addEventListener('click',function(){var choices=['💭','🙂','🎮','🎵','💤','🔥','✨','❤️'],index=choices.indexOf(state.emoji);state.emoji=choices[(index+1)%choices.length];syncPreview()});
+  expiryTrigger&&expiryTrigger.addEventListener('click',function(event){event.stopPropagation();var open=!expiry.classList.contains('open');expiry.classList.toggle('open',open);expiryTrigger.setAttribute('aria-expanded',open?'true':'false')});
+  document.querySelectorAll('[data-status-expiry]').forEach(function(button){button.addEventListener('click',function(){setExpiry(button.dataset.statusExpiry)})});
+  document.getElementById('ah-custom-status-save')&&document.getElementById('ah-custom-status-save').addEventListener('click',saveStatus);
+  document.addEventListener('click',function(event){if(expiry&&!expiry.contains(event.target)){expiry.classList.remove('open');expiryTrigger&&expiryTrigger.setAttribute('aria-expanded','false')}});
+  document.addEventListener('keydown',function(event){if(event.key==='Escape'&&modal&&modal.classList.contains('open')){event.stopPropagation();closeModal()}});
+  fetchProfile(CURRENT_USER,true).then(function(result){if(!result)return;state.profile=result.profile;renderFriendRows(result.friends);updateCustomizerPrompt();syncPreview()});
+})();
+</script>
 </body>
 </html>
