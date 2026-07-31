@@ -85,6 +85,7 @@ async def ensure_account_visual_columns(db: AsyncSession) -> None:
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS banner_url VARCHAR(512)"))
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS bio TEXT"))
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS display_name VARCHAR(32)"))
+    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS pronouns VARCHAR(40)"))
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS name_effect VARCHAR(32)"))
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS name_color_start VARCHAR(16)"))
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS name_color_end VARCHAR(16)"))
@@ -92,6 +93,9 @@ async def ensure_account_visual_columns(db: AsyncSession) -> None:
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS profile_card_bg_url VARCHAR(512)"))
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS account_status VARCHAR(16) DEFAULT 'online' NOT NULL"))
     await db.execute(text("UPDATE community_accounts SET account_status = 'online' WHERE account_status IS NULL OR account_status = ''"))
+    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS custom_status_text VARCHAR(128)"))
+    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS custom_status_emoji VARCHAR(32)"))
+    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS custom_status_expires_at TIMESTAMP WITH TIME ZONE"))
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS language VARCHAR(8) DEFAULT 'ru' NOT NULL"))
     await db.execute(text("UPDATE community_accounts SET language = 'ru' WHERE language IS NULL OR language = ''"))
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS session_version INTEGER DEFAULT 1 NOT NULL"))
@@ -307,6 +311,35 @@ async def update_presence_status(db: AsyncSession, account_id: int, status: str 
     return account
 
 
+async def update_custom_status(
+    db: AsyncSession,
+    account_id: int,
+    *,
+    status_text: str | None,
+    status_emoji: str | None,
+    expires_at: datetime | None,
+) -> Account | None:
+    """Persist or clear the short profile thought shown on profile cards."""
+    await ensure_account_visual_columns(db)
+    account = await get_account_by_id(db, account_id)
+    if not account:
+        return None
+
+    clean_text = re.sub(r"[\x00-\x1f\x7f]", "", str(status_text or "")).strip()[:128]
+    clean_emoji = re.sub(r"[\x00-\x1f\x7f]", "", str(status_emoji or "")).strip()[:32]
+    if clean_text:
+        account.custom_status_text = clean_text
+        account.custom_status_emoji = clean_emoji or "💭"
+        account.custom_status_expires_at = expires_at
+    else:
+        account.custom_status_text = None
+        account.custom_status_emoji = None
+        account.custom_status_expires_at = None
+    await db.commit()
+    await db.refresh(account)
+    return account
+
+
 async def update_account_language(db: AsyncSession, account_id: int, language: str | None) -> str | None:
     """Persist the user's UI language.
 
@@ -342,6 +375,7 @@ async def update_own_profile(
     db: AsyncSession,
     account_id: int,
     display_name: str | None,
+    pronouns: str | None,
     avatar_url: str | None,
     banner_url: str | None,
     bio: str | None,
@@ -361,6 +395,10 @@ async def update_own_profile(
         if clean_display_name and clean_display_name.casefold() != account.username.casefold()
         else None
     )
+    account.pronouns = "".join(
+        char for char in (pronouns or "").strip()
+        if char >= " " and char != "\x7f"
+    )[:40].strip() or None
     account.avatar_url = avatar_url or None
     account.banner_url = banner_url or None
     account.bio = bio or None
