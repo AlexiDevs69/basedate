@@ -1633,7 +1633,7 @@ document.addEventListener('DOMContentLoaded',()=>{
               <div id="ah-custom-profile-badges" class="ah-custom-profile-badges" aria-label="Справжні бейджі профілю"></div>
             </div>
 
-            <div class="ah-custom-profile-actions"><button class="primary" type="button">● Повідомлення</button><button class="icon" type="button" aria-label="Друзі">♟</button><button class="icon" type="button" aria-label="Інше">•••</button></div>
+            <div class="ah-custom-profile-actions"><button class="primary" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 5.75A3.75 3.75 0 0 1 8.25 2h7.5a3.75 3.75 0 0 1 3.75 3.75v6.5A3.75 3.75 0 0 1 15.75 16H10l-4.2 3.15c-.66.5-1.6.02-1.55-.8L4.5 16.1V5.75Z"></path></svg><span>Повідомлення</span></button><button class="icon" type="button" aria-label="Друзі" data-title="Друзі"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm7.25-1.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM2.5 20a7 7 0 0 1 14 0m.5-6.25 1.75 1.75L22 12.25"></path></svg></button><button class="icon" type="button" aria-label="Інше" data-title="Більше"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.75"></circle><circle cx="12" cy="12" r="1.75"></circle><circle cx="19" cy="12" r="1.75"></circle></svg></button></div>
             <div class="ah-custom-bio-wrap"><textarea id="ah-profile-bio-input" class="ah-custom-bio-input" name="bio" maxlength="280" placeholder="Розкажіть цікавий факт про себе">{{ account.bio or '' }}</textarea><div id="ah-profile-bio-preview" hidden>{{ account.bio or '' }}</div></div>
             <div class="ah-custom-profile-info"><b>Зареєстрований</b><strong id="ah-profile-created-at" data-created-at="{{ account.created_at.isoformat() if account.created_at else '' }}">{{ account.created_at.strftime('%d.%m.%Y') if account.created_at else '—' }}</strong></div>
           </div>
@@ -2419,8 +2419,8 @@ document.addEventListener('DOMContentLoaded',()=>{
     const selected=tagData.find(function(server){return !!server.tag_selected});
     if(selected){const tag=tagParts(selected);trigger.querySelector('.tag-glyph').textContent=tag.glyph;trigger.querySelector('.tag-copy').textContent=tag.text;trigger.title=selected.name||''}
     else{trigger.querySelector('.tag-glyph').textContent='◆';trigger.querySelector('.tag-copy').textContent='Тег сервера';trigger.title=''}
-    let html='<button class="ah-server-tag-option'+(!selected?' selected':'')+'" type="button" role="menuitem" data-server-tag-id=""><span class="ah-server-tag-icon">×</span><span class="ah-server-tag-copy"><b>Без тега</b><small>Не показувати тег біля імені</small></span></button>';
-    if(tagData.length){html+=tagData.map(function(server){const tag=tagParts(server);const icon=server.icon_url?' style="background-image:url(\''+esc(server.icon_url)+'\')"':'';return '<button class="ah-server-tag-option'+(server.tag_selected?' selected':'')+'" type="button" role="menuitem" data-server-tag-id="'+Number(server.id||0)+'"><span class="ah-server-tag-icon"'+icon+'>'+(server.icon_url?'':esc(tag.glyph))+'</span><span class="ah-server-tag-copy"><b>'+esc(server.name||'Сервер')+'</b><small>'+esc(tag.glyph)+' '+esc(tag.text)+'</small></span></button>'}).join('')}
+    let html='<button class="ah-server-tag-option'+(!selected?' selected':'')+'" type="button" role="menuitem" data-server-tag-id=""><span class="ah-server-tag-icon none">—</span><span class="ah-server-tag-copy"><b>Немає тега сервера</b></span><span class="ah-server-tag-check" aria-hidden="true"></span></button>';
+    if(tagData.length){html+=tagData.map(function(server){const tag=tagParts(server);const icon=server.icon_url?' style="background-image:url(\''+esc(server.icon_url)+'\')"':'';return '<button class="ah-server-tag-option'+(server.tag_selected?' selected':'')+'" type="button" role="menuitem" data-server-tag-id="'+Number(server.id||0)+'"><span class="ah-server-tag-icon"'+icon+'>'+(server.icon_url?'':esc(tag.glyph))+'</span><span class="ah-server-tag-copy"><b>'+esc(server.name||'Сервер')+'</b></span><span class="ah-server-tag-chip"><i>'+esc(tag.glyph)+'</i>'+esc(tag.text)+'</span><span class="ah-server-tag-check" aria-hidden="true"></span></button>'}).join('')}
     else{html+='<div class="ah-server-tag-empty">На ваших серверах поки немає доступних тегів.</div>'}
     menu.innerHTML=html;
   }
@@ -3328,6 +3328,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     while(next && next.classList && (next.classList.contains('ah-verified-profile-badge')||next.classList.contains('ah-verified-profile-badge')||next.classList.contains('ah-nitro-profile-badge')||next.classList.contains('ah-gifter-profile-badge'))){
       const remove=next;next=next.nextElementSibling;remove.remove();
     }
+    if(el.closest&&el.closest('.ah-custom-profile-card'))return;
     let html='';
     html+=verifiedBadgeHtml(nitro);
     if(nitro&&nitro.active)html+=badgeHtml(nitro);
@@ -4961,6 +4962,31 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
 .ah-custom-status-save{min-width:106px;height:40px;border:0;border-radius:7px;background:#5865f2;color:#fff;font-weight:750;cursor:pointer}.ah-custom-status-save:hover{background:#4752c4}.ah-custom-status-save:disabled{opacity:.55;cursor:wait}
 @keyframes ahStatusFade{from{opacity:0}to{opacity:1}}@keyframes ahStatusPop{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:none}}@keyframes ahStatusMenu{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 @media(max-width:680px){.ah-custom-status-preview{margin-left:22px;margin-right:22px}.ah-custom-profile-prompt{left:122px!important}}
+/* Discord-style profile polish: one badge rail, compact actions, anchored status bubble. */
+.ah-custom-profile-badges{display:flex!important;flex-flow:row nowrap!important;align-items:center!important;justify-content:flex-start!important;gap:5px!important;width:auto!important;max-width:100%!important;min-height:18px!important;margin:7px 0 0!important;overflow:visible!important}
+.ah-custom-profile-actions{display:flex!important;align-items:center!important;gap:8px!important;margin-top:18px!important}
+.ah-custom-profile-actions button{height:34px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;border:0!important;border-radius:6px!important;padding:0 13px!important;color:#fff!important;font:700 13px var(--ah-profile-font)!important;cursor:pointer;transition:background-color .14s ease,transform .14s ease!important}
+.ah-custom-profile-actions button:active{transform:translateY(1px)}
+.ah-custom-profile-actions .primary{flex:0 1 auto!important;min-width:124px!important;background:#5865f2!important}.ah-custom-profile-actions .primary:hover{background:#4752c4!important;filter:none!important}
+.ah-custom-profile-actions .icon{width:34px!important;min-width:34px!important;padding:0!important;background:#2f3136!important}.ah-custom-profile-actions .icon:hover{background:#3a3c43!important;filter:none!important}
+.ah-custom-profile-actions svg{width:17px;height:17px;fill:currentColor}.ah-custom-profile-actions .icon:nth-child(2) svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ah-server-tag-menu{width:274px!important;max-height:280px!important;padding:6px!important;border-radius:8px!important;background:#2b2d31!important}
+.ah-server-tag-option{min-height:42px!important;padding:6px 8px!important;gap:9px!important}.ah-server-tag-option.selected:after{content:none!important}
+.ah-server-tag-copy{flex:1 1 auto!important;min-width:0!important}.ah-server-tag-icon.none{background:#35373d!important;color:#949ba4!important}
+.ah-server-tag-chip{display:inline-flex;align-items:center;gap:4px;max-width:86px;height:21px;padding:0 6px;border-radius:4px;background:#1e1f22;color:#dbdee1;font-size:9px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ah-server-tag-chip i{color:#8ea1ff;font-style:normal}.ah-server-tag-check{width:16px;flex:0 0 16px;color:#fff;text-align:center;font-weight:900}.ah-server-tag-option.selected .ah-server-tag-check:after{content:"✓"}
+.ah-custom-profile-prompt,.ah-profile-thought,.ah-custom-status-preview-bubble{overflow:visible!important}
+.ah-custom-profile-prompt:before,.ah-profile-thought:before,.ah-custom-status-preview-bubble:before{content:"";position:absolute;left:-13px;top:12px;width:9px;height:9px;border:1px solid rgba(255,255,255,.08);border-radius:50%;background:#35373d;box-sizing:border-box}
+.ah-custom-profile-prompt:after,.ah-profile-thought:after,.ah-custom-status-preview-bubble:after{content:"";position:absolute;left:-22px;top:4px;width:5px;height:5px;border-radius:50%;background:#4e5058}
+.ah-custom-profile-prompt{left:124px!important;right:auto!important;top:-43px!important;width:min(210px,calc(100% - 144px))!important;min-height:42px!important;padding:8px 11px!important;border-radius:10px!important;background:#2b2d31!important}
+.ah-custom-profile-prompt:before{background:#2b2d31}
+.ah-custom-status-preview-bubble{left:111px!important;top:80px!important;right:16px!important;min-height:44px!important;padding:8px 11px!important;border-radius:10px!important;background:rgba(53,55,62,.96)!important}.ah-custom-status-preview-bubble:before{background:#35373e}
+#ah-v3-mini .ah-v3-body,#ah-v3-overlay .ah-v3-full-left-inner{position:relative!important}
+#ah-v3-mini .ah-v3-body>.ah-profile-thought{position:absolute!important;top:-42px!important;left:93px!important;right:14px!important;min-height:42px!important;margin:0!important;border-radius:10px!important;background:#2b2d31!important}
+#ah-v3-overlay .ah-v3-full-left-inner>.ah-profile-thought{position:absolute!important;top:136px!important;left:146px!important;width:220px!important;margin:0!important;z-index:3!important;border-radius:10px!important}
+.profile-card .profile-body>.ah-profile-thought{top:88px!important;left:111px!important;right:12px!important;min-height:42px!important;border-radius:10px!important}
+.ah-v3-handle,.ah-v3-full-handle,.profile-handle{display:inline-flex!important;align-items:center!important;vertical-align:middle!important}
+.ah-v3-handle+.ah-live-server-tag,.ah-v3-full-handle+.ah-live-server-tag,.profile-handle+.ah-live-server-tag{display:inline-flex!important;margin:0 0 0 5px!important;vertical-align:middle!important}
+.ah-live-server-tag.compact{height:18px!important;max-width:88px!important;margin:0 0 0 5px!important;padding:1px 5px!important;border-radius:4px!important;background:#2b2d31!important;font-size:9px!important;line-height:1!important;vertical-align:middle!important}
 </style>
 <div id="ah-custom-status-modal" class="ah-custom-status-backdrop" aria-hidden="true">
   <div class="ah-custom-status-card" role="dialog" aria-modal="true" aria-labelledby="ah-custom-status-title">
@@ -5007,7 +5033,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   function applyCarrier(node,profile){
     if(!node||!profile)return;
     var card=node.matches&&node.matches('.profile-card')?node:node.closest&&node.closest('.profile-card');
-    if(card){card.querySelectorAll('[data-ah-live-decoration]').forEach(function(item){item.remove()});var avatar=card.querySelector('.big-avatar,.profile-avatar');if(statusActive(profile.custom_status)&&avatar)avatar.insertAdjacentHTML('afterend',thoughtHtml(profile.custom_status));var handle=card.querySelector('.profile-handle');if(handle&&tagParts(profile.server_tag))handle.insertAdjacentHTML('afterend',serverTagHtml(profile.server_tag,false));setPresence(card,profile.account_status);setPresenceCopy(card,profile.account_status)}
+    if(card){card.querySelectorAll('[data-ah-live-decoration]').forEach(function(item){item.remove()});var avatar=card.querySelector('.big-avatar,.profile-avatar');if(statusActive(profile.custom_status)&&avatar)avatar.insertAdjacentHTML('afterend',thoughtHtml(profile.custom_status));var handle=card.querySelector('.profile-handle');if(handle&&tagParts(profile.server_tag))handle.insertAdjacentHTML('afterend',serverTagHtml(profile.server_tag,true));setPresence(card,profile.account_status);setPresenceCopy(card,profile.account_status)}
     var label=node.matches&&node.matches('.msg-name,.visual-name,.member-name,.dm-name')?node:node.querySelector&&node.querySelector('.dm-name,.member-name');
     if(label&&!label.closest('.profile-card')){
       var parent=label.parentElement;
@@ -5035,7 +5061,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     if(statusActive(status)&&avatar)avatar.insertAdjacentHTML('afterend',thoughtHtml(status));
     var oldTag=root.querySelector('.ah-live-server-tag');if(oldTag)oldTag.remove();
     var handle=root.querySelector('#ah-v3-handle,#ah-v3-full-handle');
-    if(handle&&tagParts(profile.server_tag))handle.insertAdjacentHTML('afterend',serverTagHtml(profile.server_tag));
+    if(handle&&tagParts(profile.server_tag))handle.insertAdjacentHTML('afterend',serverTagHtml(profile.server_tag,true));
     setPresence(root,profile.account_status);
   }
   function applyProfile(username,profile,badges){
