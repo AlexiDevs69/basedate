@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.9.14",
+      "date": "2026-08-01",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Rollback thought bubble functionality."
+      ],
+      "source_sha": "33a06c3ffb8565a17022720e2679c2cca5dc793f"
+    },
+    {
       "version": "1.9.13",
       "date": "2026-08-01",
       "title": "Виправлення та стабільність",
