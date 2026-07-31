@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.9.9",
+      "date": "2026-07-31",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено продуктивність: profile badge functionality and styles."
+      ],
+      "source_sha": "af272b7261955e25be149b6beb9eff1ec65f9ad1"
+    },
+    {
       "version": "1.9.8",
       "date": "2026-07-31",
       "title": "Виправлення та стабільність",
