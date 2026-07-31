@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.8.2",
+      "date": "2026-07-31",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance profile customization features."
+      ],
+      "source_sha": "fb85af46684994da5f8ddd0b8e18af34a43dd39b"
+    },
+    {
       "version": "1.8.1",
       "date": "2026-07-31",
       "title": "Виправлення та стабільність",
