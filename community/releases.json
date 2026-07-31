@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.6.0",
+      "date": "2026-07-31",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: pronouns and custom status fields to models."
+      ],
+      "source_sha": "7ef39493414f7e052099ced8d1640200e7783caa"
+    },
+    {
       "version": "1.5.19",
       "date": "2026-07-29",
       "title": "Виправлення та стабільність",
