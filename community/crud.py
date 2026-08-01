@@ -3628,6 +3628,9 @@ async def unpin_server_message(db: AsyncSession, server_id: int, channel_id: int
 
 _NITRO_TABLES_READY = False
 NITRO_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+BOOST_CODE_PREFIX = "ALEXI-BOOST-"
+BOOST_CODE_MIN_AMOUNT = 1
+BOOST_CODE_MAX_AMOUNT = 100
 NITRO_TIER_LABELS = {
     "basic": "AlexiHub Nitro",
     "gold": "Золото Nitro",
@@ -3823,6 +3826,11 @@ def is_nitro_code_generator(account: Account | None) -> bool:
     username = (getattr(account, 'username', None) or '').strip().lower()
     admin_roles = {'owner', 'admin', 'administrator', 'developer', 'dev', 'code', 'staff', 'модер', 'админ'}
     return bool(getattr(account, 'is_verified', False) or role in admin_roles or username in {'alexi', 'anchousxvii'})
+
+
+def is_boost_code_generator(account: Account | None) -> bool:
+    """Boost promo codes are a verified-account-only feature."""
+    return bool(account and getattr(account, "is_verified", False))
 
 
 async def create_nitro_gift_code(db: AsyncSession, creator_id: int, days: int = 30, note: str | None = None) -> dict:
@@ -4052,6 +4060,35 @@ async def ensure_server_boost_tables(db: AsyncSession) -> None:
         CREATE INDEX IF NOT EXISTS ix_community_account_server_tags_server
         ON community_account_server_tags (server_id)
     """))
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_server_boost_gift_codes (
+            id SERIAL PRIMARY KEY,
+            code VARCHAR(80) NOT NULL UNIQUE,
+            boosts INTEGER NOT NULL DEFAULT 1 CHECK (boosts >= 1 AND boosts <= 100),
+            note VARCHAR(255),
+            created_by_id INTEGER REFERENCES community_accounts(id) ON DELETE SET NULL,
+            used_by_id INTEGER REFERENCES community_accounts(id) ON DELETE SET NULL,
+            is_used BOOLEAN NOT NULL DEFAULT FALSE,
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+            used_at TIMESTAMP WITH TIME ZONE
+        )
+    """))
+    await db.execute(text("""
+        CREATE UNIQUE INDEX IF NOT EXISTS ix_community_server_boost_gift_codes_code
+        ON community_server_boost_gift_codes (code)
+    """))
+    await db.execute(text("""
+        CREATE INDEX IF NOT EXISTS ix_community_server_boost_gift_codes_used
+        ON community_server_boost_gift_codes (is_used, used_by_id)
+    """))
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_account_boost_credits (
+            account_id INTEGER PRIMARY KEY REFERENCES community_accounts(id) ON DELETE CASCADE,
+            boosts_total INTEGER NOT NULL DEFAULT 0 CHECK (boosts_total >= 0),
+            last_source_code VARCHAR(80),
+            updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+        )
+    """))
     await db.commit()
     _SERVER_BOOST_TABLES_READY = True
 
@@ -4060,6 +4097,138 @@ def nitro_boost_capacity(subscription: dict | None) -> int:
     if not subscription or not subscription.get("active"):
         return 0
     return int(NITRO_TIER_BOOSTS.get(str(subscription.get("tier") or "basic"), 2))
+
+
+def _new_boost_code() -> str:
+    token = "".join(secrets.choice(NITRO_CODE_ALPHABET) for _ in range(15))
+    return BOOST_CODE_PREFIX + _chunk_nitro_code(token)
+
+
+def normalize_boost_code(value: str | None) -> str:
+    """Accept generated codes with or without separators and the public prefix."""
+    compact = re.sub(r"[^A-Z0-9]", "", (value or "").strip().upper())
+    if compact.startswith("ALEXIBOOST"):
+        compact = compact[len("ALEXIBOOST"):]
+    elif compact.startswith("BOOST"):
+        compact = compact[len("BOOST"):]
+    if len(compact) != 15:
+        return ""
+    return BOOST_CODE_PREFIX + _chunk_nitro_code(compact)
+
+
+async def _generate_unique_boost_code(db: AsyncSession) -> str:
+    await ensure_server_boost_tables(db)
+    for _ in range(32):
+        code = _new_boost_code()
+        row = (await db.execute(text("""
+            SELECT id
+            FROM community_server_boost_gift_codes
+            WHERE code = :code
+            LIMIT 1
+        """), {"code": code})).first()
+        if not row:
+            return code
+    raise RuntimeError("Could not generate unique server boost code")
+
+
+async def create_server_boost_gift_code(
+    db: AsyncSession,
+    creator_id: int,
+    boosts: int = 2,
+    note: str | None = None,
+) -> dict:
+    await ensure_server_boost_tables(db)
+    boosts = max(BOOST_CODE_MIN_AMOUNT, min(int(boosts or 2), BOOST_CODE_MAX_AMOUNT))
+    code = await _generate_unique_boost_code(db)
+    await db.execute(text("""
+        INSERT INTO community_server_boost_gift_codes
+            (code, boosts, note, created_by_id)
+        VALUES (:code, :boosts, :note, :created_by_id)
+    """), {
+        "code": code,
+        "boosts": boosts,
+        "note": (note or "").strip()[:255] or None,
+        "created_by_id": int(creator_id),
+    })
+    await db.commit()
+    return {
+        "code": code,
+        "boosts": boosts,
+        "note": (note or "").strip()[:255],
+    }
+
+
+async def get_account_promo_boosts(
+    db: AsyncSession,
+    account_id: int,
+    *,
+    for_update: bool = False,
+) -> int:
+    await ensure_server_boost_tables(db)
+    lock_clause = " FOR UPDATE" if for_update else ""
+    row = (await db.execute(text(f"""
+        SELECT boosts_total
+        FROM community_account_boost_credits
+        WHERE account_id = :account_id
+        LIMIT 1{lock_clause}
+    """), {"account_id": int(account_id)})).mappings().first()
+    return max(0, int(row["boosts_total"] or 0)) if row else 0
+
+
+async def redeem_server_boost_gift_code(
+    db: AsyncSession,
+    account_id: int,
+    code_value: str | None,
+) -> dict:
+    await ensure_server_boost_tables(db)
+    code = normalize_boost_code(code_value)
+    if not code:
+        return {"ok": False, "error": "bad_code", "message": "Введіть коректний код бустів."}
+
+    row = (await db.execute(text("""
+        SELECT id, code, boosts, is_used
+        FROM community_server_boost_gift_codes
+        WHERE code = :code
+        LIMIT 1
+        FOR UPDATE
+    """), {"code": code})).mappings().first()
+    if not row:
+        return {"ok": False, "error": "not_found", "message": "Код бустів не знайдено."}
+    if bool(row["is_used"]):
+        return {"ok": False, "error": "used", "message": "Цей код бустів уже активовано."}
+
+    boosts = max(BOOST_CODE_MIN_AMOUNT, int(row["boosts"] or 1))
+    await db.execute(text("""
+        INSERT INTO community_account_boost_credits
+            (account_id, boosts_total, last_source_code, updated_at)
+        VALUES (:account_id, :boosts, :source_code, NOW())
+        ON CONFLICT (account_id)
+        DO UPDATE SET boosts_total = community_account_boost_credits.boosts_total + EXCLUDED.boosts_total,
+                      last_source_code = EXCLUDED.last_source_code,
+                      updated_at = NOW()
+    """), {
+        "account_id": int(account_id),
+        "boosts": boosts,
+        "source_code": code,
+    })
+    await db.execute(text("""
+        UPDATE community_server_boost_gift_codes
+        SET is_used = TRUE,
+            used_by_id = :account_id,
+            used_at = NOW()
+        WHERE id = :id AND is_used = FALSE
+    """), {"account_id": int(account_id), "id": int(row["id"])})
+    await db.commit()
+
+    center = await get_account_boost_center(db, account_id)
+    return {
+        "ok": True,
+        "code": code,
+        "boosts_added": boosts,
+        "promo_boosts": int(center.get("promo_boosts") or 0),
+        "capacity": int(center.get("capacity") or 0),
+        "remaining": int(center.get("remaining") or 0),
+    }
 
 
 def _server_boost_level(total_boosts: int | float | None) -> dict:
@@ -4108,10 +4277,12 @@ def _server_tag_payload(tag_text: str | None, tag_icon: str | None, *, unlocked:
 
 
 async def reconcile_account_server_boosts(db: AsyncSession, account_id: int) -> dict:
-    """Trim newest allocations when a Nitro subscription expires or loses a tier."""
+    """Keep allocations within the combined Nitro + redeemed-code capacity."""
     await ensure_server_boost_tables(db)
     subscription = await get_nitro_subscription(db, account_id)
-    capacity = nitro_boost_capacity(subscription)
+    nitro_capacity = nitro_boost_capacity(subscription)
+    promo_boosts = await get_account_promo_boosts(db, account_id)
+    capacity = nitro_capacity + promo_boosts
     rows = (await db.execute(text("""
         SELECT server_id, amount
         FROM community_server_boost_allocations
@@ -4151,6 +4322,8 @@ async def reconcile_account_server_boosts(db: AsyncSession, account_id: int) -> 
     return {
         "subscription": subscription,
         "capacity": capacity,
+        "nitro_capacity": nitro_capacity,
+        "promo_boosts": promo_boosts,
         "allocated": allocated,
         "remaining": max(0, capacity - allocated),
     }
@@ -4221,6 +4394,8 @@ async def get_server_boost_status(
         "tag": tag,
         "viewer": {
             "capacity": int(viewer["capacity"]),
+            "nitro_capacity": int(viewer.get("nitro_capacity") or 0),
+            "promo_boosts": int(viewer.get("promo_boosts") or 0),
             "allocated_total": int(viewer["allocated"]),
             "remaining": int(viewer["remaining"]),
             "allocated_here": allocated_here,
@@ -4260,6 +4435,7 @@ async def change_server_boost_allocation(
         WHERE account_id = :account_id
         FOR UPDATE
     """), {"account_id": int(account_id)})
+    await get_account_promo_boosts(db, account_id, for_update=True)
     viewer = await reconcile_account_server_boosts(db, account_id)
     current = int((await db.execute(text("""
         SELECT COALESCE(amount, 0)
@@ -4268,9 +4444,9 @@ async def change_server_boost_allocation(
         LIMIT 1
     """), {"account_id": int(account_id), "server_id": int(server_id)})).scalar_one_or_none() or 0)
     if delta > 0:
-        if not viewer["subscription"].get("active"):
+        if int(viewer["capacity"]) <= 0:
             await db.rollback()
-            return {"ok": False, "error": "nitro_required"}
+            return {"ok": False, "error": "boost_required"}
         if int(viewer["remaining"]) <= 0:
             await db.rollback()
             return {"ok": False, "error": "no_boosts_left"}
@@ -4414,6 +4590,8 @@ async def get_account_boost_center(db: AsyncSession, account_id: int) -> dict:
         "ok": True,
         "subscription": viewer["subscription"],
         "capacity": int(viewer["capacity"]),
+        "nitro_capacity": int(viewer.get("nitro_capacity") or 0),
+        "promo_boosts": int(viewer.get("promo_boosts") or 0),
         "allocated": int(viewer["allocated"]),
         "remaining": int(viewer["remaining"]),
         "selected_tag_server_id": int(selected_server_id) if selected_server_id else None,
