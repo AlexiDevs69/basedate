@@ -7857,7 +7857,7 @@ body .composer-wrap{
       const direct=menu?.querySelector('[data-block-action="message"]');
       const copy=menu?.querySelector('[data-block-action="copy"]');
       if(toggle){ toggle.hidden=own; toggle.textContent=currentStatus.blocked_by_me?text().unblock:text().block; }
-      if(direct) direct.hidden=own||currentStatus.blocked_by_me||currentStatus.blocked_me;
+      if(direct) direct.hidden=own||currentStatus.blocked_by_me||currentStatus.blocked_me||currentStatus.can_message===false;
       if(copy) copy.hidden=own;
     }catch(e){
       closeProfileMenu(); notify(e.message||text().actionError);
@@ -8669,6 +8669,137 @@ body .composer-wrap{
 
   subnav.hidden=!accountIsActive();
   updateFromScroll();
+})();
+</script>
+<style id="ah-data-privacy-settings-css">
+/* Discord-style Data & Privacy permissions shared by every settings context. */
+.ah-privacy-subnav{position:relative;display:grid;gap:0;margin:2px 0 10px 17px;padding:2px 0 2px 18px}
+.ah-privacy-subnav[hidden]{display:none!important}
+.ah-privacy-subnav:before{content:"";position:absolute;left:0;top:2px;bottom:2px;width:1px;border-radius:99px;background:#3f4147}
+.ah-privacy-subnav-btn{position:relative;width:100%;min-height:36px;border:0;border-radius:5px;background:transparent;color:#9499a3;padding:6px 8px;text-align:left;font:inherit;font-size:14px;font-weight:500;line-height:18px;cursor:pointer;transition:color .12s ease,background-color .12s ease}
+.ah-privacy-subnav-btn:hover{color:#dbdee1;background:rgba(78,80,88,.18)}
+.ah-privacy-subnav-btn.active{color:#fff}
+.ah-privacy-subnav-btn.active:before{content:"";position:absolute;left:-18px;top:0;bottom:0;width:2px;border-radius:99px;background:#fff}
+.ah-privacy-subnav-btn:focus-visible{outline:2px solid #5865f2;outline-offset:-2px;color:#fff}
+.ah-settings-page[data-settings-page="privacy"]{max-width:760px;padding-bottom:max(300px,42vh)}
+.ah-data-privacy{color:#f2f3f5}
+.ah-data-privacy>h1{margin-bottom:18px}
+.ah-privacy-lead{margin:0 0 42px;color:#b5bac1;font-size:14px;line-height:1.5}
+.ah-privacy-section{scroll-margin-top:94px;padding:0 0 38px;margin:0 0 38px;border-bottom:1px solid #303238;outline:0}
+.ah-privacy-section:last-child{border-bottom:0;margin-bottom:0}
+.ah-privacy-section h2{margin:0 0 24px;font-size:24px;line-height:1.22;font-weight:760;letter-spacing:-.025em;color:#f2f3f5}
+.ah-privacy-kicker{margin:0 0 8px;color:#f2f3f5;font-size:15px;font-weight:800}
+.ah-privacy-copy{margin:0 0 18px;color:#b5bac1;font-size:13px;line-height:1.45}
+.ah-privacy-scope{height:42px;width:100%;display:flex;align-items:center;gap:10px;margin:0 0 14px;padding:0 12px;border:1px solid #3f4147;border-radius:8px;background:#1e1f24;color:#f2f3f5;font-size:14px;font-weight:750}
+.ah-privacy-scope-icon{width:24px;height:24px;border-radius:8px;background:#5865f2;display:grid;place-items:center;color:#fff;font-size:12px;font-weight:950;flex:0 0 auto}
+.ah-privacy-scope svg{width:18px;height:18px;margin-left:auto;color:#b5bac1;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ah-privacy-setting{min-height:64px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:center;padding:10px 0}
+.ah-privacy-setting+.ah-privacy-setting{border-top:1px solid rgba(78,80,88,.45)}
+.ah-privacy-setting b{display:block;color:#f2f3f5;font-size:14px;font-weight:800;line-height:1.35}
+.ah-privacy-setting p{margin:4px 0 0;color:#aeb3bd;font-size:13px;line-height:1.42;max-width:590px}
+.ah-privacy-switch{position:relative;width:44px;height:24px;display:inline-block;flex:0 0 auto}
+.ah-privacy-switch input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.ah-privacy-switch-track{position:absolute;inset:0;border:1px solid #4b4e57;border-radius:999px;background:#2b2d31;transition:background .16s ease,border-color .16s ease,opacity .16s ease;pointer-events:none}
+.ah-privacy-switch-track:after{content:"";position:absolute;width:16px;height:16px;left:3px;top:3px;border-radius:50%;background:#f2f3f5;box-shadow:0 1px 3px rgba(0,0,0,.45);transition:transform .16s ease}
+.ah-privacy-switch input:checked+.ah-privacy-switch-track{background:#5865f2;border-color:#5865f2}
+.ah-privacy-switch input:checked+.ah-privacy-switch-track:after{transform:translateX(20px)}
+.ah-privacy-switch input:focus-visible+.ah-privacy-switch-track{outline:2px solid #fff;outline-offset:2px}
+.ah-privacy-switch input:disabled{cursor:wait}
+.ah-privacy-switch input:disabled+.ah-privacy-switch-track{opacity:.55}
+.ah-privacy-status{min-height:20px;margin:-6px 0 20px;color:#949ba4;font-size:12px;font-weight:700}
+.ah-privacy-status.ok{color:#23a55a}.ah-privacy-status.error{color:#f23f42}
+.ah-privacy-block-copy{margin:-12px 0 18px;color:#b5bac1;font-size:13px;line-height:1.45}
+.ah-privacy-retry{border:0;border-radius:6px;background:#5865f2;color:#fff;font:inherit;font-size:12px;font-weight:850;padding:7px 11px;cursor:pointer}
+#ah-dm-privacy-notice{margin:0 12px 8px;padding:10px 12px;border:1px solid rgba(240,178,50,.34);border-radius:8px;background:rgba(240,178,50,.1);color:#f0d7a0;font-size:13px;line-height:1.4}
+#ah-dm-privacy-notice b{color:#fff}
+@media(max-width:680px){.ah-privacy-section h2{font-size:21px}.ah-privacy-setting{gap:12px}.ah-data-privacy>h1{font-size:24px}}
+@media(prefers-reduced-motion:reduce){.ah-privacy-subnav-btn,.ah-privacy-switch-track,.ah-privacy-switch-track:after{transition:none!important}}
+</style>
+<script id="ah-data-privacy-settings-js">
+(function(){
+  'use strict';
+  if(window.__ahDataPrivacyReady)return;
+  window.__ahDataPrivacyReady=true;
+
+  var STRINGS={
+    ru:{title:'Разрешения для сообщений',lead:'Управляйте тем, кто может писать вам в личные сообщения и отправлять запросы дружбы.',dmNav:'Личные сообщения',friendsNav:'Запросы дружбы',blockedNav:'Игнорировать и блокировать',dmTitle:'Разрешения для личных сообщений (ЛС)',dmKicker:'От кого принимать личные сообщения',dmCopy:'Друзья всегда могут писать вам. Этот параметр управляет сообщениями от других участников ваших серверов.',allServers:'Все серверы',dmServer:'Разрешить ЛС от других участников моих серверов',dmServerCopy:'Если выключено, начать новый диалог с вами смогут только друзья.',friendTitle:'Разрешения для запросов дружбы',friendKicker:'Разрешить запросы дружбы от…',everyone:'Все',mutual:'Друзья друзей',serverMembers:'Участники серверов',serverMembersCopy:'Пользователи смогут отправлять запросы только на серверах, где состоите вы оба.',blockedTitle:'Игнорировать и блокировать',blockedCopy:'Просматривайте заблокированные учётные записи и при необходимости снимайте блокировку.',loading:'Загрузка настроек…',saved:'Изменения сохранены',loadError:'Не удалось загрузить настройки.',saveError:'Не удалось сохранить изменения.',retry:'Повторить',dmDenied:'Этот пользователь принимает личные сообщения только от друзей или разрешённых участников серверов.'},
+    uk:{title:'Дозволи для повідомлень',lead:'Керуйте тим, хто може писати вам в особисті повідомлення та надсилати запити дружби.',dmNav:'Особисті повідомлення',friendsNav:'Запити дружби',blockedNav:'Ігнорувати й блокувати',dmTitle:'Дозволи для особистих повідомлень (ЛС)',dmKicker:'Від кого приймати особисті повідомлення',dmCopy:'Друзі завжди можуть писати вам. Цей параметр керує повідомленнями від інших учасників ваших серверів.',allServers:'Усі сервери',dmServer:'Дозволити ЛС від інших учасників моїх серверів',dmServerCopy:'Якщо вимкнено, почати новий діалог із вами зможуть лише друзі.',friendTitle:'Дозволи для запитів дружби',friendKicker:'Дозволити запити дружби від…',everyone:'Усі',mutual:'Друзі друзів',serverMembers:'Учасники серверів',serverMembersCopy:'Користувачі зможуть надсилати запити лише на серверах, де перебуваєте ви обоє.',blockedTitle:'Ігнорувати й блокувати',blockedCopy:'Переглядайте заблоковані облікові записи та за потреби знімайте блокування.',loading:'Завантаження налаштувань…',saved:'Зміни збережено',loadError:'Не вдалося завантажити налаштування.',saveError:'Не вдалося зберегти зміни.',retry:'Повторити',dmDenied:'Цей користувач приймає особисті повідомлення лише від друзів або дозволених учасників серверів.'},
+    en:{title:'Message permissions',lead:'Control who can send you direct messages and friend requests.',dmNav:'Direct messages',friendsNav:'Friend requests',blockedNav:'Ignore & block',dmTitle:'Direct message permissions',dmKicker:'Who can send you direct messages',dmCopy:'Friends can always message you. This setting controls messages from other members of your servers.',allServers:'All servers',dmServer:'Allow DMs from other members of my servers',dmServerCopy:'When disabled, only friends can start a new conversation with you.',friendTitle:'Friend request permissions',friendKicker:'Allow friend requests from…',everyone:'Everyone',mutual:'Friends of friends',serverMembers:'Server members',serverMembersCopy:'People can send requests when you share at least one server.',blockedTitle:'Ignore & block',blockedCopy:'Review blocked accounts and unblock them when needed.',loading:'Loading settings…',saved:'Changes saved',loadError:'Could not load settings.',saveError:'Could not save changes.',retry:'Retry',dmDenied:'This user only accepts direct messages from friends or permitted server members.'}
+  };
+  function lang(){var v='';try{v=localStorage.getItem('alexihub_language')||localStorage.getItem('alexihub-language')||''}catch(e){}v=(v||document.documentElement.lang||'ru').toLowerCase();return v.indexOf('uk')===0?'uk':v.indexOf('en')===0?'en':'ru'}
+  function t(){return STRINGS[lang()]||STRINGS.ru}
+  function esc(v){return String(v==null?'':v).replace(/[&<>'"]/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]})}
+  async function api(url,options){var response=await fetch(url,Object.assign({credentials:'same-origin',headers:{Accept:'application/json','Content-Type':'application/json'}},options||{}));var data=await response.json().catch(function(){return {}});if(!response.ok||data.ok===false)throw new Error(data.message||data.error||'request_failed');return data}
+  function toast(message){if(typeof window.settingsToast==='function')window.settingsToast(message);else if(typeof window.showActionToast==='function')window.showActionToast(message)}
+
+  var modal=document.getElementById('ah-user-settings');
+  if(!modal)return;
+  var main=modal.querySelector('.ah-settings-main');
+  var page=modal.querySelector('[data-settings-page="privacy"]');
+  var nav=modal.querySelector('[data-settings-tab="privacy"]');
+  if(!main||!page||!nav)return;
+  var c=t(),loaded=false,busy=false,state=null,lastSaved=null,frame=0;
+
+  function switchRow(field,title,copy){
+    return '<div class="ah-privacy-setting"><div><b>'+esc(title)+'</b>'+(copy?'<p>'+esc(copy)+'</p>':'')+'</div><label class="ah-privacy-switch"><input type="checkbox" data-privacy-field="'+esc(field)+'" aria-label="'+esc(title)+'" disabled><span class="ah-privacy-switch-track"></span></label></div>';
+  }
+  function buildPage(){
+    page.innerHTML='<div class="ah-data-privacy"><h1>'+esc(c.title)+'</h1><p class="ah-privacy-lead">'+esc(c.lead)+'</p><div id="ah-privacy-status" class="ah-privacy-status" role="status" aria-live="polite">'+esc(c.loading)+'</div>'+
+      '<section id="privacy-direct-messages" class="ah-privacy-section" data-privacy-section tabindex="-1"><h2>'+esc(c.dmTitle)+'</h2><p class="ah-privacy-kicker">'+esc(c.dmKicker)+'</p><p class="ah-privacy-copy">'+esc(c.dmCopy)+'</p><div class="ah-privacy-scope"><span class="ah-privacy-scope-icon">AH</span><span>'+esc(c.allServers)+'</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"></path></svg></div>'+switchRow('allow_dm_from_server_members',c.dmServer,c.dmServerCopy)+'</section>'+
+      '<section id="privacy-friend-requests" class="ah-privacy-section" data-privacy-section tabindex="-1"><h2>'+esc(c.friendTitle)+'</h2><p class="ah-privacy-kicker">'+esc(c.friendKicker)+'</p>'+switchRow('allow_friend_requests_everyone',c.everyone,'')+switchRow('allow_friend_requests_mutual_friends',c.mutual,'')+switchRow('allow_friend_requests_server_members',c.serverMembers,c.serverMembersCopy)+'</section>'+
+      '<section id="privacy-blocked-accounts" class="ah-privacy-section" data-privacy-section tabindex="-1"><h2>'+esc(c.blockedTitle)+'</h2><p class="ah-privacy-block-copy">'+esc(c.blockedCopy)+'</p><div class="ah-blocked-card"><div class="ah-blocked-card-head"><span class="ah-blocked-card-icon">⊘</span><div class="ah-blocked-card-title"><b>'+esc(c.blockedTitle)+'</b><span id="ah-blocked-count"></span></div></div><div id="ah-blocked-list" class="ah-blocked-list"><div class="ah-blocked-loading">'+esc(c.loading)+'</div></div></div></section></div>';
+  }
+  function buildSubnav(){
+    modal.querySelectorAll('[data-settings-tab="content"],[data-settings-page="content"]').forEach(function(el){el.remove()});
+    var old=modal.querySelector('[data-privacy-subnav]');if(old)old.remove();
+    var sub=document.createElement('div');sub.className='ah-privacy-subnav';sub.dataset.privacySubnav='';sub.hidden=true;sub.setAttribute('aria-label',c.title);
+    [['privacy-direct-messages',c.dmNav],['privacy-friend-requests',c.friendsNav],['privacy-blocked-accounts',c.blockedNav]].forEach(function(item,index){var b=document.createElement('button');b.type='button';b.className='ah-privacy-subnav-btn'+(index===0?' active':'');b.dataset.privacySectionTarget=item[0];b.textContent=item[1];if(index===0)b.setAttribute('aria-current','true');sub.appendChild(b)});
+    nav.insertAdjacentElement('afterend',sub);return sub;
+  }
+  buildPage();
+  var subnav=buildSubnav();
+  var buttons=Array.prototype.slice.call(subnav.querySelectorAll('[data-privacy-section-target]'));
+  var sections=Array.prototype.slice.call(page.querySelectorAll('[data-privacy-section]'));
+  var status=document.getElementById('ah-privacy-status');
+
+  function setStatus(message,type){if(!status)return;status.textContent=message||'';status.className='ah-privacy-status'+(type?' '+type:'')}
+  function setBusy(value){busy=!!value;page.setAttribute('aria-busy',busy?'true':'false');page.querySelectorAll('[data-privacy-field]').forEach(function(input){input.disabled=busy||!loaded})}
+  function render(){if(!state)return;page.querySelectorAll('[data-privacy-field]').forEach(function(input){input.checked=!!state[input.dataset.privacyField]})}
+  async function loadSettings(force){
+    if(busy||loaded&&!force)return;
+    setBusy(true);setStatus(c.loading,'');
+    try{var data=await api('/community/api/privacy');state=Object.assign({},data.settings||{});lastSaved=Object.assign({},state);loaded=true;render();setStatus('','');window.AlexiHubBlocking&&window.AlexiHubBlocking.refreshList&&window.AlexiHubBlocking.refreshList()}
+    catch(error){loaded=false;setStatus(c.loadError+' ','error');var retry=document.createElement('button');retry.type='button';retry.className='ah-privacy-retry';retry.textContent=c.retry;retry.addEventListener('click',function(){loadSettings(true)});status&&status.appendChild(retry)}
+    finally{setBusy(false)}
+  }
+  async function saveField(input){
+    if(busy||!loaded)return;
+    var field=input.dataset.privacyField,previous=Object.assign({},lastSaved||state||{});state[field]=!!input.checked;render();setBusy(true);setStatus('','');
+    try{var body={};body[field]=state[field];var data=await api('/community/api/privacy',{method:'PATCH',body:JSON.stringify(body)});state=Object.assign({},data.settings||state);lastSaved=Object.assign({},state);render();setStatus(c.saved,'ok');window.setTimeout(function(){if(status&&status.textContent===c.saved)setStatus('','')},1500)}
+    catch(error){state=previous;lastSaved=Object.assign({},previous);render();setStatus(c.saveError,'error');toast(c.saveError)}
+    finally{setBusy(false)}
+  }
+  page.addEventListener('change',function(event){var input=event.target.closest('[data-privacy-field]');if(input)saveField(input)});
+
+  function activeSection(id){buttons.forEach(function(button){var active=button.dataset.privacySectionTarget===id;button.classList.toggle('active',active);if(active)button.setAttribute('aria-current','true');else button.removeAttribute('aria-current')})}
+  function privacyActive(){return page.classList.contains('active')}
+  function updateScroll(){frame=0;if(!privacyActive())return;var topbar=modal.querySelector('.ah-settings-top');var marker=main.getBoundingClientRect().top+(topbar?topbar.offsetHeight:58)+76;var id=sections[0].id;sections.forEach(function(section){if(section.getBoundingClientRect().top<=marker)id=section.id});if(main.scrollTop+main.clientHeight>=main.scrollHeight-3)id=sections[sections.length-1].id;activeSection(id)}
+  function queueScroll(){if(!frame)frame=requestAnimationFrame(updateScroll)}
+  function scrollTo(id){var section=document.getElementById(id);if(!section)return;var topbar=modal.querySelector('.ah-settings-top');var offset=(topbar?topbar.offsetHeight:58)+24;var top=section.getBoundingClientRect().top-main.getBoundingClientRect().top+main.scrollTop-offset;activeSection(id);main.scrollTo({top:Math.max(0,top),behavior:window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})}
+  buttons.forEach(function(button){button.addEventListener('click',function(){if(!privacyActive()&&typeof window.showSettingsTab==='function')window.showSettingsTab('privacy');requestAnimationFrame(function(){scrollTo(button.dataset.privacySectionTarget)})})});
+  main.addEventListener('scroll',queueScroll,{passive:true});window.addEventListener('resize',queueScroll,{passive:true});
+
+  var previousShow=window.showSettingsTab;
+  if(typeof previousShow==='function')window.showSettingsTab=function(tab){var result=previousShow.apply(this,arguments);var active=tab==='privacy';subnav.hidden=!active;if(active){requestAnimationFrame(function(){main.scrollTo({top:0,behavior:'auto'});activeSection(sections[0].id);updateScroll()});loadSettings(false)}return result};
+  subnav.hidden=!privacyActive();if(privacyActive())loadSettings(false);
+
+  function dmUsername(){var match=location.pathname.match(/^\/community\/dm\/([^/?#]+)/);try{return match?decodeURIComponent(match[1]):''}catch(e){return match?match[1]:''}}
+  function setDmDenied(denied){
+    document.querySelectorAll('.composer textarea,.composer button,.composer-wrap textarea,.composer-wrap button').forEach(function(el){if(denied){if(!el.disabled)el.dataset.ahPrivacyDisabled='1';el.disabled=true}else if(el.dataset.ahPrivacyDisabled==='1'){el.disabled=false;delete el.dataset.ahPrivacyDisabled}});
+    var notice=document.getElementById('ah-dm-privacy-notice');if(!denied){notice&&notice.remove();return}if(!notice){notice=document.createElement('div');notice.id='ah-dm-privacy-notice';var wrap=document.querySelector('.composer-wrap')||document.querySelector('.composer');if(wrap&&wrap.parentElement)wrap.parentElement.insertBefore(notice,wrap)}if(notice)notice.innerHTML='<b>'+esc(c.dmDenied)+'</b>';
+  }
+  async function hydrateDmPermission(){var username=dmUsername();if(!username)return;try{var data=await api('/community/api/privacy/message-permission/'+encodeURIComponent(username));if(data.reason!=='blocked_relationship')setDmDenied(!data.can_message)}catch(error){}}
+  hydrateDmPermission();
 })();
 </script>
 </body>
