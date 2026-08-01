@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.18.9",
+      "date": "2026-08-02",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: mention badge logic for server mentions."
+      ],
+      "source_sha": "5a5d3a7ad5cc2d6414740180c1ec0db845f51fa7"
+    },
+    {
       "version": "1.18.8",
       "date": "2026-08-02",
       "title": "Оновлення AlexiHub",
