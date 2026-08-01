@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.13.6",
+      "date": "2026-08-01",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance user settings navigation styles."
+      ],
+      "source_sha": "92cb5b0e7650b0c1d8fc5c1840256de02b2d0c62"
+    },
+    {
       "version": "1.13.5",
       "date": "2026-08-01",
       "title": "Виправлення та стабільність",
