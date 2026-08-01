@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.12.0",
+      "date": "2026-08-01",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: security UI styles for user settings."
+      ],
+      "source_sha": "4eb7ee085c52834840ee9318838642d3176d5050"
+    },
+    {
       "version": "1.11.19",
       "date": "2026-08-01",
       "title": "Оновлення AlexiHub",
