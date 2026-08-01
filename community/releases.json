@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.11.9",
+      "date": "2026-08-01",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: profile badge loading and cleanup."
+      ],
+      "source_sha": "19e92af1fe4e720ad33073016a20f047b78af4e2"
+    },
+    {
       "version": "1.11.8",
       "date": "2026-08-01",
       "title": "Оновлення AlexiHub",
