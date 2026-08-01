@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.11.3",
+      "date": "2026-08-01",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: language handling in travel.html."
+      ],
+      "source_sha": "aa7f8b9ade2c0c23d785c9ed40de5dd295a1c8c1"
+    },
+    {
       "version": "1.11.2",
       "date": "2026-08-01",
       "title": "Виправлення та стабільність",
