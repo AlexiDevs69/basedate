@@ -813,6 +813,7 @@
   .ah-user-boost-summary{min-height:66px;padding:12px 14px;border:1px solid #3b2f6b;border-radius:12px;background:linear-gradient(90deg,rgba(97,32,151,.42),rgba(51,52,62,.55));display:flex;align-items:center;gap:12px;margin-bottom:30px}
   .ah-user-boost-summary-icon{width:42px;height:42px;border-radius:12px;background:linear-gradient(145deg,#6b29d4,#dd45df);display:grid;place-items:center;color:#fff;font-size:24px;box-shadow:0 0 18px rgba(181,59,224,.35)}
   .ah-user-boost-summary strong,.ah-user-boost-summary span{display:block}.ah-user-boost-summary strong{color:#f2f3f5;font-size:14px}.ah-user-boost-summary span{color:#b5bac1;font-size:12px;margin-top:3px}
+  .ah-boost-code-card{margin:-12px 0 30px;padding:16px;border:1px solid #3b2f6b;border-radius:12px;background:#24212e}.ah-boost-code-copy b,.ah-boost-code-copy span{display:block}.ah-boost-code-copy b{color:#f2f3f5;font-size:15px}.ah-boost-code-copy span{margin-top:4px;color:#aeb3bd;font-size:12px;line-height:1.4}.ah-boost-code-form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:13px}.ah-boost-code-input{min-width:0;height:40px;border:1px solid #45404f;border-radius:7px;background:#111214;color:#fff;padding:0 11px;font:inherit;font-size:13px;font-weight:750;outline:0}.ah-boost-code-input:focus{border-color:#9b59ef;box-shadow:0 0 0 1px #9b59ef}.ah-boost-code-input.code{text-transform:uppercase}.ah-boost-code-button{height:40px;border:0;border-radius:7px;background:#7c3ed0;color:#fff;padding:0 15px;font:inherit;font-size:13px;font-weight:900;cursor:pointer}.ah-boost-code-button:hover{background:#914ee0}.ah-boost-code-button.secondary{background:#4e5058}.ah-boost-code-button.secondary:hover{background:#5b5d66}.ah-boost-code-button:disabled{opacity:.55;cursor:wait}.ah-boost-code-status{min-height:17px;margin-top:8px;color:#b5bac1;font-size:12px;font-weight:800}.ah-boost-code-status.ok{color:#57f287}.ah-boost-code-status.err{color:#ff7b7b}.ah-boost-code-generator{display:none;margin-top:15px;padding-top:15px;border-top:1px solid rgba(255,255,255,.09)}.ah-boost-code-generator.show{display:block}.ah-boost-code-generator-grid{display:grid;grid-template-columns:92px minmax(0,1fr) auto;gap:8px;margin-top:10px}.ah-boost-code-output{display:none;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:9px}.ah-boost-code-output.show{display:grid}
   .ah-user-boost-subtitle{font-size:16px;margin:0 0 12px;color:#f2f3f5}.ah-user-boost-list{display:grid;gap:8px}
   .ah-user-boost-row{display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:12px;min-height:64px;padding:9px 12px;background:#24252a;border:1px solid #303238;border-radius:12px}
   .ah-user-boost-server-icon{width:42px;height:42px;border-radius:13px;background:#17181c center/cover no-repeat;display:grid;place-items:center;color:#fff;font-weight:900;font-size:12px;overflow:hidden}
@@ -821,7 +822,7 @@
   .ah-user-server-tag{display:inline-flex!important;align-items:center;gap:4px;width:max-content;margin-top:5px!important;padding:2px 6px;border-radius:4px;background:#34363d;color:#e6e8ec!important;font-size:11px!important;font-weight:900}.ah-user-server-tag.selected{background:#4b3b79;color:#fff!important;box-shadow:0 0 0 1px #7d67c8 inset}
   .ah-user-boost-loading{min-height:90px;border:1px dashed #3c3e46;border-radius:12px;display:grid;place-items:center;color:#949ba4}.ah-user-boost-empty{padding:22px;border:1px solid #303238;border-radius:12px;background:#24252a;color:#b5bac1;text-align:center}
   .ah-user-boost-levels{margin-top:38px;display:grid;grid-template-columns:1.5fr repeat(3,1fr);border-top:1px solid #35373d;color:#b5bac1;font-size:13px}.ah-user-boost-levels>div,.ah-user-boost-levels>strong{padding:15px;border-bottom:1px solid #35373d}.ah-user-boost-levels>div:nth-child(-n+4){color:#f2f3f5;font-size:15px}.ah-user-boost-levels>div span{display:block;font-size:11px;color:#949ba4;margin-top:3px}.ah-user-boost-levels>strong{text-align:center;color:#f2f3f5}
-  @media(max-width:760px){.ah-user-boost-head{grid-template-columns:1fr}.ah-user-boost-art{display:none}.ah-user-boost-levels{grid-template-columns:1fr}.ah-user-boost-levels>strong{text-align:left}.ah-user-boost-row{grid-template-columns:38px minmax(0,1fr)}.ah-user-boost-actions{grid-column:2;flex-wrap:wrap}.ah-user-boost-btn{height:34px}}
+  @media(max-width:760px){.ah-user-boost-head{grid-template-columns:1fr}.ah-user-boost-art{display:none}.ah-user-boost-levels{grid-template-columns:1fr}.ah-user-boost-levels>strong{text-align:left}.ah-user-boost-row{grid-template-columns:38px minmax(0,1fr)}.ah-user-boost-actions{grid-column:2;flex-wrap:wrap}.ah-user-boost-btn{height:34px}.ah-boost-code-form,.ah-boost-code-generator-grid,.ah-boost-code-output{grid-template-columns:1fr}}
 
     .content{min-width:0;overflow:auto;background:var(--main)}
     .top{height:50px;position:sticky;top:0;z-index:10;background:#15161a;border-bottom:1px solid #2b2d31;display:flex;align-items:center;padding:0 18px;gap:26px}
@@ -1572,6 +1573,16 @@ document.addEventListener('DOMContentLoaded',()=>{
         <div id="ah-user-boost-summary" class="ah-user-boost-summary">
           <div class="ah-user-boost-summary-icon">◆</div>
           <div><strong>Загрузка бустов…</strong><span>Проверяем вашу подписку Nitro.</span></div>
+        </div>
+        <div class="ah-boost-code-card">
+          <div class="ah-boost-code-copy"><b>Активировать промокод бустов</b><span>Каждый код одноразовый. Полученные бусты навсегда добавятся к доступному лимиту аккаунта.</span></div>
+          <div class="ah-boost-code-form"><input id="ah-boost-code-input" class="ah-boost-code-input code" maxlength="40" autocomplete="off" placeholder="ALEXI-BOOST-AAAAA-BBBBB-CCCCC"><button id="ah-boost-redeem-btn" class="ah-boost-code-button" type="button" onclick="redeemBoostCode()">Активировать</button></div>
+          <div id="ah-boost-code-status" class="ah-boost-code-status"></div>
+          <div id="ah-boost-code-generator" class="ah-boost-code-generator">
+            <div class="ah-boost-code-copy"><b>Сгенерировать одноразовый код</b><span>Доступно только верифицированным пользователям.</span></div>
+            <div class="ah-boost-code-generator-grid"><input id="ah-boost-gen-amount" class="ah-boost-code-input" type="number" min="1" max="100" value="2" aria-label="Количество бустов"><input id="ah-boost-gen-note" class="ah-boost-code-input" maxlength="255" placeholder="Заметка, необязательно"><button id="ah-boost-generate-btn" class="ah-boost-code-button" type="button" onclick="generateBoostCode()">Сгенерировать</button></div>
+            <div id="ah-boost-code-output" class="ah-boost-code-output"><input id="ah-boost-generated-code" class="ah-boost-code-input code" readonly><button class="ah-boost-code-button secondary" type="button" onclick="copyGeneratedBoostCode()">Копировать</button></div>
+          </div>
         </div>
         <h2 class="ah-user-boost-subtitle">Этим серверам не помешает буст</h2>
         <div id="ah-user-boost-list" class="ah-user-boost-list"><div class="ah-user-boost-loading">Загрузка серверов…</div></div>
@@ -4645,14 +4656,14 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   const notify=message=>window.settingsToast?.(message);
   async function boostApi(url,options){
-    const response=await fetch(url,Object.assign({headers:{'Content-Type':'application/json','Accept':'application/json'}},options||{}));
+    const response=await fetch(url,Object.assign({credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json','Accept':'application/json'}},options||{}));
     const data=await response.json().catch(()=>({}));
     if(!response.ok||data.ok===false) throw new Error(data.error||data.detail||'Не вдалося виконати дію');
     return data;
   }
   function boostError(error){
     const code=String(error?.message||error||'');
-    return ({nitro_required:'Для бустів потрібна активна підписка Nitro.',no_boosts_left:'Усі доступні бусти вже використані.',nothing_to_remove:'На цьому сервері немає вашого буста.',tag_unavailable:'Тег цього сервера ще не відкритий.'})[code]||code||'Не вдалося виконати дію';
+    return ({nitro_required:'Для бустів потрібна активна підписка Nitro або промокод.',boost_required:'Спочатку активуйте Nitro або промокод бустів.',no_boosts_left:'Усі доступні бусти вже використані.',nothing_to_remove:'На цьому сервері немає вашого буста.',tag_unavailable:'Тег цього сервера ще не відкритий.',bad_code:'Введіть коректний код бустів.',not_found:'Код бустів не знайдено.',used:'Цей код бустів уже активовано.'})[code]||code||'Не вдалося виконати дію';
   }
   function renderBoostSettings(data){
     const summary=document.getElementById('ah-user-boost-summary');
@@ -4660,7 +4671,10 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     if(!summary||!list) return;
     const active=!!data.subscription?.active;
     const label=data.subscription?.tier_label||'Nitro';
-    summary.innerHTML=`<div class="ah-user-boost-summary-icon">◆</div><div><strong>${active?esc(label)+' — '+esc(data.capacity)+' бустів':'Отримайте 2 бусти з Nitro!'}</strong><span>${active?`Використано ${esc(data.allocated)} · доступно ${esc(data.remaining)}`:'Активуйте Nitro, щоб підтримувати улюблені сервери.'}</span></div>`;
+    const promo=Number(data.promo_boosts||0),nitro=Number(data.nitro_capacity||0),capacity=Number(data.capacity||0);
+    const source=active?(promo?`${esc(label)}: ${esc(nitro)} · промокоди: ${esc(promo)}`:esc(label)):(promo?`Промокоди: ${esc(promo)}`:'Активуйте Nitro або промокод, щоб підтримувати сервери.');
+    summary.innerHTML=`<div class="ah-user-boost-summary-icon">◆</div><div><strong>${capacity?`Доступний ліміт — ${esc(capacity)} бустів`:'Отримайте бусти з Nitro або промокоду!'}</strong><span>${capacity?`${source} · використано ${esc(data.allocated)} · вільно ${esc(data.remaining)}`:source}</span></div>`;
+    document.getElementById('ah-boost-code-generator')?.classList.toggle('show',!!data.can_generate);
     const servers=Array.isArray(data.servers)?data.servers:[];
     if(!servers.length){list.innerHTML='<div class="ah-user-boost-empty">Ви ще не приєдналися до жодного сервера.</div>';return;}
     list.innerHTML=servers.map(server=>{
@@ -4681,6 +4695,22 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
       await window.loadMyBoostSettings();
     }catch(error){notify(boostError(error));}
   };
+  window.redeemBoostCode=async function(){
+    const input=document.getElementById('ah-boost-code-input'),button=document.getElementById('ah-boost-redeem-btn'),status=document.getElementById('ah-boost-code-status');
+    const code=String(input?.value||'').trim();
+    if(!code){if(status){status.textContent='Введите код бустов.';status.className='ah-boost-code-status err';}return;}
+    if(button)button.disabled=true;if(status){status.textContent='Проверяем код…';status.className='ah-boost-code-status';}
+    try{const data=await boostApi('/community/api/boosts/redeem',{method:'POST',body:JSON.stringify({code})});if(input)input.value='';if(status){status.textContent=`Готово: добавлено ${data.boosts_added} бустов. Доступно ${data.remaining}.`;status.className='ah-boost-code-status ok';}await window.loadMyBoostSettings();}catch(error){if(status){status.textContent=boostError(error);status.className='ah-boost-code-status err';}}finally{if(button)button.disabled=false;}
+  };
+  window.generateBoostCode=async function(){
+    const amount=document.getElementById('ah-boost-gen-amount'),note=document.getElementById('ah-boost-gen-note'),button=document.getElementById('ah-boost-generate-btn'),output=document.getElementById('ah-boost-code-output'),field=document.getElementById('ah-boost-generated-code');
+    if(button)button.disabled=true;
+    try{const data=await boostApi('/community/api/boosts/generate',{method:'POST',body:JSON.stringify({boosts:Number(amount?.value||2),note:String(note?.value||'')})});if(field)field.value=data.code?.code||'';output?.classList.add('show');notify(`Код на ${data.code?.boosts||amount?.value||2} бустів створено.`);}catch(error){notify(boostError(error));}finally{if(button)button.disabled=false;}
+  };
+  window.copyGeneratedBoostCode=async function(){
+    const field=document.getElementById('ah-boost-generated-code'),value=String(field?.value||'');if(!value)return;
+    try{await navigator.clipboard.writeText(value);notify('Код бустів скопійовано.');}catch(_error){field?.select();document.execCommand('copy');notify('Код бустів скопійовано.');}
+  };
   window.selectMyServerTag=async function(serverId){
     try{
       await boostApi('/community/api/boosts/tag-selection',{method:'POST',body:JSON.stringify({server_id:serverId})});
@@ -4693,6 +4723,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     const wrapped=function(tab){oldShow(tab);if(tab==='boosts')window.loadMyBoostSettings();};
     wrapped.__homeBoostWrapped=true;window.showSettingsTab=wrapped;
   }
+  document.getElementById('ah-boost-code-input')?.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();window.redeemBoostCode();}});
 })();
 </script>
 
