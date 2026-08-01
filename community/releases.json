@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.11.0",
+      "date": "2026-08-01",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: language persistence check in CRUD."
+      ],
+      "source_sha": "a73fef821a338496d878c0d1d93776deb7a04faf"
+    },
+    {
       "version": "1.10.0",
       "date": "2026-08-01",
       "title": "Нові можливості AlexiHub",
