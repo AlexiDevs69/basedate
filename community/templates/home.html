@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ account.language if account and account.language else 'ru' }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -3359,18 +3359,15 @@ document.addEventListener('DOMContentLoaded',()=>{
     en:{flagClass:'ah-lang-flag-en', name:'English', native:'English'}
   };
   let AH_MESSAGES = {};
+  const INITIAL_SERVER_LANGUAGE = validLang('{{ account.language if account and account.language else "ru" }}') || 'ru';
+  let ACTIVE_LANGUAGE = INITIAL_SERVER_LANGUAGE;
 
   function validLang(lang){
     lang = String(lang || '').trim().toLowerCase();
     return META[lang] ? lang : '';
   }
   function serverLanguage(){
-    const box = document.querySelector('.ah-language-settings');
-    const fromBox = box && validLang(box.dataset.currentLanguage);
-    if(fromBox) return fromBox;
-    const fromHtml = validLang(document.documentElement.getAttribute('lang'));
-    if(fromHtml) return fromHtml;
-    return validLang('{{ account.language if account and account.language else "ru" }}') || 'ru';
+    return INITIAL_SERVER_LANGUAGE;
   }
   function persistLanguageClientSide(lang){
     lang = validLang(lang) || 'ru';
@@ -3386,7 +3383,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     return '';
   }
   function currentLang(){
-    return storedLanguage() || serverLanguage() || 'ru';
+    return validLang(ACTIVE_LANGUAGE) || serverLanguage() || storedLanguage() || 'ru';
   }
   function setFlag(el, lang){
     if(!el) return;
@@ -3405,6 +3402,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
   function setCurrentLanguageUI(lang){
     lang = validLang(lang) || 'ru';
+    ACTIVE_LANGUAGE = lang;
     document.documentElement.lang = lang;
     document.querySelectorAll('.ah-language-settings').forEach(b=>{ b.dataset.currentLanguage = lang; });
     const meta = META[lang];
@@ -3480,6 +3478,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
   async function saveLanguage(lang){
     lang = validLang(lang) || 'ru';
+    const previousLang = currentLang();
     persistLanguageClientSide(lang);
     setCurrentLanguageUI(lang);
     try{
@@ -3496,8 +3495,9 @@ document.addEventListener('DOMContentLoaded',()=>{
       applyMessages(data.messages || {});
       if(typeof settingsToast === 'function') settingsToast((data.messages && data.messages['language.saved']) || 'Language saved');
     }catch(e){
-      await loadI18n(lang);
-      if(typeof settingsToast === 'function') settingsToast((AH_MESSAGES && AH_MESSAGES['language.saved']) || 'Language saved');
+      persistLanguageClientSide(previousLang);
+      await loadI18n(previousLang);
+      if(typeof settingsToast === 'function') settingsToast((AH_MESSAGES && AH_MESSAGES['language.failed']) || 'Could not save language');
     }
   }
   document.addEventListener('click', function(e){
