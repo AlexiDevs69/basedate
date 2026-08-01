@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.11.5",
+      "date": "2026-08-01",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: language handling in home.html."
+      ],
+      "source_sha": "2ae61fb9f9b28faa53e25c15b1f2c65e6a58f64e"
+    },
+    {
       "version": "1.11.4",
       "date": "2026-08-01",
       "title": "Виправлення та стабільність",
