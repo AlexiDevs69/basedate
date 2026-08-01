@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.11.18",
+      "date": "2026-08-01",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: profile badge selector for Nitro subscription."
+      ],
+      "source_sha": "8113510cf32468cc51130e2448c79935e0fb3ee9"
+    },
+    {
       "version": "1.11.17",
       "date": "2026-08-01",
       "title": "Виправлення та стабільність",
