@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.13.2",
+      "date": "2026-08-01",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: profile badge selector for live name."
+      ],
+      "source_sha": "a00bfbea954db58880ca05cddbd0968ef9f850a1"
+    },
+    {
       "version": "1.13.1",
       "date": "2026-08-01",
       "title": "Виправлення та стабільність",
