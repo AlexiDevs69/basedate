@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.13.1",
+      "date": "2026-08-01",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Refine profile badge selector in dm_chat.html."
+      ],
+      "source_sha": "641267bed5e0a05432aaa366adf39ffe9709571f"
+    },
+    {
       "version": "1.13.0",
       "date": "2026-08-01",
       "title": "Нові можливості AlexiHub",
