@@ -1184,6 +1184,7 @@ async def api_i18n(request: Request, db: AsyncSession = Depends(get_db)):
         language = cookie_language or DEFAULT_LANGUAGE
 
     response = JSONResponse(_language_response_payload(language))
+    response.headers["Cache-Control"] = "no-store"
     response.set_cookie("alexihub_language", language, max_age=60 * 60 * 24 * 365, path="/", samesite="lax")
     return response
 
@@ -1206,6 +1207,7 @@ async def api_settings_language(request: Request, db: AsyncSession = Depends(get
     saved_language = await crud.update_account_language(db, account.id, normalized)
     final_language = saved_language or normalized
     response = JSONResponse(_language_response_payload(final_language))
+    response.headers["Cache-Control"] = "no-store"
     # Keep a lightweight client-side fallback too, so a refresh does not jump back
     # if the browser opens settings before the DB value is hydrated.
     response.set_cookie("alexihub_language", final_language, max_age=60 * 60 * 24 * 365, path="/", samesite="lax")
