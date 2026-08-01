@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.11.11",
+      "date": "2026-08-01",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: pronouns handling and badge loading."
+      ],
+      "source_sha": "03c74c1261109bcda95e58fe05a82c82732c22dc"
+    },
+    {
       "version": "1.11.10",
       "date": "2026-08-01",
       "title": "Виправлення та стабільність",
