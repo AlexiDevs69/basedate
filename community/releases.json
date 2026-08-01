@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.18.11",
+      "date": "2026-08-02",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено продуктивність: mention badge retrieval and display logic."
+      ],
+      "source_sha": "3ec98e9513398464fe87653fb62dfebb5d5adfe5"
+    },
+    {
       "version": "1.18.10",
       "date": "2026-08-02",
       "title": "Оновлення AlexiHub",
