@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.18.6",
+      "date": "2026-08-02",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance server tag picker interactions and styles."
+      ],
+      "source_sha": "07a3b266aa1367c7ed7b18a1e75d7b8ea45fa768"
+    },
+    {
       "version": "1.18.5",
       "date": "2026-08-02",
       "title": "Оновлення AlexiHub",
