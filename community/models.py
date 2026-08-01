@@ -86,6 +86,22 @@ class Account(Base):
     # Values: ru, uk, en.
     language: Mapped[str] = mapped_column(String(8), default="ru", nullable=False)
 
+    # --- Privacy and message permissions. ---
+    # Friends can always exchange direct messages.  The DM flag controls
+    # non-friends who share at least one server with this account.
+    allow_dm_from_server_members: Mapped[bool] = mapped_column(
+        Boolean, default=True, nullable=False
+    )
+    allow_friend_requests_everyone: Mapped[bool] = mapped_column(
+        Boolean, default=True, nullable=False
+    )
+    allow_friend_requests_mutual_friends: Mapped[bool] = mapped_column(
+        Boolean, default=True, nullable=False
+    )
+    allow_friend_requests_server_members: Mapped[bool] = mapped_column(
+        Boolean, default=True, nullable=False
+    )
+
     # Incrementing this invalidates every previously issued signed community
     # session. The browser that performs a sensitive action receives the new
     # version immediately, while other devices must sign in again.
