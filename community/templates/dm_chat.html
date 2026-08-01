@@ -3620,7 +3620,6 @@ document.addEventListener('DOMContentLoaded',()=>{
   function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]})}
   function toast(message){if(typeof window.settingsToast==='function')window.settingsToast(message);else if(typeof window.showActionToast==='function')window.showActionToast(message)}
   const USERNAME={{ account.username|tojson }};
-  const PRONOUNS_KEY='alexihub:pronouns:'+String(USERNAME||'').toLowerCase();
 
   function previewFile(input,targetSel,clearText){
     if(!input||!input.files||!input.files[0])return;
@@ -3644,9 +3643,6 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(!editor||!view||!input)return;
     if(editor.dataset.ready==='1')return;
     editor.dataset.ready='1';
-    if(!String(input.value||'').trim()){
-      try{const saved=localStorage.getItem(PRONOUNS_KEY)||'';if(saved)input.value=saved.slice(0,40)}catch(_e){}
-    }
     function clean(){return String(input.value||'').replace(/[\u0000-\u001f\u007f]/g,'').trim().slice(0,40)}
     function render(){const value=clean();view.textContent=value||'Додати займенники';view.classList.toggle('placeholder',!value)}
     function open(){editor.classList.add('editing');input.focus();input.setSelectionRange(input.value.length,input.value.length)}
@@ -3656,15 +3652,48 @@ document.addEventListener('DOMContentLoaded',()=>{
     input.addEventListener('input',function(){render();if(typeof window.ahMarkProfileDirty==='function')window.ahMarkProfileDirty()});
     input.addEventListener('keydown',function(event){if(event.key==='Enter'){event.preventDefault();close()}else if(event.key==='Escape'){event.preventDefault();event.stopPropagation();close()}});
     input.addEventListener('blur',function(){setTimeout(function(){if(document.activeElement!==input)close()},0)});
-    const form=$('#ah-profile-edit-form');if(form)form.addEventListener('submit',function(){try{const value=clean();if(value)localStorage.setItem(PRONOUNS_KEY,value);else localStorage.removeItem(PRONOUNS_KEY)}catch(_e){}});
   }
 
   function verifiedBadge(){const title='Верифікований учасник AlexiHub';return '<span class="ah-verified-profile-badge" data-title="'+title+'" title="'+title+'" tabindex="0" aria-label="'+title+'"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor"><path d="M14.68 3.03a5.02 5.02 0 0 0-5.43 6.55L3.53 15.3a2.45 2.45 0 0 0 3.47 3.47l5.73-5.72a5.02 5.02 0 0 0 6.53-5.45l-2.72 2.72-2.85-.76-.76-2.85 2.75-2.68Z"/><path d="m4.14 4.08 1.4-1.4 3.03 2.14-.63.63 2.37 2.37-1.82 1.82-2.37-2.37-.63.63-2.15-3.02.8-.8Z"/><path d="m11.45 12.88 1.83-1.83 7.13 7.13a1.29 1.29 0 0 1-1.83 1.82l-7.13-7.12Z"/></g></svg></span>'}
   function nitroBadge(sub){if(!sub||!sub.active)return '';const tier=String(sub.tier||'basic').toLowerCase();const label=String(sub.tier_label||'Nitro');const title='Підписка '+label;return '<span class="ah-nitro-profile-badge tier-'+esc(tier)+'" title="'+esc(title)+'" data-title="'+esc(title)+'" data-nitro-tier="'+esc(tier)+'" tabindex="0" aria-label="'+esc(title)+'"><span class="ah-nitro-medal"></span></span>'}
   function gifterBadge(sub){const gifting=sub&&sub.gifting&&sub.gifting.active?sub.gifting:null;if(!gifting)return '';const tier=['legend','philanthropist','icon'].includes(String(gifting.tier||''))?String(gifting.tier):'legend';const label=String(gifting.label||({legend:'Легенда',philanthropist:'Філантроп',icon:'Ікона'}[tier]));const title=String(gifting.title||('Подарунки, рівень «'+label+'»'));return '<span class="ah-gifter-profile-badge gifter-tier-'+esc(tier)+'" data-gifter-tier="'+esc(tier)+'" data-gifter-count="'+Number(gifting.count||0)+'" data-title="'+esc(title)+'" tabindex="0" aria-label="'+esc(title)+'"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="ah-gift-box" d="M5 12.2h14v8.3H5z"/><path class="ah-gift-lid" d="M3.7 8.3h16.6v4.4H3.7z"/><path class="ah-gift-ribbon" d="M12 8.5v12M12 8.5c-1.5-3.7-5.6-3.6-5.4-.8.1 1.6 2.1 2.1 5.4.8Zm0 0c1.5-3.7 5.6-3.6 5.4-.8-.1 1.6-2.1 2.1-5.4.8Z"/><path class="ah-gift-spark" d="m19.5 4 .55 1.45L21.5 6l-1.45.55L19.5 8l-.55-1.45L17.5 6l1.45-.55Z"/></svg></span>'}
-  async function loadRealBadges(){
-    const box=$('#ah-custom-profile-badges');if(!box)return;
-    try{const response=await fetch('/community/api/nitro/me',{credentials:'same-origin',headers:{Accept:'application/json'},cache:'no-store'});const data=await response.json().catch(function(){return {}});if(!response.ok||!data||!data.ok)throw new Error();const sub=data.subscription||{};box.innerHTML=(data.verified?verifiedBadge():'')+nitroBadge(sub)+gifterBadge(sub)}catch(_e){box.innerHTML=''}
+  function renderRealBadges(badges){const box=$('#ah-custom-profile-badges');if(!box)return;const data=badges||{},sub=data.nitro||{};box.innerHTML=(data.verified?verifiedBadge():'')+nitroBadge(sub)+gifterBadge(sub);box.hidden=!box.childElementCount}
+
+  function normalizeStatus(value){value=String(value||'offline').toLowerCase();return ['online','idle','dnd'].includes(value)?value:'offline'}
+  function statusCopy(value){return {online:'В мережі',idle:'Неактивний',dnd:'Не турбувати',offline:'Не в мережі'}[normalizeStatus(value)]}
+  function safeCssUrl(value){value=String(value||'').trim();if(!/^(https?:\/\/|\/|data:image\/)/i.test(value))return '';return value.replace(/[\n\r'"()\\]/g,function(ch){return encodeURIComponent(ch)})}
+  function avatarStyle(value){const url=safeCssUrl(value);return url?' style="background-image:url(\''+esc(url)+'\')"':''}
+  function renderFriends(items){
+    const list=$('#ah-profile-friends-list');if(!list)return;
+    const friends=Array.isArray(items)?items:[];
+    if(!friends.length){list.innerHTML='<div class="ah-profile-collection-empty">Тут з’являться ваші друзі.</div>';updateCounts();return}
+    list.innerHTML=friends.map(function(friend){const username=String(friend.username||''),name=String(friend.display_name||username||'Користувач'),status=normalizeStatus(friend.account_status||friend.status),initial=(name.trim().charAt(0)||'?').toUpperCase();return '<a class="ah-profile-list-row" href="/community/dm/'+encodeURIComponent(username)+'" data-profile-list-item="friend" data-profile-username="'+esc(username)+'"><span class="ah-profile-list-avatar"'+avatarStyle(friend.avatar_url)+'>'+(!friend.avatar_url?esc(initial):'')+'<span class="presence status-'+status+'"></span></span><span class="ah-profile-list-copy"><b>'+esc(name)+'</b><span>@'+esc(username)+' · '+statusCopy(status)+'</span></span><span class="ah-profile-list-arrow">›</span></a>'}).join('');
+    updateCounts();
+  }
+  function renderServers(items){
+    const list=$('#ah-profile-servers-list');if(!list)return;
+    const servers=Array.isArray(items)?items:[];
+    if(!servers.length){list.innerHTML='<div class="ah-profile-collection-empty">Ви поки не перебуваєте на серверах.</div>';updateCounts();return}
+    list.innerHTML=servers.map(function(server){const id=Number(server.id||0),name=String(server.name||'Сервер'),initial=(name.trim().slice(0,2)||'S').toUpperCase(),href=String(server.url||('/community/servers/'+id));return '<a class="ah-profile-list-row" href="'+esc(href)+'" data-profile-list-item="server"><span class="ah-profile-list-avatar server"'+avatarStyle(server.icon_url)+'>'+(!server.icon_url?esc(initial):'')+'</span><span class="ah-profile-list-copy"><b>'+esc(name)+'</b><span>Відкрити сервер</span></span><span class="ah-profile-list-arrow">›</span></a>'}).join('');
+    updateCounts();
+  }
+  function applyCustomizerProfile(profile){
+    profile=profile||{};
+    const status=normalizeStatus(profile.account_status),dot=$('#ah-profile-preview-avatar .ah-custom-profile-status');
+    if(dot){dot.className='ah-custom-profile-status status-'+status;dot.setAttribute('aria-label',statusCopy(status));dot.title=statusCopy(status)}
+    const pronouns=$('#ah-pronouns-editor'),pronounsInput=$('#ah-pronouns-input'),pronounsView=$('#ah-pronouns-view');
+    if(pronounsInput&&pronounsView&&(!pronouns||!pronouns.classList.contains('editing'))){const value=String(profile.pronouns||'').trim().slice(0,40);pronounsInput.value=value;pronounsView.textContent=value||'Додати займенники';pronounsView.classList.toggle('placeholder',!value)}
+    const nameEditor=$('#ah-display-name-editor'),nameInput=$('#ah-display-name-input'),namePreview=$('#ah-display-name-preview');
+    if(nameInput&&namePreview&&(!nameEditor||!nameEditor.classList.contains('editing'))){const value=String(profile.display_name||profile.username||USERNAME||'').slice(0,32);nameInput.value=value;namePreview.textContent=value}
+  }
+  let customizerPayload=null,customizerPromise=null;
+  function renderCustomizerData(data){if(!data||!data.ok)return;customizerPayload=data;applyCustomizerProfile(data.profile);renderRealBadges(data.badges);renderFriends(data.friends);renderServers(data.servers);renderTagMenu(data.boosts||{servers:data.servers||[]})}
+  async function loadCustomizerData(force){
+    if(customizerPayload&&!force){renderCustomizerData(customizerPayload);return customizerPayload}
+    if(customizerPromise)return customizerPromise;
+    const shell=$('#ah-profile-customizer');if(shell)shell.setAttribute('aria-busy','true');
+    customizerPromise=fetch('/community/api/profile/customizer',{credentials:'same-origin',headers:{Accept:'application/json'},cache:'no-store'}).then(function(response){return response.json().then(function(data){if(!response.ok||!data||!data.ok)throw new Error();renderCustomizerData(data);return data})}).catch(function(){return null}).finally(function(){customizerPromise=null;if(shell)shell.removeAttribute('aria-busy')});
+    return customizerPromise;
   }
 
   let tagData=[];
@@ -3682,7 +3711,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
   async function loadServerTags(){try{const response=await fetch('/community/api/boosts/me',{credentials:'same-origin',headers:{Accept:'application/json'},cache:'no-store'});const data=await response.json().catch(function(){return {}});if(!response.ok||!data||data.ok===false)throw new Error();renderTagMenu(data)}catch(_e){renderTagMenu({servers:[]})}}
   async function selectTag(serverId){
-    try{const response=await fetch('/community/api/boosts/tag-selection',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({server_id:serverId||null})});const data=await response.json().catch(function(){return {}});if(!response.ok||!data||data.ok===false)throw new Error();toast(serverId?'Тег сервера вибрано':'Тег сервера вимкнено');await loadServerTags()}catch(_e){toast('Цей тег зараз недоступний')}
+    try{const response=await fetch('/community/api/boosts/tag-selection',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({server_id:serverId||null})});const data=await response.json().catch(function(){return {}});if(!response.ok||!data||data.ok===false)throw new Error();toast(serverId?'Тег сервера вибрано':'Тег сервера вимкнено');customizerPayload=null;await loadCustomizerData(true)}catch(_e){toast('Цей тег зараз недоступний')}
   }
   function setupTagPicker(){
     const picker=$('#ah-server-tag-picker'),trigger=$('#ah-server-tag-trigger'),menu=$('#ah-server-tag-menu');if(!picker||!trigger||!menu)return;
@@ -3707,10 +3736,10 @@ document.addEventListener('DOMContentLoaded',()=>{
     const locale=docLang.startsWith('ru')?'ru-RU':docLang.startsWith('en')?'en-US':'uk-UA';
     try{node.textContent=date.toLocaleDateString(locale,{day:'numeric',month:'long',year:'numeric'});}catch(_e){}
   }
-  function hydrateProfileCustomizer(){setupPronouns();setupTagPicker();updateCounts();loadRealBadges();loadServerTags();formatProfileCreatedAt()}
+  function hydrateProfileCustomizer(force){setupPronouns();setupTagPicker();updateCounts();formatProfileCreatedAt();loadCustomizerData(!!force)}
 
   const originalOpen=window.openProfileCustomizer;
-  if(typeof originalOpen==='function')window.openProfileCustomizer=function(){const result=originalOpen.apply(this,arguments);hydrateProfileCustomizer();return result};
+  if(typeof originalOpen==='function')window.openProfileCustomizer=function(){const result=originalOpen.apply(this,arguments);hydrateProfileCustomizer(true);return result};
   window.openProfileSettings=function(){
     const mini=document.getElementById('ah-v3-mini');if(mini)mini.classList.remove('open');const full=document.getElementById('ah-v3-overlay');if(full)full.classList.remove('open');const oldMini=document.getElementById('mini-profile-popover');if(oldMini)oldMini.classList.remove('open');const self=document.getElementById('self-profile-modal');if(self)self.classList.remove('open');if(typeof openUserSettings==='function')openUserSettings('account');if(typeof openProfileCustomizer==='function')openProfileCustomizer();else hydrateProfileCustomizer();
   };
@@ -7709,6 +7738,14 @@ document.addEventListener('DOMContentLoaded', async function(){
 .ah-custom-status-backdrop,
 .ah-custom-status-preview-bubble{display:none!important}
 .ah-custom-profile-ident{margin-top:13px!important}
+.ah-profile-customizer-tools,.ah-profile-customizer-widgets,.ah-custom-profile-prompt{display:none!important}
+.ah-custom-profile-avatar{position:relative!important;overflow:visible!important}
+.ah-custom-profile-avatar>.ah-custom-profile-status{position:absolute!important;top:auto!important;left:auto!important;right:-2px!important;bottom:1px!important;width:16px!important;height:16px!important;margin:0!important;border:4px solid #24252b!important;border-radius:50%!important;box-sizing:content-box!important;z-index:6!important;transform:none!important}
+.ah-custom-profile-avatar>.ah-custom-profile-status.status-online{background:#23a55a!important}.ah-custom-profile-avatar>.ah-custom-profile-status.status-idle{background:#f0b232!important}.ah-custom-profile-avatar>.ah-custom-profile-status.status-dnd{background:#f23f43!important}.ah-custom-profile-avatar>.ah-custom-profile-status.status-invisible,.ah-custom-profile-avatar>.ah-custom-profile-status.status-offline{background:#80848e!important}
+.ah-custom-profile-badges{width:auto!important;max-width:100%!important;margin:7px 0 0!important}.ah-custom-profile-badges[hidden],.ah-custom-profile-badges:empty{display:none!important}
+.ah-custom-profile-meta{position:relative!important;z-index:8!important}.ah-pronouns-view,.ah-server-tag-trigger{position:relative!important;z-index:1!important}
+.ah-profile-customizer-backdrop[aria-busy="true"] .ah-profile-collection-body{opacity:.72;transition:opacity .12s ease}
+@media(max-width:680px){.ah-profile-customizer-form{grid-template-columns:1fr!important}.ah-profile-customizer-preview,.ah-profile-customizer-collections{min-width:0!important}}
 </style>
 </body>
 </html>
