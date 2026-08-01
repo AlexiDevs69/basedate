@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.20.0",
+      "date": "2026-08-02",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: account settings sub-navigation and styles."
+      ],
+      "source_sha": "823ffd3368615dad7d03fe46d258b0560a3be0be"
+    },
+    {
       "version": "1.19.0",
       "date": "2026-08-02",
       "title": "Нові можливості AlexiHub",
