@@ -357,7 +357,14 @@ async def update_account_language(db: AsyncSession, account_id: int, language: s
     await db.commit()
     if getattr(result, "rowcount", 0) == 0:
         return None
-    return normalized
+
+    # Read the value back from PostgreSQL.  This makes the API report success only
+    # after the same value a freshly loaded page will receive has been persisted.
+    persisted = await db.scalar(
+        text("SELECT language FROM community_accounts WHERE id = :account_id"),
+        {"account_id": account_id},
+    )
+    return normalize_language(persisted) if persisted is not None else None
 
 
 async def list_online_accounts(db: AsyncSession, limit: int = 50) -> list[Account]:
