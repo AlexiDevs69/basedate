@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.11.4",
+      "date": "2026-08-01",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update language handling in dm_chat.html."
+      ],
+      "source_sha": "5950bc8584238807f28587b15dff7b2d25501457"
+    },
+    {
       "version": "1.11.3",
       "date": "2026-08-01",
       "title": "Оновлення AlexiHub",
