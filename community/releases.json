@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.24.0",
+      "date": "2026-08-02",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: privacy settings for account management."
+      ],
+      "source_sha": "576dd02faab2525c24216b40d2dff540e81c9a63"
+    },
+    {
       "version": "1.23.0",
       "date": "2026-08-02",
       "title": "Нові можливості AlexiHub",
