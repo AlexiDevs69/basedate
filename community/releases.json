@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.19.0",
+      "date": "2026-08-02",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: account sub-navigation to user settings."
+      ],
+      "source_sha": "e3639e7a3632ca597ae0b3f64e6b95d56ccba8d3"
+    },
+    {
       "version": "1.18.11",
       "date": "2026-08-02",
       "title": "Оновлення AlexiHub",
