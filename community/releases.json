@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.18.1",
+      "date": "2026-08-01",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance server boost functionality and error messages."
+      ],
+      "source_sha": "8282a4f86122c8e8621f50357b318309d456c8ca"
+    },
+    {
       "version": "1.18.0",
       "date": "2026-08-01",
       "title": "Нові можливості AlexiHub",
