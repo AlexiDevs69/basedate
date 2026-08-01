@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.13.8",
+      "date": "2026-08-01",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: ah-custom-profile-banner styles for consistency."
+      ],
+      "source_sha": "50456fd95bc5713f83d483b8508d32f0b936fc3c"
+    },
+    {
       "version": "1.13.7",
       "date": "2026-08-01",
       "title": "Виправлення та стабільність",
