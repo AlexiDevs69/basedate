@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.25.0",
+      "date": "2026-08-02",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: direct message permission checks and responses."
+      ],
+      "source_sha": "6526b5fb9da2bc0b659cf3deb2874e04ee1b7f3a"
+    },
+    {
       "version": "1.24.0",
       "date": "2026-08-02",
       "title": "Нові можливості AlexiHub",
