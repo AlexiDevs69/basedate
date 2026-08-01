@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.11.7",
+      "date": "2026-08-01",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Виправлено: restore server language persistence and password settings font."
+      ],
+      "source_sha": "829be46d29035e1fb916b93b022293128a77be3a"
+    },
+    {
       "version": "1.11.6",
       "date": "2026-08-01",
       "title": "Оновлення AlexiHub",
