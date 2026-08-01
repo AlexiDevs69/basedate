@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.11.2",
+      "date": "2026-08-01",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Simplify language management logic."
+      ],
+      "source_sha": "f9e350ceb14f1279189e84603854f9433f3a0a27"
+    },
+    {
       "version": "1.11.1",
       "date": "2026-08-01",
       "title": "Оновлення AlexiHub",
