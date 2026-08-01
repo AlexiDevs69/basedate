@@ -4093,15 +4093,18 @@ document.addEventListener('DOMContentLoaded',()=>{
     en:{flagClass:'ah-lang-flag-en', name:'English', native:'English'}
   };
   let AH_MESSAGES = {};
-  const INITIAL_SERVER_LANGUAGE = validLang('{{ account.language if account and account.language else "ru" }}') || 'ru';
-  let ACTIVE_LANGUAGE = INITIAL_SERVER_LANGUAGE;
 
   function validLang(lang){
     lang = String(lang || '').trim().toLowerCase();
     return META[lang] ? lang : '';
   }
   function serverLanguage(){
-    return INITIAL_SERVER_LANGUAGE;
+    const box = document.querySelector('.ah-language-settings');
+    const fromBox = box && validLang(box.dataset.currentLanguage);
+    if(fromBox) return fromBox;
+    const fromHtml = validLang(document.documentElement.getAttribute('lang'));
+    if(fromHtml) return fromHtml;
+    return validLang('{{ account.language if account and account.language else "ru" }}') || 'ru';
   }
   function persistLanguageClientSide(lang){
     lang = validLang(lang) || 'ru';
@@ -4117,7 +4120,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     return '';
   }
   function currentLang(){
-    return validLang(ACTIVE_LANGUAGE) || serverLanguage() || storedLanguage() || 'ru';
+    return storedLanguage() || serverLanguage() || 'ru';
   }
   function setFlag(el, lang){
     if(!el) return;
@@ -4136,7 +4139,6 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
   function setCurrentLanguageUI(lang){
     lang = validLang(lang) || 'ru';
-    ACTIVE_LANGUAGE = lang;
     document.documentElement.lang = lang;
     document.querySelectorAll('.ah-language-settings').forEach(b=>{ b.dataset.currentLanguage = lang; });
     const meta = META[lang];
@@ -4212,7 +4214,6 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
   async function saveLanguage(lang){
     lang = validLang(lang) || 'ru';
-    const previousLang = currentLang();
     persistLanguageClientSide(lang);
     setCurrentLanguageUI(lang);
     try{
@@ -4229,9 +4230,8 @@ document.addEventListener('DOMContentLoaded',()=>{
       applyMessages(data.messages || {});
       if(typeof settingsToast === 'function') settingsToast((data.messages && data.messages['language.saved']) || 'Language saved');
     }catch(e){
-      persistLanguageClientSide(previousLang);
-      await loadI18n(previousLang);
-      if(typeof settingsToast === 'function') settingsToast((AH_MESSAGES && AH_MESSAGES['language.failed']) || 'Could not save language');
+      await loadI18n(lang);
+      if(typeof settingsToast === 'function') settingsToast((AH_MESSAGES && AH_MESSAGES['language.saved']) || 'Language saved');
     }
   }
   document.addEventListener('click', function(e){
@@ -7524,6 +7524,13 @@ body .composer-wrap{
 .ah-security-check{display:flex!important;align-items:flex-start!important;justify-content:flex-start!important;gap:10px!important;width:100%;color:#dbdee1;font-size:13px;text-align:left;cursor:pointer}
 .ah-security-check input[type="checkbox"]{appearance:auto!important;-webkit-appearance:checkbox!important;display:block!important;flex:0 0 16px!important;width:16px!important;min-width:16px!important;max-width:16px!important;height:16px!important;min-height:16px!important;max-height:16px!important;margin:2px 0 0!important;padding:0!important;border:0!important;box-shadow:none!important;accent-color:#5865f2}
 .ah-security-check>span{display:block!important;flex:1 1 auto!important;min-width:0!important;text-align:left!important}
+#ah-user-settings [data-settings-page="security"],
+#ah-user-settings [data-settings-page="security"] input,
+#ah-user-settings [data-settings-page="security"] button,
+#ah-user-settings [data-settings-page="security"] textarea,
+#ah-user-settings [data-settings-page="security"] select{
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;
+}
 </style>
 <script id="ah-account-security-js">
 (function(){
