@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.23.0",
+      "date": "2026-08-02",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: account settings navigation UI."
+      ],
+      "source_sha": "7067a8c0b323c31d765cd474ee5c742f043fa632"
+    },
+    {
       "version": "1.22.0",
       "date": "2026-08-02",
       "title": "Нові можливості AlexiHub",
