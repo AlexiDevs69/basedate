@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.26.5",
+      "date": "2026-08-02",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Modify direct message visibility logic."
+      ],
+      "source_sha": "6497215ecd4e2780c7d2d799be5d9dea507eb0ba"
+    },
+    {
       "version": "1.26.4",
       "date": "2026-08-02",
       "title": "Виправлення та стабільність",
