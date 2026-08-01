@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.14.0",
+      "date": "2026-08-01",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: server boost gift code and credits management."
+      ],
+      "source_sha": "ddabad2634eaf44b486776708e639a3b3dc22a67"
+    },
+    {
       "version": "1.13.8",
       "date": "2026-08-01",
       "title": "Оновлення AlexiHub",
