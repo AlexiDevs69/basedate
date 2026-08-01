@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.26.3",
+      "date": "2026-08-02",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance DM visibility conditions."
+      ],
+      "source_sha": "ebde305bae2e3832997d89b873e25ac11e64aa7c"
+    },
+    {
       "version": "1.26.2",
       "date": "2026-08-02",
       "title": "Виправлення та стабільність",
