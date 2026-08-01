@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.17.0",
+      "date": "2026-08-01",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: boost code redemption and generation features."
+      ],
+      "source_sha": "7d28da2370b96010f37d963e151eea15680bc454"
+    },
+    {
       "version": "1.16.0",
       "date": "2026-08-01",
       "title": "Нові можливості AlexiHub",
