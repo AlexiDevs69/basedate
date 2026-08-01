@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.10.0",
+      "date": "2026-08-01",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: Cache-Control header to language response."
+      ],
+      "source_sha": "c22e540fd1322c4d1037af3b946f4a6031d92283"
+    },
+    {
       "version": "1.9.15",
       "date": "2026-08-01",
       "title": "Виправлення та стабільність",
