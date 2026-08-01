@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.11.10",
+      "date": "2026-08-01",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Clean up pronouns input handling."
+      ],
+      "source_sha": "d14533c7e080a49c6d53e469cc0302da1a40a754"
+    },
+    {
       "version": "1.11.9",
       "date": "2026-08-01",
       "title": "Оновлення AlexiHub",
