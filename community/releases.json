@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.13.5",
+      "date": "2026-08-01",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Виправлено: font-family syntax in settings modal CSS."
+      ],
+      "source_sha": "ffdf091bed9b3280cfcb6304bee61e477a099713"
+    },
+    {
       "version": "1.13.4",
       "date": "2026-08-01",
       "title": "Виправлення та стабільність",
