@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.26.1",
+      "date": "2026-08-02",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance privacy settings and DM visibility logic."
+      ],
+      "source_sha": "0d2c239882d2197a3cbc214466a679afdf4ce0bd"
+    },
+    {
       "version": "1.26.0",
       "date": "2026-08-02",
       "title": "Нові можливості AlexiHub",
