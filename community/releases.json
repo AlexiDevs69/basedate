@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.18.2",
+      "date": "2026-08-01",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance server boost error messages and features."
+      ],
+      "source_sha": "fdde64c7c948c8354810a1e50c8bc00356873675"
+    },
+    {
       "version": "1.18.1",
       "date": "2026-08-01",
       "title": "Виправлення та стабільність",
