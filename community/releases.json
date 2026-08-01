@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.13.4",
+      "date": "2026-08-01",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Виправлено: font-family syntax in user settings modal CSS."
+      ],
+      "source_sha": "dde28ad7a9abc0219fd49daf104788e6254b4f29"
+    },
+    {
       "version": "1.13.3",
       "date": "2026-08-01",
       "title": "Оновлення AlexiHub",
