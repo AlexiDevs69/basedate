@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.18.7",
+      "date": "2026-08-02",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance server tag picker and styles."
+      ],
+      "source_sha": "9d54ade3162f10d5c63b7314f876108d4a7e6a28"
+    },
+    {
       "version": "1.18.6",
       "date": "2026-08-02",
       "title": "Виправлення та стабільність",
