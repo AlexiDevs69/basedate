@@ -2512,7 +2512,55 @@ async def api_my_server_boosts(request: Request, db: AsyncSession = Depends(get_
     account = await current_account(request, db)
     if not account:
         return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
-    return JSONResponse(await crud.get_account_boost_center(db, account.id))
+    payload = await crud.get_account_boost_center(db, account.id)
+    payload["can_generate"] = crud.is_boost_code_generator(account)
+    return JSONResponse(payload)
+
+
+@router.post("/api/boosts/redeem")
+async def api_redeem_server_boost_code(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    result = await crud.redeem_server_boost_gift_code(
+        db,
+        account.id,
+        str(body.get("code") or ""),
+    )
+    return JSONResponse(result, status_code=200 if result.get("ok") else 400)
+
+
+@router.post("/api/boosts/generate")
+async def api_generate_server_boost_code(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    if not crud.is_boost_code_generator(account):
+        return JSONResponse({
+            "ok": False,
+            "error": "forbidden",
+            "message": "Генерація boost-кодів доступна лише верифікованим користувачам.",
+        }, status_code=403)
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    try:
+        boosts = int(body.get("boosts") or 2)
+    except (TypeError, ValueError):
+        boosts = 2
+    note = str(body.get("note") or "")
+    code = await crud.create_server_boost_gift_code(
+        db,
+        account.id,
+        boosts=boosts,
+        note=note,
+    )
+    return JSONResponse({"ok": True, "code": code})
 
 
 @router.get("/api/profile/customizer")
@@ -2684,6 +2732,7 @@ async def api_change_server_boosts(
     status_codes = {
         "not_a_member": 403,
         "nitro_required": 402,
+        "boost_required": 402,
         "no_boosts_left": 409,
         "nothing_to_remove": 409,
     }
