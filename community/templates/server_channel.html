@@ -8407,5 +8407,91 @@ body .composer-wrap{
 .ah-profile-customizer-backdrop[aria-busy="true"] .ah-profile-collection-body{opacity:.72;transition:opacity .12s ease}
 @media(max-width:680px){.ah-profile-customizer-form{grid-template-columns:1fr!important}.ah-profile-customizer-preview,.ah-profile-customizer-collections{min-width:0!important}}
 </style>
+<style id="ah-server-settings-dm-parity">
+/* Keep the shared DM/server security UI insulated from page-level form rules. */
+#ah-user-settings button,
+#ah-user-settings input,
+#ah-user-settings textarea,
+.ah-identity-dialog button,
+.ah-identity-dialog input{font:inherit}
+
+#ah-user-settings [data-settings-page="security"] .ah-security-field label,
+.ah-identity-dialog .ah-security-field label{
+  display:block;
+  margin:0;
+  color:#b5bac1;
+  font-size:12px;
+  font-weight:850;
+  line-height:normal;
+  letter-spacing:normal;
+  text-transform:none;
+}
+#ah-user-settings [data-settings-page="security"] .ah-security-field input,
+.ah-identity-dialog .ah-security-field input{
+  width:100%;
+  height:42px;
+  margin:0;
+  padding:0 12px;
+  border:1px solid #3b3d45;
+  border-radius:8px;
+  background:#111214;
+  color:#f2f3f5;
+  font:inherit;
+  letter-spacing:normal;
+  text-transform:none;
+  outline:none;
+}
+#ah-user-settings [data-settings-page="security"] .ah-security-field input:focus,
+.ah-identity-dialog .ah-security-field input:focus{
+  border-color:#5865f2;
+  box-shadow:0 0 0 1px #5865f2;
+}
+#ah-user-settings [data-settings-page="security"] .ah-security-check{
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  margin:0;
+  color:#dbdee1;
+  font-size:13px;
+  font-weight:400;
+  line-height:normal;
+  letter-spacing:normal;
+  text-transform:none;
+  cursor:pointer;
+}
+#ah-user-settings [data-settings-page="security"] .ah-security-check input{
+  appearance:auto;
+  -webkit-appearance:auto;
+  width:13px;
+  min-width:13px;
+  height:13px;
+  margin:2px 0 0;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  accent-color:#5865f2;
+  flex:0 0 13px;
+}
+#ah-user-settings [data-settings-page="security"] .ah-security-check span{
+  display:block;
+  margin:0;
+  color:inherit;
+  font:inherit;
+  letter-spacing:normal;
+  text-transform:none;
+}
+#ah-user-settings .ah-settings-btn,
+.ah-identity-dialog .ah-settings-btn{
+  appearance:none;
+  -webkit-appearance:none;
+  margin:0;
+  font:inherit;
+  font-weight:850;
+  line-height:normal;
+  letter-spacing:normal;
+  text-transform:none;
+}
+</style>
 </body>
 </html>
