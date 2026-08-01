@@ -967,6 +967,7 @@
   box-shadow:0 2px 7px rgba(0,0,0,.42);white-space:nowrap;
 }
 .ah-mention-count[hidden]{display:none!important;}
+.ah-mention-count .ah-mention-count{display:none!important;}
 .server-dot>.ah-mention-count{
   position:absolute!important;
   right:-4px!important;
@@ -6549,9 +6550,15 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
 
   function directMentionBadge(container) {
     if (!container) return null;
-    return Array.prototype.find.call(container.children || [], function (child) {
+    var badges = Array.prototype.filter.call(container.children || [], function (child) {
       return child.classList && child.classList.contains('ah-mention-count');
-    }) || null;
+    });
+    if (!badges.length) return null;
+    var badge = badges.shift();
+    badges.forEach(function (duplicate) { duplicate.remove(); });
+    badge.querySelectorAll('.ah-mention-count').forEach(function (duplicate) { duplicate.remove(); });
+    badge.removeAttribute('data-mention-server-id');
+    return badge;
   }
 
   function setMentionBadge(container, count, kind, key) {
@@ -6568,7 +6575,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     badge.textContent = count > 99 ? '99+' : String(count);
     badge.title = count + ' непрочитаних згадок';
     if (kind === 'thread') badge.dataset.mentionThreadId = String(key || '');
-    if (kind === 'server') badge.dataset.mentionServerId = String(key || '');
+    if (kind === 'server') badge.dataset.mentionBadgeServerId = String(key || '');
     if (kind === 'channel') badge.dataset.mentionChannelId = String(key || '');
   }
 
@@ -6582,7 +6589,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
       var key = String(row.dataset.threadId || '');
       setMentionBadge(row, dm[key] || dm[Number(key)] || 0, 'thread', key);
     });
-    document.querySelectorAll('[data-mention-server-id]').forEach(function (dot) {
+    document.querySelectorAll('.server-dot[data-mention-server-id]').forEach(function (dot) {
       var key = String(dot.dataset.mentionServerId || '');
       setMentionBadge(dot, serversMap[key] || serversMap[Number(key)] || 0, 'server', key);
     });
