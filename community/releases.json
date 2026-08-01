@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.26.0",
+      "date": "2026-08-02",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: DM and friend request permissions to models."
+      ],
+      "source_sha": "21c796c50047ae8bfbfaa7277944a5f28a0f8cba"
+    },
+    {
       "version": "1.25.0",
       "date": "2026-08-02",
       "title": "Нові можливості AlexiHub",
