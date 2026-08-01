@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.21.0",
+      "date": "2026-08-02",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: Discord-style account settings navigation."
+      ],
+      "source_sha": "41599f70886c00e67ebd470f0604a97f40209135"
+    },
+    {
       "version": "1.20.0",
       "date": "2026-08-02",
       "title": "Нові можливості AlexiHub",
