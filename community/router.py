@@ -3258,6 +3258,13 @@ async def api_send_dm_nitro_gift(username: str, request: Request, db: AsyncSessi
             "error": "blocked_relationship",
             "message": "Подарунок не можна надіслати, поки один із користувачів заблокував іншого.",
         }, status_code=403)
+    permission = await crud.direct_message_permission(db, sender_id, recipient_id)
+    if not permission["allowed"]:
+        return JSONResponse({
+            "ok": False,
+            "error": "direct_messages_disabled",
+            "message": "Отримувач обмежив вхідні особисті повідомлення.",
+        }, status_code=403)
     author_payload = _account_payload(sender)
     thread = await crud.get_or_create_dm_thread(db, sender_id, recipient_id)
     if not thread:
@@ -4041,6 +4048,13 @@ async def dm_message_submit(
             status_code=303,
         )
 
+    permission = await crud.direct_message_permission(db, account.id, other.id)
+    if not permission["allowed"]:
+        return RedirectResponse(
+            url=f"/community/dm/{other.username}?privacy=1",
+            status_code=303,
+        )
+
     thread = await crud.get_or_create_dm_thread(db, account.id, other.id)
     content, image_url, _media_item = await _prepare_custom_media_message(
         db, account.id, content, image_url, context="dm", server_id=None
@@ -4165,6 +4179,13 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
             await websocket.close(code=1008)
             return
         profile = _account_payload(account)
+        other_id = (
+            int(thread.user_high_id)
+            if int(thread.user_low_id) == int(account_id)
+            else int(thread.user_low_id)
+        )
+        initial_permission = await crud.direct_message_permission(db, account_id, other_id)
+        can_send_messages = bool(initial_permission["allowed"])
 
     # Reuse the same lightweight manager. key (0, thread_id) cannot collide with real server_id.
     key = (0, thread_id)
@@ -4203,6 +4224,9 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
                 continue
 
             if event_type == "typing":
+                if not can_send_messages:
+                    await realtime_channels.clear_typing(key, account_id)
+                    continue
                 await realtime_channels.set_typing(key, account_id, profile)
                 continue
 
@@ -4274,12 +4298,22 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
                     if current_thread and current_thread.user_low_id == account_id
                     else current_thread.user_low_id if current_thread else 0
                 )
-                if not other_id or await crud.is_blocked_between(db, account_id, other_id):
+                permission = (
+                    await crud.direct_message_permission(db, account_id, other_id)
+                    if other_id
+                    else {"allowed": False, "reason": "not_found"}
+                )
+                can_send_messages = bool(permission["allowed"])
+                if not permission["allowed"]:
                     await realtime_channels.clear_typing(key, account_id)
                     await websocket.send_json({
                         "type": "message_error",
-                        "error": "blocked_relationship",
-                        "message": "Повідомлення недоступні, поки один із користувачів заблокував іншого.",
+                        "error": str(permission["reason"]),
+                        "message": (
+                            "Повідомлення недоступні, поки один із користувачів заблокував іншого."
+                            if permission["reason"] == "blocked_relationship"
+                            else "Цей користувач приймає особисті повідомлення лише від друзів або дозволених учасників серверів."
+                        ),
                     })
                     continue
                 requested_custom_media = bool(_MEDIA_TOKEN_RE.search(content))
@@ -4536,10 +4570,17 @@ async def api_block_status(username: str, request: Request, db: AsyncSession = D
         "blocked_by_me": False,
         "blocked_me": False,
     }
+    permission = (
+        await crud.direct_message_permission(db, account.id, target.id)
+        if int(target.id) != int(account.id)
+        else {"allowed": False, "reason": "self"}
+    )
     return JSONResponse({
         "ok": True,
         "user": _blocked_account_payload(target),
         "is_self": int(target.id) == int(account.id),
+        "can_message": bool(permission["allowed"]),
+        "message_permission_reason": str(permission["reason"]),
         **status,
     })
 
@@ -4593,6 +4634,64 @@ async def api_unblock_account(username: str, request: Request, db: AsyncSession 
         "user": {"id": target_id, "username": target_username},
         **status,
         "message": f"@{target_username} розблоковано.",
+    })
+
+
+# --- Data & Privacy ---------------------------------------------------------
+
+@router.get("/api/privacy")
+async def api_get_privacy_settings(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return _settings_error("Потрібно знову увійти в акаунт.", 401, "not_authenticated")
+    return JSONResponse({"ok": True, "settings": crud.account_privacy_payload(account)})
+
+
+@router.patch("/api/privacy")
+async def api_update_privacy_settings(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return _settings_error("Потрібно знову увійти в акаунт.", 401, "not_authenticated")
+    try:
+        body = await request.json()
+    except Exception:
+        body = None
+    if not isinstance(body, dict):
+        return _settings_error("Некоректні налаштування приватності.", 400, "invalid_payload")
+
+    values: dict[str, bool] = {}
+    for field in crud.PRIVACY_SETTING_FIELDS:
+        if field not in body:
+            continue
+        if not isinstance(body[field], bool):
+            return _settings_error(
+                f"Поле {field} має бути true або false.",
+                400,
+                "invalid_value",
+            )
+        values[field] = body[field]
+    if not values:
+        return _settings_error("Не передано жодного налаштування.", 400, "empty_update")
+
+    saved = await crud.update_account_privacy(db, int(account.id), values)
+    if saved is None:
+        return _settings_error("Обліковий запис не знайдено.", 404, "not_found")
+    return JSONResponse({"ok": True, "settings": saved})
+
+
+@router.get("/api/privacy/message-permission/{username}")
+async def api_dm_permission(username: str, request: Request, db: AsyncSession = Depends(get_db)):
+    sender = await current_account(request, db)
+    if not sender:
+        return _settings_error("Потрібно знову увійти в акаунт.", 401, "not_authenticated")
+    recipient = await crud.get_account_by_username_ci(db, username)
+    if not recipient:
+        return _settings_error("Користувача не знайдено.", 404, "not_found")
+    permission = await crud.direct_message_permission(db, sender.id, recipient.id)
+    return JSONResponse({
+        "ok": True,
+        "can_message": bool(permission["allowed"]),
+        "reason": str(permission["reason"]),
     })
 
 
@@ -4692,6 +4791,18 @@ async def api_send_friend_request(username: str, request: Request, db: AsyncSess
             {"error": "blocked_relationship", "message": "Спочатку розблокуйте користувача."},
             status_code=409,
         )
+
+    existing_status = await crud.friendship_status(db, viewer.id, target.id)
+    if existing_status == "none":
+        permission = await crud.friend_request_permission(db, viewer.id, target.id)
+        if not permission["allowed"]:
+            return JSONResponse(
+                {
+                    "error": "friend_requests_disabled",
+                    "message": "Цей користувач обмежив вхідні запити дружби.",
+                },
+                status_code=403,
+            )
 
     friendship = await crud.send_friend_request(db, viewer.id, target.id)
     status = await crud.friendship_status(db, viewer.id, target.id)
