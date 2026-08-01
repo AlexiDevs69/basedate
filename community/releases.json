@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.15.0",
+      "date": "2026-08-01",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: API endpoints for redeeming and generating boosts."
+      ],
+      "source_sha": "17508c3327bae3845ec478bce1df0df9ad6bcd25"
+    },
+    {
       "version": "1.14.0",
       "date": "2026-08-01",
       "title": "Нові можливості AlexiHub",
