@@ -98,6 +98,14 @@ async def ensure_account_visual_columns(db: AsyncSession) -> None:
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS custom_status_expires_at TIMESTAMP WITH TIME ZONE"))
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS language VARCHAR(8) DEFAULT 'ru' NOT NULL"))
     await db.execute(text("UPDATE community_accounts SET language = 'ru' WHERE language IS NULL OR language = ''"))
+    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS allow_dm_from_server_members BOOLEAN DEFAULT TRUE NOT NULL"))
+    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS allow_friend_requests_everyone BOOLEAN DEFAULT TRUE NOT NULL"))
+    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS allow_friend_requests_mutual_friends BOOLEAN DEFAULT TRUE NOT NULL"))
+    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS allow_friend_requests_server_members BOOLEAN DEFAULT TRUE NOT NULL"))
+    await db.execute(text("UPDATE community_accounts SET allow_dm_from_server_members = TRUE WHERE allow_dm_from_server_members IS NULL"))
+    await db.execute(text("UPDATE community_accounts SET allow_friend_requests_everyone = TRUE WHERE allow_friend_requests_everyone IS NULL"))
+    await db.execute(text("UPDATE community_accounts SET allow_friend_requests_mutual_friends = TRUE WHERE allow_friend_requests_mutual_friends IS NULL"))
+    await db.execute(text("UPDATE community_accounts SET allow_friend_requests_server_members = TRUE WHERE allow_friend_requests_server_members IS NULL"))
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS session_version INTEGER DEFAULT 1 NOT NULL"))
     await db.execute(text("UPDATE community_accounts SET session_version = 1 WHERE session_version IS NULL OR session_version < 1"))
     await db.commit()
@@ -365,6 +373,51 @@ async def update_account_language(db: AsyncSession, account_id: int, language: s
         {"account_id": account_id},
     )
     return normalize_language(persisted) if persisted is not None else None
+
+
+PRIVACY_SETTING_FIELDS = (
+    "allow_dm_from_server_members",
+    "allow_friend_requests_everyone",
+    "allow_friend_requests_mutual_friends",
+    "allow_friend_requests_server_members",
+)
+
+
+def account_privacy_payload(account: Account | None) -> dict[str, bool]:
+    """Return stable defaults for both freshly migrated and existing accounts."""
+    return {
+        "allow_dm_from_server_members": bool(
+            getattr(account, "allow_dm_from_server_members", True)
+        ),
+        "allow_friend_requests_everyone": bool(
+            getattr(account, "allow_friend_requests_everyone", True)
+        ),
+        "allow_friend_requests_mutual_friends": bool(
+            getattr(account, "allow_friend_requests_mutual_friends", True)
+        ),
+        "allow_friend_requests_server_members": bool(
+            getattr(account, "allow_friend_requests_server_members", True)
+        ),
+    }
+
+
+async def update_account_privacy(
+    db: AsyncSession,
+    account_id: int,
+    values: dict[str, bool],
+) -> dict[str, bool] | None:
+    """Persist a validated partial privacy update and return the stored state."""
+    await ensure_account_visual_columns(db)
+    account = await get_account_by_id(db, account_id)
+    if not account:
+        return None
+
+    for field in PRIVACY_SETTING_FIELDS:
+        if field in values:
+            setattr(account, field, bool(values[field]))
+    await db.commit()
+    await db.refresh(account)
+    return account_privacy_payload(account)
 
 
 async def list_online_accounts(db: AsyncSession, limit: int = 50) -> list[Account]:
@@ -878,6 +931,70 @@ async def list_mutual_servers(
         .order_by(CommunityServer.name.asc(), CommunityServer.id.asc())
     )
     return list(result.scalars().all())
+
+
+async def _accounts_have_mutual_friend(
+    db: AsyncSession,
+    first_account_id: int,
+    second_account_id: int,
+) -> bool:
+    first_friends = await list_friends(db, first_account_id)
+    if not first_friends:
+        return False
+    first_friend_ids = {int(friend.id) for friend in first_friends}
+    second_friends = await list_friends(db, second_account_id)
+    return any(int(friend.id) in first_friend_ids for friend in second_friends)
+
+
+async def direct_message_permission(
+    db: AsyncSession,
+    sender_id: int,
+    recipient_id: int,
+) -> dict[str, object]:
+    """Server-authoritative DM permission used by HTTP, WebSocket and gifts."""
+    if int(sender_id) == int(recipient_id):
+        return {"allowed": False, "reason": "self"}
+    if await is_blocked_between(db, sender_id, recipient_id):
+        return {"allowed": False, "reason": "blocked_relationship"}
+    if await friendship_status(db, sender_id, recipient_id) == "friends":
+        return {"allowed": True, "reason": "friends"}
+
+    recipient = await get_account_by_id(db, recipient_id)
+    if not recipient:
+        return {"allowed": False, "reason": "not_found"}
+    privacy = account_privacy_payload(recipient)
+    if privacy["allow_dm_from_server_members"]:
+        mutual_servers = await list_mutual_servers(db, sender_id, recipient_id)
+        if mutual_servers:
+            return {"allowed": True, "reason": "server_members"}
+    return {"allowed": False, "reason": "recipient_privacy"}
+
+
+async def friend_request_permission(
+    db: AsyncSession,
+    requester_id: int,
+    addressee_id: int,
+) -> dict[str, object]:
+    """Evaluate the recipient's three Discord-style friend-request switches."""
+    if int(requester_id) == int(addressee_id):
+        return {"allowed": False, "reason": "self"}
+    if await is_blocked_between(db, requester_id, addressee_id):
+        return {"allowed": False, "reason": "blocked_relationship"}
+
+    addressee = await get_account_by_id(db, addressee_id)
+    if not addressee:
+        return {"allowed": False, "reason": "not_found"}
+    privacy = account_privacy_payload(addressee)
+    if privacy["allow_friend_requests_everyone"]:
+        return {"allowed": True, "reason": "everyone"}
+    if privacy["allow_friend_requests_mutual_friends"]:
+        if await _accounts_have_mutual_friend(db, requester_id, addressee_id):
+            return {"allowed": True, "reason": "mutual_friends"}
+    if privacy["allow_friend_requests_server_members"]:
+        mutual_servers = await list_mutual_servers(db, requester_id, addressee_id)
+        if mutual_servers:
+            return {"allowed": True, "reason": "server_members"}
+    return {"allowed": False, "reason": "recipient_privacy"}
 
 
 async def get_server_by_id(db: AsyncSession, server_id: int) -> CommunityServer | None:
