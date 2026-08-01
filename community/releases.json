@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.11.19",
+      "date": "2026-08-01",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: profile actions and update badge selector."
+      ],
+      "source_sha": "ef52d0baef892d95f551c184f00379ffc435a5fb"
+    },
+    {
       "version": "1.11.18",
       "date": "2026-08-01",
       "title": "Оновлення AlexiHub",
