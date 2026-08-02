@@ -3462,6 +3462,274 @@ async def unread_mention_summary(db: AsyncSession, account_id: int) -> dict:
 
 
 # ============================================================================
+# Home inbox: persistent filters + server mention history
+# ============================================================================
+
+_INBOX_PREFERENCES_READY = False
+INBOX_PREFERENCE_FIELDS = {"include_everyone", "include_roles"}
+
+
+async def ensure_inbox_preferences_table(db: AsyncSession) -> None:
+    """Create the tiny per-account inbox preferences table idempotently."""
+    global _INBOX_PREFERENCES_READY
+    if _INBOX_PREFERENCES_READY:
+        return
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_inbox_preferences (
+            account_id INTEGER PRIMARY KEY REFERENCES community_accounts(id) ON DELETE CASCADE,
+            include_everyone BOOLEAN NOT NULL DEFAULT TRUE,
+            include_roles BOOLEAN NOT NULL DEFAULT TRUE,
+            updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+        )
+    """))
+    await db.commit()
+    _INBOX_PREFERENCES_READY = True
+
+
+async def get_inbox_preferences(db: AsyncSession, account_id: int) -> dict[str, bool]:
+    await ensure_inbox_preferences_table(db)
+    row = (await db.execute(
+        text("""
+            SELECT include_everyone, include_roles
+            FROM community_inbox_preferences
+            WHERE account_id = :account_id
+        """),
+        {"account_id": int(account_id)},
+    )).mappings().first()
+    if not row:
+        return {"include_everyone": True, "include_roles": True}
+    return {
+        "include_everyone": bool(row["include_everyone"]),
+        "include_roles": bool(row["include_roles"]),
+    }
+
+
+async def update_inbox_preferences(
+    db: AsyncSession,
+    account_id: int,
+    values: dict[str, bool],
+) -> dict[str, bool]:
+    current = await get_inbox_preferences(db, account_id)
+    for field, value in values.items():
+        if field in INBOX_PREFERENCE_FIELDS:
+            current[field] = bool(value)
+    await db.execute(
+        text("""
+            INSERT INTO community_inbox_preferences (
+                account_id, include_everyone, include_roles, updated_at
+            )
+            VALUES (:account_id, :include_everyone, :include_roles, NOW())
+            ON CONFLICT (account_id)
+            DO UPDATE SET
+                include_everyone = EXCLUDED.include_everyone,
+                include_roles = EXCLUDED.include_roles,
+                updated_at = NOW()
+        """),
+        {
+            "account_id": int(account_id),
+            "include_everyone": current["include_everyone"],
+            "include_roles": current["include_roles"],
+        },
+    )
+    await db.commit()
+    return current
+
+
+def _inbox_iso(value) -> str | None:
+    if value is None:
+        return None
+    if hasattr(value, "isoformat"):
+        return value.isoformat()
+    return str(value)
+
+
+async def list_server_inbox_mentions(
+    db: AsyncSession,
+    account_id: int,
+    *,
+    unread_only: bool,
+    include_everyone: bool,
+    include_roles: bool,
+    before_id: int | None = None,
+    limit: int = 50,
+) -> dict:
+    """Return an authorized, newest-first server mention page for Home inbox.
+
+    Membership and private-channel visibility are checked in the SQL query so
+    a stale mention cannot reveal a server/channel after the target loses
+    access.  ``limit + 1`` supplies a stable id cursor without offset races.
+    """
+    await ensure_mention_table(db)
+    safe_limit = max(1, min(int(limit or 50), 100))
+    fetch_limit = safe_limit + 1
+    result = await db.execute(
+        text("""
+            SELECT
+                mm.id AS mention_id,
+                mm.message_id,
+                mm.mention_type,
+                mm.created_at AS mentioned_at,
+                mm.read_at,
+                msg.content,
+                msg.image_url,
+                msg.edited_at,
+                author.id AS author_id,
+                author.username AS author_username,
+                author.display_name AS author_display_name,
+                author.avatar_url AS author_avatar_url,
+                srv.id AS server_id,
+                srv.name AS server_name,
+                srv.icon_url AS server_icon_url,
+                channel.id AS channel_id,
+                channel.name AS channel_name,
+                channel.channel_type
+            FROM community_message_mentions mm
+            JOIN community_server_messages msg
+              ON mm.message_kind = 'server'
+             AND msg.id = mm.message_id
+             AND msg.server_id = mm.server_id
+             AND msg.channel_id = mm.channel_id
+            JOIN community_accounts author ON author.id = msg.author_id
+            JOIN community_servers srv ON srv.id = mm.server_id
+            JOIN community_server_channels channel
+              ON channel.id = mm.channel_id AND channel.server_id = mm.server_id
+            JOIN community_server_members membership
+              ON membership.server_id = mm.server_id
+             AND membership.account_id = :account_id
+            LEFT JOIN community_server_categories category
+              ON category.id = channel.category_id
+             AND category.server_id = channel.server_id
+            WHERE mm.target_account_id = :account_id
+              AND mm.message_kind = 'server'
+              AND (:unread_only = FALSE OR mm.read_at IS NULL)
+              AND (:include_everyone = TRUE OR mm.mention_type <> 'everyone')
+              AND (:include_roles = TRUE OR mm.mention_type <> 'role')
+              AND (:before_id IS NULL OR mm.id < :before_id)
+              AND (
+                    (
+                        COALESCE(channel.is_private, FALSE) = FALSE
+                        AND COALESCE(category.is_private, FALSE) = FALSE
+                    )
+                    OR srv.owner_id = :account_id
+                    OR membership.role = 'admin'
+              )
+            ORDER BY mm.id DESC
+            LIMIT :fetch_limit
+        """),
+        {
+            "account_id": int(account_id),
+            "unread_only": bool(unread_only),
+            "include_everyone": bool(include_everyone),
+            "include_roles": bool(include_roles),
+            "before_id": int(before_id) if before_id and int(before_id) > 0 else None,
+            "fetch_limit": fetch_limit,
+        },
+    )
+    rows = list(result.mappings().all())
+    has_more = len(rows) > safe_limit
+    rows = rows[:safe_limit]
+    items = []
+    for row in rows:
+        server_id = int(row["server_id"])
+        channel_id = int(row["channel_id"])
+        message_id = int(row["message_id"])
+        items.append({
+            "id": int(row["mention_id"]),
+            "message_id": message_id,
+            "mention_type": str(row["mention_type"] or "user"),
+            "created_at": _inbox_iso(row["mentioned_at"]),
+            "read_at": _inbox_iso(row["read_at"]),
+            "is_read": row["read_at"] is not None,
+            "content": str(row["content"] or ""),
+            "image_url": str(row["image_url"] or ""),
+            "edited_at": _inbox_iso(row["edited_at"]),
+            "author": {
+                "id": int(row["author_id"]),
+                "username": str(row["author_username"] or ""),
+                "display_name": str(row["author_display_name"] or row["author_username"] or "Користувач"),
+                "avatar_url": str(row["author_avatar_url"] or ""),
+            },
+            "server": {
+                "id": server_id,
+                "name": str(row["server_name"] or "Сервер"),
+                "icon_url": str(row["server_icon_url"] or ""),
+            },
+            "channel": {
+                "id": channel_id,
+                "name": str(row["channel_name"] or "channel"),
+                "type": str(row["channel_type"] or "text"),
+            },
+            "jump_url": (
+                f"/community/servers/{server_id}/channel/{channel_id}"
+                f"?jump={message_id}#message-{message_id}"
+            ),
+        })
+    return {
+        "items": items,
+        "has_more": has_more,
+        "next_before_id": int(rows[-1]["mention_id"]) if has_more and rows else None,
+    }
+
+
+async def mark_server_inbox_mentions_read(
+    db: AsyncSession,
+    account_id: int,
+    *,
+    mention_ids: list[int] | None = None,
+    mark_all: bool = False,
+    server_id: int | None = None,
+    channel_id: int | None = None,
+) -> int:
+    await ensure_mention_table(db)
+    clean_ids = sorted({int(value) for value in (mention_ids or []) if int(value or 0) > 0})[:200]
+    has_channel_scope = bool(server_id and channel_id and int(server_id) > 0 and int(channel_id) > 0)
+    if not mark_all and not clean_ids and not has_channel_scope:
+        return 0
+    if mark_all:
+        result = await db.execute(
+            text("""
+                UPDATE community_message_mentions
+                SET read_at = NOW()
+                WHERE target_account_id = :account_id
+                  AND message_kind = 'server'
+                  AND read_at IS NULL
+            """),
+            {"account_id": int(account_id)},
+        )
+    elif has_channel_scope:
+        result = await db.execute(
+            text("""
+                UPDATE community_message_mentions
+                SET read_at = NOW()
+                WHERE target_account_id = :account_id
+                  AND message_kind = 'server'
+                  AND server_id = :server_id
+                  AND channel_id = :channel_id
+                  AND read_at IS NULL
+            """),
+            {
+                "account_id": int(account_id),
+                "server_id": int(server_id),
+                "channel_id": int(channel_id),
+            },
+        )
+    else:
+        result = await db.execute(
+            text("""
+                UPDATE community_message_mentions
+                SET read_at = NOW()
+                WHERE target_account_id = :account_id
+                  AND message_kind = 'server'
+                  AND read_at IS NULL
+                  AND id = ANY(:mention_ids)
+            """),
+            {"account_id": int(account_id), "mention_ids": clean_ids},
+        )
+    await db.commit()
+    return max(0, int(getattr(result, "rowcount", 0) or 0))
+
+
+# ============================================================================
 # Gifts
 # ============================================================================
 
