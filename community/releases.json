@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.30.0",
+      "date": "2026-08-02",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: inbox panel with notifications."
+      ],
+      "source_sha": "3c9a9ad53b592155bd32b4e0fe557846a3b722d5"
+    },
+    {
       "version": "1.29.0",
       "date": "2026-08-02",
       "title": "Нові можливості AlexiHub",
