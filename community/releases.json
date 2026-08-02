@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.29.0",
+      "date": "2026-08-02",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: inbox jump highlight functionality."
+      ],
+      "source_sha": "05c1971eef94f27266120880a5a8515d405ed38e"
+    },
+    {
       "version": "1.28.0",
       "date": "2026-08-02",
       "title": "Нові можливості AlexiHub",
