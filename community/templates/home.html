@@ -2048,6 +2048,33 @@
     @media(max-width:680px){.ah-store-task-grid,.ah-store-giveaways{grid-template-columns:1fr}.ah-store-task:last-child{grid-column:auto}.ah-store-pass-dashboard{padding:18px}.ah-store-progress-card{grid-template-columns:auto minmax(0,1fr);padding:14px}.ah-store-xp-total{grid-column:1/-1;display:flex;align-items:center;gap:7px;text-align:left}.ah-store-field-row{grid-template-columns:1fr}.ah-store-live-head{display:block}.ah-store-live-actions{margin-top:10px}.ah-store-create-drop{width:100%;justify-content:center}.ah-store-pass-card.is-expanded .ah-store-pass-details{max-height:2200px}}
     @media(prefers-reduced-motion:reduce){.ah-store-scroll{scroll-behavior:auto}.ah-store-hero-button,.ah-store-pass-card,.ah-store-pass-emblem,.ah-store-pass-details,.ah-store-pass-button,.ah-store-xp-fill,.ah-store-toast{transition:none!important}.ah-store-loading::after{animation:none}}
   </style>
+<style id="ah-store-studio-css">
+.ah-store-catalog,.ah-store-theme-gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.ah-store-catalog-card,.ah-store-theme-card{position:relative;min-width:0;overflow:hidden;border:1px solid #35373f;border-radius:12px;background:#2b2d31;transition:transform .16s ease,border-color .16s ease,background .16s ease}
+.ah-store-catalog-card:hover,.ah-store-theme-card:hover{transform:translateY(-2px);border-color:#4e5058;background:#303238}
+.ah-store-catalog-art{height:116px;background:#1e1f22 center/cover no-repeat;display:grid;place-items:center;color:#818894;font-size:30px}.ah-store-catalog-art.has-image:after{content:"";position:absolute;inset:0 0 auto;height:116px;background:linear-gradient(180deg,transparent,rgba(0,0,0,.34));pointer-events:none}
+.ah-store-catalog-body{padding:13px}.ah-store-catalog-top{display:flex;align-items:center;gap:7px}.ah-store-type-chip{height:20px;display:inline-flex;align-items:center;padding:0 7px;border-radius:5px;background:#404249;color:#dbdee1;font-size:8px;font-weight:950;text-transform:uppercase}.ah-store-catalog-timer{margin-left:auto;color:#949ba4;font-size:8px;font-weight:850}
+.ah-store-catalog-card h3{margin:10px 0 5px;color:#f2f3f5;font-size:14px}.ah-store-catalog-card p{min-height:30px;margin:0;color:#949ba4;font-size:9px;line-height:1.5}.ah-store-catalog-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:13px}.ah-store-price{color:#dbdee1;font-size:10px;font-weight:900}.ah-store-price.free{color:#57f287}.ah-store-catalog-author{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#6f747e;font-size:8px}
+.ah-store-theme-card{min-height:228px;background:#232428}.ah-store-theme-preview{position:relative;height:142px;background:#15161a center/cover no-repeat}.ah-store-theme-preview:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,var(--theme-overlay,.58)))}.ah-store-theme-demo{position:absolute;z-index:1;left:12px;right:12px;bottom:11px;display:flex;align-items:center;gap:8px;color:var(--theme-text,#fff)}.ah-store-theme-demo i{width:32px;height:32px;border:3px solid rgba(255,255,255,.75);border-radius:50%;background:var(--theme-accent,#5865f2)}.ah-store-theme-demo b{font-size:11px}.ah-store-theme-demo small{display:block;margin-top:2px;font-size:8px;opacity:.72}
+.ah-store-theme-body{padding:12px}.ah-store-theme-title{display:flex;align-items:center;gap:7px}.ah-store-theme-title b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#f2f3f5;font-size:12px}.ah-store-theme-lock{margin-left:auto;color:#949ba4;font-size:8px}.ah-store-theme-meta{margin-top:5px;color:#7f848e;font-size:8px}.ah-store-theme-actions{display:flex;gap:7px;margin-top:11px}.ah-store-theme-actions button{height:29px;flex:1;border:0;border-radius:6px;background:#5865f2;color:#fff;font:inherit;font-size:8px;font-weight:950;cursor:pointer}.ah-store-theme-actions button.secondary{background:#3f4147}.ah-store-theme-actions button:disabled{background:#34363c;color:#777d86;cursor:default}
+.ah-store-studio{display:none;width:min(1180px,calc(100% - 48px));margin:0 auto;padding:24px 0 72px}.ah-store-scroll.studio-open .ah-store-shell{display:none}.ah-store-scroll.studio-open .ah-store-studio{display:block;animation:ahStudioIn .18s ease-out both}@keyframes ahStudioIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+.ah-store-studio-hero{min-height:170px;display:flex;align-items:center;justify-content:space-between;gap:28px;padding:28px 30px;border:1px solid #393b43;border-radius:14px;background:linear-gradient(145deg,#2b2d31,#222328);box-shadow:0 16px 38px rgba(0,0,0,.18)}.ah-store-studio-kicker{color:#8ea1ff;font-size:9px;font-weight:950;letter-spacing:.1em}.ah-store-studio-hero h1{margin:8px 0 7px;color:#fff;font-size:27px;letter-spacing:-.035em}.ah-store-studio-hero p{max-width:650px;margin:0;color:#a5aab3;font-size:11px;line-height:1.55}.ah-store-studio-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}.ah-store-studio-actions button,.ah-store-studio-panel-head button,.ah-store-studio-refresh{height:34px;border:0;border-radius:7px;background:#5865f2;color:#fff;padding:0 12px;font:inherit;font-size:9px;font-weight:950;cursor:pointer}.ah-store-studio-actions button:hover,.ah-store-studio-panel-head button:hover{background:#6975f5}
+.ah-store-studio-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:22px 0 12px}.ah-store-studio-filters{display:flex;gap:4px;padding:4px;border-radius:9px;background:#202126}.ah-store-studio-filters button{height:29px;border:0;border-radius:6px;background:transparent;color:#949ba4;padding:0 10px;font:inherit;font-size:9px;font-weight:900;cursor:pointer}.ah-store-studio-filters button:hover{color:#dbdee1}.ah-store-studio-filters button.active{background:#3f4147;color:#fff}.ah-store-studio-refresh{background:#35373d;color:#dbdee1}
+.ah-store-studio-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.ah-store-studio-panel{min-width:0;overflow:hidden;border:1px solid #35373f;border-radius:12px;background:#232428}.ah-store-studio-panel.wide{grid-column:1/-1}.ah-store-studio-panel-head{height:56px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 15px;border-bottom:1px solid #35373f}.ah-store-studio-panel-head h2{display:inline;margin:0;color:#f2f3f5;font-size:13px}.ah-store-studio-panel-head span{margin-left:7px;color:#80858e;font-size:9px}.ah-store-studio-panel-head button{height:28px;background:#3f4147}.ah-store-studio-list{max-height:390px;overflow:auto;padding:7px}.ah-store-studio-list.pass-list{max-height:520px}.ah-studio-row{display:grid;grid-template-columns:38px minmax(0,1fr) auto;align-items:center;gap:10px;min-height:58px;padding:8px;border-radius:8px;transition:background .12s ease}.ah-studio-row:hover{background:#2b2d31}.ah-studio-row-art{width:38px;height:38px;display:grid;place-items:center;border-radius:8px;background:#3f4147 center/cover no-repeat;color:#dbdee1;font-size:15px}.ah-studio-row-copy{min-width:0}.ah-studio-row-copy b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#f2f3f5;font-size:10px}.ah-studio-row-copy span{display:block;margin-top:4px;color:#80858e;font-size:8px}.ah-studio-status{display:inline-flex!important;width:max-content;margin-top:5px!important;padding:2px 5px;border-radius:4px;background:#3f4147;color:#b5bac1!important;font-size:7px!important;font-weight:950;text-transform:uppercase}.ah-studio-status.published{background:rgba(35,165,90,.18);color:#57f287!important}.ah-studio-status.archived{background:#303136;color:#6f747e!important}.ah-studio-edit{width:28px;height:28px;border:0;border-radius:6px;background:transparent;color:#b5bac1;cursor:pointer}.ah-studio-edit:hover{background:#3f4147;color:#fff}
+.ah-store-editor-modal{display:none;position:fixed;inset:0;z-index:2147483300;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}.ah-store-editor-modal.show{display:flex;animation:ahEditorFade .14s ease both}@keyframes ahEditorFade{from{opacity:0}to{opacity:1}}.ah-store-editor-card{width:min(760px,100%);max-height:calc(100vh - 36px);display:flex;flex-direction:column;overflow:hidden;border:1px solid #3d3f47;border-radius:14px;background:#2b2d31;color:#f2f3f5;box-shadow:0 28px 90px rgba(0,0,0,.58)}
+.ah-store-editor-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:20px 22px 16px;border-bottom:1px solid #3a3c43}.ah-store-editor-head span{color:#8ea1ff;font-size:8px;font-weight:950;letter-spacing:.1em}.ah-store-editor-head h2{margin:6px 0 4px;font-size:20px}.ah-store-editor-head p{margin:0;color:#949ba4;font-size:10px}.ah-store-editor-head>button{width:31px;height:31px;border:0;border-radius:7px;background:#3f4147;color:#b5bac1;font-size:20px;cursor:pointer}.ah-store-editor-body{min-height:0;overflow:auto;padding:18px 22px}.ah-store-editor-section{margin-bottom:18px}.ah-store-editor-section:last-child{margin-bottom:0}.ah-store-editor-section>h3{margin:0 0 9px;color:#dbdee1;font-size:11px}.ah-editor-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.ah-editor-grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}.ah-editor-field{min-width:0}.ah-editor-field.full{grid-column:1/-1}.ah-editor-field label{display:block;margin-bottom:6px;color:#b5bac1;font-size:9px;font-weight:850}.ah-editor-field input,.ah-editor-field textarea,.ah-editor-field select{width:100%;box-sizing:border-box;border:1px solid transparent;border-radius:7px;background:#1e1f22;color:#f2f3f5;padding:0 10px;font:inherit;font-size:10px;outline:none}.ah-editor-field input,.ah-editor-field select{height:36px}.ah-editor-field textarea{min-height:78px;padding-top:9px;resize:vertical}.ah-editor-field input:focus,.ah-editor-field textarea:focus,.ah-editor-field select:focus{border-color:#5865f2}.ah-editor-check{height:36px;display:flex;align-items:center;gap:8px;color:#dbdee1;font-size:10px}.ah-editor-check input{width:17px;height:17px;accent-color:#5865f2}.ah-editor-upload{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px}.ah-editor-image-preview{height:104px;border-radius:9px;background:#1e1f22 center/cover no-repeat;display:grid;place-items:center;color:#6f747e;font-size:9px}.ah-editor-upload-actions{display:flex;flex-direction:column;justify-content:center;gap:7px}.ah-editor-upload-actions input[type=file]{height:auto;padding:9px}.ah-editor-help{color:#777d86;font-size:8px;line-height:1.45}
+.ah-pass-level-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}.ah-pass-level-toolbar button{height:29px;border:0;border-radius:6px;background:#3f4147;color:#fff;padding:0 10px;font:inherit;font-size:8px;font-weight:900;cursor:pointer}.ah-pass-levels{display:grid;gap:8px}.ah-pass-level{display:grid;grid-template-columns:58px minmax(0,1.15fr) minmax(0,.9fr) minmax(0,.9fr) 34px;gap:7px;align-items:end;padding:9px;border:1px solid #3a3c43;border-radius:9px;background:#232428}.ah-pass-level .ah-editor-field label{font-size:7px}.ah-pass-level-remove{width:31px;height:36px;border:0;border-radius:6px;background:#3f4147;color:#f23f42;cursor:pointer}.ah-store-editor-foot{min-height:62px;display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:11px 22px;border-top:1px solid #3a3c43}.ah-store-editor-foot>span{margin-right:auto;color:#f23f42;font-size:9px}.ah-store-editor-foot button{height:34px;border:0;border-radius:7px;background:#5865f2;color:#fff;padding:0 14px;font:inherit;font-size:9px;font-weight:950;cursor:pointer}.ah-store-editor-foot button.secondary{background:#3f4147}.ah-store-editor-foot button:disabled{opacity:.55;cursor:wait}
+@media(max-width:980px){.ah-store-catalog,.ah-store-theme-gallery{grid-template-columns:repeat(2,minmax(0,1fr))}.ah-store-studio{width:min(100% - 28px,900px)}}
+@media(max-width:720px){.ah-store-catalog,.ah-store-theme-gallery,.ah-store-studio-grid{grid-template-columns:1fr}.ah-store-studio-panel.wide{grid-column:auto}.ah-store-studio-hero{display:block;padding:22px}.ah-store-studio-actions{justify-content:flex-start;margin-top:16px}.ah-store-studio-toolbar{align-items:flex-start;flex-direction:column}.ah-store-studio-filters{max-width:100%;overflow:auto}.ah-store-studio{width:calc(100% - 20px);padding-top:12px}.ah-editor-grid,.ah-editor-grid.three{grid-template-columns:1fr}.ah-editor-field.full{grid-column:auto}.ah-editor-upload{grid-template-columns:1fr}.ah-pass-level{grid-template-columns:52px minmax(0,1fr) 34px}.ah-pass-level .reward-type,.ah-pass-level .reward-value{grid-column:1/-1}.ah-store-editor-head,.ah-store-editor-body,.ah-store-editor-foot{padding-left:15px;padding-right:15px}}
+@media(prefers-reduced-motion:reduce){.ah-store-catalog-card,.ah-store-theme-card{transition:none}.ah-store-scroll.studio-open .ah-store-studio,.ah-store-editor-modal.show{animation:none}}
+</style>
+<style id="ah-store-file-input-polish">
+.ah-editor-upload-actions input[type=file]{height:auto;padding:8px;border:1px dashed #4a4d55;border-radius:8px;background:#232428;color:#949ba4;font:inherit;font-size:9px}
+.ah-editor-upload-actions input[type=file]::file-selector-button{margin-right:9px;border:0;border-radius:6px;background:#3f4147;color:#f2f3f5;padding:7px 10px;font:inherit;font-size:8px;font-weight:900;cursor:pointer}
+.ah-editor-upload-actions input[type=file]::file-selector-button:hover{background:#4a4c54}
+.ah-editor-clear-image{width:max-content;height:27px;border:0;border-radius:6px;background:transparent;color:#b5bac1;padding:0 7px;font:inherit;font-size:8px;font-weight:850;cursor:pointer}.ah-editor-clear-image:hover{background:#3f4147;color:#fff}
+.ah-studio-status.active{background:rgba(35,165,90,.18);color:#57f287!important}.ah-studio-status.expired{background:#303136;color:#80858e!important}
+</style>
 </head>
 <body data-current-account-id="{{ account.id }}">
   <svg style="display:none" aria-hidden="true">
@@ -2423,8 +2450,9 @@
         <header class="ah-store-topbar">
           <div class="ah-store-brand"><svg class="icon"><use href="#i-shop"></use></svg><span>Магазин</span></div>
           <nav class="ah-store-tabs" aria-label="Разделы магазина">
-            <button class="ah-store-tab active" type="button" aria-current="page" onclick="scrollStoreTop()">Рекомендации</button>
-            <button class="ah-store-tab" type="button" onclick="scrollToSummerPass(this)">Сезон</button>
+            <button class="ah-store-tab active" data-store-view="browse" type="button" aria-current="page" onclick="openStoreBrowse()">Рекомендации</button>
+            <button class="ah-store-tab" data-store-view="season" type="button" onclick="openStoreSeason(this)">Сезон</button>
+            <button id="ah-store-studio-tab" class="ah-store-tab" data-store-view="studio" type="button" hidden onclick="openStoreStudio()">Мастерская</button>
           </nav>
           <span class="ah-store-season-chip">SUMMER CLOVER · СЕЗОН 01</span>
         </header>
@@ -2499,15 +2527,46 @@
               <div><h2>Раздачи сообщества</h2><p>Ограниченные бесплатные Nitro-дропы от верифицированных пользователей.</p></div>
               <div class="ah-store-live-actions">
                 <span class="ah-store-section-badge">ТОЛЬКО VERIFIED</span>
-                <button id="ah-store-create-drop" class="ah-store-create-drop" type="button" onclick="openStoreGiveawayModal()"><svg class="icon"><use href="#i-gift"></use></svg>Создать раздачу</button>
               </div>
             </div>
             <div id="ah-store-giveaways" class="ah-store-giveaways" aria-live="polite">
               <div class="ah-store-empty ah-store-loading">Загружаем активные раздачи...</div>
             </div>
 
+            <div id="ah-store-catalog-head" class="ah-store-section-head">
+              <div><h2>Новое в магазине</h2><p>Активные товары, события, пропуски и темы автоматически из базы.</p></div>
+              <span class="ah-store-section-badge">ОБНОВЛЯЕТСЯ АВТОМАТИЧЕСКИ</span>
+            </div>
+            <div id="ah-store-catalog" class="ah-store-catalog" aria-live="polite">
+              <div class="ah-store-empty ah-store-loading">Загружаем каталог...</div>
+            </div>
+
+            <div id="ah-store-themes-head" class="ah-store-section-head">
+              <div><h2>Темы мини-профиля</h2><p>Фоны от verified-авторов. Бесплатные можно применить сразу, наградные открываются в пропусках.</p></div>
+              <span class="ah-store-section-badge">PROFILE THEMES</span>
+            </div>
+            <div id="ah-store-theme-gallery" class="ah-store-theme-gallery" aria-live="polite">
+              <div class="ah-store-empty ah-store-loading">Загружаем темы...</div>
+            </div>
+
             <p class="ah-store-fineprint">XP, награды и активации хранятся в аккаунте. Одну раздачу можно забрать только один раз.</p>
           </div>
+
+          <section id="ah-store-studio" class="ah-store-studio" aria-labelledby="ah-store-studio-title">
+            <div class="ah-store-studio-hero">
+              <div><span class="ah-store-studio-kicker">VERIFIED CREATOR TOOLS</span><h1 id="ah-store-studio-title">Мастерская магазина</h1><p>Создавай темы, акции, товары и пропуски через формы. Черновики не видны пользователям, архив сохраняет историю.</p></div>
+              <div class="ah-store-studio-actions"><button type="button" onclick="openStoreEditor('item')">+ Товар</button><button type="button" onclick="openStoreEditor('theme')">+ Тема</button><button type="button" onclick="openStoreEditor('pass')">+ Пропуск</button><button type="button" onclick="openStoreGiveawayModal()">+ Раздача</button></div>
+            </div>
+            <div class="ah-store-studio-toolbar">
+              <div class="ah-store-studio-filters" role="tablist"><button class="active" type="button" data-studio-filter="all">Все</button><button type="button" data-studio-filter="active">Активные</button><button type="button" data-studio-filter="draft">Черновики</button><button type="button" data-studio-filter="archive">Архив</button></div>
+              <button class="ah-store-studio-refresh" type="button" onclick="loadStoreWorkshop(true)">Обновить</button>
+            </div>
+            <div class="ah-store-studio-grid">
+              <section class="ah-store-studio-panel"><div class="ah-store-studio-panel-head"><div><h2>Товары и события</h2><span id="ah-studio-items-count">0</span></div><button type="button" onclick="openStoreEditor('item')">Добавить</button></div><div id="ah-studio-items" class="ah-store-studio-list"><div class="ah-store-empty ah-store-loading">Загрузка...</div></div></section>
+              <section class="ah-store-studio-panel"><div class="ah-store-studio-panel-head"><div><h2>Темы профиля</h2><span id="ah-studio-themes-count">0</span></div><button type="button" onclick="openStoreEditor('theme')">Добавить</button></div><div id="ah-studio-themes" class="ah-store-studio-list"><div class="ah-store-empty ah-store-loading">Загрузка...</div></div></section>
+              <section class="ah-store-studio-panel wide"><div class="ah-store-studio-panel-head"><div><h2>Пропуски и уровни</h2><span id="ah-studio-passes-count">0</span></div><button type="button" onclick="openStoreEditor('pass')">Добавить</button></div><div id="ah-studio-passes" class="ah-store-studio-list pass-list"><div class="ah-store-empty ah-store-loading">Загрузка...</div></div></section>
+            </div>
+          </section>
         </div>
 
         <div id="ah-store-giveaway-modal" class="ah-store-modal" role="dialog" aria-modal="true" aria-labelledby="ah-store-giveaway-modal-title" onclick="storeModalBackdrop(event)">
@@ -2527,6 +2586,13 @@
               <div id="ah-store-modal-error" class="ah-store-modal-error"></div>
             </div>
             <div class="ah-store-modal-foot"><button class="ah-store-modal-button secondary" type="button" onclick="closeStoreGiveawayModal()">Отмена</button><button id="ah-store-drop-submit" class="ah-store-modal-button" type="submit">Опубликовать</button></div>
+          </form>
+        </div>
+        <div id="ah-store-editor-modal" class="ah-store-editor-modal" role="dialog" aria-modal="true" aria-labelledby="ah-store-editor-title" onclick="storeEditorBackdrop(event)">
+          <form id="ah-store-editor-form" class="ah-store-editor-card" onsubmit="submitStoreEditor(event)">
+            <div class="ah-store-editor-head"><div><span id="ah-store-editor-kicker">МАСТЕРСКАЯ</span><h2 id="ah-store-editor-title">Новый товар</h2><p id="ah-store-editor-subtitle">Заполни поля и сохрани черновик или опубликуй.</p></div><button type="button" aria-label="Закрыть" onclick="closeStoreEditor()">×</button></div>
+            <div id="ah-store-editor-body" class="ah-store-editor-body"></div>
+            <div class="ah-store-editor-foot"><span id="ah-store-editor-error" role="alert"></span><button class="secondary" type="button" onclick="closeStoreEditor()">Отмена</button><button id="ah-store-editor-save" type="submit">Сохранить</button></div>
           </form>
         </div>
         <div id="ah-store-toast" class="ah-store-toast" role="status" aria-live="polite"></div>
@@ -6275,6 +6341,13 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     updateStoreCountdown();
     renderPass(data.pass || {}, data.tasks || []);
     renderGiveaways(data.giveaways || [], !!data.can_create_giveaway);
+    const passTitle = document.getElementById('ah-summer-pass-title');
+    if(passTitle && data.season && data.season.name) passTitle.textContent = data.season.name;
+    const passFree = document.querySelector('.ah-store-pass-free');
+    if(passFree && data.pass) passFree.textContent = Number(data.pass.max_level || 20) + ' уровней · бесплатно';
+    const studioTab = document.getElementById('ah-store-studio-tab');
+    if(studioTab) studioTab.hidden = !data.can_manage_store;
+    if(window.AlexiHubStoreStudio && typeof window.AlexiHubStoreStudio.render === 'function') window.AlexiHubStoreStudio.render(data);
     const reset = document.getElementById('ah-store-task-reset');
     if(reset && data.season && data.season.daily_reset_at) reset.textContent = 'Сброс через ' + shortRemaining(data.season.daily_reset_at);
   }
@@ -6398,6 +6471,231 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   document.addEventListener('keydown', function(event){ if(event.key === 'Escape') closeStoreGiveawayModal(); });
   document.addEventListener('visibilitychange', function(){ if(!document.hidden){ updateStoreCountdown(); updateDropCountdowns(); if(storeState) loadStoreState(true); } });
 })();
+</script>
+
+
+<script id="ah-store-studio-js">
+(function(){
+  if(window.__ahStoreStudioReady) return;
+  window.__ahStoreStudioReady = true;
+  let publicState = null;
+  let workshop = null;
+  let workshopLoading = false;
+  let currentFilter = 'all';
+  let editor = {kind:null,id:null,record:null};
+  const typeLabels = {pass:'Пропуск',promotion:'Акция',one_time:'Разовый товар',timed_event:'Событие',profile_theme:'Тема профиля'};
+  const statusLabels = {active:'Активно',scheduled:'Запланировано',draft:'Черновик',archived:'Архив',expired:'Завершено',disabled:'Выключено',published:'Опубликовано'};
+  const rewardLabels = {collectible:'Предмет',profile_theme:'Тема профиля',nitro:'Nitro',none:'Без награды'};
+  const q = (selector, root=document) => root.querySelector(selector);
+  const esc = value => String(value ?? '').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  const attr = value => esc(value).replace(/`/g,'&#96;');
+  function jsonHeaders(){return {'Content-Type':'application/json','Accept':'application/json'};}
+  async function api(path, options){
+    const response = await fetch(path,Object.assign({credentials:'same-origin',cache:'no-store'},options||{}));
+    const data = await response.json().catch(()=>({}));
+    if(!response.ok || data.ok===false) throw new Error(data.message||data.error||'Не удалось выполнить действие.');
+    return data;
+  }
+  function toast(message,type){
+    if(typeof window.showActionToast==='function') window.showActionToast(message);
+    else{
+      const node=q('#ah-store-toast'); if(!node)return; node.textContent=message;node.className='ah-store-toast '+(type||'ok')+' show';setTimeout(()=>node.classList.remove('show'),2600);
+    }
+  }
+  function dateInput(value){
+    if(!value) return '';
+    const date=new Date(value); if(Number.isNaN(date.getTime()))return '';
+    const pad=n=>String(n).padStart(2,'0');
+    return date.getFullYear()+'-'+pad(date.getMonth()+1)+'-'+pad(date.getDate())+'T'+pad(date.getHours())+':'+pad(date.getMinutes());
+  }
+  function isoValue(value){return value?new Date(value).toISOString():null;}
+  function remaining(value){
+    if(!value)return '';
+    const ms=new Date(value).getTime()-Date.now(); if(ms<=0)return 'завершено';
+    const hours=Math.floor(ms/3600000), days=Math.floor(hours/24);
+    return days?days+' д. '+(hours%24)+' ч.':hours?hours+' ч.':Math.max(1,Math.floor(ms/60000))+' мин.';
+  }
+  function markTab(view){
+    document.querySelectorAll('.ah-store-tab[data-store-view]').forEach(button=>{
+      const active=button.dataset.storeView===view;button.classList.toggle('active',active);active?button.setAttribute('aria-current','page'):button.removeAttribute('aria-current');
+    });
+  }
+  window.openStoreBrowse=function(){
+    q('#ah-store-scroll')?.classList.remove('studio-open');markTab('browse');window.scrollStoreTop?.();markTab('browse');return false;
+  };
+  window.openStoreSeason=function(){
+    q('#ah-store-scroll')?.classList.remove('studio-open');markTab('season');window.scrollToSummerPass?.();markTab('season');return false;
+  };
+  window.openStoreStudio=function(){
+    if(!(publicState&&publicState.can_manage_store))return false;
+    q('#ah-store-scroll')?.classList.add('studio-open');markTab('studio');q('#ah-store-scroll')?.scrollTo({top:0,behavior:'smooth'});window.loadStoreWorkshop();return false;
+  };
+  function catalogCard(item){
+    const image=item.image_url?`style="background-image:url('${attr(item.image_url)}')"`:'';
+    const price=Number(item.price_amount||0);
+    const meta=item.metadata||{};
+    const timer=item.ends_at?remaining(item.ends_at):'';
+    const discount=item.item_type==='promotion'&&meta.discount_percent?` · −${Number(meta.discount_percent)}%`:'';
+    return `<article class="ah-store-catalog-card"><div class="ah-store-catalog-art${item.image_url?' has-image':''}" ${image}>${item.image_url?'':esc(item.icon||'✦')}</div><div class="ah-store-catalog-body"><div class="ah-store-catalog-top"><span class="ah-store-type-chip">${esc(typeLabels[item.item_type]||item.item_type)}</span>${timer?`<span class="ah-store-catalog-timer" data-store-expires="${attr(item.ends_at)}">${esc(timer)}</span>`:''}</div><h3>${esc(item.title)}</h3><p>${esc(item.description||'Новая публикация магазина AlexiHub.')}</p><div class="ah-store-catalog-foot"><span class="ah-store-price${price?'':' free'}">${price?esc(price+' '+item.currency):'Бесплатно'}${esc(discount)}</span><span class="ah-store-catalog-author">@${esc(item.creator_username||'alexihub')}</span></div></div></article>`;
+  }
+  function passCatalogCard(pass){
+    const image=pass.image_url?`style="background-image:url('${attr(pass.image_url)}')"`:'';
+    return `<article class="ah-store-catalog-card"><div class="ah-store-catalog-art${pass.image_url?' has-image':''}" ${image}>${pass.image_url?'':'◇'}</div><div class="ah-store-catalog-body"><div class="ah-store-catalog-top"><span class="ah-store-type-chip">Пропуск</span>${pass.ends_at?`<span class="ah-store-catalog-timer" data-store-expires="${attr(pass.ends_at)}">${esc(remaining(pass.ends_at))}</span>`:''}</div><h3>${esc(pass.title)}</h3><p>${esc(pass.description||'Сезонный пропуск сообщества.')}</p><div class="ah-store-catalog-foot"><span class="ah-store-price free">${Number(pass.max_level||1)} уровней</span><span class="ah-store-catalog-author">@${esc(pass.creator_username||'alexihub')}</span></div></div></article>`;
+  }
+  function themeCard(theme){
+    const can=!!theme.can_equip, equipped=!!theme.equipped;
+    const overlay=Math.max(0,Math.min(90,Number(theme.overlay_strength||58)))/100;
+    return `<article class="ah-store-theme-card"><div class="ah-store-theme-preview" style="background-image:url('${attr(theme.image_url)}');--theme-overlay:${overlay};--theme-accent:${attr(theme.accent_color)};--theme-text:${attr(theme.text_color)}"><div class="ah-store-theme-demo"><i></i><span><b>AlexiHub User</b><small>@profile</small></span></div></div><div class="ah-store-theme-body"><div class="ah-store-theme-title"><b>${esc(theme.title)}</b><span class="ah-store-theme-lock">${theme.access_mode==='free'?'FREE':theme.owned?'ОТКРЫТО':'В ПРОПУСКЕ'}</span></div><div class="ah-store-theme-meta">Автор @${esc(theme.creator_username||'verified')}</div><div class="ah-store-theme-actions"><button type="button" class="secondary" onclick="previewStoreTheme(${Number(theme.id)})">Примерить</button><button type="button" ${can&&!equipped?'':'disabled'} onclick="equipStoreTheme(${Number(theme.id)},this)">${equipped?'Используется':can?'Использовать':'Закрыто'}</button></div></div></article>`;
+  }
+  function renderPublic(data){
+    publicState=data;
+    const tab=q('#ah-store-studio-tab');if(tab)tab.hidden=!data.can_manage_store;
+    const catalog=data.catalog||{};
+    const items=[...(catalog.items||[])];
+    const passes=(catalog.passes||[]).filter(pass=>pass.pass_key!=='summer-clover-2026');
+    const catalogNode=q('#ah-store-catalog');
+    if(catalogNode){const html=items.map(catalogCard).concat(passes.map(passCatalogCard)).join('');catalogNode.innerHTML=html||'<div class="ah-store-empty">Сейчас новых публикаций нет.</div>';}
+    const themeNode=q('#ah-store-theme-gallery');
+    if(themeNode){themeNode.innerHTML=(catalog.themes||[]).map(themeCard).join('')||'<div class="ah-store-empty">Verified-авторы ещё не опубликовали темы.</div>';}
+  }
+  window.previewStoreTheme=function(themeId){
+    const theme=(publicState?.catalog?.themes||[]).find(item=>Number(item.id)===Number(themeId));if(!theme)return false;
+    if(window.AlexiHubProfileThemes?.preview)window.AlexiHubProfileThemes.preview(theme);
+    else toast('Открой мини-профиль — preview темы уже применён.');
+    return false;
+  };
+  window.equipStoreTheme=async function(themeId,button){
+    if(button)button.disabled=true;
+    try{const data=await api('/community/api/profile-themes/equip',{method:'POST',headers:jsonHeaders(),body:JSON.stringify({theme_id:Number(themeId)})});if(window.AlexiHubProfileThemes?.preview)window.AlexiHubProfileThemes.preview(data.theme);toast('Тема мини-профиля применена.');await window.AlexiHubStore?.refresh?.();}
+    catch(error){toast(error.message,'err');if(button)button.disabled=false;}
+    return false;
+  };
+  function statusClass(status){return ['active','published','archived','expired'].includes(status)?status:'';}
+  function row(record,kind){
+    const image=record.image_url?`style="background-image:url('${attr(record.image_url)}')"`:'';
+    const title=record.title||'Без названия';
+    const detail=kind==='pass'?`${Number(record.levels?.length||0)} наград · ${Number(record.max_level||1)} уровней`:kind==='theme'?(record.access_mode==='free'?'Бесплатная тема':'Награда пропуска'):(typeLabels[record.item_type]||record.item_type);
+    const lifecycle=record.lifecycle||(record.status==='draft'?'draft':record.status==='archived'?'archived':record.is_active===false?'disabled':'active');
+    return `<article class="ah-studio-row" data-studio-status="${attr(lifecycle)}"><span class="ah-studio-row-art" ${image}>${record.image_url?'':kind==='theme'?'▣':kind==='pass'?'◇':esc(record.icon||'✦')}</span><div class="ah-studio-row-copy"><b>${esc(title)}</b><span>${esc(detail)}</span><span class="ah-studio-status ${statusClass(lifecycle)}">${esc(statusLabels[lifecycle]||lifecycle)}</span></div><button class="ah-studio-edit" type="button" aria-label="Редактировать" onclick="openStoreEditor('${kind}',${Number(record.id)})">✎</button></article>`;
+  }
+  function filtered(values){if(currentFilter==='all')return values;return values.filter(item=>{const life=item.lifecycle||(item.status==='draft'?'draft':item.status==='archived'?'archived':item.is_active===false?'disabled':'active');if(currentFilter==='archive')return ['archived','expired','disabled'].includes(life);return life===currentFilter;});}
+  function renderWorkshop(){
+    if(!workshop)return;
+    [['items','item'],['themes','theme'],['passes','pass']].forEach(([key,kind])=>{
+      const values=filtered(workshop[key]||[]),node=q('#ah-studio-'+key),count=q('#ah-studio-'+key+'-count');
+      if(count)count.textContent=String(values.length);
+      if(node)node.innerHTML=values.map(item=>row(item,kind)).join('')||'<div class="ah-store-empty">В этом разделе пока пусто.</div>';
+    });
+  }
+  window.loadStoreWorkshop=async function(force){
+    if(workshopLoading||(!force&&workshop))return;
+    workshopLoading=true;
+    try{workshop=await api('/community/api/store/workshop');renderWorkshop();}
+    catch(error){['items','themes','passes'].forEach(key=>{const node=q('#ah-studio-'+key);if(node)node.innerHTML='<div class="ah-store-empty">'+esc(error.message)+'</div>';});}
+    finally{workshopLoading=false;}
+  };
+  function field(name,label,value,type='text',extra=''){
+    return `<div class="ah-editor-field"><label for="ah-ed-${name}">${esc(label)}</label><input id="ah-ed-${name}" name="${attr(name)}" type="${attr(type)}" value="${attr(value??'')}" ${extra}></div>`;
+  }
+  function area(name,label,value){return `<div class="ah-editor-field full"><label for="ah-ed-${name}">${esc(label)}</label><textarea id="ah-ed-${name}" name="${attr(name)}">${esc(value||'')}</textarea></div>`;}
+  function selectField(name,label,value,options,classes=''){
+    return `<div class="ah-editor-field ${classes}"><label for="ah-ed-${name}">${esc(label)}</label><select id="ah-ed-${name}" name="${attr(name)}">${options.map(([key,text])=>`<option value="${attr(key)}" ${String(key)===String(value)?'selected':''}>${esc(text)}</option>`).join('')}</select></div>`;
+  }
+  function commonSchedule(record){
+    return `<div class="ah-store-editor-section"><h3>Публикация</h3><div class="ah-editor-grid three">${selectField('status','Статус',record.status||'draft',[['draft','Черновик'],['published','Опубликовано'],['archived','Архив']])}${field('starts_at','Начало',dateInput(record.starts_at),'datetime-local')}${field('ends_at','Окончание',dateInput(record.ends_at),'datetime-local')}<label class="ah-editor-check"><input id="ah-ed-is_active" name="is_active" type="checkbox" ${record.is_active!==false?'checked':''}>Активно сейчас</label></div></div>`;
+  }
+  function uploadBlock(record){
+    return `<div class="ah-store-editor-section"><h3>Изображение</h3><div class="ah-editor-upload"><div id="ah-ed-image-preview" class="ah-editor-image-preview" style="${record.image_url?`background-image:url('${attr(record.image_url)}')`:''}">${record.image_url?'':'Preview'}</div><div class="ah-editor-upload-actions"><input id="ah-ed-image-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif"><input id="ah-ed-image_url" name="image_url" type="hidden" value="${attr(record.image_url||'')}"><button class="ah-editor-clear-image" type="button" onclick="clearStoreEditorImage()">Убрать изображение</button><span class="ah-editor-help">PNG, JPG, WebP или GIF до 5 МБ. Файл загружается перед сохранением.</span></div></div></div>`;
+  }
+  function itemMetadataFields(type,meta){
+    const schemas=workshop?.schemas?.item_types||{};
+    const fields=schemas[type]?.fields||[];
+    const labels={benefits:'Бонусы (по одному в строке)',discount_percent:'Скидка, %',original_price:'Старая цена',stock:'Количество',per_account_limit:'Лимит на аккаунт',event_label:'Подпись события',cta_label:'Текст кнопки',theme_id:'ID темы'};
+    return fields.map(key=>{
+      const value=Array.isArray(meta[key])?meta[key].join('\n'):(meta[key]??'');
+      return key==='benefits'?area('meta_'+key,labels[key],value):field('meta_'+key,labels[key],value,['discount_percent','original_price','stock','per_account_limit','theme_id'].includes(key)?'number':'text');
+    }).join('');
+  }
+  function itemEditor(record){
+    const schemas=workshop?.schemas?.item_types||{one_time:{label:'Разовый товар'}};
+    const options=Object.entries(schemas).map(([key,value])=>[key,value.label||typeLabels[key]||key]);
+    return `<div class="ah-store-editor-section"><h3>Основное</h3><div class="ah-editor-grid">${selectField('item_type','Тип',record.item_type||'one_time',options)}${field('title','Название',record.title||'','text','maxlength="100" required')}${area('description','Описание',record.description||'')}${field('icon','Иконка',record.icon||'✦')}${field('price_amount','Цена',record.price_amount||0,'number','min="0"')}${selectField('currency','Внутренняя валюта',record.currency||'clover',[['clover','Clover'],['xp','XP'],['boost','Boost']])}</div></div>${uploadBlock(record)}<div id="ah-editor-type-fields" class="ah-store-editor-section"><h3>Поля типа</h3><div class="ah-editor-grid">${itemMetadataFields(record.item_type||'one_time',record.metadata||{})}</div></div>${commonSchedule(record)}`;
+  }
+  function themeEditor(record){
+    return `<div class="ah-store-editor-section"><h3>Тема мини-профиля</h3><div class="ah-editor-grid">${field('title','Название',record.title||'','text','maxlength="80" required')}${selectField('access_mode','Доступ',record.access_mode||'free',[['free','Бесплатная'],['pass_reward','Награда пропуска']])}${area('description','Описание',record.description||'')}${field('accent_color','Акцент',record.accent_color||'#5865f2','color')}${field('text_color','Цвет текста',record.text_color||'#ffffff','color')}${field('overlay_strength','Затемнение, %',record.overlay_strength??58,'range','min="0" max="90"')}</div></div>${uploadBlock(record)}${commonSchedule(record)}`;
+  }
+  function levelRow(level,index){
+    const themes=workshop?.themes||[];
+    const rewardOptions=Object.entries(rewardLabels);
+    const refOptions=[['','— Выбрать тему —'],...themes.map(theme=>[String(theme.id),theme.title])];
+    const days=Number(level.reward_config?.days||1);
+    return `<div class="ah-pass-level" data-level-index="${index}">${field('level_'+index,'Уровень',level.level||index+1,'number','min="1" max="100"')}${field('level_title_'+index,'Название',level.title||'')}${selectField('reward_type_'+index,'Награда',level.reward_type||'collectible',rewardOptions,'reward-type')}${level.reward_type==='profile_theme'?selectField('reward_value_'+index,'Тема',level.reward_ref_id||'',refOptions,'reward-value'):level.reward_type==='nitro'?field('reward_value_'+index,'Дней Nitro',days,'number','min="1" max="30"'):field('reward_value_'+index,'Иконка',level.icon||'✦','text','class="reward-value"')}<button class="ah-pass-level-remove" type="button" aria-label="Удалить уровень" onclick="removePassLevel(this)">×</button></div>`;
+  }
+  function passEditor(record){
+    const levels=Array.isArray(record.levels)?record.levels:[];
+    return `<div class="ah-store-editor-section"><h3>Пропуск</h3><div class="ah-editor-grid">${field('title','Название',record.title||'','text','maxlength="100" required')}${field('max_level','Максимальный уровень',record.max_level||20,'number','min="1" max="100"')}${area('description','Описание',record.description||'')}${field('xp_per_level','XP на уровень',record.xp_per_level||100,'number','min="1" max="100000"')}</div></div>${uploadBlock(record)}<div class="ah-store-editor-section"><div class="ah-pass-level-toolbar"><h3>Награды уровней</h3><button type="button" onclick="addPassLevel()">+ Добавить уровень</button></div><div id="ah-pass-levels" class="ah-pass-levels">${levels.map(levelRow).join('')}</div></div>${commonSchedule(record)}`;
+  }
+  function findRecord(kind,id){const key=kind==='item'?'items':kind==='theme'?'themes':'passes';return (workshop?.[key]||[]).find(item=>Number(item.id)===Number(id));}
+  window.openStoreEditor=async function(kind,id){
+    if(!workshop)await window.loadStoreWorkshop();
+    const record=id?findRecord(kind,id):null;
+    editor={kind,id:id||null,record:record||{status:'draft',is_active:true}};
+    const body=q('#ah-store-editor-body'),title=q('#ah-store-editor-title'),subtitle=q('#ah-store-editor-subtitle'),error=q('#ah-store-editor-error');
+    if(error)error.textContent='';
+    if(title)title.textContent=(id?'Редактировать ':'Новый ')+(kind==='theme'?'фон мини-профиля':kind==='pass'?'пропуск':'товар');
+    if(subtitle)subtitle.textContent=kind==='pass'?'Настрой уровни и награды. Изменения применятся без редактирования кода.':kind==='theme'?'Загрузи фон, настрой читаемость и доступ.':'Тип определяет дополнительные поля карточки.';
+    if(body)body.innerHTML=kind==='theme'?themeEditor(editor.record):kind==='pass'?passEditor(editor.record):itemEditor(editor.record);
+    q('#ah-store-editor-modal')?.classList.add('show');q('#ah-ed-title')?.focus();bindEditorInputs();return false;
+  };
+  function bindEditorInputs(){
+    q('#ah-ed-image-file')?.addEventListener('change',event=>{const file=event.target.files?.[0];if(!file)return;const url=URL.createObjectURL(file);const preview=q('#ah-ed-image-preview');if(preview){preview.style.backgroundImage=`url('${url.replace(/'/g,'%27')}')`;preview.textContent='';}});
+    q('#ah-ed-item_type')?.addEventListener('change',event=>{const box=q('#ah-editor-type-fields .ah-editor-grid');if(box)box.innerHTML=itemMetadataFields(event.target.value,{});});
+    q('#ah-pass-levels')?.addEventListener('change',event=>{if(!event.target.name?.startsWith('reward_type_'))return;const all=collectPassLevels();renderPassLevels(all);});
+  }
+  window.closeStoreEditor=function(){q('#ah-store-editor-modal')?.classList.remove('show');return false;};
+  window.clearStoreEditorImage=function(){const file=q('#ah-ed-image-file'),url=q('#ah-ed-image_url'),preview=q('#ah-ed-image-preview');if(file)file.value='';if(url)url.value='';if(preview){preview.style.backgroundImage='';preview.textContent='Preview';}return false;};
+  window.storeEditorBackdrop=function(event){if(event.target?.id==='ah-store-editor-modal')window.closeStoreEditor();};
+  async function uploadEditorImage(){
+    const file=q('#ah-ed-image-file')?.files?.[0];if(!file)return q('#ah-ed-image_url')?.value||'';
+    const data=new FormData();data.append('file',file);
+    const result=await api('/community/api/upload-image',{method:'POST',body:data});return result.url||'';
+  }
+  function formValue(name){return q('[name="'+name+'"]')?.value??'';}
+  function collectMetadata(){
+    const result={};q('#ah-editor-type-fields')?.querySelectorAll('[name^="meta_"]').forEach(input=>{const key=input.name.slice(5);let value=input.value;if(key==='benefits')value=value.split('\n').map(x=>x.trim()).filter(Boolean);else if(input.type==='number')value=Number(value||0);result[key]=value;});return result;
+  }
+  function collectPassLevels(){
+    return Array.from(q('#ah-pass-levels')?.children||[]).map((node,index)=>{
+      const get=prefix=>node.querySelector(`[name="${prefix}_${index}"]`)?.value??'';
+      const rewardType=get('reward_type');const raw=get('reward_value');
+      return {level:Number(get('level')||index+1),title:get('level_title')||('Уровень '+(index+1)),icon:rewardType==='collectible'?(raw||'✦'):'✦',reward_type:rewardType,reward_ref_id:rewardType==='profile_theme'?Number(raw)||null:null,reward_config:rewardType==='nitro'?{days:Number(raw||1)}:{}};
+    });
+  }
+  function renderPassLevels(levels){const box=q('#ah-pass-levels');if(box){box.innerHTML=levels.map(levelRow).join('');bindEditorInputs();}}
+  window.addPassLevel=function(){const levels=collectPassLevels();levels.push({level:levels.length?Math.max(...levels.map(x=>Number(x.level)||0))+1:1,title:'Новая награда',icon:'✦',reward_type:'collectible',reward_config:{}});renderPassLevels(levels);};
+  window.removePassLevel=function(button){const levels=collectPassLevels();const index=Array.from(q('#ah-pass-levels').children).indexOf(button.closest('.ah-pass-level'));levels.splice(index,1);renderPassLevels(levels);};
+  window.submitStoreEditor=async function(event){
+    event.preventDefault();const save=q('#ah-store-editor-save'),error=q('#ah-store-editor-error');if(save?.disabled)return false;if(error)error.textContent='';if(save){save.disabled=true;save.textContent='Сохраняем...';}
+    try{
+      const imageUrl=await uploadEditorImage();
+      const common={title:formValue('title'),description:formValue('description'),image_url:imageUrl,status:formValue('status')||'draft',is_active:!!q('[name="is_active"]')?.checked,starts_at:isoValue(formValue('starts_at')),ends_at:isoValue(formValue('ends_at'))};
+      let payload,path;
+      if(editor.kind==='item'){
+        payload={...common,item_type:formValue('item_type'),icon:formValue('icon'),price_amount:Number(formValue('price_amount')||0),currency:formValue('currency'),metadata:collectMetadata()};path='/community/api/store/workshop/items'+(editor.id?'/'+editor.id:'');
+      }else if(editor.kind==='theme'){
+        payload={...common,access_mode:formValue('access_mode'),accent_color:formValue('accent_color'),text_color:formValue('text_color'),overlay_strength:Number(formValue('overlay_strength')||58)};path='/community/api/store/workshop/themes'+(editor.id?'/'+editor.id:'');
+      }else{
+        payload={...common,max_level:Number(formValue('max_level')||20),xp_per_level:Number(formValue('xp_per_level')||100),levels:collectPassLevels(),metadata:editor.record?.metadata||{}};path='/community/api/store/workshop/passes'+(editor.id?'/'+editor.id:'');
+      }
+      await api(path,{method:editor.id?'PATCH':'POST',headers:jsonHeaders(),body:JSON.stringify(payload)});window.closeStoreEditor();workshop=null;await window.loadStoreWorkshop(true);await window.AlexiHubStore?.refresh?.();toast('Изменения магазина сохранены.');
+    }catch(err){if(error)error.textContent=err.message;}
+    finally{if(save){save.disabled=false;save.textContent='Сохранить';}}
+    return false;
+  };
+  document.addEventListener('click',event=>{const button=event.target.closest('[data-studio-filter]');if(!button)return;currentFilter=button.dataset.studioFilter;document.querySelectorAll('[data-studio-filter]').forEach(node=>node.classList.toggle('active',node===button));renderWorkshop();});
+  document.addEventListener('keydown',event=>{if(event.key==='Escape')window.closeStoreEditor();});
+  window.AlexiHubStoreStudio={render:renderPublic,refresh:()=>window.loadStoreWorkshop(true)};
+})( );
 </script>
 
 
@@ -8170,6 +8468,15 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   syncTabs();syncPreferences();syncReadAll();
   window.AlexiHubInbox={open:function(){setOpen(true)},close:function(){setOpen(false)},refresh:function(){return loadMentions(true)}};
 })();
+</script>
+<style id="ah-mini-profile-theme-css">
+.ah-v3-mini.ah-profile-theme{--ah-theme-overlay:.58;--ah-theme-text:#fff;--ah-theme-accent:#5865f2;isolation:isolate;background:#17181c!important}
+.ah-v3-mini.ah-profile-theme:before{content:"";position:absolute;z-index:-2;inset:0;background-image:var(--ah-theme-image);background-size:cover;background-position:center;transform:scale(1.02)}
+.ah-v3-mini.ah-profile-theme:after{content:"";position:absolute;z-index:-1;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,var(--ah-theme-overlay)) 34%,rgba(0,0,0,min(.88,calc(var(--ah-theme-overlay) + .22))));pointer-events:none}
+.ah-v3-mini.ah-profile-theme .ah-v3-banner{background:transparent!important}.ah-v3-mini.ah-profile-theme .ah-v3-banner:after{background:linear-gradient(180deg,transparent,rgba(0,0,0,.2))!important}.ah-v3-mini.ah-profile-theme .ah-v3-body{background:transparent!important;color:var(--ah-theme-text)!important}.ah-v3-mini.ah-profile-theme .ah-v3-avatar{border-color:color-mix(in srgb,var(--ah-theme-accent) 38%,#23242b)!important}.ah-v3-mini.ah-profile-theme .ah-v3-note{background:rgba(0,0,0,.3);backdrop-filter:blur(8px)}
+</style>
+<script id="ah-mini-profile-theme-js">
+(function(){if(window.__ahMiniProfileThemesReady)return;window.__ahMiniProfileThemesReady=true;const cache=new Map();let version=0,previewTheme=null;const mini=()=>document.getElementById('ah-v3-mini');const safeUrl=value=>String(value||'').replace(/[\n\r'"\\()]/g,c=>encodeURIComponent(c));function apply(theme){const card=mini();if(!card)return;card.classList.toggle('ah-profile-theme',!!theme);if(!theme){card.style.removeProperty('--ah-theme-image');return;}card.style.setProperty('--ah-theme-image',`url('${safeUrl(theme.image_url)}')`);card.style.setProperty('--ah-theme-overlay',String(Math.max(0,Math.min(90,Number(theme.overlay_strength||58)))/100));card.style.setProperty('--ah-theme-text',theme.text_color||'#ffffff');card.style.setProperty('--ah-theme-accent',theme.accent_color||'#5865f2');}async function load(username){username=String(username||'').replace(/^@/,'').trim();if(!username)return;const token=++version;if(previewTheme){apply(previewTheme);return;}const hit=cache.get(username.toLowerCase());if(hit&&Date.now()-hit.at<30000){apply(hit.theme);return;}try{const response=await fetch('/community/api/friend-status/'+encodeURIComponent(username),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'}});const data=await response.json();if(token!==version||!response.ok||!data.ok)return;cache.set(username.toLowerCase(),{theme:data.mini_profile_theme||null,at:Date.now()});apply(data.mini_profile_theme||null);}catch(_error){}}function sync(){const card=mini();if(!card||!card.classList.contains('open'))return;const username=document.getElementById('ah-v3-name')?.dataset.profileUsername||document.getElementById('ah-v3-handle')?.textContent||'';load(username);}const observer=new MutationObserver(sync);document.addEventListener('DOMContentLoaded',()=>{const card=mini();if(card)observer.observe(card,{attributes:true,subtree:true,childList:true});});document.addEventListener('alexihub:full-profile-open',event=>load(event.detail?.name||event.detail?.username));window.AlexiHubProfileThemes={preview(theme){previewTheme=theme||null;apply(previewTheme);const card=mini();if(card&&!card.classList.contains('open')){const panel=document.querySelector('.account-panel,.user-panel');panel?.dispatchEvent(new MouseEvent('click',{bubbles:true,clientX:Math.max(20,innerWidth-310),clientY:Math.max(20,innerHeight-90)}));setTimeout(()=>apply(previewTheme),30);}},clearPreview(){previewTheme=null;sync();},invalidate(username){if(username)cache.delete(String(username).toLowerCase());else cache.clear();sync();}};})();
 </script>
 </body>
 </html>
