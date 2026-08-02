@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.28.0",
+      "date": "2026-08-02",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: inbox preferences and server mention handling."
+      ],
+      "source_sha": "cb3ffb07b79091a7db8788425bda033ea46f81b0"
+    },
+    {
       "version": "1.27.0",
       "date": "2026-08-02",
       "title": "Нові можливості AlexiHub",
