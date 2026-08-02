@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.27.0",
+      "date": "2026-08-02",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: inbox preferences and mentions API."
+      ],
+      "source_sha": "c926447c416eea3c627da7e48acf876200b32fc4"
+    },
+    {
       "version": "1.26.5",
       "date": "2026-08-02",
       "title": "Виправлення та стабільність",
