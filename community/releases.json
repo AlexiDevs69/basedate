@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.36.0",
+      "date": "2026-08-02",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: mini profile theme functionality to server home."
+      ],
+      "source_sha": "f1c8e6252c77b29c427cf91c1f0bc552d13e2d31"
+    },
+    {
       "version": "1.35.0",
       "date": "2026-08-02",
       "title": "Нові можливості AlexiHub",
