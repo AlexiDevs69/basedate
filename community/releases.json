@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.33.4",
+      "date": "2026-08-02",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: summer store state retrieval to use helper."
+      ],
+      "source_sha": "55f0386e4e1a7b05e39affd9dde537a25d5344f0"
+    },
+    {
       "version": "1.33.3",
       "date": "2026-08-02",
       "title": "Виправлення та стабільність",
