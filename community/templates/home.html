@@ -2107,6 +2107,23 @@
 @media(max-width:900px){.ah-store-theme-gallery{grid-template-columns:repeat(2,minmax(0,1fr))}.ah-theme-editor-layout{grid-template-columns:1fr}.ah-theme-editor-live{position:static}.ah-store-editor-card{width:min(760px,100%)}}
 @media(max-width:680px){.ah-store-topbar{gap:10px}.ah-store-tabs{gap:2px}.ah-store-tab{font-size:13px}.ah-store-theme-gallery{grid-template-columns:1fr}.ah-store-theme-card{min-height:0}.ah-store-theme-preview{height:205px}.ah-store-theme-mini-banner{height:67px}.ah-store-theme-mini-body{height:112px}.ah-store-studio-hero h1{font-size:24px}.ah-store-editor-head,.ah-store-editor-body,.ah-store-editor-foot{padding-left:16px;padding-right:16px}}
 </style>
+<style id="ah-store-collections-css">
+/* Database-driven storefront sections and a clearer Discord-style creator studio. */
+.ah-store-new-rail{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(240px,280px);gap:16px;overflow-x:auto;overflow-y:hidden;padding:2px 2px 12px;scroll-snap-type:x proximity;scrollbar-width:thin;scrollbar-color:#3f4147 transparent}.ah-store-new-rail>.ah-store-catalog-card,.ah-store-new-rail>.ah-store-theme-card{scroll-snap-align:start}.ah-store-new-rail>.ah-store-empty{width:min(100%,650px)}
+.ah-store-new-card{position:relative}.ah-store-new-badge{position:absolute;z-index:4;left:12px;top:12px;height:22px;display:inline-flex;align-items:center;padding:0 8px;border-radius:999px;background:#fff;color:#111214;font-size:10px;font-weight:800;letter-spacing:.035em;box-shadow:0 2px 7px rgba(0,0,0,.25)}
+.ah-store-new-rail .ah-store-theme-card{width:280px;min-height:300px}.ah-store-new-rail .ah-store-theme-preview{height:184px}
+.ah-store-collections{display:grid;gap:46px;margin-top:48px}.ah-store-collection{min-width:0}.ah-store-collection-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:16px}.ah-store-collection-head h2{margin:0;color:#f2f3f5;font-size:21px;font-weight:700;letter-spacing:-.018em}.ah-store-collection-head p{margin:5px 0 0;color:#949ba4;font-size:13px;line-height:1.45}.ah-store-collection-count{flex:none;height:30px;display:inline-flex;align-items:center;padding:0 10px;border:1px solid #35373f;border-radius:6px;background:#232428;color:#b5bac1;font-size:11px;font-weight:650}
+.ah-store-collection-banner{position:relative;height:220px;display:flex;align-items:flex-end;overflow:hidden;margin-bottom:16px;padding:26px;border:1px solid #35373f;border-radius:12px;background:#1e1f22 center/cover no-repeat;isolation:isolate}.ah-store-collection-banner::before{content:"";position:absolute;z-index:-1;inset:0;background:linear-gradient(90deg,rgba(8,9,12,.9),rgba(8,9,12,.35) 58%,rgba(8,9,12,.15))}.ah-store-collection-banner::after{content:"";position:absolute;z-index:-1;inset:auto 0 0;height:70%;background:linear-gradient(0deg,rgba(8,9,12,.8),transparent)}.ah-store-collection-banner-copy{max-width:520px}.ah-store-collection-banner-copy span{display:block;margin-bottom:7px;color:color-mix(in srgb,var(--collection-accent,#5865f2) 65%,#fff);font-size:10px;font-weight:800;letter-spacing:.075em}.ah-store-collection-banner-copy h3{margin:0;color:#fff;font-size:29px;font-weight:750;letter-spacing:-.025em}.ah-store-collection-banner-copy p{margin:8px 0 0;color:#d5d7dc;font-size:13px;line-height:1.5}
+.ah-store-collection-rail{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}.ah-store-collection-rail .ah-store-theme-card{min-height:300px}.ah-store-collection-rail .ah-store-catalog-card{min-width:0}
+.ah-studio-shell{display:grid;grid-template-columns:220px minmax(0,1fr);min-height:690px;border:1px solid #2f3036;border-radius:10px;background:#111214;overflow:hidden}.ah-studio-sidebar{min-width:0;padding:24px 12px 16px;border-right:1px solid #2f3036;background:#1e1f22}.ah-studio-sidebar-title{padding:0 10px 19px;border-bottom:1px solid #35363c}.ah-studio-sidebar-title h1{margin:7px 0 4px;color:#f2f3f5;font-size:21px;font-weight:700;letter-spacing:-.02em}.ah-studio-sidebar-title p{margin:0;color:#949ba4;font-size:11px}.ah-studio-nav{display:grid;gap:3px;margin-top:14px}.ah-studio-nav button,.ah-studio-refresh{width:100%;height:38px;display:grid;grid-template-columns:24px minmax(0,1fr) auto;align-items:center;gap:7px;border:0;border-radius:5px;background:transparent;color:#b5bac1;padding:0 10px;text-align:left;font:inherit;font-size:13px;font-weight:600;cursor:pointer}.ah-studio-nav button>span{color:#949ba4;text-align:center;font-size:15px}.ah-studio-nav button>i{min-width:20px;height:20px;display:grid;place-items:center;border-radius:9px;background:#2b2d31;color:#949ba4;font-style:normal;font-size:10px}.ah-studio-nav button:hover{background:#2b2d31;color:#dbdee1}.ah-studio-nav button.active{background:#404249;color:#fff}.ah-studio-nav button.active>span{color:#fff}.ah-studio-refresh{display:flex;justify-content:center;margin-top:18px;color:#949ba4;font-size:11px}.ah-studio-refresh:hover{background:#2b2d31;color:#dbdee1}
+.ah-studio-content{min-width:0;padding:30px;background:#111214}.ah-studio-pane{display:none;animation:ahStudioPaneIn .16s ease-out both}.ah-studio-pane.active{display:block}@keyframes ahStudioPaneIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}.ah-studio-page-head{min-height:73px;display:flex;align-items:flex-start;justify-content:space-between;gap:22px;margin-bottom:22px}.ah-studio-page-head>div>span{display:block;margin-bottom:6px;color:#949ba4;font-size:10px;font-weight:750;letter-spacing:.08em}.ah-studio-page-head h2{margin:0;color:#f2f3f5;font-size:25px;font-weight:700;letter-spacing:-.025em}.ah-studio-page-head p{max-width:650px;margin:7px 0 0;color:#949ba4;font-size:13px;line-height:1.5}.ah-studio-page-head>button{flex:none;height:36px;border:0;border-radius:5px;background:#5865f2;color:#fff;padding:0 13px;font:inherit;font-size:12px;font-weight:650;cursor:pointer}.ah-studio-page-head>button:hover{background:#6975f5}
+.ah-studio-create-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:22px}.ah-studio-create-grid button{min-width:0;min-height:118px;display:flex;flex-direction:column;align-items:flex-start;border:1px solid #35363c;border-radius:8px;background:#1e1f22;color:#dbdee1;padding:16px;text-align:left;font:inherit;cursor:pointer;transition:background .14s ease,border-color .14s ease,transform .14s ease}.ah-studio-create-grid button:hover{transform:translateY(-1px);background:#232428;border-color:#4e5058}.ah-studio-create-grid i{width:31px;height:31px;display:grid;place-items:center;margin-bottom:11px;border-radius:7px;background:#35363c;color:#dbdee1;font-style:normal;font-size:16px}.ah-studio-create-grid b{font-size:13px}.ah-studio-create-grid span{margin-top:5px;color:#949ba4;font-size:10px;line-height:1.4}.ah-studio-overview-grid{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:16px}.ah-studio-summary{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:12px}.ah-studio-summary-card{min-height:70px;padding:12px;border-radius:7px;background:#2b2d31}.ah-studio-summary-card b{display:block;color:#f2f3f5;font-size:21px}.ah-studio-summary-card span{display:block;margin-top:3px;color:#949ba4;font-size:10px}.ah-store-studio-list.large{max-height:570px;min-height:180px}.ah-studio-row{grid-template-columns:46px minmax(0,1fr) auto}.ah-studio-row.collection .ah-studio-row-art{width:46px}.ah-studio-row-copy em{display:inline-flex;margin-left:6px;color:#fff;font-style:normal;font-size:9px;font-weight:800}.ah-studio-row-copy em.new{height:17px;align-items:center;padding:0 6px;border-radius:999px;background:#fff;color:#111214}.ah-studio-giveaway-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;min-height:62px;padding:10px;border-radius:7px}.ah-studio-giveaway-row:hover{background:#2b2d31}.ah-studio-giveaway-row b{display:block;color:#f2f3f5;font-size:13px}.ah-studio-giveaway-row span{display:block;margin-top:4px;color:#949ba4;font-size:11px}.ah-studio-giveaway-row i{color:#57f287;font-style:normal;font-size:11px;font-weight:700}
+.ah-collection-entry-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:290px;overflow:auto;padding:3px}.ah-collection-entry{min-width:0;display:grid;grid-template-columns:18px 38px minmax(0,1fr);align-items:center;gap:9px;min-height:58px;padding:8px;border:1px solid #35363c;border-radius:7px;background:#232428;cursor:pointer}.ah-collection-entry:has(input:checked){border-color:#5865f2;background:color-mix(in srgb,#5865f2 10%,#232428)}.ah-collection-entry input{width:17px;height:17px;accent-color:#5865f2}.ah-collection-entry-art{width:38px;height:38px;display:grid;place-items:center;border-radius:6px;background:#35363c center/cover no-repeat;color:#dbdee1}.ah-collection-entry-copy{min-width:0}.ah-collection-entry-copy b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#f2f3f5;font-size:12px}.ah-collection-entry-copy span{display:block;margin-top:3px;color:#949ba4;font-size:10px}.ah-collection-editor-help{margin:0 0 9px;color:#949ba4;font-size:11px;line-height:1.5}
+@media(max-width:1160px){.ah-store-collection-rail{grid-template-columns:repeat(3,minmax(0,1fr))}.ah-studio-create-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:900px){.ah-store-collection-rail{grid-template-columns:repeat(2,minmax(0,1fr))}.ah-studio-shell{grid-template-columns:1fr}.ah-studio-sidebar{padding:14px;border-right:0;border-bottom:1px solid #2f3036}.ah-studio-sidebar-title{padding:2px 4px 12px}.ah-studio-nav{grid-auto-flow:column;grid-auto-columns:max-content;overflow-x:auto;display:grid;padding-bottom:4px}.ah-studio-nav button{width:auto;grid-template-columns:20px auto auto;padding:0 10px}.ah-studio-refresh{display:none}.ah-studio-content{padding:22px}.ah-studio-overview-grid{grid-template-columns:1fr}}
+@media(max-width:680px){.ah-store-new-rail{grid-auto-columns:minmax(236px,84vw)}.ah-store-collection-head{align-items:flex-start}.ah-store-collection-count{display:none}.ah-store-collection-banner{height:190px;padding:20px}.ah-store-collection-banner-copy h3{font-size:24px}.ah-store-collection-rail{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(236px,84vw);grid-template-columns:none;overflow-x:auto;padding-bottom:10px}.ah-studio-content{padding:17px 12px 24px}.ah-studio-page-head{display:block}.ah-studio-page-head>button{width:100%;margin-top:14px}.ah-studio-create-grid{grid-template-columns:1fr 1fr;gap:8px}.ah-studio-create-grid button{min-height:112px;padding:13px}.ah-studio-summary{grid-template-columns:1fr 1fr}.ah-store-studio-panel-head{height:auto;min-height:60px;flex-wrap:wrap;padding-top:10px;padding-bottom:10px}.ah-store-studio-filters{max-width:100%;overflow:auto}.ah-collection-entry-list{grid-template-columns:1fr}.ah-studio-sidebar-title h1{font-size:19px}}
+@media(prefers-reduced-motion:reduce){.ah-studio-pane,.ah-studio-create-grid button{animation:none;transition:none}}
+</style>
 </head>
 <body data-current-account-id="{{ account.id }}">
   <svg style="display:none" aria-hidden="true">
@@ -2566,12 +2583,14 @@
             </div>
 
             <div id="ah-store-catalog-head" class="ah-store-section-head">
-              <div><h2>Новое в магазине</h2><p>Активные товары, события, пропуски и темы автоматически из базы.</p></div>
-              <span class="ah-store-section-badge">ОБНОВЛЯЕТСЯ АВТОМАТИЧЕСКИ</span>
+              <div><h2>Новое в магазине</h2><p>Свежие публикации автоматически появляются здесь на 14 дней.</p></div>
+              <span class="ah-store-section-badge">НОВЫЕ ПОСТУПЛЕНИЯ</span>
             </div>
-            <div id="ah-store-catalog" class="ah-store-catalog" aria-live="polite">
+            <div id="ah-store-catalog" class="ah-store-new-rail" aria-live="polite">
               <div class="ah-store-empty ah-store-loading">Загружаем каталог...</div>
             </div>
+
+            <div id="ah-store-collections" class="ah-store-collections" aria-live="polite"></div>
 
             <div id="ah-store-themes-head" class="ah-store-section-head">
               <div><h2>Темы мини-профиля</h2><p>Фоны от verified-авторов. Бесплатные можно применить сразу, наградные открываются в пропусках.</p></div>
@@ -2585,18 +2604,66 @@
           </div>
 
           <section id="ah-store-studio" class="ah-store-studio" aria-labelledby="ah-store-studio-title">
-            <div class="ah-store-studio-hero">
-              <div><span class="ah-store-studio-kicker">VERIFIED CREATOR TOOLS</span><h1 id="ah-store-studio-title">Мастерская магазина</h1><p>Создавай темы, акции, товары и пропуски через формы. Черновики не видны пользователям, архив сохраняет историю.</p></div>
-              <div class="ah-store-studio-actions"><button type="button" onclick="openStoreEditor('item')">+ Товар</button><button type="button" onclick="openStoreEditor('theme')">+ Тема</button><button type="button" onclick="openStoreEditor('pass')">+ Пропуск</button><button type="button" onclick="openStoreGiveawayModal()">+ Раздача</button></div>
-            </div>
-            <div class="ah-store-studio-toolbar">
-              <div class="ah-store-studio-filters" role="tablist"><button class="active" type="button" data-studio-filter="all">Все</button><button type="button" data-studio-filter="active">Активные</button><button type="button" data-studio-filter="draft">Черновики</button><button type="button" data-studio-filter="archive">Архив</button></div>
-              <button class="ah-store-studio-refresh" type="button" onclick="loadStoreWorkshop(true)">Обновить</button>
-            </div>
-            <div class="ah-store-studio-grid">
-              <section class="ah-store-studio-panel"><div class="ah-store-studio-panel-head"><div><h2>Товары и события</h2><span id="ah-studio-items-count">0</span></div><button type="button" onclick="openStoreEditor('item')">Добавить</button></div><div id="ah-studio-items" class="ah-store-studio-list"><div class="ah-store-empty ah-store-loading">Загрузка...</div></div></section>
-              <section class="ah-store-studio-panel"><div class="ah-store-studio-panel-head"><div><h2>Темы профиля</h2><span id="ah-studio-themes-count">0</span></div><button type="button" onclick="openStoreEditor('theme')">Добавить</button></div><div id="ah-studio-themes" class="ah-store-studio-list"><div class="ah-store-empty ah-store-loading">Загрузка...</div></div></section>
-              <section class="ah-store-studio-panel wide"><div class="ah-store-studio-panel-head"><div><h2>Пропуски и уровни</h2><span id="ah-studio-passes-count">0</span></div><button type="button" onclick="openStoreEditor('pass')">Добавить</button></div><div id="ah-studio-passes" class="ah-store-studio-list pass-list"><div class="ah-store-empty ah-store-loading">Загрузка...</div></div></section>
+            <div class="ah-studio-shell">
+              <aside class="ah-studio-sidebar" aria-label="Разделы мастерской">
+                <div class="ah-studio-sidebar-title"><span class="ah-store-studio-kicker">VERIFIED</span><h1 id="ah-store-studio-title">Мастерская</h1><p>Управление содержимым магазина</p></div>
+                <nav class="ah-studio-nav">
+                  <button class="active" type="button" data-studio-section="overview"><span>⌂</span>Обзор</button>
+                  <button type="button" data-studio-section="collections"><span>▦</span>Разделы <i id="ah-studio-nav-collections">0</i></button>
+                  <button type="button" data-studio-section="items"><span>◇</span>Товары <i id="ah-studio-nav-items">0</i></button>
+                  <button type="button" data-studio-section="themes"><span>▣</span>Темы <i id="ah-studio-nav-themes">0</i></button>
+                  <button type="button" data-studio-section="passes"><span>◫</span>Пропуски <i id="ah-studio-nav-passes">0</i></button>
+                  <button type="button" data-studio-section="giveaways"><span>✦</span>Раздачи</button>
+                  <button type="button" data-studio-section="archive"><span>↺</span>Архив <i id="ah-studio-nav-archive">0</i></button>
+                </nav>
+                <button class="ah-studio-refresh" type="button" onclick="loadStoreWorkshop(true)">↻ Обновить данные</button>
+              </aside>
+
+              <div class="ah-studio-content">
+                <section class="ah-studio-pane active" data-studio-pane="overview">
+                  <div class="ah-studio-page-head"><div><span>МАСТЕРСКАЯ МАГАЗИНА</span><h2>Что будем создавать?</h2><p>Сначала создай товар или тему, затем собери из них красивый раздел магазина.</p></div></div>
+                  <div class="ah-studio-create-grid">
+                    <button type="button" onclick="openStoreEditor('collection')"><i>▦</i><b>Новый раздел</b><span>Баннер и подборка товаров</span></button>
+                    <button type="button" onclick="openStoreEditor('item')"><i>◇</i><b>Новый товар</b><span>Акция, событие или предмет</span></button>
+                    <button type="button" onclick="openStoreEditor('theme')"><i>▣</i><b>Тема профиля</b><span>Фон серой части мини-профиля</span></button>
+                    <button type="button" onclick="openStoreEditor('pass')"><i>◫</i><b>Новый пропуск</b><span>Уровни и награды</span></button>
+                  </div>
+                  <div class="ah-studio-overview-grid">
+                    <section class="ah-store-studio-panel"><div class="ah-store-studio-panel-head"><div><h2>Состояние магазина</h2><span>Что сейчас опубликовано</span></div></div><div id="ah-studio-summary" class="ah-studio-summary"></div></section>
+                    <section class="ah-store-studio-panel"><div class="ah-store-studio-panel-head"><div><h2>Недавние изменения</h2><span>Последние обновления</span></div></div><div id="ah-studio-recent" class="ah-store-studio-list"></div></section>
+                  </div>
+                </section>
+
+                <section class="ah-studio-pane" data-studio-pane="collections">
+                  <div class="ah-studio-page-head"><div><span>ВИТРИНА</span><h2>Разделы магазина</h2><p>Например Summer Bliss: большой баннер и выбранные товары под ним.</p></div><button type="button" onclick="openStoreEditor('collection')">Создать раздел</button></div>
+                  <section class="ah-store-studio-panel"><div class="ah-store-studio-panel-head"><div><h2>Все разделы</h2><span id="ah-studio-collections-count">0</span></div></div><div id="ah-studio-collections" class="ah-store-studio-list large"><div class="ah-store-empty ah-store-loading">Загрузка...</div></div></section>
+                </section>
+
+                <section class="ah-studio-pane" data-studio-pane="items">
+                  <div class="ah-studio-page-head"><div><span>КАТАЛОГ</span><h2>Товары и события</h2><p>Карточки, которые можно добавить в разделы или показать в «Новом».</p></div><button type="button" onclick="openStoreEditor('item')">Добавить товар</button></div>
+                  <section class="ah-store-studio-panel"><div class="ah-store-studio-panel-head"><div><h2>Все товары</h2><span id="ah-studio-items-count">0</span></div><div class="ah-store-studio-filters" role="tablist"><button class="active" type="button" data-studio-filter="all">Все</button><button type="button" data-studio-filter="active">Активные</button><button type="button" data-studio-filter="draft">Черновики</button></div></div><div id="ah-studio-items" class="ah-store-studio-list large"><div class="ah-store-empty ah-store-loading">Загрузка...</div></div></section>
+                </section>
+
+                <section class="ah-studio-pane" data-studio-pane="themes">
+                  <div class="ah-studio-page-head"><div><span>ОФОРМЛЕНИЕ</span><h2>Темы мини-профиля</h2><p>В магазине тема всегда показывается как превью мини-профиля, а не как обычный товар.</p></div><button type="button" onclick="openStoreEditor('theme')">Добавить тему</button></div>
+                  <section class="ah-store-studio-panel"><div class="ah-store-studio-panel-head"><div><h2>Все темы</h2><span id="ah-studio-themes-count">0</span></div></div><div id="ah-studio-themes" class="ah-store-studio-list large"><div class="ah-store-empty ah-store-loading">Загрузка...</div></div></section>
+                </section>
+
+                <section class="ah-studio-pane" data-studio-pane="passes">
+                  <div class="ah-studio-page-head"><div><span>СЕЗОНЫ</span><h2>Пропуски и уровни</h2><p>Управляй наградами уровней без редактирования кода.</p></div><button type="button" onclick="openStoreEditor('pass')">Добавить пропуск</button></div>
+                  <section class="ah-store-studio-panel"><div class="ah-store-studio-panel-head"><div><h2>Все пропуски</h2><span id="ah-studio-passes-count">0</span></div></div><div id="ah-studio-passes" class="ah-store-studio-list large pass-list"><div class="ah-store-empty ah-store-loading">Загрузка...</div></div></section>
+                </section>
+
+                <section class="ah-studio-pane" data-studio-pane="giveaways">
+                  <div class="ah-studio-page-head"><div><span>СООБЩЕСТВО</span><h2>Nitro-раздачи</h2><p>Создай ограниченную по времени бесплатную раздачу.</p></div><button type="button" onclick="openStoreGiveawayModal()">Создать раздачу</button></div>
+                  <section class="ah-store-studio-panel"><div class="ah-store-studio-panel-head"><div><h2>Активные раздачи</h2><span id="ah-studio-giveaways-count">0</span></div></div><div id="ah-studio-giveaways" class="ah-store-studio-list large"></div></section>
+                </section>
+
+                <section class="ah-studio-pane" data-studio-pane="archive">
+                  <div class="ah-studio-page-head"><div><span>ИСТОРИЯ</span><h2>Архив</h2><p>Завершённое и выключенное остаётся здесь, пока ты не опубликуешь его снова.</p></div></div>
+                  <section class="ah-store-studio-panel"><div class="ah-store-studio-panel-head"><div><h2>Архивные публикации</h2><span id="ah-studio-archive-count">0</span></div></div><div id="ah-studio-archive" class="ah-store-studio-list large"></div></section>
+                </section>
+              </div>
             </div>
           </section>
         </div>
@@ -6514,8 +6581,9 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   let workshop = null;
   let workshopLoading = false;
   let currentFilter = 'all';
+  let currentSection = 'overview';
   let editor = {kind:null,id:null,record:null};
-  const typeLabels = {pass:'Пропуск',promotion:'Акция',one_time:'Разовый товар',timed_event:'Событие',profile_theme:'Тема профиля'};
+  const typeLabels = {pass:'Пропуск',promotion:'Акция',one_time:'Разовый товар',timed_event:'Событие',profile_theme:'Старая карточка темы'};
   const statusLabels = {active:'Активно',scheduled:'Запланировано',draft:'Черновик',archived:'Архив',expired:'Завершено',disabled:'Выключено',published:'Опубликовано'};
   const rewardLabels = {collectible:'Предмет',profile_theme:'Тема профиля',nitro:'Nitro',none:'Без награды'};
   const q = (selector, root=document) => root.querySelector(selector);
@@ -6587,24 +6655,48 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     const meta=item.metadata||{};
     const timer=item.ends_at?remaining(item.ends_at):'';
     const discount=item.item_type==='promotion'&&meta.discount_percent?` · −${Number(meta.discount_percent)}%`:'';
-    return `<article class="ah-store-catalog-card"><div class="ah-store-catalog-art${item.image_url?' has-image':''}" ${image}>${item.image_url?'':esc(item.icon||'✦')}</div><div class="ah-store-catalog-body"><div class="ah-store-catalog-top"><span class="ah-store-type-chip">${esc(typeLabels[item.item_type]||item.item_type)}</span>${timer?`<span class="ah-store-catalog-timer" data-store-expires="${attr(item.ends_at)}">${esc(timer)}</span>`:''}</div><h3>${esc(item.title)}</h3><p>${esc(item.description||'Новая публикация магазина AlexiHub.')}</p><div class="ah-store-catalog-foot"><span class="ah-store-price${price?'':' free'}">${price?esc(price+' '+item.currency):'Бесплатно'}${esc(discount)}</span><span class="ah-store-catalog-author">@${esc(item.creator_username||'alexihub')}</span></div></div></article>`;
+    return `<article class="ah-store-catalog-card${item.is_new?' ah-store-new-card':''}">${item.is_new?'<span class="ah-store-new-badge">НОВОЕ</span>':''}<div class="ah-store-catalog-art${item.image_url?' has-image':''}" ${image}>${item.image_url?'':esc(item.icon||'✦')}</div><div class="ah-store-catalog-body"><div class="ah-store-catalog-top"><span class="ah-store-type-chip">${esc(typeLabels[item.item_type]||item.item_type)}</span>${timer?`<span class="ah-store-catalog-timer" data-store-expires="${attr(item.ends_at)}">${esc(timer)}</span>`:''}</div><h3>${esc(item.title)}</h3><p>${esc(item.description||'Новая публикация магазина AlexiHub.')}</p><div class="ah-store-catalog-foot"><span class="ah-store-price${price?'':' free'}">${price?esc(price+' '+item.currency):'Бесплатно'}${esc(discount)}</span><span class="ah-store-catalog-author">@${esc(item.creator_username||'alexihub')}</span></div></div></article>`;
   }
   function passCatalogCard(pass){
     const image=pass.image_url?`style="background-image:url('${attr(pass.image_url)}')"`:'';
-    return `<article class="ah-store-catalog-card"><div class="ah-store-catalog-art${pass.image_url?' has-image':''}" ${image}>${pass.image_url?'':'◇'}</div><div class="ah-store-catalog-body"><div class="ah-store-catalog-top"><span class="ah-store-type-chip">Пропуск</span>${pass.ends_at?`<span class="ah-store-catalog-timer" data-store-expires="${attr(pass.ends_at)}">${esc(remaining(pass.ends_at))}</span>`:''}</div><h3>${esc(pass.title)}</h3><p>${esc(pass.description||'Сезонный пропуск сообщества.')}</p><div class="ah-store-catalog-foot"><span class="ah-store-price free">${Number(pass.max_level||1)} уровней</span><span class="ah-store-catalog-author">@${esc(pass.creator_username||'alexihub')}</span></div></div></article>`;
+    return `<article class="ah-store-catalog-card${pass.is_new?' ah-store-new-card':''}">${pass.is_new?'<span class="ah-store-new-badge">НОВОЕ</span>':''}<div class="ah-store-catalog-art${pass.image_url?' has-image':''}" ${image}>${pass.image_url?'':'◇'}</div><div class="ah-store-catalog-body"><div class="ah-store-catalog-top"><span class="ah-store-type-chip">Пропуск</span>${pass.ends_at?`<span class="ah-store-catalog-timer" data-store-expires="${attr(pass.ends_at)}">${esc(remaining(pass.ends_at))}</span>`:''}</div><h3>${esc(pass.title)}</h3><p>${esc(pass.description||'Сезонный пропуск сообщества.')}</p><div class="ah-store-catalog-foot"><span class="ah-store-price free">${Number(pass.max_level||1)} уровней</span><span class="ah-store-catalog-author">@${esc(pass.creator_username||'alexihub')}</span></div></div></article>`;
   }
   function themeCard(theme){
     const can=!!theme.can_equip, equipped=!!theme.equipped;
-    return `<article class="ah-store-theme-card">${themePreviewMarkup(theme)}<div class="ah-store-theme-body"><div class="ah-store-theme-title"><b>${esc(theme.title)}</b><span class="ah-store-theme-lock">${theme.access_mode==='free'?'FREE':theme.owned?'ОТКРЫТО':'В ПРОПУСКЕ'}</span></div><div class="ah-store-theme-meta">Автор @${esc(theme.creator_username||'verified')}</div><div class="ah-store-theme-actions"><button type="button" class="secondary" onclick="previewStoreTheme(${Number(theme.id)})">Примерить</button><button type="button" ${can&&!equipped?'':'disabled'} onclick="equipStoreTheme(${Number(theme.id)},this)">${equipped?'Используется':can?'Использовать':'Закрыто'}</button></div></div></article>`;
+    return `<article class="ah-store-theme-card${theme.is_new?' ah-store-new-card':''}">${theme.is_new?'<span class="ah-store-new-badge">НОВОЕ</span>':''}${themePreviewMarkup(theme)}<div class="ah-store-theme-body"><div class="ah-store-theme-title"><b>${esc(theme.title)}</b><span class="ah-store-theme-lock">${theme.access_mode==='free'?'FREE':theme.owned?'ОТКРЫТО':'В ПРОПУСКЕ'}</span></div><div class="ah-store-theme-meta">Автор @${esc(theme.creator_username||'verified')}</div><div class="ah-store-theme-actions"><button type="button" class="secondary" onclick="previewStoreTheme(${Number(theme.id)})">Примерить</button><button type="button" ${can&&!equipped?'':'disabled'} onclick="equipStoreTheme(${Number(theme.id)},this)">${equipped?'Используется':can?'Использовать':'Закрыто'}</button></div></div></article>`;
+  }
+  function catalogEntityMap(catalog){
+    const map=new Map();
+    (catalog.items||[]).forEach(item=>map.set('item:'+Number(item.id),{...item,_entity_type:'item'}));
+    (catalog.themes||[]).forEach(theme=>map.set('theme:'+Number(theme.id),{...theme,_entity_type:'theme'}));
+    (catalog.passes||[]).filter(pass=>pass.pass_key!=='summer-clover-2026').forEach(pass=>map.set('pass:'+Number(pass.id),{...pass,_entity_type:'pass'}));
+    return map;
+  }
+  function entityCard(entity){return entity._entity_type==='theme'?themeCard(entity):entity._entity_type==='pass'?passCatalogCard(entity):catalogCard(entity);}
+  function collectionMarkup(collection,map){
+    const entries=(collection.entries||[]).map(entry=>map.get(entry.entity_type+':'+Number(entry.entity_id))).filter(Boolean);
+    if(!entries.length)return '';
+    const banner=collection.banner_url?`style="--collection-accent:${attr(collection.accent_color||'#5865f2')};background-image:url('${attr(collection.banner_url)}')"`:`style="--collection-accent:${attr(collection.accent_color||'#5865f2')};background-image:linear-gradient(135deg,color-mix(in srgb,${attr(collection.accent_color||'#5865f2')} 32%,#1e1f22),#111214)"`;
+    return `<section class="ah-store-collection"><div class="ah-store-collection-head"><div><h2>${esc(collection.title)}</h2><p>${esc(collection.description||'Подборка от verified-авторов AlexiHub.')}</p></div><span class="ah-store-collection-count">${entries.length} ${entries.length===1?'предмет':'предметов'}</span></div><div class="ah-store-collection-banner" ${banner}><div class="ah-store-collection-banner-copy"><span>КОЛЛЕКЦИЯ</span><h3>${esc(collection.title)}</h3><p>${esc(collection.description||'Новая подборка магазина AlexiHub.')}</p></div></div><div class="ah-store-collection-rail">${entries.map(entityCard).join('')}</div></section>`;
+  }
+  function remainingCatalogMarkup(entities,hasCollections){
+    if(!entities.length)return '';
+    return `<section class="ah-store-collection"><div class="ah-store-collection-head"><div><h2>${hasCollections?'Другие товары':'Все товары и события'}</h2><p>${hasCollections?'Активные публикации, которые ещё не добавлены в отдельный раздел.':'Все активные публикации магазина AlexiHub.'}</p></div><span class="ah-store-collection-count">${entities.length} ${entities.length===1?'предмет':'предметов'}</span></div><div class="ah-store-collection-rail">${entities.map(entityCard).join('')}</div></section>`;
   }
   function renderPublic(data){
     publicState=data;
     const tab=q('#ah-store-studio-tab');if(tab)tab.hidden=!data.can_manage_store;
     const catalog=data.catalog||{};
-    const items=[...(catalog.items||[])];
-    const passes=(catalog.passes||[]).filter(pass=>pass.pass_key!=='summer-clover-2026');
+    const map=catalogEntityMap(catalog);
+    const newest=Array.from(map.values()).filter(entity=>entity.is_new).sort((a,b)=>new Date(b.published_at||0)-new Date(a.published_at||0)).slice(0,12);
     const catalogNode=q('#ah-store-catalog');
-    if(catalogNode){const html=items.map(catalogCard).concat(passes.map(passCatalogCard)).join('');catalogNode.innerHTML=html||'<div class="ah-store-empty">Сейчас новых публикаций нет.</div>';}
+    if(catalogNode)catalogNode.innerHTML=newest.map(entityCard).join('')||'<div class="ah-store-empty">Сейчас новых поступлений нет.<br>После публикации товар будет отмечен здесь на 14 дней.</div>';
+    const collectionsNode=q('#ah-store-collections');
+    if(collectionsNode){
+      const collections=catalog.collections||[],used=new Set(collections.flatMap(collection=>(collection.entries||[]).map(entry=>entry.entity_type+':'+Number(entry.entity_id))));
+      const remaining=Array.from(map.entries()).filter(([key,entity])=>!used.has(key)&&entity._entity_type!=='theme').map(([,entity])=>entity);
+      collectionsNode.innerHTML=collections.map(collection=>collectionMarkup(collection,map)).join('')+remainingCatalogMarkup(remaining,collections.length>0);
+    }
     const themeNode=q('#ah-store-theme-gallery');
     if(themeNode){themeNode.innerHTML=(catalog.themes||[]).map(themeCard).join('')||'<div class="ah-store-empty">Verified-авторы ещё не опубликовали темы.</div>';}
   }
@@ -6622,26 +6714,49 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   };
   function statusClass(status){return ['active','published','archived','expired'].includes(status)?status:'';}
   function row(record,kind){
-    const image=record.image_url?`style="background-image:url('${attr(record.image_url)}')"`:'';
+    const artUrl=kind==='collection'?record.banner_url:record.image_url;
+    const image=artUrl?`style="background-image:url('${attr(artUrl)}')"`:'';
     const title=record.title||'Без названия';
-    const detail=kind==='pass'?`${Number(record.levels?.length||0)} наград · ${Number(record.max_level||1)} уровней`:kind==='theme'?(record.access_mode==='free'?'Бесплатная тема':'Награда пропуска'):(typeLabels[record.item_type]||record.item_type);
+    const detail=kind==='collection'?`${Number(record.entries?.length||0)} товаров · Порядок ${Number(record.display_order||0)}`:kind==='pass'?`${Number(record.levels?.length||0)} наград · ${Number(record.max_level||1)} уровней`:kind==='theme'?(record.access_mode==='free'?'Бесплатная тема':'Награда пропуска'):(typeLabels[record.item_type]||record.item_type);
     const lifecycle=record.lifecycle||(record.status==='draft'?'draft':record.status==='archived'?'archived':record.is_active===false?'disabled':'active');
-    return `<article class="ah-studio-row" data-studio-status="${attr(lifecycle)}"><span class="ah-studio-row-art" ${image}>${record.image_url?'':kind==='theme'?'▣':kind==='pass'?'◇':esc(record.icon||'✦')}</span><div class="ah-studio-row-copy"><b>${esc(title)}</b><span>${esc(detail)}</span><span class="ah-studio-status ${statusClass(lifecycle)}">${esc(statusLabels[lifecycle]||lifecycle)}</span></div><button class="ah-studio-edit" type="button" aria-label="Редактировать" onclick="openStoreEditor('${kind}',${Number(record.id)})">✎</button></article>`;
+    return `<article class="ah-studio-row ${kind}" data-studio-status="${attr(lifecycle)}"><span class="ah-studio-row-art" ${image}>${artUrl?'':kind==='collection'?'▦':kind==='theme'?'▣':kind==='pass'?'◇':esc(record.icon||'✦')}</span><div class="ah-studio-row-copy"><b>${esc(title)}${record.is_new?'<em class="new">НОВОЕ</em>':''}</b><span>${esc(detail)}</span><span class="ah-studio-status ${statusClass(lifecycle)}">${esc(statusLabels[lifecycle]||lifecycle)}</span></div><button class="ah-studio-edit" type="button" aria-label="Редактировать" onclick="openStoreEditor('${kind}',${Number(record.id)})">✎</button></article>`;
   }
   function filtered(values){if(currentFilter==='all')return values;return values.filter(item=>{const life=item.lifecycle||(item.status==='draft'?'draft':item.status==='archived'?'archived':item.is_active===false?'disabled':'active');if(currentFilter==='archive')return ['archived','expired','disabled'].includes(life);return life===currentFilter;});}
+  function lifecycleOf(item){return item.lifecycle||(item.status==='draft'?'draft':item.status==='archived'?'archived':item.is_active===false?'disabled':'active');}
+  function allWorkshopRecords(){return [['collections','collection'],['items','item'],['themes','theme'],['passes','pass']].flatMap(([key,kind])=>(workshop?.[key]||[]).map(record=>({record,kind})));}
+  function switchStudioSection(section){
+    currentSection=section||'overview';
+    document.querySelectorAll('[data-studio-section]').forEach(button=>button.classList.toggle('active',button.dataset.studioSection===currentSection));
+    document.querySelectorAll('[data-studio-pane]').forEach(pane=>pane.classList.toggle('active',pane.dataset.studioPane===currentSection));
+    q('#ah-store-scroll')?.scrollTo({top:0,behavior:'smooth'});
+  }
   function renderWorkshop(){
     if(!workshop)return;
-    [['items','item'],['themes','theme'],['passes','pass']].forEach(([key,kind])=>{
+    [['collections','collection'],['items','item'],['themes','theme'],['passes','pass']].forEach(([key,kind])=>{
       const values=filtered(workshop[key]||[]),node=q('#ah-studio-'+key),count=q('#ah-studio-'+key+'-count');
       if(count)count.textContent=String(values.length);
+      const nav=q('#ah-studio-nav-'+key);if(nav)nav.textContent=String((workshop[key]||[]).length);
       if(node)node.innerHTML=values.map(item=>row(item,kind)).join('')||'<div class="ah-store-empty">В этом разделе пока пусто.</div>';
     });
+    const all=allWorkshopRecords();
+    const archive=all.filter(({record})=>['archived','expired','disabled'].includes(lifecycleOf(record)));
+    const archiveNode=q('#ah-studio-archive');if(archiveNode)archiveNode.innerHTML=archive.map(({record,kind})=>row(record,kind)).join('')||'<div class="ah-store-empty">Архив пока пуст.</div>';
+    const archiveCount=q('#ah-studio-archive-count');if(archiveCount)archiveCount.textContent=String(archive.length);
+    const archiveNav=q('#ah-studio-nav-archive');if(archiveNav)archiveNav.textContent=String(archive.length);
+    const active=all.filter(({record})=>lifecycleOf(record)==='active');
+    const draft=all.filter(({record})=>lifecycleOf(record)==='draft');
+    const summary=q('#ah-studio-summary');if(summary)summary.innerHTML=`<div class="ah-studio-summary-card"><b>${active.length}</b><span>Опубликовано сейчас</span></div><div class="ah-studio-summary-card"><b>${draft.length}</b><span>Черновиков</span></div><div class="ah-studio-summary-card"><b>${(workshop.collections||[]).length}</b><span>Разделов витрины</span></div><div class="ah-studio-summary-card"><b>${archive.length}</b><span>В архиве</span></div>`;
+    const recent=all.sort((a,b)=>new Date(b.record.updated_at||0)-new Date(a.record.updated_at||0)).slice(0,5);
+    const recentNode=q('#ah-studio-recent');if(recentNode)recentNode.innerHTML=recent.map(({record,kind})=>row(record,kind)).join('')||'<div class="ah-store-empty">Изменений пока нет.</div>';
+    const drops=publicState?.giveaways||[];
+    const dropsNode=q('#ah-studio-giveaways');if(dropsNode)dropsNode.innerHTML=drops.map(drop=>`<article class="ah-studio-giveaway-row"><div><b>${esc(drop.title||'Nitro-раздача')}</b><span>${Number(drop.nitro_days||1)} дн. Nitro · осталось ${Number(drop.remaining_claims||0)} · ${esc(remaining(drop.expires_at))}</span></div><i>АКТИВНО</i></article>`).join('')||'<div class="ah-store-empty">Активных раздач сейчас нет.</div>';
+    const dropsCount=q('#ah-studio-giveaways-count');if(dropsCount)dropsCount.textContent=String(drops.length);
   }
   window.loadStoreWorkshop=async function(force){
     if(workshopLoading||(!force&&workshop))return;
     workshopLoading=true;
     try{workshop=await api('/community/api/store/workshop');renderWorkshop();}
-    catch(error){['items','themes','passes'].forEach(key=>{const node=q('#ah-studio-'+key);if(node)node.innerHTML='<div class="ah-store-empty">'+esc(error.message)+'</div>';});}
+    catch(error){['collections','items','themes','passes'].forEach(key=>{const node=q('#ah-studio-'+key);if(node)node.innerHTML='<div class="ah-store-empty">'+esc(error.message)+'</div>';});}
     finally{workshopLoading=false;}
   };
   function field(name,label,value,type='text',extra=''){
@@ -6668,8 +6783,23 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   }
   function itemEditor(record){
     const schemas=workshop?.schemas?.item_types||{one_time:{label:'Разовый товар'}};
-    const options=Object.entries(schemas).map(([key,value])=>[key,value.label||typeLabels[key]||key]);
+    const options=Object.entries(schemas).filter(([key])=>key!=='profile_theme'||record.item_type==='profile_theme').map(([key,value])=>[key,key==='profile_theme'?'Старая карточка темы — архивировать':value.label||typeLabels[key]||key]);
     return `<div class="ah-store-editor-section"><h3>Основное</h3><div class="ah-editor-grid">${selectField('item_type','Тип',record.item_type||'one_time',options)}${field('title','Название',record.title||'','text','maxlength="100" required')}${area('description','Описание',record.description||'')}${field('icon','Иконка',record.icon||'✦')}${field('price_amount','Цена',record.price_amount||0,'number','min="0"')}${selectField('currency','Внутренняя валюта',record.currency||'clover',[['clover','Clover'],['xp','XP'],['boost','Boost']])}</div></div>${uploadBlock(record)}<div id="ah-editor-type-fields" class="ah-store-editor-section"><h3>Поля типа</h3><div class="ah-editor-grid">${itemMetadataFields(record.item_type||'one_time',record.metadata||{})}</div></div>${commonSchedule(record)}`;
+  }
+  function collectionEditor(record){
+    const selected=new Set((record.entries||[]).map(entry=>entry.entity_type+':'+Number(entry.entity_id)));
+    const available=[
+      ...(workshop?.items||[]).map(item=>({record:item,kind:'item',label:typeLabels[item.item_type]||'Товар'})),
+      ...(workshop?.themes||[]).map(theme=>({record:theme,kind:'theme',label:'Тема мини-профиля'})),
+      ...(workshop?.passes||[]).map(pass=>({record:pass,kind:'pass',label:'Пропуск'})),
+    ].filter(({record})=>record.status!=='archived');
+    const entries=available.map(({record:item,kind,label})=>{
+      const key=kind+':'+Number(item.id),art=item.image_url||'';
+      const image=art?`style="background-image:url('${attr(art)}')"`:'';
+      return `<label class="ah-collection-entry"><input type="checkbox" data-collection-entry data-entity-type="${attr(kind)}" value="${Number(item.id)}" ${selected.has(key)?'checked':''}><span class="ah-collection-entry-art" ${image}>${art?'':kind==='theme'?'▣':kind==='pass'?'◫':'◇'}</span><span class="ah-collection-entry-copy"><b>${esc(item.title)}</b><span>${esc(label)} · ${esc(statusLabels[lifecycleOf(item)]||lifecycleOf(item))}</span></span></label>`;
+    }).join('');
+    const imageRecord={...record,image_url:record.banner_url||''};
+    return `<div class="ah-store-editor-section"><h3>Раздел магазина</h3><div class="ah-editor-grid">${field('title','Название раздела',record.title||'','text','maxlength="100" required')}${field('display_order','Порядок на странице',record.display_order||0,'number','min="-1000" max="1000"')}${area('description','Короткое описание',record.description||'')}${field('accent_color','Акцент раздела',record.accent_color||'#5865f2','color')}</div></div>${uploadBlock(imageRecord)}<div class="ah-store-editor-section"><h3>Товары внутри раздела</h3><p class="ah-collection-editor-help">Выбери публикации, которые будут показаны под баннером. Черновики появятся только после публикации.</p><div id="ah-collection-entries" class="ah-collection-entry-list">${entries||'<div class="ah-store-empty">Сначала создай хотя бы один товар, тему или пропуск.</div>'}</div></div>${commonSchedule(record)}`;
   }
   function themeEditor(record){
     return `<div class="ah-theme-editor-layout"><div><div class="ah-store-editor-section"><h3>Тема мини-профиля</h3><div class="ah-editor-grid">${field('title','Название',record.title||'','text','maxlength="80" required')}${selectField('access_mode','Доступ',record.access_mode||'free',[['free','Бесплатная'],['pass_reward','Награда пропуска']])}${area('description','Описание',record.description||'')}${field('accent_color','Акцент',record.accent_color||'#5865f2','color')}${field('text_color','Цвет текста',record.text_color||'#ffffff','color')}${field('overlay_strength','Затемнение, %',record.overlay_strength??58,'range','min="0" max="90"')}</div></div>${uploadBlock(record)}</div><aside class="ah-theme-editor-live"><span>ЖИВОЕ ПРЕВЬЮ</span><b id="ah-ed-theme-title">${esc(record.title||'Новая тема')}</b>${themePreviewMarkup(record,true)}<p>Баннер остаётся отдельным. Тема применяется только к нижней части мини-профиля.</p></aside></div>${commonSchedule(record)}`;
@@ -6695,16 +6825,16 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     const levels=Array.isArray(record.levels)?record.levels:[];
     return `<div class="ah-store-editor-section"><h3>Пропуск</h3><div class="ah-editor-grid">${field('title','Название',record.title||'','text','maxlength="100" required')}${field('max_level','Максимальный уровень',record.max_level||20,'number','min="1" max="100"')}${area('description','Описание',record.description||'')}${field('xp_per_level','XP на уровень',record.xp_per_level||100,'number','min="1" max="100000"')}</div></div>${uploadBlock(record)}<div class="ah-store-editor-section"><div class="ah-pass-level-toolbar"><h3>Награды уровней</h3><button type="button" onclick="addPassLevel()">+ Добавить уровень</button></div><div id="ah-pass-levels" class="ah-pass-levels">${levels.map(levelRow).join('')}</div></div>${commonSchedule(record)}`;
   }
-  function findRecord(kind,id){const key=kind==='item'?'items':kind==='theme'?'themes':'passes';return (workshop?.[key]||[]).find(item=>Number(item.id)===Number(id));}
+  function findRecord(kind,id){const key=kind==='collection'?'collections':kind==='item'?'items':kind==='theme'?'themes':'passes';return (workshop?.[key]||[]).find(item=>Number(item.id)===Number(id));}
   window.openStoreEditor=async function(kind,id){
     if(!workshop)await window.loadStoreWorkshop();
     const record=id?findRecord(kind,id):null;
     editor={kind,id:id||null,record:record||{status:'draft',is_active:true}};
     const body=q('#ah-store-editor-body'),title=q('#ah-store-editor-title'),subtitle=q('#ah-store-editor-subtitle'),error=q('#ah-store-editor-error');
     if(error)error.textContent='';
-    if(title)title.textContent=(id?'Редактировать ':'Новый ')+(kind==='theme'?'фон мини-профиля':kind==='pass'?'пропуск':'товар');
-    if(subtitle)subtitle.textContent=kind==='pass'?'Настрой уровни и награды. Изменения применятся без редактирования кода.':kind==='theme'?'Загрузи фон, настрой читаемость и доступ.':'Тип определяет дополнительные поля карточки.';
-    if(body)body.innerHTML=kind==='theme'?themeEditor(editor.record):kind==='pass'?passEditor(editor.record):itemEditor(editor.record);
+    if(title)title.textContent=(id?'Редактировать ':'Новый ')+(kind==='collection'?'раздел магазина':kind==='theme'?'фон мини-профиля':kind==='pass'?'пропуск':'товар');
+    if(subtitle)subtitle.textContent=kind==='collection'?'Собери баннер и товары в отдельную секцию витрины.':kind==='pass'?'Настрой уровни и награды. Изменения применятся без редактирования кода.':kind==='theme'?'Загрузи фон, настрой читаемость и доступ.':'Тип определяет дополнительные поля карточки.';
+    if(body)body.innerHTML=kind==='collection'?collectionEditor(editor.record):kind==='theme'?themeEditor(editor.record):kind==='pass'?passEditor(editor.record):itemEditor(editor.record);
     q('#ah-store-editor-modal')?.classList.add('show');q('#ah-ed-title')?.focus();bindEditorInputs();return false;
   };
   function bindEditorInputs(){
@@ -6725,6 +6855,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   function collectMetadata(){
     const result={};q('#ah-editor-type-fields')?.querySelectorAll('[name^="meta_"]').forEach(input=>{const key=input.name.slice(5);let value=input.value;if(key==='benefits')value=value.split('\n').map(x=>x.trim()).filter(Boolean);else if(input.type==='number')value=Number(value||0);result[key]=value;});return result;
   }
+  function collectCollectionEntries(){return Array.from(document.querySelectorAll('[data-collection-entry]:checked')).map((input,index)=>({entity_type:input.dataset.entityType,entity_id:Number(input.value),display_order:index}));}
   function collectPassLevels(){
     return Array.from(q('#ah-pass-levels')?.children||[]).map((node,index)=>{
       const get=prefix=>node.querySelector(`[name="${prefix}_${index}"]`)?.value??'';
@@ -6741,7 +6872,9 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
       const imageUrl=await uploadEditorImage();
       const common={title:formValue('title'),description:formValue('description'),image_url:imageUrl,status:formValue('status')||'draft',is_active:!!q('[name="is_active"]')?.checked,starts_at:isoValue(formValue('starts_at')),ends_at:isoValue(formValue('ends_at'))};
       let payload,path;
-      if(editor.kind==='item'){
+      if(editor.kind==='collection'){
+        payload={...common,banner_url:imageUrl,accent_color:formValue('accent_color'),display_order:Number(formValue('display_order')||0),entries:collectCollectionEntries(),metadata:editor.record?.metadata||{}};delete payload.image_url;path='/community/api/store/workshop/collections'+(editor.id?'/'+editor.id:'');
+      }else if(editor.kind==='item'){
         payload={...common,item_type:formValue('item_type'),icon:formValue('icon'),price_amount:Number(formValue('price_amount')||0),currency:formValue('currency'),metadata:collectMetadata()};path='/community/api/store/workshop/items'+(editor.id?'/'+editor.id:'');
       }else if(editor.kind==='theme'){
         payload={...common,access_mode:formValue('access_mode'),accent_color:formValue('accent_color'),text_color:formValue('text_color'),overlay_strength:Number(formValue('overlay_strength')||58)};path='/community/api/store/workshop/themes'+(editor.id?'/'+editor.id:'');
@@ -6753,7 +6886,11 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     finally{if(save){save.disabled=false;save.textContent='Сохранить';}}
     return false;
   };
-  document.addEventListener('click',event=>{const button=event.target.closest('[data-studio-filter]');if(!button)return;currentFilter=button.dataset.studioFilter;document.querySelectorAll('[data-studio-filter]').forEach(node=>node.classList.toggle('active',node===button));renderWorkshop();});
+  document.addEventListener('click',event=>{
+    const sectionButton=event.target.closest('[data-studio-section]');
+    if(sectionButton){switchStudioSection(sectionButton.dataset.studioSection);return;}
+    const button=event.target.closest('[data-studio-filter]');if(!button)return;currentFilter=button.dataset.studioFilter;document.querySelectorAll('[data-studio-filter]').forEach(node=>node.classList.toggle('active',node===button));renderWorkshop();
+  });
   document.addEventListener('keydown',event=>{if(event.key==='Escape')window.closeStoreEditor();});
   window.AlexiHubStoreStudio={render:renderPublic,refresh:()=>window.loadStoreWorkshop(true)};
 })( );
