@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.32.0",
+      "date": "2026-08-02",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: summer clover store API endpoints."
+      ],
+      "source_sha": "a3403160671e462361f69e2d0b953004fe4f1732"
+    },
+    {
       "version": "1.31.0",
       "date": "2026-08-02",
       "title": "Нові можливості AlexiHub",
