@@ -8802,5 +8802,30 @@ body .composer-wrap{
   hydrateDmPermission();
 })();
 </script>
+<style id="ah-inbox-jump-highlight-css">
+.message.ah-inbox-jump-target{animation:ahInboxJumpHighlight 3.2s ease-out both;border-radius:7px}
+@keyframes ahInboxJumpHighlight{0%,28%{background:rgba(88,101,242,.34);box-shadow:inset 3px 0 #8d98ff}100%{background:transparent;box-shadow:inset 3px 0 transparent}}
+@media(prefers-reduced-motion:reduce){.message.ah-inbox-jump-target{animation:none;background:rgba(88,101,242,.24);box-shadow:inset 3px 0 #8d98ff}}
+</style>
+<script id="ah-inbox-jump-highlight-js">
+(function(){
+  'use strict';
+  var match=String(location.hash||'').match(/^#message-(\d+)$/);
+  if(!match)return;
+  var targetId='message-'+match[1],attempts=0;
+  function reveal(){
+    var target=document.getElementById(targetId);
+    if(!target&&attempts++<20){window.setTimeout(reveal,100);return}
+    if(!target)return;
+    target.scrollIntoView({block:'center',inline:'nearest',behavior:window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+    target.classList.remove('ah-inbox-jump-target');
+    void target.offsetWidth;
+    target.classList.add('ah-inbox-jump-target');
+    window.setTimeout(function(){target.classList.remove('ah-inbox-jump-target')},3400);
+  }
+  if(document.readyState==='complete')window.setTimeout(reveal,80);
+  else window.addEventListener('load',function(){window.setTimeout(reveal,80)},{once:true});
+})();
+</script>
 </body>
 </html>
