@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.37.0",
+      "date": "2026-08-02",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: mini profile theme functionality to dm_chat.html."
+      ],
+      "source_sha": "87d2ddb0bb0fbc62197b010ae96835f2f85e1fd1"
+    },
+    {
       "version": "1.36.0",
       "date": "2026-08-02",
       "title": "Нові можливості AlexiHub",
