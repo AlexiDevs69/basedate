@@ -372,6 +372,7 @@ async def community_schema_startup() -> None:
         await crud.ensure_server_event_schema(db)
         await crud.ensure_server_access_schema(db)
         await crud.ensure_server_boost_tables(db)
+        await crud.ensure_store_studio_tables(db)
 
 
 # --- Lightweight realtime layer --------------------------------------------
@@ -3231,16 +3232,22 @@ def _store_error_status(result: dict) -> int:
     return 400
 
 
+async def _store_state(db: AsyncSession, account) -> dict:
+    return await crud.get_summer_store_state(
+        db,
+        account.id,
+        can_create_giveaway=bool(getattr(account, "is_verified", False)),
+        can_manage=crud.can_manage_store(account),
+        store_admin=crud.is_store_admin(account),
+    )
+
+
 @router.get("/api/store/summer-clover")
 async def api_summer_clover_store(request: Request, db: AsyncSession = Depends(get_db)):
     account = await current_account(request, db)
     if not account:
         return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
-    state = await crud.get_summer_store_state(
-        db,
-        account.id,
-        can_create_giveaway=bool(getattr(account, "is_verified", False)),
-    )
+    state = await _store_state(db, account)
     return JSONResponse(state)
 
 
@@ -3252,11 +3259,7 @@ async def api_join_summer_clover_pass(request: Request, db: AsyncSession = Depen
     result = await crud.join_summer_store_pass(db, account.id)
     if not result.get("ok"):
         return JSONResponse(result, status_code=_store_error_status(result))
-    return JSONResponse(await crud.get_summer_store_state(
-        db,
-        account.id,
-        can_create_giveaway=bool(getattr(account, "is_verified", False)),
-    ))
+    return JSONResponse(await _store_state(db, account))
 
 
 @router.post("/api/store/summer-clover/tasks/{task_key}/claim")
@@ -3267,11 +3270,7 @@ async def api_claim_summer_clover_task(task_key: str, request: Request, db: Asyn
     result = await crud.claim_summer_store_task(db, account.id, task_key)
     if not result.get("ok"):
         return JSONResponse(result, status_code=_store_error_status(result))
-    state = await crud.get_summer_store_state(
-        db,
-        account.id,
-        can_create_giveaway=bool(getattr(account, "is_verified", False)),
-    )
+    state = await _store_state(db, account)
     state["action"] = result
     return JSONResponse(state)
 
@@ -3284,11 +3283,7 @@ async def api_claim_summer_clover_reward(reward_level: int, request: Request, db
     result = await crud.claim_summer_store_reward(db, account.id, reward_level)
     if not result.get("ok"):
         return JSONResponse(result, status_code=_store_error_status(result))
-    state = await crud.get_summer_store_state(
-        db,
-        account.id,
-        can_create_giveaway=bool(getattr(account, "is_verified", False)),
-    )
+    state = await _store_state(db, account)
     state["action"] = result
     return JSONResponse(state)
 
@@ -3319,7 +3314,7 @@ async def api_create_summer_clover_giveaway(request: Request, db: AsyncSession =
     )
     if not result.get("ok"):
         return JSONResponse(result, status_code=_store_error_status(result))
-    state = await crud.get_summer_store_state(db, account.id, can_create_giveaway=True)
+    state = await _store_state(db, account)
     state["action"] = result
     return JSONResponse(state)
 
@@ -3332,13 +3327,104 @@ async def api_claim_summer_clover_giveaway(giveaway_id: int, request: Request, d
     result = await crud.claim_store_giveaway(db, account.id, giveaway_id)
     if not result.get("ok"):
         return JSONResponse(result, status_code=_store_error_status(result))
-    state = await crud.get_summer_store_state(
-        db,
-        account.id,
-        can_create_giveaway=bool(getattr(account, "is_verified", False)),
-    )
+    state = await _store_state(db, account)
     state["action"] = result
     return JSONResponse(state)
+
+
+async def _store_json_body(request: Request) -> dict:
+    try:
+        value = await request.json()
+        return value if isinstance(value, dict) else {}
+    except Exception:
+        return {}
+
+
+def _store_result_response(result: dict, success_status: int = 200) -> JSONResponse:
+    return JSONResponse(
+        result,
+        status_code=success_status if result.get("ok") else _store_error_status(result),
+    )
+
+
+@router.get("/api/store/workshop")
+async def api_store_workshop(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    return _store_result_response(await crud.get_store_workshop(db, account))
+
+
+@router.post("/api/store/workshop/items")
+async def api_store_workshop_create_item(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    result = await crud.save_store_item(db, account, await _store_json_body(request))
+    return _store_result_response(result, 201)
+
+
+@router.patch("/api/store/workshop/items/{item_id}")
+async def api_store_workshop_update_item(item_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    result = await crud.save_store_item(db, account, await _store_json_body(request), item_id=item_id)
+    return _store_result_response(result)
+
+
+@router.post("/api/store/workshop/themes")
+async def api_store_workshop_create_theme(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    result = await crud.save_profile_theme(db, account, await _store_json_body(request))
+    return _store_result_response(result, 201)
+
+
+@router.patch("/api/store/workshop/themes/{theme_id}")
+async def api_store_workshop_update_theme(theme_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    result = await crud.save_profile_theme(db, account, await _store_json_body(request), theme_id=theme_id)
+    return _store_result_response(result)
+
+
+@router.post("/api/store/workshop/passes")
+async def api_store_workshop_create_pass(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    result = await crud.save_store_pass(db, account, await _store_json_body(request))
+    return _store_result_response(result, 201)
+
+
+@router.patch("/api/store/workshop/passes/{pass_id}")
+async def api_store_workshop_update_pass(pass_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    result = await crud.save_store_pass(db, account, await _store_json_body(request), pass_id=pass_id)
+    return _store_result_response(result)
+
+
+@router.post("/api/profile-themes/equip")
+async def api_equip_profile_theme(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    body = await _store_json_body(request)
+    theme_id = _parse_optional_int(body.get("theme_id"))
+    return _store_result_response(await crud.equip_profile_theme(db, account.id, theme_id))
+
+
+@router.get("/api/profile-themes/me")
+async def api_my_profile_theme(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    return JSONResponse({"ok": True, "theme": await crud.get_equipped_profile_theme(db, account.id)})
 
 
 @router.get("/api/users/{username}/nitro")
@@ -3355,6 +3441,7 @@ async def api_user_nitro(username: str, request: Request, db: AsyncSession = Dep
         "username": account.username,
         "verified": bool(getattr(account, "is_verified", False)),
         "nitro": payload,
+        "mini_profile_theme": await crud.get_equipped_profile_theme(db, account.id),
     })
 
 
@@ -5116,6 +5203,7 @@ async def api_friend_status(username: str, request: Request, db: AsyncSession = 
         await crud.list_account_active_server_tags(db, [int(target.id)])
     ).get(int(target.id))
     target_nitro = await crud.nitro_profile_payload(db, int(target.id))
+    target_mini_theme = await crud.get_equipped_profile_theme(db, int(target.id))
     return JSONResponse({
         "ok": True,
         "profile_id": int(target.id),
@@ -5129,6 +5217,7 @@ async def api_friend_status(username: str, request: Request, db: AsyncSession = 
             "verified": bool(getattr(target, "is_verified", False)),
             "nitro": target_nitro,
         },
+        "mini_profile_theme": target_mini_theme,
         **block,
     })
 
