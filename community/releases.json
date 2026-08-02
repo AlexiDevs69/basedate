@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.33.6",
+      "date": "2026-08-02",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance store layout and theme preview styles."
+      ],
+      "source_sha": "2e8076a358e408a092ef6e0f5d20082fe19c1260"
+    },
+    {
       "version": "1.33.5",
       "date": "2026-08-02",
       "title": "Виправлення та стабільність",
