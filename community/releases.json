@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.31.0",
+      "date": "2026-08-02",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: Summer Clover store section with styles."
+      ],
+      "source_sha": "7c67e785d3b7cb5f5293054e039614e5379e8788"
+    },
+    {
       "version": "1.30.2",
       "date": "2026-08-02",
       "title": "Виправлення та стабільність",
