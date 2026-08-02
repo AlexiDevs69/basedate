@@ -5104,6 +5104,8 @@ STORE_ITEM_STATUSES = {"draft", "published", "archived"}
 STORE_THEME_ACCESS = {"free", "pass_reward"}
 STORE_REWARD_TYPES = {"none", "collectible", "profile_theme", "nitro"}
 STORE_CURRENCIES = {"clover", "xp", "boost"}
+STORE_COLLECTION_ENTITY_TYPES = {"item", "theme", "pass"}
+STORE_NEW_WINDOW = timedelta(days=14)
 
 
 def is_store_admin(account: Account | None) -> bool:
@@ -5214,6 +5216,7 @@ async def ensure_store_studio_tables(db: AsyncSession) -> None:
             status VARCHAR(16) NOT NULL DEFAULT 'draft',
             is_active BOOLEAN NOT NULL DEFAULT TRUE,
             metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+            published_at TIMESTAMP WITH TIME ZONE,
             created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
             updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
         )
@@ -5233,6 +5236,7 @@ async def ensure_store_studio_tables(db: AsyncSession) -> None:
             ends_at TIMESTAMP WITH TIME ZONE,
             status VARCHAR(16) NOT NULL DEFAULT 'draft',
             is_active BOOLEAN NOT NULL DEFAULT TRUE,
+            published_at TIMESTAMP WITH TIME ZONE,
             created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
             updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
         )
@@ -5253,6 +5257,7 @@ async def ensure_store_studio_tables(db: AsyncSession) -> None:
             is_active BOOLEAN NOT NULL DEFAULT TRUE,
             is_collaborative BOOLEAN NOT NULL DEFAULT FALSE,
             metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+            published_at TIMESTAMP WITH TIME ZONE,
             created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
             updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
         )
@@ -5292,6 +5297,36 @@ async def ensure_store_studio_tables(db: AsyncSession) -> None:
         )
     """))
     await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_store_collections (
+            id BIGSERIAL PRIMARY KEY,
+            creator_id INTEGER REFERENCES community_accounts(id) ON DELETE SET NULL,
+            title VARCHAR(100) NOT NULL,
+            description VARCHAR(320),
+            banner_url VARCHAR(512),
+            accent_color VARCHAR(16) NOT NULL DEFAULT '#5865f2',
+            display_order INTEGER NOT NULL DEFAULT 0,
+            starts_at TIMESTAMP WITH TIME ZONE,
+            ends_at TIMESTAMP WITH TIME ZONE,
+            status VARCHAR(16) NOT NULL DEFAULT 'draft',
+            is_active BOOLEAN NOT NULL DEFAULT TRUE,
+            metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+            published_at TIMESTAMP WITH TIME ZONE,
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+            updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+        )
+    """))
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_store_collection_entries (
+            id BIGSERIAL PRIMARY KEY,
+            collection_id BIGINT NOT NULL REFERENCES community_store_collections(id) ON DELETE CASCADE,
+            entity_type VARCHAR(16) NOT NULL,
+            entity_id BIGINT NOT NULL,
+            display_order INTEGER NOT NULL DEFAULT 0,
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+            UNIQUE (collection_id, entity_type, entity_id)
+        )
+    """))
+    await db.execute(text("""
         CREATE TABLE IF NOT EXISTS community_store_audit_log (
             id BIGSERIAL PRIMARY KEY,
             actor_id INTEGER REFERENCES community_accounts(id) ON DELETE SET NULL,
@@ -5302,9 +5337,15 @@ async def ensure_store_studio_tables(db: AsyncSession) -> None:
             created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
         )
     """))
+    # Idempotent upgrades for databases that already have the original studio tables.
+    for table_name in ("community_store_items", "community_profile_themes", "community_store_passes"):
+        await db.execute(text(f"ALTER TABLE {table_name} ADD COLUMN IF NOT EXISTS published_at TIMESTAMP WITH TIME ZONE"))
+        await db.execute(text(f"UPDATE {table_name} SET published_at = created_at WHERE status = 'published' AND published_at IS NULL"))
     await db.execute(text("CREATE INDEX IF NOT EXISTS ix_store_items_public ON community_store_items (status, is_active, starts_at, ends_at)"))
     await db.execute(text("CREATE INDEX IF NOT EXISTS ix_profile_themes_public ON community_profile_themes (status, is_active, starts_at, ends_at)"))
     await db.execute(text("CREATE INDEX IF NOT EXISTS ix_store_passes_public ON community_store_passes (status, is_active, starts_at, ends_at)"))
+    await db.execute(text("CREATE INDEX IF NOT EXISTS ix_store_collections_public ON community_store_collections (status, is_active, display_order, starts_at, ends_at)"))
+    await db.execute(text("CREATE INDEX IF NOT EXISTS ix_store_collection_entries_order ON community_store_collection_entries (collection_id, display_order, id)"))
     await db.execute(text("CREATE INDEX IF NOT EXISTS ix_store_audit_entity ON community_store_audit_log (entity_type, entity_id, created_at DESC)"))
 
     # Seed the existing hard-coded pass once. Afterwards its dates and levels are
@@ -5409,6 +5450,11 @@ def _store_lifecycle(status: str, is_active: bool, starts_at: datetime | None, e
     return "active"
 
 
+def _store_is_new(published_at: datetime | None) -> bool:
+    published = _nitro_datetime_utc(published_at)
+    return bool(published and published <= _store_now() and published >= _store_now() - STORE_NEW_WINDOW)
+
+
 def _store_item_payload(row) -> dict:
     return {
         "id": int(row["id"]),
@@ -5427,6 +5473,8 @@ def _store_item_payload(row) -> dict:
         "is_active": bool(row["is_active"]),
         "lifecycle": _store_lifecycle(row["status"], bool(row["is_active"]), row["starts_at"], row["ends_at"]),
         "metadata": dict(row["metadata"] or {}),
+        "published_at": _store_dt_payload(row.get("published_at")),
+        "is_new": _store_is_new(row.get("published_at")),
         "created_at": _store_dt_payload(row["created_at"]),
         "updated_at": _store_dt_payload(row["updated_at"]),
     }
@@ -5452,6 +5500,8 @@ def _store_theme_payload(row, *, owned: bool = False, equipped: bool = False, ca
         "owned": bool(owned),
         "equipped": bool(equipped),
         "can_equip": bool(can_equip),
+        "published_at": _store_dt_payload(row.get("published_at")),
+        "is_new": _store_is_new(row.get("published_at")),
         "created_at": _store_dt_payload(row["created_at"]),
         "updated_at": _store_dt_payload(row["updated_at"]),
     }
@@ -5476,6 +5526,32 @@ def _store_pass_payload_row(row, levels: list[dict] | None = None) -> dict:
         "is_collaborative": bool(row["is_collaborative"]),
         "metadata": dict(row["metadata"] or {}),
         "levels": levels or [],
+        "published_at": _store_dt_payload(row.get("published_at")),
+        "is_new": _store_is_new(row.get("published_at")),
+        "created_at": _store_dt_payload(row["created_at"]),
+        "updated_at": _store_dt_payload(row["updated_at"]),
+    }
+
+
+def _store_collection_payload(row, entries: list[dict] | None = None) -> dict:
+    return {
+        "id": int(row["id"]),
+        "creator_id": int(row["creator_id"]) if row["creator_id"] else None,
+        "creator_username": row.get("creator_username") or "AlexiHub",
+        "title": row["title"],
+        "description": row["description"] or "",
+        "banner_url": row["banner_url"] or "",
+        "accent_color": row["accent_color"] or "#5865f2",
+        "display_order": int(row["display_order"] or 0),
+        "starts_at": _store_dt_payload(row["starts_at"]),
+        "ends_at": _store_dt_payload(row["ends_at"]),
+        "status": row["status"],
+        "is_active": bool(row["is_active"]),
+        "lifecycle": _store_lifecycle(row["status"], bool(row["is_active"]), row["starts_at"], row["ends_at"]),
+        "metadata": dict(row["metadata"] or {}),
+        "entries": entries or [],
+        "published_at": _store_dt_payload(row.get("published_at")),
+        "is_new": _store_is_new(row.get("published_at")),
         "created_at": _store_dt_payload(row["created_at"]),
         "updated_at": _store_dt_payload(row["updated_at"]),
     }
@@ -5490,6 +5566,7 @@ async def get_store_catalog(db: AsyncSession, account_id: int) -> dict:
         FROM community_store_items AS item
         LEFT JOIN community_accounts AS creator ON creator.id = item.creator_id
         WHERE item.status = 'published' AND item.is_active = TRUE
+          AND item.item_type <> 'profile_theme'
           AND (item.starts_at IS NULL OR item.starts_at <= :now)
           AND (item.ends_at IS NULL OR item.ends_at > :now)
         ORDER BY item.updated_at DESC
@@ -5522,6 +5599,38 @@ async def get_store_catalog(db: AsyncSession, account_id: int) -> dict:
                  pass.updated_at DESC
         LIMIT 24
     """), {"now": now})).mappings().all()
+    collection_rows = (await db.execute(text("""
+        SELECT collection.*, creator.username AS creator_username
+        FROM community_store_collections AS collection
+        LEFT JOIN community_accounts AS creator ON creator.id = collection.creator_id
+        WHERE collection.status = 'published' AND collection.is_active = TRUE
+          AND (collection.starts_at IS NULL OR collection.starts_at <= :now)
+          AND (collection.ends_at IS NULL OR collection.ends_at > :now)
+        ORDER BY collection.display_order, collection.updated_at DESC
+        LIMIT 40
+    """), {"now": now})).mappings().all()
+    collection_entries: dict[int, list[dict]] = {int(row["id"]): [] for row in collection_rows}
+    if collection_entries:
+        entry_rows = (await db.execute(text("""
+            SELECT collection_id, entity_type, entity_id, display_order
+            FROM community_store_collection_entries
+            WHERE collection_id = ANY(CAST(:collection_ids AS BIGINT[]))
+            ORDER BY collection_id, display_order, id
+        """), {"collection_ids": list(collection_entries)})).mappings().all()
+        visible = {
+            "item": {int(row["id"]) for row in item_rows},
+            "theme": {int(row["id"]) for row in theme_rows},
+            "pass": {int(row["id"]) for row in pass_rows},
+        }
+        for entry in entry_rows:
+            entity_type = str(entry["entity_type"])
+            entity_id = int(entry["entity_id"])
+            if entity_type in visible and entity_id in visible[entity_type]:
+                collection_entries[int(entry["collection_id"])].append({
+                    "entity_type": entity_type,
+                    "entity_id": entity_id,
+                    "display_order": int(entry["display_order"] or 0),
+                })
     return {
         "items": [_store_item_payload(row) for row in item_rows],
         "themes": [
@@ -5534,6 +5643,11 @@ async def get_store_catalog(db: AsyncSession, account_id: int) -> dict:
             for row in theme_rows
         ],
         "passes": [_store_pass_payload_row(row) for row in pass_rows],
+        "collections": [
+            _store_collection_payload(row, collection_entries.get(int(row["id"]), []))
+            for row in collection_rows
+            if collection_entries.get(int(row["id"]))
+        ],
     }
 
 
@@ -5630,6 +5744,29 @@ async def get_store_workshop(db: AsyncSession, actor: Account) -> dict:
             ORDER BY level
         """), {"pass_id": int(row["id"])})).mappings().all()
         pass_payloads.append(_store_pass_payload_row(row, [dict(level) for level in levels]))
+    collections = (await db.execute(text(f"""
+        SELECT collection.*, creator.username AS creator_username
+        FROM community_store_collections AS collection
+        LEFT JOIN community_accounts AS creator ON creator.id = collection.creator_id
+        WHERE {scope.replace('creator_id', 'collection.creator_id')}
+        ORDER BY collection.display_order, collection.updated_at DESC
+    """), params)).mappings().all()
+    collection_payloads = []
+    for row in collections:
+        entries = (await db.execute(text("""
+            SELECT entity_type, entity_id, display_order
+            FROM community_store_collection_entries
+            WHERE collection_id = :collection_id
+            ORDER BY display_order, id
+        """), {"collection_id": int(row["id"])})).mappings().all()
+        collection_payloads.append(_store_collection_payload(row, [
+            {
+                "entity_type": str(entry["entity_type"]),
+                "entity_id": int(entry["entity_id"]),
+                "display_order": int(entry["display_order"] or 0),
+            }
+            for entry in entries
+        ]))
     return {
         "ok": True,
         "permissions": {"verified": True, "admin": admin},
@@ -5643,11 +5780,12 @@ async def get_store_workshop(db: AsyncSession, actor: Account) -> dict:
         "items": [_store_item_payload(row) for row in items],
         "themes": [_store_theme_payload(row) for row in themes],
         "passes": pass_payloads,
+        "collections": collection_payloads,
     }
 
 
 async def _owned_store_entity(db: AsyncSession, table: str, entity_id: int, actor: Account, collaborative: bool = False):
-    allowed_tables = {"community_store_items", "community_profile_themes", "community_store_passes"}
+    allowed_tables = {"community_store_items", "community_profile_themes", "community_store_passes", "community_store_collections"}
     if table not in allowed_tables:
         return None
     extra = ", is_collaborative" if collaborative else ""
@@ -5657,6 +5795,111 @@ async def _owned_store_entity(db: AsyncSession, table: str, entity_id: int, acto
     if is_store_admin(actor) or int(row["creator_id"] or 0) == int(actor.id) or (collaborative and bool(row["is_collaborative"])):
         return row
     return False
+
+
+async def save_store_collection(db: AsyncSession, actor: Account, payload: dict, collection_id: int | None = None) -> dict:
+    await ensure_store_studio_tables(db)
+    if not can_manage_store(actor):
+        return {"ok": False, "error": "forbidden", "message": "Нужен verified-аккаунт."}
+    title = str(payload.get("title") or "").strip()[:100]
+    if not title:
+        return {"ok": False, "error": "validation", "message": "Добавь название раздела."}
+    status = str(payload.get("status") or "draft").strip().lower()
+    status = status if status in STORE_ITEM_STATUSES else "draft"
+    starts_at = _store_parse_datetime(payload.get("starts_at"))
+    ends_at = _store_parse_datetime(payload.get("ends_at"))
+    if starts_at and ends_at and ends_at <= starts_at:
+        return {"ok": False, "error": "validation", "message": "Дата окончания должна быть позже даты начала."}
+
+    clean_entries = []
+    seen_entries = set()
+    table_map = {
+        "item": ("community_store_items", False),
+        "theme": ("community_profile_themes", False),
+        "pass": ("community_store_passes", True),
+    }
+    for index, raw in enumerate(list(payload.get("entries") or [])[:40]):
+        if not isinstance(raw, dict):
+            continue
+        entity_type = str(raw.get("entity_type") or "").strip().lower()
+        try:
+            entity_id = int(raw.get("entity_id"))
+        except (TypeError, ValueError, OverflowError):
+            continue
+        if entity_type not in STORE_COLLECTION_ENTITY_TYPES or entity_id <= 0:
+            continue
+        key = (entity_type, entity_id)
+        if key in seen_entries:
+            continue
+        seen_entries.add(key)
+        table_name, collaborative = table_map[entity_type]
+        owned = await _owned_store_entity(db, table_name, entity_id, actor, collaborative=collaborative)
+        if owned is None:
+            return {"ok": False, "error": "validation", "message": "Один из выбранных товаров больше не существует."}
+        if owned is False:
+            return {"ok": False, "error": "forbidden", "message": "В раздел можно добавлять только свои публикации."}
+        clean_entries.append({"entity_type": entity_type, "entity_id": entity_id, "display_order": index})
+    if status == "published" and not clean_entries:
+        return {"ok": False, "error": "validation", "message": "В опубликованном разделе должен быть хотя бы один товар."}
+
+    values = {
+        "creator_id": int(actor.id),
+        "title": title,
+        "description": str(payload.get("description") or "").strip()[:320] or None,
+        "banner_url": _store_clean_url(payload.get("banner_url")) or None,
+        "accent_color": _store_clean_color(payload.get("accent_color"), "#5865f2"),
+        "display_order": _store_int(payload.get("display_order"), 0, -1000, 1000),
+        "starts_at": starts_at,
+        "ends_at": ends_at,
+        "status": status,
+        "is_active": _store_bool(payload.get("is_active"), True),
+        "metadata": json.dumps(_store_json_dict(payload.get("metadata")), ensure_ascii=False),
+    }
+    if collection_id:
+        owned = await _owned_store_entity(db, "community_store_collections", int(collection_id), actor)
+        if owned is None:
+            return {"ok": False, "error": "not_found", "message": "Раздел не найден."}
+        if owned is False:
+            return {"ok": False, "error": "forbidden", "message": "Можно редактировать только свои разделы."}
+        await db.execute(text("""
+            UPDATE community_store_collections SET
+                title=:title, description=:description, banner_url=:banner_url,
+                accent_color=:accent_color, display_order=:display_order,
+                starts_at=:starts_at, ends_at=:ends_at, status=:status,
+                is_active=:is_active, metadata=CAST(:metadata AS JSONB),
+                published_at=CASE
+                    WHEN :status='published' AND status<>'published' THEN NOW()
+                    WHEN :status<>'published' THEN NULL
+                    ELSE published_at
+                END,
+                updated_at=NOW()
+            WHERE id=:entity_id
+        """), {**values, "entity_id": int(collection_id)})
+        entity_id = int(collection_id)
+        action = "update"
+    else:
+        row = (await db.execute(text("""
+            INSERT INTO community_store_collections
+                (creator_id,title,description,banner_url,accent_color,display_order,
+                 starts_at,ends_at,status,is_active,metadata,published_at)
+            VALUES
+                (:creator_id,:title,:description,:banner_url,:accent_color,:display_order,
+                 :starts_at,:ends_at,:status,:is_active,CAST(:metadata AS JSONB),
+                 CASE WHEN :status='published' THEN NOW() ELSE NULL END)
+            RETURNING id
+        """), values)).mappings().first()
+        entity_id = int(row["id"])
+        action = "create"
+    await db.execute(text("DELETE FROM community_store_collection_entries WHERE collection_id=:collection_id"), {"collection_id": entity_id})
+    for entry in clean_entries:
+        await db.execute(text("""
+            INSERT INTO community_store_collection_entries
+                (collection_id,entity_type,entity_id,display_order)
+            VALUES (:collection_id,:entity_type,:entity_id,:display_order)
+        """), {"collection_id": entity_id, **entry})
+    await _store_audit(db, actor.id, "collection", entity_id, action, {"title": title, "status": status, "entries": len(clean_entries)})
+    await db.commit()
+    return {"ok": True, "id": entity_id}
 
 
 async def save_store_item(db: AsyncSession, actor: Account, payload: dict, item_id: int | None = None) -> dict:
@@ -5706,7 +5949,13 @@ async def save_store_item(db: AsyncSession, actor: Account, payload: dict, item_
                 image_url=:image_url, icon=:icon, price_amount=:price_amount,
                 currency=:currency, starts_at=:starts_at, ends_at=:ends_at,
                 status=:status, is_active=:is_active,
-                metadata=CAST(:metadata AS JSONB), updated_at=NOW()
+                metadata=CAST(:metadata AS JSONB),
+                published_at=CASE
+                    WHEN :status='published' AND status<>'published' THEN NOW()
+                    WHEN :status<>'published' THEN NULL
+                    ELSE published_at
+                END,
+                updated_at=NOW()
             WHERE id=:entity_id
         """), {**values, "entity_id": int(item_id)})
         entity_id = int(item_id)
@@ -5715,10 +5964,11 @@ async def save_store_item(db: AsyncSession, actor: Account, payload: dict, item_
         row = (await db.execute(text("""
             INSERT INTO community_store_items
                 (creator_id,item_type,title,description,image_url,icon,price_amount,
-                 currency,starts_at,ends_at,status,is_active,metadata)
+                 currency,starts_at,ends_at,status,is_active,metadata,published_at)
             VALUES
                 (:creator_id,:item_type,:title,:description,:image_url,:icon,:price_amount,
-                 :currency,:starts_at,:ends_at,:status,:is_active,CAST(:metadata AS JSONB))
+                 :currency,:starts_at,:ends_at,:status,:is_active,CAST(:metadata AS JSONB),
+                 CASE WHEN :status='published' THEN NOW() ELSE NULL END)
             RETURNING id
         """), values)).mappings().first()
         entity_id = int(row["id"])
@@ -5770,7 +6020,13 @@ async def save_profile_theme(db: AsyncSession, actor: Account, payload: dict, th
                 accent_color=:accent_color, text_color=:text_color,
                 overlay_strength=:overlay_strength, access_mode=:access_mode,
                 starts_at=:starts_at, ends_at=:ends_at, status=:status,
-                is_active=:is_active, updated_at=NOW()
+                is_active=:is_active,
+                published_at=CASE
+                    WHEN :status='published' AND status<>'published' THEN NOW()
+                    WHEN :status<>'published' THEN NULL
+                    ELSE published_at
+                END,
+                updated_at=NOW()
             WHERE id=:entity_id
         """), {**values, "entity_id": int(theme_id)})
         entity_id = int(theme_id)
@@ -5780,10 +6036,11 @@ async def save_profile_theme(db: AsyncSession, actor: Account, payload: dict, th
         row = (await db.execute(text("""
             INSERT INTO community_profile_themes
                 (creator_id,title,description,image_url,accent_color,text_color,
-                 overlay_strength,access_mode,starts_at,ends_at,status,is_active)
+                 overlay_strength,access_mode,starts_at,ends_at,status,is_active,published_at)
             VALUES
                 (:creator_id,:title,:description,:image_url,:accent_color,:text_color,
-                 :overlay_strength,:access_mode,:starts_at,:ends_at,:status,:is_active)
+                 :overlay_strength,:access_mode,:starts_at,:ends_at,:status,:is_active,
+                 CASE WHEN :status='published' THEN NOW() ELSE NULL END)
             RETURNING id
         """), values)).mappings().first()
         entity_id = int(row["id"])
@@ -5838,7 +6095,13 @@ async def save_store_pass(db: AsyncSession, actor: Account, payload: dict, pass_
                 title=:title, description=:description, image_url=:image_url,
                 max_level=:max_level, xp_per_level=:xp_per_level,
                 starts_at=:starts_at, ends_at=:ends_at, status=:status,
-                is_active=:is_active, metadata=CAST(:metadata AS JSONB), updated_at=NOW()
+                is_active=:is_active, metadata=CAST(:metadata AS JSONB),
+                published_at=CASE
+                    WHEN :status='published' AND status<>'published' THEN NOW()
+                    WHEN :status<>'published' THEN NULL
+                    ELSE published_at
+                END,
+                updated_at=NOW()
             WHERE id=:entity_id
         """), {**values, "entity_id": int(pass_id)})
         entity_id = int(pass_id)
@@ -5849,10 +6112,11 @@ async def save_store_pass(db: AsyncSession, actor: Account, payload: dict, pass_
         row = (await db.execute(text("""
             INSERT INTO community_store_passes
                 (creator_id,pass_key,title,description,image_url,max_level,xp_per_level,
-                 starts_at,ends_at,status,is_active,is_collaborative,metadata)
+                 starts_at,ends_at,status,is_active,is_collaborative,metadata,published_at)
             VALUES
                 (:creator_id,:pass_key,:title,:description,:image_url,:max_level,:xp_per_level,
-                 :starts_at,:ends_at,:status,:is_active,FALSE,CAST(:metadata AS JSONB))
+                 :starts_at,:ends_at,:status,:is_active,FALSE,CAST(:metadata AS JSONB),
+                 CASE WHEN :status='published' THEN NOW() ELSE NULL END)
             RETURNING id
         """), {**values, "pass_key": pass_key})).mappings().first()
         entity_id = int(row["id"])
