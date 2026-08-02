@@ -366,6 +366,7 @@ async def community_schema_startup() -> None:
         await _ensure_server_visual_columns(db)
         await crud.ensure_reaction_tables(db)
         await crud.ensure_mention_table(db)
+        await crud.ensure_inbox_preferences_table(db)
         await crud.ensure_user_blocks_table(db)
         await crud.ensure_server_category_schema(db)
         await crud.ensure_server_event_schema(db)
@@ -2006,7 +2007,19 @@ async def server_channel_view(server_id: int, channel_id: int, request: Request,
     members = await crud.list_server_members(db, server_id)
     friends = await crud.list_friends(db, account.id)
     events = await crud.list_server_events(db, server_id, account.id)
-    feed = await crud.get_server_feed(db, server_id, channel_id)
+    try:
+        jump_message_id = max(0, int(request.query_params.get("jump") or 0))
+    except (TypeError, ValueError):
+        jump_message_id = 0
+    # Normal channel loads stay light. An explicit Inbox jump widens the
+    # history window so an older mention is much less likely to land on a
+    # channel page where the target message has not been rendered.
+    feed = await crud.get_server_feed(
+        db,
+        server_id,
+        channel_id,
+        limit=500 if jump_message_id else 80,
+    )
     await _decorate_server_tags(db, members, feed)
     boost_status = await crud.get_server_boost_status(db, server.id, account.id)
     server_banner_url = await _get_server_banner_url(db, server.id)
@@ -4693,6 +4706,119 @@ async def api_dm_permission(username: str, request: Request, db: AsyncSession = 
         "can_message": bool(permission["allowed"]),
         "reason": str(permission["reason"]),
     })
+
+
+# --- Home inbox -------------------------------------------------------------
+
+@router.get("/api/inbox/mentions")
+async def api_inbox_mentions(
+    request: Request,
+    view: str = "unread",
+    before: int | None = None,
+    limit: int = 50,
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return _settings_error("Потрібно знову увійти в акаунт.", 401, "not_authenticated")
+    clean_view = str(view or "unread").strip().lower()
+    if clean_view not in {"unread", "mentions"}:
+        return _settings_error("Невідома вкладка пошти.", 400, "invalid_view")
+    safe_before = int(before) if before and int(before) > 0 else None
+    safe_limit = max(1, min(int(limit or 50), 100))
+    preferences = await crud.get_inbox_preferences(db, int(account.id))
+    page = await crud.list_server_inbox_mentions(
+        db,
+        int(account.id),
+        unread_only=clean_view == "unread",
+        include_everyone=preferences["include_everyone"],
+        include_roles=preferences["include_roles"],
+        before_id=safe_before,
+        limit=safe_limit,
+    )
+    counts = await crud.unread_mention_summary(db, int(account.id))
+    response = JSONResponse({
+        "ok": True,
+        "view": clean_view,
+        "preferences": preferences,
+        "unread_count": int(counts.get("server_total") or 0),
+        **page,
+    })
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@router.patch("/api/inbox/preferences")
+async def api_inbox_preferences(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return _settings_error("Потрібно знову увійти в акаунт.", 401, "not_authenticated")
+    try:
+        body = await request.json()
+    except Exception:
+        body = None
+    if not isinstance(body, dict):
+        return _settings_error("Некоректні налаштування пошти.", 400, "invalid_payload")
+    values: dict[str, bool] = {}
+    for field in crud.INBOX_PREFERENCE_FIELDS:
+        if field not in body:
+            continue
+        if not isinstance(body[field], bool):
+            return _settings_error(f"Поле {field} має бути true або false.", 400, "invalid_value")
+        values[field] = body[field]
+    if not values:
+        return _settings_error("Не передано жодного налаштування.", 400, "empty_update")
+    saved = await crud.update_inbox_preferences(db, int(account.id), values)
+    return JSONResponse({"ok": True, "preferences": saved})
+
+
+@router.post("/api/inbox/read")
+async def api_inbox_mark_read(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return _settings_error("Потрібно знову увійти в акаунт.", 401, "not_authenticated")
+    try:
+        body = await request.json()
+    except Exception:
+        body = None
+    if not isinstance(body, dict):
+        return _settings_error("Некоректний запит.", 400, "invalid_payload")
+
+    mark_all = body.get("all") is True
+    raw_ids = body.get("mention_ids") or []
+    if not isinstance(raw_ids, list):
+        return _settings_error("mention_ids має бути списком.", 400, "invalid_mention_ids")
+    mention_ids: list[int] = []
+    for raw_id in raw_ids[:200]:
+        try:
+            value = int(raw_id)
+        except (TypeError, ValueError):
+            continue
+        if value > 0:
+            mention_ids.append(value)
+    try:
+        server_id = max(0, int(body.get("server_id") or 0))
+        channel_id = max(0, int(body.get("channel_id") or 0))
+    except (TypeError, ValueError):
+        return _settings_error("Некоректний сервер або канал.", 400, "invalid_scope")
+    has_channel_scope = bool(server_id and channel_id)
+    if not mark_all and not mention_ids and not has_channel_scope:
+        return _settings_error("Не вибрано згадки.", 400, "empty_update")
+
+    updated = await crud.mark_server_inbox_mentions_read(
+        db,
+        int(account.id),
+        mention_ids=mention_ids,
+        mark_all=mark_all,
+        server_id=server_id or None,
+        channel_id=channel_id or None,
+    )
+    counts = await crud.unread_mention_summary(db, int(account.id))
+    await account_realtime.send_to_account(
+        int(account.id),
+        {"type": "mention_counts", "counts": counts},
+    )
+    return JSONResponse({"ok": True, "updated": updated, "counts": counts})
 
 
 # --- Public profiles ---------------------------------------------------------
