@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.33.0",
+      "date": "2026-08-02",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: Summer Clover store with tasks and rewards."
+      ],
+      "source_sha": "dfa8fa2eaeafc9b8af0488198ca121eaf9507e18"
+    },
+    {
       "version": "1.32.0",
       "date": "2026-08-02",
       "title": "Нові можливості AlexiHub",
