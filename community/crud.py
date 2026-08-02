@@ -4579,9 +4579,12 @@ def _store_now() -> datetime:
     return datetime.now(timezone.utc)
 
 
-def store_season_is_active(now: datetime | None = None) -> bool:
+def store_season_is_active(now: datetime | None = None, definition: dict | None = None) -> bool:
     now = _nitro_datetime_utc(now) or _store_now()
-    return STORE_SEASON_START <= now < STORE_SEASON_END
+    starts_at = _store_parse_datetime((definition or {}).get("starts_at")) or STORE_SEASON_START
+    ends_at = _store_parse_datetime((definition or {}).get("ends_at")) or STORE_SEASON_END
+    status = str((definition or {}).get("status") or "published")
+    return status == "published" and bool((definition or {}).get("is_active", True)) and starts_at <= now < ends_at
 
 
 def _store_day_bounds(now: datetime | None = None) -> tuple[datetime, datetime, object]:
@@ -4594,10 +4597,17 @@ def _store_day_bounds(now: datetime | None = None) -> tuple[datetime, datetime, 
     return start_local.astimezone(timezone.utc), end_local.astimezone(timezone.utc), local_now.date()
 
 
-def _store_level_from_xp(xp: int | float | None, joined: bool = True) -> int:
+def _store_level_from_xp(
+    xp: int | float | None,
+    joined: bool = True,
+    max_level: int = STORE_MAX_LEVEL,
+    xp_per_level: int = STORE_XP_PER_LEVEL,
+) -> int:
     if not joined:
         return 0
-    return min(STORE_MAX_LEVEL, 1 + max(0, int(xp or 0)) // STORE_XP_PER_LEVEL)
+    max_level = max(1, int(max_level or STORE_MAX_LEVEL))
+    xp_per_level = max(1, int(xp_per_level or STORE_XP_PER_LEVEL))
+    return min(max_level, 1 + max(0, int(xp or 0)) // xp_per_level)
 
 
 async def _store_daily_message_count(db: AsyncSession, account_id: int, now: datetime | None = None) -> int:
@@ -4617,30 +4627,54 @@ async def _store_daily_message_count(db: AsyncSession, account_id: int, now: dat
     return max(0, int(row["message_count"] if row else 0))
 
 
-def _store_pass_payload(progress, claimed_levels: set[int]) -> dict:
+def _store_pass_payload(
+    progress,
+    claimed_levels: set[int],
+    definition: dict | None = None,
+    level_rows: list[dict] | None = None,
+) -> dict:
+    definition = definition or {}
+    max_level = max(1, int(definition.get("max_level") or STORE_MAX_LEVEL))
+    xp_per_level = max(1, int(definition.get("xp_per_level") or STORE_XP_PER_LEVEL))
     joined = bool(progress)
     xp = max(0, int(progress["xp"] if progress else 0))
-    level = _store_level_from_xp(xp, joined)
+    level = _store_level_from_xp(xp, joined, max_level, xp_per_level)
     if not joined:
         progress_xp = 0
-        xp_to_next = STORE_XP_PER_LEVEL
+        xp_to_next = xp_per_level
         progress_percent = 0
-    elif level >= STORE_MAX_LEVEL:
-        progress_xp = STORE_XP_PER_LEVEL
+    elif level >= max_level:
+        progress_xp = xp_per_level
         xp_to_next = 0
         progress_percent = 100
     else:
-        progress_xp = xp % STORE_XP_PER_LEVEL
-        xp_to_next = STORE_XP_PER_LEVEL - progress_xp
-        progress_percent = int(progress_xp * 100 / STORE_XP_PER_LEVEL)
+        progress_xp = xp % xp_per_level
+        xp_to_next = xp_per_level - progress_xp
+        progress_percent = int(progress_xp * 100 / xp_per_level)
 
     rewards = []
-    for item in STORE_REWARDS:
-        reward = dict(item)
-        claimed = int(item["level"]) in claimed_levels
+    source_levels = level_rows if level_rows is not None else list(STORE_REWARDS)
+    for item in source_levels:
+        item = dict(item)
+        config = dict(item.get("reward_config") or {})
+        reward_type = item.get("reward_type") or item.get("kind") or "collectible"
+        reward = {
+            "level": int(item["level"]),
+            "key": config.get("key") or item.get("key") or f"pass-level-{int(item['level'])}",
+            "title": item.get("title") or f"Уровень {int(item['level'])}",
+            "description": item.get("description") or "",
+            "kind": "background" if reward_type == "profile_theme" else reward_type,
+            "reward_type": reward_type,
+            "reward_ref_id": item.get("reward_ref_id"),
+            "reward_config": config,
+            "icon": item.get("icon") or "✦",
+        }
+        if reward_type == "nitro":
+            reward["nitro_days"] = max(1, int(config.get("days") or item.get("nitro_days") or 1))
+        claimed = int(reward["level"]) in claimed_levels
         reward["claimed"] = claimed
-        reward["claimable"] = bool(joined and level >= int(item["level"]) and not claimed)
-        reward["locked"] = bool(not joined or level < int(item["level"]))
+        reward["claimable"] = bool(joined and level >= int(reward["level"]) and not claimed)
+        reward["locked"] = bool(not joined or level < int(reward["level"]))
         rewards.append(reward)
 
     joined_at = progress["joined_at"] if progress else None
@@ -4648,8 +4682,8 @@ def _store_pass_payload(progress, claimed_levels: set[int]) -> dict:
         "joined": joined,
         "xp": xp,
         "level": level,
-        "max_level": STORE_MAX_LEVEL,
-        "xp_per_level": STORE_XP_PER_LEVEL,
+        "max_level": max_level,
+        "xp_per_level": xp_per_level,
         "progress_xp": progress_xp,
         "xp_to_next": xp_to_next,
         "progress_percent": progress_percent,
@@ -4717,10 +4751,13 @@ async def get_summer_store_state(
     db: AsyncSession,
     account_id: int,
     can_create_giveaway: bool = False,
+    can_manage: bool = False,
+    store_admin: bool = False,
 ) -> dict:
-    await ensure_store_tables(db)
+    await ensure_store_studio_tables(db)
     account_id = int(account_id)
     now = _store_now()
+    pass_definition, pass_levels = await get_store_pass_definition(db, STORE_SEASON_KEY)
     progress = (await db.execute(text("""
         SELECT xp, joined_at
         FROM community_store_pass_progress
@@ -4769,23 +4806,28 @@ async def get_summer_store_state(
         "ok": True,
         "season": {
             "key": STORE_SEASON_KEY,
-            "name": "Summer Clover",
+            "name": pass_definition.get("title") or "Summer Clover",
             "number": 1,
-            "active": store_season_is_active(now),
-            "starts_at": STORE_SEASON_START.isoformat(),
-            "ends_at": STORE_SEASON_END.isoformat(),
+            "active": store_season_is_active(now, pass_definition),
+            "starts_at": _store_dt_payload(pass_definition.get("starts_at") or STORE_SEASON_START),
+            "ends_at": _store_dt_payload(pass_definition.get("ends_at") or STORE_SEASON_END),
             "daily_reset_at": day_end.isoformat(),
         },
-        "pass": _store_pass_payload(progress, claimed_levels),
+        "pass": _store_pass_payload(progress, claimed_levels, pass_definition, pass_levels),
         "tasks": tasks,
         "giveaways": await _store_giveaway_payloads(db, account_id),
         "can_create_giveaway": bool(can_create_giveaway),
+        "can_manage_store": bool(can_manage),
+        "is_store_admin": bool(store_admin),
+        "catalog": await get_store_catalog(db, account_id),
+        "equipped_profile_theme": await get_equipped_profile_theme(db, account_id),
     }
 
 
 async def join_summer_store_pass(db: AsyncSession, account_id: int) -> dict:
-    await ensure_store_tables(db)
-    if not store_season_is_active():
+    await ensure_store_studio_tables(db)
+    pass_definition, _ = await get_store_pass_definition(db, STORE_SEASON_KEY)
+    if not store_season_is_active(definition=pass_definition):
         return {"ok": False, "error": "season_ended", "message": "Сезон уже завершён."}
     await db.execute(text("""
         INSERT INTO community_store_pass_progress (account_id, season_key, xp)
@@ -4797,13 +4839,14 @@ async def join_summer_store_pass(db: AsyncSession, account_id: int) -> dict:
 
 
 async def claim_summer_store_task(db: AsyncSession, account_id: int, task_key: str) -> dict:
-    await ensure_store_tables(db)
+    await ensure_store_studio_tables(db)
     account_id = int(account_id)
     task_key = (task_key or "").strip().lower()
     definition = STORE_TASKS.get(task_key)
     if not definition:
         return {"ok": False, "error": "task_not_found", "message": "Задание не найдено."}
-    if not store_season_is_active():
+    pass_definition, _ = await get_store_pass_definition(db, STORE_SEASON_KEY)
+    if not store_season_is_active(definition=pass_definition):
         return {"ok": False, "error": "season_ended", "message": "Сезон уже завершён."}
 
     progress = (await db.execute(text("""
@@ -4856,10 +4899,11 @@ async def claim_summer_store_task(db: AsyncSession, account_id: int, task_key: s
 
 
 async def claim_summer_store_reward(db: AsyncSession, account_id: int, reward_level: int) -> dict:
-    await ensure_store_tables(db)
+    await ensure_store_studio_tables(db)
     account_id = int(account_id)
     reward_level = int(reward_level)
-    reward = next((item for item in STORE_REWARDS if int(item["level"]) == reward_level), None)
+    pass_definition, pass_levels = await get_store_pass_definition(db, STORE_SEASON_KEY)
+    reward = next((dict(item) for item in pass_levels if int(item["level"]) == reward_level), None)
     if not reward:
         return {"ok": False, "error": "reward_not_found", "message": "Награда не найдена."}
 
@@ -4872,7 +4916,12 @@ async def claim_summer_store_reward(db: AsyncSession, account_id: int, reward_le
     """), {"account_id": account_id, "season_key": STORE_SEASON_KEY})).mappings().first()
     if not progress:
         return {"ok": False, "error": "pass_not_joined", "message": "Сначала активируй пропуск."}
-    current_level = _store_level_from_xp(progress["xp"], True)
+    current_level = _store_level_from_xp(
+        progress["xp"],
+        True,
+        int(pass_definition.get("max_level") or STORE_MAX_LEVEL),
+        int(pass_definition.get("xp_per_level") or STORE_XP_PER_LEVEL),
+    )
     if current_level < reward_level:
         return {"ok": False, "error": "reward_locked", "message": "Сначала достигни нужного уровня."}
 
@@ -4887,21 +4936,39 @@ async def claim_summer_store_reward(db: AsyncSession, account_id: int, reward_le
         "account_id": account_id,
         "season_key": STORE_SEASON_KEY,
         "reward_level": reward_level,
-        "reward_key": reward["key"],
+        "reward_key": (reward.get("reward_config") or {}).get("key") or f"pass-level-{reward_level}",
     })).first()
     if not inserted:
         return {"ok": False, "error": "already_claimed", "message": "Эта награда уже получена."}
 
     nitro = None
-    if reward.get("nitro_days"):
+    granted_theme = None
+    reward_type = str(reward.get("reward_type") or "collectible")
+    reward_config = dict(reward.get("reward_config") or {})
+    if reward_type == "nitro":
+        nitro_days = max(1, min(int(reward_config.get("days") or 1), 30))
         nitro = await _extend_nitro_subscription_no_commit(
             db,
             account_id,
-            int(reward["nitro_days"]),
+            nitro_days,
             f"PASS-{STORE_SEASON_KEY}-L{reward_level}",
         )
+    elif reward_type == "profile_theme" and reward.get("reward_ref_id"):
+        theme_id = int(reward["reward_ref_id"])
+        exists = (await db.execute(text("SELECT id FROM community_profile_themes WHERE id=:theme_id"), {"theme_id": theme_id})).first()
+        if exists:
+            await db.execute(text("""
+                INSERT INTO community_profile_theme_ownership (theme_id, account_id, source)
+                VALUES (:theme_id, :account_id, :source)
+                ON CONFLICT (theme_id, account_id) DO NOTHING
+            """), {
+                "theme_id": theme_id,
+                "account_id": account_id,
+                "source": f"PASS-{STORE_SEASON_KEY}-L{reward_level}",
+            })
+            granted_theme = theme_id
     await db.commit()
-    return {"ok": True, "reward": dict(reward), "nitro": nitro}
+    return {"ok": True, "reward": dict(reward), "nitro": nitro, "theme_id": granted_theme}
 
 
 async def create_store_giveaway(
@@ -4913,8 +4980,9 @@ async def create_store_giveaway(
     max_claims: int = 10,
     duration_hours: int = 24,
 ) -> dict:
-    await ensure_store_tables(db)
-    if not store_season_is_active():
+    await ensure_store_studio_tables(db)
+    pass_definition, _ = await get_store_pass_definition(db, STORE_SEASON_KEY)
+    if not store_season_is_active(definition=pass_definition):
         return {"ok": False, "error": "season_ended", "message": "Сезон уже завершён."}
     creator_id = int(creator_id)
     recent = (await db.execute(text("""
@@ -4931,7 +4999,8 @@ async def create_store_giveaway(
     duration_hours = max(1, min(int(duration_hours or 24), 72))
     clean_title = (title or "").strip()[:80] or f"Nitro на {nitro_days} дня"
     clean_description = (description or "").strip()[:220] or None
-    expires_at = min(_store_now() + timedelta(hours=duration_hours), STORE_SEASON_END)
+    season_end = _store_parse_datetime(pass_definition.get("ends_at")) or STORE_SEASON_END
+    expires_at = min(_store_now() + timedelta(hours=duration_hours), season_end)
     row = (await db.execute(text("""
         INSERT INTO community_store_giveaways
             (creator_id, title, description, nitro_days, max_claims, expires_at)
@@ -5002,6 +5071,835 @@ async def claim_store_giveaway(db: AsyncSession, account_id: int, giveaway_id: i
         "days_added": int(giveaway["nitro_days"]),
         "nitro": nitro,
     }
+
+
+# ============================================================================
+# Flexible store studio + mini-profile themes.
+# ============================================================================
+
+_STORE_STUDIO_TABLES_READY = False
+STORE_ITEM_TYPES = {
+    "pass": {
+        "label": "Пропуск",
+        "fields": ["benefits"],
+    },
+    "promotion": {
+        "label": "Акция",
+        "fields": ["discount_percent", "original_price"],
+    },
+    "one_time": {
+        "label": "Разовый товар",
+        "fields": ["stock", "per_account_limit"],
+    },
+    "timed_event": {
+        "label": "Событие с таймером",
+        "fields": ["event_label", "cta_label"],
+    },
+    "profile_theme": {
+        "label": "Тема мини-профиля",
+        "fields": ["theme_id"],
+    },
+}
+STORE_ITEM_STATUSES = {"draft", "published", "archived"}
+STORE_THEME_ACCESS = {"free", "pass_reward"}
+STORE_REWARD_TYPES = {"none", "collectible", "profile_theme", "nitro"}
+STORE_CURRENCIES = {"clover", "xp", "boost"}
+
+
+def is_store_admin(account: Account | None) -> bool:
+    if not account:
+        return False
+    role = (getattr(account, "role_label", None) or "").strip().lower()
+    username = (getattr(account, "username", None) or "").strip().lower()
+    return role in {
+        "owner", "admin", "administrator", "developer", "dev", "code", "staff",
+        "админ", "владелец",
+    } or username in {"alexi", "anchousxvii"}
+
+
+def can_manage_store(account: Account | None) -> bool:
+    return bool(account and (getattr(account, "is_verified", False) or is_store_admin(account)))
+
+
+def _store_clean_url(value: object) -> str:
+    clean = str(value or "").strip()
+    if not clean:
+        return ""
+    if re.search(r"['\"\\()<>\x00-\x1f]", clean):
+        return ""
+    if clean.startswith("/static/uploads/") and not clean.startswith("//"):
+        return clean[:512]
+    if re.fullmatch(r"https?://[^\s]{1,500}", clean, flags=re.IGNORECASE):
+        return clean[:512]
+    return ""
+
+
+def _store_clean_color(value: object, fallback: str) -> str:
+    clean = str(value or "").strip()
+    return clean.lower() if re.fullmatch(r"#[0-9a-fA-F]{6}", clean) else fallback
+
+
+def _store_parse_datetime(value: object) -> datetime | None:
+    if value in (None, ""):
+        return None
+    if isinstance(value, datetime):
+        return _nitro_datetime_utc(value)
+    try:
+        parsed = datetime.fromisoformat(str(value).strip().replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return None
+    return _nitro_datetime_utc(parsed)
+
+
+def _store_json_value(value: object, depth: int = 0) -> object:
+    """Keep flexible metadata JSON-only, shallow and bounded."""
+    if depth > 3:
+        return None
+    if value is None or isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return max(-1_000_000_000, min(1_000_000_000, value))
+    if isinstance(value, str):
+        return value.strip()[:500]
+    if isinstance(value, list):
+        return [_store_json_value(item, depth + 1) for item in value[:40]]
+    if isinstance(value, dict):
+        return {
+            str(key).strip()[:64]: _store_json_value(item, depth + 1)
+            for key, item in list(value.items())[:40]
+            if str(key).strip()
+        }
+    return str(value)[:500]
+
+
+def _store_json_dict(value: object) -> dict:
+    clean = _store_json_value(value)
+    return clean if isinstance(clean, dict) else {}
+
+
+def _store_int(value: object, default: int, minimum: int, maximum: int) -> int:
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError, OverflowError):
+        parsed = int(default)
+    return max(int(minimum), min(parsed, int(maximum)))
+
+
+def _store_bool(value: object, default: bool = True) -> bool:
+    if value is None:
+        return bool(default)
+    if isinstance(value, str):
+        return value.strip().lower() not in {"", "0", "false", "off", "no"}
+    return bool(value)
+
+
+async def ensure_store_studio_tables(db: AsyncSession) -> None:
+    global _STORE_STUDIO_TABLES_READY
+    if _STORE_STUDIO_TABLES_READY:
+        return
+    await ensure_store_tables(db)
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_store_items (
+            id BIGSERIAL PRIMARY KEY,
+            creator_id INTEGER REFERENCES community_accounts(id) ON DELETE SET NULL,
+            item_type VARCHAR(32) NOT NULL,
+            title VARCHAR(100) NOT NULL,
+            description VARCHAR(500),
+            image_url VARCHAR(512),
+            icon VARCHAR(32),
+            price_amount INTEGER NOT NULL DEFAULT 0 CHECK (price_amount >= 0),
+            currency VARCHAR(24) NOT NULL DEFAULT 'clover',
+            starts_at TIMESTAMP WITH TIME ZONE,
+            ends_at TIMESTAMP WITH TIME ZONE,
+            status VARCHAR(16) NOT NULL DEFAULT 'draft',
+            is_active BOOLEAN NOT NULL DEFAULT TRUE,
+            metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+            updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+        )
+    """))
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_profile_themes (
+            id BIGSERIAL PRIMARY KEY,
+            creator_id INTEGER NOT NULL REFERENCES community_accounts(id) ON DELETE CASCADE,
+            title VARCHAR(80) NOT NULL,
+            description VARCHAR(220),
+            image_url VARCHAR(512) NOT NULL,
+            accent_color VARCHAR(16) NOT NULL DEFAULT '#5865f2',
+            text_color VARCHAR(16) NOT NULL DEFAULT '#ffffff',
+            overlay_strength INTEGER NOT NULL DEFAULT 58 CHECK (overlay_strength BETWEEN 0 AND 90),
+            access_mode VARCHAR(24) NOT NULL DEFAULT 'free',
+            starts_at TIMESTAMP WITH TIME ZONE,
+            ends_at TIMESTAMP WITH TIME ZONE,
+            status VARCHAR(16) NOT NULL DEFAULT 'draft',
+            is_active BOOLEAN NOT NULL DEFAULT TRUE,
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+            updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+        )
+    """))
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_store_passes (
+            id BIGSERIAL PRIMARY KEY,
+            creator_id INTEGER REFERENCES community_accounts(id) ON DELETE SET NULL,
+            pass_key VARCHAR(64) NOT NULL UNIQUE,
+            title VARCHAR(100) NOT NULL,
+            description VARCHAR(500),
+            image_url VARCHAR(512),
+            max_level INTEGER NOT NULL DEFAULT 20 CHECK (max_level BETWEEN 1 AND 100),
+            xp_per_level INTEGER NOT NULL DEFAULT 100 CHECK (xp_per_level BETWEEN 1 AND 100000),
+            starts_at TIMESTAMP WITH TIME ZONE,
+            ends_at TIMESTAMP WITH TIME ZONE,
+            status VARCHAR(16) NOT NULL DEFAULT 'draft',
+            is_active BOOLEAN NOT NULL DEFAULT TRUE,
+            is_collaborative BOOLEAN NOT NULL DEFAULT FALSE,
+            metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+            updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+        )
+    """))
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_store_pass_levels (
+            id BIGSERIAL PRIMARY KEY,
+            pass_id BIGINT NOT NULL REFERENCES community_store_passes(id) ON DELETE CASCADE,
+            level INTEGER NOT NULL CHECK (level BETWEEN 1 AND 100),
+            title VARCHAR(100) NOT NULL,
+            description VARCHAR(260),
+            icon VARCHAR(32),
+            reward_type VARCHAR(32) NOT NULL DEFAULT 'collectible',
+            reward_ref_id BIGINT,
+            reward_config JSONB NOT NULL DEFAULT '{}'::jsonb,
+            is_active BOOLEAN NOT NULL DEFAULT TRUE,
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+            updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+            UNIQUE (pass_id, level)
+        )
+    """))
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_profile_theme_ownership (
+            id BIGSERIAL PRIMARY KEY,
+            theme_id BIGINT NOT NULL REFERENCES community_profile_themes(id) ON DELETE CASCADE,
+            account_id INTEGER NOT NULL REFERENCES community_accounts(id) ON DELETE CASCADE,
+            source VARCHAR(80),
+            acquired_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+            UNIQUE (theme_id, account_id)
+        )
+    """))
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_account_profile_theme (
+            account_id INTEGER PRIMARY KEY REFERENCES community_accounts(id) ON DELETE CASCADE,
+            theme_id BIGINT REFERENCES community_profile_themes(id) ON DELETE SET NULL,
+            equipped_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+        )
+    """))
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_store_audit_log (
+            id BIGSERIAL PRIMARY KEY,
+            actor_id INTEGER REFERENCES community_accounts(id) ON DELETE SET NULL,
+            entity_type VARCHAR(32) NOT NULL,
+            entity_id BIGINT,
+            action VARCHAR(32) NOT NULL,
+            payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+        )
+    """))
+    await db.execute(text("CREATE INDEX IF NOT EXISTS ix_store_items_public ON community_store_items (status, is_active, starts_at, ends_at)"))
+    await db.execute(text("CREATE INDEX IF NOT EXISTS ix_profile_themes_public ON community_profile_themes (status, is_active, starts_at, ends_at)"))
+    await db.execute(text("CREATE INDEX IF NOT EXISTS ix_store_passes_public ON community_store_passes (status, is_active, starts_at, ends_at)"))
+    await db.execute(text("CREATE INDEX IF NOT EXISTS ix_store_audit_entity ON community_store_audit_log (entity_type, entity_id, created_at DESC)"))
+
+    # Seed the existing hard-coded pass once. Afterwards its dates and levels are
+    # fully editable from the verified studio and remain in PostgreSQL.
+    pass_row = (await db.execute(text("""
+        INSERT INTO community_store_passes
+            (pass_key, title, description, max_level, xp_per_level, starts_at,
+             ends_at, status, is_active, is_collaborative, metadata)
+        VALUES
+            (:pass_key, 'Летний пропуск',
+             'Ежедневные задания, оформление профиля и Nitro.',
+             :max_level, :xp_per_level, :starts_at, :ends_at,
+             'published', TRUE, TRUE, '{"featured": true}'::jsonb)
+        ON CONFLICT (pass_key) DO UPDATE SET pass_key = EXCLUDED.pass_key
+        RETURNING id
+    """), {
+        "pass_key": STORE_SEASON_KEY,
+        "max_level": STORE_MAX_LEVEL,
+        "xp_per_level": STORE_XP_PER_LEVEL,
+        "starts_at": STORE_SEASON_START,
+        "ends_at": STORE_SEASON_END,
+    })).mappings().first()
+    pass_id = int(pass_row["id"])
+    for reward in STORE_REWARDS:
+        reward_type = "nitro" if reward.get("nitro_days") else (
+            "profile_theme" if reward.get("kind") == "background" else "collectible"
+        )
+        config = {"key": reward["key"]}
+        if reward.get("nitro_days"):
+            config["days"] = int(reward["nitro_days"])
+        await db.execute(text("""
+            INSERT INTO community_store_pass_levels
+                (pass_id, level, title, icon, reward_type, reward_config)
+            VALUES
+                (:pass_id, :level, :title, :icon, :reward_type,
+                 CAST(:reward_config AS JSONB))
+            ON CONFLICT (pass_id, level) DO NOTHING
+        """), {
+            "pass_id": pass_id,
+            "level": int(reward["level"]),
+            "title": reward["title"],
+            "icon": reward.get("icon") or "✦",
+            "reward_type": reward_type,
+            "reward_config": json.dumps(config, ensure_ascii=False),
+        })
+    await db.commit()
+    _STORE_STUDIO_TABLES_READY = True
+
+
+async def _store_audit(db: AsyncSession, actor_id: int, entity_type: str, entity_id: int | None, action: str, payload: dict | None = None) -> None:
+    await db.execute(text("""
+        INSERT INTO community_store_audit_log
+            (actor_id, entity_type, entity_id, action, payload)
+        VALUES (:actor_id, :entity_type, :entity_id, :action, CAST(:payload AS JSONB))
+    """), {
+        "actor_id": int(actor_id),
+        "entity_type": str(entity_type)[:32],
+        "entity_id": int(entity_id) if entity_id else None,
+        "action": str(action)[:32],
+        "payload": json.dumps(_store_json_dict(payload), ensure_ascii=False),
+    })
+
+
+async def get_store_pass_definition(db: AsyncSession, pass_key: str = STORE_SEASON_KEY) -> tuple[dict, list[dict]]:
+    await ensure_store_studio_tables(db)
+    row = (await db.execute(text("""
+        SELECT * FROM community_store_passes
+        WHERE pass_key = :pass_key
+        LIMIT 1
+    """), {"pass_key": str(pass_key)})).mappings().first()
+    if not row:
+        return {}, []
+    levels = (await db.execute(text("""
+        SELECT level, title, description, icon, reward_type, reward_ref_id,
+               reward_config, is_active
+        FROM community_store_pass_levels
+        WHERE pass_id = :pass_id AND is_active = TRUE
+        ORDER BY level
+    """), {"pass_id": int(row["id"])})).mappings().all()
+    return dict(row), [dict(level) for level in levels]
+
+
+def _store_dt_payload(value: datetime | None) -> str | None:
+    parsed = _nitro_datetime_utc(value)
+    return parsed.isoformat() if parsed else None
+
+
+def _store_lifecycle(status: str, is_active: bool, starts_at: datetime | None, ends_at: datetime | None) -> str:
+    if status == "archived":
+        return "archived"
+    if status == "draft":
+        return "draft"
+    if not is_active:
+        return "disabled"
+    now = _store_now()
+    start = _nitro_datetime_utc(starts_at)
+    end = _nitro_datetime_utc(ends_at)
+    if start and start > now:
+        return "scheduled"
+    if end and end <= now:
+        return "expired"
+    return "active"
+
+
+def _store_item_payload(row) -> dict:
+    return {
+        "id": int(row["id"]),
+        "creator_id": int(row["creator_id"]) if row["creator_id"] else None,
+        "creator_username": row.get("creator_username") or "AlexiHub",
+        "item_type": row["item_type"],
+        "title": row["title"],
+        "description": row["description"] or "",
+        "image_url": row["image_url"] or "",
+        "icon": row["icon"] or "✦",
+        "price_amount": int(row["price_amount"] or 0),
+        "currency": row["currency"] or "clover",
+        "starts_at": _store_dt_payload(row["starts_at"]),
+        "ends_at": _store_dt_payload(row["ends_at"]),
+        "status": row["status"],
+        "is_active": bool(row["is_active"]),
+        "lifecycle": _store_lifecycle(row["status"], bool(row["is_active"]), row["starts_at"], row["ends_at"]),
+        "metadata": dict(row["metadata"] or {}),
+        "created_at": _store_dt_payload(row["created_at"]),
+        "updated_at": _store_dt_payload(row["updated_at"]),
+    }
+
+
+def _store_theme_payload(row, *, owned: bool = False, equipped: bool = False, can_equip: bool = False) -> dict:
+    return {
+        "id": int(row["id"]),
+        "creator_id": int(row["creator_id"]),
+        "creator_username": row.get("creator_username") or "",
+        "title": row["title"],
+        "description": row["description"] or "",
+        "image_url": row["image_url"],
+        "accent_color": row["accent_color"],
+        "text_color": row["text_color"],
+        "overlay_strength": int(row["overlay_strength"] or 0),
+        "access_mode": row["access_mode"],
+        "starts_at": _store_dt_payload(row["starts_at"]),
+        "ends_at": _store_dt_payload(row["ends_at"]),
+        "status": row["status"],
+        "is_active": bool(row["is_active"]),
+        "lifecycle": _store_lifecycle(row["status"], bool(row["is_active"]), row["starts_at"], row["ends_at"]),
+        "owned": bool(owned),
+        "equipped": bool(equipped),
+        "can_equip": bool(can_equip),
+        "created_at": _store_dt_payload(row["created_at"]),
+        "updated_at": _store_dt_payload(row["updated_at"]),
+    }
+
+
+def _store_pass_payload_row(row, levels: list[dict] | None = None) -> dict:
+    return {
+        "id": int(row["id"]),
+        "creator_id": int(row["creator_id"]) if row["creator_id"] else None,
+        "creator_username": row.get("creator_username") or "AlexiHub",
+        "pass_key": row["pass_key"],
+        "title": row["title"],
+        "description": row["description"] or "",
+        "image_url": row["image_url"] or "",
+        "max_level": int(row["max_level"] or 1),
+        "xp_per_level": int(row["xp_per_level"] or 100),
+        "starts_at": _store_dt_payload(row["starts_at"]),
+        "ends_at": _store_dt_payload(row["ends_at"]),
+        "status": row["status"],
+        "is_active": bool(row["is_active"]),
+        "lifecycle": _store_lifecycle(row["status"], bool(row["is_active"]), row["starts_at"], row["ends_at"]),
+        "is_collaborative": bool(row["is_collaborative"]),
+        "metadata": dict(row["metadata"] or {}),
+        "levels": levels or [],
+        "created_at": _store_dt_payload(row["created_at"]),
+        "updated_at": _store_dt_payload(row["updated_at"]),
+    }
+
+
+async def get_store_catalog(db: AsyncSession, account_id: int) -> dict:
+    await ensure_store_studio_tables(db)
+    account_id = int(account_id)
+    now = _store_now()
+    item_rows = (await db.execute(text("""
+        SELECT item.*, creator.username AS creator_username
+        FROM community_store_items AS item
+        LEFT JOIN community_accounts AS creator ON creator.id = item.creator_id
+        WHERE item.status = 'published' AND item.is_active = TRUE
+          AND (item.starts_at IS NULL OR item.starts_at <= :now)
+          AND (item.ends_at IS NULL OR item.ends_at > :now)
+        ORDER BY item.updated_at DESC
+        LIMIT 60
+    """), {"now": now})).mappings().all()
+    theme_rows = (await db.execute(text("""
+        SELECT theme.*, creator.username AS creator_username,
+               ownership.id IS NOT NULL AS owned,
+               equipped.theme_id = theme.id AS equipped
+        FROM community_profile_themes AS theme
+        JOIN community_accounts AS creator ON creator.id = theme.creator_id
+        LEFT JOIN community_profile_theme_ownership AS ownership
+          ON ownership.theme_id = theme.id AND ownership.account_id = :account_id
+        LEFT JOIN community_account_profile_theme AS equipped
+          ON equipped.account_id = :account_id
+        WHERE theme.status = 'published' AND theme.is_active = TRUE
+          AND (theme.starts_at IS NULL OR theme.starts_at <= :now)
+          AND (theme.ends_at IS NULL OR theme.ends_at > :now)
+        ORDER BY theme.updated_at DESC
+        LIMIT 60
+    """), {"account_id": account_id, "now": now})).mappings().all()
+    pass_rows = (await db.execute(text("""
+        SELECT pass.*, creator.username AS creator_username
+        FROM community_store_passes AS pass
+        LEFT JOIN community_accounts AS creator ON creator.id = pass.creator_id
+        WHERE pass.status = 'published' AND pass.is_active = TRUE
+          AND (pass.starts_at IS NULL OR pass.starts_at <= :now)
+          AND (pass.ends_at IS NULL OR pass.ends_at > :now)
+        ORDER BY COALESCE(pass.metadata->>'featured', 'false') = 'true' DESC,
+                 pass.updated_at DESC
+        LIMIT 24
+    """), {"now": now})).mappings().all()
+    return {
+        "items": [_store_item_payload(row) for row in item_rows],
+        "themes": [
+            _store_theme_payload(
+                row,
+                owned=bool(row["owned"]),
+                equipped=bool(row["equipped"]),
+                can_equip=bool(row["access_mode"] == "free" or row["owned"]),
+            )
+            for row in theme_rows
+        ],
+        "passes": [_store_pass_payload_row(row) for row in pass_rows],
+    }
+
+
+async def get_equipped_profile_theme(db: AsyncSession, account_id: int) -> dict | None:
+    await ensure_store_studio_tables(db)
+    row = (await db.execute(text("""
+        SELECT theme.*, creator.username AS creator_username
+        FROM community_account_profile_theme AS equipped
+        JOIN community_profile_themes AS theme ON theme.id = equipped.theme_id
+        JOIN community_accounts AS creator ON creator.id = theme.creator_id
+        WHERE equipped.account_id = :account_id
+          AND theme.status = 'published' AND theme.is_active = TRUE
+          AND (theme.starts_at IS NULL OR theme.starts_at <= NOW())
+          AND (theme.ends_at IS NULL OR theme.ends_at > NOW())
+        LIMIT 1
+    """), {"account_id": int(account_id)})).mappings().first()
+    return _store_theme_payload(row, owned=True, equipped=True, can_equip=True) if row else None
+
+
+async def equip_profile_theme(db: AsyncSession, account_id: int, theme_id: int | None) -> dict:
+    await ensure_store_studio_tables(db)
+    account_id = int(account_id)
+    if not theme_id:
+        await db.execute(text("DELETE FROM community_account_profile_theme WHERE account_id = :account_id"), {"account_id": account_id})
+        await db.commit()
+        return {"ok": True, "theme": None}
+    row = (await db.execute(text("""
+        SELECT theme.*,
+               ownership.id IS NOT NULL AS owned
+        FROM community_profile_themes AS theme
+        LEFT JOIN community_profile_theme_ownership AS ownership
+          ON ownership.theme_id = theme.id AND ownership.account_id = :account_id
+        WHERE theme.id = :theme_id
+        LIMIT 1
+    """), {"account_id": account_id, "theme_id": int(theme_id)})).mappings().first()
+    if not row:
+        return {"ok": False, "error": "not_found", "message": "Тема не найдена."}
+    now = _store_now()
+    starts_at = _nitro_datetime_utc(row["starts_at"])
+    ends_at = _nitro_datetime_utc(row["ends_at"])
+    available = (
+        row["status"] == "published" and bool(row["is_active"])
+        and (not starts_at or starts_at <= now) and (not ends_at or ends_at > now)
+    )
+    can_equip = available and (row["access_mode"] == "free" or bool(row["owned"]))
+    if not can_equip:
+        return {"ok": False, "error": "forbidden", "message": "Эта тема ещё не открыта для аккаунта."}
+    await db.execute(text("""
+        INSERT INTO community_account_profile_theme (account_id, theme_id)
+        VALUES (:account_id, :theme_id)
+        ON CONFLICT (account_id) DO UPDATE
+        SET theme_id = EXCLUDED.theme_id, equipped_at = NOW()
+    """), {"account_id": account_id, "theme_id": int(theme_id)})
+    await db.commit()
+    return {"ok": True, "theme": await get_equipped_profile_theme(db, account_id)}
+
+
+async def get_store_workshop(db: AsyncSession, actor: Account) -> dict:
+    await ensure_store_studio_tables(db)
+    if not can_manage_store(actor):
+        return {"ok": False, "error": "forbidden", "message": "Мастерская доступна только verified-пользователям."}
+    admin = is_store_admin(actor)
+    scope = "TRUE" if admin else "creator_id = :actor_id"
+    params = {"actor_id": int(actor.id)}
+    items = (await db.execute(text(f"""
+        SELECT item.*, creator.username AS creator_username
+        FROM community_store_items AS item
+        LEFT JOIN community_accounts AS creator ON creator.id = item.creator_id
+        WHERE {scope.replace('creator_id', 'item.creator_id')}
+        ORDER BY item.updated_at DESC
+    """), params)).mappings().all()
+    themes = (await db.execute(text(f"""
+        SELECT theme.*, creator.username AS creator_username
+        FROM community_profile_themes AS theme
+        JOIN community_accounts AS creator ON creator.id = theme.creator_id
+        WHERE {scope.replace('creator_id', 'theme.creator_id')}
+        ORDER BY theme.updated_at DESC
+    """), params)).mappings().all()
+    pass_scope = "TRUE" if admin else "pass.creator_id = :actor_id OR pass.is_collaborative = TRUE"
+    passes = (await db.execute(text(f"""
+        SELECT pass.*, creator.username AS creator_username
+        FROM community_store_passes AS pass
+        LEFT JOIN community_accounts AS creator ON creator.id = pass.creator_id
+        WHERE {pass_scope}
+        ORDER BY pass.updated_at DESC
+    """), params)).mappings().all()
+    pass_payloads = []
+    for row in passes:
+        levels = (await db.execute(text("""
+            SELECT level, title, description, icon, reward_type, reward_ref_id,
+                   reward_config, is_active
+            FROM community_store_pass_levels
+            WHERE pass_id = :pass_id
+            ORDER BY level
+        """), {"pass_id": int(row["id"])})).mappings().all()
+        pass_payloads.append(_store_pass_payload_row(row, [dict(level) for level in levels]))
+    return {
+        "ok": True,
+        "permissions": {"verified": True, "admin": admin},
+        "schemas": {
+            "item_types": STORE_ITEM_TYPES,
+            "item_statuses": sorted(STORE_ITEM_STATUSES),
+            "reward_types": sorted(STORE_REWARD_TYPES),
+            "theme_access": sorted(STORE_THEME_ACCESS),
+            "currencies": sorted(STORE_CURRENCIES),
+        },
+        "items": [_store_item_payload(row) for row in items],
+        "themes": [_store_theme_payload(row) for row in themes],
+        "passes": pass_payloads,
+    }
+
+
+async def _owned_store_entity(db: AsyncSession, table: str, entity_id: int, actor: Account, collaborative: bool = False):
+    allowed_tables = {"community_store_items", "community_profile_themes", "community_store_passes"}
+    if table not in allowed_tables:
+        return None
+    extra = ", is_collaborative" if collaborative else ""
+    row = (await db.execute(text(f"SELECT id, creator_id{extra} FROM {table} WHERE id = :entity_id LIMIT 1 FOR UPDATE"), {"entity_id": int(entity_id)})).mappings().first()
+    if not row:
+        return None
+    if is_store_admin(actor) or int(row["creator_id"] or 0) == int(actor.id) or (collaborative and bool(row["is_collaborative"])):
+        return row
+    return False
+
+
+async def save_store_item(db: AsyncSession, actor: Account, payload: dict, item_id: int | None = None) -> dict:
+    await ensure_store_studio_tables(db)
+    if not can_manage_store(actor):
+        return {"ok": False, "error": "forbidden", "message": "Нужен verified-аккаунт."}
+    item_type = str(payload.get("item_type") or "one_time").strip().lower()
+    if item_type not in STORE_ITEM_TYPES:
+        return {"ok": False, "error": "invalid_type", "message": "Неизвестный тип товара."}
+    title = str(payload.get("title") or "").strip()[:100]
+    if not title:
+        return {"ok": False, "error": "validation", "message": "Добавь название."}
+    status = str(payload.get("status") or "draft").strip().lower()
+    status = status if status in STORE_ITEM_STATUSES else "draft"
+    starts_at = _store_parse_datetime(payload.get("starts_at"))
+    ends_at = _store_parse_datetime(payload.get("ends_at"))
+    if starts_at and ends_at and ends_at <= starts_at:
+        return {"ok": False, "error": "validation", "message": "Дата окончания должна быть позже даты начала."}
+    values = {
+        "creator_id": int(actor.id),
+        "item_type": item_type,
+        "title": title,
+        "description": str(payload.get("description") or "").strip()[:500] or None,
+        "image_url": _store_clean_url(payload.get("image_url")) or None,
+        "icon": str(payload.get("icon") or "✦").strip()[:32] or "✦",
+        "price_amount": _store_int(payload.get("price_amount"), 0, 0, 1_000_000_000),
+        "currency": (
+            str(payload.get("currency") or "clover").strip().lower()
+            if str(payload.get("currency") or "clover").strip().lower() in STORE_CURRENCIES
+            else "clover"
+        ),
+        "starts_at": starts_at,
+        "ends_at": ends_at,
+        "status": status,
+        "is_active": _store_bool(payload.get("is_active"), True),
+        "metadata": json.dumps(_store_json_dict(payload.get("metadata")), ensure_ascii=False),
+    }
+    if item_id:
+        owned = await _owned_store_entity(db, "community_store_items", int(item_id), actor)
+        if owned is None:
+            return {"ok": False, "error": "not_found", "message": "Товар не найден."}
+        if owned is False:
+            return {"ok": False, "error": "forbidden", "message": "Можно редактировать только свои товары."}
+        await db.execute(text("""
+            UPDATE community_store_items SET
+                item_type=:item_type, title=:title, description=:description,
+                image_url=:image_url, icon=:icon, price_amount=:price_amount,
+                currency=:currency, starts_at=:starts_at, ends_at=:ends_at,
+                status=:status, is_active=:is_active,
+                metadata=CAST(:metadata AS JSONB), updated_at=NOW()
+            WHERE id=:entity_id
+        """), {**values, "entity_id": int(item_id)})
+        entity_id = int(item_id)
+        action = "update"
+    else:
+        row = (await db.execute(text("""
+            INSERT INTO community_store_items
+                (creator_id,item_type,title,description,image_url,icon,price_amount,
+                 currency,starts_at,ends_at,status,is_active,metadata)
+            VALUES
+                (:creator_id,:item_type,:title,:description,:image_url,:icon,:price_amount,
+                 :currency,:starts_at,:ends_at,:status,:is_active,CAST(:metadata AS JSONB))
+            RETURNING id
+        """), values)).mappings().first()
+        entity_id = int(row["id"])
+        action = "create"
+    await _store_audit(db, actor.id, "item", entity_id, action, {"title": title, "status": status})
+    await db.commit()
+    return {"ok": True, "id": entity_id}
+
+
+async def save_profile_theme(db: AsyncSession, actor: Account, payload: dict, theme_id: int | None = None) -> dict:
+    await ensure_store_studio_tables(db)
+    if not can_manage_store(actor):
+        return {"ok": False, "error": "forbidden", "message": "Нужен verified-аккаунт."}
+    title = str(payload.get("title") or "").strip()[:80]
+    image_url = _store_clean_url(payload.get("image_url"))
+    if not title or not image_url:
+        return {"ok": False, "error": "validation", "message": "Для темы нужны название и изображение."}
+    status = str(payload.get("status") or "draft").strip().lower()
+    status = status if status in STORE_ITEM_STATUSES else "draft"
+    access_mode = str(payload.get("access_mode") or "free").strip().lower()
+    access_mode = access_mode if access_mode in STORE_THEME_ACCESS else "free"
+    starts_at = _store_parse_datetime(payload.get("starts_at"))
+    ends_at = _store_parse_datetime(payload.get("ends_at"))
+    if starts_at and ends_at and ends_at <= starts_at:
+        return {"ok": False, "error": "validation", "message": "Дата окончания должна быть позже даты начала."}
+    values = {
+        "creator_id": int(actor.id),
+        "title": title,
+        "description": str(payload.get("description") or "").strip()[:220] or None,
+        "image_url": image_url,
+        "accent_color": _store_clean_color(payload.get("accent_color"), "#5865f2"),
+        "text_color": _store_clean_color(payload.get("text_color"), "#ffffff"),
+        "overlay_strength": _store_int(payload.get("overlay_strength"), 58, 0, 90),
+        "access_mode": access_mode,
+        "starts_at": starts_at,
+        "ends_at": ends_at,
+        "status": status,
+        "is_active": _store_bool(payload.get("is_active"), True),
+    }
+    if theme_id:
+        owned = await _owned_store_entity(db, "community_profile_themes", int(theme_id), actor)
+        if owned is None:
+            return {"ok": False, "error": "not_found", "message": "Тема не найдена."}
+        if owned is False:
+            return {"ok": False, "error": "forbidden", "message": "Можно редактировать только свои темы."}
+        await db.execute(text("""
+            UPDATE community_profile_themes SET
+                title=:title, description=:description, image_url=:image_url,
+                accent_color=:accent_color, text_color=:text_color,
+                overlay_strength=:overlay_strength, access_mode=:access_mode,
+                starts_at=:starts_at, ends_at=:ends_at, status=:status,
+                is_active=:is_active, updated_at=NOW()
+            WHERE id=:entity_id
+        """), {**values, "entity_id": int(theme_id)})
+        entity_id = int(theme_id)
+        owner_id = int(owned["creator_id"])
+        action = "update"
+    else:
+        row = (await db.execute(text("""
+            INSERT INTO community_profile_themes
+                (creator_id,title,description,image_url,accent_color,text_color,
+                 overlay_strength,access_mode,starts_at,ends_at,status,is_active)
+            VALUES
+                (:creator_id,:title,:description,:image_url,:accent_color,:text_color,
+                 :overlay_strength,:access_mode,:starts_at,:ends_at,:status,:is_active)
+            RETURNING id
+        """), values)).mappings().first()
+        entity_id = int(row["id"])
+        owner_id = int(actor.id)
+        action = "create"
+    await db.execute(text("""
+        INSERT INTO community_profile_theme_ownership (theme_id, account_id, source)
+        VALUES (:theme_id, :account_id, 'CREATOR')
+        ON CONFLICT (theme_id, account_id) DO NOTHING
+    """), {"theme_id": entity_id, "account_id": owner_id})
+    await _store_audit(db, actor.id, "theme", entity_id, action, {"title": title, "status": status})
+    await db.commit()
+    return {"ok": True, "id": entity_id}
+
+
+async def save_store_pass(db: AsyncSession, actor: Account, payload: dict, pass_id: int | None = None) -> dict:
+    await ensure_store_studio_tables(db)
+    if not can_manage_store(actor):
+        return {"ok": False, "error": "forbidden", "message": "Нужен verified-аккаунт."}
+    title = str(payload.get("title") or "").strip()[:100]
+    if not title:
+        return {"ok": False, "error": "validation", "message": "Добавь название пропуска."}
+    max_level = _store_int(payload.get("max_level"), 20, 1, 100)
+    xp_per_level = _store_int(payload.get("xp_per_level"), 100, 1, 100_000)
+    starts_at = _store_parse_datetime(payload.get("starts_at"))
+    ends_at = _store_parse_datetime(payload.get("ends_at"))
+    if starts_at and ends_at and ends_at <= starts_at:
+        return {"ok": False, "error": "validation", "message": "Дата окончания должна быть позже даты начала."}
+    status = str(payload.get("status") or "draft").strip().lower()
+    status = status if status in STORE_ITEM_STATUSES else "draft"
+    values = {
+        "creator_id": int(actor.id),
+        "title": title,
+        "description": str(payload.get("description") or "").strip()[:500] or None,
+        "image_url": _store_clean_url(payload.get("image_url")) or None,
+        "max_level": max_level,
+        "xp_per_level": xp_per_level,
+        "starts_at": starts_at,
+        "ends_at": ends_at,
+        "status": status,
+        "is_active": _store_bool(payload.get("is_active"), True),
+        "metadata": json.dumps(_store_json_dict(payload.get("metadata")), ensure_ascii=False),
+    }
+    if pass_id:
+        owned = await _owned_store_entity(db, "community_store_passes", int(pass_id), actor, collaborative=True)
+        if owned is None:
+            return {"ok": False, "error": "not_found", "message": "Пропуск не найден."}
+        if owned is False:
+            return {"ok": False, "error": "forbidden", "message": "Этот пропуск нельзя редактировать."}
+        await db.execute(text("""
+            UPDATE community_store_passes SET
+                title=:title, description=:description, image_url=:image_url,
+                max_level=:max_level, xp_per_level=:xp_per_level,
+                starts_at=:starts_at, ends_at=:ends_at, status=:status,
+                is_active=:is_active, metadata=CAST(:metadata AS JSONB), updated_at=NOW()
+            WHERE id=:entity_id
+        """), {**values, "entity_id": int(pass_id)})
+        entity_id = int(pass_id)
+        action = "update"
+    else:
+        base_key = re.sub(r"[^a-z0-9-]", "-", title.lower()).strip("-")[:42] or "pass"
+        pass_key = f"{base_key}-{int(actor.id)}-{secrets.token_hex(3)}"
+        row = (await db.execute(text("""
+            INSERT INTO community_store_passes
+                (creator_id,pass_key,title,description,image_url,max_level,xp_per_level,
+                 starts_at,ends_at,status,is_active,is_collaborative,metadata)
+            VALUES
+                (:creator_id,:pass_key,:title,:description,:image_url,:max_level,:xp_per_level,
+                 :starts_at,:ends_at,:status,:is_active,FALSE,CAST(:metadata AS JSONB))
+            RETURNING id
+        """), {**values, "pass_key": pass_key})).mappings().first()
+        entity_id = int(row["id"])
+        action = "create"
+
+    clean_levels = []
+    seen_levels = set()
+    for raw in list(payload.get("levels") or [])[:100]:
+        if not isinstance(raw, dict):
+            continue
+        level = _store_int(raw.get("level"), 1, 1, max_level)
+        if level in seen_levels:
+            return {"ok": False, "error": "validation", "message": f"Уровень {level} добавлен дважды."}
+        seen_levels.add(level)
+        reward_type = str(raw.get("reward_type") or "collectible").strip().lower()
+        reward_type = reward_type if reward_type in STORE_REWARD_TYPES else "collectible"
+        reward_ref_id = int(raw.get("reward_ref_id")) if str(raw.get("reward_ref_id") or "").isdigit() else None
+        if reward_type == "profile_theme" and reward_ref_id:
+            theme = (await db.execute(text("SELECT creator_id FROM community_profile_themes WHERE id=:id"), {"id": reward_ref_id})).mappings().first()
+            if not theme or (not is_store_admin(actor) and int(theme["creator_id"]) != int(actor.id)):
+                return {"ok": False, "error": "forbidden", "message": "В пропуск можно добавить только свою тему."}
+        config = _store_json_dict(raw.get("reward_config"))
+        if reward_type == "nitro":
+            config["days"] = _store_int(config.get("days"), 1, 1, 30)
+        clean_levels.append({
+            "level": level,
+            "title": str(raw.get("title") or f"Уровень {level}").strip()[:100],
+            "description": str(raw.get("description") or "").strip()[:260] or None,
+            "icon": str(raw.get("icon") or "✦").strip()[:32] or "✦",
+            "reward_type": reward_type,
+            "reward_ref_id": reward_ref_id,
+            "reward_config": json.dumps(config, ensure_ascii=False),
+            "is_active": _store_bool(raw.get("is_active"), True),
+        })
+    if payload.get("levels") is not None:
+        await db.execute(text("DELETE FROM community_store_pass_levels WHERE pass_id=:pass_id"), {"pass_id": entity_id})
+        for level in clean_levels:
+            await db.execute(text("""
+                INSERT INTO community_store_pass_levels
+                    (pass_id,level,title,description,icon,reward_type,reward_ref_id,reward_config,is_active)
+                VALUES
+                    (:pass_id,:level,:title,:description,:icon,:reward_type,:reward_ref_id,
+                     CAST(:reward_config AS JSONB),:is_active)
+            """), {"pass_id": entity_id, **level})
+    await _store_audit(db, actor.id, "pass", entity_id, action, {"title": title, "levels": len(clean_levels), "status": status})
+    await db.commit()
+    return {"ok": True, "id": entity_id}
 
 
 # ============================================================================
