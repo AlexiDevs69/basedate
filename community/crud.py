@@ -3604,7 +3604,10 @@ async def list_server_inbox_mentions(
               AND (:unread_only = FALSE OR mm.read_at IS NULL)
               AND (:include_everyone = TRUE OR mm.mention_type <> 'everyone')
               AND (:include_roles = TRUE OR mm.mention_type <> 'role')
-              AND (:before_id IS NULL OR mm.id < :before_id)
+              AND (
+                    CAST(:before_id AS BIGINT) IS NULL
+                    OR mm.id < CAST(:before_id AS BIGINT)
+              )
               AND (
                     (
                         COALESCE(channel.is_private, FALSE) = FALSE
