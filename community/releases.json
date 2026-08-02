@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.39.0",
+      "date": "2026-08-02",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: published_at field to store collections and items."
+      ],
+      "source_sha": "75ed99005df261117c69d0c57ddb4857ec2b6668"
+    },
+    {
       "version": "1.38.0",
       "date": "2026-08-02",
       "title": "Нові можливості AlexiHub",
