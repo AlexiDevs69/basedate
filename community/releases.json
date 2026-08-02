@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.38.0",
+      "date": "2026-08-02",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: API endpoints for workshop collections."
+      ],
+      "source_sha": "3987cae5c5b1502100394b85c48a9c6af890b20f"
+    },
+    {
       "version": "1.37.0",
       "date": "2026-08-02",
       "title": "Нові можливості AlexiHub",
