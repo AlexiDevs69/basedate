@@ -3355,6 +3355,24 @@ async def api_store_workshop(request: Request, db: AsyncSession = Depends(get_db
     return _store_result_response(await crud.get_store_workshop(db, account))
 
 
+@router.post("/api/store/workshop/collections")
+async def api_store_workshop_create_collection(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    result = await crud.save_store_collection(db, account, await _store_json_body(request))
+    return _store_result_response(result, 201)
+
+
+@router.patch("/api/store/workshop/collections/{collection_id}")
+async def api_store_workshop_update_collection(collection_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    result = await crud.save_store_collection(db, account, await _store_json_body(request), collection_id=collection_id)
+    return _store_result_response(result)
+
+
 @router.post("/api/store/workshop/items")
 async def api_store_workshop_create_item(request: Request, db: AsyncSession = Depends(get_db)):
     account = await current_account(request, db)
