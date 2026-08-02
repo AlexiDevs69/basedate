@@ -3220,6 +3220,127 @@ async def api_nitro_generate(request: Request, db: AsyncSession = Depends(get_db
     return JSONResponse({"ok": True, "code": code})
 
 
+def _store_error_status(result: dict) -> int:
+    error = str(result.get("error") or "")
+    if error in {"forbidden"}:
+        return 403
+    if error in {"not_found", "task_not_found", "reward_not_found"}:
+        return 404
+    if error in {"already_claimed", "sold_out", "own_giveaway", "rate_limited"}:
+        return 409
+    return 400
+
+
+@router.get("/api/store/summer-clover")
+async def api_summer_clover_store(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    state = await crud.get_summer_store_state(
+        db,
+        account.id,
+        can_create_giveaway=bool(getattr(account, "is_verified", False)),
+    )
+    return JSONResponse(state)
+
+
+@router.post("/api/store/summer-clover/join")
+async def api_join_summer_clover_pass(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    result = await crud.join_summer_store_pass(db, account.id)
+    if not result.get("ok"):
+        return JSONResponse(result, status_code=_store_error_status(result))
+    return JSONResponse(await crud.get_summer_store_state(
+        db,
+        account.id,
+        can_create_giveaway=bool(getattr(account, "is_verified", False)),
+    ))
+
+
+@router.post("/api/store/summer-clover/tasks/{task_key}/claim")
+async def api_claim_summer_clover_task(task_key: str, request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    result = await crud.claim_summer_store_task(db, account.id, task_key)
+    if not result.get("ok"):
+        return JSONResponse(result, status_code=_store_error_status(result))
+    state = await crud.get_summer_store_state(
+        db,
+        account.id,
+        can_create_giveaway=bool(getattr(account, "is_verified", False)),
+    )
+    state["action"] = result
+    return JSONResponse(state)
+
+
+@router.post("/api/store/summer-clover/rewards/{reward_level}/claim")
+async def api_claim_summer_clover_reward(reward_level: int, request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    result = await crud.claim_summer_store_reward(db, account.id, reward_level)
+    if not result.get("ok"):
+        return JSONResponse(result, status_code=_store_error_status(result))
+    state = await crud.get_summer_store_state(
+        db,
+        account.id,
+        can_create_giveaway=bool(getattr(account, "is_verified", False)),
+    )
+    state["action"] = result
+    return JSONResponse(state)
+
+
+@router.post("/api/store/summer-clover/giveaways")
+async def api_create_summer_clover_giveaway(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    if not bool(getattr(account, "is_verified", False)):
+        return JSONResponse({
+            "ok": False,
+            "error": "forbidden",
+            "message": "Создавать публичные раздачи могут только верифицированные пользователи.",
+        }, status_code=403)
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    result = await crud.create_store_giveaway(
+        db,
+        account.id,
+        title=str(body.get("title") or ""),
+        description=str(body.get("description") or ""),
+        nitro_days=_parse_optional_int(body.get("nitro_days")) or 3,
+        max_claims=_parse_optional_int(body.get("max_claims")) or 10,
+        duration_hours=_parse_optional_int(body.get("duration_hours")) or 24,
+    )
+    if not result.get("ok"):
+        return JSONResponse(result, status_code=_store_error_status(result))
+    state = await crud.get_summer_store_state(db, account.id, can_create_giveaway=True)
+    state["action"] = result
+    return JSONResponse(state)
+
+
+@router.post("/api/store/summer-clover/giveaways/{giveaway_id}/claim")
+async def api_claim_summer_clover_giveaway(giveaway_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    result = await crud.claim_store_giveaway(db, account.id, giveaway_id)
+    if not result.get("ok"):
+        return JSONResponse(result, status_code=_store_error_status(result))
+    state = await crud.get_summer_store_state(
+        db,
+        account.id,
+        can_create_giveaway=bool(getattr(account, "is_verified", False)),
+    )
+    state["action"] = result
+    return JSONResponse(state)
+
+
 @router.get("/api/users/{username}/nitro")
 async def api_user_nitro(username: str, request: Request, db: AsyncSession = Depends(get_db)):
     viewer = await current_account(request, db)
