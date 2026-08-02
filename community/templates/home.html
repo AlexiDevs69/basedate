@@ -1940,6 +1940,87 @@
     @media(max-width:720px){.ah-inbox-panel{inset:0;width:100vw;height:100vh;border:0;border-radius:0}.ah-inbox-head{padding-top:env(safe-area-inset-top);height:calc(58px + env(safe-area-inset-top))}.ah-inbox-body{padding-left:10px;padding-right:10px}.ah-inbox-message-main{padding-right:0}.ah-inbox-message-actions{position:static;grid-column:2;opacity:1;transform:none;justify-content:flex-end;margin-top:7px}.ah-inbox-filter{right:0;width:min(272px,calc(100vw - 32px))}}
     @media(prefers-reduced-motion:reduce){.ah-inbox-panel.open,.ah-inbox-filter.open{animation:none}.ah-inbox-icon-btn,.ah-inbox-message{transition:none}}
   </style>
+  <style id="ah-season-store-css">
+    .app.store-open{grid-template-columns:72px 240px minmax(0,1fr)}
+    .app.store-open .right{display:none!important}
+    .app.store-open .friend-topbar,
+    .app.store-open .friend-content{display:none!important}
+    .ah-season-store{display:none;min-height:0;height:100%;flex:1;flex-direction:column;overflow:hidden;background:#17181c;color:#f2f3f5}
+    .app.store-open .ah-season-store{display:flex}
+    .ah-store-topbar{height:48px;flex:0 0 48px;display:flex;align-items:center;gap:22px;padding:0 16px;border-bottom:1px solid #101114;background:#191a1f;box-shadow:0 1px 0 rgba(0,0,0,.25);z-index:4}
+    .ah-store-brand{display:flex;align-items:center;gap:9px;min-width:max-content;font-size:15px;font-weight:950;color:#fff}
+    .ah-store-brand .icon{width:20px;height:20px}
+    .ah-store-tabs{align-self:stretch;display:flex;align-items:center;gap:5px;min-width:0}
+    .ah-store-tab{height:100%;position:relative;border:0;background:transparent;color:#b5bac1;padding:0 12px;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+    .ah-store-tab:hover{color:#fff}
+    .ah-store-tab.active{color:#fff}
+    .ah-store-tab.active::after{content:"";position:absolute;left:12px;right:12px;bottom:0;height:2px;border-radius:99px;background:#d9f99d}
+    .ah-store-season-chip{margin-left:auto;height:26px;display:inline-flex;align-items:center;gap:7px;padding:0 10px;border:1px solid rgba(190,242,100,.2);border-radius:999px;background:rgba(36,68,49,.42);color:#dcfce7;font-size:10px;font-weight:950;letter-spacing:.045em;white-space:nowrap}
+    .ah-store-season-chip::before{content:"";width:7px;height:7px;border-radius:50%;background:#86efac;box-shadow:0 0 10px rgba(134,239,172,.7)}
+    .ah-store-scroll{min-height:0;flex:1;overflow-y:auto;overflow-x:hidden;background:linear-gradient(180deg,#17181c 0,#18191d 58%,#151619 100%);overscroll-behavior:contain;scroll-behavior:smooth}
+    .ah-store-shell{width:min(1180px,calc(100% - 48px));margin:0 auto;padding:22px 0 72px}
+    .ah-store-hero{position:relative;min-height:390px;overflow:hidden;border:1px solid rgba(255,255,255,.08);border-radius:18px;background:#123c3b url('/static/store/summer-clover-hero.webp') center/cover no-repeat;box-shadow:0 24px 55px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.12);isolation:isolate}
+    .ah-store-hero::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(5,27,30,.86) 0%,rgba(7,31,32,.6) 34%,rgba(4,21,25,.08) 67%,rgba(3,18,22,.15) 100%),linear-gradient(0deg,rgba(4,17,18,.48),transparent 46%)}
+    .ah-store-hero::after{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(circle at 78% 44%,rgba(220,252,231,.12),transparent 29%),linear-gradient(115deg,transparent 58%,rgba(255,255,255,.08) 72%,transparent 83%);pointer-events:none}
+    .ah-store-hero-copy{position:relative;z-index:2;width:min(520px,56%);min-height:390px;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:54px 30px 48px 52px}
+    .ah-store-eyebrow{height:25px;display:inline-flex;align-items:center;gap:7px;padding:0 10px;border:1px solid rgba(220,252,231,.22);border-radius:999px;background:rgba(3,30,30,.37);backdrop-filter:blur(8px);color:#ecfdf5;font-size:10px;font-weight:950;letter-spacing:.11em}
+    .ah-store-clover-dot{width:14px;height:14px;position:relative;display:inline-block;transform:rotate(45deg)}
+    .ah-store-clover-dot::before,.ah-store-clover-dot::after{content:"";position:absolute;width:7px;height:7px;border-radius:7px 7px 2px 7px;background:#bef264;box-shadow:7px 0 0 #86efac,0 7px 0 #4ade80,7px 7px 0 #a3e635}
+    .ah-store-clover-dot::after{display:none}
+    .ah-store-title{margin:19px 0 5px;font-family:'Luckiest Guy','Fredoka',Inter,sans-serif;font-size:clamp(52px,6.1vw,91px);line-height:.83;letter-spacing:.01em;text-transform:uppercase;color:#ecfccb;background:linear-gradient(180deg,#fff 5%,#ecfccb 38%,#a3e635 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 6px 0 rgba(19,78,74,.5)) drop-shadow(0 13px 18px rgba(0,0,0,.38));transform:skew(-2deg);text-wrap:balance}
+    .ah-store-title span{display:block;margin-left:36px;color:#d9f99d}
+    .ah-store-subtitle{max-width:410px;margin-top:16px;color:#e7f7ee;font-size:13px;line-height:1.5;font-weight:680;text-shadow:0 2px 10px rgba(0,0,0,.5)}
+    .ah-store-hero-button{min-height:40px;margin-top:23px;padding:0 16px;border:1px solid rgba(255,255,255,.18);border-radius:8px;background:#f0fdf4;color:#123c2b;display:inline-flex;align-items:center;gap:8px;font:inherit;font-size:12px;font-weight:950;cursor:pointer;box-shadow:0 8px 22px rgba(0,0,0,.22);transition:transform .18s ease,background .18s ease,box-shadow .18s ease}
+    .ah-store-hero-button:hover{background:#fff;transform:translateY(-2px);box-shadow:0 12px 28px rgba(0,0,0,.28)}
+    .ah-store-hero-button .icon{width:16px;height:16px}
+    .ah-store-countdown{position:absolute;z-index:3;right:24px;top:22px;min-width:310px;padding:14px 15px 13px;border:1px solid rgba(255,255,255,.15);border-radius:13px;background:rgba(6,24,28,.54);backdrop-filter:blur(14px) saturate(1.18);box-shadow:0 15px 38px rgba(0,0,0,.22)}
+    .ah-store-countdown-label{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:9px;color:#e5f7eb;font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
+    .ah-store-countdown-label span:last-child{color:#bbf7d0;letter-spacing:0}
+    .ah-store-time{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+    .ah-store-time-part{min-width:0;height:49px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.1);border-radius:9px;background:rgba(1,13,16,.42);box-shadow:inset 0 1px 0 rgba(255,255,255,.035)}
+    .ah-store-time-part b{display:block;color:#fff;font-family:var(--mono);font-size:18px;line-height:1;font-variant-numeric:tabular-nums}
+    .ah-store-time-part small{display:block;margin-top:4px;color:#9ed7bd;font-size:7px;font-weight:900;letter-spacing:.09em;text-transform:uppercase}
+    .ah-store-section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin:34px 2px 15px}
+    .ah-store-section-head h2{margin:0;color:#fff;font-size:20px;font-weight:950;letter-spacing:-.025em}
+    .ah-store-section-head p{margin:4px 0 0;color:#8f949e;font-size:11px;line-height:1.4}
+    .ah-store-section-badge{height:27px;display:inline-flex;align-items:center;padding:0 10px;border-radius:999px;background:#25282b;color:#a8dfba;border:1px solid rgba(134,239,172,.1);font-size:9px;font-weight:950;letter-spacing:.055em;white-space:nowrap}
+    .ah-store-pass-card{position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.075);border-radius:16px;background:linear-gradient(118deg,#1f322c 0%,#203a31 49%,#253027 100%);box-shadow:0 14px 34px rgba(0,0,0,.18);transition:transform .24s cubic-bezier(.2,.8,.2,1),border-color .24s ease,box-shadow .24s ease}
+    .ah-store-pass-card:hover{transform:translateY(-4px);border-color:rgba(190,242,100,.22);box-shadow:0 22px 44px rgba(0,0,0,.26)}
+    .ah-store-pass-card::before{content:"";position:absolute;width:420px;height:420px;right:-115px;top:-220px;border-radius:50%;background:radial-gradient(circle,rgba(190,242,100,.22),rgba(74,222,128,.06) 45%,transparent 70%);pointer-events:none}
+    .ah-store-pass-main{position:relative;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(380px,.85fr);align-items:center;min-height:245px}
+    .ah-store-pass-copy{padding:34px 34px 32px;position:relative;z-index:2}
+    .ah-store-pass-kicker{display:flex;align-items:center;gap:8px;color:#bbf7d0;font-size:10px;font-weight:950;letter-spacing:.08em;text-transform:uppercase}
+    .ah-store-pass-copy h3{margin:10px 0 9px;color:#fff;font-size:30px;font-weight:1000;letter-spacing:-.045em}
+    .ah-store-pass-copy p{max-width:540px;margin:0;color:#c7d7cd;font-size:12px;line-height:1.55}
+    .ah-store-pass-actions{display:flex;align-items:center;gap:11px;margin-top:21px}
+    .ah-store-pass-button{height:39px;padding:0 15px;border:0;border-radius:7px;background:#d9f99d;color:#17251d;font:inherit;font-size:11px;font-weight:950;cursor:pointer;transition:background .15s ease,transform .15s ease}
+    .ah-store-pass-button:hover{background:#ecfccb;transform:translateY(-1px)}
+    .ah-store-pass-free{color:#90a89a;font-size:10px;font-weight:800}
+    .ah-store-pass-art{height:100%;min-height:245px;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
+    .ah-store-pass-emblem{width:152px;height:152px;position:relative;display:grid;place-items:center;filter:drop-shadow(0 17px 25px rgba(0,0,0,.3));transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+    .ah-store-pass-card:hover .ah-store-pass-emblem{transform:translateY(-7px) rotate(-3deg) scale(1.035)}
+    .ah-store-pass-emblem::before{content:"";position:absolute;inset:0;border-radius:36px;transform:rotate(45deg);background:linear-gradient(145deg,#d9f99d,#4ade80 54%,#0f766e);box-shadow:inset 0 0 0 2px rgba(255,255,255,.42),inset 0 -16px 28px rgba(5,46,22,.22),0 0 0 8px rgba(217,249,157,.07)}
+    .ah-store-pass-leaf{width:84px;height:84px;position:relative;z-index:1;transform:rotate(45deg)}
+    .ah-store-pass-leaf i{position:absolute;width:38px;height:38px;border-radius:25px 25px 5px 25px;background:linear-gradient(145deg,#f7fee7,#a3e635);box-shadow:inset -5px -7px 10px rgba(21,128,61,.2)}
+    .ah-store-pass-leaf i:nth-child(1){left:2px;top:2px}.ah-store-pass-leaf i:nth-child(2){right:2px;top:2px;transform:rotate(90deg)}.ah-store-pass-leaf i:nth-child(3){right:2px;bottom:2px;transform:rotate(180deg)}.ah-store-pass-leaf i:nth-child(4){left:2px;bottom:2px;transform:rotate(270deg)}
+    .ah-store-pass-ring{position:absolute;width:228px;height:228px;border:1px solid rgba(217,249,157,.18);border-radius:50%;box-shadow:0 0 0 22px rgba(217,249,157,.025),0 0 0 48px rgba(217,249,157,.015)}
+    .ah-store-pass-details{position:relative;z-index:2;max-height:0;overflow:hidden;border-top:1px solid transparent;background:rgba(8,22,18,.22);opacity:0;transition:max-height .42s cubic-bezier(.2,.8,.2,1),opacity .24s ease,border-color .24s ease}
+    .ah-store-pass-card.is-expanded .ah-store-pass-details{max-height:260px;opacity:1;border-top-color:rgba(255,255,255,.07)}
+    .ah-store-reward-track{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;padding:22px 26px 24px}
+    .ah-store-reward{position:relative;min-width:0;height:112px;padding:13px;border:1px solid rgba(255,255,255,.07);border-radius:11px;background:rgba(13,28,24,.55);display:flex;flex-direction:column;justify-content:space-between}
+    .ah-store-reward::after{content:"";position:absolute;top:37px;left:calc(100% + 1px);width:12px;height:2px;background:rgba(190,242,100,.18)}
+    .ah-store-reward:last-child::after{display:none}
+    .ah-store-reward-level{color:#91ad9b;font-size:8px;font-weight:950;letter-spacing:.08em;text-transform:uppercase}
+    .ah-store-reward-icon{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(145deg,rgba(217,249,157,.22),rgba(74,222,128,.08));color:#d9f99d;font-size:18px;font-weight:950}
+    .ah-store-reward b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#e9f7ee;font-size:10px}
+    .ah-store-fineprint{margin:17px 2px 0;color:#626871;font-size:9px;line-height:1.5;text-align:center}
+    .ah-store-scroll::-webkit-scrollbar-track{background:#17181c}
+    @media(max-width:1050px){.ah-store-hero{min-height:360px}.ah-store-hero-copy{min-height:360px;padding-left:38px}.ah-store-countdown{min-width:286px}.ah-store-pass-main{grid-template-columns:minmax(0,1fr) 310px}}
+    @media(max-width:900px){.ah-store-shell{width:min(100% - 28px,880px)}.ah-store-hero-copy{width:63%}.ah-store-countdown{right:16px;top:16px;min-width:254px;padding:11px}.ah-store-pass-main{grid-template-columns:1fr 260px}.ah-store-reward-track{grid-template-columns:repeat(3,minmax(0,1fr))}.ah-store-reward:nth-child(3)::after{display:none}}
+    @media(max-width:680px){.ah-store-topbar{gap:9px;padding:0 10px}.ah-store-tabs{overflow-x:auto}.ah-store-tab{padding:0 9px}.ah-store-season-chip{display:none}.ah-store-shell{width:calc(100% - 20px);padding-top:12px}.ah-store-hero{min-height:500px;border-radius:14px;background-position:64% center}.ah-store-hero::before{background:linear-gradient(180deg,rgba(5,27,30,.25),rgba(5,27,30,.56) 42%,rgba(4,21,23,.92) 74%,rgba(4,17,18,.96))}.ah-store-hero-copy{width:100%;min-height:500px;justify-content:flex-end;padding:170px 24px 30px}.ah-store-title{font-size:clamp(40px,11vw,56px);line-height:.88}.ah-store-title span{margin-left:18px}.ah-store-countdown{left:14px;right:14px;top:14px;min-width:0}.ah-store-pass-main{grid-template-columns:1fr}.ah-store-pass-copy{padding:28px 24px 12px}.ah-store-pass-art{min-height:210px}.ah-store-reward-track{grid-template-columns:repeat(2,minmax(0,1fr));padding:18px}.ah-store-reward:nth-child(2n)::after{display:none}.ah-store-section-head{align-items:flex-start}.ah-store-section-badge{display:none}}
+    @media(max-width:420px){.ah-store-brand span{display:none}.ah-store-title span{margin-left:10px}.ah-store-pass-copy h3{font-size:25px}.ah-store-pass-actions{align-items:flex-start;flex-direction:column}.ah-store-reward-track{grid-template-columns:1fr}.ah-store-reward::after{display:none}.ah-store-pass-card.is-expanded .ah-store-pass-details{max-height:700px}}
+    @media(prefers-reduced-motion:reduce){.ah-store-scroll{scroll-behavior:auto}.ah-store-hero-button,.ah-store-pass-card,.ah-store-pass-emblem,.ah-store-pass-details,.ah-store-pass-button{transition:none!important}}
+  </style>
 </head>
 <body data-current-account-id="{{ account.id }}">
   <svg style="display:none" aria-hidden="true">
@@ -1991,7 +2072,7 @@
           <span>Nitro</span>
           <span class="home-nav-pill" id="home-nitro-days">NITRO</span>
         </button>
-        <button class="nav-item" type="button" onclick="showHomeComingSoon('Магазин')">
+        <button class="nav-item" type="button" data-home-view="store" onclick="return switchHomeView('store', this)">
           <span class="nav-ico"><svg class="icon"><use href="#i-shop"></use></svg></span>
           <span>Магазин</span>
         </button>
@@ -2307,6 +2388,73 @@
             </section>
 
             <div class="ah-nitro-footer-note">Преимущества и доступность функций могут меняться. Подписка управляется в настройках AlexiHub.</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="home-store-view" class="ah-season-store" aria-label="Магазин Summer Clover">
+        <header class="ah-store-topbar">
+          <div class="ah-store-brand"><svg class="icon"><use href="#i-shop"></use></svg><span>Магазин</span></div>
+          <nav class="ah-store-tabs" aria-label="Разделы магазина">
+            <button class="ah-store-tab active" type="button" aria-current="page" onclick="scrollStoreTop()">Рекомендации</button>
+            <button class="ah-store-tab" type="button" onclick="scrollToSummerPass(this)">Сезон</button>
+          </nav>
+          <span class="ah-store-season-chip">SUMMER CLOVER · СЕЗОН 01</span>
+        </header>
+
+        <div id="ah-store-scroll" class="ah-store-scroll" tabindex="-1">
+          <div class="ah-store-shell">
+            <section class="ah-store-hero" aria-labelledby="ah-store-season-title">
+              <div class="ah-store-countdown">
+                <div class="ah-store-countdown-label"><span>До конца лета</span><span>31 августа</span></div>
+                <div id="ah-store-countdown" class="ah-store-time" role="timer" aria-label="Время до конца сезона">
+                  <span class="ah-store-time-part"><b data-store-time="days">00</b><small>дней</small></span>
+                  <span class="ah-store-time-part"><b data-store-time="hours">00</b><small>часов</small></span>
+                  <span class="ah-store-time-part"><b data-store-time="minutes">00</b><small>минут</small></span>
+                  <span class="ah-store-time-part"><b data-store-time="seconds">00</b><small>секунд</small></span>
+                </div>
+              </div>
+              <div class="ah-store-hero-copy">
+                <span class="ah-store-eyebrow"><i class="ah-store-clover-dot" aria-hidden="true"></i>СЕЗОННАЯ КОЛЛЕКЦИЯ</span>
+                <h1 id="ah-store-season-title" class="ah-store-title">Summer <span>Clover</span></h1>
+                <p class="ah-store-subtitle">Летний сезон AlexiHub: лёгкая зелень, солнечные награды и новый сезонный пропуск — без покупок за реальные деньги.</p>
+                <button class="ah-store-hero-button" type="button" onclick="scrollToSummerPass(this)">Посмотреть пропуск <svg class="icon"><use href="#i-arrow-right"></use></svg></button>
+              </div>
+            </section>
+
+            <div class="ah-store-section-head">
+              <div><h2>Сезонный пропуск</h2><p>Первая главная панель магазина Summer Clover.</p></div>
+              <span class="ah-store-section-badge">БЕЗ РЕАЛЬНЫХ ЦЕН</span>
+            </div>
+
+            <section id="ah-summer-pass" class="ah-store-pass-card" aria-labelledby="ah-summer-pass-title">
+              <div class="ah-store-pass-main">
+                <div class="ah-store-pass-copy">
+                  <span class="ah-store-pass-kicker"><i class="ah-store-clover-dot" aria-hidden="true"></i>SUMMER CLOVER PASS</span>
+                  <h3 id="ah-summer-pass-title">Летний пропуск</h3>
+                  <p>Открывай сезонные уровни и собирай оформление профиля, рамки и летние награды. Сейчас это витрина будущего пропуска — никаких платежей и скрытых цен.</p>
+                  <div class="ah-store-pass-actions">
+                    <button id="ah-store-pass-toggle" class="ah-store-pass-button" type="button" aria-expanded="false" aria-controls="ah-store-pass-details" onclick="toggleSummerPass(this)">Открыть пропуск</button>
+                    <span class="ah-store-pass-free">Сезонная система · скоро</span>
+                  </div>
+                </div>
+                <div class="ah-store-pass-art" aria-hidden="true">
+                  <span class="ah-store-pass-ring"></span>
+                  <span class="ah-store-pass-emblem"><span class="ah-store-pass-leaf"><i></i><i></i><i></i><i></i></span></span>
+                </div>
+              </div>
+              <div id="ah-store-pass-details" class="ah-store-pass-details">
+                <div class="ah-store-reward-track">
+                  <div class="ah-store-reward"><span class="ah-store-reward-level">Уровень 01</span><span class="ah-store-reward-icon">✦</span><b>Старт сезона</b></div>
+                  <div class="ah-store-reward"><span class="ah-store-reward-level">Уровень 05</span><span class="ah-store-reward-icon">♧</span><b>Значок Clover</b></div>
+                  <div class="ah-store-reward"><span class="ah-store-reward-level">Уровень 10</span><span class="ah-store-reward-icon">▣</span><b>Летний фон</b></div>
+                  <div class="ah-store-reward"><span class="ah-store-reward-level">Уровень 15</span><span class="ah-store-reward-icon">◇</span><b>Рамка профиля</b></div>
+                  <div class="ah-store-reward"><span class="ah-store-reward-level">Уровень 20</span><span class="ah-store-reward-icon">☘</span><b>Финал сезона</b></div>
+                </div>
+              </div>
+            </section>
+
+            <p class="ah-store-fineprint">Это первый визуальный этап магазина. Прогресс, задания и выдачу наград можно подключить следующим этапом.</p>
           </div>
         </div>
       </section>
@@ -5766,14 +5914,20 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   window.switchHomeView = function(view, trigger){
     const app = getHomeApp();
     if(!app) return false;
-    const isNitro = view === 'nitro';
+    const allowedViews = ['friends', 'nitro', 'store'];
+    const nextView = allowedViews.includes(view) ? view : 'friends';
+    const isNitro = nextView === 'nitro';
+    const isStore = nextView === 'store';
     app.classList.toggle('nitro-open', isNitro);
+    app.classList.toggle('store-open', isStore);
     document.querySelectorAll('[data-home-view]').forEach(function(item){
-      item.classList.toggle('active', item.dataset.homeView === view);
+      item.classList.toggle('active', item.dataset.homeView === nextView);
     });
     if(trigger && trigger.dataset && trigger.dataset.homeView){ trigger.classList.add('active'); }
-    try{ history.replaceState(null, '', isNitro ? '#nitro' : '#friends'); }catch(e){}
+    try{ history.replaceState(null, '', '#' + nextView); }catch(e){}
+    if(nextView !== 'friends' && window.AlexiHubInbox && typeof window.AlexiHubInbox.close === 'function') window.AlexiHubInbox.close();
     if(isNitro){ requestAnimationFrame(function(){ document.getElementById('ah-nitro-home-scroll')?.focus({preventScroll:true}); }); }
+    if(isStore){ requestAnimationFrame(function(){ document.getElementById('ah-store-scroll')?.focus({preventScroll:true}); }); }
     return false;
   };
 
@@ -5814,11 +5968,85 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   }
 
   document.addEventListener('DOMContentLoaded', function(){
-    const requested = location.hash === '#friends' ? 'friends' : 'nitro';
+    const hashView = location.hash.replace(/^#/, '');
+    const requested = ['friends', 'nitro', 'store'].includes(hashView) ? hashView : 'nitro';
     const trigger = document.querySelector('[data-home-view="' + requested + '"]');
     window.switchHomeView(requested, trigger);
     loadHomeNitroStatus();
   });
+})();
+</script>
+
+<script id="ah-season-store-js">
+(function(){
+  if(window.__ahSeasonStoreReady) return;
+  window.__ahSeasonStoreReady = true;
+  let countdownTimer = 0;
+
+  function seasonEnd(now){
+    return new Date(now.getFullYear(), 8, 1, 0, 0, 0, 0);
+  }
+
+  function updateStoreCountdown(){
+    const timer = document.getElementById('ah-store-countdown');
+    if(!timer) return;
+    const now = new Date();
+    const remaining = Math.max(0, seasonEnd(now).getTime() - now.getTime());
+    const totalSeconds = Math.floor(remaining / 1000);
+    const values = {
+      days: Math.floor(totalSeconds / 86400),
+      hours: Math.floor((totalSeconds % 86400) / 3600),
+      minutes: Math.floor((totalSeconds % 3600) / 60),
+      seconds: totalSeconds % 60
+    };
+    Object.keys(values).forEach(function(key){
+      const node = timer.querySelector('[data-store-time="' + key + '"]');
+      if(node) node.textContent = String(values[key]).padStart(2, '0');
+    });
+    timer.setAttribute('aria-label', values.days + ' дней, ' + values.hours + ' часов, ' + values.minutes + ' минут и ' + values.seconds + ' секунд до конца сезона');
+  }
+
+  function setStoreTab(seasonActive){
+    document.querySelectorAll('.ah-store-tab').forEach(function(tab, index){
+      tab.classList.toggle('active', seasonActive ? index === 1 : index === 0);
+      if(tab.classList.contains('active')) tab.setAttribute('aria-current', 'page');
+      else tab.removeAttribute('aria-current');
+    });
+  }
+
+  window.scrollStoreTop = function(){
+    const scroll = document.getElementById('ah-store-scroll');
+    if(scroll) scroll.scrollTo({top:0, behavior:'smooth'});
+    setStoreTab(false);
+    return false;
+  };
+
+  window.scrollToSummerPass = function(){
+    const pass = document.getElementById('ah-summer-pass');
+    if(pass) pass.scrollIntoView({behavior:'smooth', block:'center'});
+    setStoreTab(true);
+    return false;
+  };
+
+  window.toggleSummerPass = function(button){
+    const pass = document.getElementById('ah-summer-pass');
+    if(!pass) return false;
+    const expanded = !pass.classList.contains('is-expanded');
+    pass.classList.toggle('is-expanded', expanded);
+    if(button){
+      button.setAttribute('aria-expanded', String(expanded));
+      button.textContent = expanded ? 'Свернуть пропуск' : 'Открыть пропуск';
+    }
+    if(expanded) setTimeout(function(){ pass.scrollIntoView({behavior:'smooth', block:'nearest'}); }, 120);
+    return false;
+  };
+
+  document.addEventListener('DOMContentLoaded', function(){
+    updateStoreCountdown();
+    if(countdownTimer) clearInterval(countdownTimer);
+    countdownTimer = window.setInterval(updateStoreCountdown, 1000);
+  });
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) updateStoreCountdown(); });
 })();
 </script>
 
