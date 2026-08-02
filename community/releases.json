@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.33.2",
+      "date": "2026-08-02",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: giveaway styles and HTML structure."
+      ],
+      "source_sha": "b2788c7be35b9993e478eb33d0445a6675c0b7da"
+    },
+    {
       "version": "1.33.1",
       "date": "2026-08-02",
       "title": "Виправлення та стабільність",
