@@ -4063,6 +4063,45 @@ NITRO_GIFTER_BADGE_LABELS = {
 }
 
 
+# ============================================================================
+# Summer Clover store: free seasonal pass + verified-user Nitro drops.
+# ============================================================================
+
+_STORE_TABLES_READY = False
+STORE_SEASON_KEY = "summer-clover-2026"
+STORE_SEASON_START = datetime(2026, 7, 31, 21, 0, tzinfo=timezone.utc)
+STORE_SEASON_END = datetime(2026, 8, 31, 21, 0, tzinfo=timezone.utc)
+STORE_MAX_LEVEL = 20
+STORE_XP_PER_LEVEL = 100
+STORE_TASKS = {
+    "visit_store": {
+        "title": "Зайти в магазин",
+        "description": "Открой Summer Clover сегодня.",
+        "xp": 30,
+        "required_messages": 0,
+    },
+    "send_message": {
+        "title": "Написать сообщение",
+        "description": "Отправь одно сообщение в ЛС или на сервере.",
+        "xp": 40,
+        "required_messages": 1,
+    },
+    "send_five_messages": {
+        "title": "Быть на связи",
+        "description": "Отправь пять сообщений за сегодня.",
+        "xp": 50,
+        "required_messages": 5,
+    },
+}
+STORE_REWARDS = (
+    {"level": 1, "key": "season_starter", "title": "Старт сезона", "kind": "badge", "icon": "✦"},
+    {"level": 5, "key": "clover_badge", "title": "Значок Clover", "kind": "collectible", "icon": "♧"},
+    {"level": 10, "key": "summer_background", "title": "Летний фон", "kind": "background", "icon": "▣"},
+    {"level": 15, "key": "clover_frame", "title": "Рамка профиля", "kind": "frame", "icon": "◇"},
+    {"level": 20, "key": "nitro_three_days", "title": "Nitro на 3 дня", "kind": "nitro", "icon": "☘", "nitro_days": 3},
+)
+
+
 def nitro_gifter_badge_from_count(claimed_gifts: int | float | None) -> dict:
     """Profile gift badge earned from successfully claimed DM Nitro gifts.
 
@@ -4304,6 +4343,75 @@ async def get_nitro_subscription(db: AsyncSession, account_id: int) -> dict:
     return _nitro_payload_from_row(row)
 
 
+async def _extend_nitro_subscription_no_commit(
+    db: AsyncSession,
+    account_id: int,
+    days: int,
+    source: str,
+) -> dict:
+    """Atomically add Nitro credit while the caller owns the transaction.
+
+    Locking the account row serializes two different rewards claimed at the
+    same instant and prevents the unique subscription row from racing.
+    """
+    await ensure_nitro_tables(db)
+    account_id = int(account_id)
+    days = max(1, min(int(days or 1), 365))
+    await db.execute(
+        text("SELECT id FROM community_accounts WHERE id = :account_id FOR UPDATE"),
+        {"account_id": account_id},
+    )
+    current = (await db.execute(text("""
+        SELECT started_at, expires_at
+        FROM community_nitro_subscriptions
+        WHERE account_id = :account_id
+        LIMIT 1
+        FOR UPDATE
+    """), {"account_id": account_id})).mappings().first()
+
+    now = datetime.now(timezone.utc)
+    current_expires_at = _nitro_datetime_utc(current["expires_at"]) if current else None
+    current_started_at = _nitro_datetime_utc(current["started_at"]) if current else None
+    current_is_active = bool(current_expires_at and current_expires_at > now)
+    started_at = current_started_at if current_is_active and current_started_at else now
+    expires_at = (current_expires_at if current_is_active else now) + timedelta(days=days)
+    source = (source or "STORE").strip()[:64]
+
+    if current:
+        await db.execute(text("""
+            UPDATE community_nitro_subscriptions
+            SET started_at = :started_at,
+                expires_at = :expires_at,
+                source_code = :source_code,
+                updated_at = NOW()
+            WHERE account_id = :account_id
+        """), {
+            "started_at": started_at,
+            "expires_at": expires_at,
+            "source_code": source,
+            "account_id": account_id,
+        })
+    else:
+        await db.execute(text("""
+            INSERT INTO community_nitro_subscriptions
+                (account_id, started_at, expires_at, source_code)
+            VALUES
+                (:account_id, :started_at, :expires_at, :source_code)
+        """), {
+            "account_id": account_id,
+            "started_at": started_at,
+            "expires_at": expires_at,
+            "source_code": source,
+        })
+
+    return {
+        "active": True,
+        "started_at": started_at.isoformat(),
+        "expires_at": expires_at.isoformat(),
+        "days_added": days,
+    }
+
+
 async def redeem_nitro_gift_code(db: AsyncSession, account_id: int, code_value: str | None) -> dict:
     await ensure_nitro_tables(db)
     code = normalize_nitro_code(code_value)
@@ -4394,6 +4502,505 @@ async def nitro_profile_payload(db: AsyncSession, account_id: int) -> dict:
         "tier": sub.get('tier') or 'basic',
         "tier_label": sub.get('tier_label') or NITRO_TIER_LABELS['basic'],
         "gifting": gifting,
+    }
+
+
+async def ensure_store_tables(db: AsyncSession) -> None:
+    """Create the seasonal store schema on existing Render databases."""
+    global _STORE_TABLES_READY
+    if _STORE_TABLES_READY:
+        return
+    await ensure_nitro_tables(db)
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_store_pass_progress (
+            id BIGSERIAL PRIMARY KEY,
+            account_id INTEGER NOT NULL REFERENCES community_accounts(id) ON DELETE CASCADE,
+            season_key VARCHAR(48) NOT NULL,
+            xp INTEGER NOT NULL DEFAULT 0 CHECK (xp >= 0),
+            joined_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+            updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+            UNIQUE (account_id, season_key)
+        )
+    """))
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_store_task_claims (
+            id BIGSERIAL PRIMARY KEY,
+            account_id INTEGER NOT NULL REFERENCES community_accounts(id) ON DELETE CASCADE,
+            season_key VARCHAR(48) NOT NULL,
+            task_key VARCHAR(48) NOT NULL,
+            activity_date DATE NOT NULL,
+            xp_awarded INTEGER NOT NULL CHECK (xp_awarded > 0),
+            claimed_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+            UNIQUE (account_id, season_key, task_key, activity_date)
+        )
+    """))
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_store_reward_claims (
+            id BIGSERIAL PRIMARY KEY,
+            account_id INTEGER NOT NULL REFERENCES community_accounts(id) ON DELETE CASCADE,
+            season_key VARCHAR(48) NOT NULL,
+            reward_level INTEGER NOT NULL,
+            reward_key VARCHAR(64) NOT NULL,
+            claimed_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+            UNIQUE (account_id, season_key, reward_level)
+        )
+    """))
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_store_giveaways (
+            id BIGSERIAL PRIMARY KEY,
+            creator_id INTEGER NOT NULL REFERENCES community_accounts(id) ON DELETE CASCADE,
+            title VARCHAR(80) NOT NULL,
+            description VARCHAR(220),
+            nitro_days INTEGER NOT NULL CHECK (nitro_days BETWEEN 1 AND 7),
+            max_claims INTEGER NOT NULL CHECK (max_claims BETWEEN 1 AND 25),
+            status VARCHAR(16) NOT NULL DEFAULT 'active',
+            expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+        )
+    """))
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_store_giveaway_claims (
+            id BIGSERIAL PRIMARY KEY,
+            giveaway_id BIGINT NOT NULL REFERENCES community_store_giveaways(id) ON DELETE CASCADE,
+            account_id INTEGER NOT NULL REFERENCES community_accounts(id) ON DELETE CASCADE,
+            claimed_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+            UNIQUE (giveaway_id, account_id)
+        )
+    """))
+    await db.execute(text("CREATE INDEX IF NOT EXISTS ix_store_task_claims_daily ON community_store_task_claims (account_id, activity_date)"))
+    await db.execute(text("CREATE INDEX IF NOT EXISTS ix_store_rewards_account ON community_store_reward_claims (account_id, season_key)"))
+    await db.execute(text("CREATE INDEX IF NOT EXISTS ix_store_giveaways_active ON community_store_giveaways (status, expires_at, created_at DESC)"))
+    await db.execute(text("CREATE INDEX IF NOT EXISTS ix_store_giveaway_claims_count ON community_store_giveaway_claims (giveaway_id)"))
+    await db.commit()
+    _STORE_TABLES_READY = True
+
+
+def _store_now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def store_season_is_active(now: datetime | None = None) -> bool:
+    now = _nitro_datetime_utc(now) or _store_now()
+    return STORE_SEASON_START <= now < STORE_SEASON_END
+
+
+def _store_day_bounds(now: datetime | None = None) -> tuple[datetime, datetime, object]:
+    """Return the current Summer Clover day in Europe/Kyiv (UTC+3 in August)."""
+    now = _nitro_datetime_utc(now) or _store_now()
+    kyiv_tz = timezone(timedelta(hours=3))
+    local_now = now.astimezone(kyiv_tz)
+    start_local = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
+    end_local = start_local + timedelta(days=1)
+    return start_local.astimezone(timezone.utc), end_local.astimezone(timezone.utc), local_now.date()
+
+
+def _store_level_from_xp(xp: int | float | None, joined: bool = True) -> int:
+    if not joined:
+        return 0
+    return min(STORE_MAX_LEVEL, 1 + max(0, int(xp or 0)) // STORE_XP_PER_LEVEL)
+
+
+async def _store_daily_message_count(db: AsyncSession, account_id: int, now: datetime | None = None) -> int:
+    day_start, day_end, _ = _store_day_bounds(now)
+    row = (await db.execute(text("""
+        SELECT
+            (SELECT COUNT(*) FROM community_direct_messages
+             WHERE author_id = :account_id AND created_at >= :day_start AND created_at < :day_end)
+          + (SELECT COUNT(*) FROM community_server_messages
+             WHERE author_id = :account_id AND created_at >= :day_start AND created_at < :day_end)
+          AS message_count
+    """), {
+        "account_id": int(account_id),
+        "day_start": day_start,
+        "day_end": day_end,
+    })).mappings().first()
+    return max(0, int(row["message_count"] if row else 0))
+
+
+def _store_pass_payload(progress, claimed_levels: set[int]) -> dict:
+    joined = bool(progress)
+    xp = max(0, int(progress["xp"] if progress else 0))
+    level = _store_level_from_xp(xp, joined)
+    if not joined:
+        progress_xp = 0
+        xp_to_next = STORE_XP_PER_LEVEL
+        progress_percent = 0
+    elif level >= STORE_MAX_LEVEL:
+        progress_xp = STORE_XP_PER_LEVEL
+        xp_to_next = 0
+        progress_percent = 100
+    else:
+        progress_xp = xp % STORE_XP_PER_LEVEL
+        xp_to_next = STORE_XP_PER_LEVEL - progress_xp
+        progress_percent = int(progress_xp * 100 / STORE_XP_PER_LEVEL)
+
+    rewards = []
+    for item in STORE_REWARDS:
+        reward = dict(item)
+        claimed = int(item["level"]) in claimed_levels
+        reward["claimed"] = claimed
+        reward["claimable"] = bool(joined and level >= int(item["level"]) and not claimed)
+        reward["locked"] = bool(not joined or level < int(item["level"]))
+        rewards.append(reward)
+
+    joined_at = progress["joined_at"] if progress else None
+    return {
+        "joined": joined,
+        "xp": xp,
+        "level": level,
+        "max_level": STORE_MAX_LEVEL,
+        "xp_per_level": STORE_XP_PER_LEVEL,
+        "progress_xp": progress_xp,
+        "xp_to_next": xp_to_next,
+        "progress_percent": progress_percent,
+        "joined_at": joined_at.isoformat() if joined_at else None,
+        "rewards": rewards,
+    }
+
+
+async def _store_giveaway_payloads(db: AsyncSession, account_id: int) -> list[dict]:
+    rows = (await db.execute(text("""
+        SELECT
+            giveaway.id,
+            giveaway.creator_id,
+            giveaway.title,
+            giveaway.description,
+            giveaway.nitro_days,
+            giveaway.max_claims,
+            giveaway.expires_at,
+            giveaway.created_at,
+            creator.username AS creator_username,
+            COALESCE(creator.display_name, creator.username) AS creator_display_name,
+            creator.avatar_url AS creator_avatar_url,
+            creator.is_verified AS creator_verified,
+            COUNT(claim.id)::INTEGER AS claims_count,
+            COALESCE(BOOL_OR(claim.account_id = :account_id), FALSE) AS claimed_by_viewer
+        FROM community_store_giveaways AS giveaway
+        JOIN community_accounts AS creator ON creator.id = giveaway.creator_id
+        LEFT JOIN community_store_giveaway_claims AS claim ON claim.giveaway_id = giveaway.id
+        WHERE giveaway.status = 'active'
+          AND giveaway.expires_at > NOW()
+        GROUP BY giveaway.id, creator.id
+        HAVING COUNT(claim.id) < giveaway.max_claims
+        ORDER BY giveaway.created_at DESC
+        LIMIT 24
+    """), {"account_id": int(account_id)})).mappings().all()
+    payloads = []
+    for row in rows:
+        expires_at = _nitro_datetime_utc(row["expires_at"])
+        claims_count = max(0, int(row["claims_count"] or 0))
+        max_claims = max(1, int(row["max_claims"] or 1))
+        payloads.append({
+            "id": int(row["id"]),
+            "title": row["title"],
+            "description": row["description"] or "",
+            "nitro_days": int(row["nitro_days"] or 1),
+            "max_claims": max_claims,
+            "claims_count": claims_count,
+            "remaining_claims": max(0, max_claims - claims_count),
+            "expires_at": expires_at.isoformat() if expires_at else None,
+            "created_at": row["created_at"].isoformat() if row["created_at"] else None,
+            "claimed_by_viewer": bool(row["claimed_by_viewer"]),
+            "created_by_viewer": int(row["creator_id"]) == int(account_id),
+            "creator": {
+                "id": int(row["creator_id"]),
+                "username": row["creator_username"],
+                "display_name": row["creator_display_name"],
+                "avatar_url": row["creator_avatar_url"],
+                "verified": bool(row["creator_verified"]),
+            },
+        })
+    return payloads
+
+
+async def get_summer_store_state(
+    db: AsyncSession,
+    account_id: int,
+    can_create_giveaway: bool = False,
+) -> dict:
+    await ensure_store_tables(db)
+    account_id = int(account_id)
+    now = _store_now()
+    progress = (await db.execute(text("""
+        SELECT xp, joined_at
+        FROM community_store_pass_progress
+        WHERE account_id = :account_id AND season_key = :season_key
+        LIMIT 1
+    """), {"account_id": account_id, "season_key": STORE_SEASON_KEY})).mappings().first()
+    reward_rows = (await db.execute(text("""
+        SELECT reward_level
+        FROM community_store_reward_claims
+        WHERE account_id = :account_id AND season_key = :season_key
+    """), {"account_id": account_id, "season_key": STORE_SEASON_KEY})).mappings().all()
+    claimed_levels = {int(row["reward_level"]) for row in reward_rows}
+
+    day_start, day_end, activity_date = _store_day_bounds(now)
+    del day_start
+    claimed_task_rows = (await db.execute(text("""
+        SELECT task_key
+        FROM community_store_task_claims
+        WHERE account_id = :account_id
+          AND season_key = :season_key
+          AND activity_date = :activity_date
+    """), {
+        "account_id": account_id,
+        "season_key": STORE_SEASON_KEY,
+        "activity_date": activity_date,
+    })).mappings().all()
+    claimed_tasks = {str(row["task_key"]) for row in claimed_task_rows}
+    message_count = await _store_daily_message_count(db, account_id, now)
+    tasks = []
+    for key, definition in STORE_TASKS.items():
+        required_messages = int(definition["required_messages"])
+        eligible = message_count >= required_messages
+        claimed = key in claimed_tasks
+        tasks.append({
+            "key": key,
+            "title": definition["title"],
+            "description": definition["description"],
+            "xp": int(definition["xp"]),
+            "required_messages": required_messages,
+            "current_messages": min(message_count, required_messages) if required_messages else 0,
+            "eligible": eligible,
+            "claimed": claimed,
+        })
+
+    return {
+        "ok": True,
+        "season": {
+            "key": STORE_SEASON_KEY,
+            "name": "Summer Clover",
+            "number": 1,
+            "active": store_season_is_active(now),
+            "starts_at": STORE_SEASON_START.isoformat(),
+            "ends_at": STORE_SEASON_END.isoformat(),
+            "daily_reset_at": day_end.isoformat(),
+        },
+        "pass": _store_pass_payload(progress, claimed_levels),
+        "tasks": tasks,
+        "giveaways": await _store_giveaway_payloads(db, account_id),
+        "can_create_giveaway": bool(can_create_giveaway),
+    }
+
+
+async def join_summer_store_pass(db: AsyncSession, account_id: int) -> dict:
+    await ensure_store_tables(db)
+    if not store_season_is_active():
+        return {"ok": False, "error": "season_ended", "message": "Сезон уже завершён."}
+    await db.execute(text("""
+        INSERT INTO community_store_pass_progress (account_id, season_key, xp)
+        VALUES (:account_id, :season_key, 0)
+        ON CONFLICT (account_id, season_key) DO NOTHING
+    """), {"account_id": int(account_id), "season_key": STORE_SEASON_KEY})
+    await db.commit()
+    return {"ok": True, "joined": True}
+
+
+async def claim_summer_store_task(db: AsyncSession, account_id: int, task_key: str) -> dict:
+    await ensure_store_tables(db)
+    account_id = int(account_id)
+    task_key = (task_key or "").strip().lower()
+    definition = STORE_TASKS.get(task_key)
+    if not definition:
+        return {"ok": False, "error": "task_not_found", "message": "Задание не найдено."}
+    if not store_season_is_active():
+        return {"ok": False, "error": "season_ended", "message": "Сезон уже завершён."}
+
+    progress = (await db.execute(text("""
+        SELECT id
+        FROM community_store_pass_progress
+        WHERE account_id = :account_id AND season_key = :season_key
+        LIMIT 1
+    """), {"account_id": account_id, "season_key": STORE_SEASON_KEY})).first()
+    if not progress:
+        return {"ok": False, "error": "pass_not_joined", "message": "Сначала активируй пропуск."}
+
+    required_messages = int(definition["required_messages"])
+    if required_messages:
+        message_count = await _store_daily_message_count(db, account_id)
+        if message_count < required_messages:
+            return {
+                "ok": False,
+                "error": "task_not_ready",
+                "message": f"Нужно отправить сообщений: {required_messages}.",
+            }
+
+    _, _, activity_date = _store_day_bounds()
+    inserted = (await db.execute(text("""
+        INSERT INTO community_store_task_claims
+            (account_id, season_key, task_key, activity_date, xp_awarded)
+        VALUES
+            (:account_id, :season_key, :task_key, :activity_date, :xp_awarded)
+        ON CONFLICT (account_id, season_key, task_key, activity_date) DO NOTHING
+        RETURNING id
+    """), {
+        "account_id": account_id,
+        "season_key": STORE_SEASON_KEY,
+        "task_key": task_key,
+        "activity_date": activity_date,
+        "xp_awarded": int(definition["xp"]),
+    })).first()
+    if not inserted:
+        return {"ok": False, "error": "already_claimed", "message": "Награда за это задание уже получена сегодня."}
+    await db.execute(text("""
+        UPDATE community_store_pass_progress
+        SET xp = xp + :xp, updated_at = NOW()
+        WHERE account_id = :account_id AND season_key = :season_key
+    """), {
+        "xp": int(definition["xp"]),
+        "account_id": account_id,
+        "season_key": STORE_SEASON_KEY,
+    })
+    await db.commit()
+    return {"ok": True, "task_key": task_key, "xp_added": int(definition["xp"])}
+
+
+async def claim_summer_store_reward(db: AsyncSession, account_id: int, reward_level: int) -> dict:
+    await ensure_store_tables(db)
+    account_id = int(account_id)
+    reward_level = int(reward_level)
+    reward = next((item for item in STORE_REWARDS if int(item["level"]) == reward_level), None)
+    if not reward:
+        return {"ok": False, "error": "reward_not_found", "message": "Награда не найдена."}
+
+    progress = (await db.execute(text("""
+        SELECT xp
+        FROM community_store_pass_progress
+        WHERE account_id = :account_id AND season_key = :season_key
+        LIMIT 1
+        FOR UPDATE
+    """), {"account_id": account_id, "season_key": STORE_SEASON_KEY})).mappings().first()
+    if not progress:
+        return {"ok": False, "error": "pass_not_joined", "message": "Сначала активируй пропуск."}
+    current_level = _store_level_from_xp(progress["xp"], True)
+    if current_level < reward_level:
+        return {"ok": False, "error": "reward_locked", "message": "Сначала достигни нужного уровня."}
+
+    inserted = (await db.execute(text("""
+        INSERT INTO community_store_reward_claims
+            (account_id, season_key, reward_level, reward_key)
+        VALUES
+            (:account_id, :season_key, :reward_level, :reward_key)
+        ON CONFLICT (account_id, season_key, reward_level) DO NOTHING
+        RETURNING id
+    """), {
+        "account_id": account_id,
+        "season_key": STORE_SEASON_KEY,
+        "reward_level": reward_level,
+        "reward_key": reward["key"],
+    })).first()
+    if not inserted:
+        return {"ok": False, "error": "already_claimed", "message": "Эта награда уже получена."}
+
+    nitro = None
+    if reward.get("nitro_days"):
+        nitro = await _extend_nitro_subscription_no_commit(
+            db,
+            account_id,
+            int(reward["nitro_days"]),
+            f"PASS-{STORE_SEASON_KEY}-L{reward_level}",
+        )
+    await db.commit()
+    return {"ok": True, "reward": dict(reward), "nitro": nitro}
+
+
+async def create_store_giveaway(
+    db: AsyncSession,
+    creator_id: int,
+    title: str | None,
+    description: str | None,
+    nitro_days: int = 3,
+    max_claims: int = 10,
+    duration_hours: int = 24,
+) -> dict:
+    await ensure_store_tables(db)
+    if not store_season_is_active():
+        return {"ok": False, "error": "season_ended", "message": "Сезон уже завершён."}
+    creator_id = int(creator_id)
+    recent = (await db.execute(text("""
+        SELECT COUNT(*) AS recent_count
+        FROM community_store_giveaways
+        WHERE creator_id = :creator_id
+          AND created_at > NOW() - INTERVAL '6 hours'
+    """), {"creator_id": creator_id})).mappings().first()
+    if int(recent["recent_count"] if recent else 0) >= 2:
+        return {"ok": False, "error": "rate_limited", "message": "Можно создать не больше двух раздач за 6 часов."}
+
+    nitro_days = max(1, min(int(nitro_days or 3), 7))
+    max_claims = max(1, min(int(max_claims or 10), 25))
+    duration_hours = max(1, min(int(duration_hours or 24), 72))
+    clean_title = (title or "").strip()[:80] or f"Nitro на {nitro_days} дня"
+    clean_description = (description or "").strip()[:220] or None
+    expires_at = min(_store_now() + timedelta(hours=duration_hours), STORE_SEASON_END)
+    row = (await db.execute(text("""
+        INSERT INTO community_store_giveaways
+            (creator_id, title, description, nitro_days, max_claims, expires_at)
+        VALUES
+            (:creator_id, :title, :description, :nitro_days, :max_claims, :expires_at)
+        RETURNING id
+    """), {
+        "creator_id": creator_id,
+        "title": clean_title,
+        "description": clean_description,
+        "nitro_days": nitro_days,
+        "max_claims": max_claims,
+        "expires_at": expires_at,
+    })).mappings().first()
+    await db.commit()
+    return {"ok": True, "giveaway_id": int(row["id"]), "expires_at": expires_at.isoformat()}
+
+
+async def claim_store_giveaway(db: AsyncSession, account_id: int, giveaway_id: int) -> dict:
+    await ensure_store_tables(db)
+    account_id = int(account_id)
+    giveaway_id = int(giveaway_id)
+    giveaway = (await db.execute(text("""
+        SELECT id, creator_id, nitro_days, max_claims, status, expires_at
+        FROM community_store_giveaways
+        WHERE id = :giveaway_id
+        LIMIT 1
+        FOR UPDATE
+    """), {"giveaway_id": giveaway_id})).mappings().first()
+    if not giveaway:
+        return {"ok": False, "error": "not_found", "message": "Раздача не найдена."}
+    if int(giveaway["creator_id"]) == account_id:
+        return {"ok": False, "error": "own_giveaway", "message": "Нельзя забрать собственную раздачу."}
+    expires_at = _nitro_datetime_utc(giveaway["expires_at"])
+    if giveaway["status"] != "active" or not expires_at or expires_at <= _store_now():
+        return {"ok": False, "error": "expired", "message": "Эта раздача уже завершилась."}
+
+    already = (await db.execute(text("""
+        SELECT id
+        FROM community_store_giveaway_claims
+        WHERE giveaway_id = :giveaway_id AND account_id = :account_id
+        LIMIT 1
+    """), {"giveaway_id": giveaway_id, "account_id": account_id})).first()
+    if already:
+        return {"ok": False, "error": "already_claimed", "message": "Ты уже забрал эту раздачу."}
+    count_row = (await db.execute(text("""
+        SELECT COUNT(*) AS claims_count
+        FROM community_store_giveaway_claims
+        WHERE giveaway_id = :giveaway_id
+    """), {"giveaway_id": giveaway_id})).mappings().first()
+    if int(count_row["claims_count"] if count_row else 0) >= int(giveaway["max_claims"]):
+        return {"ok": False, "error": "sold_out", "message": "Все активации уже разобрали."}
+
+    await db.execute(text("""
+        INSERT INTO community_store_giveaway_claims (giveaway_id, account_id)
+        VALUES (:giveaway_id, :account_id)
+    """), {"giveaway_id": giveaway_id, "account_id": account_id})
+    nitro = await _extend_nitro_subscription_no_commit(
+        db,
+        account_id,
+        int(giveaway["nitro_days"]),
+        f"STORE-GIVEAWAY-{giveaway_id}",
+    )
+    await db.commit()
+    return {
+        "ok": True,
+        "giveaway_id": giveaway_id,
+        "days_added": int(giveaway["nitro_days"]),
+        "nitro": nitro,
     }
 
 
