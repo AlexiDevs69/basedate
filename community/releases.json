@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.39.2",
+      "date": "2026-08-02",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: save functions for partial updates."
+      ],
+      "source_sha": "40f8f3fc96d04c9cb86f7a4db1bc87fc646d03e4"
+    },
+    {
       "version": "1.39.1",
       "date": "2026-08-02",
       "title": "Виправлення та стабільність",
