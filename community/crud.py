@@ -5337,10 +5337,135 @@ async def ensure_store_studio_tables(db: AsyncSession) -> None:
             created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
         )
     """))
-    # Idempotent upgrades for databases that already have the original studio tables.
-    for table_name in ("community_store_items", "community_profile_themes", "community_store_passes"):
-        await db.execute(text(f"ALTER TABLE {table_name} ADD COLUMN IF NOT EXISTS published_at TIMESTAMP WITH TIME ZONE"))
-        await db.execute(text(f"UPDATE {table_name} SET published_at = created_at WHERE status = 'published' AND published_at IS NULL"))
+    # Idempotent upgrades for Render databases that already have an older version
+    # of the studio tables. CREATE TABLE IF NOT EXISTS never adds missing columns.
+    studio_column_upgrades = {
+        "community_store_items": (
+            ("creator_id", "INTEGER"),
+            ("item_type", "VARCHAR(32)"),
+            ("title", "VARCHAR(100)"),
+            ("description", "VARCHAR(500)"),
+            ("image_url", "VARCHAR(512)"),
+            ("icon", "VARCHAR(32)"),
+            ("price_amount", "INTEGER NOT NULL DEFAULT 0"),
+            ("currency", "VARCHAR(24) NOT NULL DEFAULT 'clover'"),
+            ("starts_at", "TIMESTAMP WITH TIME ZONE"),
+            ("ends_at", "TIMESTAMP WITH TIME ZONE"),
+            ("status", "VARCHAR(16) NOT NULL DEFAULT 'draft'"),
+            ("is_active", "BOOLEAN NOT NULL DEFAULT TRUE"),
+            ("metadata", "JSONB NOT NULL DEFAULT '{}'::jsonb"),
+            ("published_at", "TIMESTAMP WITH TIME ZONE"),
+            ("created_at", "TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()"),
+            ("updated_at", "TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()"),
+        ),
+        "community_profile_themes": (
+            ("creator_id", "INTEGER"),
+            ("title", "VARCHAR(80)"),
+            ("description", "VARCHAR(220)"),
+            ("image_url", "VARCHAR(512)"),
+            ("accent_color", "VARCHAR(16) NOT NULL DEFAULT '#5865f2'"),
+            ("text_color", "VARCHAR(16) NOT NULL DEFAULT '#ffffff'"),
+            ("overlay_strength", "INTEGER NOT NULL DEFAULT 58"),
+            ("access_mode", "VARCHAR(24) NOT NULL DEFAULT 'free'"),
+            ("starts_at", "TIMESTAMP WITH TIME ZONE"),
+            ("ends_at", "TIMESTAMP WITH TIME ZONE"),
+            ("status", "VARCHAR(16) NOT NULL DEFAULT 'draft'"),
+            ("is_active", "BOOLEAN NOT NULL DEFAULT TRUE"),
+            ("published_at", "TIMESTAMP WITH TIME ZONE"),
+            ("created_at", "TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()"),
+            ("updated_at", "TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()"),
+        ),
+        "community_store_passes": (
+            ("creator_id", "INTEGER"),
+            ("pass_key", "VARCHAR(64)"),
+            ("title", "VARCHAR(100)"),
+            ("description", "VARCHAR(500)"),
+            ("image_url", "VARCHAR(512)"),
+            ("max_level", "INTEGER NOT NULL DEFAULT 20"),
+            ("xp_per_level", "INTEGER NOT NULL DEFAULT 100"),
+            ("starts_at", "TIMESTAMP WITH TIME ZONE"),
+            ("ends_at", "TIMESTAMP WITH TIME ZONE"),
+            ("status", "VARCHAR(16) NOT NULL DEFAULT 'draft'"),
+            ("is_active", "BOOLEAN NOT NULL DEFAULT TRUE"),
+            ("is_collaborative", "BOOLEAN NOT NULL DEFAULT FALSE"),
+            ("metadata", "JSONB NOT NULL DEFAULT '{}'::jsonb"),
+            ("published_at", "TIMESTAMP WITH TIME ZONE"),
+            ("created_at", "TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()"),
+            ("updated_at", "TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()"),
+        ),
+        "community_store_pass_levels": (
+            ("pass_id", "BIGINT"),
+            ("level", "INTEGER"),
+            ("title", "VARCHAR(100)"),
+            ("description", "VARCHAR(260)"),
+            ("icon", "VARCHAR(32)"),
+            ("reward_type", "VARCHAR(32) NOT NULL DEFAULT 'collectible'"),
+            ("reward_ref_id", "BIGINT"),
+            ("reward_config", "JSONB NOT NULL DEFAULT '{}'::jsonb"),
+            ("is_active", "BOOLEAN NOT NULL DEFAULT TRUE"),
+            ("created_at", "TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()"),
+            ("updated_at", "TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()"),
+        ),
+        "community_profile_theme_ownership": (
+            ("theme_id", "BIGINT"),
+            ("account_id", "INTEGER"),
+            ("source", "VARCHAR(80)"),
+            ("acquired_at", "TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()"),
+        ),
+        "community_account_profile_theme": (
+            ("account_id", "INTEGER"),
+            ("theme_id", "BIGINT"),
+            ("equipped_at", "TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()"),
+        ),
+        "community_store_collections": (
+            ("creator_id", "INTEGER"),
+            ("title", "VARCHAR(100)"),
+            ("description", "VARCHAR(320)"),
+            ("banner_url", "VARCHAR(512)"),
+            ("accent_color", "VARCHAR(16) NOT NULL DEFAULT '#5865f2'"),
+            ("display_order", "INTEGER NOT NULL DEFAULT 0"),
+            ("starts_at", "TIMESTAMP WITH TIME ZONE"),
+            ("ends_at", "TIMESTAMP WITH TIME ZONE"),
+            ("status", "VARCHAR(16) NOT NULL DEFAULT 'draft'"),
+            ("is_active", "BOOLEAN NOT NULL DEFAULT TRUE"),
+            ("metadata", "JSONB NOT NULL DEFAULT '{}'::jsonb"),
+            ("published_at", "TIMESTAMP WITH TIME ZONE"),
+            ("created_at", "TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()"),
+            ("updated_at", "TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()"),
+        ),
+        "community_store_collection_entries": (
+            ("collection_id", "BIGINT"),
+            ("entity_type", "VARCHAR(16)"),
+            ("entity_id", "BIGINT"),
+            ("display_order", "INTEGER NOT NULL DEFAULT 0"),
+            ("created_at", "TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()"),
+        ),
+        "community_store_audit_log": (
+            ("actor_id", "INTEGER"),
+            ("entity_type", "VARCHAR(32)"),
+            ("entity_id", "BIGINT"),
+            ("action", "VARCHAR(32)"),
+            ("payload", "JSONB NOT NULL DEFAULT '{}'::jsonb"),
+            ("created_at", "TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()"),
+        ),
+    }
+    for table_name, columns in studio_column_upgrades.items():
+        for column_name, column_definition in columns:
+            await db.execute(text(
+                f"ALTER TABLE {table_name} ADD COLUMN IF NOT EXISTS "
+                f"{column_name} {column_definition}"
+            ))
+
+    for table_name in (
+        "community_store_items",
+        "community_profile_themes",
+        "community_store_passes",
+        "community_store_collections",
+    ):
+        await db.execute(text(
+            f"UPDATE {table_name} SET published_at = created_at "
+            "WHERE status = 'published' AND published_at IS NULL"
+        ))
     await db.execute(text("CREATE INDEX IF NOT EXISTS ix_store_items_public ON community_store_items (status, is_active, starts_at, ends_at)"))
     await db.execute(text("CREATE INDEX IF NOT EXISTS ix_profile_themes_public ON community_profile_themes (status, is_active, starts_at, ends_at)"))
     await db.execute(text("CREATE INDEX IF NOT EXISTS ix_store_passes_public ON community_store_passes (status, is_active, starts_at, ends_at)"))
@@ -5788,126 +5913,79 @@ async def _owned_store_entity(db: AsyncSession, table: str, entity_id: int, acto
     allowed_tables = {"community_store_items", "community_profile_themes", "community_store_passes", "community_store_collections"}
     if table not in allowed_tables:
         return None
-    # Select the full row (not just id/creator_id) so callers can use it as a
-    # fallback source of truth for partial (PATCH) updates -- see
-    # `_store_merge_field` below. This used to select only a couple of
-    # columns, which forced every save_* function to require the *entire*
-    # object on every save (a status-only "publish" PATCH would wipe/blank
-    # out title, entries, etc. and fail validation).
-    row = (await db.execute(text(f"SELECT * FROM {table} WHERE id = :entity_id LIMIT 1 FOR UPDATE"), {"entity_id": int(entity_id)})).mappings().first()
+    extra = ", is_collaborative" if collaborative else ""
+    row = (await db.execute(text(f"SELECT id, creator_id{extra} FROM {table} WHERE id = :entity_id LIMIT 1 FOR UPDATE"), {"entity_id": int(entity_id)})).mappings().first()
     if not row:
         return None
-    if is_store_admin(actor) or int(row["creator_id"] or 0) == int(actor.id) or (collaborative and bool(row.get("is_collaborative"))):
+    if is_store_admin(actor) or int(row["creator_id"] or 0) == int(actor.id) or (collaborative and bool(row["is_collaborative"])):
         return row
     return False
-
-
-def _store_merge_field(payload: dict, current, key: str, default=None):
-    """Partial-update helper: use the value from `payload` only if the key was
-    actually sent; otherwise fall back to the existing DB row (`current`),
-    and only fall back to `default` when there is no existing row at all
-    (i.e. this is a brand new entity)."""
-    if key in payload:
-        return payload.get(key)
-    if current is not None:
-        return current.get(key, default)
-    return default
 
 
 async def save_store_collection(db: AsyncSession, actor: Account, payload: dict, collection_id: int | None = None) -> dict:
     await ensure_store_studio_tables(db)
     if not can_manage_store(actor):
         return {"ok": False, "error": "forbidden", "message": "Нужен verified-аккаунт."}
-
-    # Load the existing row *first* (if we're updating) so a partial payload
-    # -- e.g. a "publish" toggle that only sends {"status": "published"} --
-    # falls back to what's already saved instead of being treated as blank.
-    current = None
-    if collection_id:
-        owned = await _owned_store_entity(db, "community_store_collections", int(collection_id), actor)
-        if owned is None:
-            return {"ok": False, "error": "not_found", "message": "Раздел не найден."}
-        if owned is False:
-            return {"ok": False, "error": "forbidden", "message": "Можно редактировать только свои разделы."}
-        current = owned
-
-    def field(key, default=None):
-        return _store_merge_field(payload, current, key, default)
-
-    title = str(field("title") or "").strip()[:100]
+    title = str(payload.get("title") or "").strip()[:100]
     if not title:
         return {"ok": False, "error": "validation", "message": "Добавь название раздела."}
-    status = str(field("status") or "draft").strip().lower()
+    status = str(payload.get("status") or "draft").strip().lower()
     status = status if status in STORE_ITEM_STATUSES else "draft"
-    starts_at = _store_parse_datetime(field("starts_at"))
-    ends_at = _store_parse_datetime(field("ends_at"))
+    starts_at = _store_parse_datetime(payload.get("starts_at"))
+    ends_at = _store_parse_datetime(payload.get("ends_at"))
     if starts_at and ends_at and ends_at <= starts_at:
         return {"ok": False, "error": "validation", "message": "Дата окончания должна быть позже даты начала."}
 
+    clean_entries = []
+    seen_entries = set()
     table_map = {
         "item": ("community_store_items", False),
         "theme": ("community_profile_themes", False),
         "pass": ("community_store_passes", True),
     }
-    entries_provided = "entries" in payload
-    if entries_provided:
-        clean_entries = []
-        seen_entries = set()
-        for index, raw in enumerate(list(payload.get("entries") or [])[:40]):
-            if not isinstance(raw, dict):
-                continue
-            entity_type = str(raw.get("entity_type") or "").strip().lower()
-            try:
-                entity_id = int(raw.get("entity_id"))
-            except (TypeError, ValueError, OverflowError):
-                continue
-            if entity_type not in STORE_COLLECTION_ENTITY_TYPES or entity_id <= 0:
-                continue
-            key = (entity_type, entity_id)
-            if key in seen_entries:
-                continue
-            seen_entries.add(key)
-            table_name, collaborative = table_map[entity_type]
-            owned_entry = await _owned_store_entity(db, table_name, entity_id, actor, collaborative=collaborative)
-            if owned_entry is None:
-                return {"ok": False, "error": "validation", "message": "Один из выбранных товаров больше не существует."}
-            if owned_entry is False:
-                return {"ok": False, "error": "forbidden", "message": "В раздел можно добавлять только свои публикации."}
-            clean_entries.append({"entity_type": entity_type, "entity_id": entity_id, "display_order": index})
-    else:
-        # Caller didn't touch entries (e.g. just flipping status) -- keep
-        # whatever is already attached to this collection.
-        clean_entries = None
-        if collection_id:
-            existing_entries = (await db.execute(text("""
-                SELECT entity_type, entity_id, display_order
-                FROM community_store_collection_entries
-                WHERE collection_id = :collection_id
-                ORDER BY display_order, id
-            """), {"collection_id": int(collection_id)})).mappings().all()
-            clean_entries = [
-                {"entity_type": str(row["entity_type"]), "entity_id": int(row["entity_id"]), "display_order": int(row["display_order"] or 0)}
-                for row in existing_entries
-            ]
-        else:
-            clean_entries = []
+    for index, raw in enumerate(list(payload.get("entries") or [])[:40]):
+        if not isinstance(raw, dict):
+            continue
+        entity_type = str(raw.get("entity_type") or "").strip().lower()
+        try:
+            entity_id = int(raw.get("entity_id"))
+        except (TypeError, ValueError, OverflowError):
+            continue
+        if entity_type not in STORE_COLLECTION_ENTITY_TYPES or entity_id <= 0:
+            continue
+        key = (entity_type, entity_id)
+        if key in seen_entries:
+            continue
+        seen_entries.add(key)
+        table_name, collaborative = table_map[entity_type]
+        owned = await _owned_store_entity(db, table_name, entity_id, actor, collaborative=collaborative)
+        if owned is None:
+            return {"ok": False, "error": "validation", "message": "Один из выбранных товаров больше не существует."}
+        if owned is False:
+            return {"ok": False, "error": "forbidden", "message": "В раздел можно добавлять только свои публикации."}
+        clean_entries.append({"entity_type": entity_type, "entity_id": entity_id, "display_order": index})
     if status == "published" and not clean_entries:
         return {"ok": False, "error": "validation", "message": "В опубликованном разделе должен быть хотя бы один товар."}
 
     values = {
         "creator_id": int(actor.id),
         "title": title,
-        "description": str(field("description") or "").strip()[:320] or None,
-        "banner_url": _store_clean_url(field("banner_url")) or None,
-        "accent_color": _store_clean_color(field("accent_color"), "#5865f2"),
-        "display_order": _store_int(field("display_order"), 0, -1000, 1000),
+        "description": str(payload.get("description") or "").strip()[:320] or None,
+        "banner_url": _store_clean_url(payload.get("banner_url")) or None,
+        "accent_color": _store_clean_color(payload.get("accent_color"), "#5865f2"),
+        "display_order": _store_int(payload.get("display_order"), 0, -1000, 1000),
         "starts_at": starts_at,
         "ends_at": ends_at,
         "status": status,
-        "is_active": _store_bool(field("is_active"), True),
-        "metadata": json.dumps(_store_json_dict(field("metadata")), ensure_ascii=False),
+        "is_active": _store_bool(payload.get("is_active"), True),
+        "metadata": json.dumps(_store_json_dict(payload.get("metadata")), ensure_ascii=False),
     }
     if collection_id:
+        owned = await _owned_store_entity(db, "community_store_collections", int(collection_id), actor)
+        if owned is None:
+            return {"ok": False, "error": "not_found", "message": "Раздел не найден."}
+        if owned is False:
+            return {"ok": False, "error": "forbidden", "message": "Можно редактировать только свои разделы."}
         await db.execute(text("""
             UPDATE community_store_collections SET
                 title=:title, description=:description, banner_url=:banner_url,
@@ -5937,13 +6015,12 @@ async def save_store_collection(db: AsyncSession, actor: Account, payload: dict,
         """), values)).mappings().first()
         entity_id = int(row["id"])
         action = "create"
-    if entries_provided:
-        await db.execute(text("DELETE FROM community_store_collection_entries WHERE collection_id=:collection_id"), {"collection_id": entity_id})
-        for entry in clean_entries:
-            await db.execute(text("""
-                INSERT INTO community_store_collection_entries
-                    (collection_id,entity_type,entity_id,display_order)
-                VALUES (:collection_id,:entity_type,:entity_id,:display_order)
+    await db.execute(text("DELETE FROM community_store_collection_entries WHERE collection_id=:collection_id"), {"collection_id": entity_id})
+    for entry in clean_entries:
+        await db.execute(text("""
+            INSERT INTO community_store_collection_entries
+                (collection_id,entity_type,entity_id,display_order)
+            VALUES (:collection_id,:entity_type,:entity_id,:display_order)
         """), {"collection_id": entity_id, **entry})
     await _store_audit(db, actor.id, "collection", entity_id, action, {"title": title, "status": status, "entries": len(clean_entries)})
     await db.commit()
@@ -5954,56 +6031,43 @@ async def save_store_item(db: AsyncSession, actor: Account, payload: dict, item_
     await ensure_store_studio_tables(db)
     if not can_manage_store(actor):
         return {"ok": False, "error": "forbidden", "message": "Нужен verified-аккаунт."}
-
-    # Load the existing row *first* (if updating) so a partial payload --
-    # e.g. a "publish" toggle that only sends {"status": "published"} --
-    # falls back to the item's current values instead of being treated as
-    # blank/default (which previously made publishing fail with "Добавь
-    # название" even though the item already had a title).
-    current = None
-    if item_id:
-        owned = await _owned_store_entity(db, "community_store_items", int(item_id), actor)
-        if owned is None:
-            return {"ok": False, "error": "not_found", "message": "Товар не найден."}
-        if owned is False:
-            return {"ok": False, "error": "forbidden", "message": "Можно редактировать только свои товары."}
-        current = owned
-
-    def field(key, default=None):
-        return _store_merge_field(payload, current, key, default)
-
-    item_type = str(field("item_type") or "one_time").strip().lower()
+    item_type = str(payload.get("item_type") or "one_time").strip().lower()
     if item_type not in STORE_ITEM_TYPES:
         return {"ok": False, "error": "invalid_type", "message": "Неизвестный тип товара."}
-    title = str(field("title") or "").strip()[:100]
+    title = str(payload.get("title") or "").strip()[:100]
     if not title:
         return {"ok": False, "error": "validation", "message": "Добавь название."}
-    status = str(field("status") or "draft").strip().lower()
+    status = str(payload.get("status") or "draft").strip().lower()
     status = status if status in STORE_ITEM_STATUSES else "draft"
-    starts_at = _store_parse_datetime(field("starts_at"))
-    ends_at = _store_parse_datetime(field("ends_at"))
+    starts_at = _store_parse_datetime(payload.get("starts_at"))
+    ends_at = _store_parse_datetime(payload.get("ends_at"))
     if starts_at and ends_at and ends_at <= starts_at:
         return {"ok": False, "error": "validation", "message": "Дата окончания должна быть позже даты начала."}
     values = {
         "creator_id": int(actor.id),
         "item_type": item_type,
         "title": title,
-        "description": str(field("description") or "").strip()[:500] or None,
-        "image_url": _store_clean_url(field("image_url")) or None,
-        "icon": str(field("icon") or "✦").strip()[:32] or "✦",
-        "price_amount": _store_int(field("price_amount"), 0, 0, 1_000_000_000),
+        "description": str(payload.get("description") or "").strip()[:500] or None,
+        "image_url": _store_clean_url(payload.get("image_url")) or None,
+        "icon": str(payload.get("icon") or "✦").strip()[:32] or "✦",
+        "price_amount": _store_int(payload.get("price_amount"), 0, 0, 1_000_000_000),
         "currency": (
-            str(field("currency") or "clover").strip().lower()
-            if str(field("currency") or "clover").strip().lower() in STORE_CURRENCIES
+            str(payload.get("currency") or "clover").strip().lower()
+            if str(payload.get("currency") or "clover").strip().lower() in STORE_CURRENCIES
             else "clover"
         ),
         "starts_at": starts_at,
         "ends_at": ends_at,
         "status": status,
-        "is_active": _store_bool(field("is_active"), True),
-        "metadata": json.dumps(_store_json_dict(field("metadata")), ensure_ascii=False),
+        "is_active": _store_bool(payload.get("is_active"), True),
+        "metadata": json.dumps(_store_json_dict(payload.get("metadata")), ensure_ascii=False),
     }
     if item_id:
+        owned = await _owned_store_entity(db, "community_store_items", int(item_id), actor)
+        if owned is None:
+            return {"ok": False, "error": "not_found", "message": "Товар не найден."}
+        if owned is False:
+            return {"ok": False, "error": "forbidden", "message": "Можно редактировать только свои товары."}
         await db.execute(text("""
             UPDATE community_store_items SET
                 item_type=:item_type, title=:title, description=:description,
@@ -6043,49 +6107,38 @@ async def save_profile_theme(db: AsyncSession, actor: Account, payload: dict, th
     await ensure_store_studio_tables(db)
     if not can_manage_store(actor):
         return {"ok": False, "error": "forbidden", "message": "Нужен verified-аккаунт."}
-    # Load the existing row *first* (if updating) so a partial payload --
-    # e.g. a "publish" toggle that only sends {"status": "published"} --
-    # falls back to the theme's current values instead of being treated as
-    # blank/default.
-    current = None
+    title = str(payload.get("title") or "").strip()[:80]
+    image_url = _store_clean_url(payload.get("image_url"))
+    if not title or not image_url:
+        return {"ok": False, "error": "validation", "message": "Для темы нужны название и изображение."}
+    status = str(payload.get("status") or "draft").strip().lower()
+    status = status if status in STORE_ITEM_STATUSES else "draft"
+    access_mode = str(payload.get("access_mode") or "free").strip().lower()
+    access_mode = access_mode if access_mode in STORE_THEME_ACCESS else "free"
+    starts_at = _store_parse_datetime(payload.get("starts_at"))
+    ends_at = _store_parse_datetime(payload.get("ends_at"))
+    if starts_at and ends_at and ends_at <= starts_at:
+        return {"ok": False, "error": "validation", "message": "Дата окончания должна быть позже даты начала."}
+    values = {
+        "creator_id": int(actor.id),
+        "title": title,
+        "description": str(payload.get("description") or "").strip()[:220] or None,
+        "image_url": image_url,
+        "accent_color": _store_clean_color(payload.get("accent_color"), "#5865f2"),
+        "text_color": _store_clean_color(payload.get("text_color"), "#ffffff"),
+        "overlay_strength": _store_int(payload.get("overlay_strength"), 58, 0, 90),
+        "access_mode": access_mode,
+        "starts_at": starts_at,
+        "ends_at": ends_at,
+        "status": status,
+        "is_active": _store_bool(payload.get("is_active"), True),
+    }
     if theme_id:
         owned = await _owned_store_entity(db, "community_profile_themes", int(theme_id), actor)
         if owned is None:
             return {"ok": False, "error": "not_found", "message": "Тема не найдена."}
         if owned is False:
             return {"ok": False, "error": "forbidden", "message": "Можно редактировать только свои темы."}
-        current = owned
-
-    def field(key, default=None):
-        return _store_merge_field(payload, current, key, default)
-
-    title = str(field("title") or "").strip()[:80]
-    image_url = _store_clean_url(field("image_url"))
-    if not title or not image_url:
-        return {"ok": False, "error": "validation", "message": "Для темы нужны название и изображение."}
-    status = str(field("status") or "draft").strip().lower()
-    status = status if status in STORE_ITEM_STATUSES else "draft"
-    access_mode = str(field("access_mode") or "free").strip().lower()
-    access_mode = access_mode if access_mode in STORE_THEME_ACCESS else "free"
-    starts_at = _store_parse_datetime(field("starts_at"))
-    ends_at = _store_parse_datetime(field("ends_at"))
-    if starts_at and ends_at and ends_at <= starts_at:
-        return {"ok": False, "error": "validation", "message": "Дата окончания должна быть позже даты начала."}
-    values = {
-        "creator_id": int(actor.id),
-        "title": title,
-        "description": str(field("description") or "").strip()[:220] or None,
-        "image_url": image_url,
-        "accent_color": _store_clean_color(field("accent_color"), "#5865f2"),
-        "text_color": _store_clean_color(field("text_color"), "#ffffff"),
-        "overlay_strength": _store_int(field("overlay_strength"), 58, 0, 90),
-        "access_mode": access_mode,
-        "starts_at": starts_at,
-        "ends_at": ends_at,
-        "status": status,
-        "is_active": _store_bool(field("is_active"), True),
-    }
-    if theme_id:
         await db.execute(text("""
             UPDATE community_profile_themes SET
                 title=:title, description=:description, image_url=:image_url,
@@ -6102,7 +6155,7 @@ async def save_profile_theme(db: AsyncSession, actor: Account, payload: dict, th
             WHERE id=:entity_id
         """), {**values, "entity_id": int(theme_id)})
         entity_id = int(theme_id)
-        owner_id = int(current["creator_id"])
+        owner_id = int(owned["creator_id"])
         action = "update"
     else:
         row = (await db.execute(text("""
@@ -6132,47 +6185,36 @@ async def save_store_pass(db: AsyncSession, actor: Account, payload: dict, pass_
     await ensure_store_studio_tables(db)
     if not can_manage_store(actor):
         return {"ok": False, "error": "forbidden", "message": "Нужен verified-аккаунт."}
-    # Load the existing row *first* (if updating) so a partial payload --
-    # e.g. a "publish" toggle that only sends {"status": "published"} --
-    # falls back to the pass's current values instead of being treated as
-    # blank/default.
-    current = None
+    title = str(payload.get("title") or "").strip()[:100]
+    if not title:
+        return {"ok": False, "error": "validation", "message": "Добавь название пропуска."}
+    max_level = _store_int(payload.get("max_level"), 20, 1, 100)
+    xp_per_level = _store_int(payload.get("xp_per_level"), 100, 1, 100_000)
+    starts_at = _store_parse_datetime(payload.get("starts_at"))
+    ends_at = _store_parse_datetime(payload.get("ends_at"))
+    if starts_at and ends_at and ends_at <= starts_at:
+        return {"ok": False, "error": "validation", "message": "Дата окончания должна быть позже даты начала."}
+    status = str(payload.get("status") or "draft").strip().lower()
+    status = status if status in STORE_ITEM_STATUSES else "draft"
+    values = {
+        "creator_id": int(actor.id),
+        "title": title,
+        "description": str(payload.get("description") or "").strip()[:500] or None,
+        "image_url": _store_clean_url(payload.get("image_url")) or None,
+        "max_level": max_level,
+        "xp_per_level": xp_per_level,
+        "starts_at": starts_at,
+        "ends_at": ends_at,
+        "status": status,
+        "is_active": _store_bool(payload.get("is_active"), True),
+        "metadata": json.dumps(_store_json_dict(payload.get("metadata")), ensure_ascii=False),
+    }
     if pass_id:
         owned = await _owned_store_entity(db, "community_store_passes", int(pass_id), actor, collaborative=True)
         if owned is None:
             return {"ok": False, "error": "not_found", "message": "Пропуск не найден."}
         if owned is False:
             return {"ok": False, "error": "forbidden", "message": "Этот пропуск нельзя редактировать."}
-        current = owned
-
-    def field(key, default=None):
-        return _store_merge_field(payload, current, key, default)
-
-    title = str(field("title") or "").strip()[:100]
-    if not title:
-        return {"ok": False, "error": "validation", "message": "Добавь название пропуска."}
-    max_level = _store_int(field("max_level"), 20, 1, 100)
-    xp_per_level = _store_int(field("xp_per_level"), 100, 1, 100_000)
-    starts_at = _store_parse_datetime(field("starts_at"))
-    ends_at = _store_parse_datetime(field("ends_at"))
-    if starts_at and ends_at and ends_at <= starts_at:
-        return {"ok": False, "error": "validation", "message": "Дата окончания должна быть позже даты начала."}
-    status = str(field("status") or "draft").strip().lower()
-    status = status if status in STORE_ITEM_STATUSES else "draft"
-    values = {
-        "creator_id": int(actor.id),
-        "title": title,
-        "description": str(field("description") or "").strip()[:500] or None,
-        "image_url": _store_clean_url(field("image_url")) or None,
-        "max_level": max_level,
-        "xp_per_level": xp_per_level,
-        "starts_at": starts_at,
-        "ends_at": ends_at,
-        "status": status,
-        "is_active": _store_bool(field("is_active"), True),
-        "metadata": json.dumps(_store_json_dict(field("metadata")), ensure_ascii=False),
-    }
-    if pass_id:
         await db.execute(text("""
             UPDATE community_store_passes SET
                 title=:title, description=:description, image_url=:image_url,
