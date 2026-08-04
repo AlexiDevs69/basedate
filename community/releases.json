@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.44.2",
+      "date": "2026-08-04",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Reorder community router registration in startup."
+      ],
+      "source_sha": "5fea471870525b5ddd7acb3e1a2aaa7019ff9ff6"
+    },
+    {
       "version": "1.44.1",
       "date": "2026-08-04",
       "title": "Виправлення та стабільність",
