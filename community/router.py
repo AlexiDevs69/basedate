@@ -3227,7 +3227,7 @@ def _store_error_status(result: dict) -> int:
         return 403
     if error in {"not_found", "task_not_found", "reward_not_found"}:
         return 404
-    if error in {"already_claimed", "sold_out", "own_giveaway", "rate_limited"}:
+    if error in {"already_claimed", "sold_out", "own_giveaway", "rate_limited", "payment_unavailable"}:
         return 409
     return 400
 
@@ -3378,6 +3378,51 @@ async def _store_workshop_write(
             status_code=500,
         )
     return _store_result_response(result, success_status)
+
+
+@router.get("/api/store/entities/{entity_type}/{entity_id}")
+async def api_store_entity_detail(
+    entity_type: str, entity_id: int, request: Request, db: AsyncSession = Depends(get_db)
+):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    return _store_result_response(
+        await crud.get_store_entity_detail(db, account.id, entity_type, entity_id)
+    )
+
+
+@router.post("/api/store/entities/{entity_type}/{entity_id}/acquire")
+async def api_store_entity_acquire(
+    entity_type: str, entity_id: int, request: Request, db: AsyncSession = Depends(get_db)
+):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    entity_type = str(entity_type or "").strip().lower()
+    try:
+        if entity_type == "item":
+            result = await crud.acquire_store_item(db, account.id, entity_id)
+        elif entity_type == "pass":
+            result = await crud.activate_store_pass(db, account.id, entity_id)
+        elif entity_type == "theme":
+            result = await crud.claim_profile_theme(db, account.id, entity_id)
+        else:
+            result = {"ok": False, "error": "not_found", "message": "Неизвестный тип товара."}
+    except Exception as exc:
+        await db.rollback()
+        print(
+            f"[storefront] acquire {entity_type}:{entity_id} failed: "
+            f"{type(exc).__name__}: {exc!r}",
+            flush=True,
+        )
+        return JSONResponse(
+            {"ok": False, "error": "store_action_failed", "message": "Не удалось выполнить действие с товаром."},
+            status_code=500,
+        )
+    if not result.get("ok"):
+        await db.rollback()
+    return _store_result_response(result, 201)
 
 
 @router.get("/api/store/workshop")
