@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.43.0",
+      "date": "2026-08-04",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: API endpoints for profile themes library and claim."
+      ],
+      "source_sha": "eb15ebdde6639f2e11621a5cd2c261953fb98eff"
+    },
+    {
       "version": "1.42.0",
       "date": "2026-08-04",
       "title": "Нові можливості AlexiHub",
