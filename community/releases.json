@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.45.0",
+      "date": "2026-08-05",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: item ownership tracking in store."
+      ],
+      "source_sha": "341bdd78ce778554746e9cfa3ca98ca2ae321e65"
+    },
+    {
       "version": "1.44.2",
       "date": "2026-08-04",
       "title": "Виправлення та стабільність",
