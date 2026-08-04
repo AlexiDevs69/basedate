@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.39.4",
+      "date": "2026-08-04",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: workshop API to use _store_workshop_write."
+      ],
+      "source_sha": "4449b8e721f7850929b0810976d5a8580fbe4110"
+    },
+    {
       "version": "1.39.3",
       "date": "2026-08-04",
       "title": "Оновлення AlexiHub",
