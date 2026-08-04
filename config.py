@@ -5,6 +5,7 @@ using pydantic-settings. Keeping this in one place means the rest of the app
 never touches os.environ directly.
 """
 from functools import lru_cache
+import re
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -56,6 +57,10 @@ class Settings(BaseSettings):
             url = url.replace("postgres://", "postgresql+asyncpg://", 1)
         elif url.startswith("postgresql://"):
             url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+
+        # SQLAlchemy passes query parameters to asyncpg as keyword arguments.
+        # asyncpg expects ``ssl`` rather than ``sslmode`` in that code path.
+        url = re.sub(r"([?&])sslmode=([^&]+)", r"\1ssl=\2", url, flags=re.IGNORECASE)
         return url
 
 
