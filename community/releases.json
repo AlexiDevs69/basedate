@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.42.0",
+      "date": "2026-08-04",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: mini-profile theme picker and styles."
+      ],
+      "source_sha": "86e1ef89f96b79a7a7eb2e831b5235e0e5205cf9"
+    },
+    {
       "version": "1.41.0",
       "date": "2026-08-04",
       "title": "Нові можливості AlexiHub",
