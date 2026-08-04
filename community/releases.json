@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.39.5",
+      "date": "2026-08-04",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: published_at logic based on is_published."
+      ],
+      "source_sha": "7955f3dc34b077c8fbfd9ec5fcb392a4250c035c"
+    },
+    {
       "version": "1.39.4",
       "date": "2026-08-04",
       "title": "Оновлення AlexiHub",
