@@ -5473,6 +5473,17 @@ async def ensure_store_studio_tables(db: AsyncSession) -> None:
     await db.execute(text("CREATE INDEX IF NOT EXISTS ix_store_collection_entries_order ON community_store_collection_entries (collection_id, display_order, id)"))
     await db.execute(text("CREATE INDEX IF NOT EXISTS ix_store_audit_entity ON community_store_audit_log (entity_type, entity_id, created_at DESC)"))
 
+    # Before themes had a separate claim step, equipping a free theme was the only
+    # way to obtain it. Preserve those already-equipped themes as permanent ownership.
+    await db.execute(text("""
+        INSERT INTO community_profile_theme_ownership (theme_id, account_id, source)
+        SELECT equipped.theme_id, equipped.account_id, 'LEGACY_EQUIPPED'
+        FROM community_account_profile_theme AS equipped
+        JOIN community_profile_themes AS theme ON theme.id = equipped.theme_id
+        WHERE equipped.theme_id IS NOT NULL AND theme.access_mode = 'free'
+        ON CONFLICT (theme_id, account_id) DO NOTHING
+    """))
+
     # Seed the existing hard-coded pass once. Afterwards its dates and levels are
     # fully editable from the verified studio and remain in PostgreSQL.
     pass_row = (await db.execute(text("""
@@ -5763,7 +5774,7 @@ async def get_store_catalog(db: AsyncSession, account_id: int) -> dict:
                 row,
                 owned=bool(row["owned"]),
                 equipped=bool(row["equipped"]),
-                can_equip=bool(row["access_mode"] == "free" or row["owned"]),
+                can_equip=bool(row["owned"]),
             )
             for row in theme_rows
         ],
@@ -5782,14 +5793,126 @@ async def get_equipped_profile_theme(db: AsyncSession, account_id: int) -> dict 
         SELECT theme.*, creator.username AS creator_username
         FROM community_account_profile_theme AS equipped
         JOIN community_profile_themes AS theme ON theme.id = equipped.theme_id
+        JOIN community_profile_theme_ownership AS ownership
+          ON ownership.theme_id = theme.id AND ownership.account_id = equipped.account_id
         JOIN community_accounts AS creator ON creator.id = theme.creator_id
         WHERE equipped.account_id = :account_id
-          AND theme.status = 'published' AND theme.is_active = TRUE
-          AND (theme.starts_at IS NULL OR theme.starts_at <= NOW())
-          AND (theme.ends_at IS NULL OR theme.ends_at > NOW())
+          AND theme.is_active = TRUE
         LIMIT 1
     """), {"account_id": int(account_id)})).mappings().first()
     return _store_theme_payload(row, owned=True, equipped=True, can_equip=True) if row else None
+
+
+async def get_profile_theme_library(db: AsyncSession, account_id: int) -> dict:
+    await ensure_store_studio_tables(db)
+    account_id = int(account_id)
+    now = _store_now()
+    equipped_theme = await get_equipped_profile_theme(db, account_id)
+    equipped_theme_id = int(equipped_theme["id"]) if equipped_theme else None
+
+    owned_rows = (await db.execute(text("""
+        SELECT theme.*, creator.username AS creator_username,
+               ownership.acquired_at
+        FROM community_profile_theme_ownership AS ownership
+        JOIN community_profile_themes AS theme ON theme.id = ownership.theme_id
+        JOIN community_accounts AS creator ON creator.id = theme.creator_id
+        WHERE ownership.account_id = :account_id
+          AND theme.is_active = TRUE
+        ORDER BY ownership.acquired_at DESC, theme.updated_at DESC
+    """), {"account_id": account_id})).mappings().all()
+
+    store_rows = (await db.execute(text("""
+        SELECT theme.*, creator.username AS creator_username,
+               ownership.id IS NOT NULL AS owned
+        FROM community_profile_themes AS theme
+        JOIN community_accounts AS creator ON creator.id = theme.creator_id
+        LEFT JOIN community_profile_theme_ownership AS ownership
+          ON ownership.theme_id = theme.id AND ownership.account_id = :account_id
+        WHERE theme.status = 'published' AND theme.is_active = TRUE
+          AND (theme.starts_at IS NULL OR theme.starts_at <= :now)
+          AND (theme.ends_at IS NULL OR theme.ends_at > :now)
+        ORDER BY theme.updated_at DESC
+        LIMIT 100
+    """), {"account_id": account_id, "now": now})).mappings().all()
+
+    owned_themes = [
+        _store_theme_payload(
+            row,
+            owned=True,
+            equipped=equipped_theme_id == int(row["id"]),
+            can_equip=True,
+        )
+        for row in owned_rows
+    ]
+    store_themes = []
+    for row in store_rows:
+        owned = bool(row["owned"])
+        payload = _store_theme_payload(
+            row,
+            owned=owned,
+            equipped=equipped_theme_id == int(row["id"]),
+            can_equip=owned,
+        )
+        payload["claimable"] = bool(row["access_mode"] == "free" and not owned)
+        store_themes.append(payload)
+
+    return {
+        "ok": True,
+        "equipped_theme_id": equipped_theme_id,
+        "equipped_theme": equipped_theme,
+        "owned_themes": owned_themes,
+        "store_themes": store_themes,
+    }
+
+
+async def claim_profile_theme(db: AsyncSession, account_id: int, theme_id: int) -> dict:
+    await ensure_store_studio_tables(db)
+    account_id = int(account_id)
+    theme_id = int(theme_id)
+    row = (await db.execute(text("""
+        SELECT theme.*, creator.username AS creator_username,
+               ownership.id IS NOT NULL AS owned
+        FROM community_profile_themes AS theme
+        JOIN community_accounts AS creator ON creator.id = theme.creator_id
+        LEFT JOIN community_profile_theme_ownership AS ownership
+          ON ownership.theme_id = theme.id AND ownership.account_id = :account_id
+        WHERE theme.id = :theme_id
+        LIMIT 1
+        FOR UPDATE OF theme
+    """), {"account_id": account_id, "theme_id": theme_id})).mappings().first()
+    if not row:
+        return {"ok": False, "error": "not_found", "message": "Тема не найдена."}
+    if bool(row["owned"]):
+        return {
+            "ok": True,
+            "already_owned": True,
+            "theme": _store_theme_payload(row, owned=True, equipped=False, can_equip=True),
+        }
+
+    now = _store_now()
+    starts_at = _nitro_datetime_utc(row["starts_at"])
+    ends_at = _nitro_datetime_utc(row["ends_at"])
+    available = (
+        row["status"] == "published" and bool(row["is_active"])
+        and (not starts_at or starts_at <= now)
+        and (not ends_at or ends_at > now)
+    )
+    if not available:
+        return {"ok": False, "error": "expired", "message": "Эта акция уже недоступна."}
+    if row["access_mode"] != "free":
+        return {"ok": False, "error": "forbidden", "message": "Эта тема открывается через награду пропуска."}
+
+    await db.execute(text("""
+        INSERT INTO community_profile_theme_ownership (theme_id, account_id, source)
+        VALUES (:theme_id, :account_id, 'STORE_FREE')
+        ON CONFLICT (theme_id, account_id) DO NOTHING
+    """), {"theme_id": theme_id, "account_id": account_id})
+    await db.commit()
+    return {
+        "ok": True,
+        "already_owned": False,
+        "theme": _store_theme_payload(row, owned=True, equipped=False, can_equip=True),
+    }
 
 
 async def equip_profile_theme(db: AsyncSession, account_id: int, theme_id: int | None) -> dict:
@@ -5801,8 +5924,10 @@ async def equip_profile_theme(db: AsyncSession, account_id: int, theme_id: int |
         return {"ok": True, "theme": None}
     row = (await db.execute(text("""
         SELECT theme.*,
+               creator.username AS creator_username,
                ownership.id IS NOT NULL AS owned
         FROM community_profile_themes AS theme
+        JOIN community_accounts AS creator ON creator.id = theme.creator_id
         LEFT JOIN community_profile_theme_ownership AS ownership
           ON ownership.theme_id = theme.id AND ownership.account_id = :account_id
         WHERE theme.id = :theme_id
@@ -5810,16 +5935,10 @@ async def equip_profile_theme(db: AsyncSession, account_id: int, theme_id: int |
     """), {"account_id": account_id, "theme_id": int(theme_id)})).mappings().first()
     if not row:
         return {"ok": False, "error": "not_found", "message": "Тема не найдена."}
-    now = _store_now()
-    starts_at = _nitro_datetime_utc(row["starts_at"])
-    ends_at = _nitro_datetime_utc(row["ends_at"])
-    available = (
-        row["status"] == "published" and bool(row["is_active"])
-        and (not starts_at or starts_at <= now) and (not ends_at or ends_at > now)
-    )
-    can_equip = available and (row["access_mode"] == "free" or bool(row["owned"]))
-    if not can_equip:
-        return {"ok": False, "error": "forbidden", "message": "Эта тема ещё не открыта для аккаунта."}
+    if not bool(row["is_active"]):
+        return {"ok": False, "error": "disabled", "message": "Эта тема временно отключена."}
+    if not bool(row["owned"]):
+        return {"ok": False, "error": "forbidden", "message": "Сначала добавь эту тему в свою коллекцию."}
     await db.execute(text("""
         INSERT INTO community_account_profile_theme (account_id, theme_id)
         VALUES (:account_id, :theme_id)
