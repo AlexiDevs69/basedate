@@ -5977,6 +5977,7 @@ async def save_store_collection(db: AsyncSession, actor: Account, payload: dict,
         "starts_at": starts_at,
         "ends_at": ends_at,
         "status": status,
+        "is_published": status == "published",
         "is_active": _store_bool(payload.get("is_active"), True),
         "metadata": json.dumps(_store_json_dict(payload.get("metadata")), ensure_ascii=False),
     }
@@ -5993,8 +5994,8 @@ async def save_store_collection(db: AsyncSession, actor: Account, payload: dict,
                 starts_at=:starts_at, ends_at=:ends_at, status=:status,
                 is_active=:is_active, metadata=CAST(:metadata AS JSONB),
                 published_at=CASE
-                    WHEN :status='published' AND status<>'published' THEN NOW()
-                    WHEN :status<>'published' THEN NULL
+                    WHEN :is_published AND status<>'published' THEN NOW()
+                    WHEN NOT :is_published THEN NULL
                     ELSE published_at
                 END,
                 updated_at=NOW()
@@ -6010,7 +6011,7 @@ async def save_store_collection(db: AsyncSession, actor: Account, payload: dict,
             VALUES
                 (:creator_id,:title,:description,:banner_url,:accent_color,:display_order,
                  :starts_at,:ends_at,:status,:is_active,CAST(:metadata AS JSONB),
-                 CASE WHEN :status='published' THEN NOW() ELSE NULL END)
+                 CASE WHEN :is_published THEN NOW() ELSE NULL END)
             RETURNING id
         """), values)).mappings().first()
         entity_id = int(row["id"])
@@ -6059,6 +6060,7 @@ async def save_store_item(db: AsyncSession, actor: Account, payload: dict, item_
         "starts_at": starts_at,
         "ends_at": ends_at,
         "status": status,
+        "is_published": status == "published",
         "is_active": _store_bool(payload.get("is_active"), True),
         "metadata": json.dumps(_store_json_dict(payload.get("metadata")), ensure_ascii=False),
     }
@@ -6076,8 +6078,8 @@ async def save_store_item(db: AsyncSession, actor: Account, payload: dict, item_
                 status=:status, is_active=:is_active,
                 metadata=CAST(:metadata AS JSONB),
                 published_at=CASE
-                    WHEN :status='published' AND status<>'published' THEN NOW()
-                    WHEN :status<>'published' THEN NULL
+                    WHEN :is_published AND status<>'published' THEN NOW()
+                    WHEN NOT :is_published THEN NULL
                     ELSE published_at
                 END,
                 updated_at=NOW()
@@ -6093,7 +6095,7 @@ async def save_store_item(db: AsyncSession, actor: Account, payload: dict, item_
             VALUES
                 (:creator_id,:item_type,:title,:description,:image_url,:icon,:price_amount,
                  :currency,:starts_at,:ends_at,:status,:is_active,CAST(:metadata AS JSONB),
-                 CASE WHEN :status='published' THEN NOW() ELSE NULL END)
+                 CASE WHEN :is_published THEN NOW() ELSE NULL END)
             RETURNING id
         """), values)).mappings().first()
         entity_id = int(row["id"])
@@ -6131,6 +6133,7 @@ async def save_profile_theme(db: AsyncSession, actor: Account, payload: dict, th
         "starts_at": starts_at,
         "ends_at": ends_at,
         "status": status,
+        "is_published": status == "published",
         "is_active": _store_bool(payload.get("is_active"), True),
     }
     if theme_id:
@@ -6147,8 +6150,8 @@ async def save_profile_theme(db: AsyncSession, actor: Account, payload: dict, th
                 starts_at=:starts_at, ends_at=:ends_at, status=:status,
                 is_active=:is_active,
                 published_at=CASE
-                    WHEN :status='published' AND status<>'published' THEN NOW()
-                    WHEN :status<>'published' THEN NULL
+                    WHEN :is_published AND status<>'published' THEN NOW()
+                    WHEN NOT :is_published THEN NULL
                     ELSE published_at
                 END,
                 updated_at=NOW()
@@ -6165,7 +6168,7 @@ async def save_profile_theme(db: AsyncSession, actor: Account, payload: dict, th
             VALUES
                 (:creator_id,:title,:description,:image_url,:accent_color,:text_color,
                  :overlay_strength,:access_mode,:starts_at,:ends_at,:status,:is_active,
-                 CASE WHEN :status='published' THEN NOW() ELSE NULL END)
+                 CASE WHEN :is_published THEN NOW() ELSE NULL END)
             RETURNING id
         """), values)).mappings().first()
         entity_id = int(row["id"])
@@ -6206,6 +6209,7 @@ async def save_store_pass(db: AsyncSession, actor: Account, payload: dict, pass_
         "starts_at": starts_at,
         "ends_at": ends_at,
         "status": status,
+        "is_published": status == "published",
         "is_active": _store_bool(payload.get("is_active"), True),
         "metadata": json.dumps(_store_json_dict(payload.get("metadata")), ensure_ascii=False),
     }
@@ -6222,8 +6226,8 @@ async def save_store_pass(db: AsyncSession, actor: Account, payload: dict, pass_
                 starts_at=:starts_at, ends_at=:ends_at, status=:status,
                 is_active=:is_active, metadata=CAST(:metadata AS JSONB),
                 published_at=CASE
-                    WHEN :status='published' AND status<>'published' THEN NOW()
-                    WHEN :status<>'published' THEN NULL
+                    WHEN :is_published AND status<>'published' THEN NOW()
+                    WHEN NOT :is_published THEN NULL
                     ELSE published_at
                 END,
                 updated_at=NOW()
@@ -6241,7 +6245,7 @@ async def save_store_pass(db: AsyncSession, actor: Account, payload: dict, pass_
             VALUES
                 (:creator_id,:pass_key,:title,:description,:image_url,:max_level,:xp_per_level,
                  :starts_at,:ends_at,:status,:is_active,FALSE,CAST(:metadata AS JSONB),
-                 CASE WHEN :status='published' THEN NOW() ELSE NULL END)
+                 CASE WHEN :is_published THEN NOW() ELSE NULL END)
             RETURNING id
         """), {**values, "pass_key": pass_key})).mappings().first()
         entity_id = int(row["id"])
