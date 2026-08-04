@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.44.1",
+      "date": "2026-08-04",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance theme card and claim theme functionality."
+      ],
+      "source_sha": "0cb98147d3ba906dc70408a09a680c787bc1da7f"
+    },
+    {
       "version": "1.44.0",
       "date": "2026-08-04",
       "title": "Нові можливості AlexiHub",
