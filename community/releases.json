@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.46.0",
+      "date": "2026-08-05",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: API endpoints for store entity details and acquisition."
+      ],
+      "source_sha": "2bd21212eba1297c04ebc121f1bdb848311ba1ca"
+    },
+    {
       "version": "1.45.0",
       "date": "2026-08-05",
       "title": "Нові можливості AlexiHub",
