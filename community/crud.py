@@ -5222,6 +5222,16 @@ async def ensure_store_studio_tables(db: AsyncSession) -> None:
         )
     """))
     await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_store_item_ownership (
+            id BIGSERIAL PRIMARY KEY,
+            item_id BIGINT NOT NULL REFERENCES community_store_items(id) ON DELETE CASCADE,
+            account_id INTEGER NOT NULL REFERENCES community_accounts(id) ON DELETE CASCADE,
+            source VARCHAR(80),
+            acquired_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+            UNIQUE (item_id, account_id)
+        )
+    """))
+    await db.execute(text("""
         CREATE TABLE IF NOT EXISTS community_profile_themes (
             id BIGSERIAL PRIMARY KEY,
             creator_id INTEGER NOT NULL REFERENCES community_accounts(id) ON DELETE CASCADE,
@@ -5472,6 +5482,7 @@ async def ensure_store_studio_tables(db: AsyncSession) -> None:
     await db.execute(text("CREATE INDEX IF NOT EXISTS ix_store_collections_public ON community_store_collections (status, is_active, display_order, starts_at, ends_at)"))
     await db.execute(text("CREATE INDEX IF NOT EXISTS ix_store_collection_entries_order ON community_store_collection_entries (collection_id, display_order, id)"))
     await db.execute(text("CREATE INDEX IF NOT EXISTS ix_store_audit_entity ON community_store_audit_log (entity_type, entity_id, created_at DESC)"))
+    await db.execute(text("CREATE INDEX IF NOT EXISTS ix_store_item_ownership_account ON community_store_item_ownership (account_id, acquired_at DESC)"))
 
     # Before themes had a separate claim step, equipping a free theme was the only
     # way to obtain it. Preserve those already-equipped themes as permanent ownership.
@@ -5591,7 +5602,14 @@ def _store_is_new(published_at: datetime | None) -> bool:
     return bool(published and published <= _store_now() and published >= _store_now() - STORE_NEW_WINDOW)
 
 
-def _store_item_payload(row) -> dict:
+def _store_item_payload(row, *, owned: bool | None = None, claimed_count: int | None = None) -> dict:
+    metadata = dict(row["metadata"] or {})
+    resolved_owned = bool(row.get("owned")) if owned is None else bool(owned)
+    resolved_claimed = int(row.get("claimed_count") or 0) if claimed_count is None else max(0, int(claimed_count))
+    stock = _store_int(metadata.get("stock"), 0, 0, 1_000_000_000)
+    remaining_stock = max(0, stock - resolved_claimed) if stock > 0 else None
+    sold_out = bool(stock > 0 and resolved_claimed >= stock)
+    price_amount = int(row["price_amount"] or 0)
     return {
         "id": int(row["id"]),
         "creator_id": int(row["creator_id"]) if row["creator_id"] else None,
@@ -5601,20 +5619,26 @@ def _store_item_payload(row) -> dict:
         "description": row["description"] or "",
         "image_url": row["image_url"] or "",
         "icon": row["icon"] or "✦",
-        "price_amount": int(row["price_amount"] or 0),
+        "price_amount": price_amount,
         "currency": row["currency"] or "clover",
         "starts_at": _store_dt_payload(row["starts_at"]),
         "ends_at": _store_dt_payload(row["ends_at"]),
         "status": row["status"],
         "is_active": bool(row["is_active"]),
         "lifecycle": _store_lifecycle(row["status"], bool(row["is_active"]), row["starts_at"], row["ends_at"]),
-        "metadata": dict(row["metadata"] or {}),
+        "metadata": metadata,
+        "owned": resolved_owned,
+        "claimed_count": resolved_claimed,
+        "stock": stock or None,
+        "remaining_stock": remaining_stock,
+        "sold_out": sold_out,
+        "payment_supported": price_amount == 0,
+        "can_acquire": not resolved_owned and not sold_out and price_amount == 0,
         "published_at": _store_dt_payload(row.get("published_at")),
         "is_new": _store_is_new(row.get("published_at")),
         "created_at": _store_dt_payload(row["created_at"]),
         "updated_at": _store_dt_payload(row["updated_at"]),
     }
-
 
 def _store_theme_payload(row, *, owned: bool = False, equipped: bool = False, can_equip: bool = False) -> dict:
     return {
@@ -5644,6 +5668,11 @@ def _store_theme_payload(row, *, owned: bool = False, equipped: bool = False, ca
 
 
 def _store_pass_payload_row(row, levels: list[dict] | None = None) -> dict:
+    max_level = int(row["max_level"] or 1)
+    xp_per_level = int(row["xp_per_level"] or 100)
+    joined = bool(row.get("joined"))
+    xp = max(0, int(row.get("progress_xp") or 0))
+    level = _store_level_from_xp(xp, joined, max_level, xp_per_level)
     return {
         "id": int(row["id"]),
         "creator_id": int(row["creator_id"]) if row["creator_id"] else None,
@@ -5652,8 +5681,8 @@ def _store_pass_payload_row(row, levels: list[dict] | None = None) -> dict:
         "title": row["title"],
         "description": row["description"] or "",
         "image_url": row["image_url"] or "",
-        "max_level": int(row["max_level"] or 1),
-        "xp_per_level": int(row["xp_per_level"] or 100),
+        "max_level": max_level,
+        "xp_per_level": xp_per_level,
         "starts_at": _store_dt_payload(row["starts_at"]),
         "ends_at": _store_dt_payload(row["ends_at"]),
         "status": row["status"],
@@ -5662,12 +5691,15 @@ def _store_pass_payload_row(row, levels: list[dict] | None = None) -> dict:
         "is_collaborative": bool(row["is_collaborative"]),
         "metadata": dict(row["metadata"] or {}),
         "levels": levels or [],
+        "joined": joined,
+        "progress_xp": xp,
+        "level": level,
+        "can_activate": not joined,
         "published_at": _store_dt_payload(row.get("published_at")),
         "is_new": _store_is_new(row.get("published_at")),
         "created_at": _store_dt_payload(row["created_at"]),
         "updated_at": _store_dt_payload(row["updated_at"]),
     }
-
 
 def _store_collection_payload(row, entries: list[dict] | None = None) -> dict:
     return {
@@ -5698,16 +5730,25 @@ async def get_store_catalog(db: AsyncSession, account_id: int) -> dict:
     account_id = int(account_id)
     now = _store_now()
     item_rows = (await db.execute(text("""
-        SELECT item.*, creator.username AS creator_username
+        SELECT item.*, creator.username AS creator_username,
+               ownership.id IS NOT NULL AS owned,
+               COALESCE(item_stats.claimed_count, 0) AS claimed_count
         FROM community_store_items AS item
         LEFT JOIN community_accounts AS creator ON creator.id = item.creator_id
+        LEFT JOIN community_store_item_ownership AS ownership
+          ON ownership.item_id = item.id AND ownership.account_id = :account_id
+        LEFT JOIN (
+            SELECT item_id, COUNT(*)::INTEGER AS claimed_count
+            FROM community_store_item_ownership
+            GROUP BY item_id
+        ) AS item_stats ON item_stats.item_id = item.id
         WHERE item.status = 'published' AND item.is_active = TRUE
           AND item.item_type <> 'profile_theme'
           AND (item.starts_at IS NULL OR item.starts_at <= :now)
           AND (item.ends_at IS NULL OR item.ends_at > :now)
         ORDER BY item.updated_at DESC
         LIMIT 60
-    """), {"now": now})).mappings().all()
+    """), {"account_id": account_id, "now": now})).mappings().all()
     theme_rows = (await db.execute(text("""
         SELECT theme.*, creator.username AS creator_username,
                ownership.id IS NOT NULL AS owned,
@@ -5725,16 +5766,20 @@ async def get_store_catalog(db: AsyncSession, account_id: int) -> dict:
         LIMIT 60
     """), {"account_id": account_id, "now": now})).mappings().all()
     pass_rows = (await db.execute(text("""
-        SELECT pass.*, creator.username AS creator_username
+        SELECT pass.*, creator.username AS creator_username,
+               progress.id IS NOT NULL AS joined,
+               COALESCE(progress.xp, 0) AS progress_xp
         FROM community_store_passes AS pass
         LEFT JOIN community_accounts AS creator ON creator.id = pass.creator_id
+        LEFT JOIN community_store_pass_progress AS progress
+          ON progress.account_id = :account_id AND progress.season_key = pass.pass_key
         WHERE pass.status = 'published' AND pass.is_active = TRUE
           AND (pass.starts_at IS NULL OR pass.starts_at <= :now)
           AND (pass.ends_at IS NULL OR pass.ends_at > :now)
         ORDER BY COALESCE(pass.metadata->>'featured', 'false') = 'true' DESC,
                  pass.updated_at DESC
         LIMIT 24
-    """), {"now": now})).mappings().all()
+    """), {"account_id": account_id, "now": now})).mappings().all()
     collection_rows = (await db.execute(text("""
         SELECT collection.*, creator.username AS creator_username
         FROM community_store_collections AS collection
@@ -5947,6 +5992,210 @@ async def equip_profile_theme(db: AsyncSession, account_id: int, theme_id: int |
     """), {"account_id": account_id, "theme_id": int(theme_id)})
     await db.commit()
     return {"ok": True, "theme": await get_equipped_profile_theme(db, account_id)}
+
+
+async def get_store_entity_detail(
+    db: AsyncSession, account_id: int, entity_type: str, entity_id: int
+) -> dict:
+    """Return one live storefront entity with account-specific ownership state."""
+    await ensure_store_studio_tables(db)
+    account_id = int(account_id)
+    entity_id = int(entity_id)
+    entity_type = str(entity_type or "").strip().lower()
+    now = _store_now()
+
+    if entity_type == "item":
+        row = (await db.execute(text("""
+            SELECT item.*, creator.username AS creator_username,
+                   ownership.id IS NOT NULL AS owned,
+                   COALESCE(item_stats.claimed_count, 0) AS claimed_count
+            FROM community_store_items AS item
+            LEFT JOIN community_accounts AS creator ON creator.id = item.creator_id
+            LEFT JOIN community_store_item_ownership AS ownership
+              ON ownership.item_id = item.id AND ownership.account_id = :account_id
+            LEFT JOIN (
+                SELECT item_id, COUNT(*)::INTEGER AS claimed_count
+                FROM community_store_item_ownership
+                GROUP BY item_id
+            ) AS item_stats ON item_stats.item_id = item.id
+            WHERE item.id = :entity_id
+              AND item.status = 'published' AND item.is_active = TRUE
+              AND item.item_type <> 'profile_theme'
+              AND (item.starts_at IS NULL OR item.starts_at <= :now)
+              AND (item.ends_at IS NULL OR item.ends_at > :now)
+            LIMIT 1
+        """), {"account_id": account_id, "entity_id": entity_id, "now": now})).mappings().first()
+        if not row:
+            return {"ok": False, "error": "not_found", "message": "Товар не найден или больше недоступен."}
+        entity = _store_item_payload(row)
+        metadata = entity.get("metadata") or {}
+        benefits = metadata.get("benefits") or []
+        if isinstance(benefits, str):
+            benefits = [line.strip() for line in benefits.splitlines() if line.strip()]
+        elif not isinstance(benefits, list):
+            benefits = []
+        entity["contents"] = [str(value)[:160] for value in benefits[:24]]
+        entity["entity_type"] = "item"
+        return {"ok": True, "entity": entity}
+
+    if entity_type == "pass":
+        row = (await db.execute(text("""
+            SELECT pass.*, creator.username AS creator_username,
+                   progress.id IS NOT NULL AS joined,
+                   COALESCE(progress.xp, 0) AS progress_xp
+            FROM community_store_passes AS pass
+            LEFT JOIN community_accounts AS creator ON creator.id = pass.creator_id
+            LEFT JOIN community_store_pass_progress AS progress
+              ON progress.account_id = :account_id AND progress.season_key = pass.pass_key
+            WHERE pass.id = :entity_id
+              AND pass.status = 'published' AND pass.is_active = TRUE
+              AND (pass.starts_at IS NULL OR pass.starts_at <= :now)
+              AND (pass.ends_at IS NULL OR pass.ends_at > :now)
+            LIMIT 1
+        """), {"account_id": account_id, "entity_id": entity_id, "now": now})).mappings().first()
+        if not row:
+            return {"ok": False, "error": "not_found", "message": "Пропуск не найден или больше недоступен."}
+        level_rows = (await db.execute(text("""
+            SELECT level, title, description, icon, reward_type, reward_ref_id, reward_config
+            FROM community_store_pass_levels
+            WHERE pass_id = :pass_id AND is_active = TRUE
+            ORDER BY level, id
+        """), {"pass_id": entity_id})).mappings().all()
+        levels = []
+        for level_row in level_rows:
+            level = dict(level_row)
+            level["level"] = int(level["level"] or 1)
+            level["reward_ref_id"] = int(level["reward_ref_id"]) if level.get("reward_ref_id") else None
+            level["reward_config"] = dict(level.get("reward_config") or {})
+            levels.append(level)
+        entity = _store_pass_payload_row(row, levels)
+        entity["entity_type"] = "pass"
+        entity["contents"] = [
+            {
+                "level": int(level["level"]),
+                "title": level.get("title") or f"Уровень {int(level['level'])}",
+                "description": level.get("description") or "",
+                "icon": level.get("icon") or "✦",
+                "reward_type": level.get("reward_type") or "collectible",
+            }
+            for level in levels
+        ]
+        return {"ok": True, "entity": entity}
+
+    if entity_type == "theme":
+        row = (await db.execute(text("""
+            SELECT theme.*, creator.username AS creator_username,
+                   ownership.id IS NOT NULL AS owned,
+                   equipped.theme_id = theme.id AS equipped
+            FROM community_profile_themes AS theme
+            JOIN community_accounts AS creator ON creator.id = theme.creator_id
+            LEFT JOIN community_profile_theme_ownership AS ownership
+              ON ownership.theme_id = theme.id AND ownership.account_id = :account_id
+            LEFT JOIN community_account_profile_theme AS equipped
+              ON equipped.account_id = :account_id
+            WHERE theme.id = :entity_id
+              AND theme.status = 'published' AND theme.is_active = TRUE
+              AND (theme.starts_at IS NULL OR theme.starts_at <= :now)
+              AND (theme.ends_at IS NULL OR theme.ends_at > :now)
+            LIMIT 1
+        """), {"account_id": account_id, "entity_id": entity_id, "now": now})).mappings().first()
+        if not row:
+            return {"ok": False, "error": "not_found", "message": "Тема не найдена или больше недоступна."}
+        entity = _store_theme_payload(
+            row, owned=bool(row["owned"]), equipped=bool(row["equipped"]), can_equip=bool(row["owned"])
+        )
+        entity["entity_type"] = "theme"
+        entity["contents"] = ["Тема нижней части мини-профиля", "Сохраняется в коллекции навсегда"]
+        return {"ok": True, "entity": entity}
+
+    return {"ok": False, "error": "not_found", "message": "Неизвестный тип товара."}
+
+
+async def acquire_store_item(db: AsyncSession, account_id: int, item_id: int) -> dict:
+    """Permanently claim one free published store item."""
+    await ensure_store_studio_tables(db)
+    account_id = int(account_id)
+    item_id = int(item_id)
+    now = _store_now()
+    row = (await db.execute(text("""
+        SELECT item.*
+        FROM community_store_items AS item
+        WHERE item.id = :item_id
+          AND item.status = 'published' AND item.is_active = TRUE
+          AND item.item_type <> 'profile_theme'
+          AND (item.starts_at IS NULL OR item.starts_at <= :now)
+          AND (item.ends_at IS NULL OR item.ends_at > :now)
+        LIMIT 1
+        FOR UPDATE
+    """), {"item_id": item_id, "now": now})).mappings().first()
+    if not row:
+        return {"ok": False, "error": "not_found", "message": "Товар не найден или больше недоступен."}
+
+    existing = (await db.execute(text("""
+        SELECT id FROM community_store_item_ownership
+        WHERE item_id = :item_id AND account_id = :account_id
+        LIMIT 1
+    """), {"item_id": item_id, "account_id": account_id})).first()
+    if existing:
+        return {"ok": False, "error": "already_claimed", "message": "Этот товар уже есть в твоей коллекции."}
+
+    price_amount = int(row["price_amount"] or 0)
+    if price_amount > 0:
+        return {
+            "ok": False,
+            "error": "payment_unavailable",
+            "message": "Баланс этой внутренней валюты ещё не подключён, поэтому покупка пока недоступна.",
+        }
+
+    metadata = dict(row["metadata"] or {})
+    stock = _store_int(metadata.get("stock"), 0, 0, 1_000_000_000)
+    if stock > 0:
+        claimed_count = int((await db.execute(text("""
+            SELECT COUNT(*) FROM community_store_item_ownership WHERE item_id = :item_id
+        """), {"item_id": item_id})).scalar_one() or 0)
+        if claimed_count >= stock:
+            return {"ok": False, "error": "sold_out", "message": "Товар закончился."}
+
+    await db.execute(text("""
+        INSERT INTO community_store_item_ownership (item_id, account_id, source)
+        VALUES (:item_id, :account_id, 'STORE_FREE')
+        ON CONFLICT (item_id, account_id) DO NOTHING
+    """), {"item_id": item_id, "account_id": account_id})
+    await db.commit()
+    detail = await get_store_entity_detail(db, account_id, "item", item_id)
+    return {"ok": True, "entity": detail.get("entity"), "message": "Товар добавлен в коллекцию."}
+
+
+async def activate_store_pass(db: AsyncSession, account_id: int, pass_id: int) -> dict:
+    """Activate any published pass created in the store workshop."""
+    await ensure_store_studio_tables(db)
+    account_id = int(account_id)
+    pass_id = int(pass_id)
+    now = _store_now()
+    row = (await db.execute(text("""
+        SELECT id, pass_key
+        FROM community_store_passes
+        WHERE id = :pass_id
+          AND status = 'published' AND is_active = TRUE
+          AND (starts_at IS NULL OR starts_at <= :now)
+          AND (ends_at IS NULL OR ends_at > :now)
+        LIMIT 1
+        FOR UPDATE
+    """), {"pass_id": pass_id, "now": now})).mappings().first()
+    if not row:
+        return {"ok": False, "error": "not_found", "message": "Пропуск не найден или больше недоступен."}
+
+    inserted = (await db.execute(text("""
+        INSERT INTO community_store_pass_progress (account_id, season_key, xp)
+        VALUES (:account_id, :season_key, 0)
+        ON CONFLICT (account_id, season_key) DO NOTHING
+        RETURNING id
+    """), {"account_id": account_id, "season_key": row["pass_key"]})).first()
+    if not inserted:
+        return {"ok": False, "error": "already_claimed", "message": "Этот пропуск уже активирован."}
+    await db.commit()
+    detail = await get_store_entity_detail(db, account_id, "pass", pass_id)
+    return {"ok": True, "entity": detail.get("entity"), "message": "Пропуск активирован."}
 
 
 async def get_store_workshop(db: AsyncSession, actor: Account) -> dict:
