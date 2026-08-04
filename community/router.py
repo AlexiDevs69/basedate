@@ -3496,6 +3496,26 @@ async def api_store_workshop_update_pass(pass_id: int, request: Request, db: Asy
     )
 
 
+@router.get("/api/profile-themes/library")
+async def api_profile_theme_library(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    return JSONResponse(await crud.get_profile_theme_library(db, account.id))
+
+
+@router.post("/api/profile-themes/claim")
+async def api_claim_profile_theme(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    body = await _store_json_body(request)
+    theme_id = _parse_optional_int(body.get("theme_id"))
+    if not theme_id:
+        return JSONResponse({"ok": False, "error": "validation", "message": "Выбери тему."}, status_code=400)
+    return _store_result_response(await crud.claim_profile_theme(db, account.id, theme_id))
+
+
 @router.post("/api/profile-themes/equip")
 async def api_equip_profile_theme(request: Request, db: AsyncSession = Depends(get_db)):
     account = await current_account(request, db)
