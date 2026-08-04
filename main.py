@@ -44,15 +44,15 @@ STATIC_DIR = BASE_DIR / "static"
 (STATIC_DIR / "uploads" / "profiles").mkdir(parents=True, exist_ok=True)
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
-# Everything under /community/* (registration, login, public profiles,
-# online members) lives in its own module -- see community/router.py.
-app.include_router(community_router)
-
-
 @app.on_event("startup")
 async def on_startup() -> None:
     if settings.auto_create_tables:
         await init_db()
+
+
+# Register the community router after the base-table startup handler so a new,
+# empty database is initialized before community schema upgrades run.
+app.include_router(community_router)
 
 
 def is_logged_in(request: Request) -> bool:
