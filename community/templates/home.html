@@ -2124,6 +2124,56 @@
 @media(max-width:680px){.ah-store-new-rail{grid-auto-columns:minmax(236px,84vw)}.ah-store-collection-head{align-items:flex-start}.ah-store-collection-count{display:none}.ah-store-collection-banner{height:190px;padding:20px}.ah-store-collection-banner-copy h3{font-size:24px}.ah-store-collection-rail{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(236px,84vw);grid-template-columns:none;overflow-x:auto;padding-bottom:10px}.ah-studio-content{padding:17px 12px 24px}.ah-studio-page-head{display:block}.ah-studio-page-head>button{width:100%;margin-top:14px}.ah-studio-create-grid{grid-template-columns:1fr 1fr;gap:8px}.ah-studio-create-grid button{min-height:112px;padding:13px}.ah-studio-summary{grid-template-columns:1fr 1fr}.ah-store-studio-panel-head{height:auto;min-height:60px;flex-wrap:wrap;padding-top:10px;padding-bottom:10px}.ah-store-studio-filters{max-width:100%;overflow:auto}.ah-collection-entry-list{grid-template-columns:1fr}.ah-studio-sidebar-title h1{font-size:19px}}
 @media(prefers-reduced-motion:reduce){.ah-studio-pane,.ah-studio-create-grid button{animation:none;transition:none}}
 </style>
+
+<style id="ah-storefront-sections-css">
+.ah-store-browse-dropdown{position:relative;display:flex;align-items:center;height:100%}
+.ah-store-browse-dropdown>.ah-store-tab span{margin-left:5px;color:#b5bac1;font-size:12px;transition:transform .15s ease}
+.ah-store-browse-dropdown>.ah-store-tab[aria-expanded="true"] span{transform:rotate(180deg)}
+.ah-store-browse-menu{position:absolute;z-index:180;top:43px;left:0;width:230px;padding:8px;border:1px solid #303137;border-radius:8px;background:#2b2d31;box-shadow:0 14px 36px rgba(0,0,0,.46)}
+.ah-store-browse-menu[hidden]{display:none}
+.ah-store-browse-menu button{width:100%;height:36px;display:flex;align-items:center;padding:0 10px;border:0;border-radius:5px;background:transparent;color:#dbdee1;font:600 13px/1 Inter,system-ui,sans-serif;text-align:left;cursor:pointer}
+.ah-store-browse-menu button:hover,.ah-store-browse-menu button.active{background:#404249;color:#fff}
+.ah-store-search{width:min(220px,22vw);height:32px;margin-left:auto;display:flex;align-items:center;gap:8px;padding:0 10px;border:1px solid #2f3036;border-radius:7px;background:#1e1f22;color:#949ba4}
+.ah-store-search .icon{width:15px;height:15px;flex:none}
+.ah-store-search input{min-width:0;width:100%;border:0;outline:0;background:transparent;color:#f2f3f5;font:500 12px/1.2 Inter,system-ui,sans-serif}
+.ah-store-search input::placeholder{color:#777c86}
+.ah-store-browser-toolbar{position:sticky;z-index:22;top:0;display:grid;grid-template-columns:minmax(150px,.7fr) minmax(0,2fr) auto;align-items:center;gap:18px;margin:0 -2px 22px;padding:14px 16px;border:1px solid #2f3036;border-radius:9px;background:rgba(30,31,34,.96);box-shadow:0 10px 24px rgba(0,0,0,.16);backdrop-filter:blur(14px)}
+.ah-store-browser-copy{display:grid;gap:3px}.ah-store-browser-copy span{color:#949ba4;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}.ah-store-browser-copy b{color:#f2f3f5;font-size:15px}
+.ah-store-category-chips{display:flex;align-items:center;gap:6px;overflow-x:auto;scrollbar-width:none}.ah-store-category-chips::-webkit-scrollbar{display:none}
+.ah-store-category-chips button{height:32px;flex:none;padding:0 11px;border:1px solid #3a3c43;border-radius:6px;background:#232428;color:#b5bac1;font:600 12px/1 Inter,system-ui,sans-serif;cursor:pointer;transition:background .14s ease,border-color .14s ease,color .14s ease}
+.ah-store-category-chips button:hover{background:#303238;color:#f2f3f5}.ah-store-category-chips button.active{border-color:#5865f2;background:#5865f2;color:#fff}
+.ah-store-sort{display:grid;grid-template-columns:auto auto;align-items:center;gap:8px;color:#949ba4;font-size:11px;font-weight:650}.ah-store-sort select{height:32px;min-width:150px;padding:0 30px 0 10px;border:1px solid #3a3c43;border-radius:6px;background:#232428;color:#f2f3f5;font:600 12px/1 Inter,system-ui,sans-serif;outline:0}
+[data-store-block][hidden]{display:none!important}
+.ah-store-catalog-card[role="button"],.ah-store-theme-card[role="button"]{cursor:pointer;outline:none}
+.ah-store-catalog-card[role="button"]:focus-visible,.ah-store-theme-card[role="button"]:focus-visible{border-color:#5865f2;box-shadow:0 0 0 2px rgba(88,101,242,.35)}
+.ah-store-owned-chip{display:inline-flex;align-items:center;height:20px;padding:0 6px;border-radius:4px;background:rgba(35,165,90,.16);color:#57f287;font-size:9px;font-weight:800;text-transform:uppercase}
+.ah-store-sold-chip{display:inline-flex;align-items:center;height:20px;padding:0 6px;border-radius:4px;background:rgba(237,66,69,.14);color:#ff8b8d;font-size:9px;font-weight:800;text-transform:uppercase}
+.ah-store-product-modal{position:fixed;z-index:2600;inset:0;display:none;align-items:center;justify-content:center;padding:28px;background:rgba(0,0,0,.78);backdrop-filter:blur(3px)}
+.ah-store-product-modal.show{display:flex;animation:ah-store-product-fade .16s ease both}
+@keyframes ah-store-product-fade{from{opacity:0}to{opacity:1}}
+.ah-store-product-dialog{width:min(980px,calc(100vw - 36px));height:min(620px,calc(100vh - 42px));display:grid;grid-template-columns:320px minmax(0,1fr);overflow:hidden;border:1px solid #303137;border-radius:12px;background:#111214;box-shadow:0 28px 80px rgba(0,0,0,.62);transform:translateY(8px);animation:ah-store-product-pop .18s cubic-bezier(.2,.8,.2,1) both}
+@keyframes ah-store-product-pop{to{transform:translateY(0)}}
+.ah-store-product-side{min-width:0;display:flex;flex-direction:column;padding:20px;background:#2b2d31;border-right:1px solid #303137}
+.ah-store-product-miniart{height:128px;display:grid;place-items:center;overflow:hidden;border:1px solid #404249;border-radius:9px;background:#1e1f22 center/cover no-repeat;color:#949ba4;font-size:38px}
+.ah-store-product-side h2{margin:17px 0 5px;color:#f2f3f5;font-size:23px;line-height:1.15;letter-spacing:-.02em}.ah-store-product-side>p{margin:0;color:#b5bac1;font-size:12px;line-height:1.55}
+.ah-store-product-kind{display:inline-flex;align-self:flex-start;align-items:center;height:23px;margin-top:14px;padding:0 7px;border-radius:5px;background:#404249;color:#dbdee1;font-size:10px;font-weight:750;text-transform:uppercase}
+.ah-store-product-contents-title{margin:18px 0 8px;color:#dbdee1;font-size:11px;font-weight:750;text-transform:uppercase;letter-spacing:.04em}
+.ah-store-product-contents{min-height:0;display:grid;gap:7px;overflow:auto;padding-right:2px;scrollbar-width:thin;scrollbar-color:#4e5058 transparent}
+.ah-store-product-content{display:grid;grid-template-columns:34px minmax(0,1fr);align-items:center;gap:9px;min-height:44px;padding:6px 8px;border:1px solid #3a3c43;border-radius:7px;background:#232428}.ah-store-product-content i{width:32px;height:32px;display:grid;place-items:center;border-radius:6px;background:#35373f;color:#fff;font-style:normal;font-size:15px}.ah-store-product-content b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#f2f3f5;font-size:11px}.ah-store-product-content span{display:block;margin-top:3px;color:#949ba4;font-size:10px}
+.ah-store-product-buybox{margin-top:auto;padding-top:16px}.ah-store-product-price{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px;color:#f2f3f5;font-size:15px;font-weight:800}.ah-store-product-price small{color:#949ba4;font-size:10px;font-weight:600}.ah-store-product-action{width:100%;height:42px;border:0;border-radius:6px;background:#5865f2;color:#fff;font:700 13px/1 Inter,system-ui,sans-serif;cursor:pointer;transition:background .14s ease,transform .14s ease}.ah-store-product-action:hover:not(:disabled){background:#4752c4}.ah-store-product-action:active:not(:disabled){transform:translateY(1px)}.ah-store-product-action:disabled{background:#4e5058;color:#aeb2ba;cursor:not-allowed}.ah-store-product-note{display:block;margin-top:8px;color:#949ba4;font-size:10px;line-height:1.45;text-align:center}
+.ah-store-product-stage{position:relative;min-width:0;overflow:hidden;background:#0d0e10 center/cover no-repeat}.ah-store-product-stage::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 72% 25%,rgba(255,255,255,.13),transparent 28%),linear-gradient(120deg,rgba(0,0,0,.2),rgba(0,0,0,.72))}.ah-store-product-stage.has-image::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.04),rgba(0,0,0,.28));backdrop-filter:blur(0)}
+.ah-store-product-stage-tools{position:absolute;z-index:4;top:14px;right:14px;display:flex;gap:8px}.ah-store-product-stage-tools button{width:34px;height:34px;display:grid;place-items:center;border:0;border-radius:7px;background:rgba(17,18,20,.76);color:#fff;font-size:18px;cursor:pointer}.ah-store-product-stage-tools button:hover{background:#2b2d31}
+.ah-store-product-stage-label{position:absolute;z-index:3;top:15px;left:16px;display:inline-flex;align-items:center;height:26px;padding:0 9px;border-radius:6px;background:rgba(17,18,20,.78);color:#fff;font-size:11px;font-weight:700}
+.ah-store-product-preview{position:absolute;z-index:2;inset:64px 42px 42px;display:flex;align-items:center;justify-content:center}
+.ah-store-product-art-card{width:min(430px,90%);min-height:300px;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;border:1px solid rgba(255,255,255,.18);border-radius:18px;background:#232428 center/cover no-repeat;box-shadow:0 26px 60px rgba(0,0,0,.42)}
+.ah-store-product-art-card.no-image{align-items:center;justify-content:center;color:#fff;font-size:72px;background:linear-gradient(145deg,#2b2d31,#111214)}
+.ah-store-product-art-caption{padding:20px;background:linear-gradient(180deg,transparent,rgba(0,0,0,.84));color:#fff}.ah-store-product-art-caption b{display:block;font-size:22px}.ah-store-product-art-caption span{display:block;margin-top:5px;color:#dbdee1;font-size:12px}
+.ah-store-product-theme-wrap{width:min(460px,92%)}.ah-store-product-theme-wrap .ah-store-theme-preview{height:360px;padding:22px;border:1px solid rgba(255,255,255,.15);border-radius:16px;background:rgba(17,18,20,.72)!important;box-shadow:0 24px 54px rgba(0,0,0,.42)}.ah-store-product-theme-wrap .ah-store-theme-mini-banner{height:120px}.ah-store-product-theme-wrap .ah-store-theme-mini-body{height:185px;padding:46px 24px 18px}.ah-store-product-theme-wrap .ah-store-theme-mini-avatar{left:24px;top:-36px;width:72px;height:72px}.ah-store-product-theme-wrap .ah-store-theme-demo b{font-size:20px}.ah-store-product-theme-wrap .ah-store-theme-demo small{font-size:12px}.ah-store-product-theme-wrap .ah-store-theme-demo-lines{gap:8px;margin-top:18px}.ah-store-product-theme-wrap .ah-store-theme-demo-lines i{height:8px}
+.ah-store-product-loading{display:grid;place-items:center;width:100%;height:100%;color:#b5bac1;font-size:13px}.ah-store-product-error{max-width:360px;padding:18px;border:1px solid rgba(237,66,69,.35);border-radius:10px;background:rgba(35,36,40,.92);color:#ffd0d1;text-align:center;line-height:1.5}
+body.ah-store-product-open{overflow:hidden}
+@media(max-width:980px){.ah-store-search{display:none}.ah-store-browser-toolbar{grid-template-columns:1fr}.ah-store-sort{justify-self:start}.ah-store-product-dialog{grid-template-columns:280px minmax(0,1fr)}}
+@media(max-width:720px){.ah-store-product-modal{padding:10px}.ah-store-product-dialog{height:calc(100vh - 20px);grid-template-columns:1fr;grid-template-rows:auto minmax(260px,1fr);overflow:auto}.ah-store-product-side{border-right:0;border-bottom:1px solid #303137}.ah-store-product-miniart{display:none}.ah-store-product-stage{min-height:340px}.ah-store-product-preview{inset:58px 18px 22px}.ah-store-browser-toolbar{position:relative}.ah-store-sort{grid-template-columns:1fr}.ah-store-sort select{width:100%}.ah-store-season-chip{display:none}}
+</style>
 </head>
 <body data-current-account-id="{{ account.id }}">
   <svg style="display:none" aria-hidden="true">
@@ -2500,15 +2550,41 @@
           <div class="ah-store-brand"><svg class="icon"><use href="#i-shop"></use></svg><span>Магазин</span></div>
           <nav class="ah-store-tabs" aria-label="Разделы магазина">
             <button class="ah-store-tab active" data-store-view="browse" type="button" aria-current="page" onclick="openStoreBrowse()">Рекомендации</button>
-            <button class="ah-store-tab" data-store-view="season" type="button" onclick="openStoreSeason(this)">Сезон</button>
+            <div class="ah-store-browse-dropdown">
+              <button id="ah-store-browse-trigger" class="ah-store-tab" data-store-view="catalog" type="button" aria-haspopup="menu" aria-expanded="false" onclick="toggleStoreBrowseMenu(event)">Просмотр <span aria-hidden="true">⌄</span></button>
+              <div id="ah-store-browse-menu" class="ah-store-browse-menu" role="menu" hidden>
+                <button type="button" role="menuitem" data-store-category="all" onclick="setStoreCategory('all',this)">Показать все товары</button>
+                <button type="button" role="menuitem" data-store-category="new" onclick="setStoreCategory('new',this)">Новинки</button>
+                <button type="button" role="menuitem" data-store-category="items" onclick="setStoreCategory('items',this)">Товары и события</button>
+                <button type="button" role="menuitem" data-store-category="themes" onclick="setStoreCategory('themes',this)">Темы мини-профиля</button>
+                <button type="button" role="menuitem" data-store-category="collections" onclick="setStoreCategory('collections',this)">Наборы и коллекции</button>
+                <button type="button" role="menuitem" data-store-category="free" onclick="setStoreCategory('free',this)">Бесплатное</button>
+              </div>
+            </div>
+            <button class="ah-store-tab" data-store-view="passes" type="button" onclick="openStorePasses()">Пропуски</button>
+            <button class="ah-store-tab" data-store-view="season" type="button" onclick="openStoreSeason(this)">Summer Clover</button>
             <button id="ah-store-studio-tab" class="ah-store-tab" data-store-view="studio" type="button" hidden onclick="openStoreStudio()">Мастерская</button>
           </nav>
+          <label class="ah-store-search" aria-label="Поиск по магазину"><svg class="icon"><use href="#i-search"></use></svg><input id="ah-store-search-input" type="search" placeholder="Поиск по магазину" autocomplete="off" oninput="updateStoreSearch(this.value)"></label>
           <span class="ah-store-season-chip">SUMMER CLOVER · СЕЗОН 01</span>
         </header>
 
         <div id="ah-store-scroll" class="ah-store-scroll" tabindex="-1">
           <div class="ah-store-shell">
-            <section class="ah-store-hero" aria-labelledby="ah-store-season-title">
+            <section class="ah-store-browser-toolbar" aria-label="Фильтры магазина">
+              <div class="ah-store-browser-copy"><span>Просмотр магазина</span><b id="ah-store-browser-title">Рекомендации</b></div>
+              <div class="ah-store-category-chips" role="group" aria-label="Категории">
+                <button class="active" type="button" data-store-chip="all" onclick="setStoreCategory('all',this)">Все</button>
+                <button type="button" data-store-chip="new" onclick="setStoreCategory('new',this)">Новинки</button>
+                <button type="button" data-store-chip="items" onclick="setStoreCategory('items',this)">Товары</button>
+                <button type="button" data-store-chip="themes" onclick="setStoreCategory('themes',this)">Темы</button>
+                <button type="button" data-store-chip="passes" onclick="setStoreCategory('passes',this)">Пропуски</button>
+                <button type="button" data-store-chip="collections" onclick="setStoreCategory('collections',this)">Наборы</button>
+                <button type="button" data-store-chip="free" onclick="setStoreCategory('free',this)">Бесплатное</button>
+              </div>
+              <label class="ah-store-sort"><span>Сортировать</span><select id="ah-store-sort-select" onchange="updateStoreSort(this.value)"><option value="new">Сначала новинки</option><option value="title">По названию</option><option value="ending">Скоро закончится</option></select></label>
+            </section>
+            <section class="ah-store-hero" data-store-block="featured" aria-labelledby="ah-store-season-title">
               <div class="ah-store-countdown">
                 <div class="ah-store-countdown-label"><span>До конца лета</span><span>31 августа</span></div>
                 <div id="ah-store-countdown" class="ah-store-time" role="timer" aria-label="Время до конца сезона">
@@ -2526,12 +2602,12 @@
               </div>
             </section>
 
-            <div class="ah-store-section-head">
+            <div class="ah-store-section-head" data-store-block="passes">
               <div><h2>Сезонный пропуск</h2><p>Первая главная панель магазина Summer Clover.</p></div>
               <span class="ah-store-section-badge">БЕЗ РЕАЛЬНЫХ ЦЕН</span>
             </div>
 
-            <section id="ah-summer-pass" class="ah-store-pass-card" aria-labelledby="ah-summer-pass-title">
+            <section id="ah-summer-pass" class="ah-store-pass-card" data-store-block="passes" aria-labelledby="ah-summer-pass-title">
               <div class="ah-store-pass-main">
                 <div class="ah-store-pass-copy">
                   <span class="ah-store-pass-kicker"><i class="ah-store-clover-dot" aria-hidden="true"></i>SUMMER CLOVER PASS</span>
@@ -2572,31 +2648,31 @@
               </div>
             </section>
 
-            <div id="ah-store-drops" class="ah-store-section-head ah-store-live-head">
+            <div id="ah-store-drops" class="ah-store-section-head ah-store-live-head" data-store-block="giveaways">
               <div><h2>Раздачи сообщества</h2><p>Ограниченные бесплатные Nitro-дропы от верифицированных пользователей.</p></div>
               <div class="ah-store-live-actions">
                 <span class="ah-store-section-badge">ТОЛЬКО VERIFIED</span>
               </div>
             </div>
-            <div id="ah-store-giveaways" class="ah-store-giveaways" aria-live="polite">
+            <div id="ah-store-giveaways" class="ah-store-giveaways" data-store-block="giveaways" aria-live="polite">
               <div class="ah-store-empty ah-store-loading">Загружаем активные раздачи...</div>
             </div>
 
-            <div id="ah-store-catalog-head" class="ah-store-section-head">
+            <div id="ah-store-catalog-head" class="ah-store-section-head" data-store-block="new">
               <div><h2>Новое в магазине</h2><p>Свежие публикации автоматически появляются здесь на 14 дней.</p></div>
               <span class="ah-store-section-badge">НОВЫЕ ПОСТУПЛЕНИЯ</span>
             </div>
-            <div id="ah-store-catalog" class="ah-store-new-rail" aria-live="polite">
+            <div id="ah-store-catalog" class="ah-store-new-rail" data-store-block="new" aria-live="polite">
               <div class="ah-store-empty ah-store-loading">Загружаем каталог...</div>
             </div>
 
-            <div id="ah-store-collections" class="ah-store-collections" aria-live="polite"></div>
+            <div id="ah-store-collections" class="ah-store-collections" data-store-block="collections" aria-live="polite"></div>
 
-            <div id="ah-store-themes-head" class="ah-store-section-head">
+            <div id="ah-store-themes-head" class="ah-store-section-head" data-store-block="themes">
               <div><h2>Темы мини-профиля</h2><p>Фоны от verified-авторов. Бесплатные можно применить сразу, наградные открываются в пропусках.</p></div>
               <span class="ah-store-section-badge">PROFILE THEMES</span>
             </div>
-            <div id="ah-store-theme-gallery" class="ah-store-theme-gallery" aria-live="polite">
+            <div id="ah-store-theme-gallery" class="ah-store-theme-gallery" data-store-block="themes" aria-live="polite">
               <div class="ah-store-empty ah-store-loading">Загружаем темы...</div>
             </div>
 
@@ -6582,6 +6658,10 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   let workshopLoading = false;
   let currentFilter = 'all';
   let currentSection = 'overview';
+  let currentStoreCategory = 'all';
+  let currentStoreSearch = '';
+  let currentStoreSort = 'new';
+  let activeStoreEntity = null;
   let editor = {kind:null,id:null,record:null};
   const typeLabels = {pass:'Пропуск',promotion:'Акция',one_time:'Разовый товар',timed_event:'Событие',profile_theme:'Старая карточка темы'};
   const statusLabels = {active:'Активно',scheduled:'Запланировано',draft:'Черновик',archived:'Архив',expired:'Завершено',disabled:'Выключено',published:'Опубликовано'};
@@ -6639,34 +6719,80 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
       const active=button.dataset.storeView===view;button.classList.toggle('active',active);active?button.setAttribute('aria-current','page'):button.removeAttribute('aria-current');
     });
   }
-  window.openStoreBrowse=function(){
-    q('#ah-store-scroll')?.classList.remove('studio-open');markTab('browse');window.scrollStoreTop?.();markTab('browse');return false;
+  const categoryTitles={all:'Рекомендации',new:'Новинки',items:'Товары и события',themes:'Темы мини-профиля',passes:'Пропуски',collections:'Наборы и коллекции',free:'Бесплатное'};
+  function closeStoreBrowseMenu(){
+    const menu=q('#ah-store-browse-menu'),trigger=q('#ah-store-browse-trigger');
+    if(menu)menu.hidden=true;if(trigger)trigger.setAttribute('aria-expanded','false');
+  }
+  window.toggleStoreBrowseMenu=function(event){
+    event?.stopPropagation?.();
+    const menu=q('#ah-store-browse-menu'),trigger=q('#ah-store-browse-trigger');if(!menu||!trigger)return false;
+    const opening=menu.hidden;menu.hidden=!opening;trigger.setAttribute('aria-expanded',opening?'true':'false');return false;
   };
+  function storeEntityMatches(entity){
+    const type=entity._entity_type;
+    const query=currentStoreSearch.trim().toLowerCase();
+    if(query){
+      const hay=[entity.title,entity.description,entity.creator_username,typeLabels[entity.item_type],entity.metadata?.event_label].filter(Boolean).join(' ').toLowerCase();
+      if(!hay.includes(query))return false;
+    }
+    if(currentStoreCategory==='new')return !!entity.is_new;
+    if(currentStoreCategory==='items')return type==='item';
+    if(currentStoreCategory==='themes')return type==='theme';
+    if(currentStoreCategory==='passes')return type==='pass';
+    if(currentStoreCategory==='free')return type==='pass'||(type==='theme'&&entity.access_mode==='free')||(type==='item'&&Number(entity.price_amount||0)===0);
+    return true;
+  }
+  function sortStoreEntities(values){
+    const list=[...values];
+    if(currentStoreSort==='title')list.sort((a,b)=>String(a.title||'').localeCompare(String(b.title||''),'ru'));
+    else if(currentStoreSort==='ending')list.sort((a,b)=>new Date(a.ends_at||'9999-12-31').getTime()-new Date(b.ends_at||'9999-12-31').getTime());
+    else list.sort((a,b)=>new Date(b.published_at||b.updated_at||0).getTime()-new Date(a.published_at||a.updated_at||0).getTime());
+    return list;
+  }
+  function updateStoreCategoryUi(){
+    document.querySelectorAll('[data-store-chip]').forEach(button=>button.classList.toggle('active',button.dataset.storeChip===currentStoreCategory));
+    document.querySelectorAll('#ah-store-browse-menu [data-store-category]').forEach(button=>button.classList.toggle('active',button.dataset.storeCategory===currentStoreCategory));
+    const title=q('#ah-store-browser-title');if(title)title.textContent=categoryTitles[currentStoreCategory]||categoryTitles.all;
+  }
+  window.setStoreCategory=function(category){
+    currentStoreCategory=categoryTitles[category]?category:'all';
+    q('#ah-store-scroll')?.classList.remove('studio-open');
+    markTab(currentStoreCategory==='passes'?'passes':currentStoreCategory==='all'?'browse':'catalog');
+    closeStoreBrowseMenu();updateStoreCategoryUi();if(publicState)renderPublic(publicState);window.scrollStoreTop?.();return false;
+  };
+  window.updateStoreSearch=function(value){currentStoreSearch=String(value||'');if(publicState)renderPublic(publicState);};
+  window.updateStoreSort=function(value){currentStoreSort=['new','title','ending'].includes(value)?value:'new';if(publicState)renderPublic(publicState);};
+  window.openStoreBrowse=function(){return window.setStoreCategory('all');};
+  window.openStorePasses=function(){return window.setStoreCategory('passes');};
   window.openStoreSeason=function(){
-    q('#ah-store-scroll')?.classList.remove('studio-open');markTab('season');window.scrollToSummerPass?.();markTab('season');return false;
+    q('#ah-store-scroll')?.classList.remove('studio-open');currentStoreCategory='all';updateStoreCategoryUi();markTab('season');if(publicState)renderPublic(publicState);window.scrollToSummerPass?.();return false;
   };
   window.openStoreStudio=function(){
     if(!(publicState&&publicState.can_manage_store))return false;
-    q('#ah-store-scroll')?.classList.add('studio-open');markTab('studio');q('#ah-store-scroll')?.scrollTo({top:0,behavior:'smooth'});window.loadStoreWorkshop();return false;
+    closeStoreBrowseMenu();q('#ah-store-scroll')?.classList.add('studio-open');markTab('studio');q('#ah-store-scroll')?.scrollTo({top:0,behavior:'smooth'});window.loadStoreWorkshop();return false;
+  };
+  window.productKeyboard=function(type,id,event){
+    if(event.key==='Enter'||event.key===' '){event.preventDefault();window.openStoreProduct(type,id);}
   };
   function catalogCard(item){
     const image=item.image_url?`style="background-image:url('${attr(item.image_url)}')"`:'';
-    const price=Number(item.price_amount||0);
-    const meta=item.metadata||{};
-    const timer=item.ends_at?remaining(item.ends_at):'';
+    const price=Number(item.price_amount||0),meta=item.metadata||{},timer=item.ends_at?remaining(item.ends_at):'';
     const discount=item.item_type==='promotion'&&meta.discount_percent?` · −${Number(meta.discount_percent)}%`:'';
-    return `<article class="ah-store-catalog-card${item.is_new?' ah-store-new-card':''}">${item.is_new?'<span class="ah-store-new-badge">НОВОЕ</span>':''}<div class="ah-store-catalog-art${item.image_url?' has-image':''}" ${image}>${item.image_url?'':esc(item.icon||'✦')}</div><div class="ah-store-catalog-body"><div class="ah-store-catalog-top"><span class="ah-store-type-chip">${esc(typeLabels[item.item_type]||item.item_type)}</span>${timer?`<span class="ah-store-catalog-timer" data-store-expires="${attr(item.ends_at)}">${esc(timer)}</span>`:''}</div><h3>${esc(item.title)}</h3><p>${esc(item.description||'Новая публикация магазина AlexiHub.')}</p><div class="ah-store-catalog-foot"><span class="ah-store-price${price?'':' free'}">${price?esc(price+' '+item.currency):'Бесплатно'}${esc(discount)}</span><span class="ah-store-catalog-author">@${esc(item.creator_username||'alexihub')}</span></div></div></article>`;
+    const state=item.owned?'<span class="ah-store-owned-chip">Получено</span>':item.sold_out?'<span class="ah-store-sold-chip">Закончилось</span>':'';
+    return `<article class="ah-store-catalog-card${item.is_new?' ah-store-new-card':''}" role="button" tabindex="0" aria-label="Открыть ${attr(item.title)}" onclick="openStoreProduct('item',${Number(item.id)})" onkeydown="productKeyboard('item',${Number(item.id)},event)">${item.is_new?'<span class="ah-store-new-badge">НОВОЕ</span>':''}<div class="ah-store-catalog-art${item.image_url?' has-image':''}" ${image}>${item.image_url?'':esc(item.icon||'✦')}</div><div class="ah-store-catalog-body"><div class="ah-store-catalog-top"><span class="ah-store-type-chip">${esc(typeLabels[item.item_type]||item.item_type)}</span>${state}${timer?`<span class="ah-store-catalog-timer" data-store-expires="${attr(item.ends_at)}">${esc(timer)}</span>`:''}</div><h3>${esc(item.title)}</h3><p>${esc(item.description||'Новая публикация магазина AlexiHub.')}</p><div class="ah-store-catalog-foot"><span class="ah-store-price${price?'':' free'}">${price?esc(price+' '+item.currency):'Бесплатно'}${esc(discount)}</span><span class="ah-store-catalog-author">@${esc(item.creator_username||'alexihub')}</span></div></div></article>`;
   }
   function passCatalogCard(pass){
     const image=pass.image_url?`style="background-image:url('${attr(pass.image_url)}')"`:'';
-    return `<article class="ah-store-catalog-card${pass.is_new?' ah-store-new-card':''}">${pass.is_new?'<span class="ah-store-new-badge">НОВОЕ</span>':''}<div class="ah-store-catalog-art${pass.image_url?' has-image':''}" ${image}>${pass.image_url?'':'◇'}</div><div class="ah-store-catalog-body"><div class="ah-store-catalog-top"><span class="ah-store-type-chip">Пропуск</span>${pass.ends_at?`<span class="ah-store-catalog-timer" data-store-expires="${attr(pass.ends_at)}">${esc(remaining(pass.ends_at))}</span>`:''}</div><h3>${esc(pass.title)}</h3><p>${esc(pass.description||'Сезонный пропуск сообщества.')}</p><div class="ah-store-catalog-foot"><span class="ah-store-price free">${Number(pass.max_level||1)} уровней</span><span class="ah-store-catalog-author">@${esc(pass.creator_username||'alexihub')}</span></div></div></article>`;
+    const state=pass.joined?'<span class="ah-store-owned-chip">Активирован</span>':'';
+    return `<article class="ah-store-catalog-card${pass.is_new?' ah-store-new-card':''}" role="button" tabindex="0" aria-label="Открыть ${attr(pass.title)}" onclick="openStoreProduct('pass',${Number(pass.id)})" onkeydown="productKeyboard('pass',${Number(pass.id)},event)">${pass.is_new?'<span class="ah-store-new-badge">НОВОЕ</span>':''}<div class="ah-store-catalog-art${pass.image_url?' has-image':''}" ${image}>${pass.image_url?'':'◇'}</div><div class="ah-store-catalog-body"><div class="ah-store-catalog-top"><span class="ah-store-type-chip">Пропуск</span>${state}${pass.ends_at?`<span class="ah-store-catalog-timer" data-store-expires="${attr(pass.ends_at)}">${esc(remaining(pass.ends_at))}</span>`:''}</div><h3>${esc(pass.title)}</h3><p>${esc(pass.description||'Сезонный пропуск сообщества.')}</p><div class="ah-store-catalog-foot"><span class="ah-store-price free">${Number(pass.max_level||1)} уровней · бесплатно</span><span class="ah-store-catalog-author">@${esc(pass.creator_username||'alexihub')}</span></div></div></article>`;
   }
   function themeCard(theme){
-    const owned=!!theme.owned, claimable=theme.access_mode==='free'&&!owned;
+    const owned=!!theme.owned,claimable=theme.access_mode==='free'&&!owned;
     const timer=theme.ends_at?`<span class="ah-store-theme-expiry" data-store-expires="${attr(theme.ends_at)}">Доступно ${esc(remaining(theme.ends_at))}</span>`:'';
     const access=owned?'В КОЛЛЕКЦИИ':theme.access_mode==='free'?'БЕСПЛАТНО':'В ПРОПУСКЕ';
-    const action=owned?'<button type="button" disabled>Получено</button>':claimable?`<button type="button" onclick="claimStoreTheme(${Number(theme.id)},this)">Получить</button>`:'<button type="button" disabled>Закрыто</button>';
-    return `<article class="ah-store-theme-card${theme.is_new?' ah-store-new-card':''}">${theme.is_new?'<span class="ah-store-new-badge">НОВОЕ</span>':''}${themePreviewMarkup(theme)}<div class="ah-store-theme-body"><div class="ah-store-theme-title"><b>${esc(theme.title)}</b><span class="ah-store-theme-lock">${access}</span></div><div class="ah-store-theme-meta"><span>Автор @${esc(theme.creator_username||'verified')}</span>${timer}</div><div class="ah-store-theme-actions"><button type="button" class="secondary" onclick="previewStoreTheme(${Number(theme.id)})">Примерить</button>${action}</div></div></article>`;
+    const action=owned?'<button type="button" disabled>Получено</button>':claimable?`<button type="button" onclick="event.stopPropagation();claimStoreTheme(${Number(theme.id)},this)">Получить</button>`:'<button type="button" disabled>Закрыто</button>';
+    return `<article class="ah-store-theme-card${theme.is_new?' ah-store-new-card':''}" role="button" tabindex="0" aria-label="Открыть ${attr(theme.title)}" onclick="openStoreProduct('theme',${Number(theme.id)})" onkeydown="productKeyboard('theme',${Number(theme.id)},event)">${theme.is_new?'<span class="ah-store-new-badge">НОВОЕ</span>':''}${themePreviewMarkup(theme)}<div class="ah-store-theme-body"><div class="ah-store-theme-title"><b>${esc(theme.title)}</b><span class="ah-store-theme-lock">${access}</span></div><div class="ah-store-theme-meta"><span>Автор @${esc(theme.creator_username||'verified')}</span>${timer}</div><div class="ah-store-theme-actions"><button type="button" class="secondary" onclick="event.stopPropagation();previewStoreTheme(${Number(theme.id)})">Примерить</button>${action}</div></div></article>`;
   }
   function catalogEntityMap(catalog){
     const map=new Map();
@@ -6678,30 +6804,52 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   function entityCard(entity){return entity._entity_type==='theme'?themeCard(entity):entity._entity_type==='pass'?passCatalogCard(entity):catalogCard(entity);}
   function collectionMarkup(collection,map){
     const entries=(collection.entries||[]).map(entry=>map.get(entry.entity_type+':'+Number(entry.entity_id))).filter(Boolean);
+    const query=currentStoreSearch.trim().toLowerCase();
+    const collectionMatch=!query||[collection.title,collection.description,collection.creator_username].filter(Boolean).join(' ').toLowerCase().includes(query);
+    if(!entries.length&&!collectionMatch)return '';
     if(!entries.length)return '';
     const banner=collection.banner_url?`style="--collection-accent:${attr(collection.accent_color||'#5865f2')};background-image:url('${attr(collection.banner_url)}')"`:`style="--collection-accent:${attr(collection.accent_color||'#5865f2')};background-image:linear-gradient(135deg,color-mix(in srgb,${attr(collection.accent_color||'#5865f2')} 32%,#1e1f22),#111214)"`;
     return `<section class="ah-store-collection"><div class="ah-store-collection-head"><div><h2>${esc(collection.title)}</h2><p>${esc(collection.description||'Подборка от verified-авторов AlexiHub.')}</p></div><span class="ah-store-collection-count">${entries.length} ${entries.length===1?'предмет':'предметов'}</span></div><div class="ah-store-collection-banner" ${banner}><div class="ah-store-collection-banner-copy"><span>КОЛЛЕКЦИЯ</span><h3>${esc(collection.title)}</h3><p>${esc(collection.description||'Новая подборка магазина AlexiHub.')}</p></div></div><div class="ah-store-collection-rail">${entries.map(entityCard).join('')}</div></section>`;
   }
-  function remainingCatalogMarkup(entities,hasCollections){
+  function remainingCatalogMarkup(entities,hasCollections,title){
     if(!entities.length)return '';
-    return `<section class="ah-store-collection"><div class="ah-store-collection-head"><div><h2>${hasCollections?'Другие товары':'Все товары и события'}</h2><p>${hasCollections?'Активные публикации, которые ещё не добавлены в отдельный раздел.':'Все активные публикации магазина AlexiHub.'}</p></div><span class="ah-store-collection-count">${entities.length} ${entities.length===1?'предмет':'предметов'}</span></div><div class="ah-store-collection-rail">${entities.map(entityCard).join('')}</div></section>`;
+    const heading=title||(hasCollections?'Другие товары':'Все товары и события');
+    return `<section class="ah-store-collection"><div class="ah-store-collection-head"><div><h2>${esc(heading)}</h2><p>${hasCollections?'Активные публикации, которые ещё не добавлены в отдельный раздел.':'Все активные публикации магазина AlexiHub.'}</p></div><span class="ah-store-collection-count">${entities.length} ${entities.length===1?'предмет':'предметов'}</span></div><div class="ah-store-collection-rail">${entities.map(entityCard).join('')}</div></section>`;
   }
+  function setStoreBlockVisibility(name,visible){document.querySelectorAll(`[data-store-block="${name}"]`).forEach(node=>{node.hidden=!visible;});}
   function renderPublic(data){
-    publicState=data;
+    publicState=data;updateStoreCategoryUi();
     const tab=q('#ah-store-studio-tab');if(tab)tab.hidden=!data.can_manage_store;
-    const catalog=data.catalog||{};
-    const map=catalogEntityMap(catalog);
-    const newest=Array.from(map.values()).filter(entity=>entity.is_new).sort((a,b)=>new Date(b.published_at||0)-new Date(a.published_at||0)).slice(0,12);
+    const catalog=data.catalog||{},allMap=catalogEntityMap(catalog);
+    const entities=sortStoreEntities(Array.from(allMap.values()).filter(storeEntityMatches));
+    const map=new Map(entities.map(entity=>[entity._entity_type+':'+Number(entity.id),entity]));
+    const searching=!!currentStoreSearch.trim();
+    const newest=(currentStoreCategory==='new'?entities:entities.filter(entity=>entity.is_new)).slice(0,12);
     const catalogNode=q('#ah-store-catalog');
-    if(catalogNode)catalogNode.innerHTML=newest.map(entityCard).join('')||'<div class="ah-store-empty">Сейчас новых поступлений нет.<br>После публикации товар будет отмечен здесь на 14 дней.</div>';
+    if(catalogNode)catalogNode.innerHTML=newest.map(entityCard).join('')||'<div class="ah-store-empty">По этому фильтру новых поступлений нет.</div>';
     const collectionsNode=q('#ah-store-collections');
     if(collectionsNode){
-      const collections=catalog.collections||[],used=new Set(collections.flatMap(collection=>(collection.entries||[]).map(entry=>entry.entity_type+':'+Number(entry.entity_id))));
-      const remaining=Array.from(map.entries()).filter(([key,entity])=>!used.has(key)&&entity._entity_type!=='theme').map(([,entity])=>entity);
-      collectionsNode.innerHTML=collections.map(collection=>collectionMarkup(collection,map)).join('')+remainingCatalogMarkup(remaining,collections.length>0);
+      const collections=catalog.collections||[];
+      const collectionHtml=(currentStoreCategory==='collections'||currentStoreCategory==='all'||currentStoreCategory==='items'||currentStoreCategory==='passes'||currentStoreCategory==='free')?collections.map(collection=>collectionMarkup(collection,map)).join(''):'';
+      const used=new Set(collections.flatMap(collection=>(collection.entries||[]).map(entry=>entry.entity_type+':'+Number(entry.entity_id))));
+      let remaining=entities.filter(entity=>entity._entity_type!=='theme'&&(currentStoreCategory!=='collections'||!used.has(entity._entity_type+':'+Number(entity.id))));
+      if(currentStoreCategory==='all')remaining=remaining.filter(entity=>!used.has(entity._entity_type+':'+Number(entity.id)));
+      const sectionTitle=currentStoreCategory==='passes'?'Все пропуски':currentStoreCategory==='items'?'Все товары и события':currentStoreCategory==='free'?'Бесплатные товары и пропуски':searching?'Результаты поиска':null;
+      collectionsNode.innerHTML=collectionHtml+remainingCatalogMarkup(remaining,!!collectionHtml,sectionTitle);
+      if(!collectionsNode.innerHTML.trim())collectionsNode.innerHTML='<div class="ah-store-empty">В этом разделе пока ничего нет.</div>';
     }
     const themeNode=q('#ah-store-theme-gallery');
-    if(themeNode){themeNode.innerHTML=(catalog.themes||[]).map(themeCard).join('')||'<div class="ah-store-empty">Verified-авторы ещё не опубликовали темы.</div>';}
+    if(themeNode){
+      const themes=entities.filter(entity=>entity._entity_type==='theme');
+      themeNode.innerHTML=themes.map(themeCard).join('')||'<div class="ah-store-empty">По этому фильтру тем нет.</div>';
+    }
+    const showFeatured=currentStoreCategory==='all'&&!searching;
+    setStoreBlockVisibility('featured',showFeatured);
+    setStoreBlockVisibility('passes',(currentStoreCategory==='all'||currentStoreCategory==='passes')&&!searching);
+    setStoreBlockVisibility('giveaways',(currentStoreCategory==='all'||currentStoreCategory==='free')&&!searching);
+    setStoreBlockVisibility('new',(currentStoreCategory==='all'||currentStoreCategory==='new')&&!searching);
+    setStoreBlockVisibility('collections',['all','items','passes','collections','free'].includes(currentStoreCategory)||searching);
+    setStoreBlockVisibility('themes',['all','themes','free'].includes(currentStoreCategory)||searching);
   }
   window.previewStoreTheme=function(themeId){
     const theme=(publicState?.catalog?.themes||[]).find(item=>Number(item.id)===Number(themeId));if(!theme)return false;
@@ -6715,6 +6863,72 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     catch(error){toast(error.message,'err');if(button){button.disabled=false;button.textContent='Получить';}}
     return false;
   };
+  function ensureStoreProductModal(){
+    let modal=q('#ah-store-product-modal');if(modal)return modal;
+    document.body.insertAdjacentHTML('beforeend',`<div id="ah-store-product-modal" class="ah-store-product-modal" role="presentation"><section class="ah-store-product-dialog" role="dialog" aria-modal="true" aria-labelledby="ah-store-product-title"><aside id="ah-store-product-side" class="ah-store-product-side"><div class="ah-store-product-loading">Загружаем товар…</div></aside><div id="ah-store-product-stage" class="ah-store-product-stage"><div class="ah-store-product-stage-tools"><button type="button" aria-label="Закрыть" onclick="closeStoreProduct()">×</button></div><div id="ah-store-product-preview" class="ah-store-product-preview"><div class="ah-store-product-loading">Подготавливаем превью…</div></div></div></section></div>`);
+    modal=q('#ah-store-product-modal');modal.addEventListener('mousedown',event=>{if(event.target===modal)window.closeStoreProduct();});return modal;
+  }
+  function storeProductContents(entity){
+    const contents=Array.isArray(entity.contents)?entity.contents:[];
+    if(contents.length)return contents.slice(0,24).map((entry,index)=>{
+      if(typeof entry==='string')return `<div class="ah-store-product-content"><i>${index+1}</i><div><b>${esc(entry)}</b><span>Входит в набор</span></div></div>`;
+      return `<div class="ah-store-product-content"><i>${esc(entry.icon||entry.level||'✦')}</i><div><b>${esc(entry.title||'Награда')}</b><span>${entry.level?`Уровень ${Number(entry.level)} · `:''}${esc(entry.description||entry.reward_type||'')}</span></div></div>`;
+    }).join('');
+    const meta=entity.metadata||{},fallback=[];
+    if(meta.event_label)fallback.push(meta.event_label);if(meta.cta_label)fallback.push(meta.cta_label);
+    if(meta.discount_percent)fallback.push(`Скидка ${Number(meta.discount_percent)}%`);
+    if(entity.remaining_stock!==null&&entity.remaining_stock!==undefined)fallback.push(`Осталось ${Number(entity.remaining_stock)}`);
+    if(entity.entity_type==='pass')fallback.push(`${Number(entity.max_level||1)} уровней`,`По ${Number(entity.xp_per_level||100)} XP на уровень`);
+    return (fallback.length?fallback:['Отдельный товар магазина']).map((text,index)=>`<div class="ah-store-product-content"><i>${index+1}</i><div><b>${esc(text)}</b><span>Информация о товаре</span></div></div>`).join('');
+  }
+  function storeProductAction(entity){
+    const type=entity.entity_type;
+    if(type==='item'){
+      if(entity.owned)return {label:'Уже получено',disabled:true,note:'Товар навсегда сохранён в твоей коллекции.',price:'В коллекции'};
+      if(entity.sold_out)return {label:'Товар закончился',disabled:true,note:'Доступный тираж уже разобрали.',price:'Недоступно'};
+      if(Number(entity.price_amount||0)>0)return {label:`Купить за ${Number(entity.price_amount)} ${entity.currency||''}`,disabled:true,note:'Баланс внутренней валюты ещё не подключён. Бесплатные товары уже можно получать.',price:`${Number(entity.price_amount)} ${entity.currency||''}`};
+      return {label:'Получить бесплатно',disabled:false,note:'После получения товар останется на аккаунте.',price:'Бесплатно'};
+    }
+    if(type==='pass')return entity.joined?{label:'Пропуск активирован',disabled:true,note:`Текущий уровень: ${Number(entity.level||1)}.`,price:'Активен'}:{label:'Активировать пропуск',disabled:false,note:'Активация бесплатная и сохраняется в аккаунте.',price:'Бесплатно'};
+    if(type==='theme'){
+      if(entity.owned)return {label:'Тема в коллекции',disabled:true,note:'Одеть тему можно в редактировании профиля.',price:'Получено'};
+      if(entity.access_mode!=='free')return {label:'Награда пропуска',disabled:true,note:'Тема откроется после получения соответствующей награды.',price:'Закрыто'};
+      return {label:'Получить тему',disabled:false,note:'Тема сохранится в коллекции навсегда.',price:'Бесплатно'};
+    }
+    return {label:'Недоступно',disabled:true,note:'Для этого типа нет действия.',price:'—'};
+  }
+  function renderStoreProduct(entity){
+    activeStoreEntity=entity;const modal=ensureStoreProductModal(),side=q('#ah-store-product-side'),stage=q('#ah-store-product-stage'),preview=q('#ah-store-product-preview');
+    const type=entity.entity_type,action=storeProductAction(entity),image=entity.image_url||'';
+    stage.classList.toggle('has-image',!!image);stage.style.backgroundImage=image?`url("${safeCssUrl(image)}")`:'linear-gradient(135deg,#1e1f22,#0d0e10)';
+    const fallbackIcon=entity.icon||(type==='pass'?'◇':type==='theme'?'▣':'✦');
+    side.innerHTML=`<div class="ah-store-product-miniart${image?' has-image':''}" style="${image?`background-image:url(&quot;${attr(safeCssUrl(image))}&quot;)`:''}">${image?'':esc(fallbackIcon)}</div><span class="ah-store-product-kind">${esc(type==='pass'?'Пропуск':type==='theme'?'Тема мини-профиля':typeLabels[entity.item_type]||'Товар')}</span><h2 id="ah-store-product-title">${esc(entity.title)}</h2><p>${esc(entity.description||'Товар магазина AlexiHub.')}</p><div class="ah-store-product-contents-title">${type==='pass'?'Награды пропуска':'Предметы в наборе'}</div><div class="ah-store-product-contents">${storeProductContents(entity)}</div><div class="ah-store-product-buybox"><div class="ah-store-product-price"><span>${esc(action.price)}</span><small>${entity.ends_at?`Доступно ${esc(remaining(entity.ends_at))}`:'Без ограничения по времени'}</small></div><button class="ah-store-product-action" type="button" ${action.disabled?'disabled':''} onclick="performStoreProductAction(this)">${esc(action.label)}</button><span class="ah-store-product-note">${esc(action.note)}</span></div>`;
+    const label=`<span class="ah-store-product-stage-label">${esc(entity.title)}</span>`;
+    if(type==='theme')preview.innerHTML=label+`<div class="ah-store-product-theme-wrap">${themePreviewMarkup(entity)}</div>`;
+    else preview.innerHTML=label+`<div class="ah-store-product-art-card${image?'':' no-image'}" style="${image?`background-image:url(&quot;${attr(safeCssUrl(image))}&quot;)`:''}">${image?'':esc(fallbackIcon)}<div class="ah-store-product-art-caption"><b>${esc(entity.title)}</b><span>${type==='pass'?`${Number(entity.max_level||1)} уровней · ${entity.joined?'активирован':'доступен бесплатно'}`:entity.owned?'Уже в твоей коллекции':Number(entity.price_amount||0)>0?`${Number(entity.price_amount)} ${esc(entity.currency||'')}`:'Можно получить бесплатно'}</span></div></div>`;
+    modal.classList.add('show');document.body.classList.add('ah-store-product-open');q('.ah-store-product-stage-tools button',modal)?.focus({preventScroll:true});
+  }
+  window.openStoreProduct=async function(type,id){
+    closeStoreBrowseMenu();const modal=ensureStoreProductModal(),side=q('#ah-store-product-side'),stage=q('#ah-store-product-stage'),preview=q('#ah-store-product-preview');
+    activeStoreEntity=null;side.innerHTML='<div class="ah-store-product-loading">Загружаем товар…</div>';stage.style.backgroundImage='linear-gradient(135deg,#1e1f22,#0d0e10)';preview.innerHTML='<div class="ah-store-product-loading">Подготавливаем превью…</div>';modal.classList.add('show');document.body.classList.add('ah-store-product-open');
+    try{const data=await api(`/community/api/store/entities/${encodeURIComponent(type)}/${Number(id)}`);renderStoreProduct(data.entity);}
+    catch(error){side.innerHTML='<div class="ah-store-product-error">'+esc(error.message)+'</div>';preview.innerHTML='<div class="ah-store-product-error">Не удалось открыть карточку товара.</div>';}
+    return false;
+  };
+  window.closeStoreProduct=function(){const modal=q('#ah-store-product-modal');if(modal)modal.classList.remove('show');document.body.classList.remove('ah-store-product-open');activeStoreEntity=null;};
+  window.performStoreProductAction=async function(button){
+    const entity=activeStoreEntity;if(!entity||button.disabled)return false;const original=button.textContent;button.disabled=true;button.textContent='Подождите…';
+    try{
+      const data=await api(`/community/api/store/entities/${encodeURIComponent(entity.entity_type)}/${Number(entity.id)}/acquire`,{method:'POST',headers:jsonHeaders(),body:'{}'});
+      toast(data.message|| (entity.entity_type==='pass'?'Пропуск активирован.':'Товар получен.'));
+      if(entity.entity_type==='theme')document.dispatchEvent(new CustomEvent('alexihub:profile-theme-library-changed'));
+      await window.AlexiHubStore?.refresh?.();
+      const fresh=await api(`/community/api/store/entities/${encodeURIComponent(entity.entity_type)}/${Number(entity.id)}`);renderStoreProduct(fresh.entity);
+    }catch(error){toast(error.message,'err');button.disabled=false;button.textContent=original;}
+    return false;
+  };
+  document.addEventListener('click',event=>{if(!event.target.closest('.ah-store-browse-dropdown'))closeStoreBrowseMenu();});
+  document.addEventListener('keydown',event=>{if(event.key==='Escape'){if(q('#ah-store-product-modal')?.classList.contains('show'))window.closeStoreProduct();else closeStoreBrowseMenu();}});
   function statusClass(status){return ['active','published','archived','expired'].includes(status)?status:'';}
   function row(record,kind){
     const artUrl=kind==='collection'?record.banner_url:record.image_url;
