@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.40.0",
+      "date": "2026-08-04",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: profile theme picker and library scripts."
+      ],
+      "source_sha": "642b20ea099ae1fefe5f5251627f56f1ecae1e04"
+    },
+    {
       "version": "1.39.5",
       "date": "2026-08-04",
       "title": "Оновлення AlexiHub",
