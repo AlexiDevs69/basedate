@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.39.3",
+      "date": "2026-08-04",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: store functions and update database schema."
+      ],
+      "source_sha": "c8a59ad1bb64785372a82832b340bace37535fec"
+    },
+    {
       "version": "1.39.2",
       "date": "2026-08-02",
       "title": "Оновлення AlexiHub",
