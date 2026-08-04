@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.43.1",
+      "date": "2026-08-04",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Preserve legacy equipped themes and update equip logic."
+      ],
+      "source_sha": "a92650bedcc6b917c27a73346b7b2881702adaf5"
+    },
+    {
       "version": "1.43.0",
       "date": "2026-08-04",
       "title": "Нові можливості AlexiHub",
