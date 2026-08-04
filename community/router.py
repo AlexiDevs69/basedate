@@ -3347,6 +3347,39 @@ def _store_result_response(result: dict, success_status: int = 200) -> JSONRespo
     )
 
 
+async def _store_workshop_write(
+    db: AsyncSession,
+    operation: str,
+    action,
+    success_status: int = 200,
+) -> JSONResponse:
+    try:
+        result = await action()
+    except Exception as exc:
+        try:
+            await db.rollback()
+        except Exception as rollback_exc:
+            print(
+                f"[store-workshop] rollback after {operation} failed: "
+                f"{type(rollback_exc).__name__}: {rollback_exc!r}",
+                flush=True,
+            )
+        print(
+            f"[store-workshop] {operation} failed: "
+            f"{type(exc).__name__}: {exc!r}",
+            flush=True,
+        )
+        return JSONResponse(
+            {
+                "ok": False,
+                "error": "store_write_failed",
+                "message": "Не удалось сохранить публикацию. Подробности записаны в лог Render.",
+            },
+            status_code=500,
+        )
+    return _store_result_response(result, success_status)
+
+
 @router.get("/api/store/workshop")
 async def api_store_workshop(request: Request, db: AsyncSession = Depends(get_db)):
     account = await current_account(request, db)
@@ -3360,8 +3393,13 @@ async def api_store_workshop_create_collection(request: Request, db: AsyncSessio
     account = await current_account(request, db)
     if not account:
         return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
-    result = await crud.save_store_collection(db, account, await _store_json_body(request))
-    return _store_result_response(result, 201)
+    payload = await _store_json_body(request)
+    return await _store_workshop_write(
+        db,
+        "create collection",
+        lambda: crud.save_store_collection(db, account, payload),
+        201,
+    )
 
 
 @router.patch("/api/store/workshop/collections/{collection_id}")
@@ -3369,8 +3407,12 @@ async def api_store_workshop_update_collection(collection_id: int, request: Requ
     account = await current_account(request, db)
     if not account:
         return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
-    result = await crud.save_store_collection(db, account, await _store_json_body(request), collection_id=collection_id)
-    return _store_result_response(result)
+    payload = await _store_json_body(request)
+    return await _store_workshop_write(
+        db,
+        f"update collection {collection_id}",
+        lambda: crud.save_store_collection(db, account, payload, collection_id=collection_id),
+    )
 
 
 @router.post("/api/store/workshop/items")
@@ -3378,8 +3420,13 @@ async def api_store_workshop_create_item(request: Request, db: AsyncSession = De
     account = await current_account(request, db)
     if not account:
         return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
-    result = await crud.save_store_item(db, account, await _store_json_body(request))
-    return _store_result_response(result, 201)
+    payload = await _store_json_body(request)
+    return await _store_workshop_write(
+        db,
+        "create item",
+        lambda: crud.save_store_item(db, account, payload),
+        201,
+    )
 
 
 @router.patch("/api/store/workshop/items/{item_id}")
@@ -3387,8 +3434,12 @@ async def api_store_workshop_update_item(item_id: int, request: Request, db: Asy
     account = await current_account(request, db)
     if not account:
         return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
-    result = await crud.save_store_item(db, account, await _store_json_body(request), item_id=item_id)
-    return _store_result_response(result)
+    payload = await _store_json_body(request)
+    return await _store_workshop_write(
+        db,
+        f"update item {item_id}",
+        lambda: crud.save_store_item(db, account, payload, item_id=item_id),
+    )
 
 
 @router.post("/api/store/workshop/themes")
@@ -3396,8 +3447,13 @@ async def api_store_workshop_create_theme(request: Request, db: AsyncSession = D
     account = await current_account(request, db)
     if not account:
         return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
-    result = await crud.save_profile_theme(db, account, await _store_json_body(request))
-    return _store_result_response(result, 201)
+    payload = await _store_json_body(request)
+    return await _store_workshop_write(
+        db,
+        "create profile theme",
+        lambda: crud.save_profile_theme(db, account, payload),
+        201,
+    )
 
 
 @router.patch("/api/store/workshop/themes/{theme_id}")
@@ -3405,8 +3461,12 @@ async def api_store_workshop_update_theme(theme_id: int, request: Request, db: A
     account = await current_account(request, db)
     if not account:
         return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
-    result = await crud.save_profile_theme(db, account, await _store_json_body(request), theme_id=theme_id)
-    return _store_result_response(result)
+    payload = await _store_json_body(request)
+    return await _store_workshop_write(
+        db,
+        f"update profile theme {theme_id}",
+        lambda: crud.save_profile_theme(db, account, payload, theme_id=theme_id),
+    )
 
 
 @router.post("/api/store/workshop/passes")
@@ -3414,8 +3474,13 @@ async def api_store_workshop_create_pass(request: Request, db: AsyncSession = De
     account = await current_account(request, db)
     if not account:
         return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
-    result = await crud.save_store_pass(db, account, await _store_json_body(request))
-    return _store_result_response(result, 201)
+    payload = await _store_json_body(request)
+    return await _store_workshop_write(
+        db,
+        "create pass",
+        lambda: crud.save_store_pass(db, account, payload),
+        201,
+    )
 
 
 @router.patch("/api/store/workshop/passes/{pass_id}")
@@ -3423,8 +3488,12 @@ async def api_store_workshop_update_pass(pass_id: int, request: Request, db: Asy
     account = await current_account(request, db)
     if not account:
         return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
-    result = await crud.save_store_pass(db, account, await _store_json_body(request), pass_id=pass_id)
-    return _store_result_response(result)
+    payload = await _store_json_body(request)
+    return await _store_workshop_write(
+        db,
+        f"update pass {pass_id}",
+        lambda: crud.save_store_pass(db, account, payload, pass_id=pass_id),
+    )
 
 
 @router.post("/api/profile-themes/equip")
