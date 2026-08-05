@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.48.0",
+      "date": "2026-08-05",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: rich preview feature for URLs."
+      ],
+      "source_sha": "b16c14be9aa6dd20a06b30ce543da724c10062d2"
+    },
+    {
       "version": "1.47.0",
       "date": "2026-08-05",
       "title": "Нові можливості AlexiHub",
