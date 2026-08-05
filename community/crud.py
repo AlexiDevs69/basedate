@@ -4289,10 +4289,10 @@ async def _generate_unique_nitro_code(db: AsyncSession) -> str:
 def is_nitro_code_generator(account: Account | None) -> bool:
     if not account:
         return False
+    # Privileges must come from trusted DB fields, never from a reusable username.
     role = (getattr(account, 'role_label', None) or '').strip().lower()
-    username = (getattr(account, 'username', None) or '').strip().lower()
     admin_roles = {'owner', 'admin', 'administrator', 'developer', 'dev', 'code', 'staff', 'модер', 'админ'}
-    return bool(getattr(account, 'is_verified', False) or role in admin_roles or username in {'alexi', 'anchousxvii'})
+    return bool(getattr(account, 'is_verified', False) or role in admin_roles)
 
 
 def is_boost_code_generator(account: Account | None) -> bool:
@@ -5176,12 +5176,13 @@ STORE_NEW_WINDOW = timedelta(days=14)
 def is_store_admin(account: Account | None) -> bool:
     if not account:
         return False
+    # Store-wide administrator access is assigned through trusted moderation data.
+    # Usernames are reusable identifiers and must never grant privileges.
     role = (getattr(account, "role_label", None) or "").strip().lower()
-    username = (getattr(account, "username", None) or "").strip().lower()
     return role in {
         "owner", "admin", "administrator", "developer", "dev", "code", "staff",
         "админ", "владелец",
-    } or username in {"alexi", "anchousxvii"}
+    }
 
 
 def can_manage_store(account: Account | None) -> bool:
