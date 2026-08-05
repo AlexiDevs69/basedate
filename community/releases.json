@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.46.3",
+      "date": "2026-08-05",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: store browse menu styles and functionality."
+      ],
+      "source_sha": "882067e19d7067e8654c2836051b74c09171c315"
+    },
+    {
       "version": "1.46.2",
       "date": "2026-08-05",
       "title": "Оновлення AlexiHub",
