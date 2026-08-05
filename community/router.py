@@ -925,7 +925,7 @@ def _ws_account_id(websocket: WebSocket) -> int | None:
 
 
 def _ws_session_matches_account(websocket: WebSocket, account) -> bool:
-    if not account:
+    if not account or bool(getattr(account, "is_banned", False)):
         return False
     session = getattr(websocket, "session", {}) or {}
     try:
@@ -1152,12 +1152,14 @@ async def ws_account_realtime(websocket: WebSocket):
 
 
 async def current_account(request: Request, db: AsyncSession):
-    """Returns the logged-in Account for this visitor, or None."""
+    """Returns the active logged-in Account for this visitor, or None."""
     account_id = auth.get_logged_in_account_id(request)
     if not account_id:
         return None
     account = await crud.get_account_by_id(db, account_id)
-    if not account:
+    if not account or bool(getattr(account, "is_banned", False)):
+        # A moderation ban must invalidate already-issued HTTP sessions too,
+        # not only block the next password login or WebSocket connection.
         auth.log_out(request)
         return None
     account_version = max(1, int(getattr(account, "session_version", 1) or 1))
@@ -1294,18 +1296,30 @@ async def register_submit(
             status_code=status_code,
         )
 
-    if not username or not email or len(password) < 6:
-        return error("Заповни всі поля (пароль — мінімум 6 символів).")
+    if not _SETTINGS_USERNAME_RE.fullmatch(username):
+        return error("Username: 2–32 символи, лише латинські літери, цифри, крапка та _.")
+    if len(email) > 255 or not _SETTINGS_EMAIL_RE.fullmatch(email):
+        return error("Введи коректну електронну адресу.")
+    if len(password) < 8:
+        return error("Пароль повинен містити щонайменше 8 символів.")
+    if len(password) > 128 or len(password.encode("utf-8")) > 72:
+        return error("Пароль задовгий. Максимум — 72 байти.")
+    if not any(ch.isalpha() for ch in password) or not any(ch.isdigit() for ch in password):
+        return error("Додай до пароля хоча б одну літеру та одну цифру.")
 
-    if await crud.get_account_by_username(db, username):
+    if await crud.get_account_by_username_ci(db, username):
         return error("Цей юзернейм вже зайнятий.")
 
     if await crud.get_account_by_email(db, email):
         return error("Акаунт з таким email вже існує.")
 
-    account = await crud.create_account(
-        db, username=username, email=email, password_hash=auth.hash_password(password)
-    )
+    try:
+        account = await crud.create_account(
+            db, username=username, email=email, password_hash=auth.hash_password(password)
+        )
+    except IntegrityError:
+        await db.rollback()
+        return error("Username або email вже використовується.", 409)
     auth.log_in(request, account.id, getattr(account, "session_version", 1))
     return RedirectResponse(url="/community", status_code=303)
 
@@ -1370,19 +1384,30 @@ async def telegram_callback(request: Request, db: AsyncSession = Depends(get_db)
     if account is None:
         # First time logging in with this Telegram account -- create one.
         # username must be unique, so fall back / disambiguate if needed.
-        base_username = (data.get("username") or f"telegram_{telegram_id}").lower()
+        raw_username = (data.get("username") or f"telegram_{telegram_id}").lower()
+        base_username = re.sub(r"[^a-z0-9_.]", "_", raw_username).strip("._")[:32]
+        if len(base_username) < 2:
+            base_username = f"telegram_{telegram_id}"[:32]
         username = base_username
         suffix = 1
-        while await crud.get_account_by_username(db, username):
+        while await crud.get_account_by_username_ci(db, username):
             suffix += 1
-            username = f"{base_username}{suffix}"
+            suffix_text = str(suffix)
+            username = f"{base_username[:32-len(suffix_text)]}{suffix_text}"
 
-        account = await crud.create_account(
-            db,
-            username=username,
-            telegram_id=telegram_id,
-            telegram_username=data.get("username"),
-        )
+        try:
+            account = await crud.create_account(
+                db,
+                username=username,
+                telegram_id=telegram_id,
+                telegram_username=data.get("username"),
+            )
+        except IntegrityError:
+            await db.rollback()
+            # A concurrent first login may have created this Telegram account.
+            account = await crud.get_account_by_telegram_id(db, telegram_id)
+            if account is None:
+                return RedirectResponse(url="/community/login?error=telegram", status_code=303)
         if data.get("photo_url"):
             account.avatar_url = data["photo_url"]
             await db.commit()
