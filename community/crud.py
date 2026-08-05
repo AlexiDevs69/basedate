@@ -4,6 +4,7 @@ dashboard's crud.py so the two stay easy to reason about independently.
 """
 from datetime import datetime, timedelta, timezone
 import asyncio
+import hashlib
 import json
 import re
 import secrets
@@ -8119,3 +8120,136 @@ async def toggle_message_reaction(
         viewer_id=int(account_id),
     )
     return {"ok": True, "added": True, "reactions": summary.get(int(message_id), [])}
+
+
+# ============================================================================
+# Rich link preview cache used by DM and server-channel embeds.
+# ============================================================================
+
+_LINK_PREVIEW_TABLE_READY = False
+_LINK_PREVIEW_TABLE_LOCK = asyncio.Lock()
+_LINK_PREVIEW_ADVISORY_LOCK = 611_203_884_027
+
+
+async def ensure_link_preview_cache_table(db: AsyncSession) -> None:
+    """Create the small URL metadata cache once per worker, safely and idempotently."""
+    global _LINK_PREVIEW_TABLE_READY
+    if _LINK_PREVIEW_TABLE_READY:
+        return
+    async with _LINK_PREVIEW_TABLE_LOCK:
+        if _LINK_PREVIEW_TABLE_READY:
+            return
+        try:
+            # Multiple Render workers can receive their first preview request together.
+            # Serializing the one-time DDL avoids the same startup deadlock class as the
+            # store schema while keeping this table independent from ORM migrations.
+            await db.execute(
+                text("SELECT pg_advisory_xact_lock(:lock_key)"),
+                {"lock_key": _LINK_PREVIEW_ADVISORY_LOCK},
+            )
+            await db.execute(text("""
+                CREATE TABLE IF NOT EXISTS community_link_preview_cache (
+                    url_hash VARCHAR(64) PRIMARY KEY,
+                    source_url TEXT NOT NULL,
+                    final_url TEXT,
+                    kind VARCHAR(24) NOT NULL DEFAULT 'link',
+                    site_name VARCHAR(255),
+                    title VARCHAR(500),
+                    description TEXT,
+                    image_url TEXT,
+                    favicon_url TEXT,
+                    status VARCHAR(16) NOT NULL DEFAULT 'ready',
+                    fetched_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+                    expires_at TIMESTAMP WITH TIME ZONE NOT NULL
+                )
+            """))
+            await db.execute(text("""
+                CREATE INDEX IF NOT EXISTS ix_community_link_preview_cache_expires
+                ON community_link_preview_cache (expires_at)
+            """))
+            await db.commit()
+            _LINK_PREVIEW_TABLE_READY = True
+        except Exception:
+            await db.rollback()
+            raise
+
+
+def _link_preview_hash(url: str) -> str:
+    return hashlib.sha256((url or "").encode("utf-8", errors="ignore")).hexdigest()
+
+
+async def get_cached_link_preview(db: AsyncSession, source_url: str) -> dict | None:
+    """Return a cache record, including cached failures, or None on a cache miss."""
+    await ensure_link_preview_cache_table(db)
+    row = (await db.execute(text("""
+        SELECT source_url, final_url, kind, site_name, title, description,
+               image_url, favicon_url, status, fetched_at, expires_at
+        FROM community_link_preview_cache
+        WHERE url_hash = :url_hash AND expires_at > NOW()
+        LIMIT 1
+    """), {"url_hash": _link_preview_hash(source_url)})).mappings().first()
+    if not row:
+        return None
+    if (row.get("status") or "") != "ready":
+        return {"cached": True, "preview": None}
+    return {
+        "cached": True,
+        "preview": {
+            "url": row.get("final_url") or row.get("source_url") or source_url,
+            "kind": row.get("kind") or "link",
+            "site_name": row.get("site_name") or "",
+            "title": row.get("title") or "",
+            "description": row.get("description") or "",
+            "image_url": row.get("image_url") or "",
+            "favicon_url": row.get("favicon_url") or "",
+        },
+    }
+
+
+async def save_link_preview_cache(
+    db: AsyncSession,
+    source_url: str,
+    preview: dict | None,
+    *,
+    ttl_seconds: int = 21_600,
+) -> None:
+    """Upsert sanitized preview metadata; failures get a shorter negative cache."""
+    await ensure_link_preview_cache_table(db)
+    clean = preview if isinstance(preview, dict) else {}
+    status = "ready" if preview else "failed"
+    ttl = max(300, min(int(ttl_seconds or 21_600), 604_800))
+    await db.execute(text("""
+        INSERT INTO community_link_preview_cache (
+            url_hash, source_url, final_url, kind, site_name, title, description,
+            image_url, favicon_url, status, fetched_at, expires_at
+        ) VALUES (
+            :url_hash, :source_url, :final_url, :kind, :site_name, :title,
+            :description, :image_url, :favicon_url, :status, NOW(),
+            NOW() + (:ttl_seconds * INTERVAL '1 second')
+        )
+        ON CONFLICT (url_hash) DO UPDATE SET
+            source_url = EXCLUDED.source_url,
+            final_url = EXCLUDED.final_url,
+            kind = EXCLUDED.kind,
+            site_name = EXCLUDED.site_name,
+            title = EXCLUDED.title,
+            description = EXCLUDED.description,
+            image_url = EXCLUDED.image_url,
+            favicon_url = EXCLUDED.favicon_url,
+            status = EXCLUDED.status,
+            fetched_at = NOW(),
+            expires_at = EXCLUDED.expires_at
+    """), {
+        "url_hash": _link_preview_hash(source_url),
+        "source_url": source_url[:2048],
+        "final_url": str(clean.get("url") or source_url)[:2048],
+        "kind": str(clean.get("kind") or "link")[:24],
+        "site_name": str(clean.get("site_name") or "")[:255] or None,
+        "title": str(clean.get("title") or "")[:500] or None,
+        "description": str(clean.get("description") or "")[:2000] or None,
+        "image_url": str(clean.get("image_url") or "")[:2048] or None,
+        "favicon_url": str(clean.get("favicon_url") or "")[:2048] or None,
+        "status": status,
+        "ttl_seconds": ttl,
+    })
+    await db.commit()
