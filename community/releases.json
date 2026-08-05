@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.46.9",
+      "date": "2026-08-05",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Remove note from mini-profile in travel.html."
+      ],
+      "source_sha": "df01adf2dc7b45ac41df912121126f3e8bc303ef"
+    },
+    {
       "version": "1.46.8",
       "date": "2026-08-05",
       "title": "Виправлення та стабільність",
