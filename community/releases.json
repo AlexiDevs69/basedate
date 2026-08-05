@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.46.5",
+      "date": "2026-08-05",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance account validation and error handling."
+      ],
+      "source_sha": "fb9bfa6957f2c1371c503ce1bb7852549445273e"
+    },
+    {
       "version": "1.46.4",
       "date": "2026-08-05",
       "title": "Оновлення AlexiHub",
