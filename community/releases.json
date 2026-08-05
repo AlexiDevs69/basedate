@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.46.2",
+      "date": "2026-08-05",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: store table management with advisory locks."
+      ],
+      "source_sha": "0406c619d45f49d6e3fc512b58c3bc16509abd23"
+    },
+    {
       "version": "1.46.1",
       "date": "2026-08-05",
       "title": "Виправлення та стабільність",
