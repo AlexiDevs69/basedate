@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.46.7",
+      "date": "2026-08-05",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Remove note section from mini-profile."
+      ],
+      "source_sha": "747248f8e2f912473830b9d4fe1b6422dc0ea0d6"
+    },
+    {
       "version": "1.46.6",
       "date": "2026-08-05",
       "title": "Виправлення та стабільність",
