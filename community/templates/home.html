@@ -1947,7 +1947,7 @@
     .app.store-open .friend-content{display:none!important}
     .ah-season-store{display:none;min-height:0;height:100%;flex:1;flex-direction:column;overflow:hidden;background:#17181c;color:#f2f3f5}
     .app.store-open .ah-season-store{display:flex}
-    .ah-store-topbar{height:48px;flex:0 0 48px;display:flex;align-items:center;gap:22px;padding:0 16px;border-bottom:1px solid #101114;background:#191a1f;box-shadow:0 1px 0 rgba(0,0,0,.25);z-index:4}
+    .ah-store-topbar{position:relative;height:48px;flex:0 0 48px;display:flex;align-items:center;gap:22px;padding:0 16px;border-bottom:1px solid #101114;background:#191a1f;box-shadow:0 1px 0 rgba(0,0,0,.25);z-index:80;overflow:visible;isolation:isolate}
     .ah-store-brand{display:flex;align-items:center;gap:9px;min-width:max-content;font-size:15px;font-weight:950;color:#fff}
     .ah-store-brand .icon{width:20px;height:20px}
     .ah-store-tabs{align-self:stretch;display:flex;align-items:center;gap:5px;min-width:0}
@@ -2126,10 +2126,12 @@
 </style>
 
 <style id="ah-storefront-sections-css">
-.ah-store-browse-dropdown{position:relative;display:flex;align-items:center;height:100%}
-.ah-store-browse-dropdown>.ah-store-tab span{margin-left:5px;color:#b5bac1;font-size:12px;transition:transform .15s ease}
+.ah-store-browse-dropdown{position:relative;display:flex;align-items:center;height:100%;z-index:90}
+.ah-store-browse-dropdown>.ah-store-tab span{margin-left:5px;color:#b5bac1;font-size:12px;transition:transform .22s cubic-bezier(.2,.8,.2,1),opacity .18s ease}
 .ah-store-browse-dropdown>.ah-store-tab[aria-expanded="true"] span{transform:rotate(180deg)}
-.ah-store-browse-menu{position:absolute;z-index:180;top:43px;left:0;width:230px;padding:8px;border:1px solid #303137;border-radius:8px;background:#2b2d31;box-shadow:0 14px 36px rgba(0,0,0,.46)}
+.ah-store-browse-menu{position:absolute;z-index:240;top:calc(100% + 8px);left:0;width:230px;padding:8px;border:1px solid #303137;border-radius:8px;background:#2b2d31;box-shadow:0 18px 40px rgba(0,0,0,.46);opacity:0;visibility:hidden;pointer-events:none;transform:translateY(-10px) scale(.96);transform-origin:top left;transition:opacity .18s ease,transform .22s cubic-bezier(.16,1,.3,1),visibility 0s linear .22s}
+.ah-store-browse-menu.is-open{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0) scale(1);transition:opacity .18s ease,transform .22s cubic-bezier(.16,1,.3,1),visibility 0s linear 0s}
+.ah-store-browse-menu.is-closing{opacity:0;visibility:visible;pointer-events:none;transform:translateY(-8px) scale(.97)}
 .ah-store-browse-menu[hidden]{display:none}
 .ah-store-browse-menu button{width:100%;height:36px;display:flex;align-items:center;padding:0 10px;border:0;border-radius:5px;background:transparent;color:#dbdee1;font:600 13px/1 Inter,system-ui,sans-serif;text-align:left;cursor:pointer}
 .ah-store-browse-menu button:hover,.ah-store-browse-menu button.active{background:#404249;color:#fff}
@@ -6720,14 +6722,42 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     });
   }
   const categoryTitles={all:'Рекомендации',new:'Новинки',items:'Товары и события',themes:'Темы мини-профиля',passes:'Пропуски',collections:'Наборы и коллекции',free:'Бесплатное'};
-  function closeStoreBrowseMenu(){
+  let storeBrowseMenuTimer=null;
+  function isStoreBrowseMenuOpen(){
+    const menu=q('#ah-store-browse-menu');
+    return !!menu && !menu.hidden && menu.classList.contains('is-open');
+  }
+  function closeStoreBrowseMenu(immediate=false){
     const menu=q('#ah-store-browse-menu'),trigger=q('#ah-store-browse-trigger');
-    if(menu)menu.hidden=true;if(trigger)trigger.setAttribute('aria-expanded','false');
+    if(!menu||!trigger)return;
+    if(storeBrowseMenuTimer){clearTimeout(storeBrowseMenuTimer);storeBrowseMenuTimer=null;}
+    trigger.setAttribute('aria-expanded','false');
+    if(immediate || menu.hidden){
+      menu.classList.remove('is-open','is-closing');
+      menu.hidden=true;
+      return;
+    }
+    menu.classList.remove('is-open');
+    menu.classList.add('is-closing');
+    storeBrowseMenuTimer=window.setTimeout(()=>{
+      menu.hidden=true;
+      menu.classList.remove('is-closing');
+      storeBrowseMenuTimer=null;
+    },190);
   }
   window.toggleStoreBrowseMenu=function(event){
     event?.stopPropagation?.();
     const menu=q('#ah-store-browse-menu'),trigger=q('#ah-store-browse-trigger');if(!menu||!trigger)return false;
-    const opening=menu.hidden;menu.hidden=!opening;trigger.setAttribute('aria-expanded',opening?'true':'false');return false;
+    if(storeBrowseMenuTimer){clearTimeout(storeBrowseMenuTimer);storeBrowseMenuTimer=null;}
+    if(isStoreBrowseMenuOpen()){
+      closeStoreBrowseMenu();
+      return false;
+    }
+    menu.hidden=false;
+    menu.classList.remove('is-closing');
+    trigger.setAttribute('aria-expanded','true');
+    requestAnimationFrame(()=>menu.classList.add('is-open'));
+    return false;
   };
   function storeEntityMatches(entity){
     const type=entity._entity_type;
