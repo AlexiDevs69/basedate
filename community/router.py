@@ -10,14 +10,19 @@ never collide with the admin dashboard's routes.
 import asyncio
 import json
 import hashlib
+import html as html_lib
+import ipaddress
 import math
 import os
 import platform
+import socket
 import re
 import time
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from html.parser import HTMLParser
+from urllib.parse import parse_qs, urljoin, urlsplit, urlunsplit
 from zoneinfo import ZoneInfo
 
 import httpx
@@ -5461,3 +5466,340 @@ async def api_notifications(request: Request, db: AsyncSession = Depends(get_db)
         })
 
     return JSONResponse({"count": len(items), "items": items})
+
+
+# --- Safe rich-link previews -------------------------------------------------
+
+_RICH_PREVIEW_MAX_URL_LENGTH = 2048
+_RICH_PREVIEW_MAX_HTML_BYTES = 524_288
+_RICH_PREVIEW_MAX_REDIRECTS = 3
+_RICH_PREVIEW_ALLOWED_PORTS = {80, 443}
+_RICH_PREVIEW_IMAGE_TYPES = {
+    "image/jpeg", "image/png", "image/gif", "image/webp", "image/avif"
+}
+_RICH_PREVIEW_REQUESTS: dict[int, list[float]] = {}
+_RICH_PREVIEW_REQUEST_LOCK = asyncio.Lock()
+
+
+class _RichPreviewHTMLParser(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.meta: dict[str, str] = {}
+        self.title_parts: list[str] = []
+        self.in_title = False
+        self.icon_url = ""
+
+    def handle_starttag(self, tag: str, attrs) -> None:
+        values = {str(k).lower(): str(v or "") for k, v in attrs if k}
+        tag = (tag or "").lower()
+        if tag == "title":
+            self.in_title = True
+            return
+        if tag == "meta":
+            key = (values.get("property") or values.get("name") or "").strip().lower()
+            content = values.get("content", "").strip()
+            if key and content and key not in self.meta:
+                self.meta[key] = content
+            return
+        if tag == "link":
+            rel = values.get("rel", "").lower().split()
+            href = values.get("href", "").strip()
+            if href and not self.icon_url and any(item in {"icon", "shortcut", "apple-touch-icon"} for item in rel):
+                self.icon_url = href
+
+    def handle_endtag(self, tag: str) -> None:
+        if (tag or "").lower() == "title":
+            self.in_title = False
+
+    def handle_data(self, data: str) -> None:
+        if self.in_title and data:
+            self.title_parts.append(data)
+
+
+def _rich_preview_clean_text(value: object, limit: int) -> str:
+    clean = html_lib.unescape(str(value or ""))
+    clean = re.sub(r"\s+", " ", clean).strip()
+    return clean[: max(0, int(limit))]
+
+
+def _rich_preview_youtube_id(url: str) -> str:
+    try:
+        parsed = urlsplit(url)
+    except Exception:
+        return ""
+    host = (parsed.hostname or "").lower().removeprefix("www.")
+    candidate = ""
+    if host == "youtu.be":
+        candidate = parsed.path.strip("/").split("/", 1)[0]
+    elif host in {"youtube.com", "m.youtube.com", "music.youtube.com"}:
+        if parsed.path == "/watch":
+            candidate = (parse_qs(parsed.query).get("v") or [""])[0]
+        elif parsed.path.startswith(("/shorts/", "/embed/")):
+            candidate = parsed.path.strip("/").split("/", 1)[1].split("/", 1)[0]
+    return candidate if re.fullmatch(r"[A-Za-z0-9_-]{6,20}", candidate or "") else ""
+
+
+def _rich_preview_host_label(host: str) -> str:
+    clean = (host or "").lower().removeprefix("www.")
+    if clean in {"youtube.com", "youtu.be", "m.youtube.com", "music.youtube.com"}:
+        return "YouTube"
+    if clean in {"x.com", "twitter.com", "mobile.twitter.com"}:
+        return "X"
+    return clean[:255]
+
+
+def _rich_preview_known_fallback(url: str) -> dict | None:
+    """Keep YouTube/X cards useful even when those sites reject preview bots."""
+    try:
+        parsed = urlsplit(url)
+    except Exception:
+        return None
+    host = (parsed.hostname or "").lower().removeprefix("www.")
+    video_id = _rich_preview_youtube_id(url)
+    if video_id:
+        return {
+            "url": url,
+            "kind": "video",
+            "site_name": "YouTube",
+            "title": "Відео на YouTube",
+            "description": "",
+            "image_url": f"https://i.ytimg.com/vi/{video_id}/hqdefault.jpg",
+            "favicon_url": "https://www.youtube.com/favicon.ico",
+        }
+    if host in {"x.com", "twitter.com", "mobile.twitter.com"}:
+        parts = [part for part in parsed.path.split("/") if part]
+        if len(parts) >= 3 and parts[1].lower() == "status" and parts[2].isdigit():
+            author = re.sub(r"[^A-Za-z0-9_]", "", parts[0])[:32]
+            return {
+                "url": url,
+                "kind": "link",
+                "site_name": "X",
+                "title": f"Публікація @{author}" if author else "Публікація в X",
+                "description": "Відкрити публікацію в X",
+                "image_url": "",
+                "favicon_url": "https://x.com/favicon.ico",
+            }
+    return None
+
+
+def _rich_preview_ip_allowed(value: str) -> bool:
+    try:
+        address = ipaddress.ip_address(value.split("%", 1)[0])
+    except ValueError:
+        return False
+    return bool(address.is_global)
+
+
+async def _rich_preview_normalize_public_url(value: str) -> str:
+    raw = (value or "").strip()
+    if not raw or len(raw) > _RICH_PREVIEW_MAX_URL_LENGTH:
+        raise ValueError("invalid_url")
+    try:
+        parsed = urlsplit(raw)
+    except Exception as exc:
+        raise ValueError("invalid_url") from exc
+    scheme = parsed.scheme.lower()
+    if scheme not in {"http", "https"} or not parsed.hostname:
+        raise ValueError("invalid_url")
+    if parsed.username or parsed.password:
+        raise ValueError("invalid_url")
+    host = parsed.hostname.rstrip(".").lower()
+    if not host or host in {"localhost", "localhost.localdomain"} or host.endswith(".localhost"):
+        raise ValueError("blocked_host")
+    try:
+        ascii_host = host.encode("idna").decode("ascii")
+    except UnicodeError as exc:
+        raise ValueError("invalid_url") from exc
+    try:
+        port = parsed.port or (443 if scheme == "https" else 80)
+    except ValueError as exc:
+        raise ValueError("invalid_url") from exc
+    if port not in _RICH_PREVIEW_ALLOWED_PORTS:
+        raise ValueError("blocked_port")
+
+    literal_ip = None
+    try:
+        literal_ip = ipaddress.ip_address(ascii_host.split("%", 1)[0])
+    except ValueError:
+        pass
+    if literal_ip is not None:
+        if not literal_ip.is_global:
+            raise ValueError("blocked_host")
+    else:
+        try:
+            infos = await asyncio.wait_for(
+                asyncio.get_running_loop().getaddrinfo(
+                    ascii_host, port, type=socket.SOCK_STREAM
+                ),
+                timeout=2.5,
+            )
+        except Exception as exc:
+            raise ValueError("dns_failed") from exc
+        addresses = {str(item[4][0]) for item in infos if item and item[4]}
+        if not addresses or any(not _rich_preview_ip_allowed(address) for address in addresses):
+            raise ValueError("blocked_host")
+
+    netloc_host = f"[{ascii_host}]" if ":" in ascii_host else ascii_host
+    default_port = 443 if scheme == "https" else 80
+    netloc = netloc_host if port == default_port else f"{netloc_host}:{port}"
+    return urlunsplit((scheme, netloc, parsed.path or "/", parsed.query, ""))
+
+
+async def _rich_preview_allow_fresh_fetch(account_id: int) -> bool:
+    now = time.monotonic()
+    async with _RICH_PREVIEW_REQUEST_LOCK:
+        hits = [stamp for stamp in _RICH_PREVIEW_REQUESTS.get(int(account_id), []) if now - stamp < 60.0]
+        if len(hits) >= 18:
+            _RICH_PREVIEW_REQUESTS[int(account_id)] = hits
+            return False
+        hits.append(now)
+        _RICH_PREVIEW_REQUESTS[int(account_id)] = hits
+        return True
+
+
+async def _rich_preview_safe_asset_url(value: str, base_url: str) -> str:
+    candidate = urljoin(base_url, (value or "").strip())
+    try:
+        return await _rich_preview_normalize_public_url(candidate)
+    except ValueError:
+        return ""
+
+
+async def _fetch_rich_preview(source_url: str) -> dict | None:
+    current = await _rich_preview_normalize_public_url(source_url)
+    headers = {
+        "User-Agent": "AlexiHub-LinkPreview/1.0 (+https://alexihub.app)",
+        "Accept": "text/html,application/xhtml+xml,image/avif,image/webp,image/png,image/jpeg,image/gif;q=0.9,*/*;q=0.2",
+        "Accept-Language": "en,uk;q=0.9,ru;q=0.8",
+    }
+    timeout = httpx.Timeout(connect=3.5, read=5.5, write=3.5, pool=3.5)
+    async with httpx.AsyncClient(
+        timeout=timeout,
+        follow_redirects=False,
+        trust_env=False,
+        headers=headers,
+    ) as client:
+        for redirect_count in range(_RICH_PREVIEW_MAX_REDIRECTS + 1):
+            current = await _rich_preview_normalize_public_url(current)
+            async with client.stream("GET", current) as response:
+                if response.status_code in {301, 302, 303, 307, 308}:
+                    location = response.headers.get("location", "").strip()
+                    if not location or redirect_count >= _RICH_PREVIEW_MAX_REDIRECTS:
+                        return None
+                    current = await _rich_preview_normalize_public_url(urljoin(current, location))
+                    continue
+                if response.status_code < 200 or response.status_code >= 400:
+                    return None
+                content_type = response.headers.get("content-type", "").split(";", 1)[0].strip().lower()
+                host = urlsplit(current).hostname or ""
+                if content_type in _RICH_PREVIEW_IMAGE_TYPES:
+                    title = _rich_preview_clean_text(urlsplit(current).path.rsplit("/", 1)[-1], 500) or "Зображення"
+                    return {
+                        "url": current,
+                        "kind": "image",
+                        "site_name": _rich_preview_host_label(host),
+                        "title": title,
+                        "description": "",
+                        "image_url": current,
+                        "favicon_url": "",
+                    }
+                if content_type not in {"text/html", "application/xhtml+xml", ""}:
+                    return None
+                chunks: list[bytes] = []
+                total = 0
+                async for chunk in response.aiter_bytes():
+                    total += len(chunk)
+                    if total > _RICH_PREVIEW_MAX_HTML_BYTES:
+                        break
+                    chunks.append(chunk)
+                body = b"".join(chunks)
+                encoding = response.encoding or "utf-8"
+                try:
+                    html_text = body.decode(encoding, errors="replace")
+                except LookupError:
+                    html_text = body.decode("utf-8", errors="replace")
+
+                parser = _RichPreviewHTMLParser()
+                try:
+                    parser.feed(html_text)
+                except Exception:
+                    pass
+                meta = parser.meta
+                title = _rich_preview_clean_text(
+                    meta.get("og:title") or meta.get("twitter:title") or " ".join(parser.title_parts),
+                    500,
+                )
+                description = _rich_preview_clean_text(
+                    meta.get("og:description") or meta.get("twitter:description") or meta.get("description"),
+                    900,
+                )
+                site_name = _rich_preview_clean_text(
+                    meta.get("og:site_name") or _rich_preview_host_label(host),
+                    255,
+                )
+                image_raw = meta.get("og:image:secure_url") or meta.get("og:image") or meta.get("twitter:image") or ""
+                image_url = await _rich_preview_safe_asset_url(image_raw, current) if image_raw else ""
+                favicon_url = await _rich_preview_safe_asset_url(parser.icon_url, current) if parser.icon_url else ""
+                if not favicon_url:
+                    favicon_url = await _rich_preview_safe_asset_url("/favicon.ico", current)
+                video_id = _rich_preview_youtube_id(current)
+                if video_id and not image_url:
+                    image_url = f"https://i.ytimg.com/vi/{video_id}/hqdefault.jpg"
+                og_type = (meta.get("og:type") or "").lower()
+                kind = "video" if video_id or "video" in og_type else "link"
+                if not title:
+                    title = site_name or current
+                if not any((title, description, image_url)):
+                    return None
+                return {
+                    "url": current,
+                    "kind": kind,
+                    "site_name": site_name,
+                    "title": title,
+                    "description": description,
+                    "image_url": image_url,
+                    "favicon_url": favicon_url,
+                }
+    return None
+
+
+@router.get("/api/rich-preview")
+async def api_rich_preview(
+    request: Request,
+    url: str = "",
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_authenticated"}, status_code=401)
+    try:
+        normalized = await _rich_preview_normalize_public_url(url)
+    except ValueError:
+        return JSONResponse({"ok": False, "error": "invalid_or_blocked_url"}, status_code=400)
+
+    cached = await crud.get_cached_link_preview(db, normalized)
+    if cached is not None:
+        return JSONResponse({"ok": True, **cached})
+    if not await _rich_preview_allow_fresh_fetch(int(account.id)):
+        return JSONResponse({"ok": False, "error": "rate_limited"}, status_code=429)
+
+    # Do not hold an Aiven connection while a third-party site is responding.
+    await db.close()
+    preview = None
+    try:
+        preview = await _fetch_rich_preview(normalized)
+    except Exception:
+        preview = None
+    if preview is None:
+        preview = _rich_preview_known_fallback(normalized)
+    async with AsyncSessionLocal() as cache_db:
+        try:
+            await crud.save_link_preview_cache(
+                cache_db,
+                normalized,
+                preview,
+                ttl_seconds=21_600 if preview else 900,
+            )
+        except Exception:
+            await cache_db.rollback()
+    return JSONResponse({"ok": True, "cached": False, "preview": preview})
