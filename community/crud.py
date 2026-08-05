@@ -3,12 +3,14 @@ Query functions for the community module -- kept separate from the admin
 dashboard's crud.py so the two stay easy to reason about independently.
 """
 from datetime import datetime, timedelta, timezone
+import asyncio
 import json
 import re
 import secrets
 
 from sqlalchemy import and_, delete, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import aliased, selectinload
 
 from community.models import (
@@ -4068,6 +4070,44 @@ NITRO_GIFTER_BADGE_LABELS = {
 # ============================================================================
 
 _STORE_TABLES_READY = False
+_STORE_TABLES_LOCK = asyncio.Lock()
+_STORE_STUDIO_TABLES_LOCK = asyncio.Lock()
+_STORE_SCHEMA_RETRY_ATTEMPTS = 4
+_STORE_TABLES_ADVISORY_LOCK_KEY = 824_617_341
+_STORE_STUDIO_ADVISORY_LOCK_KEY = 824_617_342
+
+
+def _postgres_sqlstate(error: BaseException) -> str | None:
+    """Best-effort SQLSTATE extraction through SQLAlchemy/asyncpg wrappers."""
+    seen: set[int] = set()
+    current: BaseException | None = error
+    while current is not None and id(current) not in seen:
+        seen.add(id(current))
+        for attr in ("sqlstate", "pgcode"):
+            value = getattr(current, attr, None)
+            if value:
+                return str(value)
+        original = getattr(current, "orig", None)
+        if isinstance(original, BaseException) and id(original) not in seen:
+            current = original
+            continue
+        cause = getattr(current, "__cause__", None)
+        if isinstance(cause, BaseException) and id(cause) not in seen:
+            current = cause
+            continue
+        context = getattr(current, "__context__", None)
+        current = context if isinstance(context, BaseException) and id(context) not in seen else None
+    return None
+
+
+def _is_store_schema_deadlock(error: BaseException) -> bool:
+    return _postgres_sqlstate(error) == "40P01" or "deadlock detected" in str(error).lower()
+
+
+async def _store_schema_retry_delay(attempt: int) -> None:
+    await asyncio.sleep(0.25 * (2 ** max(0, attempt)))
+
+
 STORE_SEASON_KEY = "summer-clover-2026"
 STORE_SEASON_START = datetime(2026, 7, 31, 21, 0, tzinfo=timezone.utc)
 STORE_SEASON_END = datetime(2026, 8, 31, 21, 0, tzinfo=timezone.utc)
@@ -4505,12 +4545,8 @@ async def nitro_profile_payload(db: AsyncSession, account_id: int) -> dict:
     }
 
 
-async def ensure_store_tables(db: AsyncSession) -> None:
-    """Create the seasonal store schema on existing Render databases."""
-    global _STORE_TABLES_READY
-    if _STORE_TABLES_READY:
-        return
-    await ensure_nitro_tables(db)
+async def _ensure_store_tables_once(db: AsyncSession) -> None:
+    """Run one idempotent seasonal-store schema migration transaction."""
     await db.execute(text("""
         CREATE TABLE IF NOT EXISTS community_store_pass_progress (
             id BIGSERIAL PRIMARY KEY,
@@ -4572,7 +4608,36 @@ async def ensure_store_tables(db: AsyncSession) -> None:
     await db.execute(text("CREATE INDEX IF NOT EXISTS ix_store_giveaways_active ON community_store_giveaways (status, expires_at, created_at DESC)"))
     await db.execute(text("CREATE INDEX IF NOT EXISTS ix_store_giveaway_claims_count ON community_store_giveaway_claims (giveaway_id)"))
     await db.commit()
-    _STORE_TABLES_READY = True
+
+
+async def ensure_store_tables(db: AsyncSession) -> None:
+    """Create the seasonal store schema once, serialized across workers."""
+    global _STORE_TABLES_READY
+    if _STORE_TABLES_READY:
+        return
+
+    # Nitro schema commits independently, so finish it before taking the
+    # transaction-scoped store advisory lock.
+    await ensure_nitro_tables(db)
+
+    async with _STORE_TABLES_LOCK:
+        if _STORE_TABLES_READY:
+            return
+        for attempt in range(_STORE_SCHEMA_RETRY_ATTEMPTS):
+            try:
+                await db.execute(
+                    text("SELECT pg_advisory_xact_lock(:lock_key)"),
+                    {"lock_key": _STORE_TABLES_ADVISORY_LOCK_KEY},
+                )
+                await _ensure_store_tables_once(db)
+            except DBAPIError as error:
+                await db.rollback()
+                if not _is_store_schema_deadlock(error) or attempt + 1 >= _STORE_SCHEMA_RETRY_ATTEMPTS:
+                    raise
+                await _store_schema_retry_delay(attempt)
+            else:
+                _STORE_TABLES_READY = True
+                return
 
 
 def _store_now() -> datetime:
@@ -5195,11 +5260,8 @@ def _store_bool(value: object, default: bool = True) -> bool:
     return bool(value)
 
 
-async def ensure_store_studio_tables(db: AsyncSession) -> None:
-    global _STORE_STUDIO_TABLES_READY
-    if _STORE_STUDIO_TABLES_READY:
-        return
-    await ensure_store_tables(db)
+async def _ensure_store_studio_tables_once(db: AsyncSession) -> None:
+    """Run one idempotent store-studio schema migration transaction."""
     await db.execute(text("""
         CREATE TABLE IF NOT EXISTS community_store_items (
             id BIGSERIAL PRIMARY KEY,
@@ -5539,7 +5601,35 @@ async def ensure_store_studio_tables(db: AsyncSession) -> None:
             "reward_config": json.dumps(config, ensure_ascii=False),
         })
     await db.commit()
-    _STORE_STUDIO_TABLES_READY = True
+
+
+async def ensure_store_studio_tables(db: AsyncSession) -> None:
+    """Create/upgrade studio tables once without concurrent DDL deadlocks."""
+    global _STORE_STUDIO_TABLES_READY
+    if _STORE_STUDIO_TABLES_READY:
+        return
+
+    # The base seasonal tables use their own serialized transaction first.
+    await ensure_store_tables(db)
+
+    async with _STORE_STUDIO_TABLES_LOCK:
+        if _STORE_STUDIO_TABLES_READY:
+            return
+        for attempt in range(_STORE_SCHEMA_RETRY_ATTEMPTS):
+            try:
+                await db.execute(
+                    text("SELECT pg_advisory_xact_lock(:lock_key)"),
+                    {"lock_key": _STORE_STUDIO_ADVISORY_LOCK_KEY},
+                )
+                await _ensure_store_studio_tables_once(db)
+            except DBAPIError as error:
+                await db.rollback()
+                if not _is_store_schema_deadlock(error) or attempt + 1 >= _STORE_SCHEMA_RETRY_ATTEMPTS:
+                    raise
+                await _store_schema_retry_delay(attempt)
+            else:
+                _STORE_STUDIO_TABLES_READY = True
+                return
 
 
 async def _store_audit(db: AsyncSession, actor_id: int, entity_type: str, entity_id: int | None, action: str, payload: dict | None = None) -> None:
