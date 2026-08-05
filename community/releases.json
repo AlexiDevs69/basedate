@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.48.2",
+      "date": "2026-08-05",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance server channel with rich text support."
+      ],
+      "source_sha": "2dee795738ec18d490e098911a8d17a8cf583fb7"
+    },
+    {
       "version": "1.48.1",
       "date": "2026-08-05",
       "title": "Виправлення та стабільність",
