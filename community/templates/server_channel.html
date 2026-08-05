@@ -6324,6 +6324,10 @@ if (typeof window.openSelfProfileSettings !== 'function') {
 
   function renderOneText(el, raw, emojis){
     if(!el) return;
+    if(window.AlexiHubRichText && typeof window.AlexiHubRichText.render === 'function'){
+      window.AlexiHubRichText.render(el.closest('.msg,.message') || document);
+      return;
+    }
     if(el.dataset) el.dataset.ahRawText = raw || '';
     const trimmed = String(raw || '').trim();
     if(/^\[\[ah:sticker:\d+\]\]$/.test(trimmed)){
@@ -8904,6 +8908,150 @@ body .composer-wrap{
   document.addEventListener('alexihub:profile-theme-library-changed',()=>{library=null;if($('#ah-profile-theme-picker')?.classList.contains('open'))loadLibrary();});
   document.addEventListener('DOMContentLoaded',bindBanner);bindBanner();
   window.openProfileThemePicker=openPicker;
+})();
+</script>
+
+
+<style id="ah-rich-text-embeds-css">
+.dm-message-text,.message-content-text{white-space:normal;overflow-wrap:anywhere;word-break:break-word}
+.ah-rich-link{color:#00a8fc;text-decoration:none}.ah-rich-link:hover{text-decoration:underline}
+.ah-rich-inline-code{padding:2px 4px;border-radius:4px;background:#1e1f22;color:#e3e5e8;font:500 .875em/1.25 ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace}
+.ah-rich-blockquote{display:block;margin:3px 0;padding:1px 0 1px 12px;border-left:4px solid #4e5058;color:#dbdee1}
+.ah-rich-spoiler{border-radius:3px;background:#1e1f22;color:transparent;cursor:pointer;user-select:none;transition:background .12s ease,color .12s ease}
+.ah-rich-spoiler:hover,.ah-rich-spoiler.revealed{background:#2b2d31;color:inherit;user-select:text}
+.ah-rich-code{width:min(720px,100%);margin:6px 0 2px;overflow:hidden;border:1px solid #3f4147;border-radius:7px;background:#1e1f22}
+.ah-rich-code-head{height:32px;display:flex;align-items:center;justify-content:space-between;padding:0 8px 0 12px;border-bottom:1px solid #34363c;color:#949ba4;font-size:11px;font-weight:750;text-transform:lowercase}
+.ah-rich-code-copy{height:24px;padding:0 8px;border:0;border-radius:4px;background:transparent;color:#b5bac1;font:700 11px/1 inherit;cursor:pointer}.ah-rich-code-copy:hover{background:#35373c;color:#fff}
+.ah-rich-code code{display:block;max-height:430px;overflow:auto;padding:12px 14px;color:#dbdee1;white-space:pre;tab-size:4;font:500 12px/1.5 ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;scrollbar-width:thin}
+.ah-syn-keyword{color:#c586c0}.ah-syn-string{color:#ce9178}.ah-syn-comment{color:#6a9955}.ah-syn-number{color:#b5cea8}.ah-syn-tag{color:#569cd6}.ah-syn-attr{color:#9cdcfe}
+.ah-rich-embeds{width:min(520px,100%);display:grid;gap:8px;margin-top:6px}
+.ah-rich-embed{position:relative;display:grid;grid-template-columns:minmax(0,1fr);overflow:hidden;border-radius:4px;background:#2b2d31;color:#dbdee1;text-decoration:none;box-shadow:inset 4px 0 0 #5865f2;transition:background .12s ease}
+.ah-rich-embed:hover{background:#303238}.ah-rich-embed.loading{min-height:98px;pointer-events:none}
+.ah-rich-embed.loading::after{content:"";position:absolute;inset:12px 16px;background:linear-gradient(90deg,#35373c 20%,#404249 40%,#35373c 60%);background-size:220% 100%;border-radius:5px;animation:ahRichSkeleton 1.25s linear infinite}
+@keyframes ahRichSkeleton{to{background-position:-220% 0}}
+.ah-rich-embed-copy{min-width:0;padding:12px 16px 10px 16px}
+.ah-rich-embed-provider{display:flex;align-items:center;gap:6px;margin-bottom:5px;color:#b5bac1;font-size:11px;font-weight:650}.ah-rich-embed-provider img{width:16px;height:16px;border-radius:3px;object-fit:cover}
+.ah-rich-embed-title{display:block;overflow:hidden;color:#00a8fc;font-size:15px;font-weight:800;line-height:1.25;text-overflow:ellipsis}.ah-rich-embed-desc{display:-webkit-box;margin-top:6px;overflow:hidden;color:#dbdee1;font-size:13px;line-height:1.35;-webkit-box-orient:vertical;-webkit-line-clamp:3}
+.ah-rich-embed-image{display:block;width:100%;max-height:290px;object-fit:cover;background:#1e1f22}.ah-rich-embed.image .ah-rich-embed-image{max-height:390px;object-fit:contain}
+.ah-rich-embed-play{position:absolute;left:50%;top:calc(50% + 30px);width:48px;height:34px;display:grid;place-items:center;border-radius:9px;background:rgba(0,0,0,.72);color:#fff;transform:translate(-50%,-50%);font-size:17px;pointer-events:none}
+@media(max-width:680px){.ah-rich-code,.ah-rich-embeds{width:100%}.ah-rich-embed-image{max-height:230px}}
+@media(prefers-reduced-motion:reduce){.ah-rich-embed.loading::after{animation:none}}
+</style>
+
+<script id="ah-rich-text-embeds-js">
+(function(){
+  'use strict';
+  if(window.__ahRichTextEmbedsReady)return;
+  window.__ahRichTextEmbedsReady=true;
+  const cfg={context:'server',currentUsername:{{ account.username|tojson }},mediaUrl:'/community/api/media/library?context=server&server_id={{ server.id }}'};
+  const previewCache=new Map();
+  const emojiByName=new Map();
+  let emojiVersion=0;
+  let scheduled=false;
+
+  function esc(value){return String(value==null?'':value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch]));}
+  function safeHttpUrl(value){try{const u=new URL(String(value||''),location.href);return (u.protocol==='http:'||u.protocol==='https:')?u.href:'';}catch(_){return '';}}
+  function tokenStore(){const values=[];return {put(html){const id='\u0001AH'+'Q'.repeat(values.length+1)+'\u0002';values.push(html);return id;},restore(text){return text.replace(/\u0001AH(Q+)\u0002/g,(_,marks)=>values[marks.length-1]||'');}};}
+  function syntax(code,language){
+    const lang=String(language||'').toLowerCase();
+    if(!lang)return esc(code);
+    if(['html','xml','svg'].includes(lang))return esc(code).replace(/(&lt;\/?)([\w-]+)/g,'$1<span class="ah-syn-tag">$2</span>').replace(/\s([\w:-]+)(?==)/g,' <span class="ah-syn-attr">$1</span>');
+    const store=tokenStore();
+    let raw=String(code||'');
+    let tokenPattern;
+    if(['js','javascript','ts','typescript','jsx','tsx','json'].includes(lang))tokenPattern=/(\/\*[\s\S]*?\*\/|\/\/[^\n]*|`(?:\\.|[^`\\])*`|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')/g;
+    else if(['py','python'].includes(lang))tokenPattern=/(#[^\n]*|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')/g;
+    else if(['sql'].includes(lang))tokenPattern=/(--[^\n]*|\/\*[\s\S]*?\*\/|'(?:''|[^'])*')/g;
+    else if(['bash','sh','shell','zsh'].includes(lang))tokenPattern=/(#[^\n]*|"(?:\\.|[^"\\])*"|'[^']*')/g;
+    else tokenPattern=/("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')/g;
+    raw=raw.replace(tokenPattern,value=>{
+      const trimmed=value.trimStart();
+      const comment=trimmed.startsWith('//')||trimmed.startsWith('/*')||trimmed.startsWith('#')||trimmed.startsWith('--');
+      return store.put('<span class="'+(comment?'ah-syn-comment':'ah-syn-string')+'">'+esc(value)+'</span>');
+    });
+    let html=esc(raw);
+    const keywords={
+      python:'and|as|assert|async|await|break|class|continue|def|del|elif|else|except|False|finally|for|from|global|if|import|in|is|lambda|None|nonlocal|not|or|pass|raise|return|True|try|while|with|yield',
+      javascript:'async|await|break|case|catch|class|const|continue|debugger|default|delete|do|else|export|extends|false|finally|for|from|function|get|if|import|in|instanceof|let|new|null|of|return|set|static|super|switch|this|throw|true|try|typeof|undefined|var|void|while|with|yield',
+      sql:'ADD|ALL|ALTER|AND|AS|ASC|BEGIN|BETWEEN|BY|CASE|CREATE|DELETE|DESC|DISTINCT|DROP|ELSE|END|EXISTS|FROM|GROUP|HAVING|IN|INDEX|INSERT|INTO|IS|JOIN|LIMIT|NOT|NULL|ON|OR|ORDER|PRIMARY|RETURNING|SELECT|SET|TABLE|THEN|UNION|UNIQUE|UPDATE|VALUES|WHEN|WHERE',
+      shell:'case|do|done|elif|else|esac|export|fi|for|function|if|in|local|readonly|return|then|until|while'
+    };
+    let group='';
+    if(['py','python'].includes(lang))group=keywords.python;
+    else if(['js','javascript','ts','typescript','jsx','tsx','json'].includes(lang))group=keywords.javascript;
+    else if(lang==='sql')group=keywords.sql;
+    else if(['bash','sh','shell','zsh'].includes(lang))group=keywords.shell;
+    if(group)html=html.replace(new RegExp('\\b('+group+')\\b','g'+(lang==='sql'?'i':'')),'<span class="ah-syn-keyword">$1</span>');
+    html=html.replace(/\b(0x[\da-f]+|\d+(?:\.\d+)?)\b/gi,'<span class="ah-syn-number">$1</span>');
+    return store.restore(html);
+  }
+  function trimUrlPunctuation(value){let url=String(value||'');while(/[.,!?;:]$/.test(url))url=url.slice(0,-1);let opens=(url.match(/\(/g)||[]).length,closes=(url.match(/\)/g)||[]).length;while(closes>opens&&url.endsWith(')')){url=url.slice(0,-1);closes--;}return url;}
+  function renderMarkdown(raw){
+    const store=tokenStore();
+    let source=String(raw||'').replace(/\r\n?/g,'\n');
+    source=source.replace(/```([A-Za-z0-9_+.-]{0,24})[^\n]*\n?([\s\S]*?)```/g,(_,language,code)=>{
+      const label=(language||'code').toLowerCase();
+      return store.put('<pre class="ah-rich-code"><div class="ah-rich-code-head"><span>'+esc(label)+'</span><button type="button" class="ah-rich-code-copy">Копіювати</button></div><code>'+syntax(code.replace(/\n$/,''),language)+'</code></pre>');
+    });
+    source=source.replace(/`([^`\n]+)`/g,(_,code)=>store.put('<code class="ah-rich-inline-code">'+esc(code)+'</code>'));
+    source=source.replace(/\[([^\]\n]{1,240})\]\((https?:\/\/[^\s)]+)\)/g,(all,label,url)=>{const safe=safeHttpUrl(trimUrlPunctuation(url));return safe?store.put('<a class="ah-rich-link" href="'+esc(safe)+'" target="_blank" rel="noopener noreferrer nofollow">'+esc(label)+'</a>'):all;});
+    source=source.replace(/https?:\/\/[^\s<>\u0001]+/g,value=>{const clean=trimUrlPunctuation(value),safe=safeHttpUrl(clean);if(!safe)return value;const suffix=value.slice(clean.length);return store.put('<a class="ah-rich-link" href="'+esc(safe)+'" target="_blank" rel="noopener noreferrer nofollow">'+esc(clean)+'</a>')+suffix;});
+    let html=esc(source);
+    html=html.replace(/\*\*([^\n*][\s\S]*?)\*\*/g,'<strong>$1</strong>');
+    html=html.replace(/__([^\n_][\s\S]*?)__/g,'<u>$1</u>');
+    html=html.replace(/~~([^\n~][\s\S]*?)~~/g,'<s>$1</s>');
+    html=html.replace(/\|\|([^\n|][\s\S]*?)\|\|/g,'<span class="ah-rich-spoiler" tabindex="0" role="button" aria-label="Спойлер">$1</span>');
+    html=html.replace(/(^|[^*])\*([^\n*]+)\*/g,'$1<em>$2</em>');
+    html=html.split('\n').map(line=>{
+      const match=line.match(/^\s*&gt;\s?(.*)$/);
+      return match?'<span class="ah-rich-blockquote">'+match[1]+'</span>':line;
+    }).join('<br>');
+    return store.restore(html);
+  }
+  function decorateText(root){
+    const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(node){if(!node.nodeValue)return NodeFilter.FILTER_REJECT;const p=node.parentElement;if(!p||p.closest('pre,code,a,.ah-mention-token'))return NodeFilter.FILTER_REJECT;return /(:[A-Za-z0-9_]{1,40}:|@[A-Za-z0-9_.-]{1,40})/.test(node.nodeValue)?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT;}});
+    const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
+    nodes.forEach(node=>{
+      const text=node.nodeValue||'',regex=/(:([A-Za-z0-9_]{1,40}):|@([A-Za-z0-9_.-]{1,40}))/g;let match,last=0,changed=false;const frag=document.createDocumentFragment();
+      while((match=regex.exec(text))){const emojiName=match[2],mention=match[3],item=emojiName?emojiByName.get(emojiName.toLowerCase()):null;if(emojiName&&!item)continue;changed=true;if(match.index>last)frag.appendChild(document.createTextNode(text.slice(last,match.index)));if(item){const img=document.createElement('img');img.className='ah-custom-emoji';img.src=item.image_url;img.alt=':'+emojiName+':';img.loading='lazy';img.referrerPolicy='no-referrer';frag.appendChild(img);}else{const span=document.createElement('span');const self=String(mention||'').toLowerCase()===String(cfg.currentUsername||'').toLowerCase()||String(mention||'').toLowerCase()==='everyone';span.className='ah-mention-token'+(self?' is-self':'');span.textContent='@'+mention;frag.appendChild(span);}last=regex.lastIndex;}
+      if(!changed)return;if(last<text.length)frag.appendChild(document.createTextNode(text.slice(last)));node.replaceWith(frag);
+    });
+  }
+  function urlsFromMessage(raw){
+    let source=String(raw||'').replace(/```[\s\S]*?```/g,' ').replace(/`[^`\n]*`/g,' ');const urls=[];
+    const add=value=>{const safe=safeHttpUrl(trimUrlPunctuation(value));if(safe&&!urls.includes(safe)&&urls.length<3)urls.push(safe);};
+    source.replace(/\[[^\]\n]+\]\((https?:\/\/[^\s)]+)\)/g,(_,url)=>{add(url);return _;});
+    source.replace(/https?:\/\/[^\s<>]+/g,value=>{add(value);return value;});
+    return urls;
+  }
+  async function previewFor(url){
+    if(previewCache.has(url))return previewCache.get(url);
+    const promise=fetch('/community/api/rich-preview?url='+encodeURIComponent(url),{credentials:'same-origin',headers:{Accept:'application/json'}}).then(async response=>{const data=await response.json().catch(()=>({}));return response.ok&&data.ok?data.preview:null;}).catch(()=>null);
+    previewCache.set(url,promise);return promise;
+  }
+  function previewNode(preview){
+    const link=document.createElement('a');link.className='ah-rich-embed '+String(preview.kind||'link');link.href=safeHttpUrl(preview.url)||'#';link.target='_blank';link.rel='noopener noreferrer nofollow';
+    const copy=document.createElement('div');copy.className='ah-rich-embed-copy';const provider=document.createElement('div');provider.className='ah-rich-embed-provider';const favicon=safeHttpUrl(preview.favicon_url);if(favicon){const icon=document.createElement('img');icon.src=favicon;icon.alt='';icon.loading='lazy';icon.referrerPolicy='no-referrer';provider.appendChild(icon);}provider.appendChild(document.createTextNode(preview.site_name||new URL(link.href).hostname));copy.appendChild(provider);
+    if(preview.title){const title=document.createElement('span');title.className='ah-rich-embed-title';title.textContent=preview.title;copy.appendChild(title);}if(preview.description){const desc=document.createElement('span');desc.className='ah-rich-embed-desc';desc.textContent=preview.description;copy.appendChild(desc);}link.appendChild(copy);
+    const previewImage=safeHttpUrl(preview.image_url);if(previewImage){const img=document.createElement('img');img.className='ah-rich-embed-image';img.src=previewImage;img.alt='';img.loading='lazy';img.referrerPolicy='no-referrer';link.appendChild(img);if(preview.kind==='video'){const play=document.createElement('span');play.className='ah-rich-embed-play';play.textContent='▶';link.appendChild(play);}}
+    return link;
+  }
+  function renderEmbeds(row,raw){
+    const body=row.querySelector(cfg.context==='dm'?'.msg-body':'.message-body');if(!body)return;body.querySelector('.ah-rich-embeds')?.remove();const urls=urlsFromMessage(raw);if(!urls.length)return;
+    const holder=document.createElement('div');holder.className='ah-rich-embeds';holder.dataset.source=raw;const content=row.querySelector(cfg.context==='dm'?'.msg-text':'.message-content');if(content)content.insertAdjacentElement('afterend',holder);else body.appendChild(holder);
+    urls.forEach(url=>{const shell=document.createElement('span');shell.className='ah-rich-embed loading';holder.appendChild(shell);previewFor(url).then(preview=>{if(!holder.isConnected||holder.dataset.source!==raw)return;if(!preview){shell.remove();if(!holder.children.length)holder.remove();return;}shell.replaceWith(previewNode(preview));});});
+  }
+  function renderRow(row){
+    const text=row.querySelector(cfg.context==='dm'?'.dm-message-text':'.message-content-text');if(!text)return;const raw=String(row.dataset.messageContent!=null?row.dataset.messageContent:text.textContent||'');const signature=raw+'|'+emojiVersion;if(text.dataset.richSource===signature)return;text.dataset.richSource=signature;text.dataset.mediaRendered='1';if(/^\s*\[\[ah:sticker:\d+\]\]\s*$/.test(raw)){text.textContent='';renderEmbeds(row,'');return;}text.innerHTML=renderMarkdown(raw);decorateText(text);renderEmbeds(row,raw);
+  }
+  function renderAll(root){(root||document).querySelectorAll(cfg.context==='dm'?'.msg':'.message').forEach(renderRow);}
+  function schedule(root){if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;renderAll(root||document);});}
+  async function loadEmojiMap(){try{const response=await fetch(cfg.mediaUrl,{credentials:'same-origin'}),data=await response.json();(data.emojis||[]).forEach(item=>{if((item.allowed||item.local)&&item.name&&safeHttpUrl(item.image_url))emojiByName.set(String(item.name).toLowerCase(),item);});emojiVersion++;renderAll(document);}catch(_){}}
+  document.addEventListener('click',event=>{const spoiler=event.target.closest('.ah-rich-spoiler');if(spoiler){spoiler.classList.toggle('revealed');return;}const button=event.target.closest('.ah-rich-code-copy');if(button){const code=button.closest('.ah-rich-code')?.querySelector('code')?.textContent||'';navigator.clipboard?.writeText(code).then(()=>{const old=button.textContent;button.textContent='Скопійовано';setTimeout(()=>button.textContent=old,1100);}).catch(()=>{});}});
+  document.addEventListener('keydown',event=>{if((event.key==='Enter'||event.key===' ')&&event.target.closest('.ah-rich-spoiler')){event.preventDefault();event.target.closest('.ah-rich-spoiler').classList.toggle('revealed');}});
+  const root=document.getElementById('messages')||document.querySelector('.messages');if(root)new MutationObserver(()=>schedule(root)).observe(root,{childList:true,subtree:true,characterData:true});
+  [0,80,350,900].forEach(delay=>setTimeout(()=>renderAll(document),delay));loadEmojiMap();
+  window.AlexiHubRichText={render:renderAll};
 })();
 </script>
 
