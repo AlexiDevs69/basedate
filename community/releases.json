@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.46.4",
+      "date": "2026-08-05",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: privilege checks to use trusted DB fields only."
+      ],
+      "source_sha": "463c85e4a9d15747a4f4f8de0929c7906d0bde6a"
+    },
+    {
       "version": "1.46.3",
       "date": "2026-08-05",
       "title": "Оновлення AlexiHub",
