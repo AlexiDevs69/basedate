@@ -4651,6 +4651,157 @@ if (typeof window.openSelfProfileSettings !== 'function') {
 </script>
 
 
+<style id="ah-system-announcement-style">
+#ah-system-announcement{
+  position:fixed;
+  left:50%;
+  top:38%;
+  width:min(680px,calc(100vw - 32px));
+  min-height:68px;
+  padding:12px 16px 12px 13px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  border:1px solid rgba(255,255,255,.10);
+  border-left:3px solid #5865f2;
+  border-radius:14px;
+  background:rgba(31,32,38,.96);
+  box-shadow:0 18px 58px rgba(0,0,0,.52),0 0 0 1px rgba(0,0,0,.18) inset;
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  color:#f2f3f5;
+  font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transform:translate(-50%,-50%) translateY(-14px) scale(.975);
+  transform-origin:center;
+  transition:opacity .2s ease,transform .28s cubic-bezier(.2,.85,.25,1),visibility 0s linear .22s;
+  z-index:2147483646;
+}
+#ah-system-announcement.show{
+  opacity:1;
+  visibility:visible;
+  transform:translate(-50%,-50%) translateY(0) scale(1);
+  transition-delay:0s;
+}
+#ah-system-announcement.refresh{animation:ahSystemAnnouncementRefresh .24s ease-out}
+.ah-system-announcement-avatar{
+  width:44px;
+  height:44px;
+  flex:0 0 44px;
+  border-radius:50%;
+  overflow:hidden;
+  background:#16171b;
+  box-shadow:0 0 0 2px #2b2d31;
+  position:relative;
+  display:grid;
+  place-items:center;
+  color:#dbdee1;
+  font-size:15px;
+  font-weight:800;
+  user-select:none;
+}
+.ah-system-announcement-avatar img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+.ah-system-announcement-content{min-width:0;flex:1;line-height:1.42}
+.ah-system-announcement-line{font-size:15px;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:8}
+.ah-system-announcement-name{font-weight:800;color:#fff;margin-right:3px}
+.ah-system-announcement-separator{font-weight:700;color:#b5bac1;margin-right:4px}
+.ah-system-announcement-message{color:#dbdee1;font-weight:600;white-space:pre-wrap;overflow-wrap:anywhere}
+@keyframes ahSystemAnnouncementRefresh{
+  0%{transform:translate(-50%,-50%) scale(1)}
+  45%{transform:translate(-50%,-50%) scale(1.018)}
+  100%{transform:translate(-50%,-50%) scale(1)}
+}
+@media(max-width:700px){
+  #ah-system-announcement{top:34%;width:calc(100vw - 22px);min-height:62px;padding:10px 12px 10px 11px;border-radius:12px;gap:10px}
+  .ah-system-announcement-avatar{width:40px;height:40px;flex-basis:40px}
+  .ah-system-announcement-line{font-size:14px;-webkit-line-clamp:6}
+}
+@media(prefers-reduced-motion:reduce){
+  #ah-system-announcement{transition:opacity .12s linear;transform:translate(-50%,-50%)}
+  #ah-system-announcement.show{transform:translate(-50%,-50%)}
+  #ah-system-announcement.refresh{animation:none}
+}
+</style>
+<script>
+(function(){
+  'use strict';
+  if(window.AlexiHubSystemAnnouncement) return;
+
+  var hideTimer=null;
+  var refreshTimer=null;
+
+  function ensureBanner(){
+    var banner=document.getElementById('ah-system-announcement');
+    if(banner) return banner;
+    banner=document.createElement('div');
+    banner.id='ah-system-announcement';
+    banner.setAttribute('role','status');
+    banner.setAttribute('aria-live','assertive');
+    banner.setAttribute('aria-atomic','true');
+    banner.innerHTML='<div class="ah-system-announcement-avatar"><span class="ah-system-announcement-fallback">A</span><img alt="" hidden></div><div class="ah-system-announcement-content"><div class="ah-system-announcement-line"><span class="ah-system-announcement-name"></span><span class="ah-system-announcement-separator">:</span><span class="ah-system-announcement-message"></span></div></div>';
+    document.body.appendChild(banner);
+    return banner;
+  }
+
+  function initialFor(author){
+    var value=String((author&&author.display_name)||(author&&author.username)||'A').trim();
+    return value ? value.charAt(0).toUpperCase() : 'A';
+  }
+
+  function show(payload){
+    var item=payload&&payload.announcement ? payload.announcement : (payload||{});
+    var text=String(item.text||'').trim();
+    if(!text) return;
+    var author=item.author||{};
+    var banner=ensureBanner();
+    var name=banner.querySelector('.ah-system-announcement-name');
+    var message=banner.querySelector('.ah-system-announcement-message');
+    var fallback=banner.querySelector('.ah-system-announcement-fallback');
+    var image=banner.querySelector('.ah-system-announcement-avatar img');
+    var displayName=String(author.display_name||author.username||'AlexiHub').trim()||'AlexiHub';
+    var avatarUrl=String(author.avatar_url||'').trim();
+
+    name.textContent=displayName;
+    message.textContent=text;
+    fallback.textContent=initialFor(author);
+    image.hidden=true;
+    image.onload=null;
+    image.onerror=null;
+    image.removeAttribute('src');
+    if(avatarUrl){
+      image.onload=function(){ image.hidden=false; };
+      image.onerror=function(){ image.hidden=true; image.removeAttribute('src'); };
+      image.src=avatarUrl;
+    }
+
+    var wasVisible=banner.classList.contains('show');
+    if(hideTimer) clearTimeout(hideTimer);
+    if(refreshTimer) clearTimeout(refreshTimer);
+    banner.classList.remove('refresh');
+    if(wasVisible){
+      void banner.offsetWidth;
+      banner.classList.add('show','refresh');
+      refreshTimer=setTimeout(function(){ banner.classList.remove('refresh'); },260);
+    }else{
+      banner.classList.add('show');
+    }
+    hideTimer=setTimeout(function(){ banner.classList.remove('show'); },7000);
+  }
+
+  window.AlexiHubSystemAnnouncement={show:show};
+})();
+</script>
+
+
 <script>
 (function () {
   'use strict';
@@ -4957,6 +5108,10 @@ if (typeof window.openSelfProfileSettings !== 'function') {
   function handleMessage(event) {
     var data;
     try { data = JSON.parse(event.data); } catch (error) { return; }
+    if (data.type === 'system_announcement') {
+      if (window.AlexiHubSystemAnnouncement) window.AlexiHubSystemAnnouncement.show(data);
+      return;
+    }
     if (data.type === 'presence') {
       updatePresence(data.account_id, data.status, data.online, data.username, data.display_name);
       return;
