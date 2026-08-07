@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.54.0",
+      "date": "2026-08-07",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: system announcement banner in dm_chat.html."
+      ],
+      "source_sha": "1b8ff9e4b6b55bdd2cf30cc95817e408dbd7d24b"
+    },
+    {
       "version": "1.53.0",
       "date": "2026-08-07",
       "title": "Нові можливості AlexiHub",
