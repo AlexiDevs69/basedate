@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.54.7",
+      "date": "2026-08-07",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено продуктивність: column addition with deadlock handling."
+      ],
+      "source_sha": "a8435891db71f5dd3c7ec8557089d96d33f7c023"
+    },
+    {
       "version": "1.54.6",
       "date": "2026-08-07",
       "title": "Оновлення AlexiHub",
