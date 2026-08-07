@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.49.0",
+      "date": "2026-08-07",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: system announcement banner in home.html."
+      ],
+      "source_sha": "c4e12f8b7bce5dcbfe4fb635ada1d58b2ad4d32b"
+    },
+    {
       "version": "1.48.2",
       "date": "2026-08-05",
       "title": "Виправлення та стабільність",
