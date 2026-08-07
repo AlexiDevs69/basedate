@@ -979,6 +979,36 @@ def _account_payload(account) -> dict:
     }
 
 
+_ANNOUNCE_COMMAND_RE = re.compile(r"^/announce(?:\s+([\s\S]*))?$", re.IGNORECASE)
+
+
+def _announcement_text_from_content(value: str | None) -> str | None:
+    """Return announcement text when *value* is exactly the /announce command."""
+    clean = str(value or "").strip()
+    match = _ANNOUNCE_COMMAND_RE.fullmatch(clean)
+    if not match:
+        return None
+    return str(match.group(1) or "").strip()
+
+
+def _system_announcement_payload(account, text_value: str) -> dict:
+    """Small global realtime payload: only the sender identity and announcement text."""
+    display_name = str(getattr(account, "display_name", None) or account.username or "AlexiHub")
+    return {
+        "type": "system_announcement",
+        "announcement": {
+            "text": str(text_value or "").strip(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "author": {
+                "id": int(account.id),
+                "username": str(account.username or ""),
+                "display_name": display_name,
+                "avatar_url": str(getattr(account, "avatar_url", None) or ""),
+            },
+        },
+    }
+
+
 def _parse_optional_int(value) -> int | None:
     try:
         clean = str(value or "").strip()
@@ -2177,6 +2207,22 @@ async def server_message_submit(
         return RedirectResponse(url=f"/community/servers/{server_id}", status_code=303)
     if not await crud.can_access_server_channel(db, server_id, channel, account.id):
         return _forbidden_response()
+
+    announcement_text = _announcement_text_from_content(content)
+    if announcement_text is not None:
+        # /announce is a reserved global command. It never becomes a normal
+        # channel message and permission is enforced on the backend.
+        if not crud.is_store_admin(account):
+            return _forbidden_response()
+        if announcement_text:
+            await account_realtime.broadcast_all(
+                _system_announcement_payload(account, announcement_text)
+            )
+        return RedirectResponse(
+            url=f"/community/servers/{server_id}/channel/{channel_id}",
+            status_code=303,
+        )
+
     content, image_url, _media_item = await _prepare_custom_media_message(
         db, account.id, content, image_url, context="server", server_id=server_id
     )
@@ -4301,6 +4347,52 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
                 content = content[:4000]
             if len(image_url) > 512:
                 image_url = image_url[:512]
+
+            announcement_text = _announcement_text_from_content(content)
+            if announcement_text is not None:
+                await realtime_channels.clear_typing(key, account_id)
+                if not announcement_text:
+                    await websocket.send_json({
+                        "type": "message_error",
+                        "error": "announcement_empty",
+                    })
+                    continue
+
+                async with AsyncSessionLocal() as db:
+                    sender = await crud.get_account_by_id(db, account_id)
+                    channel = await crud.get_server_channel(db, server_id, channel_id)
+                    is_member = await crud.is_server_member(db, server_id, account_id)
+                    can_access = bool(
+                        sender
+                        and channel
+                        and await crud.can_access_server_channel(
+                            db, server_id, channel, account_id
+                        )
+                    )
+                    if (
+                        not sender
+                        or sender.is_banned
+                        or not is_member
+                        or not can_access
+                    ):
+                        await websocket.close(code=1008)
+                        return
+                    if not crud.is_store_admin(sender):
+                        await websocket.send_json({
+                            "type": "message_error",
+                            "error": "announcement_forbidden",
+                        })
+                        continue
+                    announcement_payload = _system_announcement_payload(
+                        sender, announcement_text
+                    )
+
+                await account_realtime.broadcast_all(announcement_payload)
+                await websocket.send_json({
+                    "type": "announcement_sent",
+                    "client_nonce": client_nonce,
+                })
+                continue
 
             async with AsyncSessionLocal() as db:
                 if not await crud.is_server_member(db, server_id, account_id):
