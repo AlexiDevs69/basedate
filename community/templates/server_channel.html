@@ -3003,21 +3003,12 @@ function openChannelInviteModal(event, btn) {
         if (data.has_more) sendSocket({ type: 'sync', after_id: latestServerMessageId() });
         else if (pendingServerSend) finishServerSend(false);
       }
-      if (data.type === 'announcement_sent') {
-        if (pendingServerSend && (!data.client_nonce || data.client_nonce === pendingServerSend.nonce)) {
-          finishServerSend(true);
-        }
-      }
       if (data.type === 'message_error') {
         finishServerSend(false);
         if (window.showActionToast) {
           var errorText = data.error === 'media_not_allowed'
             ? 'Це емоджі або стікер тут недоступне.'
-            : data.error === 'announcement_forbidden'
-              ? 'Команда /announce доступна тільки адміністрації.'
-              : data.error === 'announcement_empty'
-                ? 'Після /announce додай текст оголошення.'
-                : 'Повідомлення не відправлено.';
+            : 'Повідомлення не відправлено.';
           showActionToast(errorText);
         }
       }
@@ -6990,155 +6981,111 @@ body .composer-wrap{
 </script>
 
 
-<style id="ah-system-announcement-style">
-#ah-system-announcement{
-  position:fixed;
-  left:50%;
-  top:38%;
-  width:min(680px,calc(100vw - 32px));
-  min-height:68px;
-  padding:12px 16px 12px 13px;
-  display:flex;
-  align-items:center;
-  gap:12px;
-  border:1px solid rgba(255,255,255,.10);
-  border-left:3px solid #5865f2;
-  border-radius:14px;
-  background:rgba(31,32,38,.96);
-  box-shadow:0 18px 58px rgba(0,0,0,.52),0 0 0 1px rgba(0,0,0,.18) inset;
-  backdrop-filter:blur(14px);
-  -webkit-backdrop-filter:blur(14px);
-  color:#f2f3f5;
-  font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
-  opacity:0;
-  visibility:hidden;
-  pointer-events:none;
-  transform:translate(-50%,-50%) translateY(-14px) scale(.975);
-  transform-origin:center;
-  transition:opacity .2s ease,transform .28s cubic-bezier(.2,.85,.25,1),visibility 0s linear .22s;
-  z-index:2147483646;
+<style id="ah-global-overlay-style">
+#ah-global-message{
+  position:fixed;left:50%;top:30%;width:min(760px,calc(100vw - 28px));min-height:52px;
+  display:flex;align-items:center;gap:10px;padding:8px 13px 8px 9px;
+  color:#f2f3f5;background:rgba(24,25,29,.82);border:1px solid rgba(255,255,255,.10);
+  border-radius:12px;box-shadow:0 16px 46px rgba(0,0,0,.42);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;z-index:2147483646;
+  opacity:0;visibility:hidden;pointer-events:none;transform:translate(-50%,-50%) translateY(-12px) scale(.985);
+  transition:opacity .18s ease,transform .24s cubic-bezier(.2,.82,.25,1),visibility 0s linear .2s;
 }
-#ah-system-announcement.show{
-  opacity:1;
-  visibility:visible;
-  transform:translate(-50%,-50%) translateY(0) scale(1);
-  transition-delay:0s;
+#ah-global-message.show{opacity:1;visibility:visible;transform:translate(-50%,-50%) translateY(0) scale(1);transition-delay:0s}
+#ah-global-message.refresh{animation:ahGlobalMessageRefresh .22s ease-out}
+.ah-global-message-avatar,.ah-global-poll-avatar{
+  position:relative;overflow:hidden;display:grid;place-items:center;flex:0 0 auto;border-radius:50%;
+  background:#111214;color:#dbdee1;font-weight:850;user-select:none;box-shadow:0 0 0 2px rgba(255,255,255,.06);
 }
-#ah-system-announcement.refresh{animation:ahSystemAnnouncementRefresh .24s ease-out}
-.ah-system-announcement-avatar{
-  width:44px;
-  height:44px;
-  flex:0 0 44px;
-  border-radius:50%;
-  overflow:hidden;
-  background:#16171b;
-  box-shadow:0 0 0 2px #2b2d31;
-  position:relative;
-  display:grid;
-  place-items:center;
-  color:#dbdee1;
-  font-size:15px;
-  font-weight:800;
-  user-select:none;
+.ah-global-message-avatar{width:36px;height:36px;font-size:13px}
+.ah-global-message-avatar img,.ah-global-poll-avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.ah-global-message-line{min-width:0;font-size:15px;line-height:1.38;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:5}
+.ah-global-message-name{font-weight:850;color:#fff;margin-right:2px}.ah-global-message-colon{color:#b5bac1;font-weight:700;margin-right:4px}
+.ah-global-message-text{color:#e3e5e8;font-weight:600;white-space:pre-wrap;overflow-wrap:anywhere}
+#ah-global-poll{
+  position:fixed;left:50%;top:42%;width:min(540px,calc(100vw - 28px));padding:14px;
+  color:#f2f3f5;background:rgba(30,31,34,.97);border:1px solid rgba(255,255,255,.10);border-radius:16px;
+  box-shadow:0 24px 72px rgba(0,0,0,.52);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;z-index:2147483645;
+  opacity:0;visibility:hidden;pointer-events:none;transform:translate(-50%,-50%) translateY(14px) scale(.98);
+  transition:opacity .2s ease,transform .28s cubic-bezier(.2,.82,.25,1),visibility 0s linear .22s;
 }
-.ah-system-announcement-avatar img{
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  display:block;
-}
-.ah-system-announcement-content{min-width:0;flex:1;line-height:1.42}
-.ah-system-announcement-line{font-size:15px;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:8}
-.ah-system-announcement-name{font-weight:800;color:#fff;margin-right:3px}
-.ah-system-announcement-separator{font-weight:700;color:#b5bac1;margin-right:4px}
-.ah-system-announcement-message{color:#dbdee1;font-weight:600;white-space:pre-wrap;overflow-wrap:anywhere}
-@keyframes ahSystemAnnouncementRefresh{
-  0%{transform:translate(-50%,-50%) scale(1)}
-  45%{transform:translate(-50%,-50%) scale(1.018)}
-  100%{transform:translate(-50%,-50%) scale(1)}
-}
-@media(max-width:700px){
-  #ah-system-announcement{top:34%;width:calc(100vw - 22px);min-height:62px;padding:10px 12px 10px 11px;border-radius:12px;gap:10px}
-  .ah-system-announcement-avatar{width:40px;height:40px;flex-basis:40px}
-  .ah-system-announcement-line{font-size:14px;-webkit-line-clamp:6}
-}
-@media(prefers-reduced-motion:reduce){
-  #ah-system-announcement{transition:opacity .12s linear;transform:translate(-50%,-50%)}
-  #ah-system-announcement.show{transform:translate(-50%,-50%)}
-  #ah-system-announcement.refresh{animation:none}
-}
+#ah-global-poll.show{opacity:1;visibility:visible;pointer-events:auto;transform:translate(-50%,-50%) translateY(0) scale(1);transition-delay:0s}
+#ah-global-poll.ended{pointer-events:none;filter:saturate(.72)}
+.ah-global-poll-author{display:flex;align-items:center;gap:9px;margin-bottom:10px;color:#fff;font-size:13px;font-weight:850}
+.ah-global-poll-avatar{width:32px;height:32px;font-size:12px}.ah-global-poll-question{font-size:17px;line-height:1.32;font-weight:850;letter-spacing:-.01em;color:#fff;overflow-wrap:anywhere}
+.ah-global-poll-options{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.ah-global-poll-option{min-width:0;min-height:44px;border:1px solid #3b3d45;border-radius:10px;background:#2b2d31;color:#dbdee1;padding:8px 10px;display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;text-align:left;font:inherit;font-weight:750;transition:background .14s ease,border-color .14s ease,transform .08s ease}
+.ah-global-poll-option:hover{background:#35373d;border-color:#4a4d56}.ah-global-poll-option:active{transform:scale(.985)}
+.ah-global-poll-option.selected{border-color:#5865f2;box-shadow:0 0 0 1px rgba(88,101,242,.35) inset;background:rgba(88,101,242,.14)}
+.ah-global-poll-option:disabled{cursor:default;opacity:.86}.ah-global-poll-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ah-global-poll-percent{flex:0 0 auto;color:#fff;font-size:12px;font-weight:900}
+.ah-global-poll-track{position:relative;height:9px;margin-top:13px;border-radius:999px;background:#3ba55d;overflow:visible;box-shadow:inset 0 0 0 1px rgba(0,0,0,.18)}
+.ah-global-poll-fill-a{height:100%;width:50%;border-radius:999px 0 0 999px;background:#5865f2;transition:width .34s cubic-bezier(.2,.82,.25,1)}
+.ah-global-poll-divider{position:absolute;top:-3px;bottom:-3px;left:50%;width:3px;border-radius:999px;background:#fff;box-shadow:0 0 0 2px rgba(0,0,0,.18);transform:translateX(-50%);transition:left .34s cubic-bezier(.2,.82,.25,1)}
+.ah-global-poll-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px;color:#949ba4;font-size:11px;font-weight:700}
+@keyframes ahGlobalMessageRefresh{0%{transform:translate(-50%,-50%) scale(1)}45%{transform:translate(-50%,-50%) scale(1.014)}100%{transform:translate(-50%,-50%) scale(1)}}
+@media(max-width:620px){ #ah-global-message{top:27%;width:calc(100vw - 18px);padding:7px 10px 7px 8px}.ah-global-message-avatar{width:34px;height:34px}.ah-global-message-line{font-size:14px;-webkit-line-clamp:4}#ah-global-poll{top:48%;width:calc(100vw - 18px);padding:12px}.ah-global-poll-options{grid-template-columns:1fr}.ah-global-poll-question{font-size:16px}}
+@media(prefers-reduced-motion:reduce){ #ah-global-message,#ah-global-poll{transition:opacity .12s linear}#ah-global-message.show,#ah-global-poll.show{transform:translate(-50%,-50%)}#ah-global-message.refresh{animation:none}.ah-global-poll-fill-a,.ah-global-poll-divider{transition:none}}
 </style>
-<script>
+<script id="ah-global-overlay-js">
 (function(){
   'use strict';
-  if(window.AlexiHubSystemAnnouncement) return;
-
-  var hideTimer=null;
-  var refreshTimer=null;
-
-  function ensureBanner(){
-    var banner=document.getElementById('ah-system-announcement');
-    if(banner) return banner;
-    banner=document.createElement('div');
-    banner.id='ah-system-announcement';
-    banner.setAttribute('role','status');
-    banner.setAttribute('aria-live','assertive');
-    banner.setAttribute('aria-atomic','true');
-    banner.innerHTML='<div class="ah-system-announcement-avatar"><span class="ah-system-announcement-fallback">A</span><img alt="" hidden></div><div class="ah-system-announcement-content"><div class="ah-system-announcement-line"><span class="ah-system-announcement-name"></span><span class="ah-system-announcement-separator">:</span><span class="ah-system-announcement-message"></span></div></div>';
-    document.body.appendChild(banner);
-    return banner;
+  if(window.AlexiHubGlobalOverlay) return;
+  var messageHideTimer=null,messageRefreshTimer=null,pollHideTimer=null,activePollId='',myVote=null,voteBusy=false;
+  function initial(author){var v=String((author&&author.display_name)||(author&&author.username)||'A').trim();return v?v.charAt(0).toUpperCase():'A'}
+  function setAvatar(root,author){var fallback=root.querySelector('[data-fallback]'),img=root.querySelector('img'),url=String(author&&author.avatar_url||'').trim();if(fallback)fallback.textContent=initial(author);if(!img)return;img.hidden=true;img.onload=null;img.onerror=null;img.removeAttribute('src');if(url){img.onload=function(){img.hidden=false};img.onerror=function(){img.hidden=true;img.removeAttribute('src')};img.src=url}}
+  function ensureMessage(){var node=document.getElementById('ah-global-message');if(node)return node;node=document.createElement('div');node.id='ah-global-message';node.setAttribute('role','status');node.setAttribute('aria-live','assertive');node.innerHTML='<div class="ah-global-message-avatar"><span data-fallback>A</span><img alt="" hidden></div><div class="ah-global-message-line"><span class="ah-global-message-name"></span><span class="ah-global-message-colon">:</span><span class="ah-global-message-text"></span></div>';document.body.appendChild(node);return node}
+  function ensurePoll(){var node=document.getElementById('ah-global-poll');if(node)return node;node=document.createElement('section');node.id='ah-global-poll';node.setAttribute('aria-live','polite');node.innerHTML='<div class="ah-global-poll-author"><div class="ah-global-poll-avatar"><span data-fallback>A</span><img alt="" hidden></div><span class="ah-global-poll-author-name"></span></div><div class="ah-global-poll-question"></div><div class="ah-global-poll-options"><button class="ah-global-poll-option" type="button" data-vote="a"><span class="ah-global-poll-label"></span><b class="ah-global-poll-percent">50%</b></button><button class="ah-global-poll-option" type="button" data-vote="b"><span class="ah-global-poll-label"></span><b class="ah-global-poll-percent">50%</b></button></div><div class="ah-global-poll-track"><div class="ah-global-poll-fill-a"></div><i class="ah-global-poll-divider"></i></div><div class="ah-global-poll-footer"><span class="ah-global-poll-count">Голосов: 0</span><span class="ah-global-poll-status">Голосование идет</span></div>';node.querySelectorAll('[data-vote]').forEach(function(btn){btn.addEventListener('click',function(){vote(btn.dataset.vote)})});document.body.appendChild(node);return node}
+  function toast(text){if(typeof window.showActionToast==='function'){window.showActionToast(text);return}var n=document.createElement('div');n.textContent=text;n.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:2147483647;background:#232428;color:#fff;border:1px solid #3b3d45;border-radius:10px;padding:9px 12px;font:700 12px Inter,system-ui;box-shadow:0 12px 34px rgba(0,0,0,.4)';document.body.appendChild(n);setTimeout(function(){n.remove()},2200)}
+  function showMessage(payload){var item=payload&&payload.message?payload.message:(payload||{}),text=String(item.text||'').trim();if(!text)return;var author=item.author||{},node=ensureMessage();node.querySelector('.ah-global-message-name').textContent=String(author.display_name||author.username||'AlexiHub');node.querySelector('.ah-global-message-text').textContent=text;setAvatar(node.querySelector('.ah-global-message-avatar'),author);var visible=node.classList.contains('show');if(messageHideTimer)clearTimeout(messageHideTimer);if(messageRefreshTimer)clearTimeout(messageRefreshTimer);node.classList.remove('refresh');if(visible){void node.offsetWidth;node.classList.add('show','refresh');messageRefreshTimer=setTimeout(function(){node.classList.remove('refresh')},240)}else node.classList.add('show');messageHideTimer=setTimeout(function(){node.classList.remove('show')},7000)}
+  function pct(value,fallback){var n=Number(value);if(!Number.isFinite(n))n=fallback;return Math.max(0,Math.min(100,n))}
+  function schedulePollFallback(endsAt){if(pollHideTimer)clearTimeout(pollHideTimer);var when=Date.parse(String(endsAt||''));if(!Number.isFinite(when))return;pollHideTimer=setTimeout(function(){var node=document.getElementById('ah-global-poll');if(node)node.classList.remove('show');activePollId='';myVote=null},Math.max(0,when-Date.now()+2200))}
+  function renderPoll(poll){if(!poll||!poll.id)return;var id=String(poll.id),same=id===activePollId;if(!same){activePollId=id;myVote=poll.my_vote||null}else if(poll.my_vote)myVote=poll.my_vote;var node=ensurePoll(),author=poll.author||{},a=pct(poll.percent_a,50),b=pct(poll.percent_b,100-a);node.classList.remove('ended');node.querySelector('.ah-global-poll-author-name').textContent=String(author.display_name||author.username||'AlexiHub');setAvatar(node.querySelector('.ah-global-poll-avatar'),author);node.querySelector('.ah-global-poll-question').textContent=String(poll.question||'');var btnA=node.querySelector('[data-vote="a"]'),btnB=node.querySelector('[data-vote="b"]');btnA.querySelector('.ah-global-poll-label').textContent=String(poll.option_a||'Вариант 1');btnB.querySelector('.ah-global-poll-label').textContent=String(poll.option_b||'Вариант 2');btnA.querySelector('.ah-global-poll-percent').textContent=Math.round(a)+'%';btnB.querySelector('.ah-global-poll-percent').textContent=Math.round(b)+'%';btnA.classList.toggle('selected',myVote==='a');btnB.classList.toggle('selected',myVote==='b');btnA.disabled=voteBusy;btnB.disabled=voteBusy;node.querySelector('.ah-global-poll-fill-a').style.width=a+'%';node.querySelector('.ah-global-poll-divider').style.left=a+'%';node.querySelector('.ah-global-poll-count').textContent='Голосов: '+Number(poll.total_votes||0);node.querySelector('.ah-global-poll-status').textContent='Голосование идет';node.classList.add('show');schedulePollFallback(poll.ends_at)}
+  async function vote(side){if(voteBusy||!activePollId)return;voteBusy=true;var node=ensurePoll();node.querySelectorAll('[data-vote]').forEach(function(btn){btn.disabled=true});try{var response=await fetch('/community/api/global-console/poll/'+encodeURIComponent(activePollId)+'/vote',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({option:side})});var data=await response.json().catch(function(){return{}});if(!response.ok||!data.ok)throw new Error(data.error||'vote_failed');myVote=side;if(data.poll)renderPoll(data.poll)}catch(error){toast(error&&error.message==='poll_ended'?'Голосование уже завершено.':'Не удалось сохранить голос.')}finally{voteBusy=false;if(activePollId){node.querySelectorAll('[data-vote]').forEach(function(btn){btn.disabled=false})}}
   }
-
-  function initialFor(author){
-    var value=String((author&&author.display_name)||(author&&author.username)||'A').trim();
-    return value ? value.charAt(0).toUpperCase() : 'A';
-  }
-
-  function show(payload){
-    var item=payload&&payload.announcement ? payload.announcement : (payload||{});
-    var text=String(item.text||'').trim();
-    if(!text) return;
-    var author=item.author||{};
-    var banner=ensureBanner();
-    var name=banner.querySelector('.ah-system-announcement-name');
-    var message=banner.querySelector('.ah-system-announcement-message');
-    var fallback=banner.querySelector('.ah-system-announcement-fallback');
-    var image=banner.querySelector('.ah-system-announcement-avatar img');
-    var displayName=String(author.display_name||author.username||'AlexiHub').trim()||'AlexiHub';
-    var avatarUrl=String(author.avatar_url||'').trim();
-
-    name.textContent=displayName;
-    message.textContent=text;
-    fallback.textContent=initialFor(author);
-    image.hidden=true;
-    image.onload=null;
-    image.onerror=null;
-    image.removeAttribute('src');
-    if(avatarUrl){
-      image.onload=function(){ image.hidden=false; };
-      image.onerror=function(){ image.hidden=true; image.removeAttribute('src'); };
-      image.src=avatarUrl;
-    }
-
-    var wasVisible=banner.classList.contains('show');
-    if(hideTimer) clearTimeout(hideTimer);
-    if(refreshTimer) clearTimeout(refreshTimer);
-    banner.classList.remove('refresh');
-    if(wasVisible){
-      void banner.offsetWidth;
-      banner.classList.add('show','refresh');
-      refreshTimer=setTimeout(function(){ banner.classList.remove('refresh'); },260);
-    }else{
-      banner.classList.add('show');
-    }
-    hideTimer=setTimeout(function(){ banner.classList.remove('show'); },7000);
-  }
-
-  window.AlexiHubSystemAnnouncement={show:show};
+  function endPoll(poll){if(!poll||!poll.id)return;var id=String(poll.id);if(activePollId&&activePollId!==id)return;renderPoll(poll);var node=ensurePoll();node.classList.add('ended');node.querySelectorAll('[data-vote]').forEach(function(btn){btn.disabled=true});node.querySelector('.ah-global-poll-status').textContent='Голосование завершено';if(pollHideTimer)clearTimeout(pollHideTimer);pollHideTimer=setTimeout(function(){node.classList.remove('show');activePollId='';myVote=null},1700)}
+  function handle(data){if(!data||typeof data!=='object')return false;if(data.type==='global_console_message'){showMessage(data);return true}if(data.type==='global_poll_start'||data.type==='global_poll_update'||data.type==='global_poll_snapshot'){renderPoll(data.poll||{});return true}if(data.type==='global_poll_end'){endPoll(data.poll||{});return true}return false}
+  window.AlexiHubGlobalOverlay={handle:handle,showMessage:showMessage,renderPoll:renderPoll};
 })();
 </script>
+
+<style id="ah-global-console-style">
+.ah-global-console-backdrop{position:fixed;inset:0;z-index:2147483646;background:rgba(0,0,0,.58);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:18px;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+.ah-global-console-backdrop.open{display:flex;animation:ahGlobalConsoleFade .14s ease both}.ah-global-console{width:min(520px,calc(100vw - 28px));border:1px solid #3b3d45;border-radius:16px;background:#1e1f22;color:#f2f3f5;box-shadow:0 30px 100px rgba(0,0,0,.62);overflow:hidden;animation:ahGlobalConsolePop .18s cubic-bezier(.2,.82,.25,1) both}
+.ah-global-console-head{height:58px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 16px;border-bottom:1px solid #34363d}.ah-global-console-title{font-size:17px;font-weight:900;letter-spacing:-.02em}.ah-global-console-close{width:32px;height:32px;border:0;border-radius:8px;background:transparent;color:#b5bac1;font-size:22px;cursor:pointer}.ah-global-console-close:hover{background:#2b2d31;color:#fff}
+.ah-global-console-tabs{display:flex;gap:4px;padding:10px 12px 0}.ah-global-console-tab{height:34px;border:0;border-radius:8px;background:transparent;color:#949ba4;padding:0 12px;font:800 12px Inter,system-ui;cursor:pointer}.ah-global-console-tab:hover{background:#2b2d31;color:#dbdee1}.ah-global-console-tab.active{background:#35373d;color:#fff}
+.ah-global-console-body{padding:14px 16px 16px}.ah-global-console-pane{display:none}.ah-global-console-pane.active{display:block}.ah-global-console-label{display:block;margin:0 0 6px;color:#b5bac1;font-size:11px;font-weight:850;text-transform:uppercase;letter-spacing:.04em}.ah-global-console-input,.ah-global-console-textarea{width:100%;border:1px solid #3b3d45;border-radius:9px;background:#111214;color:#f2f3f5;padding:10px 11px;outline:none;font:500 13px/1.4 Inter,system-ui;resize:none}.ah-global-console-textarea{min-height:104px;max-height:180px}.ah-global-console-input:focus,.ah-global-console-textarea:focus{border-color:#5865f2;box-shadow:0 0 0 1px rgba(88,101,242,.35)}.ah-global-console-field+.ah-global-console-field{margin-top:11px}.ah-global-console-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px}.ah-global-console-status{min-height:17px;color:#949ba4;font-size:11px;font-weight:700}.ah-global-console-status.error{color:#ff7b7b}.ah-global-console-send{height:36px;border:0;border-radius:8px;background:#5865f2;color:#fff;padding:0 14px;font:850 12px Inter,system-ui;cursor:pointer}.ah-global-console-send:hover{filter:brightness(1.06)}.ah-global-console-send:disabled{opacity:.55;cursor:default}.ah-global-console-hint{margin-top:8px;color:#7f8490;font-size:11px;line-height:1.4}
+@keyframes ahGlobalConsoleFade{from{opacity:0}to{opacity:1}}@keyframes ahGlobalConsolePop{from{opacity:0;transform:translateY(8px) scale(.985)}to{opacity:1;transform:none}}
+@media(max-width:560px){.ah-global-console-backdrop{align-items:flex-end;padding:0}.ah-global-console{width:100%;border-radius:16px 16px 0 0;border-left:0;border-right:0;border-bottom:0}}
+</style>
+<script id="ah-global-console-js">
+(function(){
+  'use strict';
+  if(window.AlexiHubGlobalConsole) return;
+  var VERIFIED={{ account.is_verified|tojson }};
+  var form=document.getElementById('dm-form')||document.getElementById('composer-form');
+  if(!form)return;
+  var input=form.querySelector('textarea[name="content"]');
+  if(!input)return;
+  var modal=null,busy=false;
+  function toast(text){if(typeof window.showActionToast==='function'){window.showActionToast(text);return}if(window.AlexiHubGlobalOverlay){var n=document.createElement('div');n.textContent=text;n.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:2147483647;background:#232428;color:#fff;border:1px solid #3b3d45;border-radius:10px;padding:9px 12px;font:700 12px Inter,system-ui';document.body.appendChild(n);setTimeout(function(){n.remove()},2200)}}
+  function ensure(){if(modal)return modal;var bg=document.createElement('div');bg.className='ah-global-console-backdrop';bg.innerHTML='<div class="ah-global-console" role="dialog" aria-modal="true" aria-label="Global Console"><div class="ah-global-console-head"><div class="ah-global-console-title">Global Console</div><button type="button" class="ah-global-console-close" aria-label="Закрыть">×</button></div><div class="ah-global-console-tabs"><button type="button" class="ah-global-console-tab active" data-tab="message">Сообщение</button><button type="button" class="ah-global-console-tab" data-tab="poll">Голосование</button></div><div class="ah-global-console-body"><div class="ah-global-console-pane active" data-pane="message"><div class="ah-global-console-field"><label class="ah-global-console-label">Глобальное сообщение</label><textarea class="ah-global-console-textarea" id="ah-console-message" maxlength="500" placeholder="Сообщение увидят все подключенные пользователи"></textarea></div><div class="ah-global-console-hint">Появится как короткая строка: аватарка, ник и сообщение.</div><div class="ah-global-console-actions"><span class="ah-global-console-status"></span><button type="button" class="ah-global-console-send" data-send="message">Отправить</button></div></div><div class="ah-global-console-pane" data-pane="poll"><div class="ah-global-console-field"><label class="ah-global-console-label">Вопрос</label><textarea class="ah-global-console-textarea" id="ah-console-poll-question" maxlength="180" placeholder="Что выбираем?"></textarea></div><div class="ah-global-console-field"><label class="ah-global-console-label">Вариант 1</label><input class="ah-global-console-input" id="ah-console-poll-a" maxlength="80" placeholder="Первый вариант"></div><div class="ah-global-console-field"><label class="ah-global-console-label">Вариант 2</label><input class="ah-global-console-input" id="ah-console-poll-b" maxlength="80" placeholder="Второй вариант"></div><div class="ah-global-console-hint">Голосование длится 30 секунд. Один аккаунт — один голос, выбор можно изменить.</div><div class="ah-global-console-actions"><span class="ah-global-console-status"></span><button type="button" class="ah-global-console-send" data-send="poll">Запустить</button></div></div></div></div>';document.body.appendChild(bg);modal=bg;bg.querySelector('.ah-global-console-close').addEventListener('click',close);bg.addEventListener('click',function(e){if(e.target===bg)close()});bg.querySelectorAll('[data-tab]').forEach(function(btn){btn.addEventListener('click',function(){setTab(btn.dataset.tab)})});bg.querySelector('[data-send="message"]').addEventListener('click',sendMessage);bg.querySelector('[data-send="poll"]').addEventListener('click',sendPoll);return bg}
+  function status(text,error){var pane=ensure().querySelector('.ah-global-console-pane.active'),node=pane&&pane.querySelector('.ah-global-console-status');if(!node)return;node.textContent=text||'';node.classList.toggle('error',!!error)}
+  function setBusy(value){busy=!!value;ensure().querySelectorAll('.ah-global-console-send').forEach(function(btn){btn.disabled=busy})}
+  function setTab(name){var bg=ensure();bg.querySelectorAll('[data-tab]').forEach(function(btn){btn.classList.toggle('active',btn.dataset.tab===name)});bg.querySelectorAll('[data-pane]').forEach(function(p){p.classList.toggle('active',p.dataset.pane===name)});status('',false);setTimeout(function(){var el=name==='poll'?bg.querySelector('#ah-console-poll-question'):bg.querySelector('#ah-console-message');if(el)el.focus()},0)}
+  function open(){if(!VERIFIED){toast('Global Console доступна только верифицированным пользователям.');return}var bg=ensure();bg.classList.add('open');setTab('message')}
+  function close(){if(!modal||busy)return;modal.classList.remove('open')}
+  function errorText(code){return code==='verified_required'?'Нужна верификация аккаунта.':code==='poll_active'?'Сейчас уже идет другое глобальное голосование.':code==='poll_fields_required'?'Заполни вопрос и оба варианта.':code==='message_empty'?'Напиши сообщение.':'Не удалось выполнить действие.'}
+  async function post(url,body){var response=await fetch(url,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}),data=await response.json().catch(function(){return{}});if(!response.ok||!data.ok){var err=new Error(data.error||'request_failed');err.code=data.error||'request_failed';throw err}return data}
+  async function sendMessage(){if(busy)return;var value=ensure().querySelector('#ah-console-message').value.trim();if(!value){status('Напиши сообщение.',true);return}setBusy(true);status('Отправка…',false);try{await post('/community/api/global-console/message',{text:value});ensure().querySelector('#ah-console-message').value='';status('',false);modal.classList.remove('open')}catch(error){status(errorText(error.code),true)}finally{setBusy(false)}}
+  async function sendPoll(){if(busy)return;var bg=ensure(),q=bg.querySelector('#ah-console-poll-question').value.trim(),a=bg.querySelector('#ah-console-poll-a').value.trim(),b=bg.querySelector('#ah-console-poll-b').value.trim();if(!q||!a||!b){status('Заполни вопрос и оба варианта.',true);return}setBusy(true);status('Запуск…',false);try{await post('/community/api/global-console/poll',{question:q,option_a:a,option_b:b});bg.querySelector('#ah-console-poll-question').value='';bg.querySelector('#ah-console-poll-a').value='';bg.querySelector('#ah-console-poll-b').value='';status('',false);modal.classList.remove('open')}catch(error){status(errorText(error.code),true)}finally{setBusy(false)}}
+  document.addEventListener('submit',function(event){if(event.target!==form||String(input.value||'').trim().toLowerCase()!=='/console')return;event.preventDefault();event.stopImmediatePropagation();input.value='';input.style.height='auto';input.dispatchEvent(new Event('input',{bubbles:true}));open()},true);
+  document.addEventListener('keydown',function(event){if(event.key==='Escape'&&modal&&modal.classList.contains('open')){event.preventDefault();close()}});
+  window.AlexiHubGlobalConsole={open:open,close:close};
+})();
+</script>
+
 
 
 <script>
@@ -7447,10 +7394,7 @@ body .composer-wrap{
   function handleMessage(event) {
     var data;
     try { data = JSON.parse(event.data); } catch (error) { return; }
-    if (data.type === 'system_announcement') {
-      if (window.AlexiHubSystemAnnouncement) window.AlexiHubSystemAnnouncement.show(data);
-      return;
-    }
+    if (window.AlexiHubGlobalOverlay && window.AlexiHubGlobalOverlay.handle(data)) return;
     if (data.type === 'presence') {
       updatePresence(data.account_id, data.status, data.online, data.username, data.display_name);
       return;
