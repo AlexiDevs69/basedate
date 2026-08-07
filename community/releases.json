@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.54.18",
+      "date": "2026-08-08",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update fmt.Println message from 'Hello' to 'Goodbye'."
+      ],
+      "source_sha": "7f1b038a27a07d599bfd9a265a60947f2cd4f02e"
+    },
+    {
       "version": "1.54.17",
       "date": "2026-08-07",
       "title": "Виправлення та стабільність",
