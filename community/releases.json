@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.51.0",
+      "date": "2026-08-07",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: system announcement feature."
+      ],
+      "source_sha": "88a1f4e6b0565252958b887c7273a927e7afe21c"
+    },
+    {
       "version": "1.50.0",
       "date": "2026-08-07",
       "title": "Нові можливості AlexiHub",
