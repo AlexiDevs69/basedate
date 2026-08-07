@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.54.23",
+      "date": "2026-08-08",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Change greeting from 'Hello World' to 'Goodbye World'."
+      ],
+      "source_sha": "09247055a7ac2677d18278b04db9f6f6da43e88c"
+    },
+    {
       "version": "1.54.22",
       "date": "2026-08-08",
       "title": "Виправлення та стабільність",
