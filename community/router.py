@@ -979,34 +979,163 @@ def _account_payload(account) -> dict:
     }
 
 
-_ANNOUNCE_COMMAND_RE = re.compile(r"^/announce(?:\s+([\s\S]*))?$", re.IGNORECASE)
+GLOBAL_CONSOLE_MESSAGE_MAX_CHARS = 500
+GLOBAL_CONSOLE_POLL_QUESTION_MAX_CHARS = 180
+GLOBAL_CONSOLE_POLL_OPTION_MAX_CHARS = 80
+GLOBAL_CONSOLE_POLL_DURATION_SECONDS = 30.0
 
 
-def _announcement_text_from_content(value: str | None) -> str | None:
-    """Return announcement text when *value* is exactly the /announce command."""
-    clean = str(value or "").strip()
-    match = _ANNOUNCE_COMMAND_RE.fullmatch(clean)
-    if not match:
-        return None
-    return str(match.group(1) or "").strip()
+def _clean_global_console_text(value: object, max_chars: int) -> str:
+    clean = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", str(value or ""))
+    return clean.strip()[:max_chars]
 
 
-def _system_announcement_payload(account, text_value: str) -> dict:
-    """Small global realtime payload: only the sender identity and announcement text."""
-    display_name = str(getattr(account, "display_name", None) or account.username or "AlexiHub")
+def _is_global_console_command(value: object) -> bool:
+    return str(value or "").strip().lower() == "/console"
+
+
+def _global_console_author_payload(account) -> dict:
     return {
-        "type": "system_announcement",
-        "announcement": {
-            "text": str(text_value or "").strip(),
+        "id": int(account.id),
+        "username": str(account.username or ""),
+        "display_name": str(getattr(account, "display_name", None) or account.username or "AlexiHub"),
+        "avatar_url": str(getattr(account, "avatar_url", None) or ""),
+    }
+
+
+def _global_console_message_payload(account, text_value: str) -> dict:
+    return {
+        "type": "global_console_message",
+        "message": {
+            "text": _clean_global_console_text(text_value, GLOBAL_CONSOLE_MESSAGE_MAX_CHARS),
             "created_at": datetime.now(timezone.utc).isoformat(),
-            "author": {
-                "id": int(account.id),
-                "username": str(account.username or ""),
-                "display_name": display_name,
-                "avatar_url": str(getattr(account, "avatar_url", None) or ""),
-            },
+            "author": _global_console_author_payload(account),
         },
     }
+
+
+class GlobalConsolePollState:
+    """One live global poll kept in RAM for the 30-second overlay window."""
+
+    def __init__(self) -> None:
+        self.lock = asyncio.Lock()
+        self.active: dict | None = None
+        self.votes: dict[int, str] = {}
+        self.close_task: asyncio.Task | None = None
+
+    def _public_poll_unlocked(self) -> dict | None:
+        if not self.active:
+            return None
+        count_a = sum(1 for choice in self.votes.values() if choice == "a")
+        count_b = sum(1 for choice in self.votes.values() if choice == "b")
+        total = count_a + count_b
+        percent_a = round((count_a / total) * 100, 1) if total else 50.0
+        percent_b = round(100.0 - percent_a, 1) if total else 50.0
+        return {
+            "id": self.active["id"],
+            "question": self.active["question"],
+            "option_a": self.active["option_a"],
+            "option_b": self.active["option_b"],
+            "author": dict(self.active["author"]),
+            "created_at": self.active["created_at"],
+            "ends_at": self.active["ends_at"],
+            "duration_seconds": int(GLOBAL_CONSOLE_POLL_DURATION_SECONDS),
+            "count_a": count_a,
+            "count_b": count_b,
+            "total_votes": total,
+            "percent_a": percent_a,
+            "percent_b": percent_b,
+            "status": "active",
+        }
+
+    async def create(self, account, question: str, option_a: str, option_b: str) -> tuple[bool, dict]:
+        now_monotonic = time.monotonic()
+        async with self.lock:
+            if self.active and float(self.active.get("expires_monotonic") or 0) > now_monotonic:
+                return False, self._public_poll_unlocked() or {}
+
+            if self.close_task:
+                self.close_task.cancel()
+                self.close_task = None
+
+            now = datetime.now(timezone.utc)
+            poll_id = uuid.uuid4().hex
+            self.active = {
+                "id": poll_id,
+                "question": question,
+                "option_a": option_a,
+                "option_b": option_b,
+                "author": _global_console_author_payload(account),
+                "created_at": now.isoformat(),
+                "ends_at": (now + timedelta(seconds=GLOBAL_CONSOLE_POLL_DURATION_SECONDS)).isoformat(),
+                "expires_monotonic": now_monotonic + GLOBAL_CONSOLE_POLL_DURATION_SECONDS,
+            }
+            self.votes = {}
+            payload = self._public_poll_unlocked() or {}
+            self.close_task = asyncio.create_task(self._finish_after(poll_id))
+
+        await account_realtime.broadcast_all({"type": "global_poll_start", "poll": payload})
+        return True, payload
+
+    async def vote(self, account_id: int, poll_id: str, option: str) -> tuple[bool, str, dict | None]:
+        clean_option = str(option or "").strip().lower()
+        if clean_option not in {"a", "b"}:
+            return False, "invalid_option", None
+
+        async with self.lock:
+            if not self.active or str(self.active.get("id") or "") != str(poll_id or ""):
+                return False, "poll_not_found", None
+            if float(self.active.get("expires_monotonic") or 0) <= time.monotonic():
+                return False, "poll_ended", None
+            self.votes[int(account_id)] = clean_option
+            public_payload = self._public_poll_unlocked() or {}
+            personal_payload = dict(public_payload)
+            personal_payload["my_vote"] = clean_option
+
+        await account_realtime.broadcast_all({"type": "global_poll_update", "poll": public_payload})
+        await account_realtime.send_to_account(
+            int(account_id),
+            {"type": "global_poll_update", "poll": personal_payload},
+        )
+        return True, "ok", personal_payload
+
+    async def snapshot_for(self, account_id: int) -> dict | None:
+        async with self.lock:
+            if not self.active:
+                return None
+            if float(self.active.get("expires_monotonic") or 0) <= time.monotonic():
+                return None
+            payload = self._public_poll_unlocked()
+            if payload:
+                payload["my_vote"] = self.votes.get(int(account_id))
+            return payload
+
+    async def _finish_after(self, poll_id: str) -> None:
+        try:
+            while True:
+                async with self.lock:
+                    if not self.active or str(self.active.get("id") or "") != str(poll_id):
+                        return
+                    remaining = float(self.active.get("expires_monotonic") or 0) - time.monotonic()
+                if remaining <= 0:
+                    break
+                await asyncio.sleep(min(remaining, 1.0))
+
+            async with self.lock:
+                if not self.active or str(self.active.get("id") or "") != str(poll_id):
+                    return
+                payload = self._public_poll_unlocked() or {}
+                payload["status"] = "ended"
+                self.active = None
+                self.votes = {}
+                self.close_task = None
+
+            await account_realtime.broadcast_all({"type": "global_poll_end", "poll": payload})
+        except asyncio.CancelledError:
+            return
+
+
+global_console_polls = GlobalConsolePollState()
 
 
 def _parse_optional_int(value) -> int | None:
@@ -1160,6 +1289,12 @@ async def ws_account_realtime(websocket: WebSocket):
     except Exception:
         pass
     try:
+        active_poll = await global_console_polls.snapshot_for(int(account_id))
+        if active_poll:
+            await websocket.send_json({"type": "global_poll_snapshot", "poll": active_poll})
+    except Exception:
+        pass
+    try:
         while True:
             data = await websocket.receive_json()
             event_type = str(data.get("type") or "").strip().lower()
@@ -1204,6 +1339,73 @@ async def current_account(request: Request, db: AsyncSession):
     if auth.SESSION_VERSION_KEY not in request.session:
         request.session[auth.SESSION_VERSION_KEY] = account_version
     return account
+
+
+@router.post("/api/global-console/message")
+async def api_global_console_message(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    if not bool(getattr(account, "is_verified", False)):
+        return JSONResponse({"ok": False, "error": "verified_required"}, status_code=403)
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    text_value = _clean_global_console_text(
+        body.get("text") if isinstance(body, dict) else "",
+        GLOBAL_CONSOLE_MESSAGE_MAX_CHARS,
+    )
+    if not text_value:
+        return JSONResponse({"ok": False, "error": "message_empty"}, status_code=400)
+    payload = _global_console_message_payload(account, text_value)
+    await account_realtime.broadcast_all(payload)
+    return JSONResponse({"ok": True, "message": payload["message"]})
+
+
+@router.post("/api/global-console/poll")
+async def api_global_console_poll_create(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    if not bool(getattr(account, "is_verified", False)):
+        return JSONResponse({"ok": False, "error": "verified_required"}, status_code=403)
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    if not isinstance(body, dict):
+        body = {}
+    question = _clean_global_console_text(body.get("question"), GLOBAL_CONSOLE_POLL_QUESTION_MAX_CHARS)
+    option_a = _clean_global_console_text(body.get("option_a"), GLOBAL_CONSOLE_POLL_OPTION_MAX_CHARS)
+    option_b = _clean_global_console_text(body.get("option_b"), GLOBAL_CONSOLE_POLL_OPTION_MAX_CHARS)
+    if not question or not option_a or not option_b:
+        return JSONResponse({"ok": False, "error": "poll_fields_required"}, status_code=400)
+    created, poll = await global_console_polls.create(account, question, option_a, option_b)
+    if not created:
+        return JSONResponse({"ok": False, "error": "poll_active", "poll": poll}, status_code=409)
+    return JSONResponse({"ok": True, "poll": poll})
+
+
+@router.post("/api/global-console/poll/{poll_id}/vote")
+async def api_global_console_poll_vote(
+    poll_id: str,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    option = str(body.get("option") or "").strip().lower() if isinstance(body, dict) else ""
+    ok, result, poll = await global_console_polls.vote(account.id, poll_id, option)
+    if not ok:
+        status = 400 if result == "invalid_option" else (410 if result == "poll_ended" else 404)
+        return JSONResponse({"ok": False, "error": result}, status_code=status)
+    return JSONResponse({"ok": True, "poll": poll})
 
 
 @router.get("/api/i18n")
@@ -2207,17 +2409,7 @@ async def server_message_submit(
         return RedirectResponse(url=f"/community/servers/{server_id}", status_code=303)
     if not await crud.can_access_server_channel(db, server_id, channel, account.id):
         return _forbidden_response()
-
-    announcement_text = _announcement_text_from_content(content)
-    if announcement_text is not None:
-        # /announce is a reserved global command. It never becomes a normal
-        # channel message and permission is enforced on the backend.
-        if not crud.is_store_admin(account):
-            return _forbidden_response()
-        if announcement_text:
-            await account_realtime.broadcast_all(
-                _system_announcement_payload(account, announcement_text)
-            )
+    if _is_global_console_command(content):
         return RedirectResponse(
             url=f"/community/servers/{server_id}/channel/{channel_id}",
             status_code=303,
@@ -4347,51 +4539,9 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
                 content = content[:4000]
             if len(image_url) > 512:
                 image_url = image_url[:512]
-
-            announcement_text = _announcement_text_from_content(content)
-            if announcement_text is not None:
+            if _is_global_console_command(content):
                 await realtime_channels.clear_typing(key, account_id)
-                if not announcement_text:
-                    await websocket.send_json({
-                        "type": "message_error",
-                        "error": "announcement_empty",
-                    })
-                    continue
-
-                async with AsyncSessionLocal() as db:
-                    sender = await crud.get_account_by_id(db, account_id)
-                    channel = await crud.get_server_channel(db, server_id, channel_id)
-                    is_member = await crud.is_server_member(db, server_id, account_id)
-                    can_access = bool(
-                        sender
-                        and channel
-                        and await crud.can_access_server_channel(
-                            db, server_id, channel, account_id
-                        )
-                    )
-                    if (
-                        not sender
-                        or sender.is_banned
-                        or not is_member
-                        or not can_access
-                    ):
-                        await websocket.close(code=1008)
-                        return
-                    if not crud.is_store_admin(sender):
-                        await websocket.send_json({
-                            "type": "message_error",
-                            "error": "announcement_forbidden",
-                        })
-                        continue
-                    announcement_payload = _system_announcement_payload(
-                        sender, announcement_text
-                    )
-
-                await account_realtime.broadcast_all(announcement_payload)
-                await websocket.send_json({
-                    "type": "announcement_sent",
-                    "client_nonce": client_nonce,
-                })
+                await websocket.send_json({"type": "message_error", "error": "console_command_ui_only"})
                 continue
 
             async with AsyncSessionLocal() as db:
@@ -4549,6 +4699,8 @@ async def dm_message_submit(
             url=f"/community/dm/{other.username}?privacy=1",
             status_code=303,
         )
+    if _is_global_console_command(content):
+        return RedirectResponse(url=f"/community/dm/{other.username}", status_code=303)
 
     thread = await crud.get_or_create_dm_thread(db, account.id, other.id)
     content, image_url, _media_item = await _prepare_custom_media_message(
@@ -4782,6 +4934,10 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
                 content = content[:4000]
             if len(image_url) > 512:
                 image_url = image_url[:512]
+            if _is_global_console_command(content):
+                await realtime_channels.clear_typing(key, account_id)
+                await websocket.send_json({"type": "message_error", "error": "console_command_ui_only"})
+                continue
 
             async with AsyncSessionLocal() as db:
                 if not await crud.is_dm_participant(db, thread_id, account_id):
