@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.54.9",
+      "date": "2026-08-07",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: global message styles for improved layout."
+      ],
+      "source_sha": "200ccf39028b79c2dbfb480a89210bc2644ac128"
+    },
+    {
       "version": "1.54.8",
       "date": "2026-08-07",
       "title": "Оновлення AlexiHub",
