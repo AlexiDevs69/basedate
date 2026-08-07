@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.54.22",
+      "date": "2026-08-08",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update dm_chat.html."
+      ],
+      "source_sha": "44871c6906f2409b13238439782504f06fa4041c"
+    },
+    {
       "version": "1.54.21",
       "date": "2026-08-08",
       "title": "Виправлення та стабільність",
