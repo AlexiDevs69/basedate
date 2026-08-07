@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.50.0",
+      "date": "2026-08-07",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: announcement handling in router."
+      ],
+      "source_sha": "4a05d1eb64303d90d37f4396c5a57a97f7decab8"
+    },
+    {
       "version": "1.49.0",
       "date": "2026-08-07",
       "title": "Нові можливості AlexiHub",
