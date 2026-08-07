@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.54.4",
+      "date": "2026-08-07",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: global message and poll styles and scripts."
+      ],
+      "source_sha": "d21521205d036a15262af5311cdbf7b5b997ba39"
+    },
+    {
       "version": "1.54.3",
       "date": "2026-08-07",
       "title": "Оновлення AlexiHub",
