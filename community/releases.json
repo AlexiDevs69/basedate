@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.54.3",
+      "date": "2026-08-07",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: announcement handling and styles."
+      ],
+      "source_sha": "695dbfde7fc0a9ee3db2576564538807b0fc951d"
+    },
+    {
       "version": "1.54.2",
       "date": "2026-08-07",
       "title": "Оновлення AlexiHub",
