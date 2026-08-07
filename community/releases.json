@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.54.2",
+      "date": "2026-08-07",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: global overlay and announcement styles."
+      ],
+      "source_sha": "347a852e5fb5fd8cb3a5b4cb149eb1d348383e8a"
+    },
+    {
       "version": "1.54.1",
       "date": "2026-08-07",
       "title": "Оновлення AlexiHub",
