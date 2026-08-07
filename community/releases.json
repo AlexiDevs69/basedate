@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.53.0",
+      "date": "2026-08-07",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: system announcement styles and WebSocket support."
+      ],
+      "source_sha": "609116b87f4110ac5e2f6f0167e220fb4b01c01f"
+    },
+    {
       "version": "1.52.0",
       "date": "2026-08-07",
       "title": "Нові можливості AlexiHub",
