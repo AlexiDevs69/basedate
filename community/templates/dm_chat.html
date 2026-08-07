@@ -6342,7 +6342,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
 
 <style id="ah-global-overlay-style">
 #ah-global-message{
-  position:fixed;left:50%;top:27%;width:max-content;max-width:calc(100vw - 28px);min-height:52px;
+  position:fixed;left:50%;top:22%;width:max-content;max-width:calc(100vw - 28px);min-height:52px;
   display:flex;align-items:center;justify-content:center;gap:10px;padding:0;
   color:#f2f3f5;background:transparent;border:0;border-radius:0;box-shadow:none;
   backdrop-filter:none;-webkit-backdrop-filter:none;
@@ -6362,7 +6362,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
 .ah-global-message-name{font-weight:850;color:#fff;margin-right:2px}.ah-global-message-colon{color:#b5bac1;font-weight:700;margin-right:4px}
 .ah-global-message-text{color:#e3e5e8;font-weight:600;white-space:pre-wrap;overflow-wrap:anywhere}
 #ah-global-poll{
-  position:fixed;left:50%;top:38%;width:min(540px,calc(100vw - 28px));padding:14px;
+  position:fixed;left:50%;top:33%;width:min(540px,calc(100vw - 28px));padding:14px;
   color:#f2f3f5;background:rgba(30,31,34,.97);border:1px solid rgba(255,255,255,.10);border-radius:16px;
   box-shadow:0 24px 72px rgba(0,0,0,.52);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
   font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;z-index:2147483645;
@@ -6384,7 +6384,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
 .ah-global-poll-divider{position:absolute;top:-3px;bottom:-3px;left:50%;width:3px;border-radius:999px;background:#fff;box-shadow:0 0 0 2px rgba(0,0,0,.18);transform:translateX(-50%);transition:left .34s cubic-bezier(.2,.82,.25,1)}
 .ah-global-poll-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px;color:#949ba4;font-size:11px;font-weight:700}
 @keyframes ahGlobalMessageRefresh{0%{transform:translate(-50%,-50%) scale(1)}45%{transform:translate(-50%,-50%) scale(1.014)}100%{transform:translate(-50%,-50%) scale(1)}}
-@media(max-width:620px){ #ah-global-message{top:24%;width:max-content;max-width:calc(100vw - 18px);padding:0}.ah-global-message-avatar{width:34px;height:34px}.ah-global-message-line{max-width:calc(100vw - 70px);font-size:14px;-webkit-line-clamp:4}#ah-global-poll{top:43%;width:calc(100vw - 18px);padding:12px}.ah-global-poll-options{grid-template-columns:1fr}.ah-global-poll-question{font-size:16px}}
+@media(max-width:620px){ #ah-global-message{top:19%;width:max-content;max-width:calc(100vw - 18px);padding:0}.ah-global-message-avatar{width:34px;height:34px}.ah-global-message-line{max-width:calc(100vw - 70px);font-size:14px;-webkit-line-clamp:4}#ah-global-poll{top:38%;width:calc(100vw - 18px);padding:12px}.ah-global-poll-options{grid-template-columns:1fr}.ah-global-poll-question{font-size:16px}}
 @media(prefers-reduced-motion:reduce){ #ah-global-message,#ah-global-poll{transition:opacity .12s linear}#ah-global-message.show,#ah-global-poll.show{transform:translate(-50%,-50%)}#ah-global-message.refresh{animation:none}.ah-global-poll-fill-a,.ah-global-poll-divider{transition:none}}
 </style>
 <script id="ah-global-overlay-js">
