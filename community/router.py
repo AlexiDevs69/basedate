@@ -31,7 +31,7 @@ from fastapi import APIRouter, Depends, File, Form, Request, UploadFile, WebSock
 from fastapi.responses import JSONResponse, RedirectResponse, PlainTextResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import text
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import DBAPIError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from community import auth, crud
@@ -222,15 +222,52 @@ def _clean_server_banner_url(value: str | None) -> str:
 
 async def _ensure_server_visual_columns(db: AsyncSession) -> None:
     # Safe Render migration: create_all does not add columns to old tables.
-    await db.execute(text("ALTER TABLE community_servers ADD COLUMN IF NOT EXISTS banner_color VARCHAR(255)"))
-    await db.execute(text("ALTER TABLE community_servers ADD COLUMN IF NOT EXISTS banner_url VARCHAR(512)"))
-    await db.execute(text("ALTER TABLE community_server_messages ADD COLUMN IF NOT EXISTS edited_at TIMESTAMP WITH TIME ZONE"))
-    await db.execute(text("ALTER TABLE community_direct_messages ADD COLUMN IF NOT EXISTS edited_at TIMESTAMP WITH TIME ZONE"))
-    await db.execute(text("ALTER TABLE community_server_messages ADD COLUMN IF NOT EXISTS reply_to_id INTEGER"))
-    await db.execute(text("ALTER TABLE community_direct_messages ADD COLUMN IF NOT EXISTS reply_to_id INTEGER"))
-    await db.execute(text("ALTER TABLE community_server_messages ADD COLUMN IF NOT EXISTS is_forwarded BOOLEAN NOT NULL DEFAULT FALSE"))
-    await db.execute(text("ALTER TABLE community_direct_messages ADD COLUMN IF NOT EXISTS is_forwarded BOOLEAN NOT NULL DEFAULT FALSE"))
-    await db.commit()
+    # Run each ALTER in its own transaction so locks on one table are released
+    # before the next table is touched. Retry only PostgreSQL deadlocks (40P01).
+    statements = (
+        "ALTER TABLE community_servers ADD COLUMN IF NOT EXISTS banner_color VARCHAR(255)",
+        "ALTER TABLE community_servers ADD COLUMN IF NOT EXISTS banner_url VARCHAR(512)",
+        "ALTER TABLE community_server_messages ADD COLUMN IF NOT EXISTS edited_at TIMESTAMP WITH TIME ZONE",
+        "ALTER TABLE community_direct_messages ADD COLUMN IF NOT EXISTS edited_at TIMESTAMP WITH TIME ZONE",
+        "ALTER TABLE community_server_messages ADD COLUMN IF NOT EXISTS reply_to_id INTEGER",
+        "ALTER TABLE community_direct_messages ADD COLUMN IF NOT EXISTS reply_to_id INTEGER",
+        "ALTER TABLE community_server_messages ADD COLUMN IF NOT EXISTS is_forwarded BOOLEAN NOT NULL DEFAULT FALSE",
+        "ALTER TABLE community_direct_messages ADD COLUMN IF NOT EXISTS is_forwarded BOOLEAN NOT NULL DEFAULT FALSE",
+    )
+
+    def is_deadlock(error: BaseException) -> bool:
+        seen: set[int] = set()
+        current: BaseException | None = error
+        while current is not None and id(current) not in seen:
+            seen.add(id(current))
+            for attr in ("sqlstate", "pgcode"):
+                value = getattr(current, attr, None)
+                if value and str(value) == "40P01":
+                    return True
+            original = getattr(current, "orig", None)
+            if isinstance(original, BaseException) and id(original) not in seen:
+                current = original
+                continue
+            cause = getattr(current, "__cause__", None)
+            if isinstance(cause, BaseException) and id(cause) not in seen:
+                current = cause
+                continue
+            context = getattr(current, "__context__", None)
+            current = context if isinstance(context, BaseException) and id(context) not in seen else None
+        return "deadlock detected" in str(error).lower()
+
+    max_attempts = 4
+    for statement in statements:
+        for attempt in range(max_attempts):
+            try:
+                await db.execute(text(statement))
+                await db.commit()
+                break
+            except DBAPIError as error:
+                await db.rollback()
+                if not is_deadlock(error) or attempt + 1 >= max_attempts:
+                    raise
+                await asyncio.sleep(0.25 * (2 ** attempt))
 
 
 async def _get_server_banner_color(db: AsyncSession, server_id: int) -> str:
