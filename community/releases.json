@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.54.1",
+      "date": "2026-08-07",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: global console command handling."
+      ],
+      "source_sha": "01a1c733f779eac903969bbf969f22baee59a454"
+    },
+    {
       "version": "1.54.0",
       "date": "2026-08-07",
       "title": "Нові можливості AlexiHub",
