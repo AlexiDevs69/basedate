@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.54.14",
+      "date": "2026-08-07",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Adjust positioning of global message and poll elements."
+      ],
+      "source_sha": "a4dab2cdbb05d492409783b0a56bcddc5feba3a8"
+    },
+    {
       "version": "1.54.13",
       "date": "2026-08-07",
       "title": "Виправлення та стабільність",
