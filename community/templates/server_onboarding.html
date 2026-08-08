@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="{{ i18n_language }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Вітаємо на {{ server.name }} // AlexiHub</title>
+  <title>{{ i18n_t("onboarding.page_title", server=server.name) }}</title>
   <style>
     :root{--brand:#5865f2;--green:#23a55a;--bg:#111214;--panel:#24252a;--panel2:#2b2d31;--border:#3b3d45;--text:#f2f3f5;--muted:#b5bac1}
     *{box-sizing:border-box}html,body{height:100%;margin:0}button{font:inherit}
@@ -52,6 +52,7 @@
       .window:after{display:none}
     }
   </style>
+{% include "i18n_runtime.html" %}
 </head>
 <body>
   <div class="scene">
@@ -71,32 +72,32 @@
     <main class="stage">
       <section class="window">
         <div class="progress"><span class="track active"></span><span class="track"></span><span class="track"></span></div>
-        <div class="progress-labels"><span class="active">Вітання</span><span>Ваші інтереси</span><span>Перші кроки</span></div>
+        <div class="progress-labels"><span class="active" data-i18n="onboarding.steps.welcome">{{ i18n_t('onboarding.steps.welcome') }}</span><span data-i18n="onboarding.steps.interests">{{ i18n_t('onboarding.steps.interests') }}</span><span data-i18n="onboarding.steps.first_steps">{{ i18n_t('onboarding.steps.first_steps') }}</span></div>
         <div class="viewport">
           <div class="slides" id="slides">
             <article class="slide welcome">
               <div class="server-icon">{% if server.icon_url %}<img src="{{ server.icon_url }}" alt="">{% else %}{{ server.name[:2]|upper }}{% endif %}</div>
-              <h1>{{ onboarding.welcome_title or ("Ласкаво просимо до " ~ server.name) }}</h1>
-              <p class="lead">Налаштуйте сервер під себе — це займе лише хвилину.</p>
-              <div class="welcome-box"><strong>Повідомлення від команди сервера</strong><p>{{ onboarding.welcome_text or "Оберіть цікаві вам ролі та перегляньте перші кроки, щоб швидко освоїтися у спільноті." }}</p></div>
+              <h1>{{ onboarding.welcome_title or i18n_t("onboarding.welcome.default_title", server=server.name) }}</h1>
+              <p class="lead" data-i18n="onboarding.welcome.subtitle">{{ i18n_t('onboarding.welcome.subtitle') }}</p>
+              <div class="welcome-box"><strong data-i18n="onboarding.welcome.team_message">{{ i18n_t('onboarding.welcome.team_message') }}</strong><p>{{ onboarding.welcome_text or i18n_t("onboarding.welcome.default_message") }}</p></div>
             </article>
             <article class="slide">
-              <h2>Розкажіть трохи про себе</h2>
-              <p class="lead">Ваші відповіді допоможуть показати потрібні розділи та ролі.</p>
+              <h2 data-i18n="onboarding.interests.title">{{ i18n_t('onboarding.interests.title') }}</h2>
+              <p class="lead" data-i18n="onboarding.interests.subtitle">{{ i18n_t('onboarding.interests.subtitle') }}</p>
               <div id="questions"></div>
             </article>
             <article class="slide">
-              <h2>З чого почати</h2>
-              <p class="lead">Короткий список корисних дій для нового учасника.</p>
+              <h2 data-i18n="onboarding.first_steps.title">{{ i18n_t('onboarding.first_steps.title') }}</h2>
+              <p class="lead" data-i18n="onboarding.first_steps.subtitle">{{ i18n_t('onboarding.first_steps.subtitle') }}</p>
               <div class="steps" id="steps"></div>
             </article>
           </div>
         </div>
         <footer class="footer">
-          <button class="btn link" type="button" id="skip">Пропустити</button>
+          <button class="btn link" type="button" id="skip" data-i18n="common.actions.skip">{{ i18n_t('common.actions.skip') }}</button>
           <div class="footer-spacer"></div>
-          <button class="btn" type="button" id="back" hidden>Назад</button>
-          <button class="btn primary" type="button" id="next">Почати</button>
+          <button class="btn" type="button" id="back" hidden data-i18n="common.actions.back">{{ i18n_t('common.actions.back') }}</button>
+          <button class="btn primary" type="button" id="next" data-i18n="common.actions.start">{{ i18n_t('common.actions.start') }}</button>
         </footer>
       </section>
     </main>
@@ -118,6 +119,7 @@
       const selections = new Map();
       const completedSteps = new Set();
       let page = 0;
+      const t = (key, params) => window.AlexiHubI18n.t(key, params);
 
       const revealScene = () => {
         if (!scene || scene.classList.contains('is-ready')) return;
@@ -168,14 +170,17 @@
         document.querySelectorAll('.progress-labels span').forEach((item, index) => item.classList.toggle('active', index === page));
         backButton.hidden = page === 0;
         skipButton.hidden = page > 0;
-        nextButton.textContent = page === 0 ? 'Почати' : (page === 2 ? 'Завершити' : 'Далі');
+        const nextKey = page === 0 ? 'common.actions.start' : (page === 2 ? 'common.actions.finish' : 'common.actions.next');
+        nextButton.dataset.i18n = nextKey;
+        nextButton.textContent = t(nextKey);
       };
       const renderQuestions = () => {
         questionsRoot.replaceChildren();
         if (!settings.questions.length) {
           const empty = document.createElement('div');
           empty.className = 'empty';
-          empty.textContent = 'На цьому сервері немає обов’язкових запитань — можна рухатися далі.';
+          empty.dataset.i18n = 'onboarding.interests.empty';
+          empty.textContent = t('onboarding.interests.empty');
           questionsRoot.appendChild(empty);
           return;
         }
@@ -189,7 +194,8 @@
           if (question.multiple) {
             const hint = document.createElement('div');
             hint.className = 'question-hint';
-            hint.textContent = 'Можна вибрати кілька варіантів';
+            hint.dataset.i18n = 'onboarding.interests.multiple_hint';
+            hint.textContent = t('onboarding.interests.multiple_hint');
             block.appendChild(hint);
           }
           const options = document.createElement('div');
@@ -226,7 +232,8 @@
         if (!settings.steps.length) {
           const empty = document.createElement('div');
           empty.className = 'empty';
-          empty.textContent = 'Перші кроки ще не налаштовані. Ласкаво просимо!';
+          empty.dataset.i18n = 'onboarding.first_steps.empty';
+          empty.textContent = t('onboarding.first_steps.empty');
           stepsRoot.appendChild(empty);
           return;
         }
@@ -239,7 +246,7 @@
           const title = document.createElement('strong');
           title.textContent = step.title;
           const description = document.createElement('p');
-          description.textContent = step.description || 'Позначте після ознайомлення.';
+          description.textContent = step.description || t('onboarding.first_steps.default_description');
           copy.append(title, description);
           row.append(check, copy);
           row.addEventListener('click', () => {
@@ -271,7 +278,7 @@
           if (!response.ok || !data.ok) throw new Error('complete_failed');
           location.replace(`/community/servers/${serverId}`);
         } catch (_) {
-          showToast('Не вдалося завершити налаштування. Спробуйте ще раз.');
+          showToast(t('onboarding.errors.complete_failed'));
           nextButton.disabled = false;
         }
       };
