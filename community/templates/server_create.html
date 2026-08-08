@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="{{ i18n_language }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Створити сервер // AlexiHub</title>
+  <title>{{ i18n_t('server.create.page_title') }}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
@@ -379,6 +379,7 @@
       .join-block{margin-left:-18px;margin-right:-18px;padding-left:18px;padding-right:18px}
     }
   </style>
+{% include "i18n_runtime.html" %}
 </head>
 <body>
   <div class="app-bg" aria-hidden="true">
@@ -391,18 +392,18 @@
       <a class="server-dot" href="/community/servers/{{ s.id }}" title="{{ s.name }}" {% if s.icon_url %}style="background-image:url('{{ s.icon_url }}')"{% endif %}>{% if not s.icon_url %}{{ s.name[:1]|upper }}{% endif %}</a>
       {% endfor %}
       <a class="server-dot plus" href="/community/servers/new">+</a>
-      <a class="server-dot plus" href="/community/travel" title="Путешествие"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="m15.8 8.2-2.1 5.5-5.5 2.1 2.1-5.5 5.5-2.1Z"/></svg></a>
+      <a class="server-dot plus" href="/community/travel" title="{{ i18n_t('discovery.title') }}" data-i18n-title="discovery.title"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="m15.8 8.2-2.1 5.5-5.5 2.1 2.1-5.5 5.5-2.1Z"/></svg></a>
     </aside>
 
     <aside class="side">
-      <div class="side-search"><input placeholder="Знайти або почати бесіду"></div>
+      <div class="side-search"><input placeholder="{{ i18n_t('dm.search_or_start') }}" data-i18n-placeholder="dm.search_or_start"></div>
       <div class="nav">
         <div class="nav-row active">
           <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>
-          Друзі / ЛС
+          <span data-i18n="ui.friends_dm">{{ i18n_t('ui.friends_dm') }}</span>
         </div>
       </div>
-      <div class="section-title">Особисті повідомлення <span>+</span></div>
+      <div class="section-title"><span data-i18n="ui.direct_messages">{{ i18n_t('ui.direct_messages') }}</span> <span>+</span></div>
       <div class="dm-row active"><div class="avatar">A</div><span>AlexiHub</span></div>
       <div class="dm-row"><div class="avatar">S</div><span>server_bot</span></div>
       <div class="account">
@@ -413,13 +414,13 @@
 
     <main class="main">
       <div class="topbar">
-        <b><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Друзі</b>
+        <b><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><span data-i18n="ui.friends">{{ i18n_t('ui.friends') }}</span></b>
         <div></div>
       </div>
       <section class="fake-center">
         <div>
-          <h1>Створи новий сервер</h1>
-          <p>Меню відкривається поверх сторінки, як у Discord.</p>
+          <h1 data-i18n="server.create.background_title">{{ i18n_t('server.create.background_title') }}</h1>
+          <p data-i18n="server.create.background_description">{{ i18n_t('server.create.background_description') }}</p>
         </div>
       </section>
     </main>
@@ -433,102 +434,102 @@
 
   <div class="modal-backdrop" id="serverModalBackdrop">
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="createTitle" id="serverModal">
-      <a class="close-btn" href="/community" title="Закрити" aria-label="Закрити">
+      <a class="close-btn" href="/community" title="{{ i18n_t('common.actions.close') }}" aria-label="{{ i18n_t('common.actions.close') }}" data-i18n-title="common.actions.close" data-i18n-aria-label="common.actions.close">
         <svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
       </a>
 
       <div class="modal-view" id="view-start">
-        <h1 id="createTitle">Створіть свій сервер</h1>
-        <p class="lead">Ваш сервер — це місце, де ви можете тусуватися зі своїми друзями. Створіть сервер і почніть спілкуватися.</p>
+        <h1 id="createTitle" data-i18n="server.create.title">{{ i18n_t('server.create.title') }}</h1>
+        <p class="lead" data-i18n="server.create.description">{{ i18n_t('server.create.description') }}</p>
 
         <div class="choice-list">
-          <button class="choice-card js-setup" type="button" data-template="Сервер {{ account.display_name }}">
+          <button class="choice-card js-setup" type="button" data-template="{{ i18n_t('server.create.templates.personal_default', name=account.display_name) }}">
             <span class="choice-left">
               <span class="choice-icon"><svg viewBox="0 0 24 24"><path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/></svg></span>
-              <span class="choice-name">Свій шаблон</span>
+              <span class="choice-name" data-i18n="server.create.templates.personal">{{ i18n_t('server.create.templates.personal') }}</span>
             </span>
             <svg class="chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
           </button>
         </div>
 
-        <div class="label">Почніть із шаблону</div>
+        <div class="label" data-i18n="server.create.templates.heading">{{ i18n_t('server.create.templates.heading') }}</div>
         <div class="choice-list">
-          <button class="choice-card js-setup" type="button" data-template="Ігровий сервер">
-            <span class="choice-left"><span class="choice-icon"><svg viewBox="0 0 24 24"><path d="M6 12h4m-2-2v4"/><path d="M15 13h.01M18 11h.01"/><path d="M17.5 7h-11A4.5 4.5 0 0 0 2 11.5v1A4.5 4.5 0 0 0 6.5 17h11A4.5 4.5 0 0 0 22 12.5v-1A4.5 4.5 0 0 0 17.5 7Z"/></svg></span><span class="choice-name">Ігри</span></span>
+          <button class="choice-card js-setup" type="button" data-template="{{ i18n_t('server.create.templates.gaming_default') }}" data-i18n-data-template="server.create.templates.gaming_default">
+            <span class="choice-left"><span class="choice-icon"><svg viewBox="0 0 24 24"><path d="M6 12h4m-2-2v4"/><path d="M15 13h.01M18 11h.01"/><path d="M17.5 7h-11A4.5 4.5 0 0 0 2 11.5v1A4.5 4.5 0 0 0 6.5 17h11A4.5 4.5 0 0 0 22 12.5v-1A4.5 4.5 0 0 0 17.5 7Z"/></svg></span><span class="choice-name" data-i18n="server.create.templates.gaming">{{ i18n_t('server.create.templates.gaming') }}</span></span>
             <svg class="chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
           </button>
-          <button class="choice-card js-setup" type="button" data-template="Сервер друзів">
-            <span class="choice-left"><span class="choice-icon"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="choice-name">Друзі</span></span>
+          <button class="choice-card js-setup" type="button" data-template="{{ i18n_t('server.create.templates.friends_default') }}" data-i18n-data-template="server.create.templates.friends_default">
+            <span class="choice-left"><span class="choice-icon"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="choice-name" data-i18n="ui.friends">{{ i18n_t('ui.friends') }}</span></span>
             <svg class="chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
           </button>
-          <button class="choice-card js-setup" type="button" data-template="Навчальна група">
-            <span class="choice-left"><span class="choice-icon"><svg viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/><path d="M22 10v6"/></svg></span><span class="choice-name">Навчальна група</span></span>
+          <button class="choice-card js-setup" type="button" data-template="{{ i18n_t('server.create.templates.study_group') }}" data-i18n-data-template="server.create.templates.study_group">
+            <span class="choice-left"><span class="choice-icon"><svg viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/><path d="M22 10v6"/></svg></span><span class="choice-name" data-i18n="server.create.templates.study_group">{{ i18n_t('server.create.templates.study_group') }}</span></span>
             <svg class="chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
           </button>
-          <button class="choice-card js-setup" type="button" data-template="Шкільний клуб">
-            <span class="choice-left"><span class="choice-icon"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M4 4v15.5A2.5 2.5 0 0 0 6.5 22H20V4Z"/><path d="M8 8h8"/><path d="M8 12h6"/></svg></span><span class="choice-name">Шкільний клуб</span></span>
+          <button class="choice-card js-setup" type="button" data-template="{{ i18n_t('server.create.templates.school_club') }}" data-i18n-data-template="server.create.templates.school_club">
+            <span class="choice-left"><span class="choice-icon"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M4 4v15.5A2.5 2.5 0 0 0 6.5 22H20V4Z"/><path d="M8 8h8"/><path d="M8 12h6"/></svg></span><span class="choice-name" data-i18n="server.create.templates.school_club">{{ i18n_t('server.create.templates.school_club') }}</span></span>
             <svg class="chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
           </button>
         </div>
 
         <div class="join-block">
-          <h2>У вас уже є запрошення?</h2>
-          <button class="gray-btn" type="button" data-view="join">Приєднатися до сервера</button>
+          <h2 data-i18n="server.join.have_invite">{{ i18n_t('server.join.have_invite') }}</h2>
+          <button class="gray-btn" type="button" data-view="join" data-i18n="server.join.action">{{ i18n_t('server.join.action') }}</button>
         </div>
       </div>
 
       <div class="modal-view" id="view-setup">
         <div class="setup-head">
-          <button class="back-btn" type="button" data-view="start" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
-          <h1>Налаштуйте сервер</h1>
+          <button class="back-btn" type="button" data-view="start" aria-label="{{ i18n_t('common.actions.back') }}" data-i18n-aria-label="common.actions.back"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+          <h1 data-i18n="server.create.setup_title">{{ i18n_t('server.create.setup_title') }}</h1>
         </div>
-        <p class="muted">Дайте серверу назву і, якщо хочеш, постав іконку. Канал <b>#general</b> створиться автоматично.</p>
+        <p class="muted"><span data-i18n="server.create.setup_description_before_channel">{{ i18n_t('server.create.setup_description_before_channel') }}</span> <b>#general</b> <span data-i18n="server.create.setup_description_after_channel">{{ i18n_t('server.create.setup_description_after_channel') }}</span></p>
         {% if error %}<div class="error">{{ error }}</div>{% endif %}
         <form method="post" action="/community/servers/new" class="form-grid">
           <div class="server-icon-row">
             <div class="server-preview" id="serverPreview">A</div>
             <div class="field" style="flex:1">
-              <label>Іконка сервера</label>
-              <input name="icon_url" id="iconUrl" placeholder="URL картинки, можна залишити пустим">
-              <div class="hint">Поки тут URL. Пізніше можна підключити upload через Cloudinary так само, як аватарки.</div>
+              <label data-i18n="server.fields.icon">{{ i18n_t('server.fields.icon') }}</label>
+              <input name="icon_url" id="iconUrl" placeholder="{{ i18n_t('server.create.icon_url_placeholder') }}" data-i18n-placeholder="server.create.icon_url_placeholder">
+              <div class="hint" data-i18n="server.create.icon_url_hint">{{ i18n_t('server.create.icon_url_hint') }}</div>
             </div>
           </div>
           <div class="field">
-            <label>Назва сервера</label>
-            <input name="name" id="serverName" required maxlength="64" value="Сервер {{ account.display_name }}" autocomplete="off">
+            <label data-i18n="server.fields.name">{{ i18n_t('server.fields.name') }}</label>
+            <input name="name" id="serverName" required maxlength="64" value="{{ i18n_t('server.create.templates.personal_default', name=account.display_name) }}" autocomplete="off">
           </div>
           <div class="field">
-            <label>Опис</label>
-            <textarea name="description" maxlength="255" placeholder="Про що цей сервер?"></textarea>
+            <label data-i18n="server.fields.description">{{ i18n_t('server.fields.description') }}</label>
+            <textarea name="description" maxlength="255" placeholder="{{ i18n_t('server.fields.description_placeholder') }}" data-i18n-placeholder="server.fields.description_placeholder"></textarea>
           </div>
-          <div class="submit-row"><button class="primary-btn" type="submit">Створити сервер</button></div>
+          <div class="submit-row"><button class="primary-btn" type="submit" data-i18n="server.create.action">{{ i18n_t('server.create.action') }}</button></div>
         </form>
       </div>
 
       <div class="modal-view" id="view-join">
         <div class="setup-head">
-          <button class="back-btn" type="button" data-view="start" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
-          <h1>Приєднатися до сервера</h1>
+          <button class="back-btn" type="button" data-view="start" aria-label="{{ i18n_t('common.actions.back') }}" data-i18n-aria-label="common.actions.back"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+          <h1 data-i18n="server.join.action">{{ i18n_t('server.join.action') }}</h1>
         </div>
-        <p class="muted">Введіть запрошення, щоб приєднатися до існуючого сервера.</p>
+        <p class="muted" data-i18n="server.join.description">{{ i18n_t('server.join.description') }}</p>
         {% if join_error %}<div class="error">{{ join_error }}</div>{% endif %}
         <form method="post" action="/community/servers/join" class="form-grid">
           <div class="field">
-            <label>Посилання-запрошення *</label>
+            <label data-i18n="server.join.invite_label">{{ i18n_t('server.join.invite_label') }}</label>
             <input name="invite" required autofocus placeholder="https://basedate.onrender.com/community/servers/1">
           </div>
-          <div class="join-examples">Запрошення можуть виглядати так:</div>
+          <div class="join-examples" data-i18n="server.join.examples">{{ i18n_t('server.join.examples') }}</div>
           <div class="chips"><span class="chip">1</span><span class="chip">/community/servers/1</span><span class="chip">https://basedate.onrender.com/community/servers/1</span></div>
           <div class="discover">
             <div class="discover-left">
               <div class="discover-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-5"/></svg></div>
-              <div><b>Немає запрошення?</b><span>Пізніше можна зробити сторінку пошуку відкритих серверів.</span></div>
+              <div><b data-i18n="server.join.no_invite">{{ i18n_t('server.join.no_invite') }}</b><span data-i18n="server.join.discovery_hint">{{ i18n_t('server.join.discovery_hint') }}</span></div>
             </div>
             <svg class="chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
           </div>
           <div class="footer-actions">
-            <button class="link-btn" type="button" data-view="start">Назад</button>
-            <button class="primary-btn" type="submit">Приєднатися до сервера</button>
+            <button class="link-btn" type="button" data-view="start" data-i18n="common.actions.back">{{ i18n_t('common.actions.back') }}</button>
+            <button class="primary-btn" type="submit" data-i18n="server.join.action">{{ i18n_t('server.join.action') }}</button>
           </div>
         </form>
       </div>
