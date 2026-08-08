@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="{{ i18n_language }}">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Налаштування сервера — {{ server.name }}</title>
+  <title>{{ i18n_t('server_settings.page_title', server=server.name) }}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
@@ -899,7 +899,7 @@
   .settings-member-copy{min-width:0}.settings-member-name-line{display:flex;align-items:center;gap:6px;min-width:0}.settings-member-name{font-weight:850;color:#f2f3f5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.settings-member-handle{display:block;color:#8e929b;font-size:12px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .settings-owner-crown{position:relative;width:17px;height:17px;flex:0 0 17px;display:inline-grid;place-items:center;color:#f0b232;cursor:default}
   .settings-owner-crown svg{width:17px;height:17px;fill:#f0b232;stroke:#f0b232;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
-  .settings-owner-crown::after{content:'Власник сервера';position:absolute;left:50%;bottom:calc(100% + 9px);transform:translate(-50%,4px);padding:7px 9px;border-radius:6px;background:#111214;color:#fff;font-size:12px;font-weight:800;white-space:nowrap;box-shadow:0 9px 24px rgba(0,0,0,.48);opacity:0;visibility:hidden;transition:.12s;z-index:100}
+  .settings-owner-crown::after{content:'{{ i18n_t("common.aria.server_owner") }}';position:absolute;left:50%;bottom:calc(100% + 9px);transform:translate(-50%,4px);padding:7px 9px;border-radius:6px;background:#111214;color:#fff;font-size:12px;font-weight:800;white-space:nowrap;box-shadow:0 9px 24px rgba(0,0,0,.48);opacity:0;visibility:hidden;transition:.12s;z-index:100}
   .settings-owner-crown:hover::after{opacity:1;visibility:visible;transform:translate(-50%,0)}
   .member-role-pill{display:inline-flex;align-items:center;min-height:24px;border-radius:999px;padding:3px 9px;background:#2b2d31;color:#b5bac1;font-size:11px;font-weight:850;text-transform:uppercase;letter-spacing:.035em}
   .member-role-pill.owner{background:rgba(240,178,50,.12);color:#f0b232}.member-role-pill.admin{background:rgba(88,101,242,.14);color:#aeb4ff}
@@ -1086,6 +1086,7 @@
     .onboarding-editor-row .onboarding-multiple,.onboarding-editor-row.step [data-onboarding-step-description]{grid-column:1/-1;grid-row:auto}
   }
 </style>
+{% include "i18n_runtime.html" %}
 </head>
 
 <body>
@@ -1093,49 +1094,49 @@
     <aside class="settings-sidebar">
       <div class="side-inner">
         <div class="side-kicker">{{ server.name }}</div>
-        <button class="side-item active" type="button" data-tab="profile">Профіль сервера</button>
-        <button class="side-item" type="button" data-tab="tag">Тег сервера</button>
-        <button class="side-item" type="button" data-tab="theme">Тема сервера <span class="badge-new">НОВОЕ</span></button>
-        <button class="side-item" type="button" data-tab="engagement">Вовлечённость</button>
-        <button class="side-item" type="button" data-tab="boosts">Бонусы буста</button>
+        <button class="side-item active" type="button" data-tab="profile"><!--i18n:server_settings.action.air_profile-->{{ i18n_t('server_settings.action.air_profile') }}</button>
+        <button class="side-item" type="button" data-tab="tag"><!--i18n:common.text.the_server_tag-->{{ i18n_t('common.text.the_server_tag') }}</button>
+        <button class="side-item" type="button" data-tab="theme"><!--i18n:server_settings.action.theme_of_the_server-->{{ i18n_t('server_settings.action.theme_of_the_server') }} <span class="badge-new"><!--i18n:server_settings.text.new-->{{ i18n_t('server_settings.text.new') }}</span></button>
+        <button class="side-item" type="button" data-tab="engagement"><!--i18n:server_settings.action.involvement-->{{ i18n_t('server_settings.action.involvement') }}</button>
+        <button class="side-item" type="button" data-tab="boosts"><!--i18n:server_settings.action.ns_of_the_boost-->{{ i18n_t('server_settings.action.ns_of_the_boost') }}</button>
 
         <div class="side-sep"></div>
-        <div class="side-kicker">Реакции</div>
-        <button class="side-item" type="button" data-tab="emojis">Эмодзи</button>
-        <button class="side-item" type="button" data-tab="stickers">Стикеры</button>
-        <button class="side-item" type="button" data-tab="soundboard">Звуковая панель</button>
+        <div class="side-kicker"><!--i18n:server_settings.text.reactions-->{{ i18n_t('server_settings.text.reactions') }}</div>
+        <button class="side-item" type="button" data-tab="emojis"><!--i18n:common.text.emoji-->{{ i18n_t('common.text.emoji') }}</button>
+        <button class="side-item" type="button" data-tab="stickers"><!--i18n:common.text.sourette_stickers-->{{ i18n_t('common.text.sourette_stickers') }}</button>
+        <button class="side-item" type="button" data-tab="soundboard"><!--i18n:server_settings.action.sound_panel-->{{ i18n_t('server_settings.action.sound_panel') }}</button>
 
         <div class="side-sep"></div>
-        <div class="side-kicker">Люди</div>
-        <button class="side-item" type="button" data-tab="members">Учасники</button>
-        <button class="side-item" type="button" data-tab="roles">Роли</button>
-        <button class="side-item" type="button" data-tab="invites">Приглашения</button>
-        <button class="side-item" type="button" data-tab="access">Доступ</button>
+        <div class="side-kicker"><!--i18n:server_settings.text.people-->{{ i18n_t('server_settings.text.people') }}</div>
+        <button class="side-item" type="button" data-tab="members"><!--i18n:server_settings.action.participants-->{{ i18n_t('server_settings.action.participants') }}</button>
+        <button class="side-item" type="button" data-tab="roles"><!--i18n:server_settings.action.the_role-->{{ i18n_t('server_settings.action.the_role') }}</button>
+        <button class="side-item" type="button" data-tab="invites"><!--i18n:server_settings.action.invitations-->{{ i18n_t('server_settings.action.invitations') }}</button>
+        <button class="side-item" type="button" data-tab="access"><!--i18n:server_settings.action.access-->{{ i18n_t('server_settings.action.access') }}</button>
 
         <div class="side-sep"></div>
-        <div class="side-kicker">Приложения</div>
-        <button class="side-item" type="button" data-tab="integrations">Интеграция</button>
-        <button class="side-item" type="button" data-tab="apps">Каталог приложений <span class="external">↗</span></button>
+        <div class="side-kicker"><!--i18n:common.text.applications-->{{ i18n_t('common.text.applications') }}</div>
+        <button class="side-item" type="button" data-tab="integrations"><!--i18n:server_settings.action.integration-->{{ i18n_t('server_settings.action.integration') }}</button>
+        <button class="side-item" type="button" data-tab="apps"><!--i18n:common.text.an_application_catalog-->{{ i18n_t('common.text.an_application_catalog') }} <span class="external">↗</span></button>
 
         <div class="side-sep"></div>
-        <div class="side-kicker">Модерация</div>
-        <button class="side-item" type="button" data-tab="safety">Настройка безопасности</button>
-        <button class="side-item" type="button" data-tab="audit">Журнал аудита</button>
-        <button class="side-item" type="button" data-tab="bans">Баны</button>
+        <div class="side-kicker"><!--i18n:server_settings.text.moderation-->{{ i18n_t('server_settings.text.moderation') }}</div>
+        <button class="side-item" type="button" data-tab="safety"><!--i18n:server_settings.action.security_settings-->{{ i18n_t('server_settings.action.security_settings') }}</button>
+        <button class="side-item" type="button" data-tab="audit"><!--i18n:server_settings.action.audit_log-->{{ i18n_t('server_settings.action.audit_log') }}</button>
+        <button class="side-item" type="button" data-tab="bans"><!--i18n:server_settings.action.baths-->{{ i18n_t('server_settings.action.baths') }}</button>
 
         <div class="side-sep"></div>
-        <button class="side-item" type="button" data-tab="community">Спільнота</button>
-        <button class="side-item" type="button" data-tab="adaptation">Ознайомлення</button>
-        <button class="side-item" type="button" data-tab="analytics">Аналитика сервера</button>
+        <button class="side-item" type="button" data-tab="community"><!--i18n:server_settings.action.community-->{{ i18n_t('server_settings.action.community') }}</button>
+        <button class="side-item" type="button" data-tab="adaptation"><!--i18n:server_settings.action.kninnamental-->{{ i18n_t('server_settings.action.kninnamental') }}</button>
+        <button class="side-item" type="button" data-tab="analytics"><!--i18n:common.text.an_analytics_of_the_server-->{{ i18n_t('common.text.an_analytics_of_the_server') }}</button>
         <div class="side-sep"></div>
-        <button class="side-item" type="button" data-tab="template">Шаблон сервера</button>
-        <button class="side-item danger" type="button" data-tab="delete">Удалить сервер <span>🗑</span></button>
+        <button class="side-item" type="button" data-tab="template"><!--i18n:server_settings.action.a_server_pattern-->{{ i18n_t('server_settings.action.a_server_pattern') }}</button>
+        <button class="side-item danger" type="button" data-tab="delete"><!--i18n:server_settings.action.delete_the_server-->{{ i18n_t('server_settings.action.delete_the_server') }} <span>🗑</span></button>
       </div>
     </aside>
 
     <main class="settings-main">
       <a class="settings-close" href="/community/servers/{{ server.id }}">
-        <button class="close-btn" type="button" aria-label="Закрити">
+        <button class="close-btn" type="button" aria-label="{{ i18n_t('common.actions.close') }}" data-i18n-aria-label="common.actions.close">
           <svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12" /></svg>
         </button>
         <span>ESC</span>
@@ -1150,19 +1151,19 @@
           <input id="remove-server-image-banner" type="hidden" name="remove_server_banner" value="0" />
 
           <section>
-            <h1 class="settings-title">Профіль сервера</h1>
-            <p class="settings-desc">Налаштуй відображення сервера в запрошеннях, списку серверів і повідомленнях. Іконку можна завантажити прямо з пристрою.</p>
+            <h1 class="settings-title"><!--i18n:server_settings.action.air_profile-->{{ i18n_t('server_settings.action.air_profile') }}</h1>
+            <p class="settings-desc"><!--i18n:server_settings.text.ask_the_display_of_the_server_in_invitations_list_of-->{{ i18n_t('server_settings.text.ask_the_display_of_the_server_in_invitations_list_of') }}</p>
 
             <div class="form-section">
               <div class="field">
-                <label>Имя</label>
+                <label><!--i18n:server_settings.text.name-->{{ i18n_t('server_settings.text.name') }}</label>
                 <input id="server-name" name="name" value="{{ server.name }}" required maxlength="64" />
               </div>
             </div>
 
             <div class="form-section">
-              <div class="section-title">Значок</div>
-              <p class="hint">Рекомендується квадратне зображення мінімум 512×512.</p>
+              <div class="section-title"><!--i18n:server_settings.text.nkitch-->{{ i18n_t('server_settings.text.nkitch') }}</div>
+              <p class="hint"><!--i18n:server_settings.text.recommended_square_image_of_at_least_512512-->{{ i18n_t('server_settings.text.recommended_square_image_of_at_least_512512') }}</p>
 
               <div class="icon-row">
                 <div id="server-icon-preview" class="server-icon-preview {% if server.icon_url %}has-image{% endif %}" style="{% if server.icon_url %}background-image:url('{{ server.icon_url }}'){% endif %}">
@@ -1170,46 +1171,46 @@
                 </div>
 
                 <div>
-                  <button id="server-icon-btn" class="blue-btn" type="button">Змінити значок сервера</button>
+                  <button id="server-icon-btn" class="blue-btn" type="button"><!--i18n:server_settings.action.alter_the_server_icon-->{{ i18n_t('server_settings.action.alter_the_server_icon') }}</button>
                   <input id="server-icon-file" type="file" accept="image/*" hidden />
-                  <p id="upload-hint" class="hint" style="margin-top:8px">Файл піде через Cloudinary/local upload endpoint, у базу пишеться тільки URL.</p>
+                  <p id="upload-hint" class="hint" style="margin-top:8px"><!--i18n:server_settings.text.the_file_will_go_through_cloudinary_local_upload_endpoint_only-->{{ i18n_t('server_settings.text.the_file_will_go_through_cloudinary_local_upload_endpoint_only') }}</p>
                 </div>
               </div>
             </div>
 
             <div class="form-section">
-              <div class="section-title">Баннер сервера</div>
-              <p class="hint" style="margin-bottom:12px">Відображається у верхній частині списку каналів. Рекомендований розмір — 960×540 або більше.</p>
+              <div class="section-title"><!--i18n:common.text.server_banner-->{{ i18n_t('common.text.server_banner') }}</div>
+              <p class="hint" style="margin-bottom:12px"><!--i18n:server_settings.text.the_recommended_size_is_960540_or_more-->{{ i18n_t('server_settings.text.the_recommended_size_is_960540_or_more') }}</p>
               {% if boost_status.total_boosts < server_banner_required_boosts %}
               <div class="server-image-banner-lock">
                 <div class="server-image-banner-lock-icon"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
                 <div>
-                  <h3>Розблокується на 2-му рівні</h3>
-                  <p>Для банера потрібно <strong>{{ server_banner_required_boosts }} бустів</strong>. Зараз у сервера {{ boost_status.total_boosts }}. Поки рівень не відкритий, верхня частина сервера лишається без змін.</p>
+                  <h3><!--i18n:server_settings.title.opened_at_level_2-->{{ i18n_t('server_settings.title.opened_at_level_2') }}</h3>
+                  <p>{{ i18n_t('server_settings.banner.required_prefix') }} <strong>{{ i18n_t('server_settings.banner.required_count', count=server_banner_required_boosts) }}</strong>. {{ i18n_t('server_settings.banner.current_locked', count=boost_status.total_boosts) }}</p>
                 </div>
               </div>
               {% else %}
               <div class="server-image-banner-card">
                 <div id="server-image-banner-preview" class="server-image-banner-preview{% if server_banner_url %} has-image{% endif %}">
-                  {% if server_banner_url %}<img id="server-image-banner-img" src="{{ server_banner_url }}" alt="Баннер {{ server.name }}" />{% else %}<img id="server-image-banner-img" alt="" hidden />{% endif %}
+                  {% if server_banner_url %}<img id="server-image-banner-img" src="{{ server_banner_url }}" alt="{{ i18n_t('server_settings.banner.alt', server=server.name) }}" />{% else %}<img id="server-image-banner-img" alt="" hidden />{% endif %}
                   <div id="server-image-banner-empty" class="server-image-banner-empty" {% if server_banner_url %}hidden{% endif %}>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="8.5" cy="9" r="1.5"/><path d="m5 17 4.5-4.5 3 3L15 13l4 4"/></svg>
-                    <span>Завантажте зображення банера</span>
+                    <span><!--i18n:server_settings.text.oload_the_banner_image-->{{ i18n_t('server_settings.text.oload_the_banner_image') }}</span>
                   </div>
-                  <button id="server-image-banner-edit" class="server-image-banner-edit" type="button" aria-label="Змінити баннер"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
+                  <button id="server-image-banner-edit" class="server-image-banner-edit" type="button" aria-label="{{ i18n_t('server_settings.text.change_the_banner') }}" data-i18n-aria-label="server_settings.text.change_the_banner"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button>
                 </div>
                 <input id="server-image-banner-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden />
                 <div class="server-image-banner-actions">
-                  <button id="server-image-banner-upload" class="blue-btn" type="button">{{ 'Змінити баннер' if server_banner_url else 'Завантажити баннер' }}</button>
-                  <button id="server-image-banner-remove" class="gray-btn" type="button" {% if not server_banner_url %}hidden{% endif %}>Видалити</button>
-                  <span class="hint">JPG, PNG, WebP або GIF · до 5 МБ</span>
+                  <button id="server-image-banner-upload" class="blue-btn" type="button">{{ i18n_t('server_settings.banner.change') if server_banner_url else i18n_t('server_settings.banner.upload') }}</button>
+                  <button id="server-image-banner-remove" class="gray-btn" type="button" {% if not server_banner_url %}hidden{% endif %}><!--i18n:server_settings.action.delete-->{{ i18n_t('server_settings.action.delete') }}</button>
+                  <span class="hint"><!--i18n:server_settings.text.jpg_png_webp_abo_gif_up_to_5_mb-->{{ i18n_t('server_settings.text.jpg_png_webp_abo_gif_up_to_5_mb') }}</span>
                 </div>
               </div>
               {% endif %}
             </div>
 
             <div class="form-section">
-              <div class="section-title">Колір картки сервера</div>
+              <div class="section-title"><!--i18n:server_settings.text.the_color_of_the_server_card-->{{ i18n_t('server_settings.text.the_color_of_the_server_card') }}</div>
               <div class="banner-grid" id="banner-grid">
                 <button type="button" class="banner-choice" data-bg="linear-gradient(135deg,#111,#555)" style="background:linear-gradient(135deg,#111,#555)"></button>
                 <button type="button" class="banner-choice" data-bg="linear-gradient(135deg,#ff2e9f,#ff6ad5)" style="background:linear-gradient(135deg,#ff2e9f,#ff6ad5)"></button>
@@ -1222,33 +1223,33 @@
                 <button type="button" class="banner-choice" data-bg="linear-gradient(135deg,#3a7d0f,#7ed957)" style="background:linear-gradient(135deg,#3a7d0f,#7ed957)"></button>
                 <button type="button" class="banner-choice" data-bg="linear-gradient(135deg,#222,#aaa)" style="background:linear-gradient(135deg,#222,#aaa)"></button>
               </div>
-              <p class="hint" style="margin-top:10px">Цей градієнт використовується в картці та запрошеннях сервера.</p>
+              <p class="hint" style="margin-top:10px"><!--i18n:server_settings.text.this_gradient_is_used_in_the_server_card_and_invitation-->{{ i18n_t('server_settings.text.this_gradient_is_used_in_the_server_card_and_invitation') }}</p>
             </div>
 
             <div class="form-section">
-              <div class="section-title">Особенности</div>
-              <p class="hint">Додай до 5 інтересів сервера. Поки це декоративний блок.</p>
+              <div class="section-title"><!--i18n:server_settings.text.features-->{{ i18n_t('server_settings.text.features') }}</div>
+              <p class="hint"><!--i18n:server_settings.text.add_to_5_interests_of_the_server_so_far_it-->{{ i18n_t('server_settings.text.add_to_5_interests_of_the_server_so_far_it') }}</p>
               <div class="feature-grid">
-                <input class="feature-input" placeholder="Интерес" />
-                <input class="feature-input" placeholder="Интерес" />
-                <input class="feature-input" placeholder="Интерес" />
-                <input class="feature-input" placeholder="Интерес" />
-                <input class="feature-input" placeholder="Интерес" />
+                <input class="feature-input" placeholder="{{ i18n_t('server_settings.placeholder.interest_of_interest') }}" data-i18n-placeholder="server_settings.placeholder.interest_of_interest" />
+                <input class="feature-input" placeholder="{{ i18n_t('server_settings.placeholder.interest_of_interest') }}" data-i18n-placeholder="server_settings.placeholder.interest_of_interest" />
+                <input class="feature-input" placeholder="{{ i18n_t('server_settings.placeholder.interest_of_interest') }}" data-i18n-placeholder="server_settings.placeholder.interest_of_interest" />
+                <input class="feature-input" placeholder="{{ i18n_t('server_settings.placeholder.interest_of_interest') }}" data-i18n-placeholder="server_settings.placeholder.interest_of_interest" />
+                <input class="feature-input" placeholder="{{ i18n_t('server_settings.placeholder.interest_of_interest') }}" data-i18n-placeholder="server_settings.placeholder.interest_of_interest" />
               </div>
             </div>
 
             <div class="form-section">
               <div class="field">
-                <label>Описание</label>
-                <textarea id="server-description" name="description" maxlength="255" placeholder="Розкажіть миру про цей сервер.">{{ server.description or '' }}</textarea>
+                <label><!--i18n:server.fields.description-->{{ i18n_t('server.fields.description') }}</label>
+                <textarea id="server-description" name="description" maxlength="255" placeholder="{{ i18n_t('server_settings.description_placeholder') }}">{{ server.description or '' }}</textarea>
               </div>
             </div>
 
             <div class="save-bar">
-              <small>Є незбережені зміни?</small>
+              <small><!--i18n:server_settings.text.do_you_have_unpreserved_changes-->{{ i18n_t('server_settings.text.do_you_have_unpreserved_changes') }}</small>
               <div style="display:flex;gap:8px">
-                <button id="cancel-changes-btn" class="gray-btn" type="button">Скасувати</button>
-                <button class="blue-btn" type="submit">Зберегти</button>
+                <button id="cancel-changes-btn" class="gray-btn" type="button"><!--i18n:common.actions.cancel-->{{ i18n_t('common.actions.cancel') }}</button>
+                <button class="blue-btn" type="submit"><!--i18n:common.action.save-->{{ i18n_t('common.action.save') }}</button>
               </div>
             </div>
           </section>
@@ -1260,8 +1261,8 @@
                 {% if not server.icon_url %}{{ (server.name or 'S')[:2] }}{% endif %}
               </div>
               <div id="preview-name" class="preview-name">{{ server.name }}</div>
-              <div class="preview-meta"><span style="color:#23a55a">●</span> 1 в сети · {{ members_count|default(1) }} учасників</div>
-              <div id="preview-desc" class="preview-desc">{{ server.description or 'Опис сервера буде показаний тут.' }}</div>
+              <div class="preview-meta"><span style="color:#23a55a">●</span> {{ i18n_t('server_settings.preview_meta', count=(members_count|default(1))) }}</div>
+              <div id="preview-desc" class="preview-desc">{{ server.description or i18n_t('server_settings.preview_description') }}</div>
             </div>
           </aside>
         </form>
@@ -1270,13 +1271,13 @@
       <section id="page-emojis" class="settings-page media-page">
         <div class="media-top">
           <div>
-            <h1 class="settings-title">Эмодзи</h1>
-            <p class="settings-desc">Добавьте до 50 пользовательских эмодзи для всех на этом сервере. Анимированные эмодзи и использование на других серверах доступны подписчикам Nitro.</p>
+            <h1 class="settings-title"><!--i18n:common.text.emoji-->{{ i18n_t('common.text.emoji') }}</h1>
+            <p class="settings-desc"><!--i18n:server_settings.text.add_up_to_50_polzovatelsky_emosis_for_all_on_the-->{{ i18n_t('server_settings.text.add_up_to_50_polzovatelsky_emosis_for_all_on_the') }}</p>
           </div>
-          <button class="blue-btn" type="button" onclick="openMediaUpload('emoji')">Загрузить эмодзи</button>
+          <button class="blue-btn" type="button" onclick="openMediaUpload('emoji')"><!--i18n:server_settings.action.download_emoji-->{{ i18n_t('server_settings.action.download_emoji') }}</button>
         </div>
 
-        <p class="hint">Если вы хотите загрузить несколько эмодзи или пропустить редактирование, перетащите файлы на эту страницу. Эмодзи будут названы именем файла.</p>
+        <p class="hint"><!--i18n:server_settings.text.you_want_to_download_a_few_emojis_or_skip_editing-->{{ i18n_t('server_settings.text.you_want_to_download_a_few_emojis_or_skip_editing') }}</p>
         <div class="form-section" style="margin-top:22px"></div>
 
         <div id="emoji-list" class="media-list"></div>
@@ -1284,21 +1285,21 @@
         <div id="emoji-empty" class="media-empty">
           <div>
             <div class="media-empty-icon"><svg class="ah-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg></div>
-            <h2>ЭМОДЗИ НЕТ</h2>
-            <p>Начните вечеринку, загрузив эмодзи</p>
+            <h2><!--i18n:server_settings.title.emoji_is_not-->{{ i18n_t('server_settings.title.emoji_is_not') }}</h2>
+            <p><!--i18n:server_settings.text.ynast_of_the_party_by_downloading_emoji-->{{ i18n_t('server_settings.text.ynast_of_the_party_by_downloading_emoji') }}</p>
           </div>
         </div>
       </section>
 
       <section id="page-stickers" class="settings-page media-page">
-        <h1 class="settings-title">Стикеры</h1>
+        <h1 class="settings-title"><!--i18n:common.text.sourette_stickers-->{{ i18n_t('common.text.sourette_stickers') }}</h1>
 
         <div class="boost-banner">
           <div>
-            <h2>Получите буст</h2>
-            <p>Дайте буст серверу до 1-го уровня, чтобы разблокировать больше стикеров и других бонусов.</p>
-            <button class="white-btn" type="button">Буст сервера</button>
-            <button class="white-btn" type="button">Узнать больше</button>
+            <h2><!--i18n:server_settings.title.ygive_you_a_bus-->{{ i18n_t('server_settings.title.ygive_you_a_bus') }}</h2>
+            <p><!--i18n:server_settings.text.bing_a_boost_to_a_level_1_server_to_unlock-->{{ i18n_t('server_settings.text.bing_a_boost_to_a_level_1_server_to_unlock') }}</p>
+            <button class="white-btn" type="button"><!--i18n:common.text.servan_bones_of_the_server-->{{ i18n_t('common.text.servan_bones_of_the_server') }}</button>
+            <button class="white-btn" type="button"><!--i18n:server_settings.action.learn_more-->{{ i18n_t('server_settings.action.learn_more') }}</button>
           </div>
         </div>
 
@@ -1307,26 +1308,26 @@
         <div class="boost-row">
           <div class="boost-line"><span class="boost-dot"></span></div>
           <div>
-            <h3 style="margin-bottom:8px">Нет буста сервера</h3>
-            <p class="settings-desc" style="margin-bottom:14px">Никто пока не дал этому серверу буст. Попросите участников сервера подарить бонусы буста всем пользователям сервера.</p>
+            <h3 style="margin-bottom:8px"><!--i18n:server_settings.title.no_server_bust-->{{ i18n_t('server_settings.title.no_server_bust') }}</h3>
+            <p class="settings-desc" style="margin-bottom:14px"><!--i18n:server_settings.text.nobody_has_given_this_server_a_bus_send_the_server-->{{ i18n_t('server_settings.text.nobody_has_given_this_server_a_bus_send_the_server') }}</p>
 
             <div class="slots-panel">
               <div class="slots-head">
-                <b>Бесплатные слоты<br /><span class="hint">Можно использовать 5 из 5 ячеек</span></b>
-                <button class="blue-btn" type="button" onclick="openMediaUpload('sticker')">Загрузить стикер</button>
+                <b><!--i18n:server_settings.text.free_slots-->{{ i18n_t('server_settings.text.free_slots') }}<br /><span class="hint"><!--i18n:server_settings.text.5_of_5_cells_can_be_used-->{{ i18n_t('server_settings.text.5_of_5_cells_can_be_used') }}</span></b>
+                <button class="blue-btn" type="button" onclick="openMediaUpload('sticker')"><!--i18n:server_settings.action.download_sticker-->{{ i18n_t('server_settings.action.download_sticker') }}</button>
               </div>
               <div id="sticker-slots" class="slots-grid"></div>
             </div>
 
             <div class="level-card">
               <div class="level-head">
-                <span>◇ 1-й уровень</span>
-                <span>2 буста <span class="inline-lock"><svg class="ah-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span></span>
+                <span><!--i18n:server_settings.text.level_1-->{{ i18n_t('server_settings.text.level_1') }}</span>
+                <span><!--i18n:common.text.2_busts-->{{ i18n_t('common.text.2_busts') }} <span class="inline-lock"><svg class="ah-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span></span>
               </div>
               <div class="level-body">
                 <div class="level-art"><svg class="empty-sticker-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l5 5v10a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3z"/><path d="M15 3v5h5"/><path d="M8 13h.01M14 13h.01M8.5 16c1.7 1.2 4.3 1.2 6 0"/></svg></div>
-                <div>+10 слотов для стикеров</div>
-                <button class="blue-btn" type="button" style="background:#0f9d58">Купить уровень</button>
+                <div><!--i18n:server_settings.text.10_slots_for_dockers-->{{ i18n_t('server_settings.text.10_slots_for_dockers') }}</div>
+                <button class="blue-btn" type="button" style="background:#0f9d58"><!--i18n:server_settings.action.buy_a_level-->{{ i18n_t('server_settings.action.buy_a_level') }}</button>
               </div>
             </div>
 
@@ -1341,45 +1342,45 @@
             <div style="display:flex;gap:14px">
               <div class="boost-crystal">◇</div>
               <div class="boost-settings-copy">
-                <h1 class="settings-title">Бусты сервера</h1>
-                <p class="settings-desc">Бусты открывают бонусы для всех участников. Каждый активный уровень Nitro даёт ещё два доступных буста.</p>
+                <h1 class="settings-title"><!--i18n:common.text.server_busties-->{{ i18n_t('common.text.server_busties') }}</h1>
+                <p class="settings-desc"><!--i18n:server_settings.text.obuts_are_coming_up_bonuses_for_all_participants_key_active-->{{ i18n_t('server_settings.text.obuts_are_coming_up_bonuses_for_all_participants_key_active') }}</p>
               </div>
             </div>
           </div>
           <div class="boost-summary-card">
             <div>
-              <div class="boost-summary-count"><span>◇</span> <b id="settings-boost-total">{{ boost_status.total_boosts }}</b> бустов</div>
-              <div id="settings-boost-level-label" class="hint" style="margin-top:5px">{{ boost_status.level }}-й уровень сервера</div>
+              <div class="boost-summary-count"><span>◇</span> <b id="settings-boost-total">{{ boost_status.total_boosts }}</b> <!--i18n:server_settings.text.s_bushes-->{{ i18n_t('server_settings.text.s_bushes') }}</div>
+              <div id="settings-boost-level-label" class="hint" style="margin-top:5px">{{ i18n_t('server_settings.boost.level', level=boost_status.level) }}</div>
               <div class="boost-mini-progress"><span id="settings-boost-progress" style="width:{{ boost_status.progress_percent }}%"></span></div>
             </div>
             <div class="boost-settings-actions">
-              <button id="settings-remove-boost" class="gray-btn" type="button" {% if not boost_status.viewer.allocated_here %}hidden{% endif %}>Забрать 1 буст</button>
-              <button id="settings-add-boost" class="boost-btn-purple" type="button" {% if not boost_status.viewer.remaining %}disabled{% endif %}>◇ Дать буст</button>
+              <button id="settings-remove-boost" class="gray-btn" type="button" {% if not boost_status.viewer.allocated_here %}hidden{% endif %}><!--i18n:server_settings.action.seed_1_bus-->{{ i18n_t('server_settings.action.seed_1_bus') }}</button>
+              <button id="settings-add-boost" class="boost-btn-purple" type="button" {% if not boost_status.viewer.remaining %}disabled{% endif %}><!--i18n:server_settings.action.ygive_a_bust-->{{ i18n_t('server_settings.action.ygive_a_bust') }}</button>
             </div>
           </div>
           <div class="boost-levels">
             <article class="boost-level-card {{ 'active' if boost_status.total_boosts >= 2 else '' }}">
-              <div class="boost-level-line"></div><div class="boost-level-gem">◇</div><h3>1-й уровень</h3>
-              <div class="boost-perks"><span>☺ 100 слотов для эмодзи</span><span>◒ 15 слотов для стикеров</span><span>GIF Анимированный значок сервера</span><span>◉ Более высокое качество звука</span></div>
-              <div class="boost-level-foot">◇ 2 буста · {{ 'Активировано' if boost_status.total_boosts >= 2 else 'Неактивно' }}</div>
+              <div class="boost-level-line"></div><div class="boost-level-gem">◇</div><h3><!--i18n:common.text.level_1-->{{ i18n_t('common.text.level_1') }}</h3>
+              <div class="boost-perks"><span><!--i18n:server_settings.text.100_slots_for_emosis-->{{ i18n_t('server_settings.text.100_slots_for_emosis') }}</span><span><!--i18n:common.text.15_slots_for_dockers-->{{ i18n_t('common.text.15_slots_for_dockers') }}</span><span><!--i18n:common.text.animated_server_icon_zxqqxz-->{{ i18n_t('common.text.animated_server_icon_zxqqxz') }}</span><span><!--i18n:common.text.higher_sound_quality-->{{ i18n_t('common.text.higher_sound_quality') }}</span></div>
+              <div class="boost-level-foot">{{ i18n_t('server_settings.boost.requirement_status', count=2, status=(i18n_t('server_settings.boost.active') if boost_status.total_boosts >= 2 else i18n_t('server_settings.boost.inactive'))) }}</div>
             </article>
             <article class="boost-level-card {{ 'active' if boost_status.total_boosts >= 5 else '' }}">
-              <div class="boost-level-line"></div><div class="boost-level-gem">◇</div><h3>2-й уровень</h3>
-              <div class="boost-perks"><span>↗ Стримы в разрешении HD</span><span>↑ Загрузка файлов до 50 МБ</span><span>⬡ Значки пользовательских ролей</span><span>▣ Баннер сервера</span></div>
-              <div class="boost-level-foot">◇ 5 бустов · {{ 'Активировано' if boost_status.total_boosts >= 5 else 'Неактивно' }}</div>
+              <div class="boost-level-line"></div><div class="boost-level-gem">◇</div><h3><!--i18n:common.text.level_2-->{{ i18n_t('common.text.level_2') }}</h3>
+              <div class="boost-perks"><span><!--i18n:common.text.expressions_in_hd_resolution-->{{ i18n_t('common.text.expressions_in_hd_resolution') }}</span><span><!--i18n:common.text.file_up_to_50_mb-->{{ i18n_t('common.text.file_up_to_50_mb') }}</span><span><!--i18n:common.text.signs_of_user_roles-->{{ i18n_t('common.text.signs_of_user_roles') }}</span><span><!--i18n:common.text.server_banner_fe3bbc1-->{{ i18n_t('common.text.server_banner_fe3bbc1') }}</span></div>
+              <div class="boost-level-foot">{{ i18n_t('server_settings.boost.requirement_status', count=5, status=(i18n_t('server_settings.boost.active') if boost_status.total_boosts >= 5 else i18n_t('server_settings.boost.inactive'))) }}</div>
             </article>
             <article class="boost-level-card {{ 'active' if boost_status.total_boosts >= 7 else '' }}">
-              <div class="boost-level-line"></div><div class="boost-level-gem">◇</div><h3>3-й уровень</h3>
-              <div class="boost-perks"><span>★ Пользовательская ссылка-приглашение</span><span>↑ Загрузка файлов до 100 МБ</span><span>◉ Лучшее качество звука</span><span>GIF Анимированный баннер</span></div>
-              <div class="boost-level-foot">◇ 7 бустов · {{ 'Активировано' if boost_status.total_boosts >= 7 else 'Неактивно' }}</div>
+              <div class="boost-level-line"></div><div class="boost-level-gem">◇</div><h3><!--i18n:common.text.level_3-->{{ i18n_t('common.text.level_3') }}</h3>
+              <div class="boost-perks"><span><!--i18n:common.text.custom_link_invitation-->{{ i18n_t('common.text.custom_link_invitation') }}</span><span><!--i18n:common.text.file_uploading_up_to_100_mb-->{{ i18n_t('common.text.file_uploading_up_to_100_mb') }}</span><span><!--i18n:common.text.best_sound_quality-->{{ i18n_t('common.text.best_sound_quality') }}</span><span><!--i18n:server_settings.text.animated_banner-->{{ i18n_t('server_settings.text.animated_banner') }}</span></div>
+              <div class="boost-level-foot">{{ i18n_t('server_settings.boost.requirement_status', count=7, status=(i18n_t('server_settings.boost.active') if boost_status.total_boosts >= 7 else i18n_t('server_settings.boost.inactive'))) }}</div>
             </article>
           </div>
           <div class="boost-activity">
-            <h2>Недавняя активность</h2>
+            <h2><!--i18n:common.title.recent_activity-->{{ i18n_t('common.title.recent_activity') }}</h2>
             <div id="settings-boost-activity" class="boost-activity-list">
               {% for item in boost_status.activity %}
               <div class="boost-activity-row"><span class="boost-activity-avatar" {% if item.avatar_url %}style="background-image:url('{{ item.avatar_url }}')"{% endif %}>{% if not item.avatar_url %}{{ item.username[:1]|upper }}{% endif %}</span><strong>{{ item.display_name }}</strong><span>◇ {{ item.amount }}</span></div>
-              {% else %}<div class="hint">Пока никто не дал серверу буст.</div>{% endfor %}
+              {% else %}<div class="hint"><!--i18n:server_settings.text.nobody_has_given_the_server_a_bus-->{{ i18n_t('server_settings.text.nobody_has_given_the_server_a_bus') }}</div>{% endfor %}
             </div>
           </div>
         </div>
@@ -1387,20 +1388,20 @@
 
       <section id="page-tag" class="settings-page">
         <div class="server-tag-settings">
-          <h1 class="settings-title">Тег сервера</h1>
-          <p class="settings-desc">Короткий тег выбранного сервера отображается рядом с именем участника в чатах и списке участников.</p>
+          <h1 class="settings-title"><!--i18n:common.text.the_server_tag-->{{ i18n_t('common.text.the_server_tag') }}</h1>
+          <p class="settings-desc"><!--i18n:server_settings.text.a_short_tag_of_the_selected_server_is_displayed_next-->{{ i18n_t('server_settings.text.a_short_tag_of_the_selected_server_is_displayed_next') }}</p>
           {% if not boost_status.tag.unlocked %}
-          <div class="server-tag-lock"><div class="boost-crystal">◇</div><div><h2 style="margin:0 0 7px">Нужно 3 буста</h2><p class="settings-desc" style="margin:0">Сейчас у сервера {{ boost_status.total_boosts }}. Разблокируйте бонус «Тег сервера», чтобы настроить его.</p></div></div>
+          <div class="server-tag-lock"><div class="boost-crystal">◇</div><div><h2 style="margin:0 0 7px"><!--i18n:server_settings.title.ygivote_is_needed-->{{ i18n_t('server_settings.title.ygivote_is_needed') }}</h2><p class="settings-desc" style="margin:0">{{ i18n_t('server_settings.tag.locked', count=boost_status.total_boosts) }}</p></div></div>
           {% endif %}
           <div class="server-tag-editor" {% if not boost_status.tag.unlocked %}style="opacity:.45;pointer-events:none"{% endif %}>
             <div class="server-tag-preview">
               <div class="server-tag-user"><span class="server-tag-avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}')"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}</span><span>{{ account.display_name or account.username }}</span><span class="server-tag-badge"><b id="server-tag-preview-icon">{{ boost_status.tag.icon_glyph }}</b><span id="server-tag-preview-text">{{ boost_status.tag.text or 'TAG' }}</span></span></div>
             </div>
             <div class="server-tag-fields">
-              <div class="field"><label>Тег</label><input id="server-tag-text" maxlength="4" value="{{ boost_status.tag.text }}" placeholder="TAG" autocomplete="off"><div class="server-tag-help">2–4 латинских буквы или цифры.</div></div>
-              <div><div class="field"><label>Значок</label></div><div id="server-tag-icons" class="server-tag-icon-grid">{% for icon in server_tag_icons %}<button class="server-tag-icon {{ 'active' if icon.id == boost_status.tag.icon else '' }}" type="button" data-icon="{{ icon.id }}" data-glyph="{{ icon.glyph }}">{{ icon.glyph }}</button>{% endfor %}</div></div>
+              <div class="field"><label><!--i18n:server_settings.text.tag_tag-->{{ i18n_t('server_settings.text.tag_tag') }}</label><input id="server-tag-text" maxlength="4" value="{{ boost_status.tag.text }}" placeholder="TAG" autocomplete="off"><div class="server-tag-help"><!--i18n:server_settings.text.2_4_latin_letters_or_numbers-->{{ i18n_t('server_settings.text.2_4_latin_letters_or_numbers') }}</div></div>
+              <div><div class="field"><label><!--i18n:server_settings.text.nkitch-->{{ i18n_t('server_settings.text.nkitch') }}</label></div><div id="server-tag-icons" class="server-tag-icon-grid">{% for icon in server_tag_icons %}<button class="server-tag-icon {{ 'active' if icon.id == boost_status.tag.icon else '' }}" type="button" data-icon="{{ icon.id }}" data-glyph="{{ icon.glyph }}">{{ icon.glyph }}</button>{% endfor %}</div></div>
             </div>
-            <div class="server-tag-save"><button id="server-tag-save" class="boost-btn-purple" type="button">Сохранить тег</button></div>
+            <div class="server-tag-save"><button id="server-tag-save" class="boost-btn-purple" type="button"><!--i18n:server_settings.action.save_the_tag-->{{ i18n_t('server_settings.action.save_the_tag') }}</button></div>
           </div>
         </div>
       </section>
@@ -1408,23 +1409,23 @@
       <section id="page-members" class="settings-page members-settings-page">
         <div class="members-page-head">
           <div>
-            <h1 class="settings-title">Учасники сервера</h1>
-            <p class="settings-desc">Керуй ролями та доступом учасників. Власник позначений золотою коронкою; передати власність може лише поточний власник.</p>
+            <h1 class="settings-title"><!--i18n:server_settings.title.participants_of_the_server-->{{ i18n_t('server_settings.title.participants_of_the_server') }}</h1>
+            <p class="settings-desc"><!--i18n:server_settings.text.ulk_the_roles_and_access_of_participants_the_owner_is-->{{ i18n_t('server_settings.text.ulk_the_roles_and_access_of_participants_the_owner_is') }}</p>
           </div>
         </div>
 
         <div class="members-card">
           <div class="members-toolbar">
-            <strong>Учасники — <span id="visible-members-count">{{ members|length }}</span></strong>
+            <strong><!--i18n:server_settings.text.participants-->{{ i18n_t('server_settings.text.participants') }} <span id="visible-members-count">{{ members|length }}</span></strong>
             <div class="members-tools">
-              <input id="member-search" class="members-search" type="search" placeholder="Пошук за іменем або роллю" autocomplete="off" />
-              <button id="member-sort" class="members-tool-btn" type="button">⇅ Сортувати</button>
-              <button id="member-clear" class="members-tool-btn clear" type="button">Очистити</button>
+              <input id="member-search" class="members-search" type="search" placeholder="{{ i18n_t('server_settings.placeholder.at_title_or_role_search') }}" data-i18n-placeholder="server_settings.placeholder.at_title_or_role_search" autocomplete="off" />
+              <button id="member-sort" class="members-tool-btn" type="button"><!--i18n:server_settings.action.spartumti-->{{ i18n_t('server_settings.action.spartumti') }}</button>
+              <button id="member-clear" class="members-tool-btn clear" type="button"><!--i18n:server_settings.action.clear-->{{ i18n_t('server_settings.action.clear') }}</button>
             </div>
           </div>
           <div class="members-table-wrap">
             <table class="members-table">
-              <thead><tr><th class="members-col-user">Учасник</th><th class="members-col-joined">На сервері з</th><th class="members-col-role">Роль</th><th class="members-col-action" aria-label="Дії"></th></tr></thead>
+              <thead><tr><th class="members-col-user"><!--i18n:common.text.accients-->{{ i18n_t('common.text.accients') }}</th><th class="members-col-joined"><!--i18n:server_settings.text.on_the_server_with-->{{ i18n_t('server_settings.text.on_the_server_with') }}</th><th class="members-col-role"><!--i18n:server_settings.text.the_role-->{{ i18n_t('server_settings.text.the_role') }}</th><th class="members-col-action" aria-label="{{ i18n_t('server_settings.aria.ye_activities') }}" data-i18n-aria-label="server_settings.aria.ye_activities"></th></tr></thead>
               <tbody id="members-table-body">
               {% for item in members %}
                 {% set m = item.account %}
@@ -1433,76 +1434,76 @@
                   <td class="members-col-user">
                     <div class="settings-member">
                       <span class="settings-member-avatar" {% if m.avatar_url %}style="background-image:url('{{ m.avatar_url }}')"{% endif %}>{% if not m.avatar_url %}{{ m.username[:1]|upper }}{% endif %}</span>
-                      <span class="settings-member-copy"><span class="settings-member-name-line"><span class="settings-member-name">{{ m.username }}</span>{% if m.id == server.owner_id %}<span class="settings-owner-crown" aria-label="Власник сервера"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.3 7.2 7.7 11l4.1-6 4.3 6 4.6-3.8-1.8 10.1H5.1L3.3 7.2Zm2.3 12.1h12.8"/></svg></span>{% endif %}</span><span class="settings-member-handle">@{{ m.username }} · ID {{ m.id }}</span></span>
+                      <span class="settings-member-copy"><span class="settings-member-name-line"><span class="settings-member-name">{{ m.username }}</span>{% if m.id == server.owner_id %}<span class="settings-owner-crown" aria-label="{{ i18n_t('common.aria.server_owner') }}" data-i18n-aria-label="common.aria.server_owner"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.3 7.2 7.7 11l4.1-6 4.3 6 4.6-3.8-1.8 10.1H5.1L3.3 7.2Zm2.3 12.1h12.8"/></svg></span>{% endif %}</span><span class="settings-member-handle">@{{ m.username }} · ID {{ m.id }}</span></span>
                     </div>
                   </td>
                   <td class="members-col-joined">{{ item.member.joined_at.strftime('%d.%m.%Y') if item.member.joined_at else '—' }}</td>
-                  <td class="members-col-role"><span class="member-role-pill {{ item.member.role }}">{{ {'owner':'Власник','admin':'Адміністратор','member':'Учасник'}.get(item.member.role, item.member.role) }}</span></td>
-                  <td class="members-col-action"><button class="member-menu-button" type="button" aria-label="Дії для {{ m.username }}" data-id="{{ m.id }}" data-username="{{ m.username|e }}" data-role="{{ item.member.role }}" data-owner="{{ '1' if m.id == server.owner_id else '0' }}" data-self="{{ '1' if m.id == account.id else '0' }}" onclick="openMemberMenu(event,this)">⋮</button></td>
+                  <td class="members-col-role"><span class="member-role-pill {{ item.member.role }}">{{ i18n_t('common.role.' ~ item.member.role) }}</span></td>
+                  <td class="members-col-action"><button class="member-menu-button" type="button" aria-label="{{ i18n_t('server_settings.member.actions', username=m.username) }}" data-id="{{ m.id }}" data-username="{{ m.username|e }}" data-role="{{ item.member.role }}" data-owner="{{ '1' if m.id == server.owner_id else '0' }}" data-self="{{ '1' if m.id == account.id else '0' }}" onclick="openMemberMenu(event,this)">⋮</button></td>
                 </tr>
                 {% endif %}
               {% endfor %}
               </tbody>
             </table>
-            <div id="members-empty" class="members-empty" {% if members %}hidden{% endif %}>Учасників не знайдено.</div>
+            <div id="members-empty" class="members-empty" {% if members %}hidden{% endif %}><!--i18n:server_settings.text.no_participants_were_found-->{{ i18n_t('server_settings.text.no_participants_were_found') }}</div>
           </div>
-          <div class="members-card-foot">Показано <span id="members-foot-count">{{ members|length }}</span> учасників</div>
+          <div class="members-card-foot"><!--i18n:server_settings.text.shown-->{{ i18n_t('server_settings.text.shown') }} <span id="members-foot-count">{{ members|length }}</span> <!--i18n:common.text.participants-->{{ i18n_t('common.text.participants') }}</div>
         </div>
       </section>
 
       <section id="page-access" class="settings-page access-settings-page">
-        <h1 class="settings-title">Доступ</h1>
+        <h1 class="settings-title"><!--i18n:server_settings.action.access-->{{ i18n_t('server_settings.action.access') }}</h1>
         <div class="access-intro">
-          <h2>Как можно присоединиться к вашему серверу?</h2>
-          <p>Вы можете оставить свой сервер приватным или открыть его, чтобы привлечь большую аудиторию. <span class="access-learn">Подробнее.</span></p>
+          <h2><!--i18n:server_settings.title.yshow_you_can_join_your_server-->{{ i18n_t('server_settings.title.yshow_you_can_join_your_server') }}</h2>
+          <p><!--i18n:server_settings.text.you_can_leave_your_server_private_or_open_it_to-->{{ i18n_t('server_settings.text.you_can_leave_your_server_private_or_open_it_to') }} <span class="access-learn"><!--i18n:server_settings.text.more_details-->{{ i18n_t('server_settings.text.more_details') }}</span></p>
         </div>
 
-        <div class="access-mode-grid" role="radiogroup" aria-label="Режим доступа к серверу">
+        <div class="access-mode-grid" role="radiogroup" aria-label="{{ i18n_t('server_settings.aria.access_to_the_server') }}" data-i18n-aria-label="server_settings.aria.access_to_the_server">
           <button class="access-mode-card" type="button" data-access-mode="invite" role="radio" aria-checked="false">
             <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="10" width="12" height="10" rx="2"/><path d="M8.5 10V7.5a3.5 3.5 0 0 1 7 0V10"/><path d="M12 14v2"/></svg>
-            <strong>Только по<br>приглашению</strong>
-            <span>К вашему серверу можно сразу присоединиться по приглашению</span>
+            <strong><!--i18n:server_settings.text.only_by-->{{ i18n_t('server_settings.text.only_by') }}<br><!--i18n:server_settings.text.an_invitation-->{{ i18n_t('server_settings.text.an_invitation') }}</strong>
+            <span><!--i18n:server_settings.text.your_server_can_be_contacted_by_invitation-->{{ i18n_t('server_settings.text.your_server_can_be_contacted_by_invitation') }}</span>
           </button>
           <button class="access-mode-card" type="button" data-access-mode="application" role="radio" aria-checked="false">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5 12 13l9-6.5"/><rect x="3" y="5" width="18" height="14" rx="2"/></svg>
-            <strong>По заявке</strong>
-            <span>Чтобы присоединиться к серверу, нужно подать заявку и дождаться её одобрения</span>
+            <strong><!--i18n:server_settings.text.an_application-->{{ i18n_t('server_settings.text.an_application') }}</strong>
+            <span><!--i18n:server_settings.text.supy_to_join_the_server_you_need_to_apply_and-->{{ i18n_t('server_settings.text.supy_to_join_the_server_you_need_to_apply_and') }}</span>
           </button>
           <button class="access-mode-card{% if boost_status.total_boosts < public_server_required_boosts %} locked{% endif %}" type="button" data-access-mode="public" data-public-locked="{{ '1' if boost_status.total_boosts < public_server_required_boosts else '0' }}" role="radio" aria-checked="false">
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg>
-            <strong>Публичный</strong>
-            <span>Сервер з’явиться в «Путешествии», і будь-хто зможе вступити без заявки</span>
-            {% if boost_status.total_boosts < public_server_required_boosts %}<span class="access-boost-lock">◇ Потрібно {{ public_server_required_boosts }} бустів · зараз {{ boost_status.total_boosts }}</span>{% endif %}
+            <strong><!--i18n:server_settings.text.public-->{{ i18n_t('server_settings.text.public') }}</strong>
+            <span><!--i18n:server_settings.text.aver_for_puchestviya_and_anyone_will_be_able_to_enter-->{{ i18n_t('server_settings.text.aver_for_puchestviya_and_anyone_will_be_able_to_enter') }}</span>
+            {% if boost_status.total_boosts < public_server_required_boosts %}<span class="access-boost-lock">{{ i18n_t('server_settings.public.lock', required=public_server_required_boosts, current=boost_status.total_boosts) }}</span>{% endif %}
           </button>
         </div>
 
         <div class="access-option-row">
           <div class="access-option-copy">
-            <strong>Сервер с возрастным ограничением</strong>
-            <p>Для просмотра содержимого этого сервера пользователям необходимо подтвердить, что они достигли совершеннолетия. <span class="access-learn">Узнать больше.</span></p>
+            <strong><!--i18n:server_settings.aria.a_server_with_age_limitation-->{{ i18n_t('server_settings.aria.a_server_with_age_limitation') }}</strong>
+            <p><!--i18n:server_settings.text.for_the_prosmotry_of_the_obsessive_server_the_polish_weds-->{{ i18n_t('server_settings.text.for_the_prosmotry_of_the_obsessive_server_the_polish_weds') }} <span class="access-learn"><!--i18n:server_settings.text.agnize_the_more-->{{ i18n_t('server_settings.text.agnize_the_more') }}</span></p>
           </div>
-          <button id="access-age-toggle" class="access-toggle" type="button" role="switch" aria-checked="false" aria-label="Сервер с возрастным ограничением"></button>
+          <button id="access-age-toggle" class="access-toggle" type="button" role="switch" aria-checked="false" aria-label="{{ i18n_t('server_settings.aria.a_server_with_age_limitation') }}" data-i18n-aria-label="server_settings.aria.a_server_with_age_limitation"></button>
         </div>
 
         <div id="access-rules-section" class="access-option-row">
           <div class="access-option-copy" style="width:100%">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:24px">
               <div>
-                <strong>Правила сервера</strong>
-                <p>Прежде чем общаться на сервере и взаимодействовать с другими его участниками, необходимо согласиться с правилами сервера.</p>
+                <strong><!--i18n:server_settings.text.rules_of_the_server-->{{ i18n_t('server_settings.text.rules_of_the_server') }}</strong>
+                <p><!--i18n:server_settings.text.nexerccess_to_communicate_on_the_server_and_interact_with_its-->{{ i18n_t('server_settings.text.nexerccess_to_communicate_on_the_server_and_interact_with_its') }}</p>
               </div>
-              <button id="access-rules-toggle" class="access-toggle" type="button" role="switch" aria-checked="false" aria-label="Включить правила сервера"></button>
+              <button id="access-rules-toggle" class="access-toggle" type="button" role="switch" aria-checked="false" aria-label="{{ i18n_t('server_settings.aria.yc_turn_on_the_rules_of_the_server') }}" data-i18n-aria-label="server_settings.aria.yc_turn_on_the_rules_of_the_server"></button>
             </div>
             <div id="access-rules-editor" class="access-editor" hidden>
-              <div class="access-editor-label">Правила <span id="access-rules-count"></span></div>
+              <div class="access-editor-label"><!--i18n:server_settings.text.rules-->{{ i18n_t('server_settings.text.rules') }} <span id="access-rules-count"></span></div>
               <div id="access-rules-list" class="access-list"></div>
-              <button id="access-add-rule" class="access-add" type="button">＋ Добавить правило</button>
-              <div class="access-editor-label" style="margin-top:18px">Примерные правила</div>
+              <button id="access-add-rule" class="access-add" type="button"><!--i18n:server_settings.action.add_rule-->{{ i18n_t('server_settings.action.add_rule') }}</button>
+              <div class="access-editor-label" style="margin-top:18px"><!--i18n:server_settings.text.estimated_rules-->{{ i18n_t('server_settings.text.estimated_rules') }}</div>
               <div class="access-examples">
-                <button class="access-example" type="button" data-rule-example="Будьте вежливы и уважительны">Будьте вежливы и уважительны</button>
-                <button class="access-example" type="button" data-rule-example="Не рассылайте спам и не занимайтесь самопродвижением">Не рассылайте спам и не занимайтесь самопродвижением</button>
-                <button class="access-example" type="button" data-rule-example="Не публикуйте непристойные материалы или контент с возрастными ограничениями">Не публикуйте непристойные материалы</button>
-                <button class="access-example" type="button" data-rule-example="Помогите поддерживать здоровую атмосферу на сервере">Поддерживайте здоровую атмосферу</button>
+                <button class="access-example" type="button" data-rule-example="{{ i18n_t('server_settings.rule.polite') }}">{{ i18n_t('server_settings.rule.polite') }}</button>
+                <button class="access-example" type="button" data-rule-example="{{ i18n_t('server_settings.rule.no_spam') }}">{{ i18n_t('server_settings.rule.no_spam') }}</button>
+                <button class="access-example" type="button" data-rule-example="{{ i18n_t('server_settings.rule.safe_content') }}">{{ i18n_t('server_settings.rule.safe_content') }}</button>
+                <button class="access-example" type="button" data-rule-example="{{ i18n_t('server_settings.rule.healthy_community') }}">{{ i18n_t('server_settings.rule.healthy_community') }}</button>
               </div>
             </div>
           </div>
@@ -1510,32 +1511,32 @@
 
         <div id="access-application-panel" class="access-mode-panel">
           <div class="access-application-head">
-            <h2>Заявка на вступление</h2>
-            <p>Добавьте в заявку вопросы. Никто не присоединится к вашему серверу, пока вы не одобрите заявку. Вы сможете написать соискателю личное сообщение, прежде чем принять или отклонить заявку.</p>
+            <h2><!--i18n:server_settings.title.an_application_for_entry-->{{ i18n_t('server_settings.title.an_application_for_entry') }}</h2>
+            <p><!--i18n:server_settings.text.send_questions_to_the_application_nobody_will_join_your_server-->{{ i18n_t('server_settings.text.send_questions_to_the_application_nobody_will_join_your_server') }}</p>
           </div>
           <div class="access-editor">
-            <div class="access-editor-label">Вопросы (<span id="access-questions-count">0</span>/5)</div>
+            <div class="access-editor-label"><!--i18n:server_settings.text.questions-->{{ i18n_t('server_settings.text.questions') }}<span id="access-questions-count">0</span>/5)</div>
             <div id="access-questions-list" class="access-list"></div>
-            <button id="access-add-question" class="access-add" type="button">＋ Добавить вопрос</button>
-            <div class="access-editor-label" style="margin-top:18px">Примеры вопросов</div>
+            <button id="access-add-question" class="access-add" type="button"><!--i18n:server_settings.action.add_a_question-->{{ i18n_t('server_settings.action.add_a_question') }}</button>
+            <div class="access-editor-label" style="margin-top:18px"><!--i18n:server_settings.text.examples_of_questions-->{{ i18n_t('server_settings.text.examples_of_questions') }}</div>
             <div class="access-examples">
-              <button class="access-example" type="button" data-question-example="Играете ли вы в те же игры, что и мы?">Играете ли вы в те же игры, что и мы?</button>
-              <button class="access-example" type="button" data-question-example="Как вы нас нашли?">Как вы нас нашли?</button>
-              <button class="access-example" type="button" data-question-example="В чём ваша изюминка?">В чём ваша изюминка?</button>
+              <button class="access-example" type="button" data-question-example="{{ i18n_t('server_settings.question.same_games') }}">{{ i18n_t('server_settings.question.same_games') }}</button>
+              <button class="access-example" type="button" data-question-example="{{ i18n_t('server_settings.question.found_us') }}">{{ i18n_t('server_settings.question.found_us') }}</button>
+              <button class="access-example" type="button" data-question-example="{{ i18n_t('server_settings.question.special') }}">{{ i18n_t('server_settings.question.special') }}</button>
             </div>
           </div>
 
           <div class="access-option-row access-profile-apply">
             <div class="access-option-copy">
-              <strong>Подача заявки из профиля</strong>
-              <p>Позволяет людям, увидевшим ваш профиль на сервере, подать заявку на вступление.</p>
+              <strong><!--i18n:server_settings.aria.an_application_from_profile-->{{ i18n_t('server_settings.aria.an_application_from_profile') }}</strong>
+              <p><!--i18n:server_settings.text.ultows_people_who_see_your_profile_on_the_server_apply-->{{ i18n_t('server_settings.text.ultows_people_who_see_your_profile_on_the_server_apply') }}</p>
             </div>
-            <button id="access-profile-apply-toggle" class="access-toggle" type="button" role="switch" aria-checked="false" aria-label="Подача заявки из профиля"></button>
+            <button id="access-profile-apply-toggle" class="access-toggle" type="button" role="switch" aria-checked="false" aria-label="{{ i18n_t('server_settings.aria.an_application_from_profile') }}" data-i18n-aria-label="server_settings.aria.an_application_from_profile"></button>
           </div>
 
           <div class="access-applications">
-            <h2>Заявки на вступление</h2>
-            <p>Одобрите заявку, чтобы сразу добавить пользователя на сервер, или отклоните её.</p>
+            <h2><!--i18n:server_settings.title.applications_for_entry-->{{ i18n_t('server_settings.title.applications_for_entry') }}</h2>
+            <p><!--i18n:server_settings.text.approve_the_request_to_immediately_add_the_user_to_the-->{{ i18n_t('server_settings.text.approve_the_request_to_immediately_add_the_user_to_the') }}</p>
             <div id="access-application-list" class="access-application-list">
               {% set access_application_count = namespace(value=0) %}
               {% for application in join_applications %}
@@ -1547,7 +1548,7 @@
                       <strong>{{ application.display_name or application.username }}</strong>
                       <small>@{{ application.username }}{% if application.submitted_at %} · {{ application.submitted_at.strftime('%d.%m.%Y %H:%M') }}{% endif %}</small>
                     </span>
-                    <span class="access-status {{ application.status }}">{{ {'pending':'Ожидает','accepted':'Принята','declined':'Отклонена'}.get(application.status, application.status) }}</span>
+                    <span class="access-status {{ application.status }}">{{ i18n_t('server_settings.application.' ~ application.status) }}</span>
                   </div>
                   {% if application.responses %}
                   <div class="access-responses">
@@ -1558,14 +1559,14 @@
                   {% endif %}
                   {% if application.status == 'pending' %}
                   <div class="access-review-actions">
-                    <button class="access-review-decline" type="button" onclick="respondAccessApplication({{ application.id }},'decline',this)">Отклонить</button>
-                    <button class="access-review-accept" type="button" onclick="respondAccessApplication({{ application.id }},'accept',this)">Принять</button>
+                    <button class="access-review-decline" type="button" onclick="respondAccessApplication({{ application.id }},'decline',this)"><!--i18n:common.aria.discard-->{{ i18n_t('common.aria.discard') }}</button>
+                    <button class="access-review-accept" type="button" onclick="respondAccessApplication({{ application.id }},'accept',this)"><!--i18n:common.aria.accept-->{{ i18n_t('common.aria.accept') }}</button>
                   </div>
                   {% endif %}
                 </article>
               {% endfor %}
               {% if access_application_count.value == 0 %}
-              <div id="access-applications-empty" class="access-empty">Новых заявок пока нет.</div>
+              <div id="access-applications-empty" class="access-empty"><!--i18n:server_settings.text.no_new_applications_yet-->{{ i18n_t('server_settings.text.no_new_applications_yet') }}</div>
               {% endif %}
             </div>
           </div>
@@ -1575,152 +1576,152 @@
           <div class="access-public-card">
             <div class="access-public-head">
               <span class="access-public-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg></span>
-              <div><h2>Публічний сервер у «Путешествии»</h2><p>Режим відкривається від {{ public_server_required_boosts }} бустів і показує сервер у каталозі спільнот.</p></div>
+              <div><h2><!--i18n:server_settings.title.public_server_in_puteshestvy-->{{ i18n_t('server_settings.title.public_server_in_puteshestvy') }}</h2><p>{{ i18n_t('server_settings.public.description', count=public_server_required_boosts) }}</p></div>
             </div>
             <div class="access-public-body">
               <div class="access-public-check">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.7 2.7L16.5 9"/></svg>
-                <div><strong>Приєднання без запрошення</strong><p>Користувач зможе знайти сервер за банером і описом та вступити одразу.</p></div>
+                <div><strong><!--i18n:server_settings.text.attack_without_an_invitation-->{{ i18n_t('server_settings.text.attack_without_an_invitation') }}</strong><p><!--i18n:server_settings.text.the_user_will_be_able_to_find_the_server_by-->{{ i18n_t('server_settings.text.the_user_will_be_able_to_find_the_server_by') }}</p></div>
               </div>
               <div class="access-public-check">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.7 2.7L16.5 9"/></svg>
-                <div><strong>Правила остаются под вашим контролем</strong><p>Если правила включены, новый участник должен принять их перед вступлением.</p></div>
+                <div><strong><!--i18n:server_settings.text.rules_remain_under_your_control-->{{ i18n_t('server_settings.text.rules_remain_under_your_control') }}</strong><p><!--i18n:server_settings.text.rules_are_included_the_new_participant_must_accept_them_before-->{{ i18n_t('server_settings.text.rules_are_included_the_new_participant_must_accept_them_before') }}</p></div>
               </div>
             </div>
           </div>
         </div>
 
         <div id="access-save-bar" class="access-save-bar" aria-live="polite">
-          <strong>Осторожнее, вы не сохранили изменения!</strong>
+          <strong><!--i18n:server_settings.text.most_careful_you_have_not_saved_the_changes-->{{ i18n_t('server_settings.text.most_careful_you_have_not_saved_the_changes') }}</strong>
           <div class="access-save-actions">
-            <button id="access-reset" class="access-reset" type="button">Сброс</button>
-            <button id="access-save" class="access-submit" type="button">Сохранить изменения</button>
+            <button id="access-reset" class="access-reset" type="button"><!--i18n:common.action.reset-->{{ i18n_t('common.action.reset') }}</button>
+            <button id="access-save" class="access-submit" type="button"><!--i18n:server_settings.action.save_changes-->{{ i18n_t('server_settings.action.save_changes') }}</button>
           </div>
         </div>
       </section>
 
       <section id="page-community" class="settings-page community-settings-page">
-        <h1 class="settings-title">Спільнота</h1>
-        <p class="settings-desc">Підготуйте сервер до нових учасників: налаштуйте вітання, вибір інтересів і перші кроки.</p>
+        <h1 class="settings-title"><!--i18n:server_settings.action.community-->{{ i18n_t('server_settings.action.community') }}</h1>
+        <p class="settings-desc"><!--i18n:server_settings.text.repare_the_server_for_new_participants_set_up_greetings_choices-->{{ i18n_t('server_settings.text.repare_the_server_for_new_participants_set_up_greetings_choices') }}</p>
 
         <div class="community-hero">
           <div class="community-hero-copy">
-            <span class="community-kicker">✦ Community Onboarding</span>
-            <h2>Допоможіть новим людям швидко освоїтися</h2>
-            <p>Ознайомлення зустрічає учасника на фоні банера сервера, пропонує потрібні ролі та показує короткий список перших дій.</p>
+            <span class="community-kicker"><!--i18n:server_settings.text.community_onboarding-->{{ i18n_t('server_settings.text.community_onboarding') }}</span>
+            <h2><!--i18n:server_settings.title.help_new_people_get_used_to_quickly-->{{ i18n_t('server_settings.title.help_new_people_get_used_to_quickly') }}</h2>
+            <p><!--i18n:server_settings.text.attofleship_meets_the_participant_against_the_background_of_the_server-->{{ i18n_t('server_settings.text.attofleship_meets_the_participant_against_the_background_of_the_server') }}</p>
           </div>
         </div>
 
         <div class="community-master">
           <div>
-            <strong>Увімкнути режим «Спільнота»</strong>
-            <p>Відкриває налаштування вхідного онбордингу. Публічність сервера, як і раніше, керується у вкладці «Доступ».</p>
+            <strong><!--i18n:server_settings.text.bring_the_community_mode-->{{ i18n_t('server_settings.text.bring_the_community_mode') }}</strong>
+            <p><!--i18n:server_settings.text.opens_the_input_onboard_settings_the_server_s_publicity_is-->{{ i18n_t('server_settings.text.opens_the_input_onboard_settings_the_server_s_publicity_is') }}</p>
           </div>
-          <button id="community-enabled-toggle" class="access-toggle" type="button" role="switch" aria-checked="false" aria-label="Увімкнути режим Спільнота"></button>
+          <button id="community-enabled-toggle" class="access-toggle" type="button" role="switch" aria-checked="false" aria-label="{{ i18n_t('server_settings.aria.bring_to_enable_community_mode') }}" data-i18n-aria-label="server_settings.aria.bring_to_enable_community_mode"></button>
         </div>
 
         <div class="community-feature-grid">
           <article class="community-feature-card">
             <span class="community-feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12"/><path d="M8 9h8M8 13h5"/></svg></span>
-            <h3>Вітальне вікно</h3>
-            <p>Великий банер, коротке пояснення і чистий перший екран у стилі Discord.</p>
+            <h3><!--i18n:server_settings.title.a_welcome_window-->{{ i18n_t('server_settings.title.a_welcome_window') }}</h3>
+            <p><!--i18n:server_settings.text.a_big_banner_a_brief_explanation_and_a_clean_first-->{{ i18n_t('server_settings.text.a_big_banner_a_brief_explanation_and_a_clean_first') }}</p>
           </article>
           <article class="community-feature-card">
             <span class="community-feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="10" r="2"/><path d="M3 19c.5-3.4 2.5-5 6-5s5.5 1.6 6 5M15 15c3.3 0 5.2 1.3 5.7 4"/></svg></span>
-            <h3>Вибір ролей</h3>
-            <p>Поставте до п’яти запитань, щоб учасник одразу обрав свої теми та інтереси.</p>
+            <h3><!--i18n:server_settings.title.ickly_selecting_roles-->{{ i18n_t('server_settings.title.ickly_selecting_roles') }}</h3>
+            <p><!--i18n:server_settings.text.ulse_five_questions_so_that_the_participant_immediately_chooses_his-->{{ i18n_t('server_settings.text.ulse_five_questions_so_that_the_participant_immediately_chooses_his') }}</p>
           </article>
           <article class="community-feature-card">
             <span class="community-feature-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/><path d="M5 6h5M14 18h5"/></svg></span>
-            <h3>Перші кроки</h3>
-            <p>Дайте новачку зрозумілий чекліст: прочитати правила, представитися або відкрити канал.</p>
+            <h3><!--i18n:onboarding.first_steps.title-->{{ i18n_t('onboarding.first_steps.title') }}</h3>
+            <p><!--i18n:server_settings.text.let_the_beginner_an_understandable_checklist_read_the_rules_introduce-->{{ i18n_t('server_settings.text.let_the_beginner_an_understandable_checklist_read_the_rules_introduce') }}</p>
           </article>
         </div>
-        <button id="open-onboarding-settings" class="community-open-onboarding" type="button">Налаштувати ознайомлення</button>
+        <button id="open-onboarding-settings" class="community-open-onboarding" type="button"><!--i18n:server_settings.action.dom_acquittal-->{{ i18n_t('server_settings.action.dom_acquittal') }}</button>
       </section>
 
       <section id="page-adaptation" class="settings-page onboarding-settings-page">
-        <h1 class="settings-title">Ознайомлення із сервером</h1>
-        <p class="settings-desc">Створіть привітний вхід для нових учасників. Після вступу вони побачать цей сценарій поверх сервера.</p>
+        <h1 class="settings-title"><!--i18n:server_settings.title.attof_the_server-->{{ i18n_t('server_settings.title.attof_the_server') }}</h1>
+        <p class="settings-desc"><!--i18n:server_settings.text.aveulate_a_friendly_entrance_for_new_participants_at_the_time-->{{ i18n_t('server_settings.text.aveulate_a_friendly_entrance_for_new_participants_at_the_time') }}</p>
 
         <div class="onboarding-banner-preview" style="{% if server_banner_url %}background-image:url('{{ server_banner_url }}'){% else %}background:{{ banner_color }}{% endif %}">
           <div class="onboarding-banner-preview-copy">
             <span class="onboarding-preview-icon" {% if server.icon_url %}style="background-image:url('{{ server.icon_url }}')"{% endif %}>{% if not server.icon_url %}{{ server.name[:1]|upper }}{% endif %}</span>
             <div>
-              <h2 id="onboarding-preview-title">{{ onboarding_settings.welcome_title or ('Ласкаво просимо до ' ~ server.name) }}</h2>
-              <p id="onboarding-preview-text">{{ onboarding_settings.welcome_text or 'Оберіть свої інтереси та виконайте перші кроки.' }}</p>
+              <h2 id="onboarding-preview-title">{{ onboarding_settings.welcome_title or i18n_t('onboarding.welcome.default_title', server=server.name) }}</h2>
+              <p id="onboarding-preview-text">{{ onboarding_settings.welcome_text or i18n_t('server_settings.onboarding.default_message') }}</p>
             </div>
           </div>
         </div>
 
         <div class="community-master">
           <div>
-            <strong>Увімкнути ознайомлення</strong>
-            <p>Нові учасники проходитимуть цей сценарій перед першим відкриттям каналів сервера.</p>
+            <strong><!--i18n:server_settings.aria.bring_to_involve-->{{ i18n_t('server_settings.aria.bring_to_involve') }}</strong>
+            <p><!--i18n:server_settings.text.new_participants_will_go_through_this_scenario_before_the_first-->{{ i18n_t('server_settings.text.new_participants_will_go_through_this_scenario_before_the_first') }}</p>
           </div>
-          <button id="onboarding-enabled-toggle" class="access-toggle" type="button" role="switch" aria-checked="false" aria-label="Увімкнути ознайомлення"></button>
+          <button id="onboarding-enabled-toggle" class="access-toggle" type="button" role="switch" aria-checked="false" aria-label="{{ i18n_t('server_settings.aria.bring_to_involve') }}" data-i18n-aria-label="server_settings.aria.bring_to_involve"></button>
         </div>
 
         <div class="onboarding-section">
           <div class="onboarding-section-head">
-            <div><h2>Вітальне повідомлення</h2><p>Цей текст показується поверх затемненого банера сервера.</p></div>
+            <div><h2><!--i18n:server_settings.title.a_gravis_message-->{{ i18n_t('server_settings.title.a_gravis_message') }}</h2><p><!--i18n:server_settings.text.this_text_is_shown_on_top_of_the_darkened_server-->{{ i18n_t('server_settings.text.this_text_is_shown_on_top_of_the_darkened_server') }}</p></div>
           </div>
           <div class="onboarding-field">
-            <label for="onboarding-welcome-title">Заголовок</label>
-            <input id="onboarding-welcome-title" class="onboarding-input" maxlength="100" placeholder="Ласкаво просимо до {{ server.name }}" />
+            <label for="onboarding-welcome-title"><!--i18n:server_settings.text.the_title-->{{ i18n_t('server_settings.text.the_title') }}</label>
+            <input id="onboarding-welcome-title" class="onboarding-input" maxlength="100" placeholder="{{ i18n_t('server_settings.onboarding.title_placeholder', server=server.name) }}" />
           </div>
           <div class="onboarding-field">
-            <label for="onboarding-welcome-text">Опис</label>
-            <textarea id="onboarding-welcome-text" class="onboarding-textarea" maxlength="1000" placeholder="Розкажіть, що варто зробити новому учаснику."></textarea>
+            <label for="onboarding-welcome-text"><!--i18n:server.fields.description-->{{ i18n_t('server.fields.description') }}</label>
+            <textarea id="onboarding-welcome-text" class="onboarding-textarea" maxlength="1000" placeholder="{{ i18n_t('server_settings.onboarding.message_placeholder') }}"></textarea>
           </div>
         </div>
 
         <div class="onboarding-section">
           <div class="onboarding-section-head">
-            <div><h2>Запитання та ролі</h2><p>Варіанти вводяться через кому. Назва варіанта одночасно стане роллю учасника.</p></div>
+            <div><h2><!--i18n:server_settings.title.questions_and_roles-->{{ i18n_t('server_settings.title.questions_and_roles') }}</h2><p><!--i18n:server_settings.text.options_are_introduced_through_a_comma_the_name_of_the-->{{ i18n_t('server_settings.text.options_are_introduced_through_a_comma_the_name_of_the') }}</p></div>
           </div>
           <div id="onboarding-questions-list" class="onboarding-list"></div>
-          <button id="onboarding-add-question" class="access-add" type="button">＋ Додати запитання</button>
-          <div class="onboarding-help">До 5 запитань і до 8 варіантів у кожному. Для активного запитання потрібно щонайменше 2 варіанти.</div>
+          <button id="onboarding-add-question" class="access-add" type="button"><!--i18n:server_settings.action.add_a_question_fcd4e1c-->{{ i18n_t('server_settings.action.add_a_question_fcd4e1c') }}</button>
+          <div class="onboarding-help"><!--i18n:server_settings.text.up_to_5_questions_and_up_to_8_options_in-->{{ i18n_t('server_settings.text.up_to_5_questions_and_up_to_8_options_in') }}</div>
         </div>
 
         <div class="onboarding-section">
           <div class="onboarding-section-head">
-            <div><h2>Перші кроки</h2><p>Короткий чекліст, який учасник побачить після вибору ролей.</p></div>
+            <div><h2><!--i18n:onboarding.first_steps.title-->{{ i18n_t('onboarding.first_steps.title') }}</h2><p><!--i18n:server_settings.text.a_short_cheist_which_the_participant_will_see_after_selecting-->{{ i18n_t('server_settings.text.a_short_cheist_which_the_participant_will_see_after_selecting') }}</p></div>
           </div>
           <div id="onboarding-steps-list" class="onboarding-list"></div>
-          <button id="onboarding-add-step" class="access-add" type="button">＋ Додати перший крок</button>
-          <div class="onboarding-help">До 8 пунктів. Кроки можна відмітити перед завершенням ознайомлення.</div>
+          <button id="onboarding-add-step" class="access-add" type="button"><!--i18n:server_settings.action.add_the_first_step-->{{ i18n_t('server_settings.action.add_the_first_step') }}</button>
+          <div class="onboarding-help"><!--i18n:server_settings.text.up_to_8_points_steps_can_be_noted_before_completing-->{{ i18n_t('server_settings.text.up_to_8_points_steps_can_be_noted_before_completing') }}</div>
         </div>
 
         <div id="onboarding-save-bar" class="access-save-bar" aria-live="polite">
-          <strong>Не забудьте зберегти зміни!</strong>
+          <strong><!--i18n:common.text.don_t_forget_to_save_the_changes-->{{ i18n_t('common.text.don_t_forget_to_save_the_changes') }}</strong>
           <div class="access-save-actions">
-            <button id="onboarding-reset" class="access-reset" type="button">Скинути</button>
-            <button id="onboarding-save" class="access-submit" type="button">Зберегти зміни</button>
+            <button id="onboarding-reset" class="access-reset" type="button"><!--i18n:common.action.skinoti-->{{ i18n_t('common.action.skinoti') }}</button>
+            <button id="onboarding-save" class="access-submit" type="button"><!--i18n:server_settings.action.save_changes-->{{ i18n_t('server_settings.action.save_changes') }}</button>
           </div>
         </div>
       </section>
 
       <section id="page-bans" class="settings-page bans-settings-page">
-        <h1 class="settings-title">Бани</h1>
-        <p class="settings-desc">Заблоковані користувачі не можуть повернутися на сервер навіть за старим запрошенням. Після розбану їх потрібно запросити повторно.</p>
+        <h1 class="settings-title"><!--i18n:server_settings.title.bath-->{{ i18n_t('server_settings.title.bath') }}</h1>
+        <p class="settings-desc"><!--i18n:server_settings.text.bacts_connected_users_cannot_return_to_the_server_even_by-->{{ i18n_t('server_settings.text.bacts_connected_users_cannot_return_to_the_server_even_by') }}</p>
         {% if banned_members %}
         <div class="ban-list">
           {% for item in banned_members %}{% set banned = item.account %}
           {% if banned %}<div class="ban-row">
-            <div class="ban-meta"><span class="settings-member-avatar" {% if banned.avatar_url %}style="background-image:url('{{ banned.avatar_url }}')"{% endif %}>{% if not banned.avatar_url %}{{ banned.username[:1]|upper }}{% endif %}</span><div><strong>{{ banned.username }}</strong><small>{% if item.ban.reason %}Причина: {{ item.ban.reason }} · {% endif %}ID {{ banned.id }}</small></div></div>
-            <button class="gray-btn" type="button" data-id="{{ banned.id }}" data-username="{{ banned.username|e }}" onclick="requestMemberAction('unban',{id:Number(this.dataset.id),username:this.dataset.username,role:'banned'})">Розбанити</button>
+            <div class="ban-meta"><span class="settings-member-avatar" {% if banned.avatar_url %}style="background-image:url('{{ banned.avatar_url }}')"{% endif %}>{% if not banned.avatar_url %}{{ banned.username[:1]|upper }}{% endif %}</span><div><strong>{{ banned.username }}</strong><small>{% if item.ban.reason %}{{ i18n_t('server_settings.ban.reason', reason=item.ban.reason) }}{% endif %}ID {{ banned.id }}</small></div></div>
+            <button class="gray-btn" type="button" data-id="{{ banned.id }}" data-username="{{ banned.username|e }}" onclick="requestMemberAction('unban',{id:Number(this.dataset.id),username:this.dataset.username,role:'banned'})"><!--i18n:server_settings.text.rosbaniti-->{{ i18n_t('server_settings.text.rosbaniti') }}</button>
           </div>{% endif %}
           {% endfor %}
         </div>
-        {% else %}<div class="ban-empty">На цьому сервері немає заблокованих користувачів.</div>{% endif %}
+        {% else %}<div class="ban-empty"><!--i18n:server_settings.text.n_s_not_blocked_users_on_this_server-->{{ i18n_t('server_settings.text.n_s_not_blocked_users_on_this_server') }}</div>{% endif %}
       </section>
 
       <section id="page-placeholder" class="settings-page placeholder-page">
-        <h1 id="placeholder-title" class="settings-title">Налаштування</h1>
-        <p id="placeholder-desc" class="settings-desc">Цей розділ поки в процесі.</p>
-        <div class="placeholder-box">Тут буде нормальна сторінка налаштувань. Я залишив вкладки як у Discord, щоб меню не ламалось і не виглядало обрізаним.</div>
+        <h1 id="placeholder-title" class="settings-title"><!--i18n:server_settings.title.directed-->{{ i18n_t('server_settings.title.directed') }}</h1>
+        <p id="placeholder-desc" class="settings-desc"><!--i18n:server_settings.text.this_section_is_still_in_process-->{{ i18n_t('server_settings.text.this_section_is_still_in_process') }}</p>
+        <div class="placeholder-box"><!--i18n:server_settings.text.there_will_be_a_normal_set_of_settings_iled_tabs-->{{ i18n_t('server_settings.text.there_will_be_a_normal_set_of_settings_iled_tabs') }}</div>
       </section>
     </main>
   </div>
@@ -1728,8 +1729,8 @@
   <div id="member-action-menu" class="member-action-menu" role="menu"></div>
   <div id="moderation-confirm" class="moderation-confirm" role="dialog" aria-modal="true" aria-labelledby="moderation-confirm-title">
     <div class="moderation-confirm-card">
-      <div class="moderation-confirm-body"><h2 id="moderation-confirm-title">Підтвердити дію</h2><p id="moderation-confirm-text"></p><input id="moderation-reason" class="moderation-reason" maxlength="255" placeholder="Причина бану, необов’язково" /></div>
-      <div class="moderation-confirm-actions"><button class="moderation-cancel" type="button" onclick="closeModerationConfirm()">Скасувати</button><button id="moderation-confirm-accept" class="moderation-accept" type="button">Підтвердити</button></div>
+      <div class="moderation-confirm-body"><h2 id="moderation-confirm-title"><!--i18n:server_settings.title.aveody_the_action-->{{ i18n_t('server_settings.title.aveody_the_action') }}</h2><p id="moderation-confirm-text"></p><input id="moderation-reason" class="moderation-reason" maxlength="255" placeholder="{{ i18n_t('server_settings.placeholder.cause_of_the_ban_neo_jazy') }}" data-i18n-placeholder="server_settings.placeholder.cause_of_the_ban_neo_jazy" /></div>
+      <div class="moderation-confirm-actions"><button class="moderation-cancel" type="button" onclick="closeModerationConfirm()"><!--i18n:common.actions.cancel-->{{ i18n_t('common.actions.cancel') }}</button><button id="moderation-confirm-accept" class="moderation-accept" type="button"><!--i18n:server_settings.action.verify-->{{ i18n_t('server_settings.action.verify') }}</button></div>
     </div>
   </div>
 
@@ -1737,8 +1738,8 @@
     <form id="media-upload-form" class="upload-modal">
       <div class="upload-head">
         <div>
-          <h2 id="media-upload-title">Отправить файл</h2>
-          <p id="media-upload-desc" class="hint">Допускаются APNG, JPG, PNG или GIF.</p>
+          <h2 id="media-upload-title"><!--i18n:common.text.send_a_file-->{{ i18n_t('common.text.send_a_file') }}</h2>
+          <p id="media-upload-desc" class="hint"><!--i18n:server_settings.text.yllowed_apng_jpg_png_or_gif-->{{ i18n_t('server_settings.text.yllowed_apng_jpg_png_or_gif') }}</p>
         </div>
         <button type="button" class="close-mini" onclick="closeMediaUpload()">×</button>
       </div>
@@ -1750,35 +1751,35 @@
         </div>
 
         <div class="field">
-          <label>Файл *</label>
+          <label><!--i18n:server_settings.text.ylu_file-->{{ i18n_t('server_settings.text.ylu_file') }}</label>
           <input id="media-file" name="file" type="file" accept="image/*" required />
         </div>
 
         <div class="field" id="media-emoji-field">
-          <label>Соответствующее эмодзи *</label>
-          <div class="media-emoji-input-wrap"><svg class="ah-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 10h.01M15.5 10h.01M8.5 14.5c1.7 1.4 5.3 1.4 7 0"/></svg><input name="emoji" placeholder="Нажмите, чтобы выбрать" /></div>
+          <label><!--i18n:server_settings.text.the_appropriate_emoji-->{{ i18n_t('server_settings.text.the_appropriate_emoji') }}</label>
+          <div class="media-emoji-input-wrap"><svg class="ah-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 10h.01M15.5 10h.01M8.5 14.5c1.7 1.4 5.3 1.4 7 0"/></svg><input name="emoji" placeholder="{{ i18n_t('server_settings.placeholder.click_to_choose') }}" data-i18n-placeholder="server_settings.placeholder.click_to_choose" /></div>
         </div>
 
         <div class="field">
-          <label id="media-name-label">Название *</label>
+          <label id="media-name-label"><!--i18n:server_settings.text.an_name-->{{ i18n_t('server_settings.text.an_name') }}</label>
           <input id="media-name" name="name" required placeholder="cat_hug" maxlength="48" />
         </div>
 
         <div class="field" id="media-description-field">
-          <label>Описание</label>
-          <textarea name="description" placeholder="В нашем справочном центре вы найдёте советы по созданию описаний для стикеров."></textarea>
-          <p class="hint">Описание необязательно, но помогает пользователям понять стикер.</p>
+          <label><!--i18n:server.fields.description-->{{ i18n_t('server.fields.description') }}</label>
+          <textarea name="description" placeholder="{{ i18n_t('server_settings.sticker.description_placeholder') }}"></textarea>
+          <p class="hint"><!--i18n:server_settings.text.nubitics_is_not_necessary_but_helps_users_understand_the_sticker-->{{ i18n_t('server_settings.text.nubitics_is_not_necessary_but_helps_users_understand_the_sticker') }}</p>
         </div>
       </div>
 
       <div class="upload-foot">
-        <button type="button" class="gray-btn" onclick="closeMediaUpload()">Не, проехали</button>
-        <button class="blue-btn" type="submit">Загрузить</button>
+        <button type="button" class="gray-btn" onclick="closeMediaUpload()"><!--i18n:server_settings.action.nug_let_s_pass-->{{ i18n_t('server_settings.action.nug_let_s_pass') }}</button>
+        <button class="blue-btn" type="submit"><!--i18n:server_settings.action.download_load-->{{ i18n_t('server_settings.action.download_load') }}</button>
       </div>
     </form>
   </div>
 
-  <div id="toast" class="toast">Готово</div>
+  <div id="toast" class="toast"><!--i18n:server_settings.text.ynethe_utterly-->{{ i18n_t('server_settings.text.ynethe_utterly') }}</div>
 
   <script>
     const SERVER_ID = {{ server.id }};
@@ -1865,8 +1866,8 @@
       activeMemberButton = button;
       button.classList.add('active');
 
-      const items = [memberMenuButton('profile', 'Профіль')];
-      if (!member.isSelf) items.push(memberMenuButton('message', 'Написати повідомлення'));
+      const items = [memberMenuButton('profile', window.AlexiHubI18n.t("settings.profile"))];
+      if (!member.isSelf) items.push(memberMenuButton('message', window.AlexiHubI18n.t("privacy.blocking.message")));
 
       const canModerate = !member.isOwner && !member.isSelf && (
         VIEWER_IS_OWNER || (VIEWER_ROLE === 'admin' && member.role === 'member')
@@ -1875,18 +1876,18 @@
         items.push('<div class="menu-separator"></div>');
         if (VIEWER_IS_OWNER) {
           const nextRole = member.role === 'admin' ? 'member' : 'admin';
-          const roleLabel = member.role === 'admin' ? 'Зняти адміністратора' : 'Зробити адміністратором';
+          const roleLabel = member.role === 'admin' ? window.AlexiHubI18n.t("server_settings.text.ol_remove_the_administrator") : window.AlexiHubI18n.t("server_settings.text.make_the_administrator");
           items.push(memberMenuButton(`set_role:${nextRole}`, roleLabel));
         }
-        items.push(memberMenuButton('kick', `Вигнати ${escapeHtml(member.username)}`, 'danger'));
-        items.push(memberMenuButton('ban', `Забанити ${escapeHtml(member.username)}`, 'danger'));
+        items.push(memberMenuButton('kick', window.AlexiHubI18n.t("server_settings.text.wignati", {p0:(escapeHtml(member.username))}), 'danger'));
+        items.push(memberMenuButton('ban', window.AlexiHubI18n.t("server_settings.text.zabaniti", {p0:(escapeHtml(member.username))}), 'danger'));
         if (VIEWER_IS_OWNER) {
           items.push('<div class="menu-separator"></div>');
-          items.push(memberMenuButton('transfer_ownership', 'Передати права на сервер', 'danger'));
+          items.push(memberMenuButton('transfer_ownership', window.AlexiHubI18n.t("server_settings.text.transfer_rights_to_the_server"), 'danger'));
         }
       }
       items.push('<div class="menu-separator"></div>');
-      items.push(memberMenuButton('copy_id', 'Копіювати ID користувача', '', '<span class="id-badge">ID</span>'));
+      items.push(memberMenuButton('copy_id', window.AlexiHubI18n.t("server_settings.text.copy_id_user"), '', '<span class="id-badge">ID</span>'));
       menu.innerHTML = items.join('');
       menu.querySelectorAll('[data-member-action]').forEach(item => item.addEventListener('click', () => {
         const command = item.dataset.memberAction || '';
@@ -1923,7 +1924,7 @@
         document.execCommand('copy');
         input.remove();
       }
-      showToast('ID користувача скопійовано');
+      showToast(window.AlexiHubI18n.t("common.message.uss_id_copied"));
     }
 
     function requestMemberAction(action, member, extra = {}) {
@@ -1933,17 +1934,17 @@
         return;
       }
       const titles = {
-        kick: `Вигнати ${member.username}?`,
-        ban: `Забанити ${member.username}?`,
-        transfer_ownership: 'Передати права на сервер?',
+        kick: window.AlexiHubI18n.t("server_settings.text.the_vignati_zxq0xz", {p0:(member.username)}),
+        ban: window.AlexiHubI18n.t("server_settings.text.bandy", {p0:(member.username)}),
+        transfer_ownership: window.AlexiHubI18n.t("server_settings.text.transfer_rights_to_the_server_f740e8d"),
       };
       const texts = {
-        kick: 'Користувача буде видалено із сервера. Повернутися він зможе лише за новим запрошенням.',
-        ban: 'Користувача буде видалено та заблоковано. Старі запрошення більше не спрацюють.',
-        transfer_ownership: `Після підтвердження ${member.username} стане новим власником сервера, а ти залишишся адміністратором.`,
+        kick: window.AlexiHubI18n.t("server_settings.text.the_user_will_be_removed_from_the_server_bely_he"),
+        ban: window.AlexiHubI18n.t("server_settings.text.the_user_will_be_deleted_and_blocked_overd_star_invitations"),
+        transfer_ownership: window.AlexiHubI18n.t("server_settings.text.after_confirmation_will_become_the_new_server_owner_and_you", {p0:(member.username)}),
       };
       pendingModeration = {action, member, extra};
-      document.getElementById('moderation-confirm-title').textContent = titles[action] || 'Підтвердити дію';
+      document.getElementById('moderation-confirm-title').textContent = titles[action] || window.AlexiHubI18n.t("server_settings.title.aveody_the_action");
       document.getElementById('moderation-confirm-text').textContent = texts[action] || '';
       const reason = document.getElementById('moderation-reason');
       reason.value = '';
@@ -1970,22 +1971,22 @@
         const data = await response.json().catch(() => ({}));
         if (!response.ok || !data.ok) {
           const labels = {
-            forbidden: 'Недостатньо прав для цієї дії', owner_only: 'Це може зробити лише власник',
-            member_not_found: 'Учасника вже немає на сервері', ban_not_found: 'Бан уже знято',
-            owner_role_locked: 'Роль власника не можна змінити', invalid_role: 'Невідома роль',
+            forbidden: window.AlexiHubI18n.t("server_settings.text.not_rights_for_this_action"), owner_only: window.AlexiHubI18n.t("server_settings.text.only_the_owner_can_do_this"),
+            member_not_found: window.AlexiHubI18n.t("server_settings.text.the_participant_is_no_longer_on_the_server"), ban_not_found: window.AlexiHubI18n.t("server_settings.text.bison_ban_is_already_renofed"),
+            owner_role_locked: window.AlexiHubI18n.t("server_settings.text.the_role_of_the_owner_can_not_be_changed"), invalid_role: window.AlexiHubI18n.t("server_settings.text.an_unknown_role"),
           };
-          showToast(labels[data.error] || 'Не вдалося виконати дію');
+          showToast(labels[data.error] || window.AlexiHubI18n.t("privacy.blocking.actionError"));
           return;
         }
         const success = {
-          set_role: 'Роль учасника оновлено', kick: 'Учасника вигнано', ban: 'Учасника забанено',
-          unban: 'Користувача розбанено', transfer_ownership: 'Власність сервера передано',
+          set_role: window.AlexiHubI18n.t("server_settings.text.the_role_of_the_participant_is_monalized"), kick: window.AlexiHubI18n.t("server_settings.text.a_vengnano_participant"), ban: window.AlexiHubI18n.t("server_settings.text.a_member_of_the_part_was_banned"),
+          unban: window.AlexiHubI18n.t("server_settings.text.bulned_by_the_user"), transfer_ownership: window.AlexiHubI18n.t("server_settings.text.uoffer_of_the_server_transferred"),
         };
-        showToast(success[action] || 'Готово');
+        showToast(success[action] || window.AlexiHubI18n.t("server_settings.text.ynethe_utterly"));
         location.hash = action === 'unban' ? 'bans' : 'members';
         setTimeout(() => location.reload(), 450);
       } catch (error) {
-        showToast('Помилка з’єднання із сервером');
+        showToast(window.AlexiHubI18n.t("server_settings.message.attt_the_server_connection_error"));
       }
     }
 
@@ -2018,7 +2019,7 @@
     document.getElementById('member-search')?.addEventListener('input', applyMemberFilters);
     document.getElementById('member-sort')?.addEventListener('click', event => {
       memberSortMode = memberSortMode === 'role' ? 'name' : memberSortMode === 'name' ? 'joined' : 'role';
-      event.currentTarget.textContent = memberSortMode === 'name' ? 'А–Я Ім’я' : memberSortMode === 'joined' ? 'Нові спочатку' : 'За роллю';
+      event.currentTarget.textContent = memberSortMode === 'name' ? window.AlexiHubI18n.t("server_settings.text.a_i_m_the_name") : memberSortMode === 'joined' ? window.AlexiHubI18n.t("server_settings.text.new_first") : window.AlexiHubI18n.t("server_settings.text.the_roll");
       applyMemberFilters();
     });
     document.getElementById('member-clear')?.addEventListener('click', () => {
@@ -2026,7 +2027,7 @@
       if (search) search.value = '';
       memberSortMode = 'role';
       const sort = document.getElementById('member-sort');
-      if (sort) sort.textContent = '⇅ Сортувати';
+      if (sort) sort.textContent = window.AlexiHubI18n.t("server_settings.action.spartumti");
       applyMemberFilters();
     });
     document.getElementById('moderation-confirm-accept')?.addEventListener('click', () => {
@@ -2081,7 +2082,7 @@
       serverImageBannerImg.src = hasImage ? url : '';
       serverImageBannerEmpty.hidden = hasImage;
       if (serverImageBannerRemove) serverImageBannerRemove.hidden = !hasImage;
-      if (serverImageBannerUpload) serverImageBannerUpload.textContent = hasImage ? 'Змінити баннер' : 'Завантажити баннер';
+      if (serverImageBannerUpload) serverImageBannerUpload.textContent = hasImage ? window.AlexiHubI18n.t("server_settings.text.change_the_banner") : window.AlexiHubI18n.t("server_settings.text.bank_banner");
     }
 
     async function uploadServerImageBanner() {
@@ -2089,14 +2090,14 @@
       if (!file) return;
       if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type) || file.size > 5 * 1024 * 1024) {
         serverImageBannerFile.value = '';
-        showToast('Потрібен JPG, PNG, WebP або GIF до 5 МБ');
+        showToast(window.AlexiHubI18n.t("server_settings.message.need_jpg_png_webp_or_gif_up_to_5_mb"));
         return;
       }
 
       const localUrl = URL.createObjectURL(file);
       setServerImageBannerPreview(localUrl);
       serverImageBannerUpload.disabled = true;
-      serverImageBannerUpload.textContent = 'Завантаження...';
+      serverImageBannerUpload.textContent = window.AlexiHubI18n.t("server_settings.label.bulk");
 
       const formData = new FormData();
       formData.append('file', file);
@@ -2108,14 +2109,14 @@
         removeServerImageBanner.value = '0';
         setServerImageBannerPreview(data.url);
         markDirty();
-        showToast('Баннер завантажено — збережіть зміни');
+        showToast(window.AlexiHubI18n.t("server_settings.message.banne_bunker_loaded_save_changes"));
       } catch (error) {
         setServerImageBannerPreview(serverImageBannerUrl?.value || initialState.serverImageBanner);
-        showToast('Не вдалося завантажити баннер');
+        showToast(window.AlexiHubI18n.t("server_settings.message.up_not_to_download_the_banner"));
       } finally {
         URL.revokeObjectURL(localUrl);
         serverImageBannerUpload.disabled = false;
-        serverImageBannerUpload.textContent = serverImageBannerUrl?.value ? 'Змінити баннер' : 'Завантажити баннер';
+        serverImageBannerUpload.textContent = serverImageBannerUrl?.value ? window.AlexiHubI18n.t("server_settings.text.change_the_banner") : window.AlexiHubI18n.t("server_settings.text.bank_banner");
         serverImageBannerFile.value = '';
       }
     }
@@ -2154,12 +2155,12 @@
       if (removeServerImageBanner) removeServerImageBanner.value = '0';
       if (serverImageBannerFile) serverImageBannerFile.value = '';
       if (previewName) previewName.textContent = initialState.name || 'Server';
-      if (previewDesc) previewDesc.textContent = initialState.desc || 'Опис сервера буде показаний тут.';
+      if (previewDesc) previewDesc.textContent = initialState.desc || window.AlexiHubI18n.t("server_settings.text.the_server_descriptions_will_be_reading_here");
       setBanner(initialState.banner);
       setIconPreview(initialState.icon);
       setServerImageBannerPreview(initialState.serverImageBanner);
       hideDirty();
-      showToast('Зміни скасовано');
+      showToast(window.AlexiHubI18n.t("server_settings.message.dated_changes_cancelled"));
     }
 
     function normalizeAccessState(value) {
@@ -2210,26 +2211,15 @@
 
     function renderAccessLists() {
       if (accessRulesList) {
-        accessRulesList.innerHTML = accessDraft.rules.map((rule, index) => `
-          <div class="access-list-row">
-            <input data-access-rule-index="${index}" maxlength="200" value="${escapeHtml(rule)}" placeholder="Введите правило" aria-label="Правило ${index + 1}" />
-            <button class="access-remove" type="button" data-remove-access-rule="${index}" aria-label="Удалить правило">${accessRemoveIcon()}</button>
-          </div>
-        `).join('');
+        accessRulesList.innerHTML = accessDraft.rules.map((rule, index) => ('' + "\n          <div class=\"access-list-row\">\n            <input data-access-rule-index=\"" + String((index)) + "\" maxlength=\"200\" value=\"" + String((escapeHtml(rule))) + "\" placeholder=\"" + window.AlexiHubI18n.t("server_settings.placeholder.enter_the_rule") + "\" aria-label=\"" + window.AlexiHubI18n.t("server_settings.aria.yunctured", {p2:(index + 1)}) + "\" />\n            <button class=\"access-remove\" type=\"button\" data-remove-access-rule=\"" + String((index)) + "\" aria-label=\"" + window.AlexiHubI18n.t("server_settings.aria.delete_the_rule") + "\">" + String((accessRemoveIcon())) + "</button>\n          </div>\n        ")).join('');
       }
       const rulesCount = document.getElementById('access-rules-count');
-      if (rulesCount) rulesCount.textContent = `(${accessDraft.rules.length}/10)`;
+      if (rulesCount) rulesCount.textContent = window.AlexiHubI18n.t("server_settings.label.10", {p0:(accessDraft.rules.length)});
       const addRule = document.getElementById('access-add-rule');
       if (addRule) addRule.disabled = accessDraft.rules.length >= 10;
 
       if (accessQuestionsList) {
-        accessQuestionsList.innerHTML = accessDraft.questions.map((question, index) => `
-          <div class="access-question-row">
-            <input data-access-question-index="${index}" maxlength="200" value="${escapeHtml(question.text)}" placeholder="Введите вопрос" aria-label="Вопрос ${index + 1}" />
-            <span class="access-question-type">Короткий ответ</span>
-            <button class="access-remove" type="button" data-remove-access-question="${index}" aria-label="Удалить вопрос">${accessRemoveIcon()}</button>
-          </div>
-        `).join('');
+        accessQuestionsList.innerHTML = accessDraft.questions.map((question, index) => ('' + "\n          <div class=\"access-question-row\">\n            <input data-access-question-index=\"" + String((index)) + "\" maxlength=\"200\" value=\"" + String((escapeHtml(question.text))) + "\" placeholder=\"" + window.AlexiHubI18n.t("server_settings.placeholder.enter_the_question") + "\" aria-label=\"" + window.AlexiHubI18n.t("server_settings.aria.a_question", {p2:(index + 1)}) + "\" />\n            <span class=\"access-question-type\">" + window.AlexiHubI18n.t("server_settings.text.a_short_answer") + "</span>\n            <button class=\"access-remove\" type=\"button\" data-remove-access-question=\"" + String((index)) + "\" aria-label=\"" + window.AlexiHubI18n.t("server_settings.aria.delete_the_question") + "\">" + String((accessRemoveIcon())) + "</button>\n          </div>\n        ")).join('');
       }
       const questionsCount = document.getElementById('access-questions-count');
       if (questionsCount) questionsCount.textContent = String(accessDraft.questions.length);
@@ -2274,7 +2264,7 @@
     document.querySelectorAll('[data-access-mode]').forEach(card => {
       card.addEventListener('click', () => {
         if (card.dataset.accessMode === 'public' && card.dataset.publicLocked === '1') {
-          showToast(`Публічний доступ відкривається від ${PUBLIC_SERVER_REQUIRED_BOOSTS} бустів`);
+          showToast(window.AlexiHubI18n.t("server_settings.message.public_access_opens_from_busts", {p0:(PUBLIC_SERVER_REQUIRED_BOOSTS)}));
           return;
         }
         accessDraft.mode = card.dataset.accessMode;
@@ -2339,13 +2329,13 @@
     document.getElementById('access-reset')?.addEventListener('click', () => {
       accessDraft = cloneAccessState(accessSavedState);
       renderAccessSettings();
-      showToast('Изменения сброшены');
+      showToast(window.AlexiHubI18n.t("server_settings.message.changes_are_dropped"));
     });
 
     document.getElementById('access-save')?.addEventListener('click', async event => {
       const button = event.currentTarget;
       button.disabled = true;
-      button.textContent = 'Сохранение...';
+      button.textContent = window.AlexiHubI18n.t("server_settings.label.saving");
       try {
         const response = await fetch(`/community/api/servers/${SERVER_ID}/access`, {
           method: 'POST',
@@ -2358,14 +2348,14 @@
         accessSavedState = normalizeAccessState(data.access);
         accessDraft = cloneAccessState(accessSavedState);
         renderAccessSettings();
-        showToast('Настройки доступа сохранены');
+        showToast(window.AlexiHubI18n.t("server_settings.message.access_settings_saved"));
       } catch (error) {
         showToast(error?.message === 'boosts_required'
-          ? `Потрібно щонайменше ${PUBLIC_SERVER_REQUIRED_BOOSTS} бустів`
-          : 'Не вдалося зберегти налаштування');
+          ? window.AlexiHubI18n.t("server_settings.message.requires_at_least_busts", {p0:(PUBLIC_SERVER_REQUIRED_BOOSTS)})
+          : window.AlexiHubI18n.t("server_settings.message.usable_to_save_the_settings"));
       } finally {
         button.disabled = false;
-        button.textContent = 'Сохранить изменения';
+        button.textContent = window.AlexiHubI18n.t("server_settings.action.save_changes");
       }
     });
 
@@ -2385,13 +2375,13 @@
         const status = card?.querySelector('.access-status');
         if (status) {
           status.className = `access-status ${data.status}`;
-          status.textContent = data.status === 'accepted' ? 'Принята' : 'Отклонена';
+          status.textContent = data.status === 'accepted' ? window.AlexiHubI18n.t("server_settings.text.accepted") : window.AlexiHubI18n.t("server_settings.text.rejected");
         }
         card?.querySelector('.access-review-actions')?.remove();
-        showToast(data.status === 'accepted' ? 'Пользователь добавлен на сервер' : 'Заявка отклонена');
+        showToast(data.status === 'accepted' ? window.AlexiHubI18n.t("server_settings.message.the_user_added_to_the_server") : window.AlexiHubI18n.t("common.message.application_rejected"));
       } catch (error) {
         buttons.forEach(item => { item.disabled = false; });
-        showToast('Не удалось обработать заявку');
+        showToast(window.AlexiHubI18n.t("common.message.nergotially_managed_to_process_the_application"));
       }
     }
 
@@ -2462,8 +2452,8 @@
     }
 
     function renderOnboardingPreview() {
-      const title = onboardingDraft.welcome_title.trim() || `Ласкаво просимо до ${SERVER_NAME}`;
-      const text = onboardingDraft.welcome_text.trim() || 'Оберіть свої інтереси та виконайте перші кроки.';
+      const title = onboardingDraft.welcome_title.trim() || window.AlexiHubI18n.t("server_settings.text.laskavo_is_requested_to", {p0:(SERVER_NAME)});
+      const text = onboardingDraft.welcome_text.trim() || window.AlexiHubI18n.t("onboarding.welcome.default_message");
       const titleNode = document.getElementById('onboarding-preview-title');
       const textNode = document.getElementById('onboarding-preview-text');
       if (titleNode) titleNode.textContent = title;
@@ -2481,29 +2471,14 @@
 
       if (onboardingQuestionsList) {
         onboardingQuestionsList.innerHTML = onboardingDraft.questions.length
-          ? onboardingDraft.questions.map((question, index) => `
-            <div class="onboarding-editor-row">
-              <div>
-                <input class="onboarding-input" data-onboarding-question-text="${index}" maxlength="160" value="${escapeHtml(question.text)}" placeholder="Що вам цікаво?" aria-label="Запитання ${index + 1}" />
-                <input class="onboarding-input" style="margin-top:7px" data-onboarding-question-options="${index}" maxlength="390" value="${escapeHtml(question.options.map(option => option.label).join(', '))}" placeholder="Новини, Ігри, Спілкування" aria-label="Варіанти запитання ${index + 1}" />
-              </div>
-              <button class="onboarding-multiple ${question.multiple ? 'active' : ''}" type="button" data-onboarding-question-multiple="${index}">${question.multiple ? 'Кілька відповідей' : 'Одна відповідь'}</button>
-              <button class="access-remove" type="button" data-remove-onboarding-question="${index}" aria-label="Видалити запитання">${accessRemoveIcon()}</button>
-            </div>
-          `).join('')
-          : '<div class="onboarding-empty">Додайте запитання, якщо хочете запропонувати новим учасникам ролі.</div>';
+          ? onboardingDraft.questions.map((question, index) => ('' + "\n            <div class=\"onboarding-editor-row\">\n              <div>\n                <input class=\"onboarding-input\" data-onboarding-question-text=\"" + String((index)) + "\" maxlength=\"160\" value=\"" + String((escapeHtml(question.text))) + "\" placeholder=\"" + window.AlexiHubI18n.t("onboarding.interests.title") + "\" aria-label=\"" + window.AlexiHubI18n.t("server_settings.aria.questions", {p2:(index + 1)}) + "\" />\n                <input class=\"onboarding-input\" style=\"margin-top:7px\" data-onboarding-question-options=\"" + String((index)) + "\" maxlength=\"390\" value=\"" + String((escapeHtml(question.options.map(option => option.label).join(', ')))) + "\" placeholder=\"" + window.AlexiHubI18n.t("server_settings.placeholder.news_games_communication") + "\" aria-label=\"" + window.AlexiHubI18n.t("server_settings.aria.method_of_question", {p5:(index + 1)}) + "\" />\n              </div>\n              <button class=\"onboarding-multiple " + String((question.multiple ? 'active' : '')) + "\" type=\"button\" data-onboarding-question-multiple=\"" + String((index)) + "\">" + String((question.multiple ? window.AlexiHubI18n.t("server_settings.text.a_few_answers") : window.AlexiHubI18n.t("server_settings.text.one_response"))) + "</button>\n              <button class=\"access-remove\" type=\"button\" data-remove-onboarding-question=\"" + String((index)) + "\" aria-label=\"" + window.AlexiHubI18n.t("server_settings.aria.remove_questions") + "\">" + String((accessRemoveIcon())) + "</button>\n            </div>\n          ")).join('')
+          : ('' + "<div class=\"onboarding-empty\">" + window.AlexiHubI18n.t("server_settings.text.ask_if_you_want_to_offer_a_new_role") + "</div>");
       }
 
       if (onboardingStepsList) {
         onboardingStepsList.innerHTML = onboardingDraft.steps.length
-          ? onboardingDraft.steps.map((step, index) => `
-            <div class="onboarding-editor-row step">
-              <input class="onboarding-input" data-onboarding-step-title="${index}" maxlength="80" value="${escapeHtml(step.title)}" placeholder="Прочитайте правила" aria-label="Назва кроку ${index + 1}" />
-              <input class="onboarding-input" data-onboarding-step-description="${index}" maxlength="180" value="${escapeHtml(step.description)}" placeholder="Коротке пояснення, необов’язково" aria-label="Опис кроку ${index + 1}" />
-              <button class="access-remove" type="button" data-remove-onboarding-step="${index}" aria-label="Видалити крок">${accessRemoveIcon()}</button>
-            </div>
-          `).join('')
-          : '<div class="onboarding-empty">Додайте перший крок, щоб новачок не загубився на сервері.</div>';
+          ? onboardingDraft.steps.map((step, index) => ('' + "\n            <div class=\"onboarding-editor-row step\">\n              <input class=\"onboarding-input\" data-onboarding-step-title=\"" + String((index)) + "\" maxlength=\"80\" value=\"" + String((escapeHtml(step.title))) + "\" placeholder=\"" + window.AlexiHubI18n.t("server_settings.placeholder.read_the_rules") + "\" aria-label=\"" + window.AlexiHubI18n.t("server_settings.aria.name_crqurah", {p2:(index + 1)}) + "\" />\n              <input class=\"onboarding-input\" data-onboarding-step-description=\"" + String((index)) + "\" maxlength=\"180\" value=\"" + String((escapeHtml(step.description))) + "\" placeholder=\"" + window.AlexiHubI18n.t("server_settings.placeholder.aided_in_short_notion") + "\" aria-label=\"" + window.AlexiHubI18n.t("server_settings.aria.cum_creture_descriptions", {p5:(index + 1)}) + "\" />\n              <button class=\"access-remove\" type=\"button\" data-remove-onboarding-step=\"" + String((index)) + "\" aria-label=\"" + window.AlexiHubI18n.t("server_settings.aria.vidaliiti_croc") + "\">" + String((accessRemoveIcon())) + "</button>\n            </div>\n          ")).join('')
+          : ('' + "<div class=\"onboarding-empty\">" + window.AlexiHubI18n.t("server_settings.text.add_the_first_step_so_that_the_newcomer_is_not") + "</div>");
       }
 
       const addQuestion = document.getElementById('onboarding-add-question');
@@ -2519,7 +2494,7 @@
       if (!onboardingDraft.community_enabled) onboardingDraft.onboarding_enabled = false;
       renderOnboardingEditors();
       switchTab('adaptation');
-      showToast(onboardingDraft.community_enabled ? 'Спільноту ввімкнено — налаштуйте та збережіть' : 'Спільноту вимкнено — збережіть зміни');
+      showToast(onboardingDraft.community_enabled ? window.AlexiHubI18n.t("server_settings.message.uilp_and_save_the_community") : window.AlexiHubI18n.t("server_settings.message.off_the_community_save_the_changes"));
     });
 
     document.getElementById('open-onboarding-settings')?.addEventListener('click', () => switchTab('adaptation'));
@@ -2547,7 +2522,7 @@
       onboardingDraft.questions.push({
         text: '',
         multiple: false,
-        options: [{label: 'Новини', role: 'Новини'}, {label: 'Спілкування', role: 'Спілкування'}],
+        options: [{label: window.AlexiHubI18n.t("server_settings.text.novini"), role: window.AlexiHubI18n.t("server_settings.text.novini")}, {label: window.AlexiHubI18n.t("server_settings.text.lizing"), role: window.AlexiHubI18n.t("server_settings.text.lizing")}],
       });
       renderOnboardingEditors();
       requestAnimationFrame(() => onboardingQuestionsList?.querySelector(`[data-onboarding-question-text="${onboardingDraft.questions.length - 1}"]`)?.focus());
@@ -2612,13 +2587,13 @@
     document.getElementById('onboarding-reset')?.addEventListener('click', () => {
       onboardingDraft = cloneOnboardingState(onboardingSavedState);
       renderOnboardingEditors();
-      showToast('Зміни скинуто');
+      showToast(window.AlexiHubI18n.t("server_settings.message.dislapsed_changes"));
     });
 
     document.getElementById('onboarding-save')?.addEventListener('click', async event => {
       const button = event.currentTarget;
       button.disabled = true;
-      button.textContent = 'Збереження...';
+      button.textContent = window.AlexiHubI18n.t("server_settings.label.saving");
       try {
         const response = await fetch(`/community/api/servers/${SERVER_ID}/onboarding`, {
           method: 'POST',
@@ -2631,12 +2606,12 @@
         onboardingSavedState = normalizeOnboardingState(data.onboarding);
         onboardingDraft = cloneOnboardingState(onboardingSavedState);
         renderOnboardingEditors();
-        showToast('Ознайомлення збережено');
+        showToast(window.AlexiHubI18n.t("server_settings.message.aveionation_is_preserved"));
       } catch (error) {
-        showToast('Не вдалося зберегти ознайомлення');
+        showToast(window.AlexiHubI18n.t("server_settings.message.could_not_keep_the_review"));
       } finally {
         button.disabled = false;
-        button.textContent = 'Зберегти зміни';
+        button.textContent = window.AlexiHubI18n.t("server_settings.action.save_changes");
       }
     });
 
@@ -2651,9 +2626,9 @@
       });
 
       if (page === 'placeholder') {
-        const title = document.querySelector(`.side-item[data-tab="${tab}"]`)?.innerText?.replace('↗', '').replace('🗑', '').trim() || 'Налаштування';
+        const title = document.querySelector(`.side-item[data-tab="${tab}"]`)?.innerText?.replace('↗', '').replace('🗑', '').trim() || window.AlexiHubI18n.t("server_settings.title.directed");
         document.getElementById('placeholder-title').textContent = title;
-        document.getElementById('placeholder-desc').textContent = 'Цей розділ поки заглушка, але меню лишається нормальним як було.';
+        document.getElementById('placeholder-desc').textContent = window.AlexiHubI18n.t("server_settings.label.this_section_is_still_plug_but_the_menu_remains_normal");
       }
 
       if (tab === 'emojis') loadEmojis();
@@ -2684,7 +2659,7 @@
     });
 
     descInput?.addEventListener('input', () => {
-      previewDesc.textContent = descInput.value || 'Опис сервера буде показаний тут.';
+      previewDesc.textContent = descInput.value || window.AlexiHubI18n.t("server_settings.text.the_server_descriptions_will_be_reading_here");
       markDirty();
     });
 
@@ -2717,7 +2692,7 @@
       const formData = new FormData();
       formData.append('file', file);
       iconBtn.disabled = true;
-      iconBtn.textContent = 'Завантаження...';
+      iconBtn.textContent = window.AlexiHubI18n.t("server_settings.label.bulk");
 
       try {
         const response = await fetch('/community/api/upload-image', { method: 'POST', body: formData });
@@ -2725,15 +2700,15 @@
         if (data && data.ok && data.url) {
           iconUrl.value = data.url;
           setIconPreview(data.url);
-          showToast('Іконку завантажено');
+          showToast(window.AlexiHubI18n.t("server_settings.message.icon_uploaded"));
         } else {
-          showToast('Не вдалося завантажити');
+          showToast(window.AlexiHubI18n.t("server_settings.message.unable_to_download"));
         }
       } catch (error) {
-        showToast('Помилка upload');
+        showToast(window.AlexiHubI18n.t("server_settings.message.a_milf_upload"));
       } finally {
         iconBtn.disabled = false;
-        iconBtn.textContent = 'Змінити значок сервера';
+        iconBtn.textContent = window.AlexiHubI18n.t("server_settings.action.alter_the_server_icon");
       }
     });
 
@@ -2743,13 +2718,13 @@
     function openMediaUpload(mode) {
       mediaMode = mode;
       document.getElementById('media-upload').classList.add('open');
-      document.getElementById('media-upload-title').textContent = mode === 'emoji' ? 'Добавить эмодзи' : 'Отправить файл';
+      document.getElementById('media-upload-title').textContent = mode === 'emoji' ? window.AlexiHubI18n.t("server_settings.text.announce_emoji") : window.AlexiHubI18n.t("common.text.send_a_file");
       document.getElementById('media-upload-desc').textContent = mode === 'emoji'
-        ? 'Допускаются APNG, JPG, PNG или GIF.'
-        : 'Допускаются файлы APNG, JPG, PNG или GIF.';
+        ? window.AlexiHubI18n.t("server_settings.text.yllowed_apng_jpg_png_or_gif")
+        : window.AlexiHubI18n.t("server_settings.text.files_apng_jpg_png_or_gif_or_gif_are_allowed");
       document.getElementById('media-emoji-field').style.display = mode === 'emoji' ? 'none' : 'grid';
       document.getElementById('media-description-field').style.display = mode === 'emoji' ? 'none' : 'grid';
-      document.getElementById('media-name-label').textContent = mode === 'emoji' ? 'Название эмодзи *' : 'Название стикера *';
+      document.getElementById('media-name-label').textContent = mode === 'emoji' ? window.AlexiHubI18n.t("server_settings.text.an_emoji_name") : window.AlexiHubI18n.t("server_settings.text.name_of_sticker");
     }
 
     function closeMediaUpload() {
@@ -2798,14 +2773,14 @@
         });
         const data = await response.json();
         if (!data.ok) {
-          showToast(data.error || data.message || 'Помилка');
+          showToast(data.error || data.message || window.AlexiHubI18n.t("server_settings.message.error"));
           return;
         }
         closeMediaUpload();
-        showToast('Загружено');
+        showToast(window.AlexiHubI18n.t("server_settings.message.mbuded"));
         mediaMode === 'emoji' ? loadEmojis() : loadStickers();
       } catch (error) {
-        showToast('Помилка upload');
+        showToast(window.AlexiHubI18n.t("server_settings.message.a_milf_upload"));
       }
     });
 
@@ -2817,18 +2792,9 @@
         const data = await response.json();
         const emojis = data.emojis || [];
         empty.style.display = emojis.length ? 'none' : 'grid';
-        list.innerHTML = emojis.map(emoji => `
-          <div class="media-card">
-            <div class="media-thumb" style="background-image:url('${escapeHtml(emoji.image_url)}')"></div>
-            <div class="media-card-main">
-              <div class="media-card-name">:${escapeHtml(emoji.name)}:</div>
-              <div class="media-card-meta">ID ${escapeHtml(emoji.id)}</div>
-            </div>
-            <button class="gray-btn" type="button" onclick="deleteEmoji(${Number(emoji.id)})">Удалить</button>
-          </div>
-        `).join('');
+        list.innerHTML = emojis.map(emoji => ('' + "\n          <div class=\"media-card\">\n            <div class=\"media-thumb\" style=\"background-image:url('" + String((escapeHtml(emoji.image_url))) + "')\"></div>\n            <div class=\"media-card-main\">\n              <div class=\"media-card-name\">:" + String((escapeHtml(emoji.name))) + ":</div>\n              <div class=\"media-card-meta\">" + window.AlexiHubI18n.t("server_settings.text.id", {p2:(escapeHtml(emoji.id))}) + "</div>\n            </div>\n            <button class=\"gray-btn\" type=\"button\" onclick=\"deleteEmoji(" + String((Number(emoji.id))) + ")\">" + window.AlexiHubI18n.t("common.action.delete") + "</button>\n          </div>\n        ")).join('');
       } catch (error) {
-        showToast('Не удалось загрузить эмодзи');
+        showToast(window.AlexiHubI18n.t("server_settings.message.ner_emojis_could_not_be_loaded"));
       }
     }
 
@@ -2848,18 +2814,9 @@
             : '<div class="sticker-slot"><svg class="empty-sticker-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l5 5v10a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3z"/><path d="M15 3v5h5"/><path d="M8 13h.01M14 13h.01M8.5 16c1.7 1.2 4.3 1.2 6 0"/></svg></div>');
         }
 
-        list.innerHTML = stickers.map(sticker => `
-          <div class="media-card">
-            <div class="media-thumb" style="background-image:url('${escapeHtml(sticker.image_url)}')"></div>
-            <div class="media-card-main">
-              <div class="media-card-name">${escapeHtml(sticker.name)}</div>
-              <div class="media-card-meta">${escapeHtml(sticker.emoji || '')} ${escapeHtml(sticker.description || '')}</div>
-            </div>
-            <button class="gray-btn" type="button" onclick="deleteSticker(${Number(sticker.id)})">Удалить</button>
-          </div>
-        `).join('');
+        list.innerHTML = stickers.map(sticker => ('' + "\n          <div class=\"media-card\">\n            <div class=\"media-thumb\" style=\"background-image:url('" + String((escapeHtml(sticker.image_url))) + "')\"></div>\n            <div class=\"media-card-main\">\n              <div class=\"media-card-name\">" + String((escapeHtml(sticker.name))) + "</div>\n              <div class=\"media-card-meta\">" + String((escapeHtml(sticker.emoji || ''))) + " " + String((escapeHtml(sticker.description || ''))) + "</div>\n            </div>\n            <button class=\"gray-btn\" type=\"button\" onclick=\"deleteSticker(" + String((Number(sticker.id))) + ")\">" + window.AlexiHubI18n.t("common.action.delete") + "</button>\n          </div>\n        ")).join('');
       } catch (error) {
-        showToast('Не удалось загрузить стикеры');
+        showToast(window.AlexiHubI18n.t("server_settings.message.not_able_to_load_the_stickers"));
       }
     }
 
@@ -2884,8 +2841,8 @@
       const add = document.getElementById('settings-add-boost');
       const remove = document.getElementById('settings-remove-boost');
       if (total) total.textContent = String(status.total_boosts || 0);
-      if (label) label.textContent = `${status.level || 0}-й уровень сервера`;
-      if (progress) progress.style.width = `${status.progress_percent || 0}%`;
+      if (label) label.textContent = window.AlexiHubI18n.t("server_settings.label.server_level", {p0:(status.level || 0)});
+      if (progress) progress.style.width = window.AlexiHubI18n.t("common.text.text_6c727a3", {p0:(status.progress_percent || 0)});
       if (add) add.disabled = Number(status.viewer?.remaining || 0) < 1;
       if (remove) remove.hidden = Number(status.viewer?.allocated_here || 0) < 1;
       document.querySelectorAll('.boost-level-card').forEach((card, index) => {
@@ -2893,7 +2850,7 @@
         const active = Number(status.total_boosts || 0) >= required;
         card.classList.toggle('active', active);
         const foot = card.querySelector('.boost-level-foot');
-        if (foot) foot.textContent = `◇ ${required} буст${required === 2 ? 'а' : 'ов'} · ${active ? 'Активировано' : 'Неактивно'}`;
+        if (foot) foot.textContent = window.AlexiHubI18n.t("server_settings.boost.requirement_status", {count:required,status:window.AlexiHubI18n.t(active ? "server_settings.boost.active" : "server_settings.boost.inactive")});
       });
       const activity = document.getElementById('settings-boost-activity');
       if (activity) {
@@ -2901,7 +2858,7 @@
           <div class="boost-activity-row">
             <span class="boost-activity-avatar" style="${item.avatar_url ? `background-image:url('${escapeHtml(item.avatar_url)}')` : ''}">${item.avatar_url ? '' : escapeHtml((item.username || '?').slice(0,1).toUpperCase())}</span>
             <strong>${escapeHtml(item.display_name || item.username)}</strong><span>◇ ${Number(item.amount || 0)}</span>
-          </div>`).join('') : '<div class="hint">Пока никто не дал серверу буст.</div>';
+          </div>`).join('') : ('' + "<div class=\"hint\">" + window.AlexiHubI18n.t("server_settings.text.nobody_has_given_the_server_a_bus") + "</div>");
       }
     }
 
@@ -2917,17 +2874,17 @@
         const data = await response.json().catch(() => ({}));
         if (!response.ok || !data.ok) {
           const messages = {
-            nitro_required: 'Для бустов нужна активная подписка Nitro',
-            no_boosts_left: 'Все доступные бусты уже распределены',
-            nothing_to_remove: 'На этом сервере нет вашего буста',
+            nitro_required: window.AlexiHubI18n.t("server_settings.text.for_the_shaving_a_needy_active_caption_nitro"),
+            no_boosts_left: window.AlexiHubI18n.t("common.text.all_available_busts_are_already_distributed"),
+            nothing_to_remove: window.AlexiHubI18n.t("common.text.nude_your_boost_on_this_server"),
           };
-          showToast(messages[data.error] || 'Не удалось изменить буст');
+          showToast(messages[data.error] || window.AlexiHubI18n.t("common.text.never_it_was_possible_to_change_the_bust"));
           return;
         }
         renderSettingsBoosts(data.status);
-        showToast(delta > 0 ? 'Сервер получил буст' : 'Буст возвращён');
+        showToast(delta > 0 ? window.AlexiHubI18n.t("common.message.the_server_received_a_bus") : window.AlexiHubI18n.t("common.message.the_booth_is_returned"));
       } catch (error) {
-        showToast('Ошибка соединения');
+        showToast(window.AlexiHubI18n.t("common.message.a_connection_error"));
       } finally {
         renderSettingsBoosts(settingsBoostStatus);
       }
@@ -2961,12 +2918,12 @@
         });
         const data = await response.json().catch(() => ({}));
         if (!response.ok || !data.ok) {
-          showToast(data.error === 'tag_locked' ? 'Нужно минимум 3 буста' : 'Тег: 2–4 латинские буквы или цифры');
+          showToast(data.error === 'tag_locked' ? window.AlexiHubI18n.t("server_settings.message.minimum_3_busts_are_needed") : window.AlexiHubI18n.t("server_settings.message.24_latin_letters_or_numbers"));
           return;
         }
-        showToast('Тег сервера сохранён');
+        showToast(window.AlexiHubI18n.t("server_settings.message.the_server_tag_is_saved"));
       } catch (error) {
-        showToast('Ошибка соединения');
+        showToast(window.AlexiHubI18n.t("common.message.a_connection_error"));
       } finally {
         event.currentTarget.disabled = false;
       }
