@@ -1,0 +1,286 @@
+<script id="alexihub-i18n-runtime">
+(function () {
+  if (window.__ahI18nV5Ready) return;
+  window.__ahI18nV5Ready = true;
+  window.__ahI18nV4Ready = true;
+  window.__ahI18nReady = true;
+
+  const SUPPORTED = ['ru', 'uk', 'en'];
+  const LOCALES = {ru: 'ru-RU', uk: 'uk-UA', en: 'en-US'};
+  const LANGUAGE_LIST = {{ i18n_languages | tojson }};
+  const META = Object.fromEntries(LANGUAGE_LIST.map(item => [item.code, {
+    ...item,
+    flagClass: 'ah-lang-flag-' + item.code
+  }]));
+  let language = normalizeLanguage({{ i18n_language | tojson }});
+  let messages = {{ i18n_messages | tojson }} || {};
+  const textMarkers = new Set();
+
+  function normalizeLanguage(value) {
+    const normalized = String(value || '').trim().toLowerCase().split('-')[0];
+    return SUPPORTED.includes(normalized) ? normalized : 'ru';
+  }
+
+  function locale() {
+    return LOCALES[language] || LOCALES.ru;
+  }
+
+  function interpolate(value, params) {
+    return String(value).replace(/\{([a-zA-Z0-9_]+)\}/g, (match, name) => (
+      Object.prototype.hasOwnProperty.call(params || {}, name) ? String(params[name]) : match
+    ));
+  }
+
+  function messageKey(key, params) {
+    if (params && Number.isFinite(Number(params.count))) {
+      const rule = new Intl.PluralRules(locale()).select(Number(params.count));
+      if (Object.prototype.hasOwnProperty.call(messages, key + '.' + rule)) return key + '.' + rule;
+      if (Object.prototype.hasOwnProperty.call(messages, key + '.other')) return key + '.other';
+    }
+    return key;
+  }
+
+  function t(key, params, fallback) {
+    const resolvedKey = messageKey(String(key || ''), params || {});
+    const value = Object.prototype.hasOwnProperty.call(messages, resolvedKey)
+      ? messages[resolvedKey]
+      : (fallback !== undefined ? fallback : key);
+    return interpolate(value, params || {});
+  }
+
+  function elementParams(element) {
+    let params = {};
+    if (element.dataset.i18nParams) {
+      try { params = JSON.parse(element.dataset.i18nParams) || {}; } catch (_) {}
+    }
+    if (element.dataset.i18nCount !== undefined) params.count = Number(element.dataset.i18nCount);
+    return params;
+  }
+
+  function replaceDirectText(element, value) {
+    const textNode = Array.from(element.childNodes).find(node => (
+      node.nodeType === Node.TEXT_NODE && node.nodeValue && node.nodeValue.trim()
+    ));
+    if (!textNode) {
+      if (element.children.length) element.insertBefore(document.createTextNode(value), element.firstChild);
+      else element.textContent = value;
+      return;
+    }
+    const leading = (textNode.nodeValue.match(/^\s*/) || [''])[0];
+    const trailing = (textNode.nodeValue.match(/\s*$/) || [''])[0];
+    textNode.nodeValue = leading + value + trailing;
+  }
+
+  function translateElement(element) {
+    const params = elementParams(element);
+    if (element.dataset.i18n) replaceDirectText(element, t(element.dataset.i18n, params));
+    const attributes = {
+      i18nPlaceholder: 'placeholder',
+      i18nTitle: 'title',
+      i18nAriaLabel: 'aria-label',
+      i18nAlt: 'alt',
+      i18nValue: 'value',
+      i18nDataTemplate: 'data-template'
+    };
+    Object.entries(attributes).forEach(([datasetName, attribute]) => {
+      const key = element.dataset[datasetName];
+      if (key) element.setAttribute(attribute, t(key, params));
+    });
+  }
+
+  function registerMarker(comment) {
+    if (!comment || comment.nodeType !== Node.COMMENT_NODE) return;
+    const raw = String(comment.nodeValue || '').trim();
+    if (!raw.startsWith('i18n:')) return;
+    textMarkers.add(comment);
+    const key = raw.slice(5).trim();
+    const target = comment.nextSibling;
+    if (key && target && target.nodeType === Node.TEXT_NODE) target.nodeValue = t(key);
+  }
+
+  function apply(root) {
+    const scope = root && root.nodeType ? root : document;
+    if (scope.nodeType === Node.ELEMENT_NODE && scope.matches('[data-i18n],[data-i18n-placeholder],[data-i18n-title],[data-i18n-aria-label],[data-i18n-alt],[data-i18n-value],[data-i18n-data-template]')) {
+      translateElement(scope);
+    }
+    if (scope.querySelectorAll) {
+      scope.querySelectorAll('[data-i18n],[data-i18n-placeholder],[data-i18n-title],[data-i18n-aria-label],[data-i18n-alt],[data-i18n-value],[data-i18n-data-template]').forEach(translateElement);
+    }
+    const walker = document.createTreeWalker(scope, NodeFilter.SHOW_COMMENT);
+    while (walker.nextNode()) registerMarker(walker.currentNode);
+  }
+
+  function reapply() {
+    document.documentElement.lang = language;
+    window.__AH_TRANSLATIONS = messages;
+    apply(document);
+    textMarkers.forEach(comment => {
+      if (!comment.isConnected) {
+        textMarkers.delete(comment);
+        return;
+      }
+      registerMarker(comment);
+    });
+  }
+
+  function persistCache() {
+    try { localStorage.setItem('alexihub_language', language); } catch (_) {}
+    try {
+      document.cookie = 'alexihub_language=' + encodeURIComponent(language)
+        + '; Max-Age=31536000; Path=/; SameSite=Lax';
+    } catch (_) {}
+  }
+
+  function setFlag(element, lang) {
+    if (!element) return;
+    element.textContent = '';
+    element.className = 'ah-lang-flag ' + (META[lang]?.flagClass || META.ru.flagClass);
+  }
+
+  function updateLanguageControls() {
+    document.documentElement.lang = language;
+    document.querySelectorAll('.ah-language-settings').forEach(box => { box.dataset.currentLanguage = language; });
+    const meta = META[language] || META.ru;
+    setFlag(document.getElementById('ah-language-current-flag'), language);
+    const name = document.getElementById('ah-language-current-name');
+    if (name) name.textContent = meta.name;
+    const nativeName = document.getElementById('ah-language-current-native');
+    if (nativeName) nativeName.textContent = meta.native;
+    document.querySelectorAll('.ah-language-option[data-language]').forEach(option => {
+      const optionLanguage = normalizeLanguage(option.dataset.language);
+      let flag = option.querySelector('.ah-lang-flag,.flag');
+      if (!flag) {
+        flag = document.createElement('span');
+        option.insertBefore(flag, option.firstChild);
+      }
+      setFlag(flag, optionLanguage);
+      const active = optionLanguage === language;
+      option.classList.toggle('active', active);
+      option.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+  }
+
+  function acceptPayload(payload, fallbackLanguage) {
+    if (!payload || !payload.ok) return false;
+    language = normalizeLanguage(payload.language || fallbackLanguage || language);
+    messages = payload.messages || {};
+    persistCache();
+    updateLanguageControls();
+    reapply();
+    document.dispatchEvent(new CustomEvent('alexihub:i18n-changed', {
+      detail: {language, locale: locale(), messages}
+    }));
+    return true;
+  }
+
+  async function load(nextLanguage) {
+    const requested = normalizeLanguage(nextLanguage || language);
+    const response = await fetch('/community/api/i18n?lang=' + encodeURIComponent(requested), {
+      credentials: 'same-origin',
+      headers: {'Accept': 'application/json'},
+      cache: 'no-store'
+    });
+    const payload = await response.json();
+    if (!response.ok || !acceptPayload(payload, requested)) throw new Error('i18n_load_failed');
+    return payload;
+  }
+
+  async function save(nextLanguage) {
+    const requested = normalizeLanguage(nextLanguage);
+    try {
+      const response = await fetch('/community/api/settings/language', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+        body: JSON.stringify({language: requested}),
+        cache: 'no-store'
+      });
+      const payload = await response.json();
+      if (!response.ok || !acceptPayload(payload, requested)) throw new Error('i18n_save_failed');
+      if (typeof window.settingsToast === 'function') window.settingsToast(t('language.saved'));
+      window.location.reload();
+      return payload;
+    } catch (error) {
+      if (typeof window.settingsToast === 'function') window.settingsToast(t('language.failed'));
+      throw error;
+    }
+  }
+
+  function applyMessages(nextMessages, root) {
+    if (nextMessages && typeof nextMessages === 'object') messages = nextMessages;
+    reapply();
+    if (root) apply(root);
+  }
+
+  function setCurrentLanguage(nextLanguage) {
+    language = normalizeLanguage(nextLanguage);
+    updateLanguageControls();
+    reapply();
+  }
+
+  function formatDate(value, options) {
+    const date = value instanceof Date ? value : new Date(value);
+    return Number.isNaN(date.getTime()) ? '' : new Intl.DateTimeFormat(locale(), options || {}).format(date);
+  }
+
+  function formatNumber(value, options) {
+    return new Intl.NumberFormat(locale(), options || {}).format(value);
+  }
+
+  const api = {
+    t,
+    load,
+    save,
+    apply: applyMessages,
+    set: setCurrentLanguage,
+    current: () => language,
+    locale,
+    formatDate,
+    formatNumber,
+    messages: () => messages
+  };
+  window.AlexiHubI18n = api;
+  window.ahT = t;
+  window.__AH_TRANSLATIONS = messages;
+  document.documentElement.lang = language;
+
+  document.addEventListener('click', event => {
+    const current = event.target.closest('#ah-language-current');
+    const select = document.getElementById('ah-language-select');
+    if (current && select) {
+      event.preventDefault();
+      event.stopPropagation();
+      const open = !select.classList.contains('open');
+      select.classList.toggle('open', open);
+      current.setAttribute('aria-expanded', open ? 'true' : 'false');
+      return;
+    }
+    const option = event.target.closest('.ah-language-option[data-language]');
+    if (option) {
+      event.preventDefault();
+      event.stopPropagation();
+      if (select) select.classList.remove('open');
+      save(option.dataset.language).catch(() => {});
+      return;
+    }
+    if (select && !event.target.closest('#ah-language-select')) select.classList.remove('open');
+  }, true);
+
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') document.getElementById('ah-language-select')?.classList.remove('open');
+  });
+
+  const start = () => {
+    updateLanguageControls();
+    reapply();
+    const observer = new MutationObserver(records => {
+      records.forEach(record => record.addedNodes.forEach(node => {
+        if (node.nodeType === Node.ELEMENT_NODE || node.nodeType === Node.COMMENT_NODE) apply(node);
+      }));
+    });
+    observer.observe(document.body, {childList: true, subtree: true});
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, {once: true});
+  else start();
+})();
+</script>
