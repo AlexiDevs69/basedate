@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.56.2",
+      "date": "2026-08-09",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance onboarding template with i18n support."
+      ],
+      "source_sha": "b6f02b1ef0ff61be2eb85ba71bfba70a7e58bf9a"
+    },
+    {
       "version": "1.56.1",
       "date": "2026-08-09",
       "title": "Виправлення та стабільність",
