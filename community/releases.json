@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.55.0",
+      "date": "2026-08-09",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: language localization and translation functions."
+      ],
+      "source_sha": "f4e3fbb210ddcae36d1a1d33d3414e92d10cc248"
+    },
+    {
       "version": "1.54.30",
       "date": "2026-08-09",
       "title": "Виправлення та стабільність",
