@@ -136,6 +136,11 @@ _LANGUAGE_META = {
     "uk": {"code": "uk", "flag": "🇺🇦", "name": "Українська", "native": "Українська"},
     "en": {"code": "en", "flag": "🇺🇸", "name": "English", "native": "English"},
 }
+_LANGUAGE_LOCALES = {
+    "ru": "ru-RU",
+    "uk": "uk-UA",
+    "en": "en-US",
+}
 _LOCALE_CACHE: dict[str, dict] = {}
 
 
@@ -168,6 +173,37 @@ def _language_response_payload(language: str | None) -> dict:
         "language": lang,
         "languages": list(_LANGUAGE_META.values()),
         "messages": _load_locale(lang),
+    }
+
+
+def _request_language(account=None, request: Request | None = None) -> str:
+    """Resolve the render language with the signed-in account as the source of truth."""
+    if account is not None:
+        return _normalize_language(getattr(account, "language", None))
+    cookie_language = request.cookies.get("alexihub_language") if request is not None else None
+    return _normalize_language(cookie_language)
+
+
+def _translate_message(messages: dict, key: str, **params) -> str:
+    value = str(messages.get(key, key))
+    for name, replacement in params.items():
+        value = value.replace("{" + name + "}", str(replacement))
+    return value
+
+
+def _template_i18n_context(account=None, request: Request | None = None) -> dict:
+    language = _request_language(account, request)
+    messages = _load_locale(language)
+
+    def translate(key: str, **params) -> str:
+        return _translate_message(messages, key, **params)
+
+    return {
+        "i18n_language": language,
+        "i18n_locale": _LANGUAGE_LOCALES[language],
+        "i18n_languages": list(_LANGUAGE_META.values()),
+        "i18n_messages": messages,
+        "i18n_t": translate,
     }
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
@@ -1452,12 +1488,12 @@ async def api_i18n(request: Request, db: AsyncSession = Depends(get_db)):
     requested_language = _normalize_language(requested_language_raw) if requested_language_raw else None
     cookie_language = _normalize_language(request.cookies.get("alexihub_language")) if request.cookies.get("alexihub_language") else None
 
-    # Якщо frontend просить конкретну мову для миттєвого свапу, віддаємо саме її.
-    # Це НЕ міняє DB. DB міняється тільки через POST /api/settings/language.
-    if requested_language:
+    # For authenticated requests, the persisted account language is authoritative.
+    # Query parameters and the cookie are only fallbacks when there is no account.
+    if account:
+        language = _normalize_language(getattr(account, "language", None))
+    elif requested_language:
         language = requested_language
-    elif account:
-        language = _normalize_language(getattr(account, "language", None) or cookie_language or DEFAULT_LANGUAGE)
     else:
         language = cookie_language or DEFAULT_LANGUAGE
 
@@ -1486,8 +1522,7 @@ async def api_settings_language(request: Request, db: AsyncSession = Depends(get
     final_language = saved_language or normalized
     response = JSONResponse(_language_response_payload(final_language))
     response.headers["Cache-Control"] = "no-store"
-    # Keep a lightweight client-side fallback too, so a refresh does not jump back
-    # if the browser opens settings before the DB value is hydrated.
+    # Mirror the persisted value in a lightweight client-side cache.
     response.set_cookie("alexihub_language", final_language, max_age=60 * 60 * 24 * 365, path="/", samesite="lax")
     return response
 
@@ -1731,6 +1766,7 @@ async def community_home(request: Request, db: AsyncSession = Depends(get_db)):
             "dm_threads": dm_threads,
             "pending_incoming": pending_incoming,
             "pending_outgoing": pending_outgoing,
+            **_template_i18n_context(account, request),
             **rail,
         },
     )
@@ -1817,6 +1853,7 @@ async def server_create_form(request: Request, db: AsyncSession = Depends(get_db
             "error": None,
             "join_error": None,
             "mode": "create",
+            **_template_i18n_context(account, request),
             **rail,
         },
     )
@@ -1840,6 +1877,7 @@ async def public_server_discovery(request: Request, db: AsyncSession = Depends(g
             "member_server_ids": member_server_ids,
             "query": query,
             "public_server_required_boosts": PUBLIC_SERVER_REQUIRED_BOOSTS,
+            **_template_i18n_context(account, request),
             **rail,
         },
     )
@@ -1865,9 +1903,13 @@ async def server_create_submit(
             {
                 "request": request,
                 "account": account,
-                "error": "Назва сервера мінімум 2 символи.",
+                "error": _translate_message(
+                    _load_locale(_request_language(account, request)),
+                    "server.create.errors.name_too_short",
+                ),
                 "join_error": None,
                 "mode": "setup",
+                **_template_i18n_context(account, request),
                 **rail,
             },
             status_code=400,
@@ -1907,8 +1949,12 @@ async def server_join_submit(
                 "request": request,
                 "account": account,
                 "error": None,
-                "join_error": "Встав нормальний код або посилання-запрошення. Прямий ID сервера більше не працює.",
+                "join_error": _translate_message(
+                    _load_locale(_request_language(account, request)),
+                    "server.join.errors.invalid_invite",
+                ),
                 "mode": "join",
+                **_template_i18n_context(account, request),
                 **rail,
             },
             status_code=400,
@@ -1923,8 +1969,12 @@ async def server_join_submit(
                 "request": request,
                 "account": account,
                 "error": None,
-                "join_error": "Запрошення не знайдено, вже використане або не належить цьому акаунту.",
+                "join_error": _translate_message(
+                    _load_locale(_request_language(account, request)),
+                    "server.join.errors.invite_not_found",
+                ),
                 "mode": "join",
+                **_template_i18n_context(account, request),
                 **rail,
             },
             status_code=404,
@@ -1973,6 +2023,7 @@ async def server_home(server_id: int, request: Request, db: AsyncSession = Depen
             "boost_status": boost_status,
             "server_banner_url": server_banner_url,
             "can_manage": can_manage,
+            **_template_i18n_context(account, request),
             **rail,
         },
     )
@@ -2005,6 +2056,7 @@ async def server_onboarding_page(
             "onboarding": onboarding,
             "server_banner_url": await _get_server_banner_url(db, server_id),
             "banner_color": await _get_server_banner_color(db, server_id),
+            **_template_i18n_context(account, request),
             **rail,
         },
     )
@@ -2345,6 +2397,7 @@ async def server_channel_view(server_id: int, channel_id: int, request: Request,
             "feed": feed,
             "boost_status": boost_status,
             "server_banner_url": server_banner_url,
+            **_template_i18n_context(account, request),
             **rail,
         },
     )
@@ -2591,6 +2644,7 @@ async def server_settings_page(
                 {"id": key, "glyph": glyph}
                 for key, glyph in crud.SERVER_TAG_ICONS.items()
             ],
+            **_template_i18n_context(account, request),
             **rail,
         },
     )
@@ -4702,6 +4756,7 @@ async def dm_chat_view(username: str, request: Request, db: AsyncSession = Depen
             "invite_servers": invite_servers,
             "friend_status": friend_status,
             "friendship_id": friendship_id,
+            **_template_i18n_context(account, request),
             **rail,
         },
     )
