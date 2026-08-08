@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.56.0",
+      "date": "2026-08-09",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: i18n support in server_create.html."
+      ],
+      "source_sha": "d2b1c467111feab70ba71b565478f975a97196d7"
+    },
+    {
       "version": "1.55.0",
       "date": "2026-08-09",
       "title": "Нові можливості AlexiHub",
