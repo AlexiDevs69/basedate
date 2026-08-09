@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.65.2",
+      "date": "2026-08-10",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: message sending on Enter key press."
+      ],
+      "source_sha": "2853f24f0cc09615fbfd7c78fe20df62e5092f8f"
+    },
+    {
       "version": "1.65.1",
       "date": "2026-08-10",
       "title": "Оновлення AlexiHub",
