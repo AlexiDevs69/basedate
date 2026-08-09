@@ -5371,6 +5371,17 @@ async def _ensure_store_studio_tables_once(db: AsyncSession) -> None:
         )
     """))
     await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_profile_theme_board (
+            account_id INTEGER NOT NULL REFERENCES community_accounts(id) ON DELETE CASCADE,
+            theme_id BIGINT NOT NULL REFERENCES community_profile_themes(id) ON DELETE CASCADE,
+            position SMALLINT NOT NULL CHECK (position BETWEEN 0 AND 19),
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+            updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+            PRIMARY KEY (account_id, theme_id),
+            UNIQUE (account_id, position)
+        )
+    """))
+    await db.execute(text("""
         CREATE TABLE IF NOT EXISTS community_store_collections (
             id BIGSERIAL PRIMARY KEY,
             creator_id INTEGER REFERENCES community_accounts(id) ON DELETE SET NULL,
@@ -5491,6 +5502,13 @@ async def _ensure_store_studio_tables_once(db: AsyncSession) -> None:
             ("theme_id", "BIGINT"),
             ("equipped_at", "TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()"),
         ),
+        "community_profile_theme_board": (
+            ("account_id", "INTEGER"),
+            ("theme_id", "BIGINT"),
+            ("position", "SMALLINT"),
+            ("created_at", "TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()"),
+            ("updated_at", "TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()"),
+        ),
         "community_store_collections": (
             ("creator_id", "INTEGER"),
             ("title", "VARCHAR(100)"),
@@ -5547,6 +5565,7 @@ async def _ensure_store_studio_tables_once(db: AsyncSession) -> None:
     await db.execute(text("CREATE INDEX IF NOT EXISTS ix_store_collection_entries_order ON community_store_collection_entries (collection_id, display_order, id)"))
     await db.execute(text("CREATE INDEX IF NOT EXISTS ix_store_audit_entity ON community_store_audit_log (entity_type, entity_id, created_at DESC)"))
     await db.execute(text("CREATE INDEX IF NOT EXISTS ix_store_item_ownership_account ON community_store_item_ownership (account_id, acquired_at DESC)"))
+    await db.execute(text("CREATE INDEX IF NOT EXISTS ix_profile_theme_board_order ON community_profile_theme_board (account_id, position)"))
 
     # Before themes had a separate claim step, equipping a free theme was the only
     # way to obtain it. Preserve those already-equipped themes as permanent ownership.
@@ -6000,6 +6019,125 @@ async def get_profile_theme_library(db: AsyncSession, account_id: int) -> dict:
         "owned_themes": owned_themes,
         "store_themes": store_themes,
     }
+
+
+PROFILE_THEME_BOARD_LIMIT = 20
+
+
+async def get_profile_theme_board(db: AsyncSession, account_id: int) -> dict:
+    """Return the ordered, public theme showcase for one account."""
+    await ensure_store_studio_tables(db)
+    account_id = int(account_id)
+    rows = (await db.execute(text("""
+        SELECT theme.*, creator.username AS creator_username,
+               board.position,
+               equipped.theme_id = theme.id AS equipped
+        FROM community_profile_theme_board AS board
+        JOIN community_profile_themes AS theme ON theme.id = board.theme_id
+        JOIN community_profile_theme_ownership AS ownership
+          ON ownership.theme_id = theme.id AND ownership.account_id = board.account_id
+        JOIN community_accounts AS creator ON creator.id = theme.creator_id
+        LEFT JOIN community_account_profile_theme AS equipped
+          ON equipped.account_id = board.account_id
+        WHERE board.account_id = :account_id
+          AND theme.is_active = TRUE
+        ORDER BY board.position ASC, board.created_at ASC
+        LIMIT :board_limit
+    """), {
+        "account_id": account_id,
+        "board_limit": PROFILE_THEME_BOARD_LIMIT,
+    })).mappings().all()
+    return {
+        "ok": True,
+        "max_items": PROFILE_THEME_BOARD_LIMIT,
+        "themes": [
+            {
+                **_store_theme_payload(
+                    row,
+                    owned=True,
+                    equipped=bool(row["equipped"]),
+                    can_equip=True,
+                ),
+                "position": int(row["position"]),
+            }
+            for row in rows
+        ],
+    }
+
+
+async def save_profile_theme_board(
+    db: AsyncSession, account_id: int, theme_ids: list[int]
+) -> dict:
+    """Replace an account's showcase after validating ownership and order."""
+    await ensure_store_studio_tables(db)
+    account_id = int(account_id)
+    if not isinstance(theme_ids, list):
+        return {"ok": False, "error": "validation", "message": "theme_ids must be a list."}
+
+    normalized: list[int] = []
+    seen: set[int] = set()
+    try:
+        for value in theme_ids:
+            theme_id = int(value)
+            if theme_id <= 0 or theme_id in seen:
+                return {"ok": False, "error": "validation", "message": "Theme list contains invalid or duplicate items."}
+            seen.add(theme_id)
+            normalized.append(theme_id)
+    except (TypeError, ValueError, OverflowError):
+        return {"ok": False, "error": "validation", "message": "Theme list contains an invalid id."}
+
+    if len(normalized) > PROFILE_THEME_BOARD_LIMIT:
+        return {
+            "ok": False,
+            "error": "too_many_items",
+            "message": f"A board can contain up to {PROFILE_THEME_BOARD_LIMIT} themes.",
+        }
+
+    # Lock the owner row so two quick saves cannot interleave their DELETE/INSERT
+    # sequence and produce a mixed order.
+    await db.execute(text(
+        "SELECT id FROM community_accounts WHERE id = :account_id FOR UPDATE"
+    ), {"account_id": account_id})
+
+    if normalized:
+        owned_rows = (await db.execute(text("""
+            SELECT theme.id
+            FROM community_profile_themes AS theme
+            JOIN community_profile_theme_ownership AS ownership
+              ON ownership.theme_id = theme.id
+             AND ownership.account_id = :account_id
+            WHERE theme.id = ANY(CAST(:theme_ids AS BIGINT[]))
+              AND theme.is_active = TRUE
+        """), {
+            "account_id": account_id,
+            "theme_ids": normalized,
+        })).scalars().all()
+        owned_ids = {int(value) for value in owned_rows}
+        missing = [value for value in normalized if value not in owned_ids]
+        if missing:
+            await db.rollback()
+            return {
+                "ok": False,
+                "error": "theme_not_owned",
+                "message": "Only themes from your collection can be placed on the board.",
+                "theme_ids": missing,
+            }
+
+    await db.execute(text(
+        "DELETE FROM community_profile_theme_board WHERE account_id = :account_id"
+    ), {"account_id": account_id})
+    for position, theme_id in enumerate(normalized):
+        await db.execute(text("""
+            INSERT INTO community_profile_theme_board
+                (account_id, theme_id, position)
+            VALUES (:account_id, :theme_id, :position)
+        """), {
+            "account_id": account_id,
+            "theme_id": theme_id,
+            "position": position,
+        })
+    await db.commit()
+    return await get_profile_theme_board(db, account_id)
 
 
 async def claim_profile_theme(db: AsyncSession, account_id: int, theme_id: int) -> dict:
