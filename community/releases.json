@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.57.5",
+      "date": "2026-08-09",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Include mobile_runtime.html in travel template."
+      ],
+      "source_sha": "a3da0df8cf30f19edb1bb7dea1ebf95f0a461504"
+    },
+    {
       "version": "1.57.4",
       "date": "2026-08-09",
       "title": "Виправлення та стабільність",
