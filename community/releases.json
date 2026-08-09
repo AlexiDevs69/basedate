@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.61.0",
+      "date": "2026-08-09",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: profile board runtime HTML, CSS, and JS."
+      ],
+      "source_sha": "21dbe77322aaec573f7fe3adf2a835c9820372e7"
+    },
+    {
       "version": "1.60.3",
       "date": "2026-08-09",
       "title": "Виправлення та стабільність",
