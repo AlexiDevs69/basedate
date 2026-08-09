@@ -3908,6 +3908,44 @@ async def api_profile_theme_library(request: Request, db: AsyncSession = Depends
     return JSONResponse(await crud.get_profile_theme_library(db, account.id))
 
 
+@router.get("/api/profile-board/{username}")
+async def api_profile_board(username: str, request: Request, db: AsyncSession = Depends(get_db)):
+    viewer = await current_account(request, db)
+    if not viewer:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    owner = await crud.get_account_by_username_ci(db, username)
+    if not owner:
+        return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
+
+    result = await crud.get_profile_theme_board(db, owner.id)
+    result.update({
+        "username": owner.username,
+        "is_self": int(owner.id) == int(viewer.id),
+    })
+    if result["is_self"]:
+        library = await crud.get_profile_theme_library(db, viewer.id)
+        result["owned_themes"] = library.get("owned_themes", [])
+    return JSONResponse(result)
+
+
+@router.put("/api/profile-board")
+async def api_save_profile_board(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    body = await _store_json_body(request)
+    theme_ids = body.get("theme_ids")
+    if not isinstance(theme_ids, list):
+        return JSONResponse({
+            "ok": False,
+            "error": "validation",
+            "message": "theme_ids must be a list.",
+        }, status_code=400)
+    return _store_result_response(
+        await crud.save_profile_theme_board(db, account.id, theme_ids)
+    )
+
+
 @router.post("/api/profile-themes/claim")
 async def api_claim_profile_theme(request: Request, db: AsyncSession = Depends(get_db)):
     account = await current_account(request, db)
