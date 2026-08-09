@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.60.1",
+      "date": "2026-08-09",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Include profile_board_runtime and mobile_runtime templates."
+      ],
+      "source_sha": "0c3c9fe9ceb318307423ec3c0d4aa0dbfcf80717"
+    },
+    {
       "version": "1.60.0",
       "date": "2026-08-09",
       "title": "Нові можливості AlexiHub",
