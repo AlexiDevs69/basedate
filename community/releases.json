@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.65.1",
+      "date": "2026-08-10",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: DM pin button retrieval method."
+      ],
+      "source_sha": "602b4bfe3bd5afb20298f2026610c63a17d5bf55"
+    },
+    {
       "version": "1.65.0",
       "date": "2026-08-10",
       "title": "Нові можливості AlexiHub",
