@@ -1,0 +1,195 @@
+<style id="alexihub-profile-board-style">
+  .ah-profile-board-right{display:flex!important;flex-direction:column;min-width:0}
+  .ah-profile-board-right .ah-v3-full-tabs{flex:0 0 auto;align-items:flex-end;overflow-x:auto;scrollbar-width:none}
+  .ah-profile-board-right .ah-v3-full-tabs::-webkit-scrollbar{display:none}
+  .ah-profile-board-tab{height:44px;border:0;border-bottom:2px solid transparent;background:transparent;color:#949ba4;padding:0;font:inherit;font-size:13px;font-weight:850;white-space:nowrap;cursor:pointer;position:relative}
+  .ah-profile-board-tab.active{color:#f2f3f5;border-bottom-color:#f2f3f5}
+  .ah-profile-board-tab:focus-visible{outline:2px solid #5865f2;outline-offset:-3px;border-radius:5px}
+  .ah-profile-board-panel{display:none;min-height:0}
+  .ah-profile-board-panel.active{display:block}
+  .ah-profile-board-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:4px 0 14px}
+  .ah-profile-board-head-copy{min-width:0}.ah-profile-board-head-copy b,.ah-profile-board-head-copy span{display:block}
+  .ah-profile-board-head-copy b{color:#f2f3f5;font-size:16px}.ah-profile-board-head-copy span{margin-top:3px;color:#949ba4;font-size:11px;line-height:1.35}
+  .ah-profile-board-edit{min-height:34px;border:0;border-radius:7px;background:#5865f2;color:#fff;padding:0 12px;font:inherit;font-size:12px;font-weight:900;white-space:nowrap;cursor:pointer}
+  .ah-profile-board-edit:hover{background:#4752c4}
+  .ah-profile-board-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding-bottom:8px}
+  .ah-profile-board-card{min-width:0;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:#2b2d34;overflow:hidden;color:#fff;text-align:left;padding:0;cursor:pointer;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+  .ah-profile-board-card:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.22);box-shadow:0 10px 24px rgba(0,0,0,.25)}
+  .ah-profile-board-art{height:112px;background:#18191d center/cover no-repeat;position:relative;overflow:hidden}
+  .ah-profile-board-art:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 35%,rgba(0,0,0,.7));pointer-events:none}
+  .ah-profile-board-accent{position:absolute;left:10px;right:10px;bottom:9px;height:4px;border-radius:999px;background:var(--board-accent,#5865f2);z-index:1;box-shadow:0 0 12px var(--board-accent,#5865f2)}
+  .ah-profile-board-card-copy{padding:10px 11px 11px}.ah-profile-board-card-copy b,.ah-profile-board-card-copy span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ah-profile-board-card-copy b{font-size:12px}.ah-profile-board-card-copy span{margin-top:3px;color:#949ba4;font-size:10px}
+  .ah-profile-board-equipped{position:absolute;right:8px;top:8px;z-index:2;border-radius:999px;background:rgba(17,18,20,.85);color:#fff;padding:4px 7px;font-size:9px;font-weight:900}
+  .ah-profile-board-empty,.ah-profile-board-loading,.ah-profile-board-error{min-height:220px;border:1px dashed #3b3d45;border-radius:13px;display:grid;place-items:center;text-align:center;padding:24px;color:#949ba4;background:rgba(17,18,20,.24)}
+  .ah-profile-board-empty div,.ah-profile-board-error div{max-width:280px}.ah-profile-board-empty b,.ah-profile-board-error b{display:block;color:#dbdee1;font-size:15px;margin-bottom:6px}.ah-profile-board-empty span,.ah-profile-board-error span{font-size:12px;line-height:1.45}
+  .ah-profile-board-error b{color:#ff7b7b}
+
+  .ah-profile-board-modal{position:fixed;inset:0;z-index:2147483640;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.76);backdrop-filter:blur(5px)}
+  .ah-profile-board-modal.open{display:flex;animation:ahProfileBoardFade .14s ease both}
+  @keyframes ahProfileBoardFade{from{opacity:0}to{opacity:1}}
+  .ah-profile-board-dialog{width:min(820px,calc(100vw - 32px));max-height:min(760px,calc(100dvh - 32px));display:flex;flex-direction:column;overflow:hidden;border:1px solid #3b3d45;border-radius:16px;background:#202127;color:#f2f3f5;box-shadow:0 30px 100px rgba(0,0,0,.68)}
+  .ah-profile-board-dialog-head{min-height:62px;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 18px;border-bottom:1px solid #34363d;background:#24252b}
+  .ah-profile-board-dialog-head b,.ah-profile-board-dialog-head span{display:block}.ah-profile-board-dialog-head b{font-size:17px}.ah-profile-board-dialog-head span{margin-top:3px;color:#949ba4;font-size:11px}
+  .ah-profile-board-close{width:36px;height:36px;flex:0 0 auto;border:0;border-radius:9px;background:transparent;color:#b5bac1;font-size:26px;cursor:pointer}.ah-profile-board-close:hover{background:#34363d;color:#fff}
+  .ah-profile-board-dialog-body{min-height:0;overflow:auto;padding:16px 18px}
+  .ah-profile-board-editor-layout{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(250px,.75fr);gap:16px}
+  .ah-profile-board-editor-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;color:#b5bac1;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.04em}
+  .ah-profile-board-library{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  .ah-profile-board-choice{position:relative;min-height:82px;border:1px solid #34363d;border-radius:10px;background:#2b2d31;color:#fff;padding:0;overflow:hidden;cursor:pointer;text-align:left}
+  .ah-profile-board-choice.selected{border-color:#5865f2;box-shadow:0 0 0 1px #5865f2 inset}
+  .ah-profile-board-choice-bg{position:absolute;inset:0;background:#18191d center/cover no-repeat;opacity:.48}.ah-profile-board-choice:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(17,18,20,.88),rgba(17,18,20,.35))}
+  .ah-profile-board-choice-copy{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:82px;padding:11px}.ah-profile-board-choice-copy b{font-size:12px;overflow:hidden;text-overflow:ellipsis}.ah-profile-board-choice-copy i{width:22px;height:22px;flex:0 0 auto;border-radius:7px;background:#111214;display:grid;place-items:center;color:#949ba4;font-style:normal;font-weight:950}.ah-profile-board-choice.selected i{background:#5865f2;color:#fff}
+  .ah-profile-board-order{display:grid;gap:7px;align-content:start}
+  .ah-profile-board-order-empty{min-height:112px;border:1px dashed #3b3d45;border-radius:10px;display:grid;place-items:center;padding:16px;text-align:center;color:#949ba4;font-size:11px;line-height:1.4}
+  .ah-profile-board-order-row{min-height:48px;display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:center;gap:8px;padding:6px 7px;border:1px solid #34363d;border-radius:9px;background:#2b2d31}
+  .ah-profile-board-order-index{width:26px;height:26px;border-radius:7px;background:#18191d;color:#949ba4;display:grid;place-items:center;font-size:10px;font-weight:900}.ah-profile-board-order-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;font-weight:850}
+  .ah-profile-board-order-actions{display:flex;gap:3px}.ah-profile-board-order-actions button{width:27px;height:27px;border:0;border-radius:6px;background:#3a3c43;color:#dbdee1;cursor:pointer;font-weight:900}.ah-profile-board-order-actions button:hover{background:#4e5058;color:#fff}.ah-profile-board-order-actions button:disabled{opacity:.35;cursor:default}.ah-profile-board-order-actions button.danger:hover{background:#da373c}
+  .ah-profile-board-dialog-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:13px 18px;border-top:1px solid #34363d;background:#24252b}
+  .ah-profile-board-dialog-actions button{min-height:38px;border:0;border-radius:7px;padding:0 15px;color:#fff;font:inherit;font-size:12px;font-weight:900;cursor:pointer}.ah-profile-board-cancel{background:transparent}.ah-profile-board-cancel:hover{background:#34363d}.ah-profile-board-save{background:#5865f2}.ah-profile-board-save:hover{background:#4752c4}.ah-profile-board-save:disabled{opacity:.55;cursor:wait}
+  .ah-profile-board-preview-dialog{width:min(620px,calc(100vw - 32px));overflow:hidden;border:1px solid #3b3d45;border-radius:16px;background:#202127;color:#f2f3f5;box-shadow:0 30px 100px rgba(0,0,0,.68);position:relative}
+  .ah-profile-board-preview-art{height:min(52vh,430px);background:#111214 center/cover no-repeat}.ah-profile-board-preview-copy{padding:18px}.ah-profile-board-preview-copy b{display:block;font-size:20px}.ah-profile-board-preview-copy p{margin:7px 0 0;color:#b5bac1;font-size:13px;line-height:1.5}.ah-profile-board-preview-copy small{display:block;margin-top:9px;color:#949ba4;font-size:11px}
+  .ah-profile-board-preview-dialog>.ah-profile-board-close{position:absolute;right:10px;top:10px;background:rgba(17,18,20,.82);z-index:2;color:#fff}
+
+  @media(max-width:700px){
+    .ah-v3-overlay.open{padding:0!important;align-items:stretch!important;overflow:hidden!important}
+    .ah-v3-overlay.open>.ah-v3-full{width:100vw!important;max-width:none!important;height:var(--ah-mobile-vv-height,100dvh)!important;max-height:none!important;border:0!important;border-radius:0!important;grid-template-columns:1fr!important;overflow-y:auto!important;overscroll-behavior:contain}
+    .ah-v3-overlay.open .ah-v3-full-left{min-height:430px!important}
+    .ah-v3-overlay.open .ah-v3-full-right{min-height:440px!important;padding:18px 14px calc(32px + env(safe-area-inset-bottom))!important;overflow:visible!important}
+    .ah-profile-board-grid{grid-template-columns:1fr 1fr;gap:8px}.ah-profile-board-art{height:100px}
+    .ah-profile-board-modal{padding:0;align-items:stretch;top:var(--ah-mobile-vv-top,0px);height:var(--ah-mobile-vv-height,100dvh)}
+    .ah-profile-board-dialog{width:100vw;max-height:none;height:100%;border:0;border-radius:0}
+    .ah-profile-board-dialog-head{padding-top:calc(12px + env(safe-area-inset-top))}
+    .ah-profile-board-dialog-body{padding:14px}.ah-profile-board-editor-layout{grid-template-columns:1fr}.ah-profile-board-library{grid-template-columns:1fr 1fr}
+    .ah-profile-board-dialog-actions{padding-bottom:calc(13px + env(safe-area-inset-bottom))}.ah-profile-board-dialog-actions button{flex:1}
+    .ah-profile-board-preview-dialog{width:calc(100vw - 20px)}.ah-profile-board-preview-art{height:45vh}
+  }
+  @media(max-width:390px){.ah-profile-board-library,.ah-profile-board-grid{grid-template-columns:1fr}.ah-profile-board-art{height:128px}}
+  @media(prefers-reduced-motion:reduce){.ah-profile-board-card,.ah-profile-board-modal{animation:none!important;transition:none!important}}
+</style>
+
+<script id="alexihub-profile-board-runtime">
+(function(){
+  if(window.__ahProfileBoardReady)return;
+  window.__ahProfileBoardReady=true;
+  const MAX_ITEMS=20;
+  const $=(selector,root=document)=>root.querySelector(selector);
+  const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+  const t=(key,fallback,vars)=>{try{const value=window.AlexiHubI18n?.t?.(key,vars);return value&&value!==key?value:fallback}catch(_){return fallback}};
+  const notify=message=>{if(typeof window.showActionToast==='function')window.showActionToast(message);else if(typeof window.settingsToast==='function')window.settingsToast(message);else console.info(message)};
+  let current=null,requestVersion=0,draftIds=[];
+
+  function themeMap(themes){return new Map((Array.isArray(themes)?themes:[]).map(theme=>[Number(theme.id),theme]));}
+  function imageStyle(url){return url?`background-image:url(&quot;${esc(url)}&quot;)`:'';}
+  function enhance(){
+    const right=$('.ah-v3-full-right'),tabs=right?.querySelector('.ah-v3-full-tabs'),mutual=$('#ah-v3-mutual-list');
+    if(!right||!tabs||!mutual)return false;
+    right.classList.add('ah-profile-board-right');
+    if(!$('#ah-profile-board-panel',right)){
+      tabs.innerHTML=`<button type="button" class="ah-profile-board-tab active" data-profile-board-tab="board">${esc(t('profile_board.tab.board','Board'))}</button><button type="button" id="ah-v3-mutual-tab" class="ah-profile-board-tab" data-profile-board-tab="mutual">${esc(t('profile_board.tab.mutual_servers','Mutual Servers'))}</button>`;
+      const board=document.createElement('section');board.id='ah-profile-board-panel';board.className='ah-profile-board-panel active';board.setAttribute('aria-live','polite');
+      tabs.after(board);mutual.classList.add('ah-profile-board-panel');mutual.classList.remove('active');
+    }
+    return true;
+  }
+
+  function selectTab(tab){
+    if(!enhance())return;
+    document.querySelectorAll('[data-profile-board-tab]').forEach(button=>button.classList.toggle('active',button.dataset.profileBoardTab===tab));
+    $('#ah-profile-board-panel')?.classList.toggle('active',tab==='board');
+    $('#ah-v3-mutual-list')?.classList.toggle('active',tab==='mutual');
+  }
+
+  function themeCard(theme,index){
+    const author=theme.creator_username?('@'+theme.creator_username):t('profile_board.unknown_author','Unknown author');
+    return `<button type="button" class="ah-profile-board-card" data-board-preview-index="${index}"><span class="ah-profile-board-art" style="${imageStyle(theme.image_url)};--board-accent:${esc(theme.accent_color||'#5865f2')}">${theme.equipped?`<span class="ah-profile-board-equipped">${esc(t('profile_board.equipped','Equipped'))}</span>`:''}<i class="ah-profile-board-accent"></i></span><span class="ah-profile-board-card-copy"><b>${esc(theme.title||t('profile_board.untitled','Untitled theme'))}</b><span>${esc(author)}</span></span></button>`;
+  }
+
+  function renderBoard(){
+    const panel=$('#ah-profile-board-panel');if(!panel||!current)return;
+    const themes=Array.isArray(current.themes)?current.themes:[];
+    const edit=current.is_self?`<button type="button" class="ah-profile-board-edit" data-board-edit>${esc(t('profile_board.edit','Edit board'))}</button>`:'';
+    const intro=`<div class="ah-profile-board-head"><div class="ah-profile-board-head-copy"><b>${esc(t('profile_board.title','Theme showcase'))}</b><span>${esc(t('profile_board.subtitle','Themes this user chose to display.'))}</span></div>${edit}</div>`;
+    if(!themes.length){panel.innerHTML=intro+`<div class="ah-profile-board-empty"><div><b>${esc(t('profile_board.empty_title','The board is empty'))}</b><span>${esc(current.is_self?t('profile_board.empty_self','Add themes from your collection to show them here.'):t('profile_board.empty_other','This user has not added any themes yet.'))}</span></div></div>`;return;}
+    panel.innerHTML=intro+`<div class="ah-profile-board-grid">${themes.map(themeCard).join('')}</div>`;
+  }
+
+  function renderError(message){const panel=$('#ah-profile-board-panel');if(panel)panel.innerHTML=`<div class="ah-profile-board-error"><div><b>${esc(t('profile_board.load_error','Could not load the board'))}</b><span>${esc(message||t('profile_board.try_again','Please try again.'))}</span></div></div>`;}
+
+  async function load(username){
+    username=String(username||'').replace(/^@/,'').trim();if(!username||!enhance())return;
+    const version=++requestVersion;selectTab('board');
+    const panel=$('#ah-profile-board-panel');if(panel)panel.innerHTML=`<div class="ah-profile-board-loading">${esc(t('profile_board.loading','Loading board…'))}</div>`;
+    try{
+      const response=await fetch('/community/api/profile-board/'+encodeURIComponent(username),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'}});
+      const data=await response.json().catch(()=>({}));if(version!==requestVersion)return;
+      if(!response.ok||data.ok===false)throw new Error(data.message||data.error||t('profile_board.load_error','Could not load the board'));
+      current=data;current.max_items=Number(data.max_items)||MAX_ITEMS;current.themes=Array.isArray(data.themes)?data.themes:[];current.owned_themes=Array.isArray(data.owned_themes)?data.owned_themes:[];renderBoard();
+    }catch(error){if(version===requestVersion)renderError(error.message);}
+  }
+
+  function ensureModals(){
+    if(!$('#ah-profile-board-editor')){
+      const editor=document.createElement('div');editor.id='ah-profile-board-editor';editor.className='ah-profile-board-modal';editor.setAttribute('aria-hidden','true');editor.innerHTML=`<div class="ah-profile-board-dialog" role="dialog" aria-modal="true" aria-labelledby="ah-profile-board-editor-title"><div class="ah-profile-board-dialog-head"><div><b id="ah-profile-board-editor-title">${esc(t('profile_board.editor_title','Edit board'))}</b><span>${esc(t('profile_board.editor_subtitle','Choose and order up to 20 owned themes.'))}</span></div><button type="button" class="ah-profile-board-close" data-board-close aria-label="${esc(t('profile_board.close','Close'))}">×</button></div><div class="ah-profile-board-dialog-body" id="ah-profile-board-editor-body"></div><div class="ah-profile-board-dialog-actions"><button type="button" class="ah-profile-board-cancel" data-board-close>${esc(t('profile_board.cancel','Cancel'))}</button><button type="button" class="ah-profile-board-save" data-board-save>${esc(t('profile_board.save','Save board'))}</button></div></div>`;document.body.appendChild(editor);
+    }
+    if(!$('#ah-profile-board-preview')){
+      const preview=document.createElement('div');preview.id='ah-profile-board-preview';preview.className='ah-profile-board-modal';preview.setAttribute('aria-hidden','true');preview.innerHTML=`<div class="ah-profile-board-preview-dialog" role="dialog" aria-modal="true"><button type="button" class="ah-profile-board-close" data-board-close aria-label="${esc(t('profile_board.close','Close'))}">×</button><div class="ah-profile-board-preview-art"></div><div class="ah-profile-board-preview-copy"><b></b><p></p><small></small></div></div>`;document.body.appendChild(preview);
+    }
+  }
+
+  function openPreview(theme){
+    if(!theme)return;ensureModals();const modal=$('#ah-profile-board-preview');
+    const art=$('.ah-profile-board-preview-art',modal);art.style.backgroundImage=theme.image_url?`url("${String(theme.image_url).replace(/["\\\n\r]/g,encodeURIComponent)}")`:'';
+    $('b',modal).textContent=theme.title||t('profile_board.untitled','Untitled theme');$('p',modal).textContent=theme.description||t('profile_board.no_description','No description.');$('small',modal).textContent=theme.creator_username?('@'+theme.creator_username):t('profile_board.unknown_author','Unknown author');
+    modal.classList.add('open');modal.setAttribute('aria-hidden','false');$('.ah-profile-board-close',modal)?.focus();
+  }
+
+  function renderEditor(){
+    const body=$('#ah-profile-board-editor-body');if(!body||!current)return;
+    const owned=Array.isArray(current.owned_themes)?current.owned_themes:[],byId=themeMap(owned),selected=new Set(draftIds),limit=Number(current.max_items)||MAX_ITEMS;
+    const choices=owned.length?owned.map(theme=>{const id=Number(theme.id),active=selected.has(id);return `<button type="button" class="ah-profile-board-choice${active?' selected':''}" data-board-choice="${id}" aria-pressed="${active?'true':'false'}"><span class="ah-profile-board-choice-bg" style="${imageStyle(theme.image_url)}"></span><span class="ah-profile-board-choice-copy"><b>${esc(theme.title||t('profile_board.untitled','Untitled theme'))}</b><i>${active?'✓':'+'}</i></span></button>`;}).join(''):`<div class="ah-profile-board-order-empty">${esc(t('profile_board.no_owned','Your collection does not contain any themes yet.'))}</div>`;
+    const order=draftIds.length?draftIds.map((id,index)=>{const theme=byId.get(id)||{title:'#'+id};return `<div class="ah-profile-board-order-row"><span class="ah-profile-board-order-index">${index+1}</span><span class="ah-profile-board-order-name">${esc(theme.title||('#'+id))}</span><span class="ah-profile-board-order-actions"><button type="button" data-board-move="up" data-board-id="${id}" ${index===0?'disabled':''} aria-label="${esc(t('profile_board.move_up','Move up'))}">↑</button><button type="button" data-board-move="down" data-board-id="${id}" ${index===draftIds.length-1?'disabled':''} aria-label="${esc(t('profile_board.move_down','Move down'))}">↓</button><button type="button" class="danger" data-board-remove="${id}" aria-label="${esc(t('profile_board.remove','Remove'))}">×</button></span></div>`;}).join(''):`<div class="ah-profile-board-order-empty">${esc(t('profile_board.selection_empty','Select themes on the left.'))}</div>`;
+    body.innerHTML=`<div class="ah-profile-board-editor-layout"><section><div class="ah-profile-board-editor-title"><span>${esc(t('profile_board.collection','Your collection'))}</span><span>${owned.length}</span></div><div class="ah-profile-board-library">${choices}</div></section><section><div class="ah-profile-board-editor-title"><span>${esc(t('profile_board.order','Board order'))}</span><span>${draftIds.length}/${limit}</span></div><div class="ah-profile-board-order">${order}</div></section></div>`;
+  }
+
+  function openEditor(){
+    if(!current?.is_self)return;ensureModals();draftIds=(Array.isArray(current.themes)?current.themes:[]).map(theme=>Number(theme.id)).filter(Boolean);renderEditor();
+    const modal=$('#ah-profile-board-editor');modal.classList.add('open');modal.setAttribute('aria-hidden','false');$('.ah-profile-board-close',modal)?.focus();
+  }
+  function closeModal(modal){if(!modal)return;modal.classList.remove('open');modal.setAttribute('aria-hidden','true');}
+
+  function toggleChoice(id){
+    id=Number(id);const limit=Number(current?.max_items)||MAX_ITEMS,index=draftIds.indexOf(id);
+    if(index>=0)draftIds.splice(index,1);else if(draftIds.length>=limit){notify(t('profile_board.limit_reached','You can place up to 20 themes on the board.'));return;}else draftIds.push(id);renderEditor();
+  }
+  function moveChoice(id,direction){const index=draftIds.indexOf(Number(id)),next=direction==='up'?index-1:index+1;if(index<0||next<0||next>=draftIds.length)return;[draftIds[index],draftIds[next]]=[draftIds[next],draftIds[index]];renderEditor();}
+
+  async function save(){
+    const button=$('[data-board-save]');if(button)button.disabled=true;
+    try{
+      const response=await fetch('/community/api/profile-board',{method:'PUT',credentials:'same-origin',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({theme_ids:draftIds})});
+      const data=await response.json().catch(()=>({}));if(!response.ok||data.ok===false)throw new Error(data.message||data.error||t('profile_board.save_error','Could not save the board.'));
+      closeModal($('#ah-profile-board-editor'));notify(t('profile_board.saved','Board saved.'));await load(current.username);
+    }catch(error){notify(error.message||t('profile_board.save_error','Could not save the board.'));}finally{if(button)button.disabled=false;}
+  }
+
+  function usernameFromOverlay(){return String($('#ah-v3-full-name')?.dataset.profileUsername||$('#ah-v3-full-handle')?.textContent||'').replace(/^@/,'').trim();}
+  document.addEventListener('alexihub:full-profile-open',event=>load(event.detail?.name||event.detail?.username||usernameFromOverlay()));
+  document.addEventListener('click',event=>{
+    const tab=event.target.closest('[data-profile-board-tab]');if(tab){event.preventDefault();selectTab(tab.dataset.profileBoardTab);return;}
+    const edit=event.target.closest('[data-board-edit]');if(edit){event.preventDefault();openEditor();return;}
+    const card=event.target.closest('[data-board-preview-index]');if(card){openPreview(current?.themes?.[Number(card.dataset.boardPreviewIndex)]);return;}
+    const choice=event.target.closest('[data-board-choice]');if(choice){toggleChoice(choice.dataset.boardChoice);return;}
+    const remove=event.target.closest('[data-board-remove]');if(remove){toggleChoice(remove.dataset.boardRemove);return;}
+    const move=event.target.closest('[data-board-move]');if(move){moveChoice(move.dataset.boardId,move.dataset.boardMove);return;}
+    if(event.target.closest('[data-board-save]')){save();return;}
+    const close=event.target.closest('[data-board-close]');if(close){closeModal(close.closest('.ah-profile-board-modal'));return;}
+    if(event.target.classList?.contains('ah-profile-board-modal'))closeModal(event.target);
+  });
+  document.addEventListener('keydown',event=>{if(event.key==='Escape')document.querySelectorAll('.ah-profile-board-modal.open').forEach(closeModal);});
+
+  const overlay=$('#ah-v3-overlay');
+  if(overlay){new MutationObserver(()=>{if(overlay.classList.contains('open'))requestAnimationFrame(()=>load(usernameFromOverlay()));}).observe(overlay,{attributes:true,attributeFilter:['class']});}
+  enhance();
+})();
+</script>
