@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.64.0",
+      "date": "2026-08-10",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: emoji and sticker handling in dm_chat.html."
+      ],
+      "source_sha": "e66de80a07a3601365bbec74fc34e6e88447715b"
+    },
+    {
       "version": "1.63.0",
       "date": "2026-08-10",
       "title": "Нові можливості AlexiHub",
