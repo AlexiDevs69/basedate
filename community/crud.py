@@ -578,8 +578,8 @@ async def block_account(db: AsyncSession, blocker_id: int, blocked_id: int) -> b
     )
     await db.execute(
         text("""
-            INSERT INTO community_user_blocks (blocker_id, blocked_id)
-            VALUES (:blocker_id, :blocked_id)
+            INSERT INTO community_user_blocks (blocker_id, blocked_id, created_at)
+            VALUES (:blocker_id, :blocked_id, NOW())
             ON CONFLICT (blocker_id, blocked_id) DO NOTHING
         """),
         {"blocker_id": blocker_id, "blocked_id": blocked_id},
