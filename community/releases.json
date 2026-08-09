@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.65.0",
+      "date": "2026-08-10",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: channel_id to media URL in server_channel.html."
+      ],
+      "source_sha": "9861f43200477573d15ed67e846afb6a16118ef8"
+    },
+    {
       "version": "1.64.0",
       "date": "2026-08-10",
       "title": "Нові можливості AlexiHub",
