@@ -3131,7 +3131,8 @@ function openChannelInviteModal(event, btn) {
       textarea.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' && !e.shiftKey) {
           e.preventDefault();
-          sendCurrentMessage();
+          if (composerForm && composerForm.requestSubmit) composerForm.requestSubmit();
+          else sendCurrentMessage();
         }
       });
       textarea.addEventListener('blur', function () { sendSocket({ type: 'typing_stop' }); });
