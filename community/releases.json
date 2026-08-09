@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.63.0",
+      "date": "2026-08-10",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: emoji and sticker action buttons to composer."
+      ],
+      "source_sha": "5550cd1f5de0f3396bfdbf22ffc644e094c8a0a9"
+    },
+    {
       "version": "1.62.0",
       "date": "2026-08-09",
       "title": "Нові можливості AlexiHub",
