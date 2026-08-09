@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.61.3",
+      "date": "2026-08-09",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Include profile and mobile runtime templates."
+      ],
+      "source_sha": "a5899f5f664470be644b565afeef91d226af2995"
+    },
+    {
       "version": "1.61.2",
       "date": "2026-08-09",
       "title": "Виправлення та стабільність",
