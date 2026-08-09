@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.57.4",
+      "date": "2026-08-09",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Include mobile_runtime.html in server_home.html."
+      ],
+      "source_sha": "94f94b11c7bcfad39088c10e3225aa11d4f11055"
+    },
+    {
       "version": "1.57.3",
       "date": "2026-08-09",
       "title": "Виправлення та стабільність",
