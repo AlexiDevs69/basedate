@@ -1,0 +1,774 @@
+<style id="alexihub-mobile-runtime-style">
+  .ah-mobile-nav-toggle,
+  .ah-mobile-scrim,
+  .ah-mobile-settings-toggle,
+  .ah-mobile-settings-scrim { display: none; }
+
+  @media (max-width: 820px) {
+    html,
+    body {
+      width: 100%;
+      max-width: 100%;
+      height: 100%;
+      height: 100dvh;
+      overflow: hidden !important;
+      overscroll-behavior: none;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body.ah-mobile-ready {
+      --ah-mobile-rail: 64px;
+      --ah-mobile-drawer: min(92vw, 360px);
+      min-height: 100dvh;
+      touch-action: pan-y;
+    }
+
+    body.ah-mobile-ready * { min-width: 0; }
+
+    .ah-mobile-nav-toggle,
+    .ah-mobile-settings-toggle {
+      width: 40px;
+      height: 40px;
+      border: 0;
+      border-radius: 12px;
+      background: rgba(35, 36, 42, .94);
+      color: #f2f3f5;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, .3), inset 0 0 0 1px rgba(255, 255, 255, .08);
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    .ah-mobile-nav-toggle {
+      display: grid !important;
+      position: fixed;
+      top: calc(8px + env(safe-area-inset-top));
+      left: 8px;
+      z-index: 2147482700;
+      transition: left .24s cubic-bezier(.2, .72, .2, 1), background-color .16s ease, transform .12s ease;
+    }
+
+    .ah-mobile-nav-toggle:active,
+    .ah-mobile-settings-toggle:active { transform: scale(.92); }
+
+    .ah-mobile-nav-toggle svg,
+    .ah-mobile-settings-toggle svg {
+      width: 22px;
+      height: 22px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      pointer-events: none;
+    }
+
+    body.ah-mobile-nav-open .ah-mobile-nav-toggle {
+      left: calc(var(--ah-mobile-drawer) - 48px);
+      background: rgba(17, 18, 20, .96);
+    }
+
+    .ah-mobile-scrim,
+    .ah-mobile-settings-scrim {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      padding: 0;
+      background: rgba(0, 0, 0, .62);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity .22s ease, visibility 0s linear .22s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .ah-mobile-scrim { display: block !important; z-index: 2147482500; }
+
+    body.ah-mobile-nav-open .ah-mobile-scrim {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transition-delay: 0s;
+    }
+
+    body.ah-mobile-ready .server-rail,
+    body.ah-mobile-ready .dm-sidebar,
+    body.ah-mobile-ready .server-sidebar,
+    body.ah-mobile-ready .side,
+    body.ah-mobile-server-settings .settings-sidebar {
+      transition: transform .25s cubic-bezier(.2, .72, .2, 1), visibility 0s linear .25s !important;
+      will-change: transform;
+      visibility: hidden;
+    }
+
+    body.ah-mobile-nav-open .server-rail,
+    body.ah-mobile-nav-open .dm-sidebar,
+    body.ah-mobile-nav-open .server-sidebar,
+    body.ah-mobile-nav-open .side,
+    body.ah-mobile-server-settings.ah-mobile-nav-open .settings-sidebar {
+      transform: translate3d(0, 0, 0) !important;
+      visibility: visible;
+      transition-delay: 0s !important;
+    }
+
+    /* Home and direct messages: server rail + DM list form one Discord-like drawer. */
+    body.ah-mobile-home #home-app,
+    body.ah-mobile-dm .app {
+      display: block !important;
+      position: relative !important;
+      width: 100vw !important;
+      height: 100dvh !important;
+      min-height: 0 !important;
+      overflow: hidden !important;
+    }
+
+    body.ah-mobile-home .server-rail,
+    body.ah-mobile-dm .server-rail {
+      display: flex !important;
+      position: fixed !important;
+      inset: 0 auto 0 0 !important;
+      z-index: 2147482600 !important;
+      width: var(--ah-mobile-rail) !important;
+      min-width: var(--ah-mobile-rail) !important;
+      height: 100dvh !important;
+      padding: calc(10px + env(safe-area-inset-top)) 8px calc(10px + env(safe-area-inset-bottom)) !important;
+      transform: translate3d(-100vw, 0, 0) !important;
+      overflow-x: hidden !important;
+      overflow-y: auto !important;
+    }
+
+    body.ah-mobile-home .dm-sidebar,
+    body.ah-mobile-dm .dm-sidebar {
+      display: flex !important;
+      position: fixed !important;
+      left: var(--ah-mobile-rail) !important;
+      top: 0 !important;
+      bottom: 0 !important;
+      z-index: 2147482600 !important;
+      width: calc(var(--ah-mobile-drawer) - var(--ah-mobile-rail)) !important;
+      height: 100dvh !important;
+      padding-top: env(safe-area-inset-top) !important;
+      padding-bottom: env(safe-area-inset-bottom) !important;
+      transform: translate3d(-100vw, 0, 0) !important;
+      overflow: hidden !important;
+    }
+
+    body.ah-mobile-home main.main,
+    body.ah-mobile-dm main.main {
+      display: flex !important;
+      position: fixed !important;
+      inset: 0 !important;
+      z-index: 1 !important;
+      width: 100vw !important;
+      height: 100dvh !important;
+      min-height: 0 !important;
+      margin: 0 !important;
+      overflow: hidden !important;
+    }
+
+    body.ah-mobile-home aside.right,
+    body.ah-mobile-dm aside.right { display: none !important; }
+
+    body.ah-mobile-home .friend-topbar,
+    body.ah-mobile-home .ah-nitro-home-topbar,
+    body.ah-mobile-home .ah-store-topbar,
+    body.ah-mobile-dm .topbar {
+      min-height: calc(56px + env(safe-area-inset-top)) !important;
+      height: calc(56px + env(safe-area-inset-top)) !important;
+      padding-top: env(safe-area-inset-top) !important;
+      padding-left: 58px !important;
+      padding-right: 10px !important;
+      flex: 0 0 calc(56px + env(safe-area-inset-top)) !important;
+    }
+
+    body.ah-mobile-home .ah-nitro-home-actions .ah-gift-top-button span,
+    body.ah-mobile-home .ah-store-brand span { display: none !important; }
+
+    body.ah-mobile-home .friend-content,
+    body.ah-mobile-home .ah-nitro-home-scroll,
+    body.ah-mobile-home .ah-store-scroll {
+      padding-bottom: calc(24px + env(safe-area-inset-bottom)) !important;
+    }
+
+    body.ah-mobile-dm .top-title {
+      overflow: hidden !important;
+      white-space: nowrap !important;
+      text-overflow: ellipsis !important;
+    }
+
+    body.ah-mobile-dm .top-title .live { display: none !important; }
+    body.ah-mobile-dm .top-search,
+    body.ah-mobile-dm .top-actions button:nth-of-type(-n+3) { display: none !important; }
+    body.ah-mobile-dm .messages { padding: 16px 8px 12px !important; }
+    body.ah-mobile-dm .msg { gap: 9px !important; padding-left: 4px !important; padding-right: 4px !important; }
+    body.ah-mobile-dm .msg-avatar { width: 36px !important; height: 36px !important; }
+    body.ah-mobile-dm .composer-wrap { padding: 0 8px calc(8px + env(safe-area-inset-bottom)) !important; }
+    body.ah-mobile-dm .composer { border-radius: 14px !important; }
+
+    /* Server pages: the rail and channel list slide together; content owns the viewport. */
+    body.ah-mobile-server-channel .server-rail,
+    body.ah-mobile-server-home .server-rail {
+      display: flex !important;
+      position: fixed !important;
+      inset: 0 auto 0 0 !important;
+      z-index: 2147482600 !important;
+      width: var(--ah-mobile-rail) !important;
+      min-width: var(--ah-mobile-rail) !important;
+      height: 100dvh !important;
+      padding: calc(10px + env(safe-area-inset-top)) 8px calc(10px + env(safe-area-inset-bottom)) !important;
+      transform: translate3d(-100vw, 0, 0) !important;
+      overflow-x: hidden !important;
+      overflow-y: auto !important;
+    }
+
+    body.ah-mobile-server-channel .server-sidebar,
+    body.ah-mobile-server-home .server-sidebar {
+      display: flex !important;
+      position: fixed !important;
+      left: var(--ah-mobile-rail) !important;
+      top: 0 !important;
+      bottom: 0 !important;
+      z-index: 2147482600 !important;
+      width: calc(var(--ah-mobile-drawer) - var(--ah-mobile-rail)) !important;
+      height: 100dvh !important;
+      transform: translate3d(-100vw, 0, 0) !important;
+      overflow: hidden !important;
+    }
+
+    body.ah-mobile-server-channel .discord-channel-topbar,
+    body.ah-mobile-server-home .discord-channel-topbar {
+      left: 0 !important;
+      right: 0 !important;
+      top: 0 !important;
+      width: 100vw !important;
+      height: calc(56px + env(safe-area-inset-top)) !important;
+      padding: env(safe-area-inset-top) 10px 0 58px !important;
+      z-index: 80 !important;
+    }
+
+    body.ah-mobile-server-channel .discord-channel-topic,
+    body.ah-mobile-server-channel .discord-live-pill,
+    body.ah-mobile-server-channel .discord-search,
+    body.ah-mobile-server-home .discord-channel-topic,
+    body.ah-mobile-server-home .discord-live-pill,
+    body.ah-mobile-server-home .discord-search { display: none !important; }
+
+    body.ah-mobile-server-channel .discord-channel-name,
+    body.ah-mobile-server-home .discord-channel-name {
+      max-width: calc(100vw - 166px) !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
+    }
+
+    body.ah-mobile-server-channel .discord-channel-tools .discord-tool-btn:nth-of-type(n+3),
+    body.ah-mobile-server-home .discord-channel-tools .discord-tool-btn:nth-of-type(n+3) { display: none !important; }
+
+    body.ah-mobile-server-channel .chat-main,
+    body.ah-mobile-server-home main.main {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100vw !important;
+      height: 100dvh !important;
+      min-height: 0 !important;
+      margin: 0 !important;
+      padding-top: calc(56px + env(safe-area-inset-top)) !important;
+      overflow: hidden !important;
+    }
+
+    body.ah-mobile-server-channel .chat-main {
+      display: flex !important;
+      flex-direction: column !important;
+    }
+
+    body.ah-mobile-server-home main.main {
+      display: block !important;
+      overflow-y: auto !important;
+    }
+    body.ah-mobile-server-channel .members-sidebar,
+    body.ah-mobile-server-home .members-sidebar { display: none !important; }
+
+    body.ah-mobile-server-channel .messages {
+      padding: 12px 6px calc(104px + env(safe-area-inset-bottom)) !important;
+      overscroll-behavior-y: contain;
+    }
+
+    body.ah-mobile-server-channel .message {
+      gap: 9px !important;
+      padding: 3px 8px !important;
+    }
+
+    body.ah-mobile-server-channel .composer-wrap {
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      width: 100vw !important;
+      padding: 0 8px calc(8px + env(safe-area-inset-bottom)) !important;
+    }
+
+    body.ah-mobile-server-channel .composer-tools .hide-mobile { display: none !important; }
+    body.ah-mobile-server-channel .composer-box.discord-composer { border-radius: 14px !important; }
+
+    body.ah-mobile-server-home main.main > .hero,
+    body.ah-mobile-server-home main.main > .grid {
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+
+    body.ah-mobile-server-home main.main > .grid {
+      grid-template-columns: 1fr !important;
+      padding: 12px !important;
+      gap: 12px !important;
+    }
+
+    /* Discovery. */
+    body.ah-mobile-travel .app {
+      display: block !important;
+      width: 100vw !important;
+      height: 100dvh !important;
+      overflow: hidden !important;
+    }
+
+    body.ah-mobile-travel .server-rail {
+      display: flex !important;
+      position: fixed !important;
+      inset: 0 auto 0 0 !important;
+      z-index: 2147482600 !important;
+      width: var(--ah-mobile-rail) !important;
+      min-width: var(--ah-mobile-rail) !important;
+      height: 100dvh !important;
+      padding: calc(10px + env(safe-area-inset-top)) 8px calc(10px + env(safe-area-inset-bottom)) !important;
+      transform: translate3d(-100vw, 0, 0) !important;
+      overflow-x: hidden !important;
+      overflow-y: auto !important;
+    }
+
+    body.ah-mobile-travel .side {
+      display: flex !important;
+      position: fixed !important;
+      left: var(--ah-mobile-rail) !important;
+      top: 0 !important;
+      bottom: 0 !important;
+      z-index: 2147482600 !important;
+      width: calc(var(--ah-mobile-drawer) - var(--ah-mobile-rail)) !important;
+      height: 100dvh !important;
+      padding-top: env(safe-area-inset-top) !important;
+      padding-bottom: env(safe-area-inset-bottom) !important;
+      transform: translate3d(-100vw, 0, 0) !important;
+      overflow: hidden !important;
+    }
+
+    body.ah-mobile-travel main.content {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100vw !important;
+      height: 100dvh !important;
+      overflow-x: hidden !important;
+      overflow-y: auto !important;
+    }
+
+    body.ah-mobile-travel .top {
+      min-height: calc(56px + env(safe-area-inset-top)) !important;
+      height: calc(56px + env(safe-area-inset-top)) !important;
+      padding: env(safe-area-inset-top) 10px 0 58px !important;
+      gap: 10px !important;
+    }
+
+    body.ah-mobile-travel .categories { display: none !important; }
+    body.ah-mobile-travel .top form { margin-left: auto !important; min-width: 0 !important; }
+    body.ah-mobile-travel .search { width: min(44vw, 190px) !important; }
+    body.ah-mobile-travel .hero { min-height: 230px !important; height: auto !important; padding: 34px 0 !important; }
+    body.ah-mobile-travel .hero-inner,
+    body.ah-mobile-travel .catalog { width: calc(100% - 24px) !important; }
+    body.ah-mobile-travel .hero h1 { font-size: clamp(28px, 9vw, 38px) !important; }
+    body.ah-mobile-travel .catalog-head { align-items: flex-start !important; flex-direction: column !important; gap: 7px !important; }
+
+    /* Standalone server settings. */
+    body.ah-mobile-server-settings .settings-app {
+      display: block !important;
+      width: 100vw !important;
+      height: 100dvh !important;
+      overflow: hidden !important;
+    }
+
+    body.ah-mobile-server-settings .settings-sidebar {
+      display: block !important;
+      position: fixed !important;
+      inset: 0 auto 0 0 !important;
+      z-index: 2147482600 !important;
+      width: var(--ah-mobile-drawer) !important;
+      max-width: var(--ah-mobile-drawer) !important;
+      height: 100dvh !important;
+      padding-top: calc(10px + env(safe-area-inset-top)) !important;
+      padding-bottom: calc(10px + env(safe-area-inset-bottom)) !important;
+      transform: translate3d(-100vw, 0, 0) !important;
+      overflow-y: auto !important;
+    }
+
+    body.ah-mobile-server-settings .settings-main {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100vw !important;
+      height: 100dvh !important;
+      padding: calc(62px + env(safe-area-inset-top)) 0 calc(24px + env(safe-area-inset-bottom)) !important;
+      overflow-x: hidden !important;
+      overflow-y: auto !important;
+    }
+
+    body.ah-mobile-server-settings .settings-page {
+      width: 100% !important;
+      max-width: none !important;
+      padding: 0 14px 72px !important;
+    }
+
+    body.ah-mobile-server-settings .settings-close {
+      position: fixed !important;
+      top: calc(10px + env(safe-area-inset-top)) !important;
+      right: 10px !important;
+      z-index: 120 !important;
+    }
+
+    body.ah-mobile-server-settings .content-grid,
+    body.ah-mobile-server-settings .boost-levels,
+    body.ah-mobile-server-settings .server-tag-fields { grid-template-columns: 1fr !important; }
+
+    body.ah-mobile-server-settings .preview-card { position: static !important; width: 100% !important; }
+
+    /* Embedded user settings on Home, DM, server and Discovery pages. */
+    body.ah-mobile-ready .ah-settings-shell {
+      display: block !important;
+      width: 100vw !important;
+      height: 100dvh !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      overflow: hidden !important;
+    }
+
+    body.ah-mobile-ready .ah-settings-shell > .ah-settings-sidebar {
+      display: block !important;
+      position: absolute !important;
+      inset: 0 auto 0 0 !important;
+      z-index: 9 !important;
+      width: min(86vw, 330px) !important;
+      max-width: min(86vw, 330px) !important;
+      height: 100dvh !important;
+      padding-top: calc(12px + env(safe-area-inset-top)) !important;
+      padding-bottom: calc(12px + env(safe-area-inset-bottom)) !important;
+      transform: translate3d(-100%, 0, 0) !important;
+      visibility: hidden !important;
+      transition: transform .24s cubic-bezier(.2, .72, .2, 1), visibility 0s linear .24s !important;
+      overflow-y: auto !important;
+    }
+
+    body.ah-mobile-ready .ah-settings-shell.ah-mobile-settings-nav-open > .ah-settings-sidebar {
+      transform: translate3d(0, 0, 0) !important;
+      visibility: visible !important;
+      transition-delay: 0s !important;
+    }
+
+    body.ah-mobile-ready .ah-settings-shell > .ah-settings-main {
+      display: block !important;
+      width: 100vw !important;
+      height: 100dvh !important;
+      overflow-x: hidden !important;
+      overflow-y: auto !important;
+    }
+
+    body.ah-mobile-ready .ah-settings-top {
+      min-height: calc(58px + env(safe-area-inset-top)) !important;
+      height: calc(58px + env(safe-area-inset-top)) !important;
+      padding: env(safe-area-inset-top) 12px 0 !important;
+      gap: 10px !important;
+    }
+
+    body.ah-mobile-ready .ah-mobile-settings-toggle {
+      display: grid !important;
+      position: relative;
+      z-index: 11;
+      flex: 0 0 40px;
+      order: -1;
+    }
+
+    body.ah-mobile-ready .ah-mobile-settings-scrim {
+      display: block !important;
+      position: absolute !important;
+      z-index: 8 !important;
+    }
+
+    body.ah-mobile-ready .ah-settings-shell.ah-mobile-settings-nav-open > .ah-mobile-settings-scrim {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transition-delay: 0s;
+    }
+
+    body.ah-mobile-ready .ah-settings-page {
+      max-width: none !important;
+      padding: 26px 14px calc(72px + env(safe-area-inset-bottom)) !important;
+    }
+
+    body.ah-mobile-ready .ah-settings-page h1 { margin-bottom: 24px !important; }
+
+    @media (max-width: 520px) {
+      body.ah-mobile-ready { --ah-mobile-drawer: 92vw; }
+      body.ah-mobile-home .ah-nitro-home-content,
+      body.ah-mobile-home .ah-store-shell { width: calc(100% - 18px) !important; }
+      body.ah-mobile-travel .grid { grid-template-columns: 1fr !important; }
+      body.ah-mobile-server-settings .members-tools,
+      body.ah-mobile-server-settings .server-image-banner-actions { grid-template-columns: 1fr !important; flex-direction: column !important; }
+    }
+
+    /* Keep this final: page-specific closed transforms above must never beat the open state. */
+    body.ah-mobile-ready.ah-mobile-nav-open .server-rail,
+    body.ah-mobile-ready.ah-mobile-nav-open .dm-sidebar,
+    body.ah-mobile-ready.ah-mobile-nav-open .server-sidebar,
+    body.ah-mobile-ready.ah-mobile-nav-open .side,
+    body.ah-mobile-server-settings.ah-mobile-nav-open .settings-sidebar {
+      transform: translate3d(0, 0, 0) !important;
+      visibility: visible !important;
+      transition-delay: 0s !important;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      body.ah-mobile-ready .server-rail,
+      body.ah-mobile-ready .dm-sidebar,
+      body.ah-mobile-ready .server-sidebar,
+      body.ah-mobile-ready .side,
+      body.ah-mobile-ready .settings-sidebar,
+      .ah-mobile-nav-toggle,
+      .ah-mobile-scrim,
+      .ah-mobile-settings-scrim { transition: none !important; }
+    }
+  }
+</style>
+
+<script id="alexihub-mobile-runtime">
+(function () {
+  if (window.__ahMobileRuntimeReady) return;
+  window.__ahMobileRuntimeReady = true;
+
+  const mobileQuery = window.matchMedia('(max-width: 820px)');
+  const body = document.body;
+  if (!body) return;
+
+  function detectPage() {
+    if (document.querySelector('.settings-app > .settings-sidebar')) return 'server-settings';
+    if (document.getElementById('home-app')) return 'home';
+    if (document.querySelector('main.chat-main')) return 'server-channel';
+    if (body.dataset.activeDmAccountId && document.querySelector('.dm-sidebar')) return 'dm';
+    if (document.querySelector('main.content') && document.querySelector('.side')) return 'travel';
+    if (document.querySelector('.server-sidebar') && document.querySelector('main.main')) return 'server-home';
+    return '';
+  }
+
+  const page = detectPage();
+  if (!page) return;
+  body.classList.add('ah-mobile-ready', 'ah-mobile-' + page);
+
+  function translatedLabel(key, fallback) {
+    try {
+      const value = window.AlexiHubI18n?.t?.(key);
+      return value && value !== key ? value : fallback;
+    } catch (_) {
+      return fallback;
+    }
+  }
+
+  const toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.className = 'ah-mobile-nav-toggle';
+  toggle.setAttribute('aria-expanded', 'false');
+  toggle.setAttribute('aria-label', translatedLabel('common.aria.home_navigation', 'Open navigation'));
+  toggle.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>';
+
+  const scrim = document.createElement('button');
+  scrim.type = 'button';
+  scrim.className = 'ah-mobile-scrim';
+  scrim.setAttribute('aria-label', translatedLabel('common.actions.close', 'Close navigation'));
+
+  body.append(toggle, scrim);
+
+  const drawerSelectors = page === 'server-settings'
+    ? ['.settings-sidebar']
+    : page === 'travel'
+      ? ['.server-rail', '.side']
+      : page === 'home' || page === 'dm'
+        ? ['.server-rail', '.dm-sidebar']
+        : ['.server-rail', '.server-sidebar'];
+
+  function drawers() {
+    return drawerSelectors.map(selector => document.querySelector(selector)).filter(Boolean);
+  }
+
+  function syncDrawerAria(open) {
+    drawers().forEach(drawer => drawer.setAttribute('aria-hidden', mobileQuery.matches && !open ? 'true' : 'false'));
+  }
+
+  function setNavigation(open, options) {
+    const shouldOpen = Boolean(open && mobileQuery.matches);
+    body.classList.toggle('ah-mobile-nav-open', shouldOpen);
+    toggle.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+    toggle.setAttribute('aria-label', shouldOpen
+      ? translatedLabel('common.actions.close', 'Close navigation')
+      : translatedLabel('common.aria.home_navigation', 'Open navigation'));
+    syncDrawerAria(shouldOpen);
+    if (shouldOpen && options?.focus !== false) {
+      const active = drawers().flatMap(drawer => Array.from(drawer.querySelectorAll('.active, [aria-current="page"]')))[0];
+      if (active && typeof active.focus === 'function') requestAnimationFrame(() => active.focus({preventScroll: true}));
+    }
+  }
+
+  toggle.addEventListener('click', () => setNavigation(!body.classList.contains('ah-mobile-nav-open'), {focus: false}));
+  scrim.addEventListener('click', () => setNavigation(false));
+
+  document.addEventListener('click', event => {
+    if (!mobileQuery.matches || !body.classList.contains('ah-mobile-nav-open')) return;
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    const selected = target.closest('.dm-row, .nav-item, [data-home-view], .chan-link, .side-link');
+    if (!selected) return;
+
+    if (page === 'server-home' && selected.matches('a, a *')) {
+      const anchor = selected.closest('a');
+      try {
+        if (anchor && new URL(anchor.href, location.href).pathname === location.pathname) {
+          sessionStorage.setItem('ah-mobile-server-home-content', '1');
+        }
+      } catch (_) {}
+    }
+    setNavigation(false);
+  }, true);
+
+  function setupEmbeddedSettings() {
+    document.querySelectorAll('.ah-settings-shell').forEach(shell => {
+      if (shell.dataset.ahMobileReady === '1') return;
+      const top = shell.querySelector('.ah-settings-top');
+      const sidebar = shell.querySelector(':scope > .ah-settings-sidebar');
+      if (!top || !sidebar) return;
+      shell.dataset.ahMobileReady = '1';
+
+      const settingsToggle = document.createElement('button');
+      settingsToggle.type = 'button';
+      settingsToggle.className = 'ah-mobile-settings-toggle';
+      settingsToggle.setAttribute('aria-label', translatedLabel('common.aria.home_navigation', 'Open settings navigation'));
+      settingsToggle.setAttribute('aria-expanded', 'false');
+      settingsToggle.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>';
+
+      const settingsScrim = document.createElement('button');
+      settingsScrim.type = 'button';
+      settingsScrim.className = 'ah-mobile-settings-scrim';
+      settingsScrim.setAttribute('aria-label', translatedLabel('common.actions.close', 'Close settings navigation'));
+
+      top.prepend(settingsToggle);
+      shell.append(settingsScrim);
+
+      const setSettingsNavigation = open => {
+        const shouldOpen = Boolean(open && mobileQuery.matches);
+        shell.classList.toggle('ah-mobile-settings-nav-open', shouldOpen);
+        settingsToggle.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+        sidebar.setAttribute('aria-hidden', mobileQuery.matches && !shouldOpen ? 'true' : 'false');
+      };
+
+      settingsToggle.addEventListener('click', () => setSettingsNavigation(!shell.classList.contains('ah-mobile-settings-nav-open')));
+      settingsScrim.addEventListener('click', () => setSettingsNavigation(false));
+      sidebar.addEventListener('click', event => {
+        if (!(event.target instanceof Element)) return;
+        if (event.target.closest('.ah-settings-nav')) setSettingsNavigation(false);
+      });
+      shell.__ahSetMobileSettingsNavigation = setSettingsNavigation;
+      setSettingsNavigation(false);
+    });
+  }
+
+  setupEmbeddedSettings();
+  const settingsObserver = new MutationObserver(setupEmbeddedSettings);
+  settingsObserver.observe(body, {childList: true, subtree: true});
+
+  function openSettingsShell() {
+    return Array.from(document.querySelectorAll('.ah-settings-shell')).find(shell => (
+      shell.closest('.ah-settings-backdrop.open, .ah-settings-backdrop[style*="display: flex"], .ah-settings-backdrop[style*="display:flex"]')
+    ));
+  }
+
+  const gestureIgnoreSelector = [
+    'input', 'textarea', 'select', '[contenteditable="true"]',
+    '.modal-card', '.backdrop.open', '.ah-event-dialog', '.ah-image-editor',
+    '.ah-profile-customizer-shell', '.ah-language-menu', '.ah-benefit-carousel',
+    '.ah-store-tabs', '.ah-studio-nav', '.categories', '.friend-tabs',
+    '[data-no-mobile-swipe]'
+  ].join(',');
+
+  let touchStart = null;
+  document.addEventListener('touchstart', event => {
+    if (!mobileQuery.matches || event.touches.length !== 1) return;
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    if (!target.closest('.ah-mobile-scrim, .ah-mobile-settings-scrim') && target.closest(gestureIgnoreSelector)) return;
+    const touch = event.touches[0];
+    touchStart = {x: touch.clientX, y: touch.clientY, target};
+  }, {passive: true});
+
+  document.addEventListener('touchend', event => {
+    if (!touchStart || !mobileQuery.matches || !event.changedTouches.length) {
+      touchStart = null;
+      return;
+    }
+    const touch = event.changedTouches[0];
+    const dx = touch.clientX - touchStart.x;
+    const dy = touch.clientY - touchStart.y;
+    touchStart = null;
+    if (Math.abs(dx) < 72 || Math.abs(dx) < Math.abs(dy) * 1.35) return;
+
+    const settingsShell = openSettingsShell();
+    if (settingsShell?.__ahSetMobileSettingsNavigation) {
+      settingsShell.__ahSetMobileSettingsNavigation(dx > 0);
+      return;
+    }
+    setNavigation(dx > 0, {focus: false});
+  }, {passive: true});
+
+  document.addEventListener('keydown', event => {
+    if (event.key !== 'Escape') return;
+    const settingsShell = openSettingsShell();
+    if (settingsShell?.classList.contains('ah-mobile-settings-nav-open')) {
+      settingsShell.__ahSetMobileSettingsNavigation?.(false);
+      return;
+    }
+    if (body.classList.contains('ah-mobile-nav-open')) setNavigation(false);
+  });
+
+  function onViewportChange() {
+    if (!mobileQuery.matches) {
+      setNavigation(false);
+      drawers().forEach(drawer => drawer.setAttribute('aria-hidden', 'false'));
+      document.querySelectorAll('.ah-settings-shell').forEach(shell => shell.__ahSetMobileSettingsNavigation?.(false));
+    } else {
+      syncDrawerAria(body.classList.contains('ah-mobile-nav-open'));
+    }
+  }
+
+  mobileQuery.addEventListener?.('change', onViewportChange);
+  window.addEventListener('orientationchange', () => requestAnimationFrame(onViewportChange), {passive: true});
+
+  let showServerHomeContent = false;
+  if (page === 'server-home') {
+    try {
+      showServerHomeContent = sessionStorage.getItem('ah-mobile-server-home-content') === '1';
+      sessionStorage.removeItem('ah-mobile-server-home-content');
+    } catch (_) {}
+  }
+  setNavigation(page === 'server-home' && !showServerHomeContent, {focus: false});
+
+  window.AlexiHubMobile = {
+    page,
+    open: () => setNavigation(true, {focus: false}),
+    close: () => setNavigation(false),
+    toggle: () => setNavigation(!body.classList.contains('ah-mobile-nav-open'), {focus: false})
+  };
+})();
+</script>
