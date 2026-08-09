@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.59.0",
+      "date": "2026-08-09",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: community profile theme board management."
+      ],
+      "source_sha": "50d3dd0795208cf20f23406d0bbbc9d7a64426c5"
+    },
+    {
       "version": "1.58.1",
       "date": "2026-08-09",
       "title": "Виправлення та стабільність",
