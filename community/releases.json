@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.60.0",
+      "date": "2026-08-09",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: API endpoints for profile board management."
+      ],
+      "source_sha": "bad228225f1946590d5a230993501edc8deb2dac"
+    },
+    {
       "version": "1.59.0",
       "date": "2026-08-09",
       "title": "Нові можливості AlexiHub",
