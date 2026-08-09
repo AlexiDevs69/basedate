@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.61.6",
+      "date": "2026-08-09",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Виправлено: event validation and friend action button state."
+      ],
+      "source_sha": "f5dfb37cee72cac60e833cd04e10d4da579e0c57"
+    },
+    {
       "version": "1.61.5",
       "date": "2026-08-09",
       "title": "Оновлення AlexiHub",
