@@ -2347,7 +2347,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     const status=profile.friendStatusKnown===false?'loading':normalizeFriendStatus(profile.friendStatus);
     button.hidden=!!profile.isSelf;
     if(more)more.hidden=!!profile.isSelf;
-    button.className=window.AlexiHubI18n.t("common.text.ah_v3_friend_action_state")+status;
+    button.className='ah-v3-friend-action state-'+status;
     button.removeAttribute('data-tooltip');
     button.disabled=false;
     button.setAttribute('aria-disabled',status==='friends'?'true':'false');
@@ -5764,7 +5764,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
 
   function esc(value){return String(value==null?'':value).replace(/[&<>"']/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]})}
   function packClass(days){days=Number(days)||30;if(days>=200)return'pack-emerald';if(days>=90)return'pack-season';if(days>=30)return'pack-month';return'pack-week'}
-  function packName(days){days=Number(days)||30;if(days>=200)returnwindow.AlexiHubI18n.t("dm.text.emerald_set_nitro");if(days>=90)returnwindow.AlexiHubI18n.t("dm.text.semensosis_nitro");if(days>=30)returnwindow.AlexiHubI18n.t("dm.text.mixubum_nitro");returnwindow.AlexiHubI18n.t("dm.text.day_nitro_week")}
+  function packName(days){days=Number(days)||30;if(days>=200)return window.AlexiHubI18n.t("dm.text.emerald_set_nitro");if(days>=90)return window.AlexiHubI18n.t("dm.text.semensosis_nitro");if(days>=30)return window.AlexiHubI18n.t("dm.text.mixubum_nitro");return window.AlexiHubI18n.t("dm.text.day_nitro_week")}
   function dateText(value){if(!value)return'';try{return new Intl.DateTimeFormat(undefined,{day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date(value))}catch(e){return''}}
   function tokenFromRow(row){if(!row)return'';const raw=(row.dataset.messageContent||(row.querySelector('.dm-message-text')&&row.querySelector('.dm-message-text').textContent)||'').trim();const found=raw.match(marker);return found?found[1]:''}
 
