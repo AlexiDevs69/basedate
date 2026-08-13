@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.65.4",
+      "date": "2026-08-13",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: delete message logic and update button event."
+      ],
+      "source_sha": "eb9c0dc1a50d6c3a501d89de763e6d49d7e42789"
+    },
+    {
       "version": "1.65.3",
       "date": "2026-08-13",
       "title": "Виправлення та стабільність",
