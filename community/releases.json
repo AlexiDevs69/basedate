@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.65.3",
+      "date": "2026-08-13",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Modify delete button to include event parameter."
+      ],
+      "source_sha": "d44c47c870f2f34656aeb85692acc8c879978156"
+    },
+    {
       "version": "1.65.2",
       "date": "2026-08-10",
       "title": "Оновлення AlexiHub",
