@@ -2841,7 +2841,7 @@ function openChannelInviteModal(event, btn) {
       article.dataset.messageContent = msg.content || '';
       article.dataset.messageAuthor = author.display_name || author.username || 'user';
       article.dataset.messageAvatar = author.avatar_url || '';
-      article.dataset.messageDeleteUrl = '/community/servers/{{ server.id }}/channel/{{ channel.id }}/message/' + msg.id + window.AlexiHubI18n.t("common.text.delete");
+      article.dataset.messageDeleteUrl = '/community/servers/{{ server.id }}/channel/{{ channel.id }}/message/' + msg.id + '/delete';
       var isForwarded = msg.is_forwarded === true || msg.is_forwarded === '1' || msg.forwarded === true || msg.forwarded === '1';
       article.dataset.own = (author.id === myAccountId) ? '1' : '0';
       article.dataset.messageEditable = (author.id === myAccountId && !isForwarded) ? '1' : '0';
@@ -2901,7 +2901,7 @@ function openChannelInviteModal(event, btn) {
         editForm.id = 'edit-form-' + msg.id;
         editForm.className = 'edit-form';
         editForm.method = 'post';
-        editForm.action = '/community/servers/{{ server.id }}/channel/{{ channel.id }}/message/' + msg.id + window.AlexiHubI18n.t("server_channel.text.edit");
+        editForm.action = '/community/servers/{{ server.id }}/channel/{{ channel.id }}/message/' + msg.id + '/edit';
         editForm.innerHTML = ('' + "<textarea name=\"content\" required></textarea><input type=\"text\" name=\"image_url\" placeholder=\"" + window.AlexiHubI18n.t("server_channel.placeholder.image_url_not_kazyvo") + "\"><div class=\"edit-actions\"><span>" + window.AlexiHubI18n.t("common.text.esc_for") + "</span><button type=\"button\" class=\"edit-cancel\" onclick=\"closeEdit(") + msg.id + ('' + ")\">" + window.AlexiHubI18n.t("common.text.annault") + "</button><span>" + window.AlexiHubI18n.t("common.text.enter_to_save") + "</span><button type=\"submit\" class=\"edit-save\" aria-label=\"" + window.AlexiHubI18n.t("common.action.save") + "\">" + window.AlexiHubI18n.t("common.action.save") + "</button></div>");
         editForm.querySelector('textarea').value = msg.content || '';
         editForm.querySelector('input').value = msg.image_url || '';
@@ -8269,7 +8269,7 @@ body .composer-wrap{
   window.copyCurrentEventLink=copyCurrentEventLink;window.copyEventShareLink=copyEventShareLink;
   function toggleEventMore(event){event?.stopPropagation();$("#ah-event-more-menu")?.classList.toggle("open")}window.toggleEventMore=toggleEventMore;
   async function endCurrentEvent(){const e=eventById(currentEventId),button=$("#ah-event-detail-end");if(!e||!CAN_MANAGE||!isEventOngoing(e)||!button)return;button.disabled=true;button.textContent=window.AlexiHubI18n.t("common.label.completion");try{const response=await fetch("/community/api/servers/"+SERVER_ID+"/events/"+e.id+"/end",{method:"POST"}),payload=await response.json();if(!response.ok||!payload.ok)throw new Error(payload.message||window.AlexiHubI18n.t("common.text.narently_completed_the_event"));EVENTS=EVENTS.filter(item=>Number(item.id)!==Number(e.id));renderEventList();closeBackdrop("ah-event-detail-modal");showActionToast?.(window.AlexiHubI18n.t("common.message.event_completed"))}catch(error){showActionToast?.(error.message||window.AlexiHubI18n.t("common.text.narently_completed_the_event"));button.disabled=false;button.textContent=window.AlexiHubI18n.t("common.action.conclude_the_event")}}window.endCurrentEvent=endCurrentEvent;
-  function deleteCurrentEvent(){const e=eventById(currentEventId);if(!e||!CAN_MANAGE||!confirm(window.AlexiHubI18n.t("common.message.delete_the_event")+e.title+"»?"))return;const form=document.createElement("form");form.method="post";form.action="/community/servers/"+SERVER_ID+window.AlexiHubI18n.t("common.text.events")+e.id+window.AlexiHubI18n.t("common.text.delete");form.innerHTML='<input type="hidden" name="redirect_to" value="'+esc(location.pathname)+'">';document.body.appendChild(form);form.submit()}window.deleteCurrentEvent=deleteCurrentEvent;
+  function deleteCurrentEvent(){const e=eventById(currentEventId);if(!e||!CAN_MANAGE||!confirm(window.AlexiHubI18n.t("common.message.delete_the_event")+e.title+"»?"))return;const form=document.createElement("form");form.method="post";form.action="/community/servers/"+SERVER_ID+"/events/"+e.id+"/delete";form.innerHTML='<input type="hidden" name="redirect_to" value="'+esc(location.pathname)+'">';document.body.appendChild(form);form.submit()}window.deleteCurrentEvent=deleteCurrentEvent;
   function launchEventConfetti(){if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;const colors=["#5865f2","#eb459e","#f0b232","#23a55a","#fff","#3ba55d"];for(let i=0;i<72;i++){const piece=document.createElement("i"),left=i%2===0;piece.className="ah-event-confetti";piece.style.background=colors[Math.floor(Math.random()*colors.length)];piece.style.left=left?"-14px":"auto";piece.style.right=left?"auto":"-14px";piece.style.top=(24+Math.random()*54)+"vh";piece.style.setProperty("--tx",(left?1:-1)*(30+Math.random()*58)+"vw");piece.style.setProperty("--ty",(-120+Math.random()*320)+"px");piece.style.setProperty("--rot",(-720+Math.random()*1440)+"deg");piece.style.animationDelay=(Math.random()*.22)+"s";document.body.appendChild(piece);setTimeout(()=>piece.remove(),2300)}}window.launchEventConfetti=launchEventConfetti;
 
   function init(){
