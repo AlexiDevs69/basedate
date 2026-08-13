@@ -2154,7 +2154,7 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
     <button class="ctx-item" type="button" data-pin-message onclick="showActionToast && showActionToast(window.AlexiHubI18n.t('server.stub.pinning'))"><span><!--i18n:common.text.secret_the_message-->{{ i18n_t('common.text.secret_the_message') }}</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3l5 5-6 6v4l-2 2-3.5-3.5L5 21l-2-2 4.5-4.5L4 11l2-2h4z"/></svg></button>
     <button class="ctx-item" type="button" onclick="showActionToast && showActionToast(window.AlexiHubI18n.t('server.stub.marked_unread'))"><span><!--i18n:server_channel.text.note_the_notionngument_as_unread-->{{ i18n_t('server_channel.text.note_the_notionngument_as_unread') }}</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v12H5.17L4 17.17z"/><path d="M9 10h6"/></svg></button>
     <div class="ctx-sep"></div>
-    <button class="ctx-item danger" type="button" data-own-only onclick="openDeleteConfirmFromMenu()"><span><!--i18n:common.text.delete_the_message-->{{ i18n_t('common.text.delete_the_message') }}</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
+    <button class="ctx-item danger" type="button" data-own-only onclick="openDeleteConfirmFromMenu(event)"><span><!--i18n:common.text.delete_the_message-->{{ i18n_t('common.text.delete_the_message') }}</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
     <button class="ctx-item muted" type="button" onclick="copyMessageIdFromMenu()"><span><!--i18n:common.text.copy_id_messages-->{{ i18n_t('common.text.copy_id_messages') }}</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M8 9h8"/><path d="M8 15h8"/></svg></button>
   </div>
 
@@ -2361,10 +2361,35 @@ function openChannelInviteModal(event, btn) {
       if (box) box.classList.add('hidden');
     }
 
-    function openDeleteConfirmFromMenu() {
+    function performServerMessageDelete(url, id) {
+      if (!url) return;
+      var row = id ? document.getElementById('message-' + id) : null;
+      var parent = row ? row.parentNode : null;
+      var next = row ? row.nextSibling : null;
+      if (row) row.remove();
+      if (id && window.__serverPinsApi) window.__serverPinsApi.removeServerPin(id);
+      fetch(url, { method: 'POST', credentials: 'same-origin' }).then(function (r) {
+        if (!r.ok && parent && row) {
+          parent.insertBefore(row, next);
+          if (window.showActionToast) showActionToast(window.AlexiHubI18n.t("privacy.blocking.actionError"));
+        }
+      }).catch(function () {
+        if (parent && row) {
+          parent.insertBefore(row, next);
+          if (window.showActionToast) showActionToast(window.AlexiHubI18n.t("privacy.blocking.actionError"));
+        }
+      });
+    }
+    function openDeleteConfirmFromMenu(event) {
       if (!activeMessageEl) return;
       var url = activeMessageEl.dataset.messageDeleteUrl || '';
       if (!url) return;
+      var id = Number(activeMessageEl.dataset.messageId || activeMessageEl.dataset.id || 0);
+      if (event && event.shiftKey) {
+        closeMessageMenu();
+        performServerMessageDelete(url, id);
+        return;
+      }
       var modal = document.getElementById('delete-message-modal');
       var form = document.getElementById('delete-message-form');
       var av = document.getElementById('delete-preview-avatar');
@@ -2387,6 +2412,13 @@ function openChannelInviteModal(event, btn) {
       var modal = document.getElementById('delete-message-modal');
       if (modal) modal.classList.remove('open');
     }
+    document.getElementById('delete-message-form')?.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var url = this.action;
+      var id = activeMessageEl ? Number(activeMessageEl.dataset.messageId || activeMessageEl.dataset.id || 0) : 0;
+      closeDeleteConfirm();
+      performServerMessageDelete(url, id);
+    });
     function copyMessageTextFromMenu() {
       if (!activeMessageEl) return;
       var text = activeMessageEl.dataset.messageContent || '';
