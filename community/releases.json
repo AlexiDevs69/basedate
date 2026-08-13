@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.65.5",
+      "date": "2026-08-13",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: message rendering in dm_chat.html."
+      ],
+      "source_sha": "5283696c059f76ac3335665ca52393b06f83b9c9"
+    },
+    {
       "version": "1.65.4",
       "date": "2026-08-13",
       "title": "Оновлення AlexiHub",
