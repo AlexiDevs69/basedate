@@ -700,8 +700,21 @@
     '.modal-card', '.backdrop.open', '.ah-event-dialog', '.ah-image-editor',
     '.ah-profile-customizer-shell', '.ah-language-menu', '.ah-benefit-carousel',
     '.ah-store-tabs', '.ah-studio-nav', '.categories', '.friend-tabs',
+    '.ah-boost-benefits-table', '.ah-nitro-category-tabs', '.ah-store-category-chips',
+    '.ah-store-collection-rail', '.ah-store-new-rail',
     '[data-no-mobile-swipe]'
   ].join(',');
+
+  // Real touch UIs only open an off-canvas drawer from an edge swipe; anywhere-on-screen
+  // swipes are reserved for closing an already-open drawer. Without this split, any
+  // horizontal scroller (carousels, wide tables) fights the drawer gesture for the touch.
+  const EDGE_ZONE = 24;
+
+  function isDrawerOpen() {
+    const settingsShell = openSettingsShell();
+    if (settingsShell) return settingsShell.classList.contains('ah-mobile-settings-nav-open');
+    return body.classList.contains('ah-mobile-nav-open');
+  }
 
   let touchStart = null;
   document.addEventListener('touchstart', event => {
@@ -710,6 +723,8 @@
     if (!(target instanceof Element)) return;
     if (!target.closest('.ah-mobile-scrim, .ah-mobile-settings-scrim') && target.closest(gestureIgnoreSelector)) return;
     const touch = event.touches[0];
+    const nearEdge = touch.clientX <= EDGE_ZONE + (parseFloat(getComputedStyle(document.documentElement).paddingLeft) || 0);
+    if (!isDrawerOpen() && !nearEdge) return;
     touchStart = {x: touch.clientX, y: touch.clientY, target};
   }, {passive: true});
 
