@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.66.1",
+      "date": "2026-08-19",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Adjust media query for responsive settings modal."
+      ],
+      "source_sha": "8e9947a6289b8b420b786016abd0d230a637d8f4"
+    },
+    {
       "version": "1.66.0",
       "date": "2026-08-19",
       "title": "Нові можливості AlexiHub",
