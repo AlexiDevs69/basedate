@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.65.7",
+      "date": "2026-08-19",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Adjust media query for responsive settings modal."
+      ],
+      "source_sha": "6766bf4ad6d27119b984bed9a758bfde84e79cea"
+    },
+    {
       "version": "1.65.6",
       "date": "2026-08-13",
       "title": "Виправлення та стабільність",
