@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.66.0",
+      "date": "2026-08-19",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: new selectors for mobile UI touch handling."
+      ],
+      "source_sha": "013a3fdf412b561fecb5cf827ca923eef1b8c701"
+    },
+    {
       "version": "1.65.8",
       "date": "2026-08-19",
       "title": "Виправлення та стабільність",
