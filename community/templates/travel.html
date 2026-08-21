@@ -4073,15 +4073,18 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     modal?.classList.add('open'); modal?.setAttribute('aria-hidden','false');
   }
   function closeConfirm(){ const m=document.getElementById('ah-block-modal'); m?.classList.remove('open');m?.setAttribute('aria-hidden','true'); }
+  function announceBlockChange(username,blockedByMe){
+    document.dispatchEvent(new CustomEvent('alexihub:block-status-changed',{detail:{username,blocked_by_me:!!blockedByMe}}));
+  }
   async function blockUser(username){
     const data=await api('/community/api/blocks/'+encodeURIComponent(username),{method:'POST'});
     currentStatus=Object.assign({},currentStatus||{},data,{blocked_by_me:true});
-    notify(data.message||text().blockedOk); await loadBlockedUsers(); applyDmBlockState(username,currentStatus); return data;
+    notify(data.message||text().blockedOk); await loadBlockedUsers(); applyDmBlockState(username,currentStatus); announceBlockChange(username,true); return data;
   }
   async function unblockUser(username){
     const data=await api('/community/api/blocks/'+encodeURIComponent(username),{method:'DELETE'});
     currentStatus=Object.assign({},currentStatus||{},data,{blocked_by_me:false});
-    notify(data.message||text().unblockedOk); await loadBlockedUsers(); applyDmBlockState(username,currentStatus); return data;
+    notify(data.message||text().unblockedOk); await loadBlockedUsers(); applyDmBlockState(username,currentStatus); announceBlockChange(username,false); return data;
   }
   async function openBlockFor(username){
     try{
@@ -4485,6 +4488,16 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
       closeMenu();
       hideTooltip();
     }
+  });
+  // Blocking/unblocking is handled by a separate script (the confirm dialog can be
+  // reached from this card's "..." menu). Without this, the friend button and the
+  // "Block"/"Unblock" menu label only caught up the next time the card was reopened.
+  document.addEventListener('alexihub:block-status-changed', event => {
+    const detail = event.detail || {};
+    const username = String(detail.username || '').replace(/^@/, '').trim().toLowerCase();
+    if (!username || !active || String(active.name || '').toLowerCase() !== username) return;
+    active.blockedByMe = !!detail.blocked_by_me;
+    refresh();
   });
 })();
 </script>
