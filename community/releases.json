@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.74.0",
+      "date": "2026-08-22",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: global loader to server onboarding template."
+      ],
+      "source_sha": "56aff2fbc38f2b3969195238625407781275ce83"
+    },
+    {
       "version": "1.73.0",
       "date": "2026-08-22",
       "title": "Нові можливості AlexiHub",
