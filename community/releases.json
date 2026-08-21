@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.70.0",
+      "date": "2026-08-22",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: block status change announcement."
+      ],
+      "source_sha": "1bc479880ad76c3489882446e9c558ee262d051c"
+    },
+    {
       "version": "1.69.0",
       "date": "2026-08-22",
       "title": "Нові можливості AlexiHub",
