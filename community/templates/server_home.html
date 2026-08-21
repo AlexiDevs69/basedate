@@ -5234,15 +5234,18 @@ if (typeof window.openSelfProfileSettings !== 'function') {
     modal?.classList.add('open'); modal?.setAttribute('aria-hidden','false');
   }
   function closeConfirm(){ const m=document.getElementById('ah-block-modal'); m?.classList.remove('open');m?.setAttribute('aria-hidden','true'); }
+  function announceBlockChange(username,blockedByMe){
+    document.dispatchEvent(new CustomEvent('alexihub:block-status-changed',{detail:{username,blocked_by_me:!!blockedByMe}}));
+  }
   async function blockUser(username){
     const data=await api('/community/api/blocks/'+encodeURIComponent(username),{method:'POST'});
     currentStatus=Object.assign({},currentStatus||{},data,{blocked_by_me:true});
-    notify(data.message||text().blockedOk); await loadBlockedUsers(); applyDmBlockState(username,currentStatus); return data;
+    notify(data.message||text().blockedOk); await loadBlockedUsers(); applyDmBlockState(username,currentStatus); announceBlockChange(username,true); return data;
   }
   async function unblockUser(username){
     const data=await api('/community/api/blocks/'+encodeURIComponent(username),{method:'DELETE'});
     currentStatus=Object.assign({},currentStatus||{},data,{blocked_by_me:false});
-    notify(data.message||text().unblockedOk); await loadBlockedUsers(); applyDmBlockState(username,currentStatus); return data;
+    notify(data.message||text().unblockedOk); await loadBlockedUsers(); applyDmBlockState(username,currentStatus); announceBlockChange(username,false); return data;
   }
   async function openBlockFor(username){
     try{
@@ -5791,6 +5794,7 @@ if (typeof window.openSelfProfileSettings !== 'function') {
   document.addEventListener('mouseover',event=>{const button=event.target.closest('#ah-v3-friend-action[data-tooltip]');if(button)showTooltip(button)});
   document.addEventListener('mouseout',event=>{if(event.target.closest('#ah-v3-friend-action[data-tooltip]'))hideTooltip()});
   window.addEventListener('resize',closeMenu);document.addEventListener('keydown',event=>{if(event.key==='Escape'){closeMenu();hideTooltip()}});
+  document.addEventListener('alexihub:block-status-changed',event=>{const detail=event.detail||{};const username=String(detail.username||'').replace(/^@/,'').trim().toLowerCase();if(!username||!active||String(active.name||'').toLowerCase()!==username)return;active.blockedByMe=!!detail.blocked_by_me;refresh();});
 })();
 </script>
 <script id="ah-server-boost-script">
