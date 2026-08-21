@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.71.0",
+      "date": "2026-08-22",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: block status change announcement functionality."
+      ],
+      "source_sha": "1dfb728322b1d28ce2c4b3b0546845944effc77b"
+    },
+    {
       "version": "1.70.0",
       "date": "2026-08-22",
       "title": "Нові можливості AlexiHub",
