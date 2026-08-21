@@ -625,5 +625,133 @@
   *::-webkit-scrollbar-corner { background: transparent !important; }
   *::-webkit-scrollbar-button { width: 0; height: 0; display: none; }
 </style>
+<!-- ah-global-loader: єдиний індикатор завантаження для всього сайту -->
+<div id="ah-loader-overlay" class="ah-loader-overlay" role="status" aria-live="polite" aria-hidden="true">
+  <div class="ah-loader-card">
+    <div class="ah-loader-cubes"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="ah-loader-label" id="ah-loader-label">Завантаження…</div>
+    <div class="ah-loader-time" id="ah-loader-time">0,0с</div>
+  </div>
+</div>
+<style id="ah-loader-style">
+.ah-loader-overlay{position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,.58);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:18px;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .16s ease;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+.ah-loader-overlay.show{opacity:1;visibility:visible;pointer-events:auto}
+.ah-loader-card{display:flex;flex-direction:column;align-items:center;gap:14px;min-width:150px;padding:26px 32px;border:1px solid #3b3d45;border-radius:16px;background:#1e1f22;box-shadow:0 30px 100px rgba(0,0,0,.62);animation:ahLoaderPop .18s cubic-bezier(.2,.82,.25,1) both}
+@keyframes ahLoaderPop{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+.ah-loader-cubes{position:relative;width:46px;height:46px;flex:0 0 auto}
+.ah-loader-cubes i{position:absolute;inset:0;margin:auto;font-style:normal}
+.ah-loader-cubes i::before{content:'';position:absolute;top:0;left:19px;width:7px;height:7px;border-radius:2px;background:#5865f2;animation:ahLoaderFade 1.1s linear infinite}
+.ah-loader-cubes i:nth-child(1){transform:rotate(0deg)}
+.ah-loader-cubes i:nth-child(2){transform:rotate(45deg)}
+.ah-loader-cubes i:nth-child(3){transform:rotate(90deg)}
+.ah-loader-cubes i:nth-child(4){transform:rotate(135deg)}
+.ah-loader-cubes i:nth-child(5){transform:rotate(180deg)}
+.ah-loader-cubes i:nth-child(6){transform:rotate(225deg)}
+.ah-loader-cubes i:nth-child(7){transform:rotate(270deg)}
+.ah-loader-cubes i:nth-child(8){transform:rotate(315deg)}
+.ah-loader-cubes i:nth-child(1)::before{animation-delay:-1.05s}
+.ah-loader-cubes i:nth-child(2)::before{animation-delay:-.9s}
+.ah-loader-cubes i:nth-child(3)::before{animation-delay:-.75s}
+.ah-loader-cubes i:nth-child(4)::before{animation-delay:-.6s}
+.ah-loader-cubes i:nth-child(5)::before{animation-delay:-.45s}
+.ah-loader-cubes i:nth-child(6)::before{animation-delay:-.3s}
+.ah-loader-cubes i:nth-child(7)::before{animation-delay:-.15s}
+.ah-loader-cubes i:nth-child(8)::before{animation-delay:0s}
+@keyframes ahLoaderFade{0%{opacity:1}100%{opacity:.15}}
+.ah-loader-label{color:#f2f3f5;font-size:13px;font-weight:800;letter-spacing:-.01em;white-space:nowrap}
+.ah-loader-time{color:#949ba4;font-size:11px;font-weight:700;font-variant-numeric:tabular-nums}
+@media(prefers-reduced-motion:reduce){.ah-loader-cubes i::before{animation:ahLoaderFadeReduced 1.4s ease-in-out infinite}}
+@keyframes ahLoaderFadeReduced{0%,100%{opacity:.25}50%{opacity:1}}
+</style>
+<script id="ah-loader-js">
+(function(){
+  if (window.AlexiHubLoader) return;
+  var overlay=null, labelEl=null, timeEl=null;
+  var pending=0, showTimer=null, tickTimer=null, startedAt=0;
+  var SHOW_DELAY=380; // показуємо лоадер лише якщо дія справді довша за цей поріг
+
+  function cacheEls(){
+    if (!overlay) overlay=document.getElementById('ah-loader-overlay');
+    if (!labelEl) labelEl=document.getElementById('ah-loader-label');
+    if (!timeEl) timeEl=document.getElementById('ah-loader-time');
+  }
+  function tick(){
+    cacheEls();
+    if (!timeEl) return;
+    timeEl.textContent=((Date.now()-startedAt)/1000).toFixed(1).replace('.',',')+'с';
+  }
+  function reveal(label){
+    cacheEls();
+    if (!overlay) return;
+    if (labelEl) labelEl.textContent=label||'Завантаження…';
+    startedAt=Date.now();
+    overlay.classList.add('show');
+    overlay.setAttribute('aria-hidden','false');
+    tick();
+    clearInterval(tickTimer);
+    tickTimer=setInterval(tick,100);
+  }
+  function begin(label){
+    pending++;
+    if (pending===1){
+      clearTimeout(showTimer);
+      showTimer=setTimeout(function(){reveal(label);},SHOW_DELAY);
+    }
+  }
+  function end(){
+    pending=Math.max(0,pending-1);
+    if (pending===0){
+      clearTimeout(showTimer);
+      clearInterval(tickTimer);
+      cacheEls();
+      if (overlay){overlay.classList.remove('show');overlay.setAttribute('aria-hidden','true');}
+    }
+  }
+  function reset(){
+    pending=0;
+    clearTimeout(showTimer);
+    clearInterval(tickTimer);
+    cacheEls();
+    if (overlay){overlay.classList.remove('show');overlay.setAttribute('aria-hidden','true');}
+  }
+
+  // Публічне API — можна викликати вручну: AlexiHubLoader.show('Текст...') / .hide() / .wrap(promise,'Текст')
+  window.AlexiHubLoader={
+    show:function(label){begin(label);},
+    hide:function(){end();},
+    wrap:function(promise,label){begin(label);return Promise.resolve(promise).finally(end);}
+  };
+
+  // Автоматично показуємо лоадер для всіх запитів, що щось змінюють (POST/PUT/PATCH/DELETE).
+  // GET-запити (фонові оновлення, опитування нотифікацій тощо) навмисно не чіпаємо.
+  var originalFetch=window.fetch?window.fetch.bind(window):null;
+  if (originalFetch){
+    window.fetch=function(input,init){
+      var method='GET';
+      if (init&&init.method) method=String(init.method).toUpperCase();
+      else if (input&&typeof input==='object'&&input.method) method=String(input.method).toUpperCase();
+      var track=method!=='GET'&&method!=='HEAD';
+      if (track) begin();
+      var result=originalFetch(input,init);
+      if (track) result=result.finally(end);
+      return result;
+    };
+  }
+
+  // Автоматично показуємо лоадер для звичайних <form> (справжній перехід на нову сторінку),
+  // якщо форму не перехопив інший скрипт через event.preventDefault().
+  document.addEventListener('submit',function(event){
+    if (event.defaultPrevented) return;
+    var form=event.target;
+    if (!form||form.tagName!=='FORM') return;
+    if (form.hasAttribute('data-no-loader')) return;
+    if (form.target&&form.target!==''&&form.target!=='_self') return;
+    begin();
+  },false);
+
+  window.addEventListener('pageshow',function(e){ if (e.persisted) reset(); });
+})();
+</script>
+
 </body>
 </html>
