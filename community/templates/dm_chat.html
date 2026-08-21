@@ -2616,6 +2616,20 @@ document.addEventListener('DOMContentLoaded',()=>{
   });
   window.addEventListener('resize',closeFullMenu);
   document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeMini();closeFull();closeFullMenu();}});
+  // Blocking/unblocking happens via a separate script (the confirm dialog can fire
+  // from the full-profile "..." menu). Without this, the friend button and the
+  // "Block"/"Unblock" menu label only caught up the next time the card was reopened.
+  document.addEventListener('alexihub:block-status-changed',function(e){
+    const detail=e.detail||{};
+    const username=String(detail.username||'').replace(/^@/,'').trim().toLowerCase();
+    if(!username)return;
+    const known=typeof getKnownProfile==='function'?getKnownProfile(username):null;
+    if(known)known.blockedByMe=!!detail.blocked_by_me;
+    if(active&&String(active.name||'').toLowerCase()===username){
+      active.blockedByMe=!!detail.blocked_by_me;
+      refreshFriendState(active);
+    }
+  });
 })();
 </script>
 
@@ -7184,15 +7198,18 @@ document.addEventListener('DOMContentLoaded', async function(){
     modal?.classList.add('open'); modal?.setAttribute('aria-hidden','false');
   }
   function closeConfirm(){ const m=document.getElementById('ah-block-modal'); m?.classList.remove('open');m?.setAttribute('aria-hidden','true'); }
+  function announceBlockChange(username,blockedByMe){
+    document.dispatchEvent(new CustomEvent('alexihub:block-status-changed',{detail:{username,blocked_by_me:!!blockedByMe}}));
+  }
   async function blockUser(username){
     const data=await api('/community/api/blocks/'+encodeURIComponent(username),{method:'POST'});
     currentStatus=Object.assign({},currentStatus||{},data,{blocked_by_me:true});
-    notify(data.message||text().blockedOk); await loadBlockedUsers(); applyDmBlockState(username,currentStatus); return data;
+    notify(data.message||text().blockedOk); await loadBlockedUsers(); applyDmBlockState(username,currentStatus); announceBlockChange(username,true); return data;
   }
   async function unblockUser(username){
     const data=await api('/community/api/blocks/'+encodeURIComponent(username),{method:'DELETE'});
     currentStatus=Object.assign({},currentStatus||{},data,{blocked_by_me:false});
-    notify(data.message||text().unblockedOk); await loadBlockedUsers(); applyDmBlockState(username,currentStatus); return data;
+    notify(data.message||text().unblockedOk); await loadBlockedUsers(); applyDmBlockState(username,currentStatus); announceBlockChange(username,false); return data;
   }
   async function openBlockFor(username){
     try{
