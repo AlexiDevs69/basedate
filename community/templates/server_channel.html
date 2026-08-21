@@ -7821,15 +7821,18 @@ body .composer-wrap{
     modal?.classList.add('open'); modal?.setAttribute('aria-hidden','false');
   }
   function closeConfirm(){ const m=document.getElementById('ah-block-modal'); m?.classList.remove('open');m?.setAttribute('aria-hidden','true'); }
+  function announceBlockChange(username,blockedByMe){
+    document.dispatchEvent(new CustomEvent('alexihub:block-status-changed',{detail:{username,blocked_by_me:!!blockedByMe}}));
+  }
   async function blockUser(username){
     const data=await api('/community/api/blocks/'+encodeURIComponent(username),{method:'POST'});
     currentStatus=Object.assign({},currentStatus||{},data,{blocked_by_me:true});
-    notify(data.message||text().blockedOk); await loadBlockedUsers(); applyDmBlockState(username,currentStatus); return data;
+    notify(data.message||text().blockedOk); await loadBlockedUsers(); applyDmBlockState(username,currentStatus); announceBlockChange(username,true); return data;
   }
   async function unblockUser(username){
     const data=await api('/community/api/blocks/'+encodeURIComponent(username),{method:'DELETE'});
     currentStatus=Object.assign({},currentStatus||{},data,{blocked_by_me:false});
-    notify(data.message||text().unblockedOk); await loadBlockedUsers(); applyDmBlockState(username,currentStatus); return data;
+    notify(data.message||text().unblockedOk); await loadBlockedUsers(); applyDmBlockState(username,currentStatus); announceBlockChange(username,false); return data;
   }
   async function openBlockFor(username){
     try{
@@ -8344,6 +8347,7 @@ body .composer-wrap{
   document.addEventListener('alexihub:full-profile-open',event=>{const profile=event.detail||{};active={...profile,name:String(profile.name||profile.username||'').replace(/^@/,''),display:profile.display||profile.name||profile.username||'',profile:profile.profile||'',isSelf:!!profile.isSelf||String(profile.name||profile.username||'').toLowerCase()===String(CURRENT_USER).toLowerCase(),friendStatus:profile.isSelf?'self':'loading',friendshipId:null,inviteServers:[],mutualServers:[]};closeMenu();hideTooltip();renderFriend();renderInvites();renderMutualServers();if(!active.isSelf)refresh()});
   document.addEventListener('click',async event=>{const friend=event.target.closest('#ah-v3-friend-action');if(friend){event.preventDefault();event.stopPropagation();return friendAction()}const more=event.target.closest('#ah-v3-full-more');if(more){event.preventDefault();event.stopPropagation();return openMenu()}const inviteButton=event.target.closest('[data-invite-server-id]');if(inviteButton){event.preventDefault();event.stopPropagation();return invite(inviteButton.dataset.inviteServerId,inviteButton)}const action=event.target.closest('[data-full-profile-action]');if(action){event.preventDefault();event.stopPropagation();const kind=action.dataset.fullProfileAction;closeMenu();if(kind==='copy'&&active){if(!active.id)await refresh();try{await navigator.clipboard.writeText(String(active.id||''));notify(window.AlexiHubI18n.t("common.message.uss_id_copied"))}catch(error){notify(window.AlexiHubI18n.t("common.message.ided_to_copy_id"))}}else if(kind==='block'&&active){if(window.AlexiHubBlocking?.openBlockFor)window.AlexiHubBlocking.openBlockFor(active.name);else notify(window.AlexiHubI18n.t("common.message.unable_to_open_blocking"))}else if(kind==='ignore')notify(window.AlexiHubI18n.t("common.message.illing_you_will_be_available_in_communication_settings"));else if(kind==='report')notify(window.AlexiHubI18n.t("common.message.mugs_will_be_available_in_moderation_modules"));return}if(!event.target.closest('#ah-v3-full-menu,#ah-v3-full-more'))closeMenu()});
   document.addEventListener('mouseover',event=>{const button=event.target.closest('#ah-v3-friend-action[data-tooltip]');if(button)showTooltip(button)});document.addEventListener('mouseout',event=>{if(event.target.closest('#ah-v3-friend-action[data-tooltip]'))hideTooltip()});window.addEventListener('resize',closeMenu);document.addEventListener('keydown',event=>{if(event.key==='Escape'){closeMenu();hideTooltip()}});
+document.addEventListener('alexihub:block-status-changed',event=>{const detail=event.detail||{};const username=String(detail.username||'').replace(/^@/,'').trim().toLowerCase();if(!username||!active||String(active.name||'').toLowerCase()!==username)return;active.blockedByMe=!!detail.blocked_by_me;refresh();});
 })();
 </script>
 <script id="ah-server-boost-script">
