@@ -1325,7 +1325,7 @@
       <div class="dm-list" id="dm-list">
         {% for item in dm_threads %}{% set u = item.other %}{% if u %}
         {% set u_status = u.account_status or 'online' %}{% set u_visible = u.id in online_ids and u_status != 'invisible' %}
-        <a class="dm-row {{ 'active' if u.id == other.id else '' }}" href="/community/dm/{{ u.username }}" data-name="{{ ((u.display_name or u.username) ~ ' ' ~ u.username)|lower }}" data-thread-id="{{ item.thread.id }}" data-account-id="{{ u.id }}" data-mini-username="{{ u.username }}" data-mini-display="{{ u.display_name or u.username }}" data-mini-avatar="{{ u.avatar_url or '' }}" data-mini-banner="{{ u.banner_url or '' }}" data-mini-status="{{ u_status if u_visible else 'offline' }}" data-mini-role="{{ u.role_label or 'member' }}" data-mini-c1="{{ u.role_color_start or '#5865f2' }}" data-mini-c2="{{ u.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ u.username }}" data-mini-bio="{{ u.bio or '' }}"><span class="avatar" {% if u.avatar_url %}style="background-image:url('{{ u.avatar_url }}')"{% endif %}>{% if not u.avatar_url %}{{ u.username[:1]|upper }}{% endif %}{% if u_visible %}<span class="presence status-{{ u_status }}"></span>{% endif %}</span><span class="dm-meta"><span class="dm-name">{{ u.display_name or u.username }}</span>{% if item.server_tag %}<span class="dm-server-tag" title="{{ item.server_tag.server_name }}"><b>{{ item.server_tag.icon_glyph }}</b>{{ item.server_tag.text }}</span>{% endif %}</span>{% set dc = mention_counts.dm_by_thread.get(item.thread.id, 0) %}<span class="ah-mention-count" {% if not dc %}hidden{% endif %}>{{ '99+' if dc > 99 else dc }}</span></a>
+        <a class="dm-row {{ 'active' if u.id == other.id else '' }}" href="/community/dm/{{ u.username }}" data-name="{{ ((u.display_name or u.username) ~ ' ' ~ u.username)|lower }}" data-thread-id="{{ item.thread.id }}" data-account-id="{{ u.id }}" data-mini-username="{{ u.username }}" data-mini-display="{{ u.display_name or u.username }}" data-mini-avatar="{{ u.avatar_url or '' }}" data-mini-banner="{{ u.banner_url or '' }}" data-mini-status="{{ u_status if u_visible else 'offline' }}" data-mini-role="{{ u.role_label or 'member' }}" data-mini-c1="{{ u.role_color_start or '#5865f2' }}" data-mini-c2="{{ u.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ u.username }}" data-mini-bio="{{ u.bio or '' }}"><span class="avatar" {% if u.avatar_url %}style="background-image:url('{{ u.avatar_url }}')"{% endif %}>{% if not u.avatar_url %}{{ u.username[:1]|upper }}{% endif %}{% if u_visible %}<span class="presence status-{{ u_status }}"></span>{% endif %}</span><span class="dm-meta"><span class="dm-name">{{ u.display_name or u.username }}</span>{% if item.server_tag %}<span class="dm-server-tag ah-tag-clickable" title="{{ item.server_tag.server_name }}" data-tag-server-id="{{ item.server_tag.server_id or '' }}" data-tag-server-name="{{ item.server_tag.server_name or '' }}" data-tag-icon-glyph="{{ item.server_tag.icon_glyph or '' }}" data-tag-icon-url="{{ item.server_tag.icon_url or '' }}" data-tag-text="{{ item.server_tag.text or '' }}" data-tag-member-count="{{ item.server_tag.member_count or '' }}" data-tag-online-count="{{ item.server_tag.online_count or '' }}" data-tag-description="{{ item.server_tag.description or '' }}" data-tag-invite="{{ item.server_tag.invite_url or '' }}"><b>{{ item.server_tag.icon_glyph }}</b>{{ item.server_tag.text }}</span>{% endif %}</span>{% set dc = mention_counts.dm_by_thread.get(item.thread.id, 0) %}<span class="ah-mention-count" {% if not dc %}hidden{% endif %}>{{ '99+' if dc > 99 else dc }}</span></a>
         {% endif %}{% endfor %}
       </div>
       <div class="user-panel mini-profile-trigger" data-mini-username="{{ account.username }}" data-mini-display="{{ account.display_name or account.username }}" data-mini-avatar="{{ account.avatar_url or '' }}" data-mini-banner="{{ account.banner_url or '' }}" data-mini-status="{{ account.account_status or 'online' }}" data-mini-role="{{ account.role_label or 'online' }}" data-mini-c1="{{ account.role_color_start or '#5865f2' }}" data-mini-c2="{{ account.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ account.username }}" data-mini-bio="{{ account.bio or '' }}">
@@ -1343,7 +1343,7 @@
       </header>
       <section id="messages" class="messages">
         <div class="dm-start"><span class="avatar" {% if other.avatar_url %}style="background-image:url('{{ other.avatar_url }}')"{% endif %}>{% if not other.avatar_url %}{{ other.username[:1]|upper }}{% endif %}{% if other_visible %}<span class="presence status-{{ other_status }}"></span>{% endif %}</span><h1>{{ other.display_name or other.username }}</h1><div class="profile-handle">@{{ other.username }}</div><p><!--i18n:dm.text.this_is_the_beginning_of_your_personal_dialogue-->{{ i18n_t('dm.text.this_is_the_beginning_of_your_personal_dialogue') }}</p></div>
-        {% for item in messages %}{% set msg=item.message %}{% set au=item.author %}{% set is_forwarded = msg.is_forwarded if msg.is_forwarded is defined else false %}<div class="msg" id="dm-message-{{ msg.id }}" data-id="{{ msg.id }}" data-message-id="{{ msg.id }}" data-own="{{ '1' if msg.author_id == account.id else '0' }}" data-message-editable="{{ '1' if msg.author_id == account.id and not is_forwarded else '0' }}" data-message-author="{{ (au.display_name or au.username) if au else '?' }}" data-message-avatar="{{ au.avatar_url if au and au.avatar_url else '' }}" data-message-content="{{ msg.content|e }}" data-message-delete-url="/community/dm/{{ other.username }}/message/{{ msg.id }}/delete" data-message-edited="{{ '1' if msg.edited_at else '0' }}" data-message-forwarded="{{ '1' if is_forwarded else '0' }}" data-message-image="{{ msg.image_url or '' }}"><span class="msg-avatar mini-profile-trigger" data-mini-username="{{ au.username if au else '?' }}" data-mini-display="{{ (au.display_name or au.username) if au else '?' }}" data-mini-avatar="{{ au.avatar_url if au and au.avatar_url else '' }}" data-mini-banner="{{ au.banner_url if au and au.banner_url else '' }}" data-mini-status="{{ account.account_status if au and au.id == account.id else (other_status if au and au.id == other.id and other_visible else 'offline') }}" data-mini-role="{{ au.role_label if au and au.role_label else 'member' }}" data-mini-c1="{{ au.role_color_start if au and au.role_color_start else '#5865f2' }}" data-mini-c2="{{ au.role_color_end if au and au.role_color_end else '#9b5cf6' }}" data-mini-profile="/community/profile/{{ au.username if au else '' }}" data-mini-bio="{{ au.bio if au and au.bio else '' }}" {% if au and au.avatar_url %}style="background-image:url('{{ au.avatar_url }}')"{% endif %}>{% if au and not au.avatar_url %}{{ (au.display_name or au.username)|first|upper }}{% endif %}</span><div class="msg-body"><div class="msg-head"><span class="msg-name mini-profile-trigger" data-mini-username="{{ au.username if au else '?' }}" data-mini-display="{{ (au.display_name or au.username) if au else '?' }}" data-mini-avatar="{{ au.avatar_url if au and au.avatar_url else '' }}" data-mini-banner="{{ au.banner_url if au and au.banner_url else '' }}" data-mini-status="{{ account.account_status if au and au.id == account.id else (other_status if au and au.id == other.id and other_visible else 'offline') }}" data-mini-role="{{ au.role_label if au and au.role_label else 'member' }}" data-mini-c1="{{ au.role_color_start if au and au.role_color_start else '#5865f2' }}" data-mini-c2="{{ au.role_color_end if au and au.role_color_end else '#9b5cf6' }}" data-mini-profile="/community/profile/{{ au.username if au else '' }}" data-mini-bio="{{ au.bio if au and au.bio else '' }}">{{ (au.display_name or au.username) if au else '?' }}</span>{% if item.server_tag %}<span class="message-server-tag" title="{{ item.server_tag.server_name }}"><b>{{ item.server_tag.icon_glyph }}</b>{{ item.server_tag.text }}</span>{% endif %}<span class="msg-time">{{ msg.created_at }}</span></div>{% if is_forwarded %}<div class="dm-forwarded-label"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg><span><!--i18n:common.text.undpentent-->{{ i18n_t('common.text.undpentent') }}</span></div>{% endif %}{% if item.reply and item.reply.message %}<div class="dm-reply" onclick="jumpToDmMessage({{ item.reply.message.id }})"><span class="dm-reply-author">{{ (item.reply.author.display_name or item.reply.author.username) if item.reply.author else i18n_t('common.user.deleted') }}</span><span class="dm-reply-text">{{ item.reply.message.content if item.reply.message.content else i18n_t('common.attachment') }}</span></div>{% endif %}<div class="msg-text"><span class="dm-message-text">{{ msg.content }}</span><span class="dm-message-edited {{ '' if msg.edited_at else 'hidden' }}" id="dm-edited-{{ msg.id }}"><!--i18n:common.label.modified-->{{ i18n_t('common.label.modified') }}</span></div>{% if msg.image_url %}<img class="msg-img" src="{{ msg.image_url }}" alt="">{% endif %}</div><div class="msg-actions"><button type="button" class="dm-message-more-btn" onclick="openDmMessageMenu(event)" title="{{ i18n_t('common.aria.more') }}" data-i18n-title="common.aria.more"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button></div></div>{% endfor %}
+        {% for item in messages %}{% set msg=item.message %}{% set au=item.author %}{% set is_forwarded = msg.is_forwarded if msg.is_forwarded is defined else false %}<div class="msg" id="dm-message-{{ msg.id }}" data-id="{{ msg.id }}" data-message-id="{{ msg.id }}" data-own="{{ '1' if msg.author_id == account.id else '0' }}" data-message-editable="{{ '1' if msg.author_id == account.id and not is_forwarded else '0' }}" data-message-author="{{ (au.display_name or au.username) if au else '?' }}" data-message-avatar="{{ au.avatar_url if au and au.avatar_url else '' }}" data-message-content="{{ msg.content|e }}" data-message-delete-url="/community/dm/{{ other.username }}/message/{{ msg.id }}/delete" data-message-edited="{{ '1' if msg.edited_at else '0' }}" data-message-forwarded="{{ '1' if is_forwarded else '0' }}" data-message-image="{{ msg.image_url or '' }}"><span class="msg-avatar mini-profile-trigger" data-mini-username="{{ au.username if au else '?' }}" data-mini-display="{{ (au.display_name or au.username) if au else '?' }}" data-mini-avatar="{{ au.avatar_url if au and au.avatar_url else '' }}" data-mini-banner="{{ au.banner_url if au and au.banner_url else '' }}" data-mini-status="{{ account.account_status if au and au.id == account.id else (other_status if au and au.id == other.id and other_visible else 'offline') }}" data-mini-role="{{ au.role_label if au and au.role_label else 'member' }}" data-mini-c1="{{ au.role_color_start if au and au.role_color_start else '#5865f2' }}" data-mini-c2="{{ au.role_color_end if au and au.role_color_end else '#9b5cf6' }}" data-mini-profile="/community/profile/{{ au.username if au else '' }}" data-mini-bio="{{ au.bio if au and au.bio else '' }}" {% if au and au.avatar_url %}style="background-image:url('{{ au.avatar_url }}')"{% endif %}>{% if au and not au.avatar_url %}{{ (au.display_name or au.username)|first|upper }}{% endif %}</span><div class="msg-body"><div class="msg-head"><span class="msg-name mini-profile-trigger" data-mini-username="{{ au.username if au else '?' }}" data-mini-display="{{ (au.display_name or au.username) if au else '?' }}" data-mini-avatar="{{ au.avatar_url if au and au.avatar_url else '' }}" data-mini-banner="{{ au.banner_url if au and au.banner_url else '' }}" data-mini-status="{{ account.account_status if au and au.id == account.id else (other_status if au and au.id == other.id and other_visible else 'offline') }}" data-mini-role="{{ au.role_label if au and au.role_label else 'member' }}" data-mini-c1="{{ au.role_color_start if au and au.role_color_start else '#5865f2' }}" data-mini-c2="{{ au.role_color_end if au and au.role_color_end else '#9b5cf6' }}" data-mini-profile="/community/profile/{{ au.username if au else '' }}" data-mini-bio="{{ au.bio if au and au.bio else '' }}">{{ (au.display_name or au.username) if au else '?' }}</span>{% if item.server_tag %}<span class="message-server-tag ah-tag-clickable" title="{{ item.server_tag.server_name }}" data-tag-server-id="{{ item.server_tag.server_id or '' }}" data-tag-server-name="{{ item.server_tag.server_name or '' }}" data-tag-icon-glyph="{{ item.server_tag.icon_glyph or '' }}" data-tag-icon-url="{{ item.server_tag.icon_url or '' }}" data-tag-text="{{ item.server_tag.text or '' }}" data-tag-member-count="{{ item.server_tag.member_count or '' }}" data-tag-online-count="{{ item.server_tag.online_count or '' }}" data-tag-description="{{ item.server_tag.description or '' }}" data-tag-invite="{{ item.server_tag.invite_url or '' }}"><b>{{ item.server_tag.icon_glyph }}</b>{{ item.server_tag.text }}</span>{% endif %}<span class="msg-time">{{ msg.created_at }}</span></div>{% if is_forwarded %}<div class="dm-forwarded-label"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg><span><!--i18n:common.text.undpentent-->{{ i18n_t('common.text.undpentent') }}</span></div>{% endif %}{% if item.reply and item.reply.message %}<div class="dm-reply" onclick="jumpToDmMessage({{ item.reply.message.id }})"><span class="dm-reply-author">{{ (item.reply.author.display_name or item.reply.author.username) if item.reply.author else i18n_t('common.user.deleted') }}</span><span class="dm-reply-text">{{ item.reply.message.content if item.reply.message.content else i18n_t('common.attachment') }}</span></div>{% endif %}<div class="msg-text"><span class="dm-message-text">{{ msg.content }}</span><span class="dm-message-edited {{ '' if msg.edited_at else 'hidden' }}" id="dm-edited-{{ msg.id }}"><!--i18n:common.label.modified-->{{ i18n_t('common.label.modified') }}</span></div>{% if msg.image_url %}<img class="msg-img" src="{{ msg.image_url }}" alt="">{% endif %}</div><div class="msg-actions"><button type="button" class="dm-message-more-btn" onclick="openDmMessageMenu(event)" title="{{ i18n_t('common.aria.more') }}" data-i18n-title="common.aria.more"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button></div></div>{% endfor %}
       </section>
       <div class="composer-wrap"><div id="typing" class="typing"></div><form id="dm-form" method="post" action="/community/dm/{{ other.username }}/message"><input id="dm-file-input" type="file" accept="image/*" style="display:none"><input id="image_url" name="image_url" type="hidden" value=""><div id="dm-reply-preview" class="dm-reply-preview hidden"><span><!--i18n:common.text.the_answer_to-->{{ i18n_t('common.text.the_answer_to') }} <b id="dm-reply-author"></b></span><span id="dm-reply-text" class="dm-reply-preview-text"></span><button type="button" onclick="clearDmReply()" aria-label="{{ i18n_t('common.aria.cancel_reply') }}" data-i18n-aria-label="common.aria.cancel_reply">×</button><input id="dm-reply-to-id" type="hidden" name="reply_to_id" value=""></div><div class="dm-composer-shell"><div id="dm-plus-menu" class="dm-plus-menu"><button type="button" onclick="chooseDmImage()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="M9 15h6"/></svg><span><!--i18n:common.text.send_a_file-->{{ i18n_t('common.text.send_a_file') }}</span></button><button type="button" onclick="showActionToast && showActionToast(window.AlexiHubI18n.t('dm.stub.polls'))"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M8 17V9"/><path d="M12 19V3"/><path d="M16 15v-4"/><path d="M20 17V7"/></svg><span><!--i18n:dm.text.create_a_survey-->{{ i18n_t('dm.text.create_a_survey') }}</span></button><button type="button" onclick="showActionToast && showActionToast(window.AlexiHubI18n.t('dm.stub.apps'))"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span><!--i18n:dm.text.use_the_applications-->{{ i18n_t('dm.text.use_the_applications') }}</span></button></div><div id="dm-attachment-preview" class="attachment-preview"></div><div class="composer"><button class="dm-plus-btn" id="dm-plus-btn" type="button" onclick="toggleDmPlus(event)" title="{{ i18n_t('dm.aria.add_an_addition') }}" data-i18n-title="dm.aria.add_an_addition">+</button><textarea id="content" name="content" placeholder="{{ i18n_t('dm.composer.placeholder', username=other.username) }}" rows="1"></textarea><button type="submit">→</button></div></div></form></div>
     </main>
@@ -1772,7 +1772,7 @@ function messageHtml(msg,author){
   const forwardedLabel=forwarded?('' + "<div class=\"dm-forwarded-label\"><svg viewBox=\"0 0 24 24\"><path d=\"M9 14 4 9l5-5\"/><path d=\"M20 20v-7a4 4 0 0 0-4-4H4\"/></svg><span>" + window.AlexiHubI18n.t("dm.forwarded") + '</span></div>'):'';
   const actions=('' + "<div class=\"msg-actions\"><button type=\"button\" class=\"dm-message-more-btn\" onclick=\"openDmMessageMenu(event)\" title=\"" + window.AlexiHubI18n.t("common.aria.more") + "\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\"><circle cx=\"5\" cy=\"12\" r=\"2\"/><circle cx=\"12\" cy=\"12\" r=\"2\"/><circle cx=\"19\" cy=\"12\" r=\"2\"/></svg></button></div>");
   const tag=author.server_tag&&author.server_tag.active?author.server_tag:null;
-  const serverTagHtml=tag?('' + "<span class=\"message-server-tag\" title=\"" + escapeHtml(tag.server_name||'') + "\"><b>" + escapeHtml(tag.icon_glyph||'') + "</b>" + escapeHtml(tag.text||'') + "</span>"):'';
+  const serverTagHtml=tag?('' + "<span class=\"message-server-tag ah-tag-clickable\" title=\"" + escapeHtml(tag.server_name||'') + "\" data-tag-server-id=\"" + escapeHtml(String(tag.server_id||'')) + "\" data-tag-server-name=\"" + escapeHtml(tag.server_name||'') + "\" data-tag-icon-glyph=\"" + escapeHtml(tag.icon_glyph||'') + "\" data-tag-icon-url=\"" + escapeHtml(tag.icon_url||'') + "\" data-tag-text=\"" + escapeHtml(tag.text||'') + "\" data-tag-member-count=\"" + escapeHtml(String(tag.member_count||'')) + "\" data-tag-online-count=\"" + escapeHtml(String(tag.online_count||'')) + "\" data-tag-description=\"" + escapeHtml(tag.description||'') + "\" data-tag-invite=\"" + escapeHtml(tag.invite_url||'') + "\"><b>" + escapeHtml(tag.icon_glyph||'') + "</b>" + escapeHtml(tag.text||'') + "</span>"):'';
   return ('' + "<div class=\"msg\" id=\"dm-message-" + String((msg.id)) + "\" data-id=\"" + String((msg.id)) + "\" data-message-id=\"" + String((msg.id)) + "\" data-own=\"" + String((own?'1':'0')) + "\" data-message-editable=\"" + String((own&&!forwarded?'1':'0')) + "\" data-message-author=\"" + String((escapeHtml(displayName))) + "\" data-message-avatar=\"" + String((escapeHtml(author.avatar_url||''))) + "\" data-message-content=\"" + String((escapeHtml(msg.content||''))) + "\" data-message-delete-url=\"/community/dm/{{ other.username }}/message/" + String((msg.id)) + "/delete\" data-message-edited=\"" + String((msg.edited_at?'1':'0')) + "\" data-message-forwarded=\"" + String((forwarded?'1':'0')) + "\" data-message-image=\"" + String((escapeHtml(msg.image_url||''))) + "\"><span class=\"msg-avatar mini-profile-trigger\" data-mini-username=\"" + String((escapeHtml(username))) + "\" data-mini-display=\"" + String((escapeHtml(displayName))) + "\" data-mini-avatar=\"" + String((escapeHtml(author.avatar_url||''))) + "\" data-mini-banner=\"" + String((escapeHtml(author.banner_url||''))) + "\" data-mini-status=\"" + String((escapeHtml(status))) + "\" data-mini-role=\"" + String((escapeHtml(role))) + "\" data-mini-c1=\"" + String((escapeHtml(c1))) + "\" data-mini-c2=\"" + String((escapeHtml(c2))) + "\" data-mini-profile=\"/community/profile/" + String((encodeURIComponent(username))) + "\" data-mini-bio=\"" + String((escapeHtml(bio))) + "\" " + String((av)) + ">" + String((first)) + "</span><div class=\"msg-body\"><div class=\"msg-head\"><span class=\"msg-name mini-profile-trigger\" data-mini-username=\"" + String((escapeHtml(username))) + "\" data-mini-display=\"" + String((escapeHtml(displayName))) + "\" data-mini-avatar=\"" + String((escapeHtml(author.avatar_url||''))) + "\" data-mini-banner=\"" + String((escapeHtml(author.banner_url||''))) + "\" data-mini-status=\"" + String((escapeHtml(status))) + "\" data-mini-role=\"" + String((escapeHtml(role))) + "\" data-mini-c1=\"" + String((escapeHtml(c1))) + "\" data-mini-c2=\"" + String((escapeHtml(c2))) + "\" data-mini-profile=\"/community/profile/" + String((encodeURIComponent(username))) + "\" data-mini-bio=\"" + String((escapeHtml(bio))) + "\">" + String((escapeHtml(displayName))) + "</span>" + String((serverTagHtml)) + "<span class=\"msg-time\">" + String((escapeHtml(msg.created_at||''))) + "</span></div>" + String((forwardedLabel)) + String((dmReplyHtml(resolveDmReply(msg)))) + "<div class=\"msg-text\"><span class=\"dm-message-text\">" + String((escapeHtml(msg.content||''))) + "</span><span class=\"dm-message-edited " + String((msg.edited_at?'':'hidden')) + "\" id=\"dm-edited-" + String((msg.id)) + "\">" + window.AlexiHubI18n.t("common.label.modified") + "</span></div>" + String((img)) + '</div>' + String((actions)) + '</div>');
 }
 
@@ -8028,5 +8028,142 @@ document.addEventListener('DOMContentLoaded', async function(){
 </script>
 {% include "profile_board_runtime.html" %}
 {% include "mobile_runtime.html" %}
+<style>
+.ah-tag-clickable{cursor:pointer}
+.ah-tag-clickable:hover{background:#3b3d44!important}
+.ah-tag-preview{position:fixed;z-index:100000;width:280px;max-width:calc(100vw - 24px);background:var(--panel);border:1px solid var(--border);border-radius:12px;box-shadow:0 20px 50px rgba(0,0,0,.5);padding:14px;display:none}
+.ah-tag-preview.open{display:block;animation:ah-tag-preview-pop .14s ease}
+@keyframes ah-tag-preview-pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+.ah-tag-preview-head{display:flex;gap:12px;align-items:center}
+.ah-tag-preview-icon{width:48px;height:48px;border-radius:14px;background:#313338;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;overflow:hidden;flex:0 0 auto;color:var(--text)}
+.ah-tag-preview-icon img{width:100%;height:100%;object-fit:cover}
+.ah-tag-preview-meta{min-width:0;flex:1}
+.ah-tag-preview-name-row{display:flex;align-items:center;gap:6px;min-width:0}
+.ah-tag-preview-name{font-weight:800;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+.ah-tag-preview-chip{display:inline-flex;align-items:center;height:18px;padding:0 5px;border-radius:4px;background:#3b3d44;color:#fff;font-size:9px;font-weight:800;white-space:nowrap;flex:0 0 auto}
+.ah-tag-preview-stats{display:flex;gap:12px;margin-top:4px;color:var(--muted);font-size:11px}
+.ah-tag-preview-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-right:4px}
+.ah-tag-preview-dot.muted{background:var(--muted)}
+.ah-tag-preview-desc{margin-top:10px;color:var(--text);font-size:12px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.ah-tag-preview-action{display:block;margin-top:12px;height:36px;border-radius:8px;background:var(--accent);color:#fff;text-align:center;line-height:36px;font-weight:800;font-size:13px;text-decoration:none}
+.ah-tag-preview-action:hover{background:#4752c4}
+</style>
+<div id="ah-tag-preview" class="ah-tag-preview" role="dialog" aria-hidden="true">
+  <div class="ah-tag-preview-head">
+    <div class="ah-tag-preview-icon" id="ah-tag-preview-icon"></div>
+    <div class="ah-tag-preview-meta">
+      <div class="ah-tag-preview-name-row">
+        <span class="ah-tag-preview-name" id="ah-tag-preview-name"></span>
+        <span class="ah-tag-preview-chip" id="ah-tag-preview-chip" hidden></span>
+      </div>
+      <div class="ah-tag-preview-stats" id="ah-tag-preview-stats" hidden>
+        <span><i class="ah-tag-preview-dot"></i><b id="ah-tag-preview-online">0</b>&nbsp;в мережі</span>
+        <span><i class="ah-tag-preview-dot muted"></i><b id="ah-tag-preview-members">0</b>&nbsp;учасників</span>
+      </div>
+    </div>
+  </div>
+  <p class="ah-tag-preview-desc" id="ah-tag-preview-desc" hidden></p>
+  <a class="ah-tag-preview-action" id="ah-tag-preview-action" href="#" hidden>Перейти на сервер</a>
+</div>
+<script>
+(function(){
+  var pv=document.getElementById('ah-tag-preview');
+  if(!pv||pv.dataset.bound==='1')return;
+  pv.dataset.bound='1';
+  var iconEl=document.getElementById('ah-tag-preview-icon');
+  var nameEl=document.getElementById('ah-tag-preview-name');
+  var chipEl=document.getElementById('ah-tag-preview-chip');
+  var statsEl=document.getElementById('ah-tag-preview-stats');
+  var onlineEl=document.getElementById('ah-tag-preview-online');
+  var membersEl=document.getElementById('ah-tag-preview-members');
+  var descEl=document.getElementById('ah-tag-preview-desc');
+  var actionEl=document.getElementById('ah-tag-preview-action');
+  var numberFormat=new Intl.NumberFormat('uk-UA');
+
+  function closeTagPreview(){
+    pv.classList.remove('open');
+    pv.setAttribute('aria-hidden','true');
+  }
+
+  function placeTagPreview(anchor){
+    var gap=8,margin=12;
+    var rect=anchor.getBoundingClientRect();
+    var width=pv.offsetWidth,height=pv.offsetHeight;
+    var left=rect.left;
+    if(left+width>window.innerWidth-margin)left=window.innerWidth-width-margin;
+    left=Math.max(margin,left);
+    var top=rect.bottom+gap;
+    if(top+height>window.innerHeight-margin)top=rect.top-height-gap;
+    top=Math.max(margin,top);
+    pv.style.left=Math.round(left)+'px';
+    pv.style.top=Math.round(top)+'px';
+  }
+
+  function openTagPreview(el){
+    var name=el.getAttribute('data-tag-server-name')||el.getAttribute('title')||'';
+    var glyph=el.getAttribute('data-tag-icon-glyph')||'◆';
+    var text=el.getAttribute('data-tag-text')||'';
+    var serverId=el.getAttribute('data-tag-server-id')||'';
+    var iconUrl=el.getAttribute('data-tag-icon-url')||'';
+    var members=el.getAttribute('data-tag-member-count')||'';
+    var online=el.getAttribute('data-tag-online-count')||'';
+    var desc=el.getAttribute('data-tag-description')||'';
+    var invite=el.getAttribute('data-tag-invite')||(serverId?('/community/servers/'+serverId):'');
+
+    nameEl.textContent=name||text||'Сервер';
+    chipEl.hidden=!text;
+    chipEl.textContent=text?(glyph+' '+text):'';
+
+    iconEl.replaceChildren();
+    if(iconUrl){
+      var img=document.createElement('img');
+      img.src=iconUrl;img.alt='';
+      iconEl.appendChild(img);
+    }else{
+      iconEl.textContent=glyph||(name?name.slice(0,2).toUpperCase():'◆');
+    }
+
+    if(members||online){
+      statsEl.hidden=false;
+      onlineEl.textContent=numberFormat.format(Number(online||0));
+      membersEl.textContent=numberFormat.format(Number(members||0));
+    }else{
+      statsEl.hidden=true;
+    }
+
+    if(desc){
+      descEl.hidden=false;
+      descEl.textContent=desc;
+    }else{
+      descEl.hidden=true;
+    }
+
+    if(invite){
+      actionEl.hidden=false;
+      actionEl.href=invite;
+    }else{
+      actionEl.hidden=true;
+    }
+
+    pv.classList.add('open');
+    pv.setAttribute('aria-hidden','false');
+    requestAnimationFrame(function(){placeTagPreview(el);});
+  }
+
+  document.addEventListener('click',function(e){
+    var tag=e.target.closest('.member-server-tag, .dm-server-tag, .message-server-tag');
+    if(tag){
+      e.preventDefault();
+      e.stopPropagation();
+      openTagPreview(tag);
+      return;
+    }
+    if(!e.target.closest('#ah-tag-preview'))closeTagPreview();
+  },true);
+
+  window.addEventListener('resize',closeTagPreview);
+  document.addEventListener('scroll',closeTagPreview,true);
+})();
+</script>
 </body>
 </html>
