@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.80.0",
+      "date": "2026-08-22",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: tag preview functionality and styles."
+      ],
+      "source_sha": "f6032ea3fc8be6f701b583ef5c28bb39e48907e2"
+    },
+    {
       "version": "1.79.1",
       "date": "2026-08-22",
       "title": "Виправлення та стабільність",
