@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.77.0",
+      "date": "2026-08-22",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: initial HTML structure for AlexiHub."
+      ],
+      "source_sha": "f08d3dbccab2be359e610aa5e90b33e41a73ad7e"
+    },
+    {
       "version": "1.76.0",
       "date": "2026-08-22",
       "title": "Нові можливості AlexiHub",
