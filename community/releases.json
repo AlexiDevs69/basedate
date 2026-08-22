@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.79.1",
+      "date": "2026-08-22",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update DM chat template with server tag enhancements."
+      ],
+      "source_sha": "f5203a118206e3aa206789203e21191d21b68abe"
+    },
+    {
       "version": "1.79.0",
       "date": "2026-08-22",
       "title": "Нові можливості AlexiHub",
