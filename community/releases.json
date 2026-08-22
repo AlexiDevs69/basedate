@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.81.0",
+      "date": "2026-08-23",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: tag support to user interface elements."
+      ],
+      "source_sha": "c74b9071884f13adde27d6256f87ca9e34ab7d4d"
+    },
+    {
       "version": "1.80.0",
       "date": "2026-08-22",
       "title": "Нові можливості AlexiHub",
