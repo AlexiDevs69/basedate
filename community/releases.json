@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.84.0",
+      "date": "2026-08-23",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: tag functionality to user profile."
+      ],
+      "source_sha": "d4e0b1f474cd24b8a591afd60b1f0633fb7bb6d3"
+    },
+    {
       "version": "1.83.0",
       "date": "2026-08-23",
       "title": "Нові можливості AlexiHub",
