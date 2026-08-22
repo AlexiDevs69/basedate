@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.77.2",
+      "date": "2026-08-22",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance DM threads with server tag decoration."
+      ],
+      "source_sha": "a4ade5d042126f4b08a08e236336ac25275d86c9"
+    },
+    {
       "version": "1.77.1",
       "date": "2026-08-22",
       "title": "Виправлення та стабільність",
