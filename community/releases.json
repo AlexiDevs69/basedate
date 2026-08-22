@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.74.1",
+      "date": "2026-08-22",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: loader overlay and remove label element."
+      ],
+      "source_sha": "499c79f6b3c09dfc5cfd18bc6aa71b0bb6ba4359"
+    },
+    {
       "version": "1.74.0",
       "date": "2026-08-22",
       "title": "Нові можливості AlexiHub",
