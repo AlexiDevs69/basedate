@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.78.0",
+      "date": "2026-08-22",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: server tag feature in DM UI."
+      ],
+      "source_sha": "6bfe035c5de416c0055b662be991b66d137307b1"
+    },
+    {
       "version": "1.77.2",
       "date": "2026-08-22",
       "title": "Виправлення та стабільність",
