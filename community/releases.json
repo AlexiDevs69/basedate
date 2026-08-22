@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.83.0",
+      "date": "2026-08-23",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: tag functionality to user display in chat."
+      ],
+      "source_sha": "f86f984d8ebf9857a6e7cdb1ed9689cb0a59f318"
+    },
+    {
       "version": "1.82.0",
       "date": "2026-08-23",
       "title": "Нові можливості AlexiHub",
