@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.77.1",
+      "date": "2026-08-22",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Change language and update loading messages in HTML."
+      ],
+      "source_sha": "fa70aa72ca60827e0267405a6c8c52b558238af2"
+    },
+    {
       "version": "1.77.0",
       "date": "2026-08-22",
       "title": "Нові можливості AlexiHub",
