@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.74.4",
+      "date": "2026-08-22",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update composer-wrap styles in mobile_runtime.html."
+      ],
+      "source_sha": "46d06332f740efba44c62b6a87a0c30140c49af2"
+    },
+    {
       "version": "1.74.3",
       "date": "2026-08-22",
       "title": "Оновлення AlexiHub",
