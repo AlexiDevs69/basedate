@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.75.0",
+      "date": "2026-08-22",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: touch gesture locking for drawer navigation."
+      ],
+      "source_sha": "5174c9b41e3a4d5e656b78dcc2a83a2b6b4a9312"
+    },
+    {
       "version": "1.74.4",
       "date": "2026-08-22",
       "title": "Виправлення та стабільність",
