@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.79.0",
+      "date": "2026-08-22",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: server tag preview feature."
+      ],
+      "source_sha": "74eed7590db22fdae3d7a7556d06bac04162ad4e"
+    },
+    {
       "version": "1.78.2",
       "date": "2026-08-22",
       "title": "Виправлення та стабільність",
