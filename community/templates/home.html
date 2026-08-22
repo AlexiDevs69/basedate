@@ -8946,5 +8946,142 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
 </script>
 {% include "profile_board_runtime.html" %}
 {% include "mobile_runtime.html" %}
+<style>
+.ah-tag-clickable{cursor:pointer}
+.ah-tag-clickable:hover{background:#3b3d44!important}
+.ah-tag-preview{position:fixed;z-index:100000;width:280px;max-width:calc(100vw - 24px);background:var(--panel);border:1px solid var(--border);border-radius:12px;box-shadow:0 20px 50px rgba(0,0,0,.5);padding:14px;display:none}
+.ah-tag-preview.open{display:block;animation:ah-tag-preview-pop .14s ease}
+@keyframes ah-tag-preview-pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+.ah-tag-preview-head{display:flex;gap:12px;align-items:center}
+.ah-tag-preview-icon{width:48px;height:48px;border-radius:14px;background:#313338;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;overflow:hidden;flex:0 0 auto;color:var(--text)}
+.ah-tag-preview-icon img{width:100%;height:100%;object-fit:cover}
+.ah-tag-preview-meta{min-width:0;flex:1}
+.ah-tag-preview-name-row{display:flex;align-items:center;gap:6px;min-width:0}
+.ah-tag-preview-name{font-weight:800;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+.ah-tag-preview-chip{display:inline-flex;align-items:center;height:18px;padding:0 5px;border-radius:4px;background:#3b3d44;color:#fff;font-size:9px;font-weight:800;white-space:nowrap;flex:0 0 auto}
+.ah-tag-preview-stats{display:flex;gap:12px;margin-top:4px;color:var(--muted);font-size:11px}
+.ah-tag-preview-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-right:4px}
+.ah-tag-preview-dot.muted{background:var(--muted)}
+.ah-tag-preview-desc{margin-top:10px;color:var(--text);font-size:12px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.ah-tag-preview-action{display:block;margin-top:12px;height:36px;border-radius:8px;background:var(--accent);color:#fff;text-align:center;line-height:36px;font-weight:800;font-size:13px;text-decoration:none}
+.ah-tag-preview-action:hover{background:#4752c4}
+</style>
+<div id="ah-tag-preview" class="ah-tag-preview" role="dialog" aria-hidden="true">
+  <div class="ah-tag-preview-head">
+    <div class="ah-tag-preview-icon" id="ah-tag-preview-icon"></div>
+    <div class="ah-tag-preview-meta">
+      <div class="ah-tag-preview-name-row">
+        <span class="ah-tag-preview-name" id="ah-tag-preview-name"></span>
+        <span class="ah-tag-preview-chip" id="ah-tag-preview-chip" hidden></span>
+      </div>
+      <div class="ah-tag-preview-stats" id="ah-tag-preview-stats" hidden>
+        <span><i class="ah-tag-preview-dot"></i><b id="ah-tag-preview-online">0</b>&nbsp;в мережі</span>
+        <span><i class="ah-tag-preview-dot muted"></i><b id="ah-tag-preview-members">0</b>&nbsp;учасників</span>
+      </div>
+    </div>
+  </div>
+  <p class="ah-tag-preview-desc" id="ah-tag-preview-desc" hidden></p>
+  <a class="ah-tag-preview-action" id="ah-tag-preview-action" href="#" hidden>Перейти на сервер</a>
+</div>
+<script>
+(function(){
+  var pv=document.getElementById('ah-tag-preview');
+  if(!pv||pv.dataset.bound==='1')return;
+  pv.dataset.bound='1';
+  var iconEl=document.getElementById('ah-tag-preview-icon');
+  var nameEl=document.getElementById('ah-tag-preview-name');
+  var chipEl=document.getElementById('ah-tag-preview-chip');
+  var statsEl=document.getElementById('ah-tag-preview-stats');
+  var onlineEl=document.getElementById('ah-tag-preview-online');
+  var membersEl=document.getElementById('ah-tag-preview-members');
+  var descEl=document.getElementById('ah-tag-preview-desc');
+  var actionEl=document.getElementById('ah-tag-preview-action');
+  var numberFormat=new Intl.NumberFormat('uk-UA');
+
+  function closeTagPreview(){
+    pv.classList.remove('open');
+    pv.setAttribute('aria-hidden','true');
+  }
+
+  function placeTagPreview(anchor){
+    var gap=8,margin=12;
+    var rect=anchor.getBoundingClientRect();
+    var width=pv.offsetWidth,height=pv.offsetHeight;
+    var left=rect.left;
+    if(left+width>window.innerWidth-margin)left=window.innerWidth-width-margin;
+    left=Math.max(margin,left);
+    var top=rect.bottom+gap;
+    if(top+height>window.innerHeight-margin)top=rect.top-height-gap;
+    top=Math.max(margin,top);
+    pv.style.left=Math.round(left)+'px';
+    pv.style.top=Math.round(top)+'px';
+  }
+
+  function openTagPreview(el){
+    var name=el.getAttribute('data-tag-server-name')||el.getAttribute('title')||'';
+    var glyph=el.getAttribute('data-tag-icon-glyph')||'◆';
+    var text=el.getAttribute('data-tag-text')||'';
+    var serverId=el.getAttribute('data-tag-server-id')||'';
+    var iconUrl=el.getAttribute('data-tag-icon-url')||'';
+    var members=el.getAttribute('data-tag-member-count')||'';
+    var online=el.getAttribute('data-tag-online-count')||'';
+    var desc=el.getAttribute('data-tag-description')||'';
+    var invite=el.getAttribute('data-tag-invite')||(serverId?('/community/servers/'+serverId):'');
+
+    nameEl.textContent=name||text||'Сервер';
+    chipEl.hidden=!text;
+    chipEl.textContent=text?(glyph+' '+text):'';
+
+    iconEl.replaceChildren();
+    if(iconUrl){
+      var img=document.createElement('img');
+      img.src=iconUrl;img.alt='';
+      iconEl.appendChild(img);
+    }else{
+      iconEl.textContent=glyph||(name?name.slice(0,2).toUpperCase():'◆');
+    }
+
+    if(members||online){
+      statsEl.hidden=false;
+      onlineEl.textContent=numberFormat.format(Number(online||0));
+      membersEl.textContent=numberFormat.format(Number(members||0));
+    }else{
+      statsEl.hidden=true;
+    }
+
+    if(desc){
+      descEl.hidden=false;
+      descEl.textContent=desc;
+    }else{
+      descEl.hidden=true;
+    }
+
+    if(invite){
+      actionEl.hidden=false;
+      actionEl.href=invite;
+    }else{
+      actionEl.hidden=true;
+    }
+
+    pv.classList.add('open');
+    pv.setAttribute('aria-hidden','false');
+    requestAnimationFrame(function(){placeTagPreview(el);});
+  }
+
+  document.addEventListener('click',function(e){
+    var tag=e.target.closest('.member-server-tag, .dm-server-tag, .message-server-tag');
+    if(tag){
+      e.preventDefault();
+      e.stopPropagation();
+      openTagPreview(tag);
+      return;
+    }
+    if(!e.target.closest('#ah-tag-preview'))closeTagPreview();
+  },true);
+
+  window.addEventListener('resize',closeTagPreview);
+  document.addEventListener('scroll',closeTagPreview,true);
+})();
+</script>
 </body>
 </html>
