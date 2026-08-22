@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.74.3",
+      "date": "2026-08-22",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: loader overlay and aria attributes."
+      ],
+      "source_sha": "afdfa79186f3bb30030faf3b5ba882cfc1d8f239"
+    },
+    {
       "version": "1.74.2",
       "date": "2026-08-22",
       "title": "Виправлення та стабільність",
