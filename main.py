@@ -12,6 +12,7 @@ import asyncio
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, Form, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -29,6 +30,19 @@ from telegram import send_telegram_message
 settings = get_settings()
 
 app = FastAPI(title="Telegram Bot Admin Dashboard")
+
+# Дозволяє окремо захостованій gateway-сторінці (wake-up preloader) читати
+# відповідь /api/ping через fetch. Онови allow_origins на реальний домен,
+# де лежить gateway/index.html (Render Static Site / Netlify / Cloudflare
+# Pages тощо) -- "*" тут НЕ підходить, бо на цьому ж app ходять сесійні cookie.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://your-gateway-domain.example",  # TODO: заміни на реальний домен gateway
+    ],
+    allow_methods=["GET"],
+    allow_headers=["*"],
+)
 
 # Signs the session cookie so it can't be tampered with client-side.
 # SECRET_KEY must be set to a long random string in production.
@@ -53,6 +67,17 @@ async def on_startup() -> None:
 # Register the community router after the base-table startup handler so a new,
 # empty database is initialized before community schema upgrades run.
 app.include_router(community_router)
+
+
+@app.get("/")
+async def root_redirect():
+    """
+    The bare domain has no page of its own -- regular visitors land on the
+    public AlexiHub app, not the admin dashboard. community_home() (in
+    community/router.py) takes care of sending logged-out visitors on to
+    /community/login from there.
+    """
+    return RedirectResponse(url="/community", status_code=307)
 
 
 def is_logged_in(request: Request) -> bool:
@@ -502,4 +527,14 @@ async def community_user_delete(account_id: int, request: Request, db: AsyncSess
 @app.get("/health")
 async def health_check():
     """Simple liveness endpoint -- intentionally not behind login."""
+    return {"status": "ok"}
+
+
+@app.get("/api/ping")
+async def api_ping():
+    """
+    Same contract as /health, under the path the wake-up gateway page
+    expects. Kept separate (not just an alias/redirect) so it's obvious
+    at a glance in logs/metrics which caller is hitting it.
+    """
     return {"status": "ok"}
