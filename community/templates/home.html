@@ -214,6 +214,8 @@
     }
     .dm-meta { min-width: 0; flex: 1; }
     .dm-name { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dm-server-tag{display:inline-flex;align-items:center;gap:3px;height:15px;padding:0 4px;margin-left:5px;border:1px solid #4a4c54;border-radius:4px;background:#2b2d31;color:#eceef1;font-size:9px;font-weight:900;line-height:1;white-space:nowrap;vertical-align:middle}
+    .dm-server-tag b{color:#df67ec;font-size:9px}
     .dm-snippet { display: none; }
     .empty-note { color: var(--muted2); font-size: 12px; padding: 6px 10px 12px; }
 
@@ -2253,7 +2255,7 @@ body.ah-store-product-open{overflow:hidden}
             {% if not other.avatar_url %}{{ other.username[:1]|upper }}{% endif %}
             {% if other_visible %}<span class="presence status-{{ other_status }}"></span>{% endif %}
           </span>
-          <span class="dm-meta"><span class="dm-name">{{ other.display_name or other.username }}</span></span>
+          <span class="dm-meta"><span class="dm-name">{{ other.display_name or other.username }}</span>{% if item.server_tag %}<span class="dm-server-tag" title="{{ item.server_tag.server_name }}"><b>{{ item.server_tag.icon_glyph }}</b>{{ item.server_tag.text }}</span>{% endif %}</span>
           {% set dc = mention_counts.dm_by_thread.get(item.thread.id, 0) %}<span class="ah-mention-count" {% if not dc %}hidden{% endif %}>{{ '99+' if dc > 99 else dc }}</span>
         </a>
         {% endif %}
@@ -7234,6 +7236,25 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     }
   }
 
+  function setDmRowTag(row, profile) {
+    if (!row) return;
+    var tag = row.querySelector('.dm-server-tag');
+    if (!tag) return;
+    var serverTag = profile && profile.server_tag;
+    if (serverTag && serverTag.active) {
+      tag.innerHTML = '';
+      var glyph = document.createElement('b');
+      glyph.textContent = serverTag.icon_glyph || '';
+      tag.appendChild(glyph);
+      tag.appendChild(document.createTextNode(serverTag.text || ''));
+      tag.title = serverTag.server_name || '';
+      tag.style.display = 'inline-flex';
+    } else {
+      tag.style.display = 'none';
+      tag.title = '';
+    }
+  }
+
   function makeDmRow(profile, threadId) {
     var row = document.createElement('a');
     row.className = 'dm-row';
@@ -7260,14 +7281,19 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     var name = document.createElement('span');
     name.className = 'dm-name';
     name.textContent = profile.display_name || profile.username || 'User';
+    var tag = document.createElement('span');
+    tag.className = 'dm-server-tag';
+    tag.style.display = 'none';
     var snippet = document.createElement('span');
     snippet.className = 'dm-snippet';
 
     meta.appendChild(name);
+    meta.appendChild(tag);
     meta.appendChild(snippet);
     row.appendChild(avatar);
     row.appendChild(meta);
     setAvatarContent(avatar, profile);
+    setDmRowTag(row, profile);
     return row;
   }
 
@@ -7327,6 +7353,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
 
     var name = row.querySelector('.dm-name');
     if (name) name.textContent = profile.display_name || profile.username || 'User';
+    setDmRowTag(row, profile);
     var avatar = row.querySelector('.avatar');
     setAvatarContent(avatar, profile);
 
