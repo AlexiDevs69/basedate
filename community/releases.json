@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.74.2",
+      "date": "2026-08-22",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update loader overlay design and functionality."
+      ],
+      "source_sha": "a354f8a6cafcd3397553eb672cb8e8c5b95bd7a2"
+    },
+    {
       "version": "1.74.1",
       "date": "2026-08-22",
       "title": "Оновлення AlexiHub",
