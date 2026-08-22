@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.78.2",
+      "date": "2026-08-22",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Make server tags clickable with additional data attributes."
+      ],
+      "source_sha": "592b142b3149d7d0f731125d9f572e52dbab484b"
+    },
+    {
       "version": "1.78.1",
       "date": "2026-08-22",
       "title": "Виправлення та стабільність",
