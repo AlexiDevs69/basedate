@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AlexiHub — завантаження</title>
+<title>AlexiHub — Loading</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --app: #0b0b0d;
+    --app: #06070b;
     --panel: #18191d;
     --text: #f4f4f5;
     --muted: #9ca3af;
@@ -19,7 +19,7 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; }
   body {
-    background: var(--app);
+    background: radial-gradient(120% 120% at 50% 20%, #14152b 0%, #06070b 60%);
     color: var(--text);
     font-family: var(--font);
     display: flex;
@@ -33,38 +33,64 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 22px;
+    gap: 26px;
     padding: 32px;
     text-align: center;
-    animation: fadeIn .4s ease;
+    animation: fadeIn .5s ease;
   }
 
+  /* Лого — те саме місце й розмір, що й у Discord: велика іконка по центру екрана */
   .wp-logo {
-    width: 64px;
-    height: 64px;
-    border-radius: 20px;
+    width: 84px;
+    height: 84px;
+    border-radius: 26px;
     background: var(--accent);
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 800;
-    font-size: 26px;
+    font-size: 32px;
     color: #fff;
-    box-shadow: 0 0 0 1px rgba(255,255,255,0.06), 0 10px 30px rgba(88,101,242,0.35);
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.06), 0 14px 40px rgba(88,101,242,0.45);
+    animation: logoPulse 2.4s ease-in-out infinite;
   }
 
-  .wp-spinner {
-    width: 42px;
-    height: 42px;
+  @keyframes logoPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.04); }
+  }
+
+  /* Дискордівська анімація завантаження: три крапки підстрибують хвилею одна за одною */
+  .wp-dots {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    height: 18px;
+  }
+
+  .wp-dot {
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
-    border: 3px solid rgba(255,255,255,0.08);
-    border-top-color: var(--accent);
-    animation: spin 0.9s linear infinite;
+    background: var(--text);
+    opacity: 0.9;
+    animation: dotBounce 1.1s ease-in-out infinite;
+  }
+
+  .wp-dot:nth-child(1) { animation-delay: 0s; }
+  .wp-dot:nth-child(2) { animation-delay: 0.15s; }
+  .wp-dot:nth-child(3) { animation-delay: 0.3s; }
+
+  @keyframes dotBounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.55; }
+    30% { transform: translateY(-10px); opacity: 1; }
   }
 
   .wp-title {
-    font-size: 16px;
-    font-weight: 600;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
     color: var(--text);
   }
 
@@ -92,10 +118,11 @@
   }
   .wp-retry:hover { filter: brightness(1.08); }
 
-  .wp-error .wp-spinner { display: none; }
+  /* Коли сталась помилка — ховаємо крапки, показуємо кнопку "спробувати ще раз" */
+  .wp-error .wp-dots { display: none; }
+  .wp-error .wp-logo { animation: none; }
   .wp-error .wp-retry { display: inline-block; }
 
-  @keyframes spin { to { transform: rotate(360deg); } }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
   .wp-hide { opacity: 0; pointer-events: none; transition: opacity .35s ease; }
 </style>
@@ -104,10 +131,14 @@
 
   <div id="wake-preloader">
     <div class="wp-logo">AH</div>
-    <div class="wp-spinner"></div>
+    <div class="wp-dots" id="wp-dots">
+      <span class="wp-dot"></span>
+      <span class="wp-dot"></span>
+      <span class="wp-dot"></span>
+    </div>
     <div class="wp-title">AlexiHub</div>
-    <div class="wp-subtitle" id="wp-status">Завантаження…</div>
-    <button class="wp-retry" id="wp-retry-btn">Спробувати ще раз</button>
+    <div class="wp-subtitle" id="wp-status">Loading…</div>
+    <button class="wp-retry" id="wp-retry-btn">Try again</button>
   </div>
 
   <script>
@@ -139,11 +170,11 @@
 
     function scheduleMessages() {
       setTimeout(function () {
-        if (!stopped) setMessage('Сервер розігрівається, зачекайте ще трохи…');
+        if (!stopped) setMessage('The server is waking up, hang on a little longer…');
       }, SLOW_MESSAGE_AFTER_MS);
 
       setTimeout(function () {
-        if (!stopped) setMessage('Це може зайняти до хвилини — контейнер щойно піднімається.');
+        if (!stopped) setMessage('This can take up to a minute — the container just started.');
       }, VERY_SLOW_MESSAGE_AFTER_MS);
     }
 
@@ -177,7 +208,7 @@
     function showError() {
       stopped = true;
       rootEl.classList.add('wp-error');
-      setMessage('Не вдалося розбудити сервер. Спробуйте ще раз.');
+      setMessage('Could not wake up the server. Please try again.');
     }
 
     function poll() {
@@ -202,7 +233,7 @@
       rootEl.classList.remove('wp-error');
       stopped = false;
       startedAt = Date.now();
-      setMessage('Завантаження…');
+      setMessage('Loading…');
       poll();
     });
 
