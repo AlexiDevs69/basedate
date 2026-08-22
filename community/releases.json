@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.76.0",
+      "date": "2026-08-22",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: CORS middleware for gateway domain."
+      ],
+      "source_sha": "8fd36430402160c85751303faa4755cf5bf21f9a"
+    },
+    {
       "version": "1.75.0",
       "date": "2026-08-22",
       "title": "Нові можливості AlexiHub",
