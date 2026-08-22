@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AlexiHub — завантаження</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --app: #0b0b0d;
+    --panel: #18191d;
+    --text: #f4f4f5;
+    --muted: #9ca3af;
+    --accent: #5865f2;
+    --danger: #ef4444;
+    --font: 'Inter', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--app);
+    color: var(--text);
+    font-family: var(--font);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+
+  #wake-preloader {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 22px;
+    padding: 32px;
+    text-align: center;
+    animation: fadeIn .4s ease;
+  }
+
+  .wp-logo {
+    width: 64px;
+    height: 64px;
+    border-radius: 20px;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 26px;
+    color: #fff;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.06), 0 10px 30px rgba(88,101,242,0.35);
+  }
+
+  .wp-spinner {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.08);
+    border-top-color: var(--accent);
+    animation: spin 0.9s linear infinite;
+  }
+
+  .wp-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .wp-subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    max-width: 320px;
+    line-height: 1.5;
+    min-height: 36px;
+    transition: opacity .25s ease;
+  }
+
+  .wp-retry {
+    display: none;
+    margin-top: 6px;
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    font: inherit;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .wp-retry:hover { filter: brightness(1.08); }
+
+  .wp-error .wp-spinner { display: none; }
+  .wp-error .wp-retry { display: inline-block; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .wp-hide { opacity: 0; pointer-events: none; transition: opacity .35s ease; }
+</style>
+</head>
+<body>
+
+  <div id="wake-preloader">
+    <div class="wp-logo">AH</div>
+    <div class="wp-spinner"></div>
+    <div class="wp-title">AlexiHub</div>
+    <div class="wp-subtitle" id="wp-status">Завантаження…</div>
+    <button class="wp-retry" id="wp-retry-btn">Спробувати ще раз</button>
+  </div>
+
+  <script>
+  (function () {
+    // ==== НАЛАШТУВАННЯ — заміни на свої значення ====
+    var APP_URL = 'https://your-app.onrender.com';      // адреса основного застосунку (Render web service)
+    var PING_PATH = '/api/ping';                         // легкий health-check ендпоінт
+    var SLOW_MESSAGE_AFTER_MS = 5000;                    // коли міняти текст (за ТЗ — 5с)
+    var VERY_SLOW_MESSAGE_AFTER_MS = 20000;               // додаткове повідомлення для довгого холодного старту
+    var RETRY_INTERVAL_MS = 3000;                         // пауза між спробами пінгу
+    var REQUEST_TIMEOUT_MS = 8000;                        // таймаут однієї спроби fetch
+    var MAX_TOTAL_WAIT_MS = 90000;                        // після цього — показуємо кнопку "спробувати ще раз"
+    // =================================================
+
+    var statusEl = document.getElementById('wp-status');
+    var rootEl = document.getElementById('wake-preloader');
+    var retryBtn = document.getElementById('wp-retry-btn');
+
+    var startedAt = Date.now();
+    var stopped = false;
+
+    function setMessage(text) {
+      statusEl.style.opacity = 0;
+      setTimeout(function () {
+        statusEl.textContent = text;
+        statusEl.style.opacity = 1;
+      }, 150);
+    }
+
+    function scheduleMessages() {
+      setTimeout(function () {
+        if (!stopped) setMessage('Сервер розігрівається, зачекайте ще трохи…');
+      }, SLOW_MESSAGE_AFTER_MS);
+
+      setTimeout(function () {
+        if (!stopped) setMessage('Це може зайняти до хвилини — контейнер щойно піднімається.');
+      }, VERY_SLOW_MESSAGE_AFTER_MS);
+    }
+
+    function pingOnce() {
+      var controller = new AbortController();
+      var timeoutId = setTimeout(function () { controller.abort(); }, REQUEST_TIMEOUT_MS);
+
+      return fetch(APP_URL + PING_PATH, {
+        method: 'GET',
+        cache: 'no-store',
+        signal: controller.signal
+      }).then(function (res) {
+        clearTimeout(timeoutId);
+        return res.ok;
+      }).catch(function () {
+        clearTimeout(timeoutId);
+        return false;
+      });
+    }
+
+    function goToApp() {
+      stopped = true;
+      rootEl.classList.add('wp-hide');
+      // зберігаємо шлях/параметри, з якими прийшов користувач
+      var target = APP_URL + window.location.pathname + window.location.search;
+      setTimeout(function () {
+        window.location.replace(target);
+      }, 250);
+    }
+
+    function showError() {
+      stopped = true;
+      rootEl.classList.add('wp-error');
+      setMessage('Не вдалося розбудити сервер. Спробуйте ще раз.');
+    }
+
+    function poll() {
+      if (stopped) return;
+
+      if (Date.now() - startedAt > MAX_TOTAL_WAIT_MS) {
+        showError();
+        return;
+      }
+
+      pingOnce().then(function (ok) {
+        if (stopped) return;
+        if (ok) {
+          goToApp();
+        } else {
+          setTimeout(poll, RETRY_INTERVAL_MS);
+        }
+      });
+    }
+
+    retryBtn.addEventListener('click', function () {
+      rootEl.classList.remove('wp-error');
+      stopped = false;
+      startedAt = Date.now();
+      setMessage('Завантаження…');
+      poll();
+    });
+
+    scheduleMessages();
+    poll();
+  })();
+  </script>
+
+</body>
+</html>
