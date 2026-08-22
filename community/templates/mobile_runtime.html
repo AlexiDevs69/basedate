@@ -722,6 +722,7 @@
   }
 
   let touchStart = null;
+  let touchGestureLock = null; // null = undecided, 'drawer' = ours (block native nav), 'scroll' = not ours (let go)
   document.addEventListener('touchstart', event => {
     if (!mobileQuery.matches || event.touches.length !== 1) return;
     const target = event.target;
@@ -731,7 +732,25 @@
     const nearEdge = touch.clientX <= EDGE_ZONE + (parseFloat(getComputedStyle(document.documentElement).paddingLeft) || 0);
     if (!isDrawerOpen() && !nearEdge) return;
     touchStart = {x: touch.clientX, y: touch.clientY, target};
+    touchGestureLock = null;
   }, {passive: true});
+
+  // Without this, the browser's own edge-swipe-back gesture races our drawer gesture for the
+  // same touch (same left-edge zone, same horizontal drag) since touchstart/touchend alone
+  // can't cancel it. That race is what makes the previous page (e.g. server home) briefly
+  // flash in before our drawer finishes opening. Once we can tell the drag is ours, we call
+  // preventDefault() on touchmove so the browser stops treating it as back-navigation.
+  document.addEventListener('touchmove', event => {
+    if (!touchStart || !mobileQuery.matches || event.touches.length !== 1) return;
+    const touch = event.touches[0];
+    const dx = touch.clientX - touchStart.x;
+    const dy = touch.clientY - touchStart.y;
+    if (touchGestureLock === null && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
+      touchGestureLock = Math.abs(dx) > Math.abs(dy) * 1.35 ? 'drawer' : 'scroll';
+      if (touchGestureLock === 'scroll') touchStart = null;
+    }
+    if (touchGestureLock === 'drawer' && event.cancelable) event.preventDefault();
+  }, {passive: false});
 
   document.addEventListener('touchend', event => {
     if (!touchStart || !mobileQuery.matches || !event.changedTouches.length) {
