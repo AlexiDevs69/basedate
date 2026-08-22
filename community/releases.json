@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.82.0",
+      "date": "2026-08-23",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: tag functionality to user elements."
+      ],
+      "source_sha": "59ee3ca841d1e16a6411de93d2390584fd439e3b"
+    },
+    {
       "version": "1.81.0",
       "date": "2026-08-23",
       "title": "Нові можливості AlexiHub",
