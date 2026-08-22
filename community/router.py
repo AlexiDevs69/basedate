@@ -971,6 +971,8 @@ async def _emit_dm_sidebar_update(thread_id: int, message_id: int) -> None:
                 (int(recipient.id), sender),
             ):
                 other_profile = _account_payload(other)
+                other_tags = await crud.list_account_active_server_tags(db, [int(other.id)])
+                other_profile["server_tag"] = other_tags.get(int(other.id))
                 other_online, other_status = await account_realtime.public_status(int(other.id), other_profile)
                 await account_realtime.send_to_account(
                     viewer_id,
@@ -1309,6 +1311,9 @@ async def _dm_message_realtime_event(
         if reply_message:
             reply_author = await crud.get_account_by_id(db, int(reply_message.author_id))
             reply = _reply_payload(reply_message, reply_author)
+    author_payload = _account_payload(author) if author else _missing_author_payload(message.author_id)
+    active_tags = await crud.list_account_active_server_tags(db, [int(message.author_id)])
+    author_payload["server_tag"] = active_tags.get(int(message.author_id))
     payload = {
         "type": "message",
         "message": {
@@ -1327,7 +1332,7 @@ async def _dm_message_realtime_event(
             "reply": reply,
             "is_forwarded": bool(getattr(message, "is_forwarded", False)),
         },
-        "author": _account_payload(author) if author else _missing_author_payload(message.author_id),
+        "author": author_payload,
     }
     if client_nonce:
         payload["client_nonce"] = client_nonce
@@ -1577,6 +1582,23 @@ async def _decorate_server_tags(
         item["server_tag"] = tags.get(int(author.id)) if author else None
 
 
+async def _decorate_dm_thread_tags(db: AsyncSession, dm_threads: list[dict]) -> None:
+    """Attach each DM partner's selected, currently unlocked server tag in-place.
+
+    Mirrors _decorate_server_tags() but dm_threads items key the other
+    account as "other" rather than "account"/"author".
+    """
+    account_ids = {
+        int(item["other"].id)
+        for item in dm_threads
+        if item.get("other")
+    }
+    tags = await crud.list_account_active_server_tags(db, account_ids)
+    for item in dm_threads:
+        other = item.get("other")
+        item["server_tag"] = tags.get(int(other.id)) if other else None
+
+
 # --- Registration -----------------------------------------------------------
 
 @router.get("/register")
@@ -1750,6 +1772,7 @@ async def community_home(request: Request, db: AsyncSession = Depends(get_db)):
     online_ids = [m.id for m in online_members]
     friends = await crud.list_friends(db, account.id)
     dm_threads = await crud.list_dm_threads_for_account(db, account.id)
+    await _decorate_dm_thread_tags(db, dm_threads)
     pending_incoming = await crud.list_pending_requests_with_requester(db, account.id)
     pending_outgoing = await crud.list_pending_sent_with_addressee(db, account.id)
     rail = await server_rail_context(db, account.id)
@@ -4749,6 +4772,8 @@ async def dm_chat_view(username: str, request: Request, db: AsyncSession = Depen
     friends = await crud.list_friends(db, account.id)
     dm_threads = await crud.list_dm_threads_for_account(db, account.id)
     messages = await crud.list_dm_messages(db, thread.id)
+    await _decorate_server_tags(db, [], messages)
+    await _decorate_dm_thread_tags(db, dm_threads)
     mutual_server_models = await crud.list_mutual_servers(db, account.id, other.id)
     friendship = await crud.get_friendship_between(db, account.id, other.id)
     friend_status = await crud.friendship_status(db, account.id, other.id)
