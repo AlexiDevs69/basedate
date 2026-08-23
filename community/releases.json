@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.88.1",
+      "date": "2026-08-23",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: travel dot and mention attributes in travel.html."
+      ],
+      "source_sha": "139128e15bd4ef3bf351a1671d8c47d4ec7d639e"
+    },
+    {
       "version": "1.88.0",
       "date": "2026-08-23",
       "title": "Нові можливості AlexiHub",
