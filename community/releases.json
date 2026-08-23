@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.93.2",
+      "date": "2026-08-24",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: server invite handling and add invite link features."
+      ],
+      "source_sha": "1228a850e323be3add5f7bd1e1a8752ce8d0ef2a"
+    },
+    {
       "version": "1.93.1",
       "date": "2026-08-23",
       "title": "Оновлення AlexiHub",
