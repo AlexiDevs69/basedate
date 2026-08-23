@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.95.0",
+      "date": "2026-08-24",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: invite management UI and functionality."
+      ],
+      "source_sha": "eaf0beb05b06016946746919d4bd60363c26284c"
+    },
+    {
       "version": "1.94.2",
       "date": "2026-08-24",
       "title": "Оновлення AlexiHub",
