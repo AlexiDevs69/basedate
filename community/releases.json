@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.97.6",
+      "date": "2026-08-24",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update invites-empty HTML structure and SVG graphics."
+      ],
+      "source_sha": "e65e0172b9b260a75414b76174a7d68c3f107a42"
+    },
+    {
       "version": "1.97.5",
       "date": "2026-08-24",
       "title": "Виправлення та стабільність",
