@@ -19,11 +19,11 @@
     .app{height:100vh;display:grid;grid-template-columns:72px 230px minmax(0,1fr)}
     .server-rail{background:var(--rail);padding:12px 10px;display:flex;flex-direction:column;align-items:center;gap:10px;overflow-y:auto;overflow-x:hidden;border-right:1px solid #111}
     .server-dot{width:48px;height:48px;flex:0 0 48px;border:0;border-radius:18px;background-color:var(--panel);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;position:relative;transition:.16s ease;background-size:cover;background-position:center;background-repeat:no-repeat;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(255,255,255,.04)}
-    .server-dot:hover,.server-dot.active{border-radius:14px;background-color:var(--brand)}
+    .server-dot:hover,.server-dot.active{border-radius:14px!important;background-color:var(--brand)!important}
     .server-dot.active:before{content:"";position:absolute;left:-10px;width:4px;height:34px;border-radius:0 6px 6px 0;background:#fff}
     .server-dot.home-dot{background:linear-gradient(135deg,#5865f2,#4752c4)}
-    .server-dot.plus{font-size:28px;color:var(--green)}
-    .server-dot.plus:hover{background:var(--green);color:#fff}
+    .server-dot.plus{font-size:1.7rem;color:var(--green)}
+    .server-dot.plus:hover{background:var(--green)!important;color:#fff!important}
     .server-sep{width:32px;height:1px;background:#2b2d34;flex:0 0 auto}
     .side{min-width:0;background:var(--side);border-right:1px solid #0c0d0f;display:flex;flex-direction:column}
     .side-title{height:50px;padding:0 16px;display:flex;align-items:center;font-size:20px;font-weight:800;border-bottom:1px solid #24262c}
@@ -915,7 +915,7 @@
           {% set sc = mention_counts.server_by_id.get(rail_server.id, 0) if mention_counts is defined else 0 %}<b class="ah-mention-count server-mention-badge" {% if not sc %}hidden{% endif %}>{{ '99+' if sc > 99 else sc }}</b>
         </a>
       {% endfor %}
-      <a class="server-dot plus" href="/community/servers/new" title="{{ i18n_t('server.create.action') }}" data-i18n-title="server.create.action"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></a>
+      <a class="server-dot plus" href="/community/servers/new" title="{{ i18n_t('server.create.action') }}" data-i18n-title="server.create.action">+</a>
       <a class="server-dot plus" href="/community/travel" title="{{ i18n_t('common.aria.a_journey') }}" data-i18n-title="common.aria.a_journey">
         <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15.8 8.2-2.1 5.5-5.5 2.1 2.1-5.5 5.5-2.1Z"/></svg>
       </a>
