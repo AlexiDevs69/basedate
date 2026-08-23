@@ -378,9 +378,12 @@
 
     /* --- Discord-like final polish --- */
     .server-sidebar { padding: 0 !important; overflow: visible !important; display: flex !important; flex-direction: column !important; background: #0f0f10 !important; }
-    .server-head { position: relative; flex: 0 0 auto; height: 52px; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 .65rem; background: #101012; z-index: 90; }
-    .server-head-btn { width: 100%; height: 38px; border: none; border-radius: 8px; background: transparent; color: var(--text-primary); display: flex; align-items: center; justify-content: space-between; gap: .7rem; padding: 0 .55rem; font-family: var(--font-sans); font-size: .98rem; font-weight: 900; cursor: pointer; text-align: left; }
+    .server-head { position: relative; flex: 0 0 auto; height: 52px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: .35rem; padding: 0 .65rem; background: #101012; z-index: 90; }
+    .server-head-btn { flex: 1 1 auto; min-width: 0; height: 38px; border: none; border-radius: 8px; background: transparent; color: var(--text-primary); display: flex; align-items: center; justify-content: space-between; gap: .7rem; padding: 0 .55rem; font-family: var(--font-sans); font-size: .98rem; font-weight: 900; cursor: pointer; text-align: left; }
     .server-head-btn:hover { background: rgba(255,255,255,.055); }
+    .server-head-invite-btn { flex: 0 0 auto; width: 32px; height: 32px; border: none; border-radius: 8px; background: transparent; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .server-head-invite-btn svg { width: 18px; height: 18px; }
+    .server-head-invite-btn:hover { background: rgba(255,255,255,.08); color: var(--text-primary); }
     .server-head-btn span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .server-arrow { color: var(--text-secondary); transition: transform .16s ease, color .16s ease; flex-shrink: 0; }
     .server-head-btn.open .server-arrow { transform: rotate(180deg); color: var(--text-primary); }
@@ -1854,6 +1857,7 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
   <button id="server-head-btn" type="button" class="server-head-btn" onclick="toggleServerMenu(event)">
     <span>{{ server.name }}</span><span class="server-arrow">⌄</span>
   </button>
+  <button type="button" class="server-head-invite-btn" onclick="openServerInviteModal(event)" title="{{ i18n_t('common.text.ysusp_to_the_server') }}" data-i18n-title="common.text.ysusp_to_the_server"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></button>
   <div id="server-menu" class="server-menu discord-server-menu">
     <button type="button" class="menu-item menu-muted" onclick="openServerBoostCenter()"><span><!--i18n:common.text.servan_bones_of_the_server-->{{ i18n_t('common.text.servan_bones_of_the_server') }}</span><span class="menu-ico"><svg class="menu-svg" viewBox="0 0 24 24"><path d="M12 2l6 6-6 14L6 8l6-6z"/><path d="M6 8h12"/></svg></span></button>
     <div class="menu-divider"></div>
@@ -2129,7 +2133,7 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
 
 
 
-  <div id="invite-modal" class="modal-backdrop"><div class="modal-card invite-card"><div class="modal-head"><div class="invite-title-block"><h2 id="invite-modal-title">{{ i18n_t('server.invite.title', server=server.name) }}</h2><p id="invite-modal-subtitle"><!--i18n:common.text.participants_will_be_on_the_server-->{{ i18n_t('common.text.participants_will_be_on_the_server') }}</p></div><button class="modal-close" type="button" onclick="closeModal('invite-modal')">×</button></div><div class="invite-search-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="text" placeholder="{{ i18n_t('common.placeholder.finding_friends') }}" data-i18n-placeholder="common.placeholder.finding_friends" oninput="filterInviteFriends(this.value)"></div>{% if friends %}<div class="friends-list discord-invite-list">{% for friend in friends %}<form class="friend-invite-row" data-invite-search="{{ friend.username }} {{ friend.display_name or '' }}" method="post" action="/community/servers/{{ server.id }}/invite"><input type="hidden" name="username" value="{{ friend.username }}"><input type="hidden" name="redirect_to" value="{{ request.url.path }}"><input type="hidden" name="channel_id" value="" class="invite-channel-id-input"><span class="friend-invite-avatar" {% if friend.avatar_url %}style="background-image:url('{{ friend.avatar_url }}');"{% endif %}>{% if not friend.avatar_url %}{{ friend.username[:1]|upper }}{% endif %}</span><span class="friend-invite-meta"><span class="friend-invite-name">{{ friend.display_name or friend.username }}</span><span class="friend-invite-handle">{{ friend.username }}</span></span><button type="submit"><!--i18n:common.aria.yuncture-->{{ i18n_t('common.aria.yuncture') }}</button></form>{% endfor %}</div>{% else %}<div class="empty-note" style="padding:0 22px 18px;"><!--i18n:common.text.don_t_have_friends_for_a_quick_inwit-->{{ i18n_t('common.text.don_t_have_friends_for_a_quick_inwit') }}</div>{% endif %}<form class="manual-invite discord-manual" method="post" action="/community/servers/{{ server.id }}/invite"><input type="hidden" name="redirect_to" value="{{ request.url.path }}"><input type="hidden" name="channel_id" value="" class="invite-channel-id-input"><label><!--i18n:common.text.or_send_a_request_link_to_the_server-->{{ i18n_t('common.text.or_send_a_request_link_to_the_server') }}</label><div class="invite-link-row"><input name="username" placeholder="{{ i18n_t('common.placeholder.friend_s_username') }}" data-i18n-placeholder="common.placeholder.friend_s_username" required><button class="modal-btn" type="submit"><!--i18n:common.action.submit-->{{ i18n_t('common.action.submit') }}</button></div></form></div></div>
+  <div id="invite-modal" class="modal-backdrop"><div class="modal-card invite-card"><div class="modal-head"><div class="invite-title-block"><h2 id="invite-modal-title">{{ i18n_t('server.invite.title', server=server.name) }}</h2><p id="invite-modal-subtitle"><!--i18n:common.text.participants_will_be_on_the_server-->{{ i18n_t('common.text.participants_will_be_on_the_server') }}</p></div><button class="modal-close" type="button" onclick="closeModal('invite-modal')">×</button></div><div class="invite-link-section" style="padding:0 22px 14px;"><div style="font-size:12px;color:var(--text-secondary,#9aa0a6);margin-bottom:8px;">Или отправьте другу ссылку-приглашение на сервер</div><div style="display:flex;gap:8px;"><input id="invite-link-url-input" type="text" readonly value="" placeholder="Загрузка ссылки…" onclick="this.select()" style="flex:1;min-width:0;background:var(--input-bg,#1e1f22);border:1px solid var(--border,#26272b);border-radius:6px;padding:8px 10px;color:var(--text-primary,#f2f3f5);font-size:13px;"><button type="button" id="invite-link-copy-btn" class="modal-btn" onclick="copyServerInviteLink()">Копировать</button></div><div style="margin-top:8px;font-size:12px;color:var(--text-secondary,#9aa0a6);">Ваша ссылка-приглашение перестанет действовать через 30 дней. <a href="#" onclick="regenerateServerInviteLink(event)" style="color:#5865f2;text-decoration:none;">Изменить ссылку-приглашение.</a></div></div><div class="invite-search-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="text" placeholder="{{ i18n_t('common.placeholder.finding_friends') }}" data-i18n-placeholder="common.placeholder.finding_friends" oninput="filterInviteFriends(this.value)"></div>{% if friends %}<div class="friends-list discord-invite-list">{% for friend in friends %}<form class="friend-invite-row" data-invite-search="{{ friend.username }} {{ friend.display_name or '' }}" method="post" action="/community/servers/{{ server.id }}/invite"><input type="hidden" name="username" value="{{ friend.username }}"><input type="hidden" name="redirect_to" value="{{ request.url.path }}"><input type="hidden" name="channel_id" value="" class="invite-channel-id-input"><span class="friend-invite-avatar" {% if friend.avatar_url %}style="background-image:url('{{ friend.avatar_url }}');"{% endif %}>{% if not friend.avatar_url %}{{ friend.username[:1]|upper }}{% endif %}</span><span class="friend-invite-meta"><span class="friend-invite-name">{{ friend.display_name or friend.username }}</span><span class="friend-invite-handle">{{ friend.username }}</span></span><button type="submit"><!--i18n:common.aria.yuncture-->{{ i18n_t('common.aria.yuncture') }}</button></form>{% endfor %}</div>{% else %}<div class="empty-note" style="padding:0 22px 18px;"><!--i18n:common.text.don_t_have_friends_for_a_quick_inwit-->{{ i18n_t('common.text.don_t_have_friends_for_a_quick_inwit') }}</div>{% endif %}<form class="manual-invite discord-manual" method="post" action="/community/servers/{{ server.id }}/invite"><input type="hidden" name="redirect_to" value="{{ request.url.path }}"><input type="hidden" name="channel_id" value="" class="invite-channel-id-input"><label><!--i18n:common.text.or_send_a_request_link_to_the_server-->{{ i18n_t('common.text.or_send_a_request_link_to_the_server') }}</label><div class="invite-link-row"><input name="username" placeholder="{{ i18n_t('common.placeholder.friend_s_username') }}" data-i18n-placeholder="common.placeholder.friend_s_username" required><button class="modal-btn" type="submit"><!--i18n:common.action.submit-->{{ i18n_t('common.action.submit') }}</button></div></form></div></div>
   {% if not can_manage %}
   <div id="leave-server-modal" class="modal-backdrop">
     <div class="modal-card leave-modal-card">
@@ -2271,8 +2275,52 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
     }
 
     
+    var AH_INVITE_SERVER_ID = {{ server.id }};
     function setInviteModalChannel(channelId) {
       document.querySelectorAll('#invite-modal input[name="channel_id"]').forEach(function(input){ input.value = channelId || ''; });
+    }
+    function loadServerInviteLink() {
+      var input = document.getElementById('invite-link-url-input');
+      var copyBtn = document.getElementById('invite-link-copy-btn');
+      if (!input) return;
+      input.value = '';
+      input.placeholder = 'Загрузка ссылки…';
+      if (copyBtn) copyBtn.disabled = true;
+      fetch('/community/servers/' + AH_INVITE_SERVER_ID + '/invites/link/active')
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+          if (!data || !data.ok) { input.placeholder = 'Не удалось создать ссылку'; return; }
+          input.value = data.url;
+          if (copyBtn) copyBtn.disabled = false;
+        })
+        .catch(function(){ input.placeholder = 'Не удалось создать ссылку'; });
+    }
+    function copyServerInviteLink() {
+      var input = document.getElementById('invite-link-url-input');
+      if (!input || !input.value) return;
+      input.select();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(input.value).catch(function(){ document.execCommand('copy'); });
+      } else {
+        document.execCommand('copy');
+      }
+      var copyBtn = document.getElementById('invite-link-copy-btn');
+      if (copyBtn) {
+        var original = copyBtn.textContent;
+        copyBtn.textContent = 'Скопировано!';
+        setTimeout(function(){ copyBtn.textContent = original; }, 1500);
+      }
+    }
+    function regenerateServerInviteLink(event) {
+      if (event) event.preventDefault();
+      var input = document.getElementById('invite-link-url-input');
+      if (input) { input.value = ''; input.placeholder = 'Создание новой ссылки…'; }
+      fetch('/community/servers/' + AH_INVITE_SERVER_ID + '/invites/link', { method: 'POST' })
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+          if (!data || !data.ok || !input) return;
+          input.value = data.url;
+        });
     }
     function openServerInviteModal(event) {
       if (event) { event.preventDefault(); event.stopPropagation(); }
@@ -2281,6 +2329,7 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
       var subtitle = document.getElementById('invite-modal-subtitle');
       if (title) title.textContent = window.AlexiHubI18n.t("common.label.scure_friends_in_0");
       if (subtitle) subtitle.textContent = window.AlexiHubI18n.t("common.text.participants_will_be_on_the_server");
+      loadServerInviteLink();
       if (typeof openModal === 'function') openModal('invite-modal');
     }
 function openChannelInviteModal(event, btn) {
@@ -2292,6 +2341,7 @@ function openChannelInviteModal(event, btn) {
       var subtitle = document.getElementById('invite-modal-subtitle');
       if (title) title.textContent = window.AlexiHubI18n.t("common.label.scure_friends_in_0");
       if (subtitle) subtitle.textContent = name ? (window.AlexiHubI18n.t("common.text.participants_will_be_in") + name) : window.AlexiHubI18n.t("common.text.participants_will_be_on_the_server");
+      loadServerInviteLink();
       if (typeof openModal === 'function') openModal('invite-modal');
     }
     function filterInviteFriends(value) {
