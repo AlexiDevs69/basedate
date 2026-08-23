@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.88.5",
+      "date": "2026-08-23",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: server onboarding styles and structure."
+      ],
+      "source_sha": "5401f6278bd0753de76ee9812ef07edaa6f5b43a"
+    },
+    {
       "version": "1.88.4",
       "date": "2026-08-23",
       "title": "Виправлення та стабільність",
