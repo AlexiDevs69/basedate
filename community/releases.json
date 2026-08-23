@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.92.0",
+      "date": "2026-08-23",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: server deletion confirmation dialog."
+      ],
+      "source_sha": "404ce560e6da8e4048a226419ef538acbb746742"
+    },
+    {
       "version": "1.91.0",
       "date": "2026-08-23",
       "title": "Нові можливості AlexiHub",
