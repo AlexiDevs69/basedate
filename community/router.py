@@ -4774,6 +4774,7 @@ async def dm_chat_view(username: str, request: Request, db: AsyncSession = Depen
     messages = await crud.list_dm_messages(db, thread.id)
     await _decorate_server_tags(db, [], messages)
     await _decorate_dm_thread_tags(db, dm_threads)
+    other_tag = (await crud.list_account_active_server_tags(db, [int(other.id)])).get(int(other.id))
     mutual_server_models = await crud.list_mutual_servers(db, account.id, other.id)
     friendship = await crud.get_friendship_between(db, account.id, other.id)
     friend_status = await crud.friendship_status(db, account.id, other.id)
@@ -4808,6 +4809,7 @@ async def dm_chat_view(username: str, request: Request, db: AsyncSession = Depen
             "request": request,
             "account": account,
             "other": other,
+            "other_tag": other_tag,
             "thread": thread,
             "messages": messages,
             "online_members": online_members,
