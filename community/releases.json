@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.97.2",
+      "date": "2026-08-24",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update invite link display to show channel name."
+      ],
+      "source_sha": "abd4d6c740f76920dc2611069927351f957226b9"
+    },
+    {
       "version": "1.97.1",
       "date": "2026-08-24",
       "title": "Виправлення та стабільність",
