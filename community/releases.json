@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.94.1",
+      "date": "2026-08-24",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: server invite button and modal functionality."
+      ],
+      "source_sha": "e1f8fd7574ce7c8ce4d9a30b7d1fa757c130d01a"
+    },
+    {
       "version": "1.94.0",
       "date": "2026-08-24",
       "title": "Нові можливості AlexiHub",
