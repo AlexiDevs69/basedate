@@ -1762,7 +1762,7 @@
             <div class="invite-row" data-invite-id="{{ link.id }}">
               <div class="invite-inviter">
                 <span class="settings-member-avatar" {% if link.creator_avatar_url %}style="background-image:url('{{ link.creator_avatar_url }}')"{% endif %}>{% if not link.creator_avatar_url %}{{ (link.creator_username or '?')[:1]|upper }}{% endif %}</span>
-                <div><strong>{{ link.creator_username or '—' }}</strong><small>#rules</small></div>
+                <div><strong>{{ link.creator_username or '—' }}</strong><small>{% if link.channel_name %}#{{ link.channel_name }}{% else %}—{% endif %}</small></div>
               </div>
               <span class="invite-code">{{ link.code }}</span>
               <span class="invite-uses">{{ link.uses }}</span>
@@ -2746,8 +2746,9 @@
       const username = escapeHtml(link.creator_username || '—');
       const initial = escapeHtml((link.creator_username || '?').slice(0, 1).toUpperCase());
       const avatarStyle = link.creator_avatar_url ? ` style="background-image:url('${escapeHtml(link.creator_avatar_url)}')"` : '';
+      const channelLabel = link.channel_name ? ('#' + escapeHtml(link.channel_name)) : '—';
       return `<div class="invite-row" data-invite-id="${link.id}">
-        <div class="invite-inviter"><span class="settings-member-avatar"${avatarStyle}>${link.creator_avatar_url ? '' : initial}</span><div><strong>${username}</strong><small>#rules</small></div></div>
+        <div class="invite-inviter"><span class="settings-member-avatar"${avatarStyle}>${link.creator_avatar_url ? '' : initial}</span><div><strong>${username}</strong><small>${channelLabel}</small></div></div>
         <span class="invite-code">${escapeHtml(link.code)}</span>
         <span class="invite-uses">${Number(link.uses || 0)}</span>
         <span class="invite-expires" data-expires-at="${link.expires_at || ''}">${formatInviteExpiry(link.expires_at)}</span>
