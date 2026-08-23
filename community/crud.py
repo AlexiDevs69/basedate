@@ -272,10 +272,18 @@ async def create_server_invite_link(
     max_age_seconds: int | None = 30 * 24 * 3600,
     max_uses: int | None = None,
 ) -> dict | None:
-    """Create a new reusable invite link (the discord.gg/<code> equivalent)."""
+    """Create a new reusable invite link (the discord.gg/<code> equivalent).
+
+    Only one active link may exist per server at a time: if one is already
+    active this returns that link unchanged instead of minting a second code.
+    The only way to get a brand new code is to revoke the existing link first
+    (the server-settings "Приглашения" tab)."""
     await ensure_server_invite_link_table(db)
     if not await is_server_member(db, server_id, creator_id):
         return None
+    existing = await get_active_server_invite_link(db, server_id)
+    if existing:
+        return existing
     code = await _generate_unique_invite_link_code(db)
     expires_at = (
         datetime.now(timezone.utc) + timedelta(seconds=max_age_seconds)
@@ -320,21 +328,32 @@ async def get_active_server_invite_link(db: AsyncSession, server_id: int) -> dic
     return dict(row) if row else None
 
 
-async def get_or_create_server_invite_link(db: AsyncSession, server_id: int, creator_id: int) -> dict | None:
+async def get_or_create_server_invite_link(
+    db: AsyncSession, server_id: int, creator_id: int, channel_id: int | None = None,
+) -> dict | None:
     existing = await get_active_server_invite_link(db, server_id)
     if existing:
         return existing
-    return await create_server_invite_link(db, server_id, creator_id)
+    return await create_server_invite_link(db, server_id, creator_id, channel_id=channel_id)
 
 
 async def list_server_invite_links(db: AsyncSession, server_id: int) -> list[dict]:
-    """Active links for the server-settings 'Приглашения' tab."""
+    """Active links for the server-settings 'Приглашения' tab.
+
+    channel_name is the channel the link was actually created from (shown next
+    to the creator instead of a fixed placeholder). Older links created before
+    channel tracking existed fall back to the server's first channel."""
     await ensure_server_invite_link_table(db)
     result = await db.execute(
         text(
-            "SELECT l.*, a.username AS creator_username, a.avatar_url AS creator_avatar_url "
+            "SELECT l.*, a.username AS creator_username, a.avatar_url AS creator_avatar_url, "
+            "COALESCE(c.name, ("
+            "  SELECT sc.name FROM community_server_channels sc "
+            "  WHERE sc.server_id = l.server_id ORDER BY sc.id ASC LIMIT 1"
+            ")) AS channel_name "
             "FROM community_server_invite_links l "
             "LEFT JOIN community_accounts a ON a.id = l.creator_id "
+            "LEFT JOIN community_server_channels c ON c.id = l.channel_id "
             "WHERE l.server_id = :server_id AND l.revoked = FALSE "
             "AND (l.expires_at IS NULL OR l.expires_at > NOW()) "
             "AND (l.max_uses IS NULL OR l.uses < l.max_uses) "
