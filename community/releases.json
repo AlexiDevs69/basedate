@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.88.3",
+      "date": "2026-08-23",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update styles and server dot interactions in travel.html."
+      ],
+      "source_sha": "7c33c0c2b78a7e1dc026fc9616907eb3d0a77665"
+    },
+    {
       "version": "1.88.2",
       "date": "2026-08-23",
       "title": "Виправлення та стабільність",
