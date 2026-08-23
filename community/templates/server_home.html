@@ -304,9 +304,12 @@
 
     /* --- Discord-like final polish --- */
     .server-sidebar { padding: 0 !important; overflow: visible !important; display: flex !important; flex-direction: column !important; background: #0f0f10 !important; }
-    .server-head { position: relative; flex: 0 0 auto; height: 52px; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 .65rem; background: #101012; z-index: 90; }
-    .server-head-btn { width: 100%; height: 38px; border: none; border-radius: 8px; background: transparent; color: var(--text-primary); display: flex; align-items: center; justify-content: space-between; gap: .7rem; padding: 0 .55rem; font-family: var(--font-sans); font-size: .98rem; font-weight: 900; cursor: pointer; text-align: left; }
+    .server-head { position: relative; flex: 0 0 auto; height: 52px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: .35rem; padding: 0 .65rem; background: #101012; z-index: 90; }
+    .server-head-btn { flex: 1 1 auto; min-width: 0; height: 38px; border: none; border-radius: 8px; background: transparent; color: var(--text-primary); display: flex; align-items: center; justify-content: space-between; gap: .7rem; padding: 0 .55rem; font-family: var(--font-sans); font-size: .98rem; font-weight: 900; cursor: pointer; text-align: left; }
     .server-head-btn:hover { background: rgba(255,255,255,.055); }
+    .server-head-invite-btn { flex: 0 0 auto; width: 32px; height: 32px; border: none; border-radius: 8px; background: transparent; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .server-head-invite-btn svg { width: 18px; height: 18px; }
+    .server-head-invite-btn:hover { background: rgba(255,255,255,.08); color: var(--text-primary); }
     .server-head-btn span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .server-arrow { color: var(--text-secondary); transition: transform .16s ease, color .16s ease; flex-shrink: 0; }
     .server-head-btn.open .server-arrow { transform: rotate(180deg); color: var(--text-primary); }
@@ -1530,6 +1533,7 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
   <button id="server-head-btn" type="button" class="server-head-btn" onclick="toggleServerMenu(event)">
     <span>{{ server.name }}</span><span class="server-arrow">⌄</span>
   </button>
+  <button type="button" class="server-head-invite-btn" onclick="openServerInviteModal(event)" title="{{ i18n_t('common.text.ysusp_to_the_server') }}" data-i18n-title="common.text.ysusp_to_the_server"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></button>
   <div id="server-menu" class="server-menu discord-server-menu">
     <button type="button" class="menu-item menu-muted" onclick="openServerBoostCenter()"><span><!--i18n:common.text.servan_bones_of_the_server-->{{ i18n_t('common.text.servan_bones_of_the_server') }}</span><span class="menu-ico"><svg class="menu-svg" viewBox="0 0 24 24"><path d="M12 2l6 6-6 14L6 8l6-6z"/><path d="M6 8h12"/></svg></span></button>
     <div class="menu-divider"></div>
