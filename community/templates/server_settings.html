@@ -935,7 +935,11 @@
   .invite-code{font-family:var(--font-mono,monospace);color:#dbdee1}
   .invite-revoke-btn{background:transparent;border:none;color:#8e929b;font-size:15px;cursor:pointer;border-radius:6px;width:28px;height:28px}
   .invite-revoke-btn:hover{background:#2b2d31;color:#f23f42}
-  .invites-empty{padding:36px;border:1px dashed #3a3c43;border-radius:12px;text-align:center;color:#8e929b;background:#18191d}
+  .invites-empty{padding:56px 24px 44px;border:0;border-radius:12px;text-align:center;color:#8e929b;background:transparent;display:flex;flex-direction:column;align-items:center}
+  .invites-empty-art{width:280px;max-width:100%;margin-bottom:26px}
+  .invites-empty-art svg{width:100%;height:auto;display:block}
+  .invites-empty-title{margin:0;font-size:15px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:#96999f}
+  .invites-empty-text{margin:12px 0 0;max-width:420px;font-size:13.5px;line-height:1.65;color:#72757e}
   @media (max-width: 900px){.invites-table-head{display:none}.invite-row{grid-template-columns:1fr auto;grid-template-areas:"inviter revoke" "code code" "uses expires";}}
   @media(max-width:900px){.settings-main{padding-right:78px}.members-col-joined{display:none}.members-col-user{width:52%}.members-col-role{width:32%}.members-tools{flex-wrap:wrap}.members-search{width:220px}}
   @media(max-width:650px){.members-page-head,.members-toolbar{align-items:stretch;flex-direction:column}.members-tools{display:grid;grid-template-columns:1fr 1fr}.members-search{grid-column:1/-1;width:100%}.members-col-role{display:none}.members-col-user{width:auto}.members-table th,.members-table td{padding-left:8px;padding-right:8px}}
@@ -1772,7 +1776,11 @@
             </div>
             {% endfor %}
             {% else %}
-            <div class="invites-empty">Пока нет активных ссылок-приглашений. Нажмите «Создать ссылку-приглашение».</div>
+            <div class="invites-empty">
+              <div class="invites-empty-art"><svg viewBox="0 0 280 132" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><rect x="4" y="14" width="272" height="104" rx="52" fill="#202127"/><g fill="#2b2d34"><circle cx="226" cy="34" r="11"/><circle cx="240" cy="29" r="8"/><circle cx="214" cy="29" r="8"/><rect x="211" y="29" width="32" height="11" rx="5.5"/></g><circle cx="246" cy="18" r="2.4" fill="#3c3f48"/><g fill="#2b2d34"><circle cx="46" cy="98" r="11"/><circle cx="60" cy="93" r="8"/><circle cx="34" cy="93" r="8"/><rect x="31" y="93" width="32" height="11" rx="5.5"/></g><g fill="#2b2d34"><circle cx="22" cy="58" r="6.5"/><circle cx="31" cy="55" r="4.5"/><rect x="18" y="55" width="17" height="7" rx="3.5"/></g><g stroke="#494c56" stroke-width="3" stroke-linecap="round" fill="none"><path d="M62 62 h28"/><path d="M56 74 h24"/></g><g transform="translate(96,40) rotate(-10)"><path d="M0 22 L78 0 L30 15 L21 38 L14 24 Z" fill="#eef0f4"/><path d="M30 15 L21 38 L14 24 Z" fill="#c7cad3"/><path d="M0 22 L30 15 L21 38 Z" fill="#f8f9fb"/></g></svg></div>
+              <h3 class="invites-empty-title">Пока нет приглашений</h3>
+              <p class="invites-empty-text">Не видите перед собой цели? Вас несёт, словно бумажный самолётик, дрейфующий по небу? Пригласите сюда своих друзей, создав ссылку-приглашение!</p>
+            </div>
             {% endif %}
           </div>
         </div>
@@ -2757,11 +2765,13 @@
       </div>`;
     }
 
+    const INVITES_EMPTY_HTML = '<div class="invites-empty"><div class="invites-empty-art"><svg viewBox="0 0 280 132" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><rect x="4" y="14" width="272" height="104" rx="52" fill="#202127"/><g fill="#2b2d34"><circle cx="226" cy="34" r="11"/><circle cx="240" cy="29" r="8"/><circle cx="214" cy="29" r="8"/><rect x="211" y="29" width="32" height="11" rx="5.5"/></g><circle cx="246" cy="18" r="2.4" fill="#3c3f48"/><g fill="#2b2d34"><circle cx="46" cy="98" r="11"/><circle cx="60" cy="93" r="8"/><circle cx="34" cy="93" r="8"/><rect x="31" y="93" width="32" height="11" rx="5.5"/></g><g fill="#2b2d34"><circle cx="22" cy="58" r="6.5"/><circle cx="31" cy="55" r="4.5"/><rect x="18" y="55" width="17" height="7" rx="3.5"/></g><g stroke="#494c56" stroke-width="3" stroke-linecap="round" fill="none"><path d="M62 62 h28"/><path d="M56 74 h24"/></g><g transform="translate(96,40) rotate(-10)"><path d="M0 22 L78 0 L30 15 L21 38 L14 24 Z" fill="#eef0f4"/><path d="M30 15 L21 38 L14 24 Z" fill="#c7cad3"/><path d="M0 22 L30 15 L21 38 Z" fill="#f8f9fb"/></g></svg></div><h3 class="invites-empty-title">Пока нет приглашений</h3><p class="invites-empty-text">Не видите перед собой цели? Вас несёт, словно бумажный самолётик, дрейфующий по небу? Пригласите сюда своих друзей, создав ссылку-приглашение!</p></div>';
+
     function renderInviteLinksList(links) {
       const body = document.getElementById('invites-table-body');
       if (!body) return;
       if (!links || !links.length) {
-        body.innerHTML = '<div class="invites-empty">Пока нет активных ссылок-приглашений. Нажмите «Создать ссылку-приглашение».</div>';
+        body.innerHTML = INVITES_EMPTY_HTML;
         return;
       }
       body.innerHTML = links.map(inviteRowHtml).join('');
@@ -2791,7 +2801,7 @@
             if (row) row.remove();
             const body = document.getElementById('invites-table-body');
             if (body && !body.querySelector('.invite-row')) {
-              body.innerHTML = '<div class="invites-empty">Пока нет активных ссылок-приглашений. Нажмите «Создать ссылку-приглашение».</div>';
+              body.innerHTML = INVITES_EMPTY_HTML;
             }
           } else {
             if (btn) btn.disabled = false;
