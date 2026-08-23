@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.96.0",
+      "date": "2026-08-24",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: channel_id parameter to invite link functions."
+      ],
+      "source_sha": "1905458674d7bbc6fa4d2ffa8be88df52dcb25f4"
+    },
+    {
       "version": "1.95.0",
       "date": "2026-08-24",
       "title": "Нові можливості AlexiHub",
