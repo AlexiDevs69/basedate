@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.88.4",
+      "date": "2026-08-23",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update travel link to be active in travel.html."
+      ],
+      "source_sha": "130fd4bf9d25b8f767c697fb8ad6c456e75cbb50"
+    },
+    {
       "version": "1.88.3",
       "date": "2026-08-23",
       "title": "Виправлення та стабільність",
