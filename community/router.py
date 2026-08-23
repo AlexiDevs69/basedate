@@ -1984,7 +1984,14 @@ async def server_join_submit(
         )
 
     invite_row = await crud.accept_server_invite_by_code(db, invite_code, account.id)
-    if not invite_row:
+    joined_server_id = int(invite_row.server_id) if invite_row else None
+    if joined_server_id is None:
+        # Not a targeted friend-invite code -- try it as a reusable discord.gg-style
+        # invite link instead (created from the server header / settings invites tab).
+        link_row = await crud.accept_server_invite_link(db, invite_code, account.id)
+        joined_server_id = int(link_row["server_id"]) if link_row else None
+
+    if joined_server_id is None:
         rail = await server_rail_context(db, account.id)
         return templates.TemplateResponse(
             "server_create.html",
@@ -2003,7 +2010,7 @@ async def server_join_submit(
             status_code=404,
         )
 
-    return RedirectResponse(url=f"/community/servers/{invite_row.server_id}", status_code=303)
+    return RedirectResponse(url=f"/community/servers/{joined_server_id}", status_code=303)
 
 
 @router.get("/servers/{server_id}")
@@ -2643,6 +2650,8 @@ async def server_settings_page(
     access_settings = await crud.get_server_access_settings(db, server_id)
     onboarding_settings = await crud.get_server_onboarding_settings(db, server_id)
     join_applications = await crud.list_server_join_applications(db, server_id)
+    invite_links_raw = await crud.list_server_invite_links(db, server_id)
+    invite_links = [_invite_link_payload(request, link) for link in invite_links_raw]
     rail = await server_rail_context(db, account.id, active_server_id=server_id)
     return templates.TemplateResponse(
         "server_settings.html",
@@ -2663,6 +2672,7 @@ async def server_settings_page(
             "onboarding_settings": onboarding_settings,
             "public_server_required_boosts": PUBLIC_SERVER_REQUIRED_BOOSTS,
             "join_applications": join_applications,
+            "invite_links": invite_links,
             "server_tag_icons": [
                 {"id": key, "glyph": glyph}
                 for key, glyph in crud.SERVER_TAG_ICONS.items()
@@ -3335,6 +3345,117 @@ async def server_invite_submit(
     return RedirectResponse(url=safe_redirect, status_code=303)
 
 
+def _invite_link_payload(request: Request, link: dict) -> dict:
+    code = link["code"]
+    return {
+        "ok": True,
+        "id": int(link["id"]),
+        "code": code,
+        "url": str(request.base_url).rstrip("/") + f"/community/invite/{code}",
+        "uses": int(link.get("uses") or 0),
+        "max_uses": link.get("max_uses"),
+        "expires_at": link["expires_at"].isoformat() if link.get("expires_at") else None,
+        "creator_id": int(link["creator_id"]),
+        "creator_username": link.get("creator_username"),
+        "creator_avatar_url": link.get("creator_avatar_url"),
+        "created_at": link["created_at"].isoformat() if link.get("created_at") else None,
+    }
+
+
+@router.get("/servers/{server_id}/invites/link/active")
+async def server_invite_link_active(server_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    """Used by the invite modal: fetches (creating if needed) a shareable link
+    the way Discord's invite popup always shows a ready-to-copy link."""
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    if not await crud.is_server_member(db, server_id, account.id):
+        return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
+
+    link = await crud.get_or_create_server_invite_link(db, server_id, account.id)
+    if not link:
+        return JSONResponse({"ok": False, "error": "invite_unavailable"}, status_code=409)
+    return JSONResponse(_invite_link_payload(request, link))
+
+
+@router.post("/servers/{server_id}/invites/link")
+async def server_invite_link_create(server_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    """Creates a brand new invite link/code -- same action as Discord's
+    'Generate a new link' in the invite popup or the settings Invites tab."""
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    if not await crud.is_server_member(db, server_id, account.id):
+        return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
+
+    link = await crud.create_server_invite_link(db, server_id, account.id)
+    if not link:
+        return JSONResponse({"ok": False, "error": "invite_unavailable"}, status_code=409)
+    return JSONResponse(_invite_link_payload(request, link))
+
+
+@router.get("/servers/{server_id}/invites/links")
+async def server_invite_links_list(server_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    """Backs the server-settings 'Приглашения' table."""
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    if not await crud.can_manage_server(db, server_id, account.id):
+        return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
+
+    links = await crud.list_server_invite_links(db, server_id)
+    return JSONResponse({"ok": True, "links": [_invite_link_payload(request, link) for link in links]})
+
+
+@router.post("/servers/{server_id}/invites/link/{link_id}/revoke")
+async def server_invite_link_revoke(server_id: int, link_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    """Deletes/pauses an invite link. The same code can be recreated afterwards
+    via server_invite_link_create -- it just gets a fresh random code."""
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    if not await crud.can_manage_server(db, server_id, account.id):
+        return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
+
+    removed = await crud.revoke_server_invite_link(db, server_id, link_id)
+    if not removed:
+        return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
+    return JSONResponse({"ok": True})
+
+
+@router.get("/invite/{code}")
+async def invite_link_redirect(code: str, request: Request, db: AsyncSession = Depends(get_db)):
+    """Short discord.gg-style landing link. Logged-out visitors are sent to log
+    in first and come straight back here afterwards to complete the join."""
+    account = await current_account(request, db)
+    if not account:
+        next_url = f"/community/invite/{code}"
+        return RedirectResponse(url=f"/community/login?next={next_url}", status_code=303)
+
+    link_row = await crud.accept_server_invite_link(db, code, account.id)
+    if not link_row:
+        invite_row = await crud.accept_server_invite_by_code(db, code, account.id)
+        if not invite_row:
+            rail = await server_rail_context(db, account.id)
+            return templates.TemplateResponse(
+                "server_create.html",
+                {
+                    "request": request,
+                    "account": account,
+                    "error": None,
+                    "join_error": _translate_message(
+                        _load_locale(_request_language(account, request)),
+                        "server.join.errors.invite_not_found",
+                    ),
+                    "mode": "join",
+                    **_template_i18n_context(account, request),
+                    **rail,
+                },
+                status_code=404,
+            )
+        return RedirectResponse(url=f"/community/servers/{invite_row.server_id}", status_code=303)
+
+    return RedirectResponse(url=f"/community/servers/{int(link_row['server_id'])}", status_code=303)
 
 
 
