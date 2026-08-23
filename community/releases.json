@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.97.3",
+      "date": "2026-08-24",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update invite button styles in server home template."
+      ],
+      "source_sha": "0fe9f6f77240fe34aac4d8c5488c05dcfbfee153"
+    },
+    {
       "version": "1.97.2",
       "date": "2026-08-24",
       "title": "Виправлення та стабільність",
