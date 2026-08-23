@@ -202,6 +202,202 @@ async def _generate_unique_invite_code(db: AsyncSession) -> str:
     raise RuntimeError("Could not generate unique server invite code")
 
 
+# ---------------------------------------------------------------------------
+# Discord-style reusable invite *links* (discord.gg/<code> equivalent).
+#
+# Kept in their own table instead of reusing ServerInvite: existing
+# ServerInvite rows are single-target (one inviter -> one invitee) and most
+# code assumes invitee_id is set. A link invite has no fixed invitee - anyone
+# holding the code can use it, possibly many times - so it gets a dedicated,
+# additive table instead of loosening those assumptions everywhere.
+# ---------------------------------------------------------------------------
+
+_SERVER_INVITE_LINK_TABLE_READY = False
+
+
+async def ensure_server_invite_link_table(db: AsyncSession) -> None:
+    global _SERVER_INVITE_LINK_TABLE_READY
+    if _SERVER_INVITE_LINK_TABLE_READY:
+        return
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_server_invite_links (
+            id SERIAL PRIMARY KEY,
+            server_id INTEGER NOT NULL REFERENCES community_servers(id) ON DELETE CASCADE,
+            channel_id INTEGER REFERENCES community_server_channels(id) ON DELETE SET NULL,
+            creator_id INTEGER NOT NULL REFERENCES community_accounts(id) ON DELETE CASCADE,
+            code VARCHAR(16) NOT NULL,
+            uses INTEGER NOT NULL DEFAULT 0,
+            max_uses INTEGER,
+            expires_at TIMESTAMP WITH TIME ZONE,
+            revoked BOOLEAN NOT NULL DEFAULT FALSE,
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+        )
+    """))
+    await db.execute(text(
+        "CREATE UNIQUE INDEX IF NOT EXISTS ix_community_server_invite_links_code "
+        "ON community_server_invite_links (code)"
+    ))
+    await db.execute(text(
+        "CREATE INDEX IF NOT EXISTS ix_community_server_invite_links_server "
+        "ON community_server_invite_links (server_id, revoked, created_at DESC)"
+    ))
+    await db.commit()
+    _SERVER_INVITE_LINK_TABLE_READY = True
+
+
+def _new_invite_link_code() -> str:
+    # Short discord.gg-style alphanumeric code. Ambiguous characters (0/O, 1/l/I)
+    # are dropped so a code is easy to read aloud or retype from a screenshot.
+    alphabet = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+    return "".join(secrets.choice(alphabet) for _ in range(8))
+
+
+async def _generate_unique_invite_link_code(db: AsyncSession) -> str:
+    for _ in range(24):
+        code = _new_invite_link_code()
+        result = await db.execute(
+            text("SELECT id FROM community_server_invite_links WHERE code = :code"),
+            {"code": code},
+        )
+        if result.first() is None:
+            return code
+    raise RuntimeError("Could not generate unique invite link code")
+
+
+async def create_server_invite_link(
+    db: AsyncSession,
+    server_id: int,
+    creator_id: int,
+    channel_id: int | None = None,
+    max_age_seconds: int | None = 30 * 24 * 3600,
+    max_uses: int | None = None,
+) -> dict | None:
+    """Create a new reusable invite link (the discord.gg/<code> equivalent)."""
+    await ensure_server_invite_link_table(db)
+    if not await is_server_member(db, server_id, creator_id):
+        return None
+    code = await _generate_unique_invite_link_code(db)
+    expires_at = (
+        datetime.now(timezone.utc) + timedelta(seconds=max_age_seconds)
+        if max_age_seconds else None
+    )
+    result = await db.execute(
+        text(
+            "INSERT INTO community_server_invite_links "
+            "(server_id, channel_id, creator_id, code, max_uses, expires_at) "
+            "VALUES (:server_id, :channel_id, :creator_id, :code, :max_uses, :expires_at) "
+            "RETURNING id, server_id, channel_id, creator_id, code, uses, max_uses, "
+            "expires_at, revoked, created_at"
+        ),
+        {
+            "server_id": server_id,
+            "channel_id": channel_id,
+            "creator_id": creator_id,
+            "code": code,
+            "max_uses": max_uses,
+            "expires_at": expires_at,
+        },
+    )
+    row = result.mappings().first()
+    await db.commit()
+    return dict(row) if row else None
+
+
+async def get_active_server_invite_link(db: AsyncSession, server_id: int) -> dict | None:
+    """Newest still-usable link for the server, if any (used by the invite modal)."""
+    await ensure_server_invite_link_table(db)
+    result = await db.execute(
+        text(
+            "SELECT * FROM community_server_invite_links "
+            "WHERE server_id = :server_id AND revoked = FALSE "
+            "AND (expires_at IS NULL OR expires_at > NOW()) "
+            "AND (max_uses IS NULL OR uses < max_uses) "
+            "ORDER BY created_at DESC LIMIT 1"
+        ),
+        {"server_id": server_id},
+    )
+    row = result.mappings().first()
+    return dict(row) if row else None
+
+
+async def get_or_create_server_invite_link(db: AsyncSession, server_id: int, creator_id: int) -> dict | None:
+    existing = await get_active_server_invite_link(db, server_id)
+    if existing:
+        return existing
+    return await create_server_invite_link(db, server_id, creator_id)
+
+
+async def list_server_invite_links(db: AsyncSession, server_id: int) -> list[dict]:
+    """Active links for the server-settings 'Приглашения' tab."""
+    await ensure_server_invite_link_table(db)
+    result = await db.execute(
+        text(
+            "SELECT l.*, a.username AS creator_username, a.avatar_url AS creator_avatar_url "
+            "FROM community_server_invite_links l "
+            "LEFT JOIN community_accounts a ON a.id = l.creator_id "
+            "WHERE l.server_id = :server_id AND l.revoked = FALSE "
+            "AND (l.expires_at IS NULL OR l.expires_at > NOW()) "
+            "AND (l.max_uses IS NULL OR l.uses < l.max_uses) "
+            "ORDER BY l.created_at DESC"
+        ),
+        {"server_id": server_id},
+    )
+    return [dict(row) for row in result.mappings().all()]
+
+
+async def revoke_server_invite_link(db: AsyncSession, server_id: int, link_id: int) -> bool:
+    """Pause/delete a link. It disappears from the list and the code stops working."""
+    await ensure_server_invite_link_table(db)
+    result = await db.execute(
+        text(
+            "UPDATE community_server_invite_links SET revoked = TRUE "
+            "WHERE id = :id AND server_id = :server_id AND revoked = FALSE"
+        ),
+        {"id": link_id, "server_id": server_id},
+    )
+    await db.commit()
+    return result.rowcount > 0
+
+
+async def get_server_invite_link_by_code(db: AsyncSession, code: str) -> dict | None:
+    await ensure_server_invite_link_table(db)
+    result = await db.execute(
+        text("SELECT * FROM community_server_invite_links WHERE code = :code"),
+        {"code": code},
+    )
+    row = result.mappings().first()
+    return dict(row) if row else None
+
+
+async def accept_server_invite_link(db: AsyncSession, code: str, account_id: int) -> dict | None:
+    """Join a server through a reusable link. Unlike accept_server_invite_by_code
+    this has no fixed invitee, can be reused, and only fails on expiry/limits/bans."""
+    await ensure_server_invite_link_table(db)
+    link = await get_server_invite_link_by_code(db, code)
+    if not link or link["revoked"]:
+        return None
+    if link["expires_at"] and link["expires_at"] <= datetime.now(timezone.utc):
+        return None
+    if link["max_uses"] and link["uses"] >= link["max_uses"]:
+        return None
+
+    server_id = int(link["server_id"])
+    if await is_server_banned(db, server_id, account_id):
+        return None
+
+    is_new_member = not await is_server_member(db, server_id, account_id)
+    if is_new_member:
+        db.add(ServerMember(server_id=server_id, account_id=account_id, role="member"))
+
+    await db.execute(
+        text("UPDATE community_server_invite_links SET uses = uses + 1 WHERE id = :id"),
+        {"id": link["id"]},
+    )
+    await db.commit()
+    if is_new_member:
+        await mark_server_onboarding_pending(db, server_id, account_id)
+    link["uses"] = int(link["uses"]) + 1
+    return link
 
 
 async def get_account_by_id(db: AsyncSession, account_id: int) -> Account | None:
