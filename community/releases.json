@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.97.4",
+      "date": "2026-08-24",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: server invite button styles for consistency."
+      ],
+      "source_sha": "bf48e56eeac6a4e621387c80be96681c319d4c4f"
+    },
+    {
       "version": "1.97.3",
       "date": "2026-08-24",
       "title": "Виправлення та стабільність",
