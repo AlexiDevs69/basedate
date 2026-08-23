@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.97.5",
+      "date": "2026-08-24",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update invites empty state design and message."
+      ],
+      "source_sha": "2e274793ed46ce1d7c5495b47531b262bc5b9e07"
+    },
+    {
       "version": "1.97.4",
       "date": "2026-08-24",
       "title": "Оновлення AlexiHub",
