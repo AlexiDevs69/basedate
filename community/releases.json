@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.96.1",
+      "date": "2026-08-24",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: get_or_create_server_invite_link function."
+      ],
+      "source_sha": "6fde10bc7748cb678b09aacc0241a97a28bf5fbe"
+    },
+    {
       "version": "1.96.0",
       "date": "2026-08-24",
       "title": "Нові можливості AlexiHub",
