@@ -23,6 +23,7 @@
     .server-dot.active:before{content:"";position:absolute;left:-10px;width:4px;height:34px;border-radius:0 6px 6px 0;background:#fff}
     .server-dot.home-dot{background:linear-gradient(135deg,#5865f2,#4752c4)}
     .server-dot.plus{font-size:1.7rem;color:var(--green)}
+    .server-dot.plus.active{color:#fff}
     .server-dot.plus:hover{background:var(--green)!important;color:#fff!important}
     .server-sep{width:32px;height:1px;background:#2b2d34;flex:0 0 auto}
     .side{min-width:0;background:var(--side);border-right:1px solid #0c0d0f;display:flex;flex-direction:column}
@@ -916,7 +917,7 @@
         </a>
       {% endfor %}
       <a class="server-dot plus" href="/community/servers/new" title="{{ i18n_t('server.create.action') }}" data-i18n-title="server.create.action">+</a>
-      <a class="server-dot plus" href="/community/travel" title="{{ i18n_t('common.aria.a_journey') }}" data-i18n-title="common.aria.a_journey">
+      <a class="server-dot plus active" href="/community/travel" title="{{ i18n_t('common.aria.a_journey') }}" data-i18n-title="common.aria.a_journey">
         <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15.8 8.2-2.1 5.5-5.5 2.1 2.1-5.5 5.5-2.1Z"/></svg>
       </a>
     </aside>
