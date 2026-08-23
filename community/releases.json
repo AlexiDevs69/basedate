@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.85.4",
+      "date": "2026-08-23",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: user name and tag structure in home.html."
+      ],
+      "source_sha": "ea1ab5f3828e7a05d35274c607fdbf734ec5b292"
+    },
+    {
       "version": "1.85.3",
       "date": "2026-08-23",
       "title": "Оновлення AlexiHub",
