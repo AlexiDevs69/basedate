@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.94.0",
+      "date": "2026-08-24",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: reusable server invite link management."
+      ],
+      "source_sha": "18da248c9e4ed9344cccae2a2de005264e39123e"
+    },
+    {
       "version": "1.93.2",
       "date": "2026-08-24",
       "title": "Оновлення AlexiHub",
