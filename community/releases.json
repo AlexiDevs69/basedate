@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.85.5",
+      "date": "2026-08-23",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance profile display and tag functionality."
+      ],
+      "source_sha": "2a7c3bccbe3cf50d91789c9d27a47dbb26c33332"
+    },
+    {
       "version": "1.85.4",
       "date": "2026-08-23",
       "title": "Оновлення AlexiHub",
