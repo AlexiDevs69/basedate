@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.86.2",
+      "date": "2026-08-23",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Adjust profile badge sizes and margins."
+      ],
+      "source_sha": "57f8b985ea37d584beaca357370ead92ea25fec6"
+    },
+    {
       "version": "1.86.1",
       "date": "2026-08-23",
       "title": "Виправлення та стабільність",
