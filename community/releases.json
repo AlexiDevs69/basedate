@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.88.0",
+      "date": "2026-08-23",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: plus icon and update server creation modal."
+      ],
+      "source_sha": "d06fc4cd96f309348a39d1a54c2ed6b685bcf9a3"
+    },
+    {
       "version": "1.87.0",
       "date": "2026-08-23",
       "title": "Нові можливості AlexiHub",
