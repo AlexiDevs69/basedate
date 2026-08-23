@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.94.2",
+      "date": "2026-08-24",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: server header styles and add invite button."
+      ],
+      "source_sha": "a7a178ef5fb80e2d1c123dc0c6cffebb78e14d28"
+    },
+    {
       "version": "1.94.1",
       "date": "2026-08-24",
       "title": "Оновлення AlexiHub",
