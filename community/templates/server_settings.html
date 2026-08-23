@@ -922,6 +922,21 @@
   .moderation-confirm.open .moderation-confirm-card{transform:translateY(0) scale(1);opacity:1;transition:transform .2s cubic-bezier(.2,.9,.32,1.1) .02s,opacity .18s ease .02s}
   .moderation-confirm-body{padding:22px}.moderation-confirm-body h2{font-size:20px;margin-bottom:8px}.moderation-confirm-body p{color:#b5bac1;line-height:1.45}.moderation-reason{display:none;width:100%;height:40px;margin-top:16px;border:1px solid #41434a;border-radius:7px;background:#111214;color:#fff;padding:0 11px;outline:0}.moderation-reason.show{display:block}.moderation-confirm-actions{display:flex;justify-content:flex-end;gap:9px;padding:14px 22px;background:#24252a}.moderation-confirm-actions button{height:38px;border-radius:6px;padding:0 14px;color:#fff;font-weight:850;cursor:pointer;transition:background-color .15s ease,opacity .15s ease}.moderation-cancel{background:transparent}.moderation-cancel:hover{background:#35373e}.moderation-accept{background:#da373c}.moderation-accept:hover{background:#e0464b}
   .ban-list{display:grid;gap:8px}.ban-row{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#18191d;border:1px solid #292b31;border-radius:10px;padding:12px 14px}.ban-meta{display:flex;align-items:center;gap:10px;min-width:0}.ban-meta small{display:block;color:#8e929b;margin-top:3px}.ban-empty{padding:36px;border:1px dashed #3a3c43;border-radius:12px;text-align:center;color:#8e929b;background:#18191d}
+  .invites-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:18px 0 14px}
+  .invites-toolbar-label{font-size:12px;font-weight:700;letter-spacing:.02em;color:#949ba4;text-transform:uppercase}
+  .invites-toolbar-actions{display:flex;gap:10px}
+  .invites-toolbar-actions .danger-text{color:#f23f42}
+  .blue-btn{background:#5865f2;color:#fff;border:none;border-radius:6px;padding:9px 16px;font-weight:600;font-size:13px;cursor:pointer}
+  .blue-btn:hover{background:#4752c4}
+  .invites-table-head{display:grid;grid-template-columns:2fr 1.2fr .8fr 1fr .8fr 32px;gap:12px;padding:0 14px 10px;color:#8e929b;font-size:12px;font-weight:600;text-transform:uppercase}
+  .invite-row{display:grid;grid-template-columns:2fr 1.2fr .8fr 1fr .8fr 32px;gap:12px;align-items:center;background:#18191d;border:1px solid #292b31;border-radius:10px;padding:12px 14px;margin-bottom:8px}
+  .invite-inviter{display:flex;align-items:center;gap:10px;min-width:0}
+  .invite-inviter small{display:block;color:#8e929b;margin-top:2px}
+  .invite-code{font-family:var(--font-mono,monospace);color:#dbdee1}
+  .invite-revoke-btn{background:transparent;border:none;color:#8e929b;font-size:15px;cursor:pointer;border-radius:6px;width:28px;height:28px}
+  .invite-revoke-btn:hover{background:#2b2d31;color:#f23f42}
+  .invites-empty{padding:36px;border:1px dashed #3a3c43;border-radius:12px;text-align:center;color:#8e929b;background:#18191d}
+  @media (max-width: 900px){.invites-table-head{display:none}.invite-row{grid-template-columns:1fr auto;grid-template-areas:"inviter revoke" "code code" "uses expires";}}
   @media(max-width:900px){.settings-main{padding-right:78px}.members-col-joined{display:none}.members-col-user{width:52%}.members-col-role{width:32%}.members-tools{flex-wrap:wrap}.members-search{width:220px}}
   @media(max-width:650px){.members-page-head,.members-toolbar{align-items:stretch;flex-direction:column}.members-tools{display:grid;grid-template-columns:1fr 1fr}.members-search{grid-column:1/-1;width:100%}.members-col-role{display:none}.members-col-user{width:auto}.members-table th,.members-table td{padding-left:8px;padding-right:8px}}
 </style>
@@ -1726,6 +1741,41 @@
           {% endfor %}
         </div>
         {% else %}<div class="ban-empty"><!--i18n:server_settings.text.n_s_not_blocked_users_on_this_server-->{{ i18n_t('server_settings.text.n_s_not_blocked_users_on_this_server') }}</div>{% endif %}
+      </section>
+
+      <section id="page-invites" class="settings-page invites-settings-page">
+        <h1 class="settings-title">Приглашения</h1>
+        <div class="invites-toolbar">
+          <div class="invites-toolbar-label">АКТИВНЫЕ ССЫЛКИ-ПРИГЛАШЕНИЯ</div>
+          <div class="invites-toolbar-actions">
+            <button class="gray-btn danger-text" type="button" onclick="pauseAllInviteLinks()">Приостановить приглашения</button>
+            <button class="blue-btn" type="button" onclick="createInviteLink()">Создать ссылку-приглашение</button>
+          </div>
+        </div>
+        <div id="invites-table-wrap">
+          <div class="invites-table-head">
+            <span>Приглашающий</span><span>Код приглашения</span><span>Использований</span><span>Истекает</span><span>Роли</span><span></span>
+          </div>
+          <div id="invites-table-body">
+            {% if invite_links %}
+            {% for link in invite_links %}
+            <div class="invite-row" data-invite-id="{{ link.id }}">
+              <div class="invite-inviter">
+                <span class="settings-member-avatar" {% if link.creator_avatar_url %}style="background-image:url('{{ link.creator_avatar_url }}')"{% endif %}>{% if not link.creator_avatar_url %}{{ (link.creator_username or '?')[:1]|upper }}{% endif %}</span>
+                <div><strong>{{ link.creator_username or '—' }}</strong><small>#rules</small></div>
+              </div>
+              <span class="invite-code">{{ link.code }}</span>
+              <span class="invite-uses">{{ link.uses }}</span>
+              <span class="invite-expires" data-expires-at="{{ link.expires_at or '' }}">—</span>
+              <span class="invite-roles">—</span>
+              <button type="button" class="invite-revoke-btn" title="Удалить ссылку-приглашение" onclick="revokeInviteLink({{ link.id }}, this)">✕</button>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="invites-empty">Пока нет активных ссылок-приглашений. Нажмите «Создать ссылку-приглашение».</div>
+            {% endif %}
+          </div>
+        </div>
       </section>
 
       <section id="page-placeholder" class="settings-page placeholder-page">
@@ -2645,7 +2695,7 @@
     });
 
     function switchTab(tab) {
-      const known = ['profile', 'tag', 'boosts', 'emojis', 'stickers', 'members', 'access', 'community', 'adaptation', 'bans'];
+      const known = ['profile', 'tag', 'boosts', 'emojis', 'stickers', 'members', 'invites', 'access', 'community', 'adaptation', 'bans'];
       const page = known.includes(tab) ? tab : 'placeholder';
       document.querySelectorAll('.settings-page').forEach(section => {
         section.classList.toggle('active', section.id === `page-${page}`);
@@ -2663,9 +2713,96 @@
       if (tab === 'emojis') loadEmojis();
       if (tab === 'stickers') loadStickers();
       if (tab === 'members') applyMemberFilters();
+      if (tab === 'invites') { renderInviteExpiries(); loadInviteLinks(); }
       if (tab === 'access') renderAccessSettings(false);
       if (tab === 'community' || tab === 'adaptation') renderOnboardingEditors();
       location.hash = page === 'profile' ? '' : tab;
+    }
+
+    function formatInviteExpiry(iso) {
+      if (!iso) return 'Никогда';
+      const target = new Date(iso).getTime();
+      const diff = target - Date.now();
+      if (diff <= 0) return 'Истекло';
+      const totalSeconds = Math.floor(diff / 1000);
+      const days = Math.floor(totalSeconds / 86400);
+      const hours = Math.floor((totalSeconds % 86400) / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+      const pad = n => String(n).padStart(2, '0');
+      return `${days}:${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+    }
+
+    function renderInviteExpiries() {
+      document.querySelectorAll('#invites-table-body .invite-expires').forEach(el => {
+        el.textContent = formatInviteExpiry(el.dataset.expiresAt);
+      });
+    }
+    setInterval(() => {
+      if (document.getElementById('page-invites')?.classList.contains('active')) renderInviteExpiries();
+    }, 1000);
+
+    function inviteRowHtml(link) {
+      const username = escapeHtml(link.creator_username || '—');
+      const initial = escapeHtml((link.creator_username || '?').slice(0, 1).toUpperCase());
+      const avatarStyle = link.creator_avatar_url ? ` style="background-image:url('${escapeHtml(link.creator_avatar_url)}')"` : '';
+      return `<div class="invite-row" data-invite-id="${link.id}">
+        <div class="invite-inviter"><span class="settings-member-avatar"${avatarStyle}>${link.creator_avatar_url ? '' : initial}</span><div><strong>${username}</strong><small>#rules</small></div></div>
+        <span class="invite-code">${escapeHtml(link.code)}</span>
+        <span class="invite-uses">${Number(link.uses || 0)}</span>
+        <span class="invite-expires" data-expires-at="${link.expires_at || ''}">${formatInviteExpiry(link.expires_at)}</span>
+        <span class="invite-roles">—</span>
+        <button type="button" class="invite-revoke-btn" title="Удалить ссылку-приглашение" onclick="revokeInviteLink(${link.id}, this)">✕</button>
+      </div>`;
+    }
+
+    function renderInviteLinksList(links) {
+      const body = document.getElementById('invites-table-body');
+      if (!body) return;
+      if (!links || !links.length) {
+        body.innerHTML = '<div class="invites-empty">Пока нет активных ссылок-приглашений. Нажмите «Создать ссылку-приглашение».</div>';
+        return;
+      }
+      body.innerHTML = links.map(inviteRowHtml).join('');
+    }
+
+    function loadInviteLinks() {
+      fetch(`/community/servers/${SERVER_ID}/invites/links`)
+        .then(r => r.json())
+        .then(data => { if (data && data.ok) renderInviteLinksList(data.links); })
+        .catch(() => {});
+    }
+
+    function createInviteLink() {
+      fetch(`/community/servers/${SERVER_ID}/invites/link`, { method: 'POST' })
+        .then(r => r.json())
+        .then(data => { if (data && data.ok) loadInviteLinks(); else showToast('Не удалось создать ссылку'); })
+        .catch(() => showToast('Не удалось создать ссылку'));
+    }
+
+    function revokeInviteLink(linkId, btn) {
+      if (btn) btn.disabled = true;
+      fetch(`/community/servers/${SERVER_ID}/invites/link/${linkId}/revoke`, { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+          if (data && data.ok) {
+            const row = document.querySelector(`.invite-row[data-invite-id="${linkId}"]`);
+            if (row) row.remove();
+            const body = document.getElementById('invites-table-body');
+            if (body && !body.querySelector('.invite-row')) {
+              body.innerHTML = '<div class="invites-empty">Пока нет активных ссылок-приглашений. Нажмите «Создать ссылку-приглашение».</div>';
+            }
+          } else {
+            if (btn) btn.disabled = false;
+            showToast('Не удалось удалить ссылку');
+          }
+        })
+        .catch(() => { if (btn) btn.disabled = false; });
+    }
+
+    function pauseAllInviteLinks() {
+      const rows = document.querySelectorAll('#invites-table-body .invite-row');
+      rows.forEach(row => revokeInviteLink(Number(row.dataset.inviteId), row.querySelector('.invite-revoke-btn')));
     }
 
     document.querySelectorAll('.side-item[data-tab]').forEach(button => {
