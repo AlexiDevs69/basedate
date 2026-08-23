@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.88.2",
+      "date": "2026-08-23",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Modify server-sep style in travel.html."
+      ],
+      "source_sha": "7e5ff49fb65c3d4e71b509e97095c1d993459bb5"
+    },
+    {
       "version": "1.88.1",
       "date": "2026-08-23",
       "title": "Оновлення AlexiHub",
