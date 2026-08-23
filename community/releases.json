@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.85.1",
+      "date": "2026-08-23",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: user display elements in dm_chat.html."
+      ],
+      "source_sha": "7463ba2437c1b5977c8e8bf1d1c7f0f780a6fa41"
+    },
+    {
       "version": "1.85.0",
       "date": "2026-08-23",
       "title": "Нові можливості AlexiHub",
