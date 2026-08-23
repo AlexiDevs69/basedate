@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.89.0",
+      "date": "2026-08-23",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: server onboarding modal design."
+      ],
+      "source_sha": "c57e69055f1a5303c5cf6cfc1b87c08aea1d52e2"
+    },
+    {
       "version": "1.88.5",
       "date": "2026-08-23",
       "title": "Оновлення AlexiHub",
