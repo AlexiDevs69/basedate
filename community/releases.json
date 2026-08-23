@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.85.0",
+      "date": "2026-08-23",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: tag statistics retrieval in CRUD."
+      ],
+      "source_sha": "8ee452fa5ce635313ece49eac23396c7ebc41b8d"
+    },
+    {
       "version": "1.84.0",
       "date": "2026-08-23",
       "title": "Нові можливості AlexiHub",
