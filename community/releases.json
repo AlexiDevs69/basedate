@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.93.1",
+      "date": "2026-08-23",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: styles for close button and moderation modal."
+      ],
+      "source_sha": "af617b318e96b99138ae5b0f32aef1b8d90ccaad"
+    },
+    {
       "version": "1.93.0",
       "date": "2026-08-23",
       "title": "Нові можливості AlexiHub",
