@@ -2702,6 +2702,22 @@ async def server_settings_submit(
     return RedirectResponse(url=safe_redirect, status_code=303)
 
 
+@router.delete("/api/servers/{server_id}")
+async def api_delete_server(server_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    server = await crud.get_server_by_id(db, server_id)
+    if not server:
+        return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
+    # Only the owner can permanently delete the server; admins can manage
+    # settings but must not be able to wipe it out from under the owner.
+    if int(server.owner_id) != int(account.id):
+        return JSONResponse({"ok": False, "error": "owner_only"}, status_code=403)
+    removed = await crud.delete_server(db, server_id)
+    return JSONResponse({"ok": bool(removed)})
+
+
 @router.get("/api/servers/{server_id}/access")
 async def api_server_access_preview(
     server_id: int,
