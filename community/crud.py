@@ -7253,6 +7253,24 @@ async def get_server_boost_status(
         settings_row["tag_icon"] if settings_row else "gem",
         unlocked=total >= SERVER_TAG_REQUIRED_BOOSTS,
     )
+    tag_stats_row = (await db.execute(text("""
+        SELECT s.icon_url,
+               COUNT(DISTINCT member.id) AS member_count,
+               COUNT(DISTINCT CASE
+                   WHEN account.last_seen_at IS NOT NULL
+                    AND account.last_seen_at >= NOW() - INTERVAL '3 minutes'
+                    AND COALESCE(account.account_status, 'online') <> 'invisible'
+                   THEN account.id
+               END) AS online_count
+        FROM community_servers s
+        LEFT JOIN community_server_members member ON member.server_id = s.id
+        LEFT JOIN community_accounts account ON account.id = member.account_id
+        WHERE s.id = :server_id
+        GROUP BY s.id, s.icon_url
+    """), {"server_id": int(server_id)})).mappings().first()
+    tag["icon_url"] = (tag_stats_row["icon_url"] if tag_stats_row else "") or ""
+    tag["member_count"] = int(tag_stats_row["member_count"]) if tag_stats_row else 0
+    tag["online_count"] = int(tag_stats_row["online_count"]) if tag_stats_row else 0
     allocated_here = 0
     if viewer_id:
         allocated_here = int((await db.execute(text("""
