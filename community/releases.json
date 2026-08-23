@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.97.1",
+      "date": "2026-08-24",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance server header with invite button styles."
+      ],
+      "source_sha": "c9eadfc8d57401a1297eae3ff379d7193adeafaa"
+    },
+    {
       "version": "1.97.0",
       "date": "2026-08-24",
       "title": "Нові можливості AlexiHub",
