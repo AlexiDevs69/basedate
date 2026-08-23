@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.86.1",
+      "date": "2026-08-23",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Adjust profile badge sizes and margins."
+      ],
+      "source_sha": "4e7799b33398267c3c15125d4f160625857b43f5"
+    },
+    {
       "version": "1.86.0",
       "date": "2026-08-23",
       "title": "Нові можливості AlexiHub",
