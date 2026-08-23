@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.86.4",
+      "date": "2026-08-23",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Reduce size of profile badge icons."
+      ],
+      "source_sha": "1374964fcdc7cdf92ed292dc1d5df3e1b380a427"
+    },
+    {
       "version": "1.86.3",
       "date": "2026-08-23",
       "title": "Виправлення та стабільність",
