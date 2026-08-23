@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.93.0",
+      "date": "2026-08-23",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: server deletion API endpoint."
+      ],
+      "source_sha": "62edb24564258f75748e35615a527fdb1c461c90"
+    },
+    {
       "version": "1.92.0",
       "date": "2026-08-23",
       "title": "Нові можливості AlexiHub",
