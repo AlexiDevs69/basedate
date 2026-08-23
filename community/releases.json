@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.86.0",
+      "date": "2026-08-23",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: other_tag retrieval for mutual server data."
+      ],
+      "source_sha": "1baff9eb84ac1cae8206ff9606ccc3b98c591a75"
+    },
+    {
       "version": "1.85.5",
       "date": "2026-08-23",
       "title": "Виправлення та стабільність",
