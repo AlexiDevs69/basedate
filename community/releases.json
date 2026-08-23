@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.87.0",
+      "date": "2026-08-23",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: user tag element to travel.html template."
+      ],
+      "source_sha": "fe667c466345463434638456e2a2abf4aeed71ca"
+    },
+    {
       "version": "1.86.4",
       "date": "2026-08-23",
       "title": "Виправлення та стабільність",
