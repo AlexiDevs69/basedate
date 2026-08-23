@@ -1677,6 +1677,8 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
 .server-banner-image::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.62) 0,rgba(0,0,0,.18) 44%,rgba(0,0,0,.04) 72%,rgba(0,0,0,.28) 100%);pointer-events:none}
 .server-head.has-server-banner .server-head-btn{position:relative;z-index:2;color:#fff!important;text-shadow:0 1px 3px rgba(0,0,0,.88);background:transparent!important}
 .server-head.has-server-banner .server-head-btn:hover,.server-head.has-server-banner .server-head-btn.open{background:rgba(0,0,0,.22)!important}
+.server-head.has-server-banner .server-head-invite-btn{position:relative;z-index:2;color:#fff!important;background:rgba(0,0,0,.28)!important;filter:drop-shadow(0 1px 2px rgba(0,0,0,.7))}
+.server-head.has-server-banner .server-head-invite-btn:hover{background:rgba(0,0,0,.42)!important;color:#fff!important}
 .server-head.has-server-banner .server-menu{top:48px!important;z-index:4}
 </style>
 {% include "i18n_runtime.html" %}
@@ -2276,7 +2278,9 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
 
     
     var AH_INVITE_SERVER_ID = {{ server.id }};
+    var AH_INVITE_CURRENT_CHANNEL_ID = '';
     function setInviteModalChannel(channelId) {
+      AH_INVITE_CURRENT_CHANNEL_ID = channelId || '';
       document.querySelectorAll('#invite-modal input[name="channel_id"]').forEach(function(input){ input.value = channelId || ''; });
     }
     function loadServerInviteLink() {
@@ -2286,7 +2290,8 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
       input.value = '';
       input.placeholder = 'Загрузка ссылки…';
       if (copyBtn) copyBtn.disabled = true;
-      fetch('/community/servers/' + AH_INVITE_SERVER_ID + '/invites/link/active')
+      var qs = AH_INVITE_CURRENT_CHANNEL_ID ? ('?channel_id=' + encodeURIComponent(AH_INVITE_CURRENT_CHANNEL_ID)) : '';
+      fetch('/community/servers/' + AH_INVITE_SERVER_ID + '/invites/link/active' + qs)
         .then(function(r){ return r.json(); })
         .then(function(data){
           if (!data || !data.ok) { input.placeholder = 'Не удалось создать ссылку'; return; }
@@ -2315,7 +2320,8 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
       if (event) event.preventDefault();
       var input = document.getElementById('invite-link-url-input');
       if (input) { input.value = ''; input.placeholder = 'Создание новой ссылки…'; }
-      fetch('/community/servers/' + AH_INVITE_SERVER_ID + '/invites/link', { method: 'POST' })
+      var qs = AH_INVITE_CURRENT_CHANNEL_ID ? ('?channel_id=' + encodeURIComponent(AH_INVITE_CURRENT_CHANNEL_ID)) : '';
+      fetch('/community/servers/' + AH_INVITE_SERVER_ID + '/invites/link' + qs, { method: 'POST' })
         .then(function(r){ return r.json(); })
         .then(function(data){
           if (!data || !data.ok || !input) return;
