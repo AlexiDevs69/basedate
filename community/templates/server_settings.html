@@ -1130,7 +1130,9 @@
         <button class="side-item" type="button" data-tab="analytics"><!--i18n:common.text.an_analytics_of_the_server-->{{ i18n_t('common.text.an_analytics_of_the_server') }}</button>
         <div class="side-sep"></div>
         <button class="side-item" type="button" data-tab="template"><!--i18n:server_settings.action.a_server_pattern-->{{ i18n_t('server_settings.action.a_server_pattern') }}</button>
+        {% if viewer_is_owner %}
         <button class="side-item danger" type="button" data-tab="delete"><!--i18n:server_settings.action.delete_the_server-->{{ i18n_t('server_settings.action.delete_the_server') }} <span>🗑</span></button>
+        {% endif %}
       </div>
     </aside>
 
@@ -1734,6 +1736,24 @@
     </div>
   </div>
 
+  {% if viewer_is_owner %}
+  <div id="delete-server-confirm" class="moderation-confirm" role="dialog" aria-modal="true" aria-labelledby="delete-server-confirm-title">
+    <div class="moderation-confirm-card">
+      <div class="moderation-confirm-body" style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">
+        <div>
+          <h2 id="delete-server-confirm-title">Удалить '{{ server.name }}'</h2>
+          <p>Вы уверены, что хотите удалить <strong>{{ server.name }}</strong>? Это действие нельзя отменить.</p>
+        </div>
+        <button type="button" class="close-mini" onclick="closeDeleteServerConfirm()" aria-label="Отмена">×</button>
+      </div>
+      <div class="moderation-confirm-actions">
+        <button class="moderation-cancel" type="button" onclick="closeDeleteServerConfirm()">Отмена</button>
+        <button id="delete-server-confirm-accept" class="moderation-accept" type="button">Удалить сервер</button>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
   <div id="media-upload" class="upload-backdrop">
     <form id="media-upload-form" class="upload-modal">
       <div class="upload-head">
@@ -2040,6 +2060,7 @@
     document.addEventListener('click', event => {
       if (!event.target.closest('#member-action-menu') && !event.target.closest('.member-menu-button')) closeMemberMenu();
       if (event.target.id === 'moderation-confirm') closeModerationConfirm();
+      if (event.target.id === 'delete-server-confirm') closeDeleteServerConfirm();
     });
     window.addEventListener('resize', closeMemberMenu);
 
@@ -2640,7 +2661,45 @@
     }
 
     document.querySelectorAll('.side-item[data-tab]').forEach(button => {
-      button.addEventListener('click', () => switchTab(button.dataset.tab));
+      button.addEventListener('click', () => {
+        if (button.dataset.tab === 'delete') {
+          openDeleteServerConfirm();
+          return;
+        }
+        switchTab(button.dataset.tab);
+      });
+    });
+
+    function openDeleteServerConfirm() {
+      const modal = document.getElementById('delete-server-confirm');
+      if (!modal) return;
+      const accept = document.getElementById('delete-server-confirm-accept');
+      if (accept) { accept.disabled = false; accept.textContent = 'Удалить сервер'; }
+      modal.classList.add('open');
+    }
+
+    function closeDeleteServerConfirm() {
+      document.getElementById('delete-server-confirm')?.classList.remove('open');
+    }
+
+    document.getElementById('delete-server-confirm-accept')?.addEventListener('click', async event => {
+      const button = event.currentTarget;
+      button.disabled = true;
+      button.textContent = 'Удаление…';
+      try {
+        const response = await fetch(`/community/api/servers/${SERVER_ID}`, {
+          method: 'DELETE',
+          credentials: 'same-origin',
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data.ok) throw new Error(data.error || 'delete_failed');
+        window.location.href = '/community';
+      } catch (error) {
+        closeDeleteServerConfirm();
+        showToast('Не вдалося видалити сервер. Спробуйте ще раз.');
+        button.disabled = false;
+        button.textContent = 'Удалить сервер';
+      }
     });
 
     setBanner(initialState.banner);
@@ -2930,11 +2989,18 @@
     });
 
     const initialTab = location.hash ? location.hash.slice(1) : 'profile';
-    switchTab(initialTab || 'profile');
+    if (initialTab === 'delete') {
+      switchTab('profile');
+      openDeleteServerConfirm();
+    } else {
+      switchTab(initialTab || 'profile');
+    }
 
     window.addEventListener('keydown', event => {
       if (event.key === 'Escape') {
-        if (document.getElementById('moderation-confirm').classList.contains('open')) {
+        if (document.getElementById('delete-server-confirm')?.classList.contains('open')) {
+          closeDeleteServerConfirm();
+        } else if (document.getElementById('moderation-confirm').classList.contains('open')) {
           closeModerationConfirm();
         } else if (document.getElementById('member-action-menu').classList.contains('open')) {
           closeMemberMenu();
