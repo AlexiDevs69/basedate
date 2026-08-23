@@ -3358,37 +3358,53 @@ def _invite_link_payload(request: Request, link: dict) -> dict:
         "creator_id": int(link["creator_id"]),
         "creator_username": link.get("creator_username"),
         "creator_avatar_url": link.get("creator_avatar_url"),
+        "channel_id": link.get("channel_id"),
+        "channel_name": link.get("channel_name"),
         "created_at": link["created_at"].isoformat() if link.get("created_at") else None,
     }
 
 
 @router.get("/servers/{server_id}/invites/link/active")
-async def server_invite_link_active(server_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+async def server_invite_link_active(
+    server_id: int, request: Request, channel_id: str | None = None, db: AsyncSession = Depends(get_db),
+):
     """Used by the invite modal: fetches (creating if needed) a shareable link
-    the way Discord's invite popup always shows a ready-to-copy link."""
+    the way Discord's invite popup always shows a ready-to-copy link.
+
+    channel_id is only used the first time a link is created for the server --
+    since only one link may be active at a time, later calls (from any
+    channel's invite button) just return that same link."""
     account = await current_account(request, db)
     if not account:
         return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
     if not await crud.is_server_member(db, server_id, account.id):
         return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
 
-    link = await crud.get_or_create_server_invite_link(db, server_id, account.id)
+    link = await crud.get_or_create_server_invite_link(
+        db, server_id, account.id, channel_id=_parse_optional_int(channel_id),
+    )
     if not link:
         return JSONResponse({"ok": False, "error": "invite_unavailable"}, status_code=409)
     return JSONResponse(_invite_link_payload(request, link))
 
 
 @router.post("/servers/{server_id}/invites/link")
-async def server_invite_link_create(server_id: int, request: Request, db: AsyncSession = Depends(get_db)):
-    """Creates a brand new invite link/code -- same action as Discord's
-    'Generate a new link' in the invite popup or the settings Invites tab."""
+async def server_invite_link_create(
+    server_id: int, request: Request, channel_id: str | None = None, db: AsyncSession = Depends(get_db),
+):
+    """Returns the server's single active invite link, creating it (for the
+    given channel) if none exists yet. Only one link may be active per server
+    at a time, so this never mints a second code while one is still active --
+    revoke the existing link in server settings first to get a fresh one."""
     account = await current_account(request, db)
     if not account:
         return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
     if not await crud.is_server_member(db, server_id, account.id):
         return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
 
-    link = await crud.create_server_invite_link(db, server_id, account.id)
+    link = await crud.create_server_invite_link(
+        db, server_id, account.id, channel_id=_parse_optional_int(channel_id),
+    )
     if not link:
         return JSONResponse({"ok": False, "error": "invite_unavailable"}, status_code=409)
     return JSONResponse(_invite_link_payload(request, link))
