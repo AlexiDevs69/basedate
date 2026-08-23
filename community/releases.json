@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.85.3",
+      "date": "2026-08-23",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: user tag display in server_channel.html."
+      ],
+      "source_sha": "a49896feac4dcf643444cb8aa543e3b02eed3c5e"
+    },
+    {
       "version": "1.85.2",
       "date": "2026-08-23",
       "title": "Оновлення AlexiHub",
