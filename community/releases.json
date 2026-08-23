@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.91.0",
+      "date": "2026-08-23",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: leave server modal functionality."
+      ],
+      "source_sha": "3a6dbad9d75ff3308ba10d6b583b46a0aee5f2e6"
+    },
+    {
       "version": "1.90.0",
       "date": "2026-08-23",
       "title": "Нові можливості AlexiHub",
