@@ -109,8 +109,8 @@
       background: #fff;
     }
     .server-dot.home-dot { background: linear-gradient(135deg, #05AFB3, #049295); }
-    .server-dot.plus { color: var(--green); }
-    .server-dot.plus:hover { background: var(--green); color: #fff; }
+    .server-dot.plus { color: var(--accent); }
+    .server-dot.plus:hover { background: var(--accent); color: #fff; }
     .server-sep { width: 32px; height: 2px; background: #24252b; border-radius: 9px; }
 
     /* left dm sidebar */
@@ -222,13 +222,15 @@
     .empty-note { color: var(--muted2); font-size: 12px; padding: 6px 10px 12px; }
 
     .user-panel {
-      height: 56px;
+      height: 52px;
       background: #17181d;
-      border-top: 1px solid #22242b;
+      border-radius: 12px;
       display: flex;
       align-items: center;
-      padding: 8px;
+      padding: 6px 8px;
       gap: 8px;
+      margin: 0 8px 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.35);
     }
     .user-panel .avatar { width: 36px; height: 36px; }
     .user-info { min-width: 0; flex: 1; }
