@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.99.0",
+      "date": "2026-08-24",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: drag-and-drop image upload feature."
+      ],
+      "source_sha": "a31d4645aec5d7777286dbab4ae7ac40d019f897"
+    },
+    {
       "version": "1.98.6",
       "date": "2026-08-24",
       "title": "Виправлення та стабільність",
