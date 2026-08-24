@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.100.5",
+      "date": "2026-08-25",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: user panel styling and position."
+      ],
+      "source_sha": "bb730c2efcebfad6b04d0c75c3219797053ca9d8"
+    },
+    {
       "version": "1.100.4",
       "date": "2026-08-25",
       "title": "Виправлення та стабільність",
