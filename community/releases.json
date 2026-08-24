@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.100.6",
+      "date": "2026-08-25",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update fmt.Println message from 'Hello' to 'Goodbye'."
+      ],
+      "source_sha": "bb52bfa9ca43023b9d59c64a8d0689b7c6d13e51"
+    },
+    {
       "version": "1.100.5",
       "date": "2026-08-25",
       "title": "Оновлення AlexiHub",
