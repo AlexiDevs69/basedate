@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.100.4",
+      "date": "2026-08-25",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Refine layout and positioning in home.html."
+      ],
+      "source_sha": "2416caa2634cf40205010a15db58bef651f504be"
+    },
+    {
       "version": "1.100.3",
       "date": "2026-08-24",
       "title": "Оновлення AlexiHub",
