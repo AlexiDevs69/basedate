@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.100.3",
+      "date": "2026-08-24",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: styles for server-dot and user-panel."
+      ],
+      "source_sha": "d16754be844641a5c09904986f10dc0d3be445fc"
+    },
+    {
       "version": "1.100.2",
       "date": "2026-08-24",
       "title": "Виправлення та стабільність",
