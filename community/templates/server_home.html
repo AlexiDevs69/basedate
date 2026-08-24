@@ -311,7 +311,8 @@
     .server-head-invite-btn svg { width: 18px; height: 18px; }
     .server-head-invite-btn:hover { background: rgba(255,255,255,.08); color: var(--text-primary); }
     .server-head-btn span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .server-arrow { color: var(--text-secondary); transition: transform .16s ease, color .16s ease; flex-shrink: 0; }
+    .server-arrow { color: var(--text-secondary); transition: transform .16s ease, color .16s ease; flex-shrink: 0; display: inline-flex; }
+    .server-arrow svg { width: 16px; height: 16px; display: block; }
     .server-head-btn.open .server-arrow { transform: rotate(180deg); color: var(--text-primary); }
     .server-menu { position: absolute; top: 48px; left: .55rem; right: .55rem; display: none; padding: .45rem; border-radius: 12px; background: #1d1d20; border: 1px solid #303036; box-shadow: 0 18px 50px rgba(0,0,0,.48); z-index: 260; transform-origin: top center; }
     .server-menu.open { display: block; animation: menuPop .12s ease-out; }
@@ -1533,7 +1534,7 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
     <div class="server-head{% if boost_status.total_boosts >= 5 and server_banner_url %} has-server-banner{% endif %}">
   {% if boost_status.total_boosts >= 5 and server_banner_url %}<div class="server-banner-image" aria-hidden="true"><img src="{{ server_banner_url }}" alt="" /></div>{% endif %}
   <button id="server-head-btn" type="button" class="server-head-btn" onclick="toggleServerMenu(event)">
-    <span>{{ server.name }}</span><span class="server-arrow">⌄</span>
+    <span>{{ server.name }}</span><span class="server-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
   </button>
   <button type="button" class="server-head-invite-btn" onclick="openServerInviteModal(event)" title="{{ i18n_t('common.text.ysusp_to_the_server') }}" data-i18n-title="common.text.ysusp_to_the_server"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></button>
   <div id="server-menu" class="server-menu discord-server-menu">
