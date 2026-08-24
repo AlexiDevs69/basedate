@@ -220,8 +220,14 @@
     .empty-note { color: var(--muted2); font-size: 12px; padding: 6px 10px 12px; }
 
     .dm-sidebar { padding-bottom: 0; }
+    .dm-list { padding: 0 8px 72px; overflow-y: auto; min-height: 0; flex: 1; }
+    .server-rail { padding-bottom: 72px; }
     .user-panel {
-      margin: 0 8px 8px;
+      position: fixed;
+      left: 8px;
+      bottom: 8px;
+      width: 296px;
+      z-index: 60;
       min-height: 54px;
       background: var(--panel);
       border: 1px solid var(--border);
