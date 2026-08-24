@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.98.4",
+      "date": "2026-08-24",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update mascot dimensions and styling in home.html."
+      ],
+      "source_sha": "7bdb0f9c26e3d5984bb4c6ea3ff1ed24ee5f1522"
+    },
+    {
       "version": "1.98.3",
       "date": "2026-08-24",
       "title": "Виправлення та стабільність",
