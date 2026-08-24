@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.98.5",
+      "date": "2026-08-24",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update styles for add friend box and mascot."
+      ],
+      "source_sha": "87398def2830d06d730a351a025b928c20676393"
+    },
+    {
       "version": "1.98.4",
       "date": "2026-08-24",
       "title": "Виправлення та стабільність",
