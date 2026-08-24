@@ -428,6 +428,13 @@
 }
 
 
+/* Drag-and-drop file overlay for DM */
+#dm-main{position:relative;}
+.dm-dropzone-overlay{position:absolute;inset:0;z-index:60;display:none;align-items:center;justify-content:center;background:rgba(24,25,29,.82);border:3px dashed #5865f2;border-radius:8px;margin:8px;pointer-events:none;}
+.dm-dropzone-overlay.active{display:flex;}
+.dm-dropzone-inner{display:flex;flex-direction:column;align-items:center;gap:10px;color:#fff;font-weight:800;font-size:16px;}
+.dm-dropzone-inner svg{width:46px;height:46px;stroke:#5865f2;}
+
 /* Discord-like attachment composer for DM */
 .dm-composer-shell{position:relative;width:100%;}
 .dm-plus-btn{width:34px!important;height:34px!important;border-radius:8px!important;background:#353740!important;color:#dbdee1!important;display:flex!important;align-items:center!important;justify-content:center!important;font-size:24px!important;line-height:1!important;flex:0 0 auto;transition:background .13s ease,color .13s ease,transform .08s ease;}
@@ -1336,7 +1343,8 @@
       </div>
     </aside>
 
-    <main class="main">
+    <main class="main" id="dm-main">
+      <div id="dm-dropzone-overlay" class="dm-dropzone-overlay"><div class="dm-dropzone-inner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg><span data-i18n="common.text.send_a_file"><!--i18n:common.text.send_a_file-->{{ i18n_t('common.text.send_a_file') }}</span></div></div>
       <header class="topbar">
         <div class="top-title"><span class="avatar" {% if other.avatar_url %}style="background-image:url('{{ other.avatar_url }}')"{% endif %}>{% if not other.avatar_url %}{{ other.username[:1]|upper }}{% endif %}{% if other_visible %}<span class="presence status-{{ other_status }}"></span>{% endif %}</span>{{ other.display_name or other.username }} <span id="live-status" class="live"><!--i18n:dm.text.connecting-->{{ i18n_t("dm.text.connecting") }}</span></div>
         <div class="top-actions"><button title="{{ i18n_t('dm.aria.call') }}" data-i18n-title="dm.aria.call" onclick="showActionToast(window.AlexiHubI18n.t('dm.stub.calls'))"><svg class="icon"><use href="#i-phone"></use></svg></button><button title="{{ i18n_t('dm.aria.video') }}" data-i18n-title="dm.aria.video" onclick="showActionToast(window.AlexiHubI18n.t('dm.stub.video'))"><svg class="icon"><use href="#i-video"></use></svg></button><button id="dm-pin-trigger-btn" title="{{ i18n_t('dm.aria.pin') }}" data-i18n-title="dm.aria.pin"><svg class="icon"><use href="#i-pin"></use></svg></button>{% if friend_status != 'friends' %}<button title="{% if friend_status == 'pending_sent' %}{{ i18n_t('dm.friend.request_sent') }}{% elif friend_status == 'pending_received' %}{{ i18n_t('dm.friend.request_accept') }}{% else %}{{ i18n_t('ui.add_friend') }}{% endif %}" onclick="showActionToast(window.AlexiHubI18n.t('dm.stub.friendship'))"><svg class="icon"><use href="#i-invite"></use></svg></button>{% endif %}<input class="top-search" id="message-search" placeholder="{{ i18n_t('dm.search_conversation', username=other.username) }}"><button title="{{ i18n_t('settings.search_placeholder') }}" data-i18n-title="settings.search_placeholder" onclick="document.getElementById('message-search')?.focus()"><svg class="icon"><use href="#i-search"></use></svg></button></div>
@@ -4076,9 +4084,68 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   window.chooseDmImage=function(){ if(menu) menu.classList.remove('open'); if(plus) plus.classList.remove('open'); if(fileInput) fileInput.click(); };
   window.clearDmAttachment=function(){ if(input) input.value=''; if(fileInput) fileInput.value=''; if(preview){preview.classList.remove('open'); preview.innerHTML='';}};
   window.setDmAttachmentPreview=function(url,label,loading){ if(!preview)return; preview.classList.add('open'); preview.innerHTML='<img src="'+esc(url)+'" alt=""><div class="attach-meta"><div class="attach-title">'+(loading?window.AlexiHubI18n.t("dm.text.bulming_the_file"):window.AlexiHubI18n.t("dm.text.attened_file"))+'</div><div class="attach-sub">'+esc(label||window.AlexiHubI18n.t('common.label.image'))+'</div></div><button type="button" class="attach-remove" onclick="clearDmAttachment()">×</button>'; };
-  if(fileInput){fileInput.addEventListener('change',async function(){const file=fileInput.files&&fileInput.files[0]; if(!file)return; if(!file.type.startsWith('image/')){alert(window.AlexiHubI18n.t("common.message.one_can_be_loaded_only_pictures")); return;} if(file.size>5*1024*1024){alert(window.AlexiHubI18n.t("common.message.the_picture_glued_maximum_5mb")); return;} const local=URL.createObjectURL(file); setDmAttachmentPreview(local,file.name,true); try{const fd=new FormData(); fd.append('file',file); const r=await fetch('/community/api/upload-image',{method:'POST',body:fd}); const data=await r.json().catch(()=>({})); if(!r.ok||!data.url) throw new Error(data.error||'upload failed'); if(input) input.value=data.url; setDmAttachmentPreview(data.url,file.name,false); const text=document.getElementById('content'); if(text) text.focus();}catch(err){clearDmAttachment(); alert(window.AlexiHubI18n.t("dm.message.could_not_be_able_to_upload_photos"));} finally{setTimeout(()=>{try{URL.revokeObjectURL(local)}catch(e){}},2500);}})}
+  async function handleDmFile(file){
+    if(!file)return;
+    if(!file.type||!file.type.startsWith('image/')){alert(window.AlexiHubI18n.t("common.message.one_can_be_loaded_only_pictures")); return;}
+    if(file.size>5*1024*1024){alert(window.AlexiHubI18n.t("common.message.the_picture_glued_maximum_5mb")); return;}
+    const local=URL.createObjectURL(file); setDmAttachmentPreview(local,file.name,true);
+    try{
+      const fd=new FormData(); fd.append('file',file);
+      const r=await fetch('/community/api/upload-image',{method:'POST',body:fd});
+      const data=await r.json().catch(()=>({}));
+      if(!r.ok||!data.url) throw new Error(data.error||'upload failed');
+      if(input) input.value=data.url;
+      setDmAttachmentPreview(data.url,file.name,false);
+      const text=document.getElementById('content'); if(text) text.focus();
+    }catch(err){
+      clearDmAttachment();
+      alert(window.AlexiHubI18n.t("dm.message.could_not_be_able_to_upload_photos"));
+    }finally{
+      setTimeout(()=>{try{URL.revokeObjectURL(local)}catch(e){}},2500);
+    }
+  }
+  if(fileInput){fileInput.addEventListener('change',function(){handleDmFile(fileInput.files&&fileInput.files[0]);})}
   const form=document.getElementById('dm-form'); if(form){form.addEventListener('submit',()=>{setTimeout(clearDmAttachment,60)},true)}
   document.addEventListener('click',function(e){if(menu&&!e.target.closest('#dm-plus-menu')&&!e.target.closest('#dm-plus-btn')){menu.classList.remove('open'); if(plus)plus.classList.remove('open')}});
+
+  // Drag-and-drop: drop an image file anywhere on the DM pane to attach it.
+  const dmMain=document.getElementById('dm-main');
+  const dropOverlay=document.getElementById('dm-dropzone-overlay');
+  if(dmMain&&dropOverlay){
+    let dragDepth=0;
+    function hasFiles(e){return e.dataTransfer&&Array.prototype.indexOf.call(e.dataTransfer.types||[],'Files')!==-1;}
+    dmMain.addEventListener('dragenter',function(e){
+      if(!hasFiles(e))return;
+      e.preventDefault(); dragDepth++;
+      dropOverlay.classList.add('active');
+    });
+    dmMain.addEventListener('dragover',function(e){
+      if(!hasFiles(e))return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect='copy';
+    });
+    dmMain.addEventListener('dragleave',function(e){
+      if(!hasFiles(e))return;
+      dragDepth=Math.max(0,dragDepth-1);
+      if(dragDepth===0) dropOverlay.classList.remove('active');
+    });
+    dmMain.addEventListener('drop',function(e){
+      if(!hasFiles(e))return;
+      e.preventDefault();
+      dragDepth=0;
+      dropOverlay.classList.remove('active');
+      const file=e.dataTransfer.files&&e.dataTransfer.files[0];
+      if(!file)return;
+      if(fileInput){
+        try{
+          const dt=new DataTransfer();
+          dt.items.add(file);
+          fileInput.files=dt.files;
+        }catch(err){/* DataTransfer construction unsupported */}
+      }
+      handleDmFile(file);
+    });
+  }
 })();
 </script>
 
