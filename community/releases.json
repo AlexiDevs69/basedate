@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.100.1",
+      "date": "2026-08-24",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update fmt.Println to print 'Goodbye World'."
+      ],
+      "source_sha": "6ee0f09193240949e7005cd9cb20b6d6fe3efb8f"
+    },
+    {
       "version": "1.100.0",
       "date": "2026-08-24",
       "title": "Нові можливості AlexiHub",
