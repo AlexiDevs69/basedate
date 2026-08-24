@@ -48,7 +48,6 @@
       grid-template-columns: 72px 240px 1fr 300px;
       height: 100vh;
       min-width: 0;
-      position: relative;
     }
 
     .icon {
@@ -76,7 +75,22 @@
       gap: 10px;
       overflow-y: auto;
       border-right: 1px solid #111;
+      position: relative;
     }
+    .server-rail::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 52px;
+      background: #17181d;
+      border-radius: 12px 0 0 0;
+      box-shadow: 0 -2px 10px rgba(0,0,0,.3);
+      pointer-events: none;
+      z-index: 1;
+    }
+    .server-rail > * { position: relative; z-index: 2; }
     .server-dot {
       width: 48px;
       height: 48px;
@@ -225,16 +239,11 @@
     .user-panel {
       height: 52px;
       background: #17181d;
-      border-radius: 12px 12px 0 0;
+      border-radius: 0 12px 0 0;
       display: flex;
       align-items: center;
       padding: 6px 8px;
       gap: 8px;
-      position: absolute;
-      left: 0;
-      bottom: 0;
-      width: 312px;
-      z-index: 30;
       box-shadow: 0 -2px 10px rgba(0,0,0,.3);
     }
     .user-panel .avatar { width: 36px; height: 36px; }
