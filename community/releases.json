@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.98.6",
+      "date": "2026-08-24",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update z-index of .add-mascot in home.html."
+      ],
+      "source_sha": "cd93f32ddbbd8205c4c589ce4da26cb21e2de667"
+    },
+    {
       "version": "1.98.5",
       "date": "2026-08-24",
       "title": "Виправлення та стабільність",
