@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.98.0",
+      "date": "2026-08-24",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: SVG icon to server arrow in server home template."
+      ],
+      "source_sha": "dcdea774f44c0ccd5e1573e602b5d004879e5b33"
+    },
+    {
       "version": "1.97.7",
       "date": "2026-08-24",
       "title": "Виправлення та стабільність",
