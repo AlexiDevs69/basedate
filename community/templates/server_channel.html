@@ -964,6 +964,11 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
 .composer-icon-btn:active{transform:scale(.92)}
 .composer-icon-btn svg{width:18px;height:18px;display:block;}
 .composer-box .send-btn{width:36px!important;height:36px!important;border-radius:9px!important;flex:0 0 auto!important;}
+.chat-main{position:relative;}
+.channel-dropzone-overlay{position:absolute;inset:0;z-index:60;display:none;align-items:center;justify-content:center;background:rgba(24,25,29,.82);border:3px dashed #5865f2;border-radius:8px;margin:8px;pointer-events:none;}
+.channel-dropzone-overlay.active{display:flex;}
+.channel-dropzone-inner{display:flex;flex-direction:column;align-items:center;gap:10px;color:#fff;font-weight:800;font-size:16px;}
+.channel-dropzone-inner svg{width:46px;height:46px;stroke:#5865f2;}
 .composer-upload-preview{display:none;border-top:1px solid rgba(255,255,255,.06);padding:8px 10px;color:#b5bac1;font-size:12px;align-items:center;gap:10px;}
 .composer-upload-preview.open{display:flex;}
 .composer-upload-preview img{width:42px;height:42px;border-radius:8px;object-fit:cover;border:1px solid rgba(255,255,255,.08);}
@@ -1945,7 +1950,8 @@ body{background:#18191d!important;overflow:hidden!important}.server-rail{backgro
     {% endfor %}
   </aside>
 
-  <main class="chat-main">
+  <main class="chat-main" id="channel-main">
+    <div id="channel-dropzone-overlay" class="channel-dropzone-overlay"><div class="channel-dropzone-inner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg><span><!--i18n:server_channel.text.send_photo_upload-->{{ i18n_t('server_channel.text.send_photo_upload') }}</span></div></div>
     <div class="channel-header">
       <div class="channel-title">
         <h1># {{ channel.name }}</h1>
@@ -2818,6 +2824,45 @@ function openChannelInviteModal(event, btn) {
       composerFileInput.addEventListener('change', function(){ uploadComposerImage(composerFileInput.files && composerFileInput.files[0]); });
     }
     document.addEventListener('click', function(e){ if (composerPlusMenu && !e.target.closest('#composer-plus-menu') && !e.target.closest('#composer-plus-btn')) closeComposerPlus(); }, true);
+
+    // Drag-and-drop: drop an image file anywhere on the channel pane to attach it.
+    var channelMain = document.getElementById('channel-main');
+    var channelDropOverlay = document.getElementById('channel-dropzone-overlay');
+    if (channelMain && channelDropOverlay) {
+      var dragDepth = 0;
+      var hasFiles = function(e){ return e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], 'Files') !== -1; };
+      channelMain.addEventListener('dragenter', function(e){
+        if (!hasFiles(e)) return;
+        e.preventDefault(); dragDepth++;
+        channelDropOverlay.classList.add('active');
+      });
+      channelMain.addEventListener('dragover', function(e){
+        if (!hasFiles(e)) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+      });
+      channelMain.addEventListener('dragleave', function(e){
+        if (!hasFiles(e)) return;
+        dragDepth = Math.max(0, dragDepth - 1);
+        if (dragDepth === 0) channelDropOverlay.classList.remove('active');
+      });
+      channelMain.addEventListener('drop', function(e){
+        if (!hasFiles(e)) return;
+        e.preventDefault();
+        dragDepth = 0;
+        channelDropOverlay.classList.remove('active');
+        var file = e.dataTransfer.files && e.dataTransfer.files[0];
+        if (!file) return;
+        if (composerFileInput) {
+          try {
+            var dt = new DataTransfer();
+            dt.items.add(file);
+            composerFileInput.files = dt.files;
+          } catch (err) { /* DataTransfer construction unsupported */ }
+        }
+        uploadComposerImage(file);
+      });
+    }
 
     function setWsStatus(state, label) {
       if (!wsStatus || !wsStatusText) return;
