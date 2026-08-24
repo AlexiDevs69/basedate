@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.100.0",
+      "date": "2026-08-24",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: drag-and-drop file upload for DM."
+      ],
+      "source_sha": "1c4018f9b144aa8f82be079924796cfdee39cd53"
+    },
+    {
       "version": "1.99.0",
       "date": "2026-08-24",
       "title": "Нові можливості AlexiHub",
