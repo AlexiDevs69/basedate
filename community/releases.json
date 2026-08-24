@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.98.2",
+      "date": "2026-08-24",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance friend add and explore sections with SVGs."
+      ],
+      "source_sha": "979e882dd948821c6f5ecbaf323b4d7c64b4b26f"
+    },
+    {
       "version": "1.98.1",
       "date": "2026-08-24",
       "title": "Виправлення та стабільність",
