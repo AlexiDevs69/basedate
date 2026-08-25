@@ -1532,7 +1532,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
       <button class="discord-tool-btn pin-btn" type="button" onclick="showActionToast && showActionToast(window.AlexiHubI18n.t('server.stub.pinned'))" title="{{ i18n_t('common.aria.pinned_messages') }}" data-i18n-title="common.aria.pinned_messages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3l5 5-6 6v4l-2 2-3.5-3.5L5 21l-2-2 4.5-4.5L4 11l2-2h4z"/></svg></button>
       <button class="discord-tool-btn members-toggle-btn" type="button" onclick="document.body.classList.toggle('members-hidden')" title="{{ i18n_t('server_channel.aria.members') }}" data-i18n-title="server_channel.aria.members"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></button>
       <label class="discord-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><input type="search" placeholder="{{ i18n_t('server.search.placeholder', server=server.name) }}"></label>
-      <button class="discord-tool-btn" type="button" onclick="showActionToast && showActionToast(window.AlexiHubI18n.t('server.stub.inbox'))" title="{{ i18n_t('common.aria.inbox') }}" data-i18n-title="common.aria.inbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></button>
+      <button id="ah-inbox-trigger" class="discord-tool-btn ah-inbox-trigger" type="button" title="{{ i18n_t('common.aria.inbox') }}" data-i18n-title="common.aria.inbox" aria-label="{{ i18n_t('common.aria.inbox') }}" aria-haspopup="dialog" aria-controls="ah-inbox-panel" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg><span id="ah-inbox-trigger-count" class="ah-inbox-trigger-count" hidden></span></button>
       <button class="discord-tool-btn" type="button" onclick="showActionToast && showActionToast(window.AlexiHubI18n.t('server.stub.help'))" title="{{ i18n_t('common.aria.help') }}" data-i18n-title="common.aria.help"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 1 1 5.83 1c0 2-3 2-3 4"/><path d="M12 17h.01"/></svg></button>
     </div>    </div>
   </div>
@@ -6505,5 +6505,350 @@ if (typeof window.openSelfProfileSettings !== 'function') {
   document.addEventListener('scroll',closeTagPreview,true);
 })();
 </script>
+  <style id="ah-home-inbox-css">
+    .ah-inbox-trigger{position:relative}
+    .ah-inbox-trigger[aria-expanded="true"]{color:#f2f3f5!important;background:#2b2d31!important}
+    .ah-inbox-trigger-count{position:absolute;right:-5px;top:-5px;min-width:17px;height:17px;padding:0 4px;border:2px solid #1e1f24;border-radius:999px;background:#f23f42;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:950;line-height:1;box-sizing:border-box;pointer-events:none;font-variant-numeric:tabular-nums}
+    .ah-inbox-trigger-count[hidden]{display:none!important}
+    .ah-inbox-panel{position:fixed;z-index:2147482500;top:58px;right:18px;width:min(602px,calc(100vw - 36px));height:min(758px,calc(100vh - 78px));display:none;flex-direction:column;overflow:hidden;border:1px solid #3a3c43;border-radius:12px;background:#232428;color:#f2f3f5;box-shadow:0 24px 80px rgba(0,0,0,.62);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;transform-origin:top right}
+    .ah-inbox-panel.open{display:flex;animation:ahInboxIn .14s cubic-bezier(.2,.8,.2,1) both}
+    @keyframes ahInboxIn{from{opacity:0;transform:translateY(-7px) scale(.985)}to{opacity:1;transform:none}}
+    .ah-inbox-head{height:58px;display:flex;align-items:center;gap:12px;padding:0 16px;border-bottom:1px solid rgba(255,255,255,.045);flex:0 0 auto}
+    .ah-inbox-title{display:flex;align-items:center;gap:9px;font-size:20px;font-weight:900;letter-spacing:-.02em;min-width:0}
+    .ah-inbox-title .icon{width:20px;height:20px}
+    .ah-inbox-head-actions{display:flex;align-items:center;gap:8px;margin-left:auto;position:relative}
+    .ah-inbox-icon-btn{position:relative;width:34px;height:34px;border:0;border-radius:9px;background:#313338;color:#b5bac1;display:grid;place-items:center;cursor:pointer;font:inherit;transition:background .12s ease,color .12s ease,transform .12s ease}
+    .ah-inbox-icon-btn:hover,.ah-inbox-icon-btn[aria-expanded="true"]{background:#3f4148;color:#fff}
+    .ah-inbox-icon-btn:active{transform:translateY(1px)}
+    .ah-inbox-icon-btn:disabled{opacity:.45;cursor:not-allowed}
+    .ah-inbox-icon-btn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .ah-inbox-icon-btn .icon{fill:none}
+    .ah-inbox-filter{position:absolute;z-index:3;right:42px;top:40px;width:272px;display:none;padding:8px;border:1px solid #44464f;border-radius:9px;background:#2b2d31;box-shadow:0 18px 48px rgba(0,0,0,.52)}
+    .ah-inbox-filter.open{display:block;animation:ahInboxFilterIn .1s ease-out both}
+    @keyframes ahInboxFilterIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+    .ah-inbox-filter label{min-height:39px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:7px 8px;border-radius:6px;color:#dbdee1;font-size:13px;font-weight:760;cursor:pointer}
+    .ah-inbox-filter label:hover{background:#35373d;color:#fff}
+    .ah-inbox-filter input{width:19px;height:19px;margin:0;accent-color:#00C4B4;cursor:pointer}
+    .ah-inbox-filter input:disabled{cursor:wait;opacity:.55}
+    .ah-inbox-tabs{height:47px;display:grid;grid-template-columns:1fr 1fr;padding:0 16px;border-bottom:1px solid #33353b;flex:0 0 auto}
+    .ah-inbox-tab{position:relative;border:0;background:transparent;color:#a6a9b1;font:inherit;font-size:13px;font-weight:850;cursor:pointer}
+    .ah-inbox-tab:hover{color:#d8dbe1}
+    .ah-inbox-tab.active{color:#8ea0ff}
+    .ah-inbox-tab.active:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:#7c8cff;border-radius:2px 2px 0 0}
+    .ah-inbox-body{min-height:0;flex:1;overflow-y:auto;overflow-x:hidden;padding:12px 16px 18px;scrollbar-width:thin;scrollbar-color:#5b5e67 #232428}
+    .ah-inbox-body::-webkit-scrollbar{width:10px}.ah-inbox-body::-webkit-scrollbar-track{background:#232428}.ah-inbox-body::-webkit-scrollbar-thumb{border:2px solid #232428;border-radius:999px;background:#565962}
+    .ah-inbox-state{min-height:270px;display:grid;place-items:center;padding:32px;text-align:center;color:#949ba4;font-size:13px;line-height:1.5}
+    .ah-inbox-empty-art{width:64px;height:64px;margin:0 auto 14px;border-radius:20px;background:#2f3137;color:#737984;display:grid;place-items:center}
+    .ah-inbox-empty-art svg{width:30px;height:30px;fill:none;stroke:currentColor;stroke-width:1.8}
+    .ah-inbox-state b{display:block;margin-bottom:5px;color:#dbdee1;font-size:15px}
+    .ah-inbox-retry{margin-top:14px;border:0;border-radius:6px;background:#00C4B4;color:#fff;padding:8px 13px;font:inherit;font-size:12px;font-weight:850;cursor:pointer}
+    .ah-inbox-guide{display:flex;gap:12px;margin:0 0 14px;padding:15px 16px;border-radius:9px;background:#111214;color:#f2f3f5;font-size:12px;line-height:1.45}
+    .ah-inbox-guide-icon{width:38px;height:38px;border-radius:50%;background:#24262c;color:#b5bac1;display:grid;place-items:center;flex:0 0 auto}
+    .ah-inbox-guide-icon svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2}
+    .ah-inbox-guide b{display:block;margin-bottom:2px;font-size:14px}
+    .ah-inbox-group{overflow:hidden;margin:0 0 12px;border:1px solid #3b3d44;border-radius:11px;background:#292a2f}
+    .ah-inbox-group:last-child{margin-bottom:0}
+    .ah-inbox-group-head{min-height:62px;display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid #3b3d44;background:#292a2f}
+    .ah-inbox-server-icon{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#41434a center/cover no-repeat;color:#fff;font-size:13px;font-weight:950;flex:0 0 auto}
+    .ah-inbox-group-copy{min-width:0}
+    .ah-inbox-channel{display:flex;align-items:center;gap:5px;min-width:0;color:#f2f3f5;font-size:14px;font-weight:900}
+    .ah-inbox-channel span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .ah-inbox-channel small{min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#f23f42;color:#fff;display:inline-grid;place-items:center;font-size:9px;font-weight:950}
+    .ah-inbox-server-name{margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#b5bac1;font-size:11px;font-weight:720}
+    .ah-inbox-group-actions{display:flex;gap:7px}
+    .ah-inbox-message{position:relative;display:grid;grid-template-columns:40px minmax(0,1fr);gap:10px;padding:13px 14px 14px;background:#292a2f;transition:background .12s ease,opacity .12s ease}
+    .ah-inbox-message+.ah-inbox-message{border-top:1px solid #3b3d44}
+    .ah-inbox-message:hover{background:#2f3036}
+    .ah-inbox-message.is-read{opacity:.72}
+    .ah-inbox-author-avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#41434a center/cover no-repeat;color:#fff;font-size:12px;font-weight:950}
+    .ah-inbox-message-main{min-width:0;padding-right:70px}
+    .ah-inbox-message-head{display:flex;align-items:baseline;gap:7px;min-width:0}
+    .ah-inbox-author{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#f2f3f5;font-size:13px;font-weight:900}
+    .ah-inbox-time{flex:0 0 auto;color:#949ba4;font-size:10px}
+    .ah-inbox-kind{margin-left:auto;flex:0 0 auto;border-radius:4px;background:rgba(0,196,180,.22);color:#aeb7ff;padding:2px 5px;font-size:9px;font-weight:900}
+    .ah-inbox-content{margin-top:4px;color:#dbdee1;font-size:13px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere}
+    .ah-inbox-mention-token{border-radius:3px;background:rgba(0,196,180,.35);color:#dfe2ff;padding:1px 2px;font-weight:780}
+    .ah-inbox-image{display:block;width:auto;max-width:min(100%,420px);max-height:280px;margin-top:9px;border-radius:7px;object-fit:cover;background:#111214}
+    .ah-inbox-message-actions{position:absolute;right:10px;top:10px;display:flex;gap:5px;opacity:0;transform:translateY(2px);transition:opacity .12s ease,transform .12s ease}
+    .ah-inbox-message:hover .ah-inbox-message-actions,.ah-inbox-message:focus-within .ah-inbox-message-actions{opacity:1;transform:none}
+    .ah-inbox-jump{height:29px;border:0;border-radius:6px;background:#3f4148;color:#fff;padding:0 9px;font:inherit;font-size:11px;font-weight:850;cursor:pointer}
+    .ah-inbox-jump:hover{background:#4b4d55}
+    .ah-inbox-message-actions .ah-inbox-icon-btn{width:29px;height:29px;border-radius:6px}
+    .ah-inbox-load-more{width:100%;height:38px;margin-top:12px;border:1px solid #45474f;border-radius:7px;background:#313338;color:#dbdee1;font:inherit;font-size:12px;font-weight:850;cursor:pointer}
+    .ah-inbox-load-more:hover{background:#3a3c43;color:#fff}
+    .ah-inbox-load-more:disabled{opacity:.55;cursor:wait}
+    @media(max-width:720px){.ah-inbox-panel{inset:0;width:100vw;height:100vh;border:0;border-radius:0}.ah-inbox-head{padding-top:env(safe-area-inset-top);height:calc(58px + env(safe-area-inset-top))}.ah-inbox-body{padding-left:10px;padding-right:10px}.ah-inbox-message-main{padding-right:0}.ah-inbox-message-actions{position:static;grid-column:2;opacity:1;transform:none;justify-content:flex-end;margin-top:7px}.ah-inbox-filter{right:0;width:min(272px,calc(100vw - 32px))}}
+    @media(prefers-reduced-motion:reduce){.ah-inbox-panel.open,.ah-inbox-filter.open{animation:none}.ah-inbox-icon-btn,.ah-inbox-message{transition:none}}
+  </style>
+      <aside id="ah-inbox-panel" class="ah-inbox-panel" role="dialog" aria-modal="false" aria-labelledby="ah-inbox-title" aria-hidden="true">
+        <div class="ah-inbox-head">
+          <div id="ah-inbox-title" class="ah-inbox-title"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg><span><!--i18n:home.aria.the_mail-->{{ i18n_t('home.aria.the_mail') }}</span></div>
+          <div class="ah-inbox-head-actions">
+            <button id="ah-inbox-filter-trigger" class="ah-inbox-icon-btn" type="button" title="{{ i18n_t('home.aria.filters_of_mentions') }}" data-i18n-title="home.aria.filters_of_mentions" aria-label="{{ i18n_t('home.aria.filters_of_mentions') }}" data-i18n-aria-label="home.aria.filters_of_mentions" aria-haspopup="menu" aria-controls="ah-inbox-filter" aria-expanded="false">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M6 14v6"></path></svg>
+            </button>
+            <button id="ah-inbox-read-all" class="ah-inbox-icon-btn" type="button" title="{{ i18n_t('home.aria.nume_everything_as_read') }}" data-i18n-title="home.aria.nume_everything_as_read" aria-label="{{ i18n_t('home.aria.nume_everything_as_read') }}" data-i18n-aria-label="home.aria.nume_everything_as_read">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 12 4 4L17 6"></path><path d="m11 16 2 2 8-9"></path></svg>
+            </button>
+            <button id="ah-inbox-close" class="ah-inbox-icon-btn" type="button" title="{{ i18n_t('common.actions.close') }}" data-i18n-title="common.actions.close" aria-label="{{ i18n_t('home.aria.close_the_mail') }}" data-i18n-aria-label="home.aria.close_the_mail">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+            </button>
+            <div id="ah-inbox-filter" class="ah-inbox-filter" role="menu" aria-hidden="true">
+              <label><span><!--i18n:home.text.ysue_everyone-->{{ i18n_t('home.text.ysue_everyone') }}</span><input type="checkbox" data-inbox-preference="include_everyone" checked></label>
+              <label><span><!--i18n:home.text.yc_turn_on_role_mentions-->{{ i18n_t('home.text.yc_turn_on_role_mentions') }}</span><input type="checkbox" data-inbox-preference="include_roles" checked></label>
+            </div>
+          </div>
+        </div>
+        <div class="ah-inbox-tabs" role="tablist" aria-label="{{ i18n_t('home.aria.secubted_mail_sections') }}" data-i18n-aria-label="home.aria.secubted_mail_sections">
+          <button class="ah-inbox-tab active" type="button" role="tab" data-inbox-view="unread" aria-selected="true"><!--i18n:home.action.unread-->{{ i18n_t('home.action.unread') }}</button>
+          <button class="ah-inbox-tab" type="button" role="tab" data-inbox-view="mentions" aria-selected="false"><!--i18n:home.action.references_to-->{{ i18n_t('home.action.references_to') }}</button>
+        </div>
+        <div id="ah-inbox-body" class="ah-inbox-body" aria-live="polite">
+          <div class="ah-inbox-state"><div><b><!--i18n:home.text.mail_uploading-->{{ i18n_t('home.text.mail_uploading') }}</b><span><!--i18n:home.text.yluse_of_the_last_mentions_on_your_servers-->{{ i18n_t('home.text.yluse_of_the_last_mentions_on_your_servers') }}</span></div></div>
+        </div>
+      </aside>
+<script id="ah-home-inbox-js">
+(function(){
+  'use strict';
+  if(window.__ahHomeInboxReady)return;
+  window.__ahHomeInboxReady=true;
+
+  var trigger=document.getElementById('ah-inbox-trigger');
+  var panel=document.getElementById('ah-inbox-panel');
+  var body=document.getElementById('ah-inbox-body');
+  var closeButton=document.getElementById('ah-inbox-close');
+  var readAllButton=document.getElementById('ah-inbox-read-all');
+  var filterTrigger=document.getElementById('ah-inbox-filter-trigger');
+  var filter=document.getElementById('ah-inbox-filter');
+  if(!trigger||!panel||!body)return;
+
+  var state={view:'unread',items:[],cursor:null,hasMore:false,preferences:{include_everyone:true,include_roles:true},loading:false,open:false};
+  var requestController=null;
+  var requestSerial=0;
+  var refreshTimer=0;
+  var suppressRealtimeUntil=0;
+
+  function api(url,options){
+    options=options||{};
+    var headers=Object.assign({Accept:'application/json'},options.headers||{});
+    if(options.body&&!headers['Content-Type'])headers['Content-Type']='application/json';
+    return fetch(url,Object.assign({credentials:'same-origin',cache:'no-store'},options,{headers:headers})).then(async function(response){
+      var data=await response.json().catch(function(){return {}});
+      if(!response.ok||data.ok===false){var error=new Error(data.message||data.error||'request_failed');error.status=response.status;throw error}
+      return data;
+    });
+  }
+  function toast(message){
+    if(typeof window.showActionToast==='function')window.showActionToast(message);
+    else if(typeof window.settingsToast==='function')window.settingsToast(message);
+  }
+  function setOpen(value){
+    state.open=!!value;
+    panel.classList.toggle('open',state.open);
+    panel.setAttribute('aria-hidden',state.open?'false':'true');
+    trigger.setAttribute('aria-expanded',state.open?'true':'false');
+    if(!state.open){setFilterOpen(false);if(requestController)requestController.abort();return}
+    loadMentions(true);
+    window.setTimeout(function(){var tab=panel.querySelector('.ah-inbox-tab.active');if(tab)tab.focus({preventScroll:true})},20);
+  }
+  function setFilterOpen(value){
+    if(!filter||!filterTrigger)return;
+    var open=!!value&&state.open;
+    filter.classList.toggle('open',open);
+    filter.setAttribute('aria-hidden',open?'false':'true');
+    filterTrigger.setAttribute('aria-expanded',open?'true':'false');
+  }
+  function syncTabs(){
+    panel.querySelectorAll('[data-inbox-view]').forEach(function(tab){
+      var active=tab.dataset.inboxView===state.view;
+      tab.classList.toggle('active',active);
+      tab.setAttribute('aria-selected',active?'true':'false');
+      tab.tabIndex=active?0:-1;
+    });
+  }
+  function syncPreferences(){
+    panel.querySelectorAll('[data-inbox-preference]').forEach(function(input){
+      input.checked=state.preferences[input.dataset.inboxPreference]!==false;
+    });
+  }
+  function setPreferencesBusy(value){
+    panel.querySelectorAll('[data-inbox-preference]').forEach(function(input){input.disabled=!!value});
+  }
+  function unreadTotal(){
+    var counts=window.__ahLastMentionCounts||{};
+    return Math.max(0,Number(counts.server_total||0));
+  }
+  function syncReadAll(){
+    if(readAllButton)readAllButton.disabled=state.loading||unreadTotal()<=0;
+  }
+  function stateView(title,copy,error){
+    body.replaceChildren();
+    var wrap=document.createElement('div');wrap.className='ah-inbox-state';
+    var inner=document.createElement('div');
+    var art=document.createElement('div');art.className='ah-inbox-empty-art';
+    art.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12h-6l-2 3h-4l-2-3H2"></path><path d="M5.5 5 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-7H7.2a2 2 0 0 0-1.7 1Z"></path></svg>';
+    var heading=document.createElement('b');heading.textContent=title;
+    var text=document.createElement('span');text.textContent=copy;
+    inner.append(art,heading,text);
+    if(error){var retry=document.createElement('button');retry.type='button';retry.className='ah-inbox-retry';retry.textContent=window.AlexiHubI18n.t("common.actions.retry");retry.addEventListener('click',function(){loadMentions(true)});inner.appendChild(retry)}
+    wrap.appendChild(inner);body.appendChild(wrap);
+  }
+  function initials(value){
+    var parts=String(value||'?').trim().split(/\s+/).filter(Boolean);
+    return (parts.slice(0,2).map(function(part){return part.charAt(0)}).join('')||'?').toUpperCase();
+  }
+  function applyAvatar(element,url,label){
+    if(url){element.style.backgroundImage='url("'+String(url).replace(/["\\]/g,'\\$&')+'")';element.textContent=''}
+    else{element.style.backgroundImage='';element.textContent=initials(label)}
+  }
+  function formatTime(value){
+    var date=new Date(value||'');if(!Number.isFinite(date.getTime()))return '';
+    var now=new Date(),sameDay=date.toDateString()===now.toDateString();
+    return new Intl.DateTimeFormat(undefined,sameDay?{hour:'2-digit',minute:'2-digit'}:{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}).format(date);
+  }
+  function appendMentionText(container,value){
+    var text=String(value||'');
+    if(!text){container.textContent=window.AlexiHubI18n.t("common.text.an_investment");return}
+    text.split(/(@everyone|@[\p{L}\p{N}_.-]+)/gu).forEach(function(part){
+      if(!part)return;
+      if(part.charAt(0)==='@'){var token=document.createElement('span');token.className='ah-inbox-mention-token';token.textContent=part;container.appendChild(token)}
+      else container.appendChild(document.createTextNode(part));
+    });
+  }
+  function groupedItems(items){
+    var groups=[],map=new Map();
+    items.forEach(function(item){
+      var key=String(item.server&&item.server.id||0)+':'+String(item.channel&&item.channel.id||0);
+      var group=map.get(key);
+      if(!group){group={key:key,server:item.server||{},channel:item.channel||{},items:[]};map.set(key,group);groups.push(group)}
+      group.items.push(item);
+    });
+    return groups;
+  }
+  function actionIcon(path,title){
+    var button=document.createElement('button');button.type='button';button.className='ah-inbox-icon-btn';button.title=title;button.setAttribute('aria-label',title);
+    button.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="'+path+'"></path></svg>';
+    return button;
+  }
+  function markRead(ids,markAll){
+    ids=(ids||[]).map(Number).filter(Boolean);
+    if(!markAll&&!ids.length)return Promise.resolve();
+    suppressRealtimeUntil=Date.now()+900;
+    return api('/community/api/inbox/read',{method:'POST',body:JSON.stringify({all:!!markAll,mention_ids:ids})}).then(function(data){
+      if(data.counts&&window.AlexiHubAccountRealtime&&typeof window.AlexiHubAccountRealtime.applyMentionCounts==='function')window.AlexiHubAccountRealtime.applyMentionCounts(data.counts);
+      return loadMentions(true);
+    }).catch(function(){toast(window.AlexiHubI18n.t("home.message.narcomposed_not_to_update_the_mail_ynain_s_trying_again"))});
+  }
+  function markChannel(group,button){
+    if(button)button.disabled=true;
+    suppressRealtimeUntil=Date.now()+900;
+    return api('/community/api/inbox/read',{method:'POST',body:JSON.stringify({server_id:Number(group.server.id),channel_id:Number(group.channel.id)})}).then(function(data){
+      if(data.counts&&window.AlexiHubAccountRealtime&&typeof window.AlexiHubAccountRealtime.applyMentionCounts==='function')window.AlexiHubAccountRealtime.applyMentionCounts(data.counts);
+      return loadMentions(true);
+    }).catch(function(){if(button)button.disabled=false;toast(window.AlexiHubI18n.t("home.message.narcomposed_not_to_update_the_mail_ynain_s_trying_again"))});
+  }
+  function jumpTo(item,button){
+    if(button)button.disabled=true;
+    suppressRealtimeUntil=Date.now()+900;
+    api('/community/api/inbox/read',{method:'POST',body:JSON.stringify({mention_ids:[Number(item.id)]})}).then(function(data){
+      if(data.counts&&window.AlexiHubAccountRealtime&&typeof window.AlexiHubAccountRealtime.applyMentionCounts==='function')window.AlexiHubAccountRealtime.applyMentionCounts(data.counts);
+    }).catch(function(){}).finally(function(){location.href=item.jump_url});
+  }
+  function renderMessage(item){
+    var row=document.createElement('article');row.className='ah-inbox-message'+(item.is_read?' is-read':'');row.dataset.mentionId=String(item.id||'');
+    var avatar=document.createElement('div');avatar.className='ah-inbox-author-avatar';applyAvatar(avatar,item.author&&item.author.avatar_url,item.author&&(item.author.display_name||item.author.username));
+    var main=document.createElement('div');main.className='ah-inbox-message-main';
+    var head=document.createElement('div');head.className='ah-inbox-message-head';
+    var author=document.createElement('span');author.className='ah-inbox-author';author.textContent=item.author&&(item.author.display_name||item.author.username)||window.AlexiHubI18n.t("home.text.a_user");
+    var time=document.createElement('time');time.className='ah-inbox-time';time.dateTime=item.created_at||'';time.textContent=formatTime(item.created_at);
+    var kind=document.createElement('span');kind.className='ah-inbox-kind';kind.textContent=item.mention_type==='everyone'?'@everyone':item.mention_type==='role'?'@role':window.AlexiHubI18n.t('home.mention.you');
+    head.append(author,time,kind);
+    var content=document.createElement('div');content.className='ah-inbox-content';appendMentionText(content,item.content);
+    main.append(head,content);
+    if(item.image_url){var image=document.createElement('img');image.className='ah-inbox-image';image.loading='lazy';image.alt=window.AlexiHubI18n.t("home.aria.an_investment_in_the_mention");image.src=item.image_url;main.appendChild(image)}
+    var actions=document.createElement('div');actions.className='ah-inbox-message-actions';
+    var jump=document.createElement('button');jump.type='button';jump.className='ah-inbox-jump';jump.textContent=window.AlexiHubI18n.t("home.label.go_to");jump.addEventListener('click',function(){jumpTo(item,jump)});actions.appendChild(jump);
+    if(!item.is_read){var read=actionIcon('m5 12 4 4L19 6',window.AlexiHubI18n.t("home.text.nude_how_read"));read.addEventListener('click',function(){read.disabled=true;markRead([item.id],false)});actions.appendChild(read)}
+    row.append(avatar,main,actions);return row;
+  }
+  function renderGroup(group){
+    var card=document.createElement('section');card.className='ah-inbox-group';
+    var head=document.createElement('div');head.className='ah-inbox-group-head';
+    var serverIcon=document.createElement('div');serverIcon.className='ah-inbox-server-icon';applyAvatar(serverIcon,group.server.icon_url,group.server.name);
+    var copy=document.createElement('div');copy.className='ah-inbox-group-copy';
+    var channel=document.createElement('div');channel.className='ah-inbox-channel';var hash=document.createElement('span');hash.textContent='#';var channelName=document.createElement('span');channelName.textContent=group.channel.name||'channel';channel.append(hash,channelName);
+    var unread=group.items.filter(function(item){return !item.is_read}).length;
+    if(unread){var count=document.createElement('small');count.textContent=unread>99?'99+':String(unread);channel.appendChild(count)}
+    var serverName=document.createElement('div');serverName.className='ah-inbox-server-name';serverName.textContent=group.server.name||window.AlexiHubI18n.t("common.text.the_server");copy.append(channel,serverName);
+    var groupActions=document.createElement('div');groupActions.className='ah-inbox-group-actions';
+    if(unread){var groupRead=actionIcon('m4 12 5 5L20 6',window.AlexiHubI18n.t("home.text.nume_the_links_of_the_channel"));groupRead.addEventListener('click',function(){markChannel(group,groupRead)});groupActions.appendChild(groupRead)}
+    head.append(serverIcon,copy,groupActions);card.appendChild(head);group.items.forEach(function(item){card.appendChild(renderMessage(item))});return card;
+  }
+  function render(){
+    body.replaceChildren();
+    if(!state.items.length){stateView(state.view==='unread'?window.AlexiHubI18n.t("home.text.all_mentions_are_read"):window.AlexiHubI18n.t("home.text.secrections_are_not_yet"),state.view==='unread'?window.AlexiHubI18n.t("home.text.new_server_mentions_will_appear_here"):window.AlexiHubI18n.t("home.text.someone_will_mention_you_on_the_server_the_message_will"),false);return}
+    var fragment=document.createDocumentFragment();
+    if(state.view==='unread'){
+      var guide=document.createElement('div');guide.className='ah-inbox-guide';
+      var icon=document.createElement('div');icon.className='ah-inbox-guide-icon';icon.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12h-6l-2 3h-4l-2-3H2"></path><path d="M5.5 5 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-7H7.2a2 2 0 0 0-1.7 1Z"></path></svg>';
+      var guideCopy=document.createElement('div');var guideTitle=document.createElement('b');guideTitle.textContent=window.AlexiHubI18n.t("home.label.spead_not_to_miss_new_messages");var guideText=document.createElement('span');guideText.textContent=window.AlexiHubI18n.t("home.label.this_displays_unread_mentions_from_all_your_servers");guideCopy.append(guideTitle,guideText);guide.append(icon,guideCopy);fragment.appendChild(guide);
+    }
+    groupedItems(state.items).forEach(function(group){fragment.appendChild(renderGroup(group))});
+    if(state.hasMore){var more=document.createElement('button');more.type='button';more.className='ah-inbox-load-more';more.textContent=window.AlexiHubI18n.t("home.label.show_earlier");more.addEventListener('click',function(){more.disabled=true;more.textContent=window.AlexiHubI18n.t("privacy.blocking.loading");loadMentions(false)});fragment.appendChild(more)}
+    body.appendChild(fragment);
+  }
+  async function loadMentions(reset){
+    if(!state.open)return;
+    if(state.loading){
+      if(!reset)return;
+      if(requestController)requestController.abort();
+    }
+    state.loading=true;syncReadAll();
+    if(reset){if(requestController)requestController.abort();requestController=new AbortController();state.items=[];state.cursor=null;state.hasMore=false;stateView(window.AlexiHubI18n.t("home.text.mail_uploading"),window.AlexiHubI18n.t("home.text.yluse_of_the_last_mentions_on_your_servers"),false)}
+    var serial=++requestSerial;
+    var url='/community/api/inbox/mentions?view='+encodeURIComponent(state.view)+'&limit=50';
+    if(!reset&&state.cursor)url+='&before='+encodeURIComponent(state.cursor);
+    try{
+      var data=await api(url,{signal:requestController&&requestController.signal});
+      if(serial!==requestSerial)return;
+      state.preferences=Object.assign({},state.preferences,data.preferences||{});syncPreferences();
+      var incoming=Array.isArray(data.items)?data.items:[];
+      if(reset)state.items=incoming;else{var seen=new Set(state.items.map(function(item){return Number(item.id)}));incoming.forEach(function(item){if(!seen.has(Number(item.id))){seen.add(Number(item.id));state.items.push(item)}})}
+      state.cursor=data.next_before_id||null;state.hasMore=!!data.has_more;render();
+      if(typeof data.unread_count==='number'){var counts=Object.assign({},window.__ahLastMentionCounts||{}, {server_total:data.unread_count});window.__ahLastMentionCounts=counts;var badge=document.getElementById('ah-inbox-trigger-count');if(badge){badge.hidden=data.unread_count<=0;badge.textContent=data.unread_count>99?'99+':String(data.unread_count)}}
+    }catch(error){if(error&&error.name==='AbortError')return;if(serial===requestSerial)stateView(window.AlexiHubI18n.t("home.text.unable_to_download_mail"),window.AlexiHubI18n.t("home.text.check_the_connection_and_try_again"),true)}
+    finally{if(serial===requestSerial){state.loading=false;syncReadAll()}}
+  }
+  function changeView(view){
+    if(view!=='unread'&&view!=='mentions'||view===state.view)return;
+    state.view=view;syncTabs();setFilterOpen(false);loadMentions(true);
+  }
+  async function savePreference(input){
+    var field=input.dataset.inboxPreference;if(!field)return;
+    var previous=Object.assign({},state.preferences);state.preferences[field]=!!input.checked;setPreferencesBusy(true);
+    try{var payload={};payload[field]=state.preferences[field];var data=await api('/community/api/inbox/preferences',{method:'PATCH',body:JSON.stringify(payload)});state.preferences=Object.assign({},state.preferences,data.preferences||{});syncPreferences();await loadMentions(true)}
+    catch(error){state.preferences=previous;syncPreferences();toast(window.AlexiHubI18n.t("home.message.narcombut_to_save_the_mail_filter"))}
+    finally{setPreferencesBusy(false)}
+  }
+
+  trigger.addEventListener('click',function(event){event.stopPropagation();setOpen(!state.open)});
+  closeButton&&closeButton.addEventListener('click',function(){setOpen(false);trigger.focus()});
+  filterTrigger&&filterTrigger.addEventListener('click',function(event){event.stopPropagation();setFilterOpen(!filter.classList.contains('open'))});
+  filter&&filter.addEventListener('click',function(event){event.stopPropagation()});
+  panel.querySelectorAll('[data-inbox-view]').forEach(function(tab){tab.addEventListener('click',function(){changeView(tab.dataset.inboxView)})});
+  panel.querySelectorAll('[data-inbox-preference]').forEach(function(input){input.addEventListener('change',function(){savePreference(input)})});
+  readAllButton&&readAllButton.addEventListener('click',function(){if(unreadTotal()>0){readAllButton.disabled=true;markRead([],true)}});
+  panel.addEventListener('click',function(event){event.stopPropagation()});
+  document.addEventListener('click',function(){if(state.open)setOpen(false)});
+  document.addEventListener('keydown',function(event){if(event.key!=='Escape'||!state.open)return;if(filter&&filter.classList.contains('open')){setFilterOpen(false);filterTrigger&&filterTrigger.focus()}else{setOpen(false);trigger.focus()}});
+  window.addEventListener('alexihub:mention-counts',function(event){
+    syncReadAll();if(!state.open||Date.now()<suppressRealtimeUntil)return;
+    window.clearTimeout(refreshTimer);refreshTimer=window.setTimeout(function(){loadMentions(true)},220);
+  });
+  syncTabs();syncPreferences();syncReadAll();
+  window.AlexiHubInbox={open:function(){setOpen(true)},close:function(){setOpen(false)},refresh:function(){return loadMentions(true)}};
+})();
+</script>
+
 </body>
 </html>
