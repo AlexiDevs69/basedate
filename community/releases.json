@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.103.3",
+      "date": "2026-08-25",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update members toggle button in server home template."
+      ],
+      "source_sha": "e90fe7e7779b4c8ecda460f7e8e71dfdb2bdf470"
+    },
+    {
       "version": "1.103.2",
       "date": "2026-08-25",
       "title": "Виправлення та стабільність",
