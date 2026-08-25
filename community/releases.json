@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.103.2",
+      "date": "2026-08-25",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update members toggle button SVG in server home."
+      ],
+      "source_sha": "fd6092ad48df78637ec55649976d7bb742e70b57"
+    },
+    {
       "version": "1.103.1",
       "date": "2026-08-25",
       "title": "Виправлення та стабільність",
