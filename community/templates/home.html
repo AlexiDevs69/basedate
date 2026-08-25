@@ -293,9 +293,6 @@
       justify-content: center;
     }
     .user-actions button:hover { background: var(--hover); color: var(--text); }
-    .voice-control-wrap { display: flex; align-items: center; gap: 0; }
-    .voice-caret { font-size: 12px; color: var(--muted2); line-height: 1; padding: 0 2px 0 0; cursor: pointer; user-select: none; }
-    .voice-control-wrap:hover .voice-caret { color: var(--text); }
 
     /* center */
     .main { background: var(--main); display: flex; flex-direction: column; min-width: 0; }
@@ -2302,14 +2299,8 @@ body.ah-store-product-open{overflow:hidden}
           <span><i id="my-status-dot" class="status-dot status-{{ my_status }}"></i><span id="my-status-label">{{ i18n_t('status.' ~ my_status) }}</span></span><small class="account-username">@{{ account.username }}</small>
         </div>
         <div class="user-actions">
-          <span class="voice-control-wrap">
-            <button class="voice-control" data-audio-kind="mic" title="{{ i18n_t('common.aria.mute') }}" data-i18n-title="common.aria.mute" onclick="toggleAudioControl(this,'mic')"><svg class="icon icon-sm"><use href="#i-mic"></use></svg></button>
-            <span class="voice-caret">⌄</span>
-          </span>
-          <span class="voice-control-wrap">
-            <button class="voice-control" data-audio-kind="headphones" title="{{ i18n_t('common.aria.deafen') }}" data-i18n-title="common.aria.deafen" onclick="toggleAudioControl(this,'headphones')"><svg class="icon icon-sm"><use href="#i-headphones"></use></svg></button>
-            <span class="voice-caret">⌄</span>
-          </span>
+          <button class="voice-control" data-audio-kind="mic" title="{{ i18n_t('common.aria.mute') }}" data-i18n-title="common.aria.mute" onclick="toggleAudioControl(this,'mic')"><svg class="icon icon-sm"><use href="#i-mic"></use></svg></button>
+          <button class="voice-control" data-audio-kind="headphones" title="{{ i18n_t('common.aria.deafen') }}" data-i18n-title="common.aria.deafen" onclick="toggleAudioControl(this,'headphones')"><svg class="icon icon-sm"><use href="#i-headphones"></use></svg></button>
           <button title="{{ i18n_t('common.aria.settings') }}" data-i18n-title="common.aria.settings" onclick="openUserSettings()"><svg class="icon icon-sm"><use href="#i-settings"></use></svg></button>
         </div>
         <div id="status-menu" class="status-menu">
