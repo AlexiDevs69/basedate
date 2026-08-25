@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.100.9",
+      "date": "2026-08-25",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Remove plus server dot styles from home template."
+      ],
+      "source_sha": "6b0794796292bc6c4f50f0856ab5a3443dc73a1e"
+    },
+    {
       "version": "1.100.8",
       "date": "2026-08-25",
       "title": "Виправлення та стабільність",
