@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.103.4",
+      "date": "2026-08-25",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance inbox functionality and styles."
+      ],
+      "source_sha": "2225edcc31ccfec8ef5bb56e152c02536872b23b"
+    },
+    {
       "version": "1.103.3",
       "date": "2026-08-25",
       "title": "Виправлення та стабільність",
