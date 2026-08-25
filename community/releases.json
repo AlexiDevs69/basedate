@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.102.0",
+      "date": "2026-08-25",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: members sidebar toggle button."
+      ],
+      "source_sha": "a4aa4681a24210c617b5ebf85536d96ea0b8188b"
+    },
+    {
       "version": "1.101.0",
       "date": "2026-08-25",
       "title": "Нові можливості AlexiHub",
