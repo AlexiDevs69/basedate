@@ -46,6 +46,7 @@
       grid-template-columns: 72px 240px 1fr 300px;
       height: 100vh;
       min-width: 0;
+      position: relative;
     }
 
     .icon {
@@ -223,7 +224,7 @@
     .dm-list { padding: 0 8px 72px; overflow-y: auto; min-height: 0; flex: 1; }
     .server-rail { padding-bottom: 72px; }
     .user-panel {
-      position: fixed;
+      position: absolute;
       left: 8px;
       bottom: 8px;
       width: 296px;
@@ -278,7 +279,6 @@
     }
     .status-menu button:hover { background: var(--hover); }
     .status-menu small { display:block; color: var(--muted2); font-size: 11px; margin-top: 1px; }
-    .user-panel { position: relative; }
     .user-panel .status-trigger { cursor: pointer; border-radius: 7px; padding: 2px 4px; margin-left: -4px; }
     .user-panel .status-trigger:hover { background: var(--hover); }
     .user-actions { display: flex; gap: 4px; }
