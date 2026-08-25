@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.103.1",
+      "date": "2026-08-25",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Remove invite button from channel tools."
+      ],
+      "source_sha": "cbc2e3e658e35b80879ab7990279fa788e6ceb2b"
+    },
+    {
       "version": "1.103.0",
       "date": "2026-08-25",
       "title": "Нові можливості AlexiHub",
