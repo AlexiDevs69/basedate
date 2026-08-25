@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.101.0",
+      "date": "2026-08-25",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: connection bar for online/offline status."
+      ],
+      "source_sha": "429dae392a6b37eb6aa868b0011d0020998fda17"
+    },
+    {
       "version": "1.100.10",
       "date": "2026-08-25",
       "title": "Оновлення AlexiHub",
