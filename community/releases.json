@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.100.7",
+      "date": "2026-08-25",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Adjust user panel positioning and styling."
+      ],
+      "source_sha": "fa02e1930d5c7dc1489a1a72183c80f360f56310"
+    },
+    {
       "version": "1.100.6",
       "date": "2026-08-25",
       "title": "Виправлення та стабільність",
