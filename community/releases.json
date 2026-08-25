@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.100.8",
+      "date": "2026-08-25",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update user-panel position in home.html."
+      ],
+      "source_sha": "c7d1e413a63b13ad7f3bc37ad9ff67176faaf8de"
+    },
+    {
       "version": "1.100.7",
       "date": "2026-08-25",
       "title": "Виправлення та стабільність",
