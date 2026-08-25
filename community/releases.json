@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.105.0",
+      "date": "2026-08-26",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: CSS styles for account panel in server_channel.html."
+      ],
+      "source_sha": "e527b1fb9cd0d64f0297d03d39898fcc16600091"
+    },
+    {
       "version": "1.104.0",
       "date": "2026-08-25",
       "title": "Нові можливості AlexiHub",
