@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.104.0",
+      "date": "2026-08-25",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: inbox panel with trigger and styles."
+      ],
+      "source_sha": "d24fae90769d582ac596a78ba9c21b7274a09c77"
+    },
+    {
       "version": "1.103.4",
       "date": "2026-08-25",
       "title": "Виправлення та стабільність",
