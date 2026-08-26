@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.106.1",
+      "date": "2026-08-26",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: account panel to user panel."
+      ],
+      "source_sha": "c122c5254967156f14314ed2760d1651e9c92542"
+    },
+    {
       "version": "1.106.0",
       "date": "2026-08-26",
       "title": "Нові можливості AlexiHub",
