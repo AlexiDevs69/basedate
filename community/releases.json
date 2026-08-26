@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.106.14",
+      "date": "2026-08-27",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update side navigation links in travel.html."
+      ],
+      "source_sha": "ea92594fb534a6c2b52c61f401558d7533548a35"
+    },
+    {
       "version": "1.106.13",
       "date": "2026-08-27",
       "title": "Виправлення та стабільність",
