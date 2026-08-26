@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.106.4",
+      "date": "2026-08-26",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Change user panel position to fixed and update z-index."
+      ],
+      "source_sha": "5982f6498baa17ed0dccbf742e14e83ab31120ca"
+    },
+    {
       "version": "1.106.3",
       "date": "2026-08-26",
       "title": "Виправлення та стабільність",
