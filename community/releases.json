@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.106.2",
+      "date": "2026-08-26",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Replace account panel with user panel."
+      ],
+      "source_sha": "3b6cdc6cacd358aa3068abc43fb25f7a76d72112"
+    },
+    {
       "version": "1.106.1",
       "date": "2026-08-26",
       "title": "Оновлення AlexiHub",
