@@ -3758,7 +3758,6 @@ document.addEventListener('DOMContentLoaded',()=>{
   <symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 20h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
   <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="9" cy="7" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
   <symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
-  <symbol id="i-headphones" viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0 1 18 0v6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
   <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.4 1.08V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.08-.4H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .4-1.08V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 16 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.15.32.36.6.6 1 .26.25.64.4 1.08.4H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51.6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
   <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" fill="none" stroke="currentColor" stroke-width="2"/><path d="m21 21-4.35-4.35" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
@@ -9700,115 +9699,41 @@ document.addEventListener('alexihub:block-status-changed',event=>{const detail=e
 
 
 <style id="ah-user-panel-transplant-css">
-  /* === Floating "island" profile panel — sits ABOVE the server rail line === */
   .user-panel {
-    position: fixed !important;
-    left: 10px !important;
-    bottom: 10px !important;
-    width: 300px !important;
-    z-index: 95 !important;
-    min-height: 58px !important;
-    background: #1b1b1e !important;
-    border: 1px solid rgba(255,255,255,.07) !important;
-    border-radius: 20px !important;
-    box-shadow: 0 16px 36px rgba(0,0,0,.5), 0 2px 10px rgba(0,0,0,.35) !important;
-    display: flex !important;
-    align-items: center !important;
-    padding: 8px 9px !important;
-    gap: 9px !important;
-    cursor: pointer !important;
+    position: fixed;
+    left: 8px;
+    bottom: 8px;
+    width: 296px;
+    z-index: 90;
+    min-height: 54px;
+    background: #1c1c1c;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 10px 26px rgba(0,0,0,.38);
+    display: flex;
+    align-items: center;
+    padding: 7px 8px;
+    gap: 8px;
+    cursor: pointer;
   }
-
-  .user-panel .avatar {
-    width: 40px !important;
-    height: 40px !important;
-    border-radius: 50% !important;
-    position: relative !important;
-    flex: 0 0 auto !important;
-  }
+  .user-panel .avatar { width: 36px; height: 36px; }
   .user-panel .avatar .presence {
-    position: absolute !important;
-    right: -2px !important;
-    bottom: -2px !important;
-    width: 14px !important;
-    height: 14px !important;
-    border-radius: 50% !important;
-    border: 3px solid #1b1b1e !important;
-    box-sizing: border-box !important;
+    position: absolute;
+    right: -1px;
+    bottom: -1px;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    border: 2px solid #1c1c1c;
   }
-
-  /* Name + status always shown stacked (no hover swap) — matches the reference island */
-  .user-panel .user-info {
-    position: relative !important;
-    height: auto !important;
-    min-width: 0 !important;
-    flex: 1 1 auto !important;
-    padding: 0 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: center !important;
-    gap: 2px !important;
-  }
-  .user-panel .user-info > b {
-    position: static !important;
-    transform: none !important;
-    opacity: 1 !important;
-    pointer-events: auto !important;
-    font-size: 14px !important;
-    font-weight: 800 !important;
-    color: #fff !important;
-    line-height: 16px !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    max-width: 150px !important;
-  }
-  .user-panel .user-info > span {
-    position: static !important;
-    transform: none !important;
-    opacity: 1 !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 5px !important;
-    font-size: 12px !important;
-    font-weight: 750 !important;
-    line-height: 14px !important;
-    color: #b5bac1 !important;
-    white-space: nowrap !important;
-  }
-  .user-panel:hover .user-info > span,
-  .user-panel:hover .user-info > b { transform: none !important; opacity: 1 !important; }
-  .user-panel .user-info > .account-username { display: none !important; }
-
-  .user-panel .user-info .status-dot { width: 8px !important; height: 8px !important; border-radius: 50% !important; display: inline-block !important; flex: 0 0 auto !important; }
-  #my-status-dot.status-online  ~ #my-status-label { color: #23a55a !important; }
-  #my-status-dot.status-idle    ~ #my-status-label { color: #f0b232 !important; }
-  #my-status-dot.status-dnd     ~ #my-status-label { color: #f23f42 !important; }
-  #my-status-dot.status-invisible ~ #my-status-label,
-  #my-status-dot.status-offline   ~ #my-status-label { color: #80848e !important; }
-
-  .user-panel .status-trigger { cursor: pointer !important; border-radius: 8px !important; padding: 0 !important; margin: 0 !important; }
-  .user-panel .status-trigger:hover { background: transparent !important; }
-
-  /* Mic / deafen / settings buttons */
-  .user-panel .user-actions {
-    display: flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-    flex: 0 0 auto !important;
-    margin-left: auto !important;
-  }
-  .user-panel .user-actions button {
-    width: 32px !important;
-    height: 32px !important;
-    border-radius: 10px !important;
-  }
-
-  .status-menu .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .user-panel .status-trigger { cursor: pointer; border-radius: 7px; padding: 2px 4px; margin-left: -4px; }
+  .user-panel .status-trigger:hover { background: rgba(255,255,255,.06); }
+  .user-panel .status-dot,
+  .status-menu .status-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
   .status-menu {
     position: absolute;
     left: 10px;
-    bottom: 78px;
+    bottom: 72px;
     width: 220px;
     background: #24252b;
     border: 1px solid var(--border);
@@ -9835,7 +9760,7 @@ document.addEventListener('alexihub:block-status-changed',event=>{const detail=e
   }
   .status-menu button:hover { background: rgba(255,255,255,.06); }
   .status-menu small { display: block; color: #6b7280; font-size: 11px; margin-top: 1px; }
-  .sidebar-scroll { padding-bottom: 80px !important; }
+  .sidebar-scroll { padding-bottom: 72px !important; }
 </style>
 
 </body>
