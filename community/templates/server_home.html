@@ -23,10 +23,9 @@
     .server-dot:hover, .server-dot.active { border-radius:16px; border-color:var(--border-hover); transform:translateY(-1px); }
     .server-dot.active::before { content:''; position:absolute; left:-9px; top:50%; transform:translateY(-50%); width:4px; height:28px; border-radius:999px; background:var(--text-primary); }
     .server-dot span { width:100%; height:100%; background:center/cover no-repeat; display:block; }
-    .server-dot.home-dot { background:linear-gradient(135deg,#5865f2,#4752c4); color:#fff; }
-    .server-dot.plus { color:#10b981; font-size:1.7rem; font-family:var(--font-sans); }
-    .server-dot.plus:hover { background:#10b981; color:#06180d; }
-    .rail-sep { width:32px; height:1px; background:var(--border); flex-shrink:0; }
+    .server-dot.home-dot { background:linear-gradient(135deg,#00C4B4,#00A89B); color:#fff; }
+    .server-dot.plus { font-size:1.7rem; font-family:var(--font-sans); }
+    .rail-sep { width:32px; height:1px; background:#24252b; flex-shrink:0; }
     .topbar { position:fixed; top:0; left:var(--rail); right:0; height:var(--topbar); z-index:50; background:var(--bg-header); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 1.5rem; }
     .brand { font-weight:700; color:var(--text-primary); text-decoration:none; }
     .topbar-right { display:flex; align-items:center; gap:1.25rem; }
@@ -483,7 +482,7 @@
 
 /* === Server pages unified to DM visual language === */
 :root{--bg:#18191d!important;--bg-elevated:#202127!important;--bg-header:#111114!important;--border:#2b2d34!important;--border-hover:#3a3c45!important;--text-secondary:#9ca3af!important;--rail:72px;--sidebar:240px;--members:300px;--topbar:48px;}
-body{background:#18191d!important;overflow:hidden!important}.server-rail{background:#08080a!important;border-right:1px solid #111!important;padding:12px 10px!important;gap:10px!important}.server-dot{width:48px!important;height:48px!important;border-radius:18px!important;border:0!important;background:#202127!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.04)!important}.server-dot:hover,.server-dot.active{border-radius:14px!important;background-color:#5865f2!important;transform:none!important}.server-dot.plus{color:#23a55a!important}.server-dot.plus:hover{background:#23a55a!important;color:#fff!important}.topbar{height:48px!important;background:#18191d!important;border-bottom:1px solid #111318!important;left:calc(var(--rail) + var(--sidebar))!important;padding:0 14px!important}.brand{font-weight:800!important}.server-sidebar{top:0!important;background:#111114!important;border-right:1px solid #111!important;padding:0!important;display:flex!important;flex-direction:column!important}.server-head{height:48px!important;border-bottom:1px solid #1f2026!important;display:flex!important;align-items:center!important;padding:0 10px!important;flex:0 0 auto!important}.server-head-btn{height:36px!important;border-radius:8px!important}.sidebar-scroll{padding:10px 8px!important;overflow-y:auto!important;min-height:0!important;flex:1!important}.server-desc{padding:0 8px!important}.chan-link{min-height:36px!important;border-radius:8px!important;padding:.45rem .65rem!important;color:#9ca3af!important;font-weight:750!important}.chan-link:hover,.chan-link.active{background:#2e3038!important;color:#f4f4f5!important}.sidebar-label,.members-title{color:#6b7280!important;font-size:11px!important}.sidebar-plus{background:transparent!important;color:#9ca3af!important;border:0!important}.sidebar-plus:hover{background:#2e3038!important;color:#fff!important}.main{background:#18191d!important;margin-left:calc(var(--rail) + var(--sidebar))!important;margin-right:var(--members)!important;padding-top:48px!important}.members-sidebar{top:48px!important;background:#18191d!important;border-left:1px solid #111318!important;width:var(--members)!important}.member-row:hover{background:#2e3038!important}.account-panel{background:#17181d!important;border-top:1px solid #22242b!important}.mini-profile-popover.open{box-shadow:0 0 0 9999px rgba(0,0,0,.68),0 26px 90px rgba(0,0,0,.58)!important;border-color:#3a3c45!important}
+body{background:#18191d!important;overflow:hidden!important}.server-rail{background:#070707!important;border-right:1px solid #111!important;padding:12px 10px!important;gap:10px!important}.server-dot{width:48px!important;height:48px!important;border-radius:18px!important;border:0!important;background:#1c1c1c!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.04)!important}.server-dot:hover,.server-dot.active{border-radius:14px!important;background-color:#00C4B4!important;transform:none!important}.topbar{height:48px!important;background:#18191d!important;border-bottom:1px solid #111318!important;left:calc(var(--rail) + var(--sidebar))!important;padding:0 14px!important}.brand{font-weight:800!important}.server-sidebar{top:0!important;background:#111114!important;border-right:1px solid #111!important;padding:0!important;display:flex!important;flex-direction:column!important}.server-head{height:48px!important;border-bottom:1px solid #1f2026!important;display:flex!important;align-items:center!important;padding:0 10px!important;flex:0 0 auto!important}.server-head-btn{height:36px!important;border-radius:8px!important}.sidebar-scroll{padding:10px 8px!important;overflow-y:auto!important;min-height:0!important;flex:1!important}.server-desc{padding:0 8px!important}.chan-link{min-height:36px!important;border-radius:8px!important;padding:.45rem .65rem!important;color:#9ca3af!important;font-weight:750!important}.chan-link:hover,.chan-link.active{background:#2e3038!important;color:#f4f4f5!important}.sidebar-label,.members-title{color:#6b7280!important;font-size:11px!important}.sidebar-plus{background:transparent!important;color:#9ca3af!important;border:0!important}.sidebar-plus:hover{background:#2e3038!important;color:#fff!important}.main{background:#18191d!important;margin-left:calc(var(--rail) + var(--sidebar))!important;margin-right:var(--members)!important;padding-top:48px!important}.members-sidebar{top:48px!important;background:#18191d!important;border-left:1px solid #111318!important;width:var(--members)!important}.member-row:hover{background:#2e3038!important}.account-panel{background:#17181d!important;border-top:1px solid #22242b!important}.mini-profile-popover.open{box-shadow:0 0 0 9999px rgba(0,0,0,.68),0 26px 90px rgba(0,0,0,.58)!important;border-color:#3a3c45!important}
 @media(max-width:820px){.topbar{left:64px!important;right:0!important}.server-sidebar{left:64px!important;width:calc(100vw - 64px)!important}.main{margin-left:64px!important;margin-right:0!important}.members-sidebar{display:none!important}}
 
 
@@ -1608,24 +1607,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
       {% endfor %}
     </div>
     <div class="sidebar-scroll">{% if server.description %}<div class="server-desc">{{ server.description }}</div>{% endif %}<a href="/community/servers/{{ server.id }}" class="chan-link active"><!--i18n:common.action.ygroom_olys-->{{ i18n_t('common.action.ygroom_olys') }}</a><div class="sidebar-label-row"><div class="sidebar-label"><!--i18n:common.text.kanali-->{{ i18n_t('common.text.kanali') }}</div>{% if can_manage %}<button type="button" class="sidebar-plus" onclick="openModal('channel-modal')" title="{{ i18n_t('common.aria.the_colludes_of_the_canal') }}" data-i18n-title="common.aria.the_colludes_of_the_canal">+</button>{% endif %}</div>{% for ch in channels %}<div class="chan-row "><a href="/community/servers/{{ server.id }}/channel/{{ ch.id }}" data-mention-channel-key="{{ server.id }}:{{ ch.id }}" class="chan-link "><span class="chan-symbol">#</span><span class="chan-name">{{ ch.name }}</span>{% set cc = mention_counts.channel_by_id.get((server.id|string) ~ ':' ~ (ch.id|string), 0) %}<span class="ah-mention-count" {% if not cc %}hidden{% endif %}>{{ '99+' if cc > 99 else cc }}</span></a><div class="chan-actions"><button type="button" class="chan-action-btn" data-channel-id="{{ ch.id }}" data-channel-name="{{ ch.name }}" onclick="openChannelInviteModal(event, this)" title="{{ i18n_t('common.aria.yuncture') }}" data-i18n-title="common.aria.yuncture"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></button>{% if can_manage %}<a class="chan-action-btn" href="/community/servers/{{ server.id }}/channel/{{ ch.id }}/settings" onclick="event.stopPropagation()" title="{{ i18n_t('common.aria.channel_settings') }}" data-i18n-title="common.aria.channel_settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.33 1.82 2 2 0 1 1-3.34 0A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.82-.33 2 2 0 1 1 0-3.34A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .33-1.82 2 2 0 1 1 3.34 0A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 .6 1 1.65 1.65 0 0 0 1.82.33 2 2 0 1 1 0 3.34A1.65 1.65 0 0 0 19.4 15Z"/></svg></a>{% endif %}</div></div>{% endfor %}</div>
-    <div class="user-panel mini-profile-trigger" data-mini-username="{{ account.username }}" data-mini-display="{{ account.display_name or account.username }}" data-mini-avatar="{{ account.avatar_url or '' }}" data-mini-banner="{{ account.banner_url or '' }}" data-mini-status="{{ account.account_status or 'online' }}" data-mini-role="{{ account.role_label or 'online' }}" data-mini-c1="{{ account.role_color_start or '#00C4B4' }}" data-mini-c2="{{ account.role_color_end or '#0A0A0A' }}" data-mini-profile="/community/profile/{{ account.username }}" data-mini-bio="{{ account.bio or '' }}">
-      <span class="avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}')"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}<span id="my-avatar-status" class="presence status-{{ account.account_status or 'online' }}"></span></span>
-      <div class="user-info status-trigger" onclick="openSelfProfile()">
-        <b>{{ account.display_name or account.username }}</b>
-        <span><i id="my-status-dot" class="status-dot status-{{ account.account_status or 'online' }}"></i><span id="my-status-label">{{ i18n_t('status.' ~ (account.account_status or 'online')) }}</span></span><small class="account-username">@{{ account.username }}</small>
-      </div>
-      <div class="user-actions">
-        <button class="voice-control" data-audio-kind="mic" title="{{ i18n_t('common.aria.mute') }}" data-i18n-title="common.aria.mute" onclick="event.stopPropagation();toggleAudioControl(this,'mic')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button>
-        <button class="voice-control" data-audio-kind="headphones" title="{{ i18n_t('common.aria.deafen') }}" data-i18n-title="common.aria.deafen" onclick="event.stopPropagation();toggleAudioControl(this,'headphones')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg></button>
-        <button title="{{ i18n_t('common.aria.settings') }}" data-i18n-title="common.aria.settings" onclick="event.stopPropagation();openUserSettings()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.4 1.08V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.08-.4H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6A1.65 1.65 0 0 0 10.4 3V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 16 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.15.32.36.6.6 1 .26.25.64.4 1.08.4H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51.6z"/></svg></button>
-      </div>
-      <div id="status-menu" class="status-menu">
-        <button onclick="event.stopPropagation();setPresenceStatus('online')"><i class="status-dot status-online"></i><span><b>{{ i18n_t('common.text.online') }}</b><small>{{ i18n_t('common.text.text_a4074ad') }}</small></span></button>
-        <button onclick="event.stopPropagation();setPresenceStatus('idle')"><i class="status-dot status-idle"></i><span><b>{{ i18n_t('status.idle') }}</b><small>{{ i18n_t('common.text.text_baf2a9c') }}</small></span></button>
-        <button onclick="event.stopPropagation();setPresenceStatus('dnd')"><i class="status-dot status-dnd"></i><span><b>{{ i18n_t('status.dnd') }}</b><small>{{ i18n_t('common.text.text_9fda25e') }}</small></span></button>
-        <button onclick="event.stopPropagation();setPresenceStatus('invisible')"><i class="status-dot status-invisible"></i><span><b>{{ i18n_t('status.invisible') }}</b><small>{{ i18n_t('common.text.text_87b603c') }}</small></span></button>
-      </div>
-    </div>
+    <div class="account-panel mini-profile-trigger" data-mini-username="{{ account.username|e }}" data-mini-display="{{ account.display_name or account.username }}" data-mini-avatar="{{ account.avatar_url or '' }}" data-mini-banner="{{ account.banner_url or '' }}" data-mini-status="{{ account.account_status or 'online' }}" data-mini-role="{{ account.role_label or 'online' }}" data-mini-effect="{{ account.name_effect or 'none' }}" data-mini-font="{{ account.name_font or 'default' }}" data-mini-c1="{{ account.role_color_start or '#f5576c' }}" data-mini-c2="{{ account.role_color_end or '#7367f0' }}" data-mini-profile="/community/profile/{{ account.username }}" data-mini-bio="{{ account.bio or '' }}"><span class="account-avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}');"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}</span><span class="account-meta"><span class="visual-name account-name name-{{ account.name_effect or 'none' }} font-{{ account.name_font or 'default' }}" style="--name-c1: {{ account.role_color_start or '#f5576c' }}; --name-c2: {{ account.role_color_end or '#7367f0' }};">{{ account.display_name or account.username }}</span><span class="account-status">{{ i18n_t('status.' ~ (account.account_status or 'online')) }}</span><small class="account-username">@{{ account.username }}</small></span><span class="account-actions"><button class="voice-control" data-audio-kind="mic" type="button" onclick="event.stopPropagation();toggleAudioControl(this,'mic')" title="{{ i18n_t('common.aria.mute') }}" data-i18n-title="common.aria.mute"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button><button class="voice-control" data-audio-kind="headphones" type="button" onclick="event.stopPropagation();toggleAudioControl(this,'headphones')" title="{{ i18n_t('common.aria.deafen') }}" data-i18n-title="common.aria.deafen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg></button><button type="button" onclick="event.stopPropagation();openUserSettings()" title="{{ i18n_t('common.aria.settings') }}" data-i18n-title="common.aria.settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.4 1.08V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.08-.4H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6A1.65 1.65 0 0 0 10.4 3V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 16 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.15.32.36.6.6 1 .26.25.64.4 1.08.4H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51.6z"/></svg></button></span></div>
   </aside>
   <aside class="members-sidebar">
     <div class="members-title">{{ i18n_t('server.members.count', count=(members|length)) }}</div>
@@ -6866,72 +6848,6 @@ if (typeof window.openSelfProfileSettings !== 'function') {
   window.AlexiHubInbox={open:function(){setOpen(true)},close:function(){setOpen(false)},refresh:function(){return loadMentions(true)}};
 })();
 </script>
-
-
-<style id="ah-user-panel-transplant-css">
-  .user-panel {
-    position: fixed;
-    left: 8px;
-    bottom: 8px;
-    width: 296px;
-    z-index: 90;
-    min-height: 54px;
-    background: #1c1c1c;
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    box-shadow: 0 10px 26px rgba(0,0,0,.38);
-    display: flex;
-    align-items: center;
-    padding: 7px 8px;
-    gap: 8px;
-    cursor: pointer;
-  }
-  .user-panel .avatar { width: 36px; height: 36px; }
-  .user-panel .avatar .presence {
-    position: absolute;
-    right: -1px;
-    bottom: -1px;
-    width: 11px;
-    height: 11px;
-    border-radius: 50%;
-    border: 2px solid #1c1c1c;
-  }
-  .user-panel .status-trigger { cursor: pointer; border-radius: 7px; padding: 2px 4px; margin-left: -4px; }
-  .user-panel .status-trigger:hover { background: rgba(255,255,255,.06); }
-  .user-panel .status-dot,
-  .status-menu .status-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
-  .status-menu {
-    position: absolute;
-    left: 10px;
-    bottom: 72px;
-    width: 220px;
-    background: #24252b;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 8px;
-    box-shadow: 0 18px 40px rgba(0,0,0,.42);
-    display: none;
-    z-index: 50;
-  }
-  .status-menu.open { display: block; }
-  .status-menu button {
-    width: 100%;
-    min-height: 42px;
-    border: 0;
-    background: transparent;
-    color: #f4f4f5;
-    border-radius: 8px;
-    padding: 8px 9px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    text-align: left;
-  }
-  .status-menu button:hover { background: rgba(255,255,255,.06); }
-  .status-menu small { display: block; color: #6b7280; font-size: 11px; margin-top: 1px; }
-  .sidebar-scroll { padding-bottom: 72px !important; }
-</style>
 
 </body>
 </html>
