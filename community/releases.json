@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.106.13",
+      "date": "2026-08-27",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update styles for server rail and dots in travel.html."
+      ],
+      "source_sha": "fa41ce610b486cb045bf4060734397497d385056"
+    },
+    {
       "version": "1.106.12",
       "date": "2026-08-27",
       "title": "Оновлення AlexiHub",
