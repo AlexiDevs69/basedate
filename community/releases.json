@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.106.5",
+      "date": "2026-08-26",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: user status display in server_channel.html."
+      ],
+      "source_sha": "0b433b466b0d7f925fcf5ed30c2ac0661db0061e"
+    },
+    {
       "version": "1.106.4",
       "date": "2026-08-26",
       "title": "Виправлення та стабільність",
