@@ -7016,9 +7016,10 @@ if (typeof window.openSelfProfileSettings !== 'function') {
     el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.visibility = '';
   }
 
-  function openSubPanel(anchorEl, html, id) {
+  function openSubPanel(anchorEl, panelEl, id) {
     if (state.subFor === id) return;
-    sub.innerHTML = html;
+    sub.innerHTML = '';
+    sub.appendChild(panelEl);
     state.subFor = id;
     var r = anchorEl.getBoundingClientRect();
     sub.style.display = 'block';
@@ -7189,7 +7190,12 @@ if (typeof window.openSelfProfileSettings !== 'function') {
       });
       panel.appendChild(it);
     });
-    return panel.innerHTML;
+    return panel;
+  }
+
+  function refreshNotifSubmenu(id, dot) {
+    sub.innerHTML = '';
+    sub.appendChild(buildNotifSubmenu(id, dot));
   }
 
   function buildNotifSubmenu(id, dot) {
@@ -7203,7 +7209,7 @@ if (typeof window.openSelfProfileSettings !== 'function') {
       it.addEventListener('click', function () {
         p = setServerPrefs(id, { notif: pair[0] });
         renderMenuFor(state.serverId, dot); // refresh subtitle in main menu
-        sub.innerHTML = buildNotifSubmenu(id, dot);
+        refreshNotifSubmenu(id, dot);
         toast(t('server.ctx.notif_saved', 'Налаштування сповіщень збережено'));
       });
       panel.appendChild(it);
@@ -7221,7 +7227,7 @@ if (typeof window.openSelfProfileSettings !== 'function') {
       it.addEventListener('click', function () {
         var patch = {}; patch[pair[0]] = !p[pair[0]];
         p = setServerPrefs(id, patch);
-        sub.innerHTML = buildNotifSubmenu(id, dot);
+        refreshNotifSubmenu(id, dot);
       });
       panel.appendChild(it);
     });
@@ -7231,11 +7237,11 @@ if (typeof window.openSelfProfileSettings !== 'function') {
     var pushIt = makeItem({ label: t('server.ctx.push_mobile', 'Мобільні Push-сповіщення'), right: checkBox(!!p.pushMobile) });
     pushIt.addEventListener('click', function () {
       p = setServerPrefs(id, { pushMobile: !p.pushMobile });
-      sub.innerHTML = buildNotifSubmenu(id, dot);
+      refreshNotifSubmenu(id, dot);
     });
     panel.appendChild(pushIt);
 
-    return panel.innerHTML;
+    return panel;
   }
 
   function notifSubtitle(p) {
