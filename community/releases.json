@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.117.0",
+      "date": "2026-08-28",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: channel visibility toggle feature."
+      ],
+      "source_sha": "2da680b0c0d2507a4b8f507b739f6f34d531ff4c"
+    },
+    {
       "version": "1.116.1",
       "date": "2026-08-28",
       "title": "Виправлення та стабільність",
