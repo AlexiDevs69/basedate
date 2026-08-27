@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.109.2",
+      "date": "2026-08-27",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Виправлено: script tag escaping in server_home.html."
+      ],
+      "source_sha": "964deea961da90181148459132105fa59ff5aa9f"
+    },
+    {
       "version": "1.109.1",
       "date": "2026-08-27",
       "title": "Оновлення AlexiHub",
