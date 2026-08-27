@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.114.1",
+      "date": "2026-08-27",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Виправлено: HTML structure and style formatting."
+      ],
+      "source_sha": "a5921f26d7d06e5fb2445c3f7513b23c0d65a5aa"
+    },
+    {
       "version": "1.114.0",
       "date": "2026-08-27",
       "title": "Нові можливості AlexiHub",
