@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.109.1",
+      "date": "2026-08-27",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: openSubPanel and notification handling."
+      ],
+      "source_sha": "2c10f0f4862863c0a86f039cba2f6391048f4b3c"
+    },
+    {
       "version": "1.109.0",
       "date": "2026-08-27",
       "title": "Нові можливості AlexiHub",
