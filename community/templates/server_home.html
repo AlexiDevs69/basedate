@@ -1505,62 +1505,6 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
 .server-head.has-server-banner .server-menu{top:48px!important;z-index:4}
 </style>
 {% include "i18n_runtime.html" %}
-<style id="ah-channel-browser-styles">
-.ah-cb-overlay{position:fixed;inset:0;z-index:26000;display:none;background:#1a1a1e;color:#f4f4f5;font-family:var(--font-sans);}
-.ah-cb-overlay.open{display:flex;}
-.ah-cb-left{width:240px;flex:0 0 240px;background:#121214;display:flex;flex-direction:column;border-right:1px solid #0c0c0e;overflow:hidden;}
-.ah-cb-head-slot{flex:0 0 auto;}
-.ah-cb-head-slot .server-head{position:static!important;}
-.ah-cb-nav{padding:10px 8px 4px;display:flex;flex-direction:column;gap:2px;flex:0 0 auto;}
-.ah-cb-nav-item{height:38px;border:0;background:transparent;border-radius:8px;color:#9ca3af;display:flex;align-items:center;gap:10px;padding:0 10px;font-weight:750;font-size:14px;cursor:pointer;text-align:left;width:100%;}
-.ah-cb-nav-item svg{width:18px;height:18px;flex:0 0 auto;}
-.ah-cb-nav-item:hover{background:#1f2026;color:#f4f4f5;}
-.ah-cb-nav-item.active{background:#2c2c30;color:#fff;}
-.ah-cb-divider{height:1px;background:#1f2026;margin:8px 8px 4px;flex:0 0 auto;}
-.ah-cb-tree-slot{flex:1;min-height:0;overflow-y:auto;padding:2px 8px 8px;}
-.ah-cb-tree-slot .sidebar-scroll{padding:0!important;overflow:visible!important;}
-#ah-cb-account-slot{flex:0 0 auto;}
-.ah-cb-main{flex:1;min-width:0;display:flex;flex-direction:column;background:#1a1a1e;}
-.ah-cb-main-head{flex:0 0 auto;height:48px;display:flex;align-items:center;gap:8px;padding:0 20px;border-bottom:1px solid #0c0c0e;background:#1a1a1e;}
-.ah-cb-main-head svg{width:18px;height:18px;color:#9ca3af;flex:0 0 auto;}
-.ah-cb-main-head h2{font-size:15px;font-weight:800;margin:0;flex:1;min-width:0;}
-.ah-cb-close{margin-left:auto;width:30px;height:30px;border:0;border-radius:50%;background:transparent;color:#9ca3af;font-size:20px;line-height:1;cursor:pointer;flex:0 0 auto;}
-.ah-cb-close:hover{background:#26262b;color:#fff;}
-.ah-cb-toolbar{flex:0 0 auto;display:flex;align-items:center;gap:12px;padding:16px 20px;}
-.ah-cb-search{flex:1;min-width:0;height:38px;display:flex;align-items:center;gap:8px;background:#121214;border:1px solid #1f2026;border-radius:8px;padding:0 12px;}
-.ah-cb-search svg{width:16px;height:16px;color:#7d828c;flex:0 0 auto;}
-.ah-cb-search input{flex:1;min-width:0;background:transparent;border:0;outline:none;color:#f4f4f5;font:inherit;font-size:13px;}
-.ah-cb-search input::placeholder{color:#7d828c;}
-.ah-cb-create-btn{flex:0 0 auto;height:38px;display:inline-flex;align-items:center;gap:6px;padding:0 16px;border:0;border-radius:8px;background:linear-gradient(135deg,#5865f2,#8865f2);color:#fff;font-weight:800;font-size:13px;cursor:pointer;}
-.ah-cb-create-btn:hover{filter:brightness(1.08);}
-.ah-cb-create-btn svg{width:16px;height:16px;}
-.ah-cb-body{flex:1;min-height:0;overflow-y:auto;padding:0 20px 24px;}
-.ah-cb-section{margin-bottom:22px;}
-.ah-cb-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 4px 10px;font-size:16px;font-weight:800;color:#f4f4f5;}
-.ah-cb-follow{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700;color:#dbdee1;cursor:pointer;}
-.ah-cb-switch{position:relative;width:34px;height:19px;border-radius:999px;background:#3a3c43;flex:0 0 auto;transition:background .15s ease;}
-.ah-cb-switch::after{content:'';position:absolute;left:2px;top:2px;width:15px;height:15px;border-radius:50%;background:#fff;transition:transform .15s ease;}
-.ah-cb-follow input{display:none;}
-.ah-cb-follow input:checked + .ah-cb-switch{background:#23a55a;}
-.ah-cb-follow input:checked + .ah-cb-switch::after{transform:translateX(15px);}
-.ah-cb-rows{display:flex;flex-direction:column;gap:2px;}
-.ah-cb-row{display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:8px;background:#202024;cursor:pointer;}
-.ah-cb-row:hover{background:#26262c;}
-.ah-cb-row-icon{width:20px;height:20px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;color:#80848e;}
-.ah-cb-row-icon svg{width:18px;height:18px;}
-.ah-cb-row-hash{font-size:18px;font-weight:700;line-height:1;color:#80848e;}
-.ah-cb-row-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;}
-.ah-cb-row-name{font-size:14px;font-weight:800;color:#f4f4f5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.ah-cb-row-sub{font-size:11.5px;font-weight:600;color:#7d828c;}
-.ah-cb-row-check{flex:0 0 auto;display:flex;}
-.ah-cb-row-check input{display:none;}
-.ah-cb-checkbox{width:18px;height:18px;border-radius:5px;background:#3a3c43;display:flex;align-items:center;justify-content:center;transition:background .12s ease;}
-.ah-cb-row-check input:checked + .ah-cb-checkbox{background:#5865f2;}
-.ah-cb-checkbox svg{width:13px;height:13px;color:#fff;opacity:0;transform:scale(.6);transition:.12s ease;}
-.ah-cb-row-check input:checked + .ah-cb-checkbox svg{opacity:1;transform:scale(1);}
-.ah-cb-row.ah-cb-hidden{display:none!important;}
-@media (max-width:900px){.ah-cb-left{width:200px;flex-basis:200px;}}
-</style>
 </head>
 <body data-current-account-id="{{ account.id }}">
   <aside class="server-rail">
@@ -1612,7 +1556,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
     {% if can_manage %}<button type="button" class="menu-item" onclick="openEventWizard()"><span><!--i18n:common.text.create_an_event-->{{ i18n_t('common.text.create_an_event') }}</span><span class="menu-ico"><svg class="menu-svg" viewBox="0 0 24 24"><path d="M8 2v4M16 2v4M3 10h18"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M12 14v4M10 16h4"/></svg></span></button>{% endif %}
     <button type="button" class="menu-item" onclick="showActionToast(window.AlexiHubI18n.t('server.stub.apps'))"><span><!--i18n:common.text.an_application_catalog-->{{ i18n_t('common.text.an_application_catalog') }}</span><span class="menu-ico"><svg class="menu-svg" viewBox="0 0 24 24"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg></span></button>
     <div class="menu-divider"></div>
-    <button type="button" class="menu-item" onclick="openChannelBrowserPage()"><span><!--i18n:common.text.show_all_channels-->{{ i18n_t('common.text.show_all_channels') }}</span><span class="menu-ico checked"><svg class="menu-svg" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12l3 3 5-6"/></svg></span></button>
+    <button type="button" class="menu-item" onclick="openChannelBrowser()"><span><!--i18n:common.text.show_all_channels-->{{ i18n_t('common.text.show_all_channels') }}</span><span class="menu-ico checked"><svg class="menu-svg" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12l3 3 5-6"/></svg></span></button>
     <button type="button" class="menu-item" onclick="showActionToast(window.AlexiHubI18n.t('server.stub.notifications'))"><span><!--i18n:common.text.parameters_of_notifications-->{{ i18n_t('common.text.parameters_of_notifications') }}</span><span class="menu-ico"><svg class="menu-svg" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg></span></button>
     <button type="button" class="menu-item" onclick="showActionToast(window.AlexiHubI18n.t('server.stub.privacy'))"><span><!--i18n:common.text.confidential_settings-->{{ i18n_t('common.text.confidential_settings') }}</span><span class="menu-ico"><svg class="menu-svg" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span></button>
     <div class="menu-divider"></div>
@@ -1665,46 +1609,6 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
     <div class="sidebar-scroll">{% if server.description %}<div class="server-desc">{{ server.description }}</div>{% endif %}<a href="/community/servers/{{ server.id }}" class="chan-link active"><!--i18n:common.action.ygroom_olys-->{{ i18n_t('common.action.ygroom_olys') }}</a><div class="sidebar-label-row"><div class="sidebar-label"><!--i18n:common.text.kanali-->{{ i18n_t('common.text.kanali') }}</div>{% if can_manage %}<button type="button" class="sidebar-plus" onclick="openModal('channel-modal')" title="{{ i18n_t('common.aria.the_colludes_of_the_canal') }}" data-i18n-title="common.aria.the_colludes_of_the_canal">+</button>{% endif %}</div>{% for ch in channels %}<div class="chan-row "><a href="/community/servers/{{ server.id }}/channel/{{ ch.id }}" data-mention-channel-key="{{ server.id }}:{{ ch.id }}" class="chan-link "><span class="chan-symbol">#</span><span class="chan-name">{{ ch.name }}</span>{% set cc = mention_counts.channel_by_id.get((server.id|string) ~ ':' ~ (ch.id|string), 0) %}<span class="ah-mention-count" {% if not cc %}hidden{% endif %}>{{ '99+' if cc > 99 else cc }}</span></a><div class="chan-actions"><button type="button" class="chan-action-btn" data-channel-id="{{ ch.id }}" data-channel-name="{{ ch.name }}" onclick="openChannelInviteModal(event, this)" title="{{ i18n_t('common.aria.yuncture') }}" data-i18n-title="common.aria.yuncture"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></button>{% if can_manage %}<a class="chan-action-btn" href="/community/servers/{{ server.id }}/channel/{{ ch.id }}/settings" onclick="event.stopPropagation()" title="{{ i18n_t('common.aria.channel_settings') }}" data-i18n-title="common.aria.channel_settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.33 1.82 2 2 0 1 1-3.34 0A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.82-.33 2 2 0 1 1 0-3.34A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .33-1.82 2 2 0 1 1 3.34 0A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 .6 1 1.65 1.65 0 0 0 1.82.33 2 2 0 1 1 0 3.34A1.65 1.65 0 0 0 19.4 15Z"/></svg></a>{% endif %}</div></div>{% endfor %}</div>
     <div class="account-panel mini-profile-trigger" data-mini-username="{{ account.username|e }}" data-mini-display="{{ account.display_name or account.username }}" data-mini-avatar="{{ account.avatar_url or '' }}" data-mini-banner="{{ account.banner_url or '' }}" data-mini-status="{{ account.account_status or 'online' }}" data-mini-role="{{ account.role_label or 'online' }}" data-mini-effect="{{ account.name_effect or 'none' }}" data-mini-font="{{ account.name_font or 'default' }}" data-mini-c1="{{ account.role_color_start or '#f5576c' }}" data-mini-c2="{{ account.role_color_end or '#7367f0' }}" data-mini-profile="/community/profile/{{ account.username }}" data-mini-bio="{{ account.bio or '' }}"><span class="account-avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}');"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}</span><span class="account-meta"><span class="visual-name account-name name-{{ account.name_effect or 'none' }} font-{{ account.name_font or 'default' }}" style="--name-c1: {{ account.role_color_start or '#f5576c' }}; --name-c2: {{ account.role_color_end or '#7367f0' }};">{{ account.display_name or account.username }}</span><span class="account-status">{{ i18n_t('status.' ~ (account.account_status or 'online')) }}</span><small class="account-username">@{{ account.username }}</small></span><span class="account-actions"><button class="voice-control" data-audio-kind="mic" type="button" onclick="event.stopPropagation();toggleAudioControl(this,'mic')" title="{{ i18n_t('common.aria.mute') }}" data-i18n-title="common.aria.mute"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button><button class="voice-control" data-audio-kind="headphones" type="button" onclick="event.stopPropagation();toggleAudioControl(this,'headphones')" title="{{ i18n_t('common.aria.deafen') }}" data-i18n-title="common.aria.deafen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg></button><button type="button" onclick="event.stopPropagation();openUserSettings()" title="{{ i18n_t('common.aria.settings') }}" data-i18n-title="common.aria.settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.4 1.08V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.08-.4H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6A1.65 1.65 0 0 0 10.4 3V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 16 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.15.32.36.6.6 1 .26.25.64.4 1.08.4H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51.6z"/></svg></button></span></div>
   </aside>
-
-  <div id="ah-channel-browser-overlay" class="ah-cb-overlay" aria-hidden="true">
-    <div class="ah-cb-left">
-      <div id="ah-cb-head-slot" class="ah-cb-head-slot"></div>
-      <nav class="ah-cb-nav">
-        <button type="button" class="ah-cb-nav-item" onclick="ahCbNavAction('events')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 2v6M16 2v6M3 10h18"/></svg>
-          <span><!--i18n:common.text.events_020d3b2-->{{ i18n_t('common.text.events_020d3b2') }}</span>
-        </button>
-        <button type="button" class="ah-cb-nav-item active" onclick="ahCbNavAction('channels')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/><circle cx="19" cy="19" r="3"/><path d="m22 22-1.5-1.5"/></svg>
-          <span><!--i18n:common.text.show_all_channels-->{{ i18n_t('common.text.show_all_channels') }}</span>
-        </button>
-        <button type="button" class="ah-cb-nav-item" onclick="ahCbNavAction('members')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          <span>{{ i18n_t('server_channel.aria.members') }}</span>
-        </button>
-        <button type="button" class="ah-cb-nav-item" onclick="ahCbNavAction('boosts')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l6 6-6 14L6 8l6-6z"/><path d="M6 8h12"/></svg>
-          <span><!--i18n:common.text.servan_bones_of_the_server-->{{ i18n_t('common.text.servan_bones_of_the_server') }}</span>
-        </button>
-      </nav>
-      <div class="ah-cb-divider"></div>
-      <div id="ah-cb-tree-slot" class="ah-cb-tree-slot"></div>
-      <div id="ah-cb-account-slot"></div>
-    </div>
-    <div class="ah-cb-main">
-      <div class="ah-cb-main-head">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/><circle cx="19" cy="19" r="3"/><path d="m22 22-1.5-1.5"/></svg>
-        <h2><!--i18n:common.text.show_all_channels-->{{ i18n_t('common.text.show_all_channels') }}</h2>
-        <button type="button" class="ah-cb-close" onclick="closeChannelBrowserPage()" aria-label="{{ i18n_t('common.actions.close') }}" data-i18n-aria-label="common.actions.close">×</button>
-      </div>
-      <div class="ah-cb-toolbar">
-        <label class="ah-cb-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><input type="text" id="ah-cb-search-input" oninput="ahCbFilterChannels(this.value)" placeholder="{{ i18n_t('common.text.search_channels') }}"></label>
-        <button type="button" class="ah-cb-create-btn" onclick="openChannelCreateModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg><span><!--i18n:common.actions.create-->{{ i18n_t('common.actions.create') }}</span></button>
-      </div>
-      <div class="ah-cb-body" id="ah-cb-body"></div>
-    </div>
-  </div>
-
   <aside class="members-sidebar">
     <div class="members-title">{{ i18n_t('server.members.count', count=(members|length)) }}</div>
     {% for item in members %}
@@ -1740,6 +1644,195 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
       </section>
     </div>
   </main>
+
+  {% macro cb_channel_row(ch, category_id=0) -%}
+  <div class="cb-row" data-cb-name="{{ ch.name|lower }}" data-cb-cat-id="{{ category_id }}">
+    <span class="cb-icon{{ ' is-hash' if ch.channel_type != 'voice' and (ch.name|lower) != 'rules' else '' }}">
+      {%- if ch.channel_type == 'voice' -%}
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15 9a4 4 0 0 1 0 6"/><path d="M18 6a8 8 0 0 1 0 12"/></svg>
+      {%- elif (ch.name|lower) == 'rules' -%}
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+      {%- else -%}#{%- endif -%}
+    </span>
+    <span class="cb-info">
+      <span class="cb-name">{{ ch.name }}</span>
+      {% if ch.channel_type != 'voice' %}<span class="cb-activity" data-channel-id="{{ ch.id }}"></span>{% endif %}
+    </span>
+    <button type="button" class="cb-checkbox checked" onclick="this.classList.toggle('checked')" aria-label="{{ ch.name }}" title="{{ ch.name }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></button>
+  </div>
+  {%- endmacro %}
+
+  <section class="channel-browser-overlay" id="channel-browser-overlay">
+    <div class="cb-header">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      <h1>Просмотр каналов</h1>
+    </div>
+    <div class="cb-body">
+      <div class="cb-toolbar">
+        <label class="cb-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg><input type="search" placeholder="Поиск каналов" oninput="cbFilterChannels(this.value)"></label>
+        {% if can_manage %}<button type="button" class="cb-create-btn" onclick="openChannelCreateModal()">+ Создать</button>{% endif %}
+      </div>
+
+      {% set ns = namespace(has_uncat=false) %}
+      {% for ch in channels if not ch.category_id %}{% set ns.has_uncat = true %}{% endfor %}
+      {% if ns.has_uncat %}
+      <div class="cb-section">
+        <div class="cb-section-title">Без категории</div>
+        {% for ch in channels if not ch.category_id %}{{ cb_channel_row(ch, 0) }}{% endfor %}
+      </div>
+      {% endif %}
+
+      {% for category in categories %}
+      <div class="cb-section">
+        <div class="cb-cat-head" data-cb-cat="{{ category.id }}">
+          <div class="cb-cat-name">{{ category.name }}</div>
+          <label class="cb-follow"><span>Подписаться на категорию</span><input class="discord-switch-input" type="checkbox"><span class="discord-switch"></span></label>
+        </div>
+        {% set ns2 = namespace(has_ch=false) %}
+        {% for ch in channels if ch.category_id == category.id %}{% set ns2.has_ch = true %}{{ cb_channel_row(ch, category.id) }}{% endfor %}
+        {% if not ns2.has_ch %}<div class="cb-empty">В этой категории пока нет каналов</div>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <style id="channel-browser-styles">
+    .channel-browser-overlay{display:none;position:fixed;left:calc(var(--rail) + var(--sidebar));right:0;top:var(--topbar);bottom:0;z-index:35;background:#0b0b0b;overflow-y:auto;}
+    body.channel-browser-open .channel-browser-overlay{display:block;}
+    body.channel-browser-open .main{display:none!important;}
+    body.channel-browser-open .members-sidebar{display:none!important;}
+    @media(max-width:820px){.channel-browser-overlay{left:64px!important;}}
+
+    .cb-header{display:flex;align-items:center;gap:.6rem;height:56px;padding:0 24px;border-bottom:1px solid #222;position:sticky;top:0;background:#0b0b0b;z-index:2;}
+    .cb-header svg{width:17px;height:17px;color:#b5bac1;flex:0 0 auto;}
+    .cb-header h1{font-size:15px;font-weight:800;color:#f2f3f5;margin:0;}
+
+    .cb-body{max-width:960px;margin:0 auto;padding:22px 24px 60px;}
+    .cb-toolbar{display:flex;align-items:center;gap:12px;margin-bottom:22px;}
+    .cb-search{flex:1;height:38px;background:#0d0d0d;border:1px solid #222;border-radius:9px;display:flex;align-items:center;gap:8px;padding:0 12px;color:#8e949f;}
+    .cb-search svg{width:16px;height:16px;flex:0 0 auto;color:#8e949f;}
+    .cb-search input{flex:1;height:100%;border:0;background:transparent;outline:0;color:#dbdee1;font:inherit;font-size:14px;min-width:0;}
+    .cb-search input::placeholder{color:#72767d;}
+    .cb-create-btn{height:38px;padding:0 18px;border:0;border-radius:9px;background:#5865f2;color:#fff;font-weight:800;font-size:14px;cursor:pointer;white-space:nowrap;}
+    .cb-create-btn:hover{background:#4752c4;}
+
+    .cb-section{margin-bottom:4px;}
+    .cb-section-title{font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#8e949f;padding:8px 4px 10px;}
+    .cb-cat-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:20px 4px 10px;border-top:1px solid #222;margin-top:10px;}
+    .cb-section:first-child .cb-cat-head{border-top:0;margin-top:0;}
+    .cb-cat-name{font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#8e949f;}
+    .cb-follow{display:flex;align-items:center;gap:10px;cursor:pointer;}
+    .cb-follow span{font-size:13px;font-weight:650;color:#b5bac1;}
+
+    .cb-row{display:flex;align-items:center;gap:12px;padding:9px 4px;border-radius:8px;}
+    .cb-row:hover{background:rgba(255,255,255,.03);}
+    .cb-row.cb-hidden{display:none!important;}
+    .cb-cat-head.cb-hidden{display:none!important;}
+    .cb-icon{width:20px;height:20px;display:flex;align-items:center;justify-content:center;color:#80848e;flex:0 0 auto;}
+    .cb-icon.is-hash{font-size:18px;font-weight:700;line-height:1;}
+    .cb-icon svg{width:18px;height:18px;}
+    .cb-info{min-width:0;flex:1;display:flex;flex-direction:column;gap:1px;}
+    .cb-name{font-size:14.5px;font-weight:700;color:#f2f3f5;line-height:1.25;}
+    .cb-activity{font-size:12px;color:#7d838f;}
+
+    .cb-checkbox{width:22px;height:22px;border-radius:6px;border:2px solid #4e5058;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;padding:0;}
+    .cb-checkbox svg{width:14px;height:14px;color:#fff;opacity:0;transform:scale(.6);transition:opacity .1s ease,transform .1s ease;}
+    .cb-checkbox.checked{background:#5865f2;border-color:#5865f2;}
+    .cb-checkbox.checked svg{opacity:1;transform:scale(1);}
+
+    .cb-empty{color:#6b7280;font-size:13px;padding:6px 4px 18px;}
+
+    .cb-quicklink{width:100%;margin-bottom:2px;border:0;background:transparent;text-align:left;font:inherit;cursor:pointer;display:flex;align-items:center;gap:.4rem;padding:.48rem .6rem;border-radius:7px;color:#9ca3af;font-weight:650;}
+    .cb-quicklink:hover{background:rgba(255,255,255,.05);color:#f4f4f5;}
+    .cb-quicklink.active{background:#2e3038;color:#f4f4f5;}
+    .cb-quicklink svg{width:18px;height:18px;flex:0 0 auto;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+    .cb-quicklink[data-cb-nav="boosts"]{margin-bottom:10px;}
+
+    .members-sidebar.cb-flash{transition:box-shadow .2s ease;box-shadow:inset 0 0 0 2px #5865f2;}
+  </style>
+  <script id="channel-browser-script">
+    (function(){
+      function $(sel,root){return (root||document).querySelector(sel);}
+      function $all(sel,root){return Array.prototype.slice.call((root||document).querySelectorAll(sel));}
+
+      function cbActivityLabel(days){
+        if(days>=300) return 'Последняя активность год назад';
+        if(days<1) days=1;
+        var mod10=days%10, mod100=days%100, word='дней';
+        if(mod100<11||mod100>14){
+          if(mod10===1) word='день';
+          else if(mod10>=2&&mod10<=4) word='дня';
+        }
+        return 'Последняя активность '+days+' '+word+' назад';
+      }
+      function fillChannelActivityLabels(){
+        $all('.cb-activity[data-channel-id]').forEach(function(el){
+          if(el.dataset.filled) return;
+          el.dataset.filled='1';
+          var id=Number(el.dataset.channelId)||0;
+          var days=(id*37+11)%360+1;
+          el.textContent=cbActivityLabel(days);
+        });
+      }
+
+      function cbFilterChannels(value){
+        var q=(value||'').trim().toLowerCase();
+        $all('.cb-row[data-cb-name]').forEach(function(row){
+          row.classList.toggle('cb-hidden', !!q && row.dataset.cbName.indexOf(q)===-1);
+        });
+        $all('.cb-cat-head[data-cb-cat]').forEach(function(head){
+          var catId=head.dataset.cbCat;
+          var rows=$all('.cb-row[data-cb-cat-id="'+catId+'"]');
+          var anyVisible=rows.some(function(r){return !r.classList.contains('cb-hidden');});
+          head.classList.toggle('cb-hidden', !!q && !anyVisible);
+        });
+      }
+      window.cbFilterChannels=cbFilterChannels;
+
+      function openChannelBrowser(){
+        if(document.body.classList.contains('channel-browser-open')){closeChannelBrowser();return;}
+        if(typeof closeServerMenu==='function')closeServerMenu();
+        document.body.classList.add('channel-browser-open');
+        $all('.cb-quicklink').forEach(function(b){b.classList.toggle('active', b.dataset.cbNav==='browse');});
+        fillChannelActivityLabels();
+      }
+      function closeChannelBrowser(){
+        document.body.classList.remove('channel-browser-open');
+        $all('.cb-quicklink').forEach(function(b){b.classList.remove('active');});
+      }
+      window.openChannelBrowser=openChannelBrowser;
+      window.closeChannelBrowser=closeChannelBrowser;
+
+      function cbOpenMembers(){
+        closeChannelBrowser();
+        document.body.classList.remove('members-hidden');
+        var aside=$('.members-sidebar');
+        if(aside){aside.scrollTop=0;aside.classList.add('cb-flash');setTimeout(function(){aside.classList.remove('cb-flash');},900);}
+      }
+      window.cbOpenMembers=cbOpenMembers;
+
+      function injectChannelBrowserQuicklinks(){
+        var tree=$('.server-channel-tree');
+        if(!tree||$('.cb-quicklink[data-cb-nav="browse"]',tree))return;
+        var label=$('.sidebar-label-row',tree);
+        var items=[
+          ['browse','Просмотр каналов','<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>', openChannelBrowser],
+          ['members','Участники','<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>', cbOpenMembers],
+          ['boosts','Бусты сервера','<path d="M12 2l6 6-6 14L6 8l6-6z"/><path d="M6 8h12"/>', function(){closeChannelBrowser(); if(typeof openServerBoostCenter==='function')openServerBoostCenter();}]
+        ];
+        items.forEach(function(def){
+          var btn=document.createElement('button');
+          btn.type='button';
+          btn.className='chan-link cb-quicklink';
+          btn.dataset.cbNav=def[0];
+          btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+def[2]+'</svg><span>'+def[1]+'</span>';
+          btn.addEventListener('click', def[3]);
+          tree.insertBefore(btn, label||tree.firstChild);
+        });
+      }
+      document.addEventListener('DOMContentLoaded', function(){ setTimeout(injectChannelBrowserQuicklinks, 0); });
+    })();
+  </script>
 
   <style id="discord-server-create-styles">
     .server-channel-tree + .sidebar-scroll{display:none!important}
@@ -7494,149 +7587,6 @@ if (typeof window.openSelfProfileSettings !== 'function') {
   });
 })();
 
-</script>
-
-<script id="ah-channel-browser-script">
-(function () {
-  var ACTIVITY_PHRASES = ['18 дней назад', '13 дней назад', 'год назад', '2 дня назад', '5 дней назад', 'сегодня', 'вчера', '3 недели назад'];
-  function activityFor(name) {
-    var h = 0;
-    for (var i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
-    return ACTIVITY_PHRASES[h % ACTIVITY_PHRASES.length];
-  }
-  function rowIconSvg(isVoice, isRules) {
-    if (isVoice) return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg>';
-    if (isRules) return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12l3 3 5-6"/></svg>';
-    return '';
-  }
-  function buildRow(nameEl, isVoice) {
-    var name = (nameEl && nameEl.textContent || '').trim();
-    var isRules = !isVoice && name.toLowerCase() === 'rules';
-    var iconHtml = (isVoice || isRules) ? rowIconSvg(isVoice, isRules) : '<span class="ah-cb-row-hash">#</span>';
-    var row = document.createElement('label');
-    row.className = 'ah-cb-row';
-    row.setAttribute('data-cb-name', name.toLowerCase());
-    row.innerHTML =
-      '<span class="ah-cb-row-icon">' + iconHtml + '</span>' +
-      '<span class="ah-cb-row-copy"><span class="ah-cb-row-name"></span><span class="ah-cb-row-sub"></span></span>' +
-      '<span class="ah-cb-row-check"><input type="checkbox" checked onclick="event.stopPropagation()"><span class="ah-cb-checkbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></span>';
-    row.querySelector('.ah-cb-row-name').textContent = name;
-    row.querySelector('.ah-cb-row-sub').textContent = (window.AlexiHubI18n && window.AlexiHubI18n.t ? window.AlexiHubI18n.t('common.text.last_activity') + ' ' : 'Последняя активность ') + activityFor(name || 'x');
-    return row;
-  }
-  function buildSection(title, rows, withFollow) {
-    var section = document.createElement('div');
-    section.className = 'ah-cb-section';
-    var head = document.createElement('div');
-    head.className = 'ah-cb-section-head';
-    var titleSpan = document.createElement('span');
-    titleSpan.textContent = title;
-    head.appendChild(titleSpan);
-    if (withFollow) {
-      var label = document.createElement('label');
-      label.className = 'ah-cb-follow';
-      label.innerHTML = '<span></span><input type="checkbox"><span class="ah-cb-switch"></span>';
-      label.querySelector('span').textContent = (window.AlexiHubI18n && window.AlexiHubI18n.t ? window.AlexiHubI18n.t('common.text.follow_category') : 'Подписаться на категорию');
-      head.appendChild(label);
-    }
-    section.appendChild(head);
-    var list = document.createElement('div');
-    list.className = 'ah-cb-rows';
-    rows.forEach(function (r) { list.appendChild(r); });
-    section.appendChild(list);
-    return section;
-  }
-  function ahCbRenderBody() {
-    var body = document.getElementById('ah-cb-body');
-    var treeSlot = document.getElementById('ah-cb-tree-slot');
-    if (!body || !treeSlot) return;
-    body.innerHTML = '';
-    var tree = treeSlot.querySelector('.server-channel-tree');
-    if (!tree) return;
-    var topRows = [];
-    Array.prototype.forEach.call(tree.children, function (child) {
-      if (child.classList && child.classList.contains('chan-row')) {
-        var link = child.querySelector('.chan-link');
-        var symbol = child.querySelector('.chan-symbol');
-        var isVoice = !!symbol && /🔊/.test(symbol.textContent);
-        topRows.push(buildRow(link.querySelector('.chan-name'), isVoice));
-      }
-    });
-    var noCategoryLabel = (window.AlexiHubI18n && window.AlexiHubI18n.t ? window.AlexiHubI18n.t('common.text.no_category') : 'Без категории');
-    if (topRows.length) body.appendChild(buildSection(noCategoryLabel, topRows, false));
-    tree.querySelectorAll(':scope > .server-category-block').forEach(function (block) {
-      var nameEl = block.querySelector('.server-category-name');
-      var catName = nameEl ? nameEl.textContent.trim() : '';
-      var rows = [];
-      block.querySelectorAll('.chan-row').forEach(function (row) {
-        var link = row.querySelector('.chan-link');
-        var symbol = row.querySelector('.chan-symbol');
-        var isVoice = !!symbol && /🔊/.test(symbol.textContent);
-        rows.push(buildRow(link.querySelector('.chan-name'), isVoice));
-      });
-      body.appendChild(buildSection(catName, rows, true));
-    });
-  }
-  window.ahCbFilterChannels = function (query) {
-    var q = (query || '').trim().toLowerCase();
-    document.querySelectorAll('#ah-cb-body .ah-cb-row').forEach(function (row) {
-      var name = row.getAttribute('data-cb-name') || '';
-      row.classList.toggle('ah-cb-hidden', !!q && name.indexOf(q) === -1);
-    });
-    document.querySelectorAll('#ah-cb-body .ah-cb-section').forEach(function (section) {
-      var anyVisible = !!section.querySelector('.ah-cb-row:not(.ah-cb-hidden)');
-      section.style.display = anyVisible ? '' : 'none';
-    });
-  };
-  window.openChannelBrowserPage = function () {
-    closeServerMenu && closeServerMenu();
-    var overlay = document.getElementById('ah-channel-browser-overlay');
-    if (!overlay) return;
-    var headSlot = document.getElementById('ah-cb-head-slot');
-    var treeSlot = document.getElementById('ah-cb-tree-slot');
-    var accountSlot = document.getElementById('ah-cb-account-slot');
-    var realHead = document.querySelector('.server-sidebar > .server-head');
-    var realTree = document.querySelector('.server-sidebar .sidebar-scroll.server-channel-tree');
-    var realAccount = document.querySelector('.server-sidebar > .account-panel');
-    if (headSlot && realHead) {
-      headSlot.innerHTML = '';
-      var headClone = realHead.cloneNode(true);
-      var menuClone = headClone.querySelector('#server-menu');
-      if (menuClone) menuClone.remove();
-      var btnClone = headClone.querySelector('#server-head-btn');
-      if (btnClone) { btnClone.removeAttribute('id'); btnClone.removeAttribute('onclick'); }
-      headSlot.appendChild(headClone);
-    }
-    if (treeSlot && realTree) { treeSlot.innerHTML = ''; treeSlot.appendChild(realTree.cloneNode(true)); }
-    if (accountSlot && realAccount) { accountSlot.innerHTML = ''; accountSlot.appendChild(realAccount.cloneNode(true)); }
-    ahCbRenderBody();
-    var searchInput = document.getElementById('ah-cb-search-input');
-    if (searchInput) searchInput.value = '';
-    overlay.classList.add('open');
-    overlay.setAttribute('aria-hidden', 'false');
-    document.body.classList.add('ah-cb-open');
-  };
-  window.closeChannelBrowserPage = function () {
-    var overlay = document.getElementById('ah-channel-browser-overlay');
-    if (!overlay) return;
-    overlay.classList.remove('open');
-    overlay.setAttribute('aria-hidden', 'true');
-    document.body.classList.remove('ah-cb-open');
-  };
-  window.ahCbNavAction = function (kind) {
-    if (kind === 'channels') return;
-    closeChannelBrowserPage();
-    if (kind === 'events' && typeof openEventList === 'function') openEventList();
-    else if (kind === 'members') document.body.classList.remove('members-hidden');
-    else if (kind === 'boosts' && typeof openServerBoostCenter === 'function') openServerBoostCenter();
-  };
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') {
-      var overlay = document.getElementById('ah-channel-browser-overlay');
-      if (overlay && overlay.classList.contains('open')) closeChannelBrowserPage();
-    }
-  });
-})();
 </script>
 
 </body>
