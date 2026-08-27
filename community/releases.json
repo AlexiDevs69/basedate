@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.115.0",
+      "date": "2026-08-27",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: channel browser overlay with styles and actions."
+      ],
+      "source_sha": "719cc1b94a4fb5764032c7e4b21f14cae918c3f4"
+    },
+    {
       "version": "1.114.1",
       "date": "2026-08-27",
       "title": "Виправлення та стабільність",
