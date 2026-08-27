@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.113.0",
+      "date": "2026-08-27",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: server context menu functionality."
+      ],
+      "source_sha": "a97d2503531401a525fbe533bd839a7f74b8e619"
+    },
+    {
       "version": "1.112.0",
       "date": "2026-08-27",
       "title": "Нові можливості AlexiHub",
