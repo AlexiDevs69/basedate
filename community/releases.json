@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.112.0",
+      "date": "2026-08-27",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: server context menu functionality in dm_chat.html."
+      ],
+      "source_sha": "c667235c0dc5571696e1e1238fb2819227a25fb0"
+    },
+    {
       "version": "1.111.0",
       "date": "2026-08-27",
       "title": "Нові можливості AlexiHub",
