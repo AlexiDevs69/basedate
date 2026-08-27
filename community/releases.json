@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.108.0",
+      "date": "2026-08-27",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: server-context-menu.js script to server_home.html."
+      ],
+      "source_sha": "fcf6f1d90956f7a1f7f6555640a13c24f86e4c05"
+    },
+    {
       "version": "1.107.0",
       "date": "2026-08-27",
       "title": "Нові можливості AlexiHub",
