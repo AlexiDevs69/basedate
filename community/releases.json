@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.116.0",
+      "date": "2026-08-28",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: channel overview styles and functionality."
+      ],
+      "source_sha": "5c4a97d08bbefe3ed3c99952708b37ddbda1eeee"
+    },
+    {
       "version": "1.115.1",
       "date": "2026-08-28",
       "title": "Виправлення та стабільність",
