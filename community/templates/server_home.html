@@ -108,6 +108,24 @@
     .cv-row-lock { font-size:.7rem; flex-shrink:0; }
     .cv-row-sub { font-size:.76rem; color:var(--text-secondary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .cv-row-check { display:flex; align-items:center; flex-shrink:0; padding:.2rem; }
+    .cv-row-preview-btn { flex-shrink:0; border:none; background:#fff; color:#111214; font-weight:800; font-size:.78rem; border-radius:8px; padding:.42rem .85rem; cursor:pointer; opacity:0; visibility:hidden; transform:translateX(4px); transition:opacity .12s ease, transform .12s ease, visibility .12s; }
+    .cv-row:hover .cv-row-preview-btn, .cv-row-preview-btn:focus-visible { opacity:1; visibility:visible; transform:translateX(0); }
+    .cv-row-preview-btn:hover { background:#e7e8ea; }
+
+    /* --- Channel chat preview slide-over --- */
+    .cv-preview-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:190; opacity:0; visibility:hidden; transition:opacity .18s ease, visibility .18s; }
+    .cv-preview-backdrop.open { opacity:1; visibility:visible; }
+    .cv-preview-panel { position:fixed; top:0; right:0; bottom:0; width:min(480px, 92vw); background:var(--bg-header); border-left:1px solid var(--border); z-index:191; display:flex; flex-direction:column; transform:translateX(100%); transition:transform .2s ease; box-shadow:-8px 0 28px rgba(0,0,0,.35); }
+    .cv-preview-panel.open { transform:translateX(0); }
+    .cv-preview-head { flex:0 0 auto; height:var(--topbar); display:flex; align-items:center; gap:.5rem; padding:0 1rem; border-bottom:1px solid var(--border); font-weight:800; }
+    .cv-preview-head .cv-row-hash { color:var(--text-secondary); font-size:1.05rem; }
+    .cv-preview-head-name { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .cv-preview-close { flex-shrink:0; width:30px; height:30px; border:none; background:transparent; color:var(--text-secondary); border-radius:7px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+    .cv-preview-close:hover { background:rgba(255,255,255,.08); color:var(--text-primary); }
+    .cv-preview-close svg { width:17px; height:17px; }
+    .cv-preview-body { flex:1; min-height:0; position:relative; }
+    .cv-preview-body iframe { width:100%; height:100%; border:none; display:block; background:var(--bg); }
+    .cv-preview-loading { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--text-secondary); font-size:.85rem; }
     .cv-check { -webkit-appearance:none; appearance:none; width:20px; height:20px; border-radius:6px; background:#2b2c31; border:1px solid #46474e; cursor:pointer; position:relative; margin:0; flex-shrink:0; transition:background .12s ease, border-color .12s ease; }
     .cv-check:hover { border-color:#5c5e66; }
     .cv-check:checked { background:#5865f2; border-color:#5865f2; }
@@ -1648,6 +1666,9 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
         <span class="cv-row-name-line"><strong class="cv-row-name">{{ ch.name }}</strong>{% if ch.is_private %}<span class="cv-row-lock" title="{{ i18n_t('common.aria.a_private_channel') }}" data-i18n-title="common.aria.a_private_channel">🔒</span>{% endif %}</span>
         {% if ch.channel_type != 'voice' %}<span class="cv-row-sub">{{ ch.description if ch.description else i18n_t('server_home.text.open_chat') }}</span>{% endif %}
       </span>
+      {% if ch.channel_type != 'voice' %}
+      <button type="button" class="cv-row-preview-btn" onclick="event.preventDefault();event.stopPropagation();cvOpenChannelPreview({{ ch.id }}, {{ ch.name|tojson }}, {{ server.id }});">Просмотр</button>
+      {% endif %}
       <label class="cv-row-check" onclick="event.stopPropagation()" title="{{ i18n_t('common.aria.channel_settings') }}" data-i18n-title="common.aria.channel_settings">
         <input type="checkbox" class="cv-check" data-channel-id="{{ ch.id }}" checked onclick="event.stopPropagation()" onchange="cvToggleChannelVisibility(this)">
       </label>
@@ -1749,6 +1770,21 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
         {% endif %}
       </div>
     </div>
+
+    <div class="cv-preview-backdrop" id="cv-preview-backdrop" onclick="cvCloseChannelPreview()"></div>
+    <aside class="cv-preview-panel" id="cv-preview-panel">
+      <div class="cv-preview-head">
+        <span class="cv-row-hash">#</span>
+        <span class="cv-preview-head-name" id="cv-preview-head-name"></span>
+        <button type="button" class="cv-preview-close" onclick="cvCloseChannelPreview()" title="Закрыть">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="cv-preview-body">
+        <div class="cv-preview-loading" id="cv-preview-loading">Загрузка…</div>
+        <iframe id="cv-preview-iframe" src="about:blank" title="Просмотр канала"></iframe>
+      </div>
+    </aside>
   </main>
 
   <script>
@@ -1775,6 +1811,41 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
       });
       var cvRow = checkbox.closest('.cv-row');
       if (cvRow) cvRow.classList.toggle('cv-row-hidden', !visible);
+    }
+
+    function cvOpenChannelPreview(channelId, channelName, serverId) {
+      var panel = document.getElementById('cv-preview-panel');
+      var backdrop = document.getElementById('cv-preview-backdrop');
+      var iframe = document.getElementById('cv-preview-iframe');
+      var loading = document.getElementById('cv-preview-loading');
+      var nameEl = document.getElementById('cv-preview-head-name');
+      if (!panel || !backdrop || !iframe) return;
+      nameEl.textContent = channelName || '';
+      loading.style.display = 'flex';
+      iframe.style.visibility = 'hidden';
+      iframe.onload = function () {
+        loading.style.display = 'none';
+        iframe.style.visibility = 'visible';
+      };
+      iframe.src = '/community/servers/' + serverId + '/channel/' + channelId;
+      panel.classList.add('open');
+      backdrop.classList.add('open');
+      document.addEventListener('keydown', cvPreviewEscHandler);
+    }
+
+    function cvCloseChannelPreview() {
+      var panel = document.getElementById('cv-preview-panel');
+      var backdrop = document.getElementById('cv-preview-backdrop');
+      var iframe = document.getElementById('cv-preview-iframe');
+      if (!panel || !backdrop) return;
+      panel.classList.remove('open');
+      backdrop.classList.remove('open');
+      document.removeEventListener('keydown', cvPreviewEscHandler);
+      setTimeout(function () { if (iframe) iframe.src = 'about:blank'; }, 220);
+    }
+
+    function cvPreviewEscHandler(event) {
+      if (event.key === 'Escape') cvCloseChannelPreview();
     }
   </script>
 
