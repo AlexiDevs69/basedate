@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.119.0",
+      "date": "2026-08-28",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: cvStripChannelChrome for iframe styling."
+      ],
+      "source_sha": "cb24a46fde9524e548e7a83333a170ed82e1b83d"
+    },
+    {
       "version": "1.118.0",
       "date": "2026-08-28",
       "title": "Нові можливості AlexiHub",
