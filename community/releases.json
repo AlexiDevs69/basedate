@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.119.1",
+      "date": "2026-08-28",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update CSS styles for server home template."
+      ],
+      "source_sha": "adc7222e100704aa125291b877fdbccfc78b7e8a"
+    },
+    {
       "version": "1.119.0",
       "date": "2026-08-28",
       "title": "Нові можливості AlexiHub",
