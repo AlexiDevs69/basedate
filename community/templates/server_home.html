@@ -1826,6 +1826,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
       iframe.onload = function () {
         loading.style.display = 'none';
         iframe.style.visibility = 'visible';
+        cvStripChannelChrome(iframe);
       };
       iframe.src = '/community/servers/' + serverId + '/channel/' + channelId;
       panel.classList.add('open');
@@ -1846,6 +1847,24 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
 
     function cvPreviewEscHandler(event) {
       if (event.key === 'Escape') cvCloseChannelPreview();
+    }
+
+    function cvStripChannelChrome(iframe) {
+      try {
+        var doc = iframe.contentDocument || iframe.contentWindow.document;
+        if (!doc || !doc.head) return;
+        if (doc.getElementById('cv-embed-strip-style')) return;
+        var style = doc.createElement('style');
+        style.id = 'cv-embed-strip-style';
+        style.textContent = ''
+          + ':root{--rail:0px !important;--sidebar:0px !important;--members:0px !important;}'
+          + 'body{overflow:hidden !important;}'
+          + '.server-rail,.rail-sep,.members-sidebar,.server-sidebar,.topbar{display:none !important;}'
+          + '.main{margin:0 !important;width:100% !important;padding-top:0 !important;}';
+        doc.head.appendChild(style);
+      } catch (err) {
+        /* cross-origin or markup differs — fall back to the full page as-is */
+      }
     }
   </script>
 
