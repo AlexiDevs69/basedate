@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.121.9",
+      "date": "2026-08-30",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance member action button with menu functionality."
+      ],
+      "source_sha": "5a48f89751db088b9dcc2ca28f6df9466cb3aa92"
+    },
+    {
       "version": "1.121.8",
       "date": "2026-08-30",
       "title": "Виправлення та стабільність",
