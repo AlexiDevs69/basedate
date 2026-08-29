@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.121.1",
+      "date": "2026-08-29",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update server_channel.html with SVG icons."
+      ],
+      "source_sha": "627427256bd213a7caae3b253fe0566cbe838d2e"
+    },
+    {
       "version": "1.121.0",
       "date": "2026-08-29",
       "title": "Нові можливості AlexiHub",
