@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.121.6",
+      "date": "2026-08-29",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update server_home.html with new column for AlexiHub."
+      ],
+      "source_sha": "80305be056cfe0ea6296892f5af3619a557dd1ab"
+    },
+    {
       "version": "1.121.5",
       "date": "2026-08-29",
       "title": "Оновлення AlexiHub",
