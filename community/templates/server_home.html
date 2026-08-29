@@ -8170,8 +8170,12 @@ if (typeof window.openSelfProfileSettings !== 'function') {
     return d;
   }
 
-  /* Открыть тот же мини-профиль (всплывающая карточка), что и по клику на аватар в таблице */
-  function openMiniProfileFor(data, e) {
+  /* Открыть карточку профиля так же, как это происходит в остальном интерфейсе:
+     сначала подставляются данные пользователя через тот же mini-profile-trigger,
+     затем сразу переключаемся на полный профиль (#ah-v3-overlay) той же кнопкой,
+     которой пользуется остальной код (#ah-v3-open-full). Всё происходит синхронно,
+     поэтому промежуточное мини-окно не успевает отрисоваться. */
+  function openFullProfileFor(data, e) {
     if (!data.trigger) { location.href = data.profile; return; }
     var evt = new MouseEvent('click', {
       bubbles: true,
@@ -8180,6 +8184,9 @@ if (typeof window.openSelfProfileSettings !== 'function') {
       clientY: e ? e.clientY : undefined
     });
     data.trigger.dispatchEvent(evt);
+    var fullBtn = document.getElementById('ah-v3-open-full');
+    if (fullBtn) fullBtn.click();
+    else location.href = data.profile;
   }
 
   function buildMenu(data) {
@@ -8187,7 +8194,7 @@ if (typeof window.openSelfProfileSettings !== 'function') {
 
     menu.appendChild(makeItem({
       label: 'Профиль',
-      onClick: function (e) { closeMenu(); openMiniProfileFor(data, e); }
+      onClick: function (e) { closeMenu(); openFullProfileFor(data, e); }
     }));
 
     menu.appendChild(makeItem({
