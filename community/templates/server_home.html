@@ -113,6 +113,44 @@
     .cv-row:hover .cv-row-preview-btn, .cv-row-preview-btn:focus-visible { opacity:1; visibility:visible; transform:translateX(0); }
     .cv-row-preview-btn:hover { background:#e7e8ea; }
 
+    /* --- Members view ("Участники") --- */
+    .mv-page { max-width:1200px; }
+    .mv-panel { background:var(--bg-elevated); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+    .mv-panel-head { display:flex; align-items:center; gap:.75rem; padding:1rem 1.1rem; flex-wrap:wrap; }
+    .mv-panel-title { font-weight:800; font-size:.95rem; color:var(--text-primary); margin-right:auto; }
+    .mv-search { display:flex; align-items:center; gap:.5rem; background:#0d0d0d; border:1px solid var(--border); border-radius:8px; padding:.5rem .75rem; min-width:220px; }
+    .mv-search svg { width:15px; height:15px; color:var(--text-secondary); flex-shrink:0; }
+    .mv-search input { flex:1; background:transparent; border:none; color:var(--text-primary); font-size:.82rem; outline:none; font-family:var(--font-sans); }
+    .mv-search input::placeholder { color:#5b5c60; }
+    .mv-btn { display:inline-flex; align-items:center; gap:.4rem; border:1px solid var(--border); background:transparent; color:var(--text-primary); border-radius:8px; padding:.5rem .8rem; font-weight:700; font-size:.8rem; cursor:pointer; white-space:nowrap; }
+    .mv-btn:hover { border-color:var(--border-hover); background:rgba(255,255,255,.03); }
+    .mv-btn svg { width:14px; height:14px; }
+    .mv-btn-clear { border:none; color:#f23f42; font-weight:800; }
+    .mv-btn-clear:hover { background:rgba(242,63,66,.1); }
+    .mv-table-wrap { overflow-x:auto; }
+    .mv-table { width:100%; border-collapse:collapse; font-size:.82rem; }
+    .mv-table thead th { text-align:left; padding:.6rem 1rem; font-size:.68rem; font-weight:800; letter-spacing:.04em; color:var(--text-secondary); text-transform:uppercase; border-top:1px solid var(--border); border-bottom:1px solid var(--border); white-space:nowrap; }
+    .mv-table thead th.mv-th-sortable { cursor:pointer; user-select:none; }
+    .mv-th-inner { display:inline-flex; align-items:center; gap:.35rem; }
+    .mv-th-inner svg { width:12px; height:12px; opacity:.6; }
+    .mv-table tbody td { padding:.55rem 1rem; border-bottom:1px solid var(--border); vertical-align:middle; color:var(--text-primary); }
+    .mv-table tbody tr:hover { background:rgba(255,255,255,.02); }
+    .mv-check { -webkit-appearance:none; appearance:none; width:18px; height:18px; border-radius:5px; background:#2b2c31; border:1px solid #46474e; cursor:pointer; position:relative; margin:0; }
+    .mv-check:checked { background:#5865f2; border-color:#5865f2; }
+    .mv-check:checked::after { content:""; position:absolute; left:5px; top:1px; width:5px; height:9px; border:solid #fff; border-width:0 2px 2px 0; transform:rotate(45deg); }
+    .mv-user-cell { display:flex; align-items:center; gap:.6rem; min-width:180px; }
+    .mv-avatar { width:34px; height:34px; border-radius:50%; background:#2b2d34 center/cover no-repeat; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.85rem; color:var(--text-primary); flex-shrink:0; }
+    .mv-user-name { font-weight:700; color:var(--text-primary); line-height:1.25; }
+    .mv-user-handle { font-size:.74rem; color:var(--text-secondary); line-height:1.25; }
+    .mv-role-pill { display:inline-flex; align-items:center; gap:.35rem; background:rgba(255,255,255,.06); border-radius:999px; padding:.2rem .6rem .2rem .45rem; font-size:.74rem; font-weight:700; }
+    .mv-role-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .mv-row-actions { display:flex; align-items:center; gap:.3rem; justify-content:flex-end; }
+    .mv-row-action-btn { width:30px; height:30px; border:none; background:transparent; color:var(--text-secondary); border-radius:7px; cursor:pointer; display:flex; align-items:center; justify-content:center; text-decoration:none; }
+    .mv-row-action-btn:hover { background:rgba(255,255,255,.06); color:var(--text-primary); }
+    .mv-row-action-btn svg { width:16px; height:16px; }
+    .mv-footer { padding:.85rem 1.1rem; color:var(--text-secondary); font-size:.78rem; }
+    .mv-footer b { color:var(--text-primary); }
+
     /* --- Channel chat preview slide-over --- */
     .cv-preview-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:190; opacity:0; visibility:hidden; transition:opacity .18s ease, visibility .18s; }
     .cv-preview-backdrop.open { opacity:1; visibility:visible; }
@@ -1676,7 +1714,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
     {%- endmacro %}
     <div class="sidebar-scroll server-channel-tree">
       {% if server.description %}<div class="server-desc">{{ server.description }}</div>{% endif %}
-      <a href="/community/servers/{{ server.id }}" class="chan-link active"><svg class="cv-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 5H3"/><path d="M15 12H3"/><path d="M9 19H3"/><circle cx="17" cy="17" r="3"/><path d="m21 21-1.9-1.9"/></svg><span>Просмотр каналов</span></a>
+      <a href="/community/servers/{{ server.id }}" class="chan-link active" id="cv-nav-channels" onclick="return cvShowTab('channels', event)"><svg class="cv-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 5H3"/><path d="M15 12H3"/><path d="M9 19H3"/><circle cx="17" cy="17" r="3"/><path d="m21 21-1.9-1.9"/></svg><span>Просмотр каналов</span></a><a href="/community/servers/{{ server.id }}#members" class="chan-link" id="cv-nav-members" onclick="return cvShowTab('members', event)"><svg class="cv-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Участники</span></a>
       <div class="sidebar-label-row"><div class="sidebar-label"><!--i18n:common.text.kanali-->{{ i18n_t('common.text.kanali') }}</div>{% if can_manage %}<button type="button" class="sidebar-plus" onclick="openChannelCreateModal()" title="{{ i18n_t('common.aria.the_colludes_of_the_canal') }}" data-i18n-title="common.aria.the_colludes_of_the_canal">+</button>{% endif %}</div>
       {% for ch in channels if not ch.category_id %}{{ server_channel_row(ch) }}{% endfor %}
       {% for category in categories %}
@@ -1689,7 +1727,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
       </section>
       {% endfor %}
     </div>
-    <div class="sidebar-scroll">{% if server.description %}<div class="server-desc">{{ server.description }}</div>{% endif %}<a href="/community/servers/{{ server.id }}" class="chan-link active"><svg class="cv-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 5H3"/><path d="M15 12H3"/><path d="M9 19H3"/><circle cx="17" cy="17" r="3"/><path d="m21 21-1.9-1.9"/></svg><span>Просмотр каналов</span></a><div class="sidebar-label-row"><div class="sidebar-label"><!--i18n:common.text.kanali-->{{ i18n_t('common.text.kanali') }}</div>{% if can_manage %}<button type="button" class="sidebar-plus" onclick="openModal('channel-modal')" title="{{ i18n_t('common.aria.the_colludes_of_the_canal') }}" data-i18n-title="common.aria.the_colludes_of_the_canal">+</button>{% endif %}</div>{% for ch in channels %}<div class="chan-row " data-channel-id="{{ ch.id }}"><a href="/community/servers/{{ server.id }}/channel/{{ ch.id }}" data-mention-channel-key="{{ server.id }}:{{ ch.id }}" class="chan-link "><span class="chan-symbol">#</span><span class="chan-name">{{ ch.name }}</span>{% set cc = mention_counts.channel_by_id.get((server.id|string) ~ ':' ~ (ch.id|string), 0) %}<span class="ah-mention-count" {% if not cc %}hidden{% endif %}>{{ '99+' if cc > 99 else cc }}</span></a><div class="chan-actions"><button type="button" class="chan-action-btn" data-channel-id="{{ ch.id }}" data-channel-name="{{ ch.name }}" onclick="openChannelInviteModal(event, this)" title="{{ i18n_t('common.aria.yuncture') }}" data-i18n-title="common.aria.yuncture"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></button>{% if can_manage %}<a class="chan-action-btn" href="/community/servers/{{ server.id }}/channel/{{ ch.id }}/settings" onclick="event.stopPropagation()" title="{{ i18n_t('common.aria.channel_settings') }}" data-i18n-title="common.aria.channel_settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.33 1.82 2 2 0 1 1-3.34 0A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.82-.33 2 2 0 1 1 0-3.34A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .33-1.82 2 2 0 1 1 3.34 0A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 .6 1 1.65 1.65 0 0 0 1.82.33 2 2 0 1 1 0 3.34A1.65 1.65 0 0 0 19.4 15Z"/></svg></a>{% endif %}</div></div>{% endfor %}</div>
+    <div class="sidebar-scroll">{% if server.description %}<div class="server-desc">{{ server.description }}</div>{% endif %}<a href="/community/servers/{{ server.id }}" class="chan-link active" id="cv-nav-channels" onclick="return cvShowTab('channels', event)"><svg class="cv-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 5H3"/><path d="M15 12H3"/><path d="M9 19H3"/><circle cx="17" cy="17" r="3"/><path d="m21 21-1.9-1.9"/></svg><span>Просмотр каналов</span></a><a href="/community/servers/{{ server.id }}#members" class="chan-link" id="cv-nav-members" onclick="return cvShowTab('members', event)"><svg class="cv-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Участники</span></a><div class="sidebar-label-row"><div class="sidebar-label"><!--i18n:common.text.kanali-->{{ i18n_t('common.text.kanali') }}</div>{% if can_manage %}<button type="button" class="sidebar-plus" onclick="openModal('channel-modal')" title="{{ i18n_t('common.aria.the_colludes_of_the_canal') }}" data-i18n-title="common.aria.the_colludes_of_the_canal">+</button>{% endif %}</div>{% for ch in channels %}<div class="chan-row " data-channel-id="{{ ch.id }}"><a href="/community/servers/{{ server.id }}/channel/{{ ch.id }}" data-mention-channel-key="{{ server.id }}:{{ ch.id }}" class="chan-link "><span class="chan-symbol">#</span><span class="chan-name">{{ ch.name }}</span>{% set cc = mention_counts.channel_by_id.get((server.id|string) ~ ':' ~ (ch.id|string), 0) %}<span class="ah-mention-count" {% if not cc %}hidden{% endif %}>{{ '99+' if cc > 99 else cc }}</span></a><div class="chan-actions"><button type="button" class="chan-action-btn" data-channel-id="{{ ch.id }}" data-channel-name="{{ ch.name }}" onclick="openChannelInviteModal(event, this)" title="{{ i18n_t('common.aria.yuncture') }}" data-i18n-title="common.aria.yuncture"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></button>{% if can_manage %}<a class="chan-action-btn" href="/community/servers/{{ server.id }}/channel/{{ ch.id }}/settings" onclick="event.stopPropagation()" title="{{ i18n_t('common.aria.channel_settings') }}" data-i18n-title="common.aria.channel_settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.33 1.82 2 2 0 1 1-3.34 0A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.82-.33 2 2 0 1 1 0-3.34A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .33-1.82 2 2 0 1 1 3.34 0A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 .6 1 1.65 1.65 0 0 0 1.82.33 2 2 0 1 1 0 3.34A1.65 1.65 0 0 0 19.4 15Z"/></svg></a>{% endif %}</div></div>{% endfor %}</div>
     <div class="account-panel mini-profile-trigger" data-mini-username="{{ account.username|e }}" data-mini-display="{{ account.display_name or account.username }}" data-mini-avatar="{{ account.avatar_url or '' }}" data-mini-banner="{{ account.banner_url or '' }}" data-mini-status="{{ account.account_status or 'online' }}" data-mini-role="{{ account.role_label or 'online' }}" data-mini-effect="{{ account.name_effect or 'none' }}" data-mini-font="{{ account.name_font or 'default' }}" data-mini-c1="{{ account.role_color_start or '#f5576c' }}" data-mini-c2="{{ account.role_color_end or '#7367f0' }}" data-mini-profile="/community/profile/{{ account.username }}" data-mini-bio="{{ account.bio or '' }}"><span class="account-avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}');"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}</span><span class="account-meta"><span class="visual-name account-name name-{{ account.name_effect or 'none' }} font-{{ account.name_font or 'default' }}" style="--name-c1: {{ account.role_color_start or '#f5576c' }}; --name-c2: {{ account.role_color_end or '#7367f0' }};">{{ account.display_name or account.username }}</span><span class="account-status">{{ i18n_t('status.' ~ (account.account_status or 'online')) }}</span><small class="account-username">@{{ account.username }}</small></span><span class="account-actions"><button class="voice-control" data-audio-kind="mic" type="button" onclick="event.stopPropagation();toggleAudioControl(this,'mic')" title="{{ i18n_t('common.aria.mute') }}" data-i18n-title="common.aria.mute"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button><button class="voice-control" data-audio-kind="headphones" type="button" onclick="event.stopPropagation();toggleAudioControl(this,'headphones')" title="{{ i18n_t('common.aria.deafen') }}" data-i18n-title="common.aria.deafen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg></button><button type="button" onclick="event.stopPropagation();openUserSettings()" title="{{ i18n_t('common.aria.settings') }}" data-i18n-title="common.aria.settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.4 1.08V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.08-.4H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6A1.65 1.65 0 0 0 10.4 3V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 16 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.15.32.36.6.6 1 .26.25.64.4 1.08.4H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51.6z"/></svg></button></span></div>
   </aside>
   <aside class="members-sidebar">
@@ -1711,7 +1749,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
   </aside>
 
   <main class="main">
-    <div class="cv-page">
+    <div class="cv-page" id="cv-tab-channels">
       <div class="cv-topbar">
         <svg class="cv-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 5H3"/><path d="M15 12H3"/><path d="M9 19H3"/><circle cx="17" cy="17" r="3"/><path d="m21 21-1.9-1.9"/></svg>
         <span>Просмотр каналов</span>
@@ -1785,6 +1823,81 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
         <iframe id="cv-preview-iframe" src="about:blank" title="Просмотр канала"></iframe>
       </div>
     </aside>
+
+    <div class="mv-page" id="cv-tab-members" style="display:none">
+      <div class="cv-topbar">
+        <svg class="cv-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Участники</span>
+      </div>
+
+      <div class="mv-panel">
+        <div class="mv-panel-head">
+          <span class="mv-panel-title">Недавние участники</span>
+          <div class="mv-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" id="mv-search-input" oninput="mvFilterMembers(this.value)" placeholder="Поиск по имени пользователя">
+          </div>
+          <button type="button" class="mv-btn" id="mv-sort-btn" onclick="mvCycleSort()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M6 12h12M10 18h4"/></svg>
+            <span id="mv-sort-label">Сортировать</span>
+          </button>
+          <button type="button" class="mv-btn mv-btn-clear" onclick="mvClearFilters()">Очистить</button>
+        </div>
+        <div class="mv-table-wrap">
+          <table class="mv-table">
+            <thead>
+              <tr>
+                <th style="width:2.5rem"><input type="checkbox" class="mv-check" id="mv-check-all" onchange="mvToggleAll(this)"></th>
+                <th>Имя</th>
+                <th class="mv-th-sortable" onclick="mvCycleSort()"><span class="mv-th-inner">В числе участников с<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l4-5 4 5M8 15l4 5 4-5"/></svg></span></th>
+                <th class="mv-th-sortable" onclick="mvCycleSort()"><span class="mv-th-inner">В Discord с<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l4-5 4 5M8 15l4 5 4-5"/></svg></span></th>
+                <th>Способ вступления</th>
+                <th>Роли</th>
+                <th>Сигналы</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="mv-tbody">
+              {% for item in members %}
+              {% set m = item.account %}
+              {% if m %}
+              <tr data-mv-name="{{ (m.display_name or m.username)|lower }}" data-mv-created="{{ m.created_at.timestamp() if m.created_at else 0 }}">
+                <td><input type="checkbox" class="mv-check"></td>
+                <td>
+                  <div class="mv-user-cell mini-profile-trigger profile-click" data-mini-username="{{ m.username|e }}" data-mini-display="{{ m.display_name or m.username }}" data-mini-avatar="{{ m.avatar_url or '' }}" data-mini-banner="{{ m.banner_url or '' }}" data-mini-status="{{ account.account_status if m.id == account.id else (m.account_status or 'offline') }}" data-mini-role="{{ m.role_label or item.member.role }}" data-mini-effect="{{ m.name_effect or 'none' }}" data-mini-font="{{ m.name_font or 'default' }}" data-mini-c1="{{ m.role_color_start or '#f5576c' }}" data-mini-c2="{{ m.role_color_end or '#7367f0' }}" data-mini-profile="/community/profile/{{ m.username }}" data-mini-bio="{{ m.bio or '' }}" style="cursor:pointer">
+                    <span class="mv-avatar" {% if m.avatar_url %}style="background-image:url('{{ m.avatar_url }}');"{% endif %}>{% if not m.avatar_url %}{{ m.username[:1]|upper }}{% endif %}</span>
+                    <span>
+                      <div class="mv-user-name">{{ m.display_name or m.username }}</div>
+                      <div class="mv-user-handle">@{{ m.username }}</div>
+                    </span>
+                  </div>
+                </td>
+                <td>—</td>
+                <td>{{ m.created_at.strftime('%d.%m.%Y') if m.created_at else '—' }}</td>
+                <td>Неизвестно</td>
+                <td><span class="mv-role-pill"><span class="mv-role-dot" style="background:{{ m.role_color_start or '#5865f2' }}"></span>{{ i18n_t('common.role.' ~ item.member.role) }}</span></td>
+                <td></td>
+                <td>
+                  <div class="mv-row-actions">
+                    <a class="mv-row-action-btn" href="/community/profile/{{ m.username }}" title="Профиль">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
+                    </a>
+                    <button type="button" class="mv-row-action-btn" onclick="showActionToast && showActionToast(window.AlexiHubI18n.t('server.stub.member_actions'))" title="Ещё">
+                      <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              {% endif %}
+              {% else %}
+              <tr><td colspan="8" class="empty-note">Нет участников</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="mv-footer">Показано <b>{{ members|length }}</b> участников</div>
+      </div>
+    </div>
   </main>
 
   <script>
@@ -1925,6 +2038,57 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
       } catch (err) {
         /* cross-origin or markup differs — fall back to the full page as-is */
       }
+    }
+
+    function cvShowTab(tab, event) {
+      if (event) event.preventDefault();
+      var channelsTab = document.getElementById('cv-tab-channels');
+      var membersTab = document.getElementById('cv-tab-members');
+      var navChannels = document.getElementById('cv-nav-channels');
+      var navMembers = document.getElementById('cv-nav-members');
+      if (channelsTab) channelsTab.style.display = tab === 'members' ? 'none' : '';
+      if (membersTab) membersTab.style.display = tab === 'members' ? '' : 'none';
+      if (navChannels) navChannels.classList.toggle('active', tab !== 'members');
+      if (navMembers) navMembers.classList.toggle('active', tab === 'members');
+      try { history.replaceState(null, '', tab === 'members' ? '#members' : location.pathname); } catch (err) {}
+      return false;
+    }
+    if (location.hash === '#members') cvShowTab('members');
+
+    function mvFilterMembers(query) {
+      var q = (query || '').trim().toLowerCase();
+      document.querySelectorAll('#mv-tbody tr[data-mv-name]').forEach(function (row) {
+        var name = row.getAttribute('data-mv-name') || '';
+        row.style.display = (!q || name.indexOf(q) !== -1) ? '' : 'none';
+      });
+    }
+
+    var mvSortState = -1;
+    var mvSortModes = [
+      { label: 'Имя (А-Я)', cmp: function (a, b) { return a.getAttribute('data-mv-name').localeCompare(b.getAttribute('data-mv-name')); } },
+      { label: 'Имя (Я-А)', cmp: function (a, b) { return b.getAttribute('data-mv-name').localeCompare(a.getAttribute('data-mv-name')); } },
+      { label: 'Дата регистрации (новые)', cmp: function (a, b) { return parseFloat(b.getAttribute('data-mv-created')) - parseFloat(a.getAttribute('data-mv-created')); } },
+      { label: 'Дата регистрации (старые)', cmp: function (a, b) { return parseFloat(a.getAttribute('data-mv-created')) - parseFloat(b.getAttribute('data-mv-created')); } }
+    ];
+    function mvCycleSort() {
+      mvSortState = (mvSortState + 1) % mvSortModes.length;
+      var mode = mvSortModes[mvSortState];
+      var label = document.getElementById('mv-sort-label');
+      if (label) label.textContent = mode.label;
+      var tbody = document.getElementById('mv-tbody');
+      if (!tbody) return;
+      var rows = Array.prototype.slice.call(tbody.querySelectorAll('tr[data-mv-name]'));
+      rows.sort(mode.cmp).forEach(function (row) { tbody.appendChild(row); });
+    }
+
+    function mvToggleAll(checkbox) {
+      document.querySelectorAll('#mv-tbody .mv-check').forEach(function (cb) { cb.checked = checkbox.checked; });
+    }
+
+    function mvClearFilters() {
+      var search = document.getElementById('mv-search-input');
+      if (search) { search.value = ''; mvFilterMembers(''); }
+      document.querySelectorAll('.mv-check').forEach(function (cb) { cb.checked = false; });
     }
   </script>
 
