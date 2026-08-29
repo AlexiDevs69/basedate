@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.121.11",
+      "date": "2026-08-30",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Change profile menu to open full profile."
+      ],
+      "source_sha": "8df4b17b7166561c017c62d94324e6a91d738015"
+    },
+    {
       "version": "1.121.10",
       "date": "2026-08-30",
       "title": "Виправлення та стабільність",
