@@ -1844,7 +1844,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/></svg>
             <span id="mv-sort-label">Сортировать</span>
           </button>
-          <button type="button" class="mv-btn mv-btn-clear" onclick="mvClearFilters()">Очистить</button>
+          <button type="button" class="mv-btn mv-btn-clear" onclick="openPruneModal()">Очистить</button>
         </div>
         <div class="mv-table-wrap">
           <table class="mv-table">
@@ -2103,6 +2103,132 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
       if (search) { search.value = ''; mvFilterMembers(''); }
       document.querySelectorAll('.mv-check').forEach(function (cb) { cb.checked = false; });
     }
+
+    /* --- Prune members ("Чистка участников") modal --- */
+    var prSelectedRoles = [];
+
+    function openPruneModal() {
+      var modal = document.getElementById('prune-modal');
+      if (!modal) { mvClearFilters(); return; }
+      prSelectedRoles = [];
+      document.querySelectorAll('input[name="pr-days"]').forEach(function (r) { r.checked = (r.value === '7'); });
+      prCloseRoleDropdown();
+      prBuildRoleOptions();
+      prUpdateRoleTriggerLabel();
+      prUpdateSummary();
+      openModal('prune-modal');
+    }
+
+    function prRoleRowsMap() {
+      var map = {};
+      document.querySelectorAll('#mv-tbody tr[data-mv-name]').forEach(function (row) {
+        var pill = row.querySelector('.mv-role-pill');
+        var text = pill ? pill.textContent.trim() : '';
+        var key = text || '__none__';
+        if (!map[key]) map[key] = [];
+        map[key].push(row);
+      });
+      return map;
+    }
+
+    function prBuildRoleOptions() {
+      var panel = document.getElementById('pr-role-panel');
+      if (!panel) return;
+      var map = prRoleRowsMap();
+      var roles = Object.keys(map).filter(function (r) { return r !== '__none__'; }).sort(function (a, b) { return a.localeCompare(b, 'ru'); });
+      if (!roles.length) { panel.innerHTML = '<div class="pr-role-empty">Нет доступных ролей</div>'; return; }
+      panel.innerHTML = roles.map(function (r) {
+        var checked = prSelectedRoles.indexOf(r) !== -1 ? 'checked' : '';
+        var safe = r.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        return '<label class="pr-role-option"><input type="checkbox" ' + checked + ' onchange="prToggleRole(this, ' + JSON.stringify(r).replace(/"/g, '&quot;') + ')">' +
+          '<span class="pr-role-option-name">' + safe + '</span><span class="pr-role-count">' + map[r].length + '</span></label>';
+      }).join('');
+    }
+
+    function prToggleRole(checkbox, name) {
+      var idx = prSelectedRoles.indexOf(name);
+      if (checkbox.checked && idx === -1) prSelectedRoles.push(name);
+      if (!checkbox.checked && idx !== -1) prSelectedRoles.splice(idx, 1);
+      prUpdateRoleTriggerLabel();
+      prUpdateSummary();
+    }
+
+    function prUpdateRoleTriggerLabel() {
+      var label = document.getElementById('pr-role-trigger-label');
+      if (!label) return;
+      label.textContent = prSelectedRoles.length ? prSelectedRoles.join(', ') : 'Выберите...';
+    }
+
+    function prToggleRoleDropdown(e) {
+      if (e) e.stopPropagation();
+      var wrap = document.getElementById('pr-role-select');
+      if (wrap) wrap.classList.toggle('open');
+    }
+
+    function prCloseRoleDropdown() {
+      var wrap = document.getElementById('pr-role-select');
+      if (wrap) wrap.classList.remove('open');
+    }
+
+    document.addEventListener('click', function (e) {
+      var wrap = document.getElementById('pr-role-select');
+      if (wrap && wrap.classList.contains('open') && !wrap.contains(e.target)) wrap.classList.remove('open');
+    });
+
+    function prPluralHuman(n) {
+      var mod100 = n % 100, mod10 = n % 10;
+      if (mod100 >= 11 && mod100 <= 14) return 'человек';
+      if (mod10 === 1) return 'человек';
+      if (mod10 >= 2 && mod10 <= 4) return 'человека';
+      return 'человек';
+    }
+
+    function prEligibleRows() {
+      var map = prRoleRowsMap();
+      var rows = (map['__none__'] || []).slice();
+      prSelectedRoles.forEach(function (role) { if (map[role]) rows = rows.concat(map[role]); });
+      return rows;
+    }
+
+    function prUpdateSummary() {
+      var daysInput = document.querySelector('input[name="pr-days"]:checked');
+      var days = daysInput ? daysInput.value : '7';
+      var eligible = prEligibleRows();
+      var count = eligible.length;
+      var countEl = document.getElementById('pr-count');
+      var wordEl = document.getElementById('pr-count-word');
+      var daysEl = document.getElementById('pr-days-label');
+      var extraEl = document.getElementById('pr-extra-roles');
+      var submitBtn = document.getElementById('pr-submit-btn');
+      if (countEl) countEl.textContent = count;
+      if (wordEl) wordEl.textContent = prPluralHuman(count);
+      if (daysEl) daysEl.textContent = days;
+      if (extraEl) extraEl.textContent = prSelectedRoles.length ? (', а также участников с ролями: ' + prSelectedRoles.join(', ')) : '';
+      if (submitBtn) submitBtn.classList.toggle('pr-empty', count === 0);
+    }
+
+    function prExecutePrune() {
+      var eligible = prEligibleRows();
+      var count = eligible.length;
+      closeModal('prune-modal');
+      if (!count) { showActionToast && showActionToast('Нет участников, подходящих под условия чистки'); return; }
+      eligible.forEach(function (row) {
+        row.style.transition = 'opacity .25s ease, transform .25s ease';
+        row.style.opacity = '0';
+        row.style.transform = 'translateX(10px)';
+        setTimeout(function () {
+          row.remove();
+          mvUpdateFooterCount();
+        }, 250);
+      });
+      showActionToast && showActionToast('Исключено участников: ' + count);
+    }
+
+    function mvUpdateFooterCount() {
+      var footer = document.querySelector('.mv-footer b');
+      var rows = document.querySelectorAll('#mv-tbody tr[data-mv-name]');
+      if (footer) footer.textContent = rows.length;
+    }
   </script>
 
   <style id="discord-server-create-styles">
@@ -2222,7 +2348,62 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
     </div>
   </div>
   {% endif %}
-  {% if can_manage %}<div id="settings-modal" class="modal-backdrop"><form class="modal-card" method="post" action="/community/servers/{{ server.id }}/settings"><input type="hidden" name="redirect_to" value="{{ request.url.path }}"><div class="modal-head"><h2><!--i18n:common.title.server_settings-->{{ i18n_t('common.title.server_settings') }}</h2><button class="modal-close" type="button" onclick="closeModal('settings-modal')">×</button></div><label><!--i18n:server.fields.name-->{{ i18n_t('server.fields.name') }}</label><input name="name" value="{{ server.name }}" required maxlength="64"><label><!--i18n:common.text.icon_url-->{{ i18n_t('common.text.icon_url') }}</label><input name="icon_url" value="{{ server.icon_url or '' }}" placeholder="https://..."><label><!--i18n:server.fields.description-->{{ i18n_t("server.fields.description") }}</label><textarea name="description" maxlength="255" placeholder="{{ i18n_t('server.fields.description_placeholder') }}">{{ server.description or '' }}</textarea><div class="modal-actions"><button class="modal-btn secondary" type="button" onclick="closeModal('settings-modal')"><!--i18n:common.actions.cancel-->{{ i18n_t("common.actions.cancel") }}</button><button class="modal-btn" type="submit"><!--i18n:common.action.save_changes-->{{ i18n_t('common.action.save_changes') }}</button></div></form></div><div id="channel-modal" class="modal-backdrop"><form class="modal-card" method="post" action="/community/servers/{{ server.id }}/channels/create"><div class="modal-head"><h2><!--i18n:common.title.create_channel-->{{ i18n_t('common.title.create_channel') }}</h2><button class="modal-close" type="button" onclick="closeModal('channel-modal')">×</button></div><label><!--i18n:common.text.channel_name-->{{ i18n_t('common.text.channel_name') }}</label><input name="name" placeholder="general-chat" required><label><!--i18n:server.fields.description-->{{ i18n_t("server.fields.description") }}</label><input name="description" placeholder="{{ i18n_t('common.placeholder.n_ena_japan') }}" data-i18n-placeholder="common.placeholder.n_ena_japan"><div class="modal-actions"><button class="modal-btn secondary" type="button" onclick="closeModal('channel-modal')"><!--i18n:common.actions.cancel-->{{ i18n_t("common.actions.cancel") }}</button><button class="modal-btn" type="submit"><!--i18n:common.action.create-->{{ i18n_t("common.action.create") }}</button></div></form></div>{% endif %}
+  {% if can_manage %}<div id="settings-modal" class="modal-backdrop"><form class="modal-card" method="post" action="/community/servers/{{ server.id }}/settings"><input type="hidden" name="redirect_to" value="{{ request.url.path }}"><div class="modal-head"><h2><!--i18n:common.title.server_settings-->{{ i18n_t('common.title.server_settings') }}</h2><button class="modal-close" type="button" onclick="closeModal('settings-modal')">×</button></div><label><!--i18n:server.fields.name-->{{ i18n_t('server.fields.name') }}</label><input name="name" value="{{ server.name }}" required maxlength="64"><label><!--i18n:common.text.icon_url-->{{ i18n_t('common.text.icon_url') }}</label><input name="icon_url" value="{{ server.icon_url or '' }}" placeholder="https://..."><label><!--i18n:server.fields.description-->{{ i18n_t("server.fields.description") }}</label><textarea name="description" maxlength="255" placeholder="{{ i18n_t('server.fields.description_placeholder') }}">{{ server.description or '' }}</textarea><div class="modal-actions"><button class="modal-btn secondary" type="button" onclick="closeModal('settings-modal')"><!--i18n:common.actions.cancel-->{{ i18n_t("common.actions.cancel") }}</button><button class="modal-btn" type="submit"><!--i18n:common.action.save_changes-->{{ i18n_t('common.action.save_changes') }}</button></div></form></div><div id="channel-modal" class="modal-backdrop"><form class="modal-card" method="post" action="/community/servers/{{ server.id }}/channels/create"><div class="modal-head"><h2><!--i18n:common.title.create_channel-->{{ i18n_t('common.title.create_channel') }}</h2><button class="modal-close" type="button" onclick="closeModal('channel-modal')">×</button></div><label><!--i18n:common.text.channel_name-->{{ i18n_t('common.text.channel_name') }}</label><input name="name" placeholder="general-chat" required><label><!--i18n:server.fields.description-->{{ i18n_t("server.fields.description") }}</label><input name="description" placeholder="{{ i18n_t('common.placeholder.n_ena_japan') }}" data-i18n-placeholder="common.placeholder.n_ena_japan"><div class="modal-actions"><button class="modal-btn secondary" type="button" onclick="closeModal('channel-modal')"><!--i18n:common.actions.cancel-->{{ i18n_t("common.actions.cancel") }}</button><button class="modal-btn" type="submit"><!--i18n:common.action.create-->{{ i18n_t("common.action.create") }}</button></div></form></div>
+  <style id="prune-modal-styles">
+    .pr-card { width:min(480px,100%); }
+    .pr-card .modal-head h2 { font-size:1.05rem; }
+    .pr-block { margin:1rem 0; }
+    .pr-block-label { font-weight:800; font-size:.9rem; margin-bottom:.5rem; color:var(--text-primary); }
+    .pr-radio-row { display:flex; align-items:center; gap:.65rem; padding:.4rem 0; font-size:.92rem; cursor:pointer; color:var(--text-primary); }
+    .pr-radio-row input[type="radio"] { width:18px; height:18px; accent-color:#5865f2; cursor:pointer; flex:0 0 auto; }
+    .pr-role-select { position:relative; }
+    .pr-role-trigger { width:100%; display:flex; align-items:center; justify-content:space-between; gap:.5rem; background:#111114; color:var(--text-primary); border:1px solid var(--border); border-radius:10px; padding:.68rem .76rem; font-family:var(--font-sans); font-size:.88rem; cursor:pointer; text-align:left; }
+    .pr-role-trigger:hover { border-color:var(--border-hover); }
+    .pr-role-select.open .pr-role-trigger { border-color:#5865f2; }
+    .pr-role-trigger-label { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .pr-role-chevron { width:16px; height:16px; flex:0 0 auto; transition:transform .15s ease; color:var(--text-secondary); }
+    .pr-role-select.open .pr-role-chevron { transform:rotate(180deg); }
+    .pr-role-panel { display:none; margin-top:6px; max-height:180px; overflow:auto; background:#111114; border:1px solid var(--border); border-radius:10px; padding:.35rem; }
+    .pr-role-select.open .pr-role-panel { display:block; }
+    .pr-role-option { display:flex; align-items:center; gap:.55rem; padding:.5rem .55rem; border-radius:8px; cursor:pointer; font-size:.86rem; }
+    .pr-role-option:hover { background:rgba(255,255,255,.06); }
+    .pr-role-option input[type="checkbox"] { width:15px; height:15px; accent-color:#5865f2; flex:0 0 auto; }
+    .pr-role-option-name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .pr-role-count { color:var(--text-secondary); font-size:.78rem; flex:0 0 auto; }
+    .pr-role-empty { padding:.6rem .55rem; color:var(--text-secondary); font-size:.82rem; }
+    .pr-summary { margin-top:1rem; font-size:.86rem; line-height:1.55; color:var(--text-secondary); }
+    .pr-summary b { color:var(--text-primary); }
+    #pr-submit-btn.pr-empty { opacity:.55; }
+  </style>
+  <div id="prune-modal" class="modal-backdrop">
+    <div class="modal-card pr-card">
+      <div class="modal-head">
+        <h2>Чистка участников — {{ server.name }}</h2>
+        <button class="modal-close" type="button" onclick="closeModal('prune-modal')">×</button>
+      </div>
+      <div class="pr-block">
+        <div class="pr-block-label">Последний раз был</div>
+        <label class="pr-radio-row"><input type="radio" name="pr-days" value="7" checked onchange="prUpdateSummary()"> более 7 дней назад</label>
+        <label class="pr-radio-row"><input type="radio" name="pr-days" value="30" onchange="prUpdateSummary()"> более 30 дней назад</label>
+      </div>
+      <div class="pr-block">
+        <div class="pr-block-label">Включить также участников со следующими ролями</div>
+        <div class="pr-role-select" id="pr-role-select">
+          <button type="button" class="pr-role-trigger" id="pr-role-trigger" onclick="prToggleRoleDropdown(event)">
+            <span class="pr-role-trigger-label" id="pr-role-trigger-label">Выберите...</span>
+            <svg class="pr-role-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="pr-role-panel" id="pr-role-panel"></div>
+        </div>
+      </div>
+      <p class="pr-summary" id="pr-summary">Чистка выгонит <b id="pr-count">0</b> <span id="pr-count-word">человек</span>, которые не появлялись на сервере <b id="pr-days-label">7</b> дней. Чистка коснётся только участников, не имеющих ролей<span id="pr-extra-roles"></span>.</p>
+      <div class="modal-actions">
+        <button type="button" class="modal-btn secondary" onclick="closeModal('prune-modal')">Отмена</button>
+        <button type="button" class="modal-btn" id="pr-submit-btn" onclick="prExecutePrune()">Очистить</button>
+      </div>
+    </div>
+  </div>
+  {% endif %}
   <div id="mini-profile-popover" class="mini-profile-popover"><div class="mini-banner"></div><div class="mini-profile-body"><div id="mini-avatar" class="mini-avatar"></div><span id="mini-name" class="visual-name mini-name name-none font-default"></span><div id="mini-role" class="mini-role-line"></div><div class="mini-note"><!--i18n:common.text.mini_profile_auty_click_open_profile_if_you_need_a-->{{ i18n_t('common.text.mini_profile_auty_click_open_profile_if_you_need_a') }}</div><div class="mini-profile-actions"><a id="mini-open-profile" href="#"><!--i18n:common.action.open_profile-->{{ i18n_t('common.action.open_profile') }}</a><a id="mini-message-link" href="#" class="secondary"><!--i18n:privacy.blocking.message-->{{ i18n_t("privacy.blocking.message") }}</a></div></div></div>
 
   <script>
