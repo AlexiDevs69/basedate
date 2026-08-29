@@ -8084,21 +8084,11 @@ if (typeof window.openSelfProfileSettings !== 'function') {
 </script>
 
 <script>
-/* ---------- Меню дій учасника (кнопка "..." у розділі "Участники") ---------- */
+/* ---------- Меню действий участника (кнопка "..." в разделе "Участники") ---------- */
 (function () {
   'use strict';
   if (window.__ahMemberMenuInit) return;
   window.__ahMemberMenuInit = true;
-
-  function t(key, fallback) {
-    try {
-      if (window.AlexiHubI18n && typeof window.AlexiHubI18n.t === 'function') {
-        var v = window.AlexiHubI18n.t(key);
-        if (v && v !== key) return v;
-      }
-    } catch (e) {}
-    return fallback;
-  }
 
   function toast(msg) {
     if (typeof window.showActionToast === 'function') { window.showActionToast(msg); return; }
@@ -8110,7 +8100,18 @@ if (typeof window.openSelfProfileSettings !== 'function') {
     setTimeout(function () { n.remove(); }, 2200);
   }
 
-  /* Меню перевикористовує стилі .ahctx-menu / .ahctx-item з меню сервера вище на сторінці */
+  function stubToast() {
+    var msg = 'Раздел в разработке';
+    try {
+      if (window.AlexiHubI18n && typeof window.AlexiHubI18n.t === 'function') {
+        var v = window.AlexiHubI18n.t('server.stub.member_actions');
+        if (v && v !== 'server.stub.member_actions') msg = v;
+      }
+    } catch (e) {}
+    toast(msg);
+  }
+
+  /* Меню переиспользует стили .ahctx-menu / .ahctx-item из меню сервера выше на странице */
   var menu = document.createElement('div');
   menu.className = 'ahctx-menu';
   menu.setAttribute('role', 'menu');
@@ -8169,18 +8170,28 @@ if (typeof window.openSelfProfileSettings !== 'function') {
     return d;
   }
 
-  function stubToast() { toast(t('server.stub.member_actions', 'Розділ у розробці')); }
+  /* Открыть тот же мини-профиль (всплывающая карточка), что и по клику на аватар в таблице */
+  function openMiniProfileFor(data, e) {
+    if (!data.trigger) { location.href = data.profile; return; }
+    var evt = new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+      clientX: e ? e.clientX : undefined,
+      clientY: e ? e.clientY : undefined
+    });
+    data.trigger.dispatchEvent(evt);
+  }
 
   function buildMenu(data) {
     menu.innerHTML = '';
 
     menu.appendChild(makeItem({
-      label: t('server.member_ctx.profile', 'Профіль'),
-      onClick: function () { closeMenu(); location.href = data.profile; }
+      label: 'Профиль',
+      onClick: function (e) { closeMenu(); openMiniProfileFor(data, e); }
     }));
 
     menu.appendChild(makeItem({
-      label: t('server.member_ctx.message', 'Написати повідомлення'),
+      label: 'Написать сообщение',
       onClick: function () {
         closeMenu();
         if (data.isSelf) { stubToast(); return; }
@@ -8190,23 +8201,23 @@ if (typeof window.openSelfProfileSettings !== 'function') {
 
     menu.appendChild(divider());
 
-    menu.appendChild(makeItem({ label: t('server.member_ctx.nickname', 'Змінити нікнейм'), onClick: function () { closeMenu(); stubToast(); } }));
-    menu.appendChild(makeItem({ label: t('server.member_ctx.ignore', 'Ігнорувати'), onClick: function () { closeMenu(); stubToast(); } }));
-    menu.appendChild(makeItem({ label: t('server.member_ctx.block', 'Заблокувати'), danger: true, onClick: function () { closeMenu(); stubToast(); } }));
+    menu.appendChild(makeItem({ label: 'Изменить никнейм', onClick: function () { closeMenu(); stubToast(); } }));
+    menu.appendChild(makeItem({ label: 'Игнорировать', onClick: function () { closeMenu(); stubToast(); } }));
+    menu.appendChild(makeItem({ label: 'Заблокировать', danger: true, onClick: function () { closeMenu(); stubToast(); } }));
 
     menu.appendChild(divider());
 
-    menu.appendChild(makeItem({ label: t('server.member_ctx.roles', 'Ролі'), chevron: true, onClick: function () { closeMenu(); stubToast(); } }));
-    menu.appendChild(makeItem({ label: t('server.member_ctx.open_as_mod', 'Відкрити з доступом модератора'), onClick: function () { closeMenu(); stubToast(); } }));
+    menu.appendChild(makeItem({ label: 'Роли', chevron: true, onClick: function () { closeMenu(); stubToast(); } }));
+    menu.appendChild(makeItem({ label: 'Открыть с доступом модератора', onClick: function () { closeMenu(); stubToast(); } }));
 
     if (!data.isOwner && !data.isSelf) {
       menu.appendChild(makeItem({
-        label: (t('server.member_ctx.timeout_prefix', 'Відправити ')) + data.display + (t('server.member_ctx.timeout_suffix', ' у тайм-аут')),
+        label: 'Отправить ' + data.display + ' в тайм-аут',
         danger: true,
         onClick: function () { closeMenu(); stubToast(); }
       }));
       menu.appendChild(makeItem({
-        label: (t('server.member_ctx.kick_prefix', 'Вигнати ')) + data.display,
+        label: 'Выгнать ' + data.display,
         danger: true,
         onClick: function () { closeMenu(); stubToast(); }
       }));
@@ -8215,11 +8226,11 @@ if (typeof window.openSelfProfileSettings !== 'function') {
     menu.appendChild(divider());
 
     menu.appendChild(makeItem({
-      label: t('server.member_ctx.copy_id', 'Копіювати ID користувача'),
+      label: 'Копировать ID пользователя',
       leftBadge: 'ID',
       onClick: function () {
         if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(String(data.id)).catch(function () {});
-        toast(t('common.feedback.copied', 'Скопійовано'));
+        toast('Скопировано');
         closeMenu();
       }
     }));
@@ -8229,13 +8240,17 @@ if (typeof window.openSelfProfileSettings !== 'function') {
     if (e) { e.preventDefault(); e.stopPropagation(); }
     if (currentTarget === btn && menu.classList.contains('open')) { closeMenu(); return; }
 
+    var row = btn.closest('tr');
+    var trigger = row ? row.querySelector('.mini-profile-trigger') : null;
+
     var data = {
       id: btn.getAttribute('data-member-id') || '',
       username: btn.getAttribute('data-member-username') || '',
       display: btn.getAttribute('data-member-display') || btn.getAttribute('data-member-username') || '',
       profile: btn.getAttribute('data-member-profile') || '#',
       isOwner: btn.getAttribute('data-member-owner') === '1',
-      isSelf: btn.getAttribute('data-member-self') === '1'
+      isSelf: btn.getAttribute('data-member-self') === '1',
+      trigger: trigger
     };
 
     buildMenu(data);
