@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.119.2",
+      "date": "2026-08-29",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance channel preview button functionality."
+      ],
+      "source_sha": "0c547ff9775f05b02d4762dc3edf78bda5563bdb"
+    },
+    {
       "version": "1.119.1",
       "date": "2026-08-28",
       "title": "Виправлення та стабільність",
