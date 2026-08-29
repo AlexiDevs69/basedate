@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.121.4",
+      "date": "2026-08-29",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено продуктивність: table layout and styling in server_home.html."
+      ],
+      "source_sha": "4241bc6043bd04dda2d3ed3c5ad7d5e8134b6296"
+    },
+    {
       "version": "1.121.3",
       "date": "2026-08-29",
       "title": "Виправлення та стабільність",
