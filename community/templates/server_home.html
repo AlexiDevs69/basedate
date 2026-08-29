@@ -118,14 +118,14 @@
     .mv-panel { background:var(--bg-elevated); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
     .mv-panel-head { display:flex; align-items:center; gap:.75rem; padding:1rem 1.1rem; flex-wrap:wrap; }
     .mv-panel-title { font-weight:800; font-size:.95rem; color:var(--text-primary); margin-right:auto; }
-    .mv-search { display:flex; align-items:center; gap:.5rem; background:#0d0d0d; border:1px solid var(--border); border-radius:8px; padding:.5rem .75rem; min-width:220px; }
-    .mv-search svg { width:15px; height:15px; color:var(--text-secondary); flex-shrink:0; }
-    .mv-search input { flex:1; background:transparent; border:none; color:var(--text-primary); font-size:.82rem; outline:none; font-family:var(--font-sans); }
+    .mv-search { display:flex; align-items:center; gap:.55rem; background:rgba(0,0,0,.35); border:1px solid var(--border); border-radius:10px; padding:.6rem .85rem; min-width:260px; }
+    .mv-search svg { width:16px; height:16px; color:var(--text-secondary); flex-shrink:0; }
+    .mv-search input { flex:1; background:transparent; border:none; color:var(--text-primary); font-size:.85rem; outline:none; font-family:var(--font-sans); min-width:0; }
     .mv-search input::placeholder { color:#5b5c60; }
-    .mv-btn { display:inline-flex; align-items:center; gap:.4rem; border:1px solid var(--border); background:transparent; color:var(--text-primary); border-radius:8px; padding:.5rem .8rem; font-weight:700; font-size:.8rem; cursor:pointer; white-space:nowrap; }
-    .mv-btn:hover { border-color:var(--border-hover); background:rgba(255,255,255,.03); }
-    .mv-btn svg { width:14px; height:14px; }
-    .mv-btn-clear { border:none; color:#f23f42; font-weight:800; }
+    .mv-btn { display:inline-flex; align-items:center; gap:.45rem; border:1px solid var(--border); background:rgba(255,255,255,.05); color:var(--text-primary); border-radius:10px; padding:.6rem .95rem; font-weight:700; font-size:.85rem; cursor:pointer; white-space:nowrap; }
+    .mv-btn:hover { border-color:var(--border-hover); background:rgba(255,255,255,.09); }
+    .mv-btn svg { width:15px; height:15px; }
+    .mv-btn-clear { border:none; background:transparent; color:#f23f42; font-weight:800; }
     .mv-btn-clear:hover { background:rgba(242,63,66,.1); }
     .mv-table-wrap { overflow-x:auto; }
     .mv-table { width:100%; border-collapse:collapse; font-size:.82rem; table-layout:fixed; }
@@ -1838,10 +1838,10 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
           <span class="mv-panel-title">Недавние участники</span>
           <div class="mv-search">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-            <input type="text" id="mv-search-input" oninput="mvFilterMembers(this.value)" placeholder="Поиск по имени пользователя">
+            <input type="text" id="mv-search-input" oninput="mvFilterMembers(this.value)" placeholder="Поиск по имени пользователя или тегу">
           </div>
           <button type="button" class="mv-btn" id="mv-sort-btn" onclick="mvCycleSort()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M6 12h12M10 18h4"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/></svg>
             <span id="mv-sort-label">Сортировать</span>
           </button>
           <button type="button" class="mv-btn mv-btn-clear" onclick="mvClearFilters()">Очистить</button>
