@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.121.7",
+      "date": "2026-08-30",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance prune modal with role selection and summary."
+      ],
+      "source_sha": "053ca89bb12dae4b810e987a8a3af36a703214f8"
+    },
+    {
       "version": "1.121.6",
       "date": "2026-08-29",
       "title": "Виправлення та стабільність",
