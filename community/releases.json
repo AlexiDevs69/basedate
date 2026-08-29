@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.121.2",
+      "date": "2026-08-29",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance channel row with data attribute and hide logic."
+      ],
+      "source_sha": "7975495f05c4c78d128bacf06c29721676111d2f"
+    },
+    {
       "version": "1.121.1",
       "date": "2026-08-29",
       "title": "Виправлення та стабільність",
