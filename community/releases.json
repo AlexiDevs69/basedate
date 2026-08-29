@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.121.3",
+      "date": "2026-08-29",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance members view with search and sorting features."
+      ],
+      "source_sha": "f68a1d3c7ace655bf9b13a4f4dedc4a60baa7538"
+    },
+    {
       "version": "1.121.2",
       "date": "2026-08-29",
       "title": "Виправлення та стабільність",
