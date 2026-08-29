@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.121.10",
+      "date": "2026-08-30",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update member actions menu and localization strings."
+      ],
+      "source_sha": "a2d4ef6668fb85f3c8ab54169ac1d2632e64fba4"
+    },
+    {
       "version": "1.121.9",
       "date": "2026-08-30",
       "title": "Виправлення та стабільність",
