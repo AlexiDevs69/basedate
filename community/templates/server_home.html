@@ -1667,7 +1667,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
         {% if ch.channel_type != 'voice' %}<span class="cv-row-sub">{{ ch.description if ch.description else i18n_t('server_home.text.open_chat') }}</span>{% endif %}
       </span>
       {% if ch.channel_type != 'voice' %}
-      <button type="button" class="cv-row-preview-btn" onclick="event.preventDefault();event.stopPropagation();cvOpenChannelPreview({{ ch.id }}, {{ ch.name|tojson }}, {{ server.id }});">Просмотр</button>
+      <button type="button" class="cv-row-preview-btn" data-preview-channel-id="{{ ch.id }}" data-preview-channel-name="{{ ch.name }}" data-preview-server-id="{{ server.id }}">Просмотр</button>
       {% endif %}
       <label class="cv-row-check" onclick="event.stopPropagation()" title="{{ i18n_t('common.aria.channel_settings') }}" data-i18n-title="common.aria.channel_settings">
         <input type="checkbox" class="cv-check" data-channel-id="{{ ch.id }}" checked onclick="event.stopPropagation()" onchange="cvToggleChannelVisibility(this)">
@@ -1812,6 +1812,18 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
       var cvRow = checkbox.closest('.cv-row');
       if (cvRow) cvRow.classList.toggle('cv-row-hidden', !visible);
     }
+
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.cv-row-preview-btn');
+      if (!btn) return;
+      e.preventDefault();
+      e.stopPropagation();
+      cvOpenChannelPreview(
+        btn.getAttribute('data-preview-channel-id'),
+        btn.getAttribute('data-preview-channel-name'),
+        btn.getAttribute('data-preview-server-id')
+      );
+    }, true);
 
     function cvOpenChannelPreview(channelId, channelName, serverId) {
       var panel = document.getElementById('cv-preview-panel');
