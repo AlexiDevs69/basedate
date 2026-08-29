@@ -1895,7 +1895,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
                     <a class="mv-row-action-btn" href="/community/profile/{{ m.username }}" title="Профиль">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
                     </a>
-                    <button type="button" class="mv-row-action-btn" onclick="showActionToast && showActionToast(window.AlexiHubI18n.t('server.stub.member_actions'))" title="Ещё">
+                    <button type="button" class="mv-row-action-btn ah-member-more-btn" data-member-id="{{ m.id }}" data-member-username="{{ m.username|e }}" data-member-display="{{ (m.display_name or m.username)|e }}" data-member-profile="/community/profile/{{ m.username }}" data-member-owner="{{ '1' if m.id == server.owner_id else '0' }}" data-member-self="{{ '1' if m.id == account.id else '0' }}" onclick="window.ahOpenMemberMenu(event, this)" title="Ещё">
                       <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
                     </button>
                   </div>
@@ -8081,6 +8081,184 @@ if (typeof window.openSelfProfileSettings !== 'function') {
   });
 })();
 
+</script>
+
+<script>
+/* ---------- Меню дій учасника (кнопка "..." у розділі "Участники") ---------- */
+(function () {
+  'use strict';
+  if (window.__ahMemberMenuInit) return;
+  window.__ahMemberMenuInit = true;
+
+  function t(key, fallback) {
+    try {
+      if (window.AlexiHubI18n && typeof window.AlexiHubI18n.t === 'function') {
+        var v = window.AlexiHubI18n.t(key);
+        if (v && v !== key) return v;
+      }
+    } catch (e) {}
+    return fallback;
+  }
+
+  function toast(msg) {
+    if (typeof window.showActionToast === 'function') { window.showActionToast(msg); return; }
+    if (typeof window.settingsToast === 'function') { window.settingsToast(msg); return; }
+    var n = document.createElement('div');
+    n.textContent = msg;
+    n.style.cssText = 'position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:2147483647;background:#232428;color:#fff;border:1px solid #3b3d45;border-radius:10px;padding:9px 12px;font:700 12px Inter,system-ui;box-shadow:0 12px 34px rgba(0,0,0,.4)';
+    document.body.appendChild(n);
+    setTimeout(function () { n.remove(); }, 2200);
+  }
+
+  /* Меню перевикористовує стилі .ahctx-menu / .ahctx-item з меню сервера вище на сторінці */
+  var menu = document.createElement('div');
+  menu.className = 'ahctx-menu';
+  menu.setAttribute('role', 'menu');
+  document.body.appendChild(menu);
+
+  var currentTarget = null;
+
+  function closeMenu() {
+    menu.classList.remove('open');
+    menu.innerHTML = '';
+    currentTarget = null;
+  }
+
+  function placeFixed(el, x, y) {
+    el.style.left = '0px'; el.style.top = '0px'; el.style.visibility = 'hidden'; el.classList.add('open');
+    var r = el.getBoundingClientRect();
+    var vw = window.innerWidth, vh = window.innerHeight;
+    if (x + r.width > vw - 8) x = vw - r.width - 8;
+    if (x < 8) x = 8;
+    if (y + r.height > vh - 8) y = vh - r.height - 8;
+    if (y < 8) y = 8;
+    el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.visibility = '';
+  }
+
+  function makeItem(opts) {
+    // opts: {label, danger, chevron, leftBadge, onClick}
+    var el = document.createElement('div');
+    el.className = 'ahctx-item' + (opts.danger ? ' danger' : '');
+    el.setAttribute('role', 'menuitem');
+    if (opts.leftBadge) {
+      var badge = document.createElement('span');
+      badge.className = 'ahctx-idbadge';
+      badge.style.marginRight = '8px';
+      badge.textContent = opts.leftBadge;
+      el.appendChild(badge);
+    }
+    var label = document.createElement('div');
+    label.className = 'ahctx-label';
+    var l = document.createElement('span');
+    l.textContent = opts.label;
+    label.appendChild(l);
+    el.appendChild(label);
+    if (opts.chevron) {
+      var right = document.createElement('div');
+      right.className = 'ahctx-right';
+      right.innerHTML = '<svg class="ahctx-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>';
+      el.appendChild(right);
+    }
+    if (opts.onClick) el.addEventListener('click', function (e) { e.stopPropagation(); opts.onClick(e); });
+    return el;
+  }
+
+  function divider() {
+    var d = document.createElement('div');
+    d.className = 'ahctx-divider';
+    return d;
+  }
+
+  function stubToast() { toast(t('server.stub.member_actions', 'Розділ у розробці')); }
+
+  function buildMenu(data) {
+    menu.innerHTML = '';
+
+    menu.appendChild(makeItem({
+      label: t('server.member_ctx.profile', 'Профіль'),
+      onClick: function () { closeMenu(); location.href = data.profile; }
+    }));
+
+    menu.appendChild(makeItem({
+      label: t('server.member_ctx.message', 'Написати повідомлення'),
+      onClick: function () {
+        closeMenu();
+        if (data.isSelf) { stubToast(); return; }
+        location.href = '/community/dm/' + encodeURIComponent(data.username);
+      }
+    }));
+
+    menu.appendChild(divider());
+
+    menu.appendChild(makeItem({ label: t('server.member_ctx.nickname', 'Змінити нікнейм'), onClick: function () { closeMenu(); stubToast(); } }));
+    menu.appendChild(makeItem({ label: t('server.member_ctx.ignore', 'Ігнорувати'), onClick: function () { closeMenu(); stubToast(); } }));
+    menu.appendChild(makeItem({ label: t('server.member_ctx.block', 'Заблокувати'), danger: true, onClick: function () { closeMenu(); stubToast(); } }));
+
+    menu.appendChild(divider());
+
+    menu.appendChild(makeItem({ label: t('server.member_ctx.roles', 'Ролі'), chevron: true, onClick: function () { closeMenu(); stubToast(); } }));
+    menu.appendChild(makeItem({ label: t('server.member_ctx.open_as_mod', 'Відкрити з доступом модератора'), onClick: function () { closeMenu(); stubToast(); } }));
+
+    if (!data.isOwner && !data.isSelf) {
+      menu.appendChild(makeItem({
+        label: (t('server.member_ctx.timeout_prefix', 'Відправити ')) + data.display + (t('server.member_ctx.timeout_suffix', ' у тайм-аут')),
+        danger: true,
+        onClick: function () { closeMenu(); stubToast(); }
+      }));
+      menu.appendChild(makeItem({
+        label: (t('server.member_ctx.kick_prefix', 'Вигнати ')) + data.display,
+        danger: true,
+        onClick: function () { closeMenu(); stubToast(); }
+      }));
+    }
+
+    menu.appendChild(divider());
+
+    menu.appendChild(makeItem({
+      label: t('server.member_ctx.copy_id', 'Копіювати ID користувача'),
+      leftBadge: 'ID',
+      onClick: function () {
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(String(data.id)).catch(function () {});
+        toast(t('common.feedback.copied', 'Скопійовано'));
+        closeMenu();
+      }
+    }));
+  }
+
+  window.ahOpenMemberMenu = function (e, btn) {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    if (currentTarget === btn && menu.classList.contains('open')) { closeMenu(); return; }
+
+    var data = {
+      id: btn.getAttribute('data-member-id') || '',
+      username: btn.getAttribute('data-member-username') || '',
+      display: btn.getAttribute('data-member-display') || btn.getAttribute('data-member-username') || '',
+      profile: btn.getAttribute('data-member-profile') || '#',
+      isOwner: btn.getAttribute('data-member-owner') === '1',
+      isSelf: btn.getAttribute('data-member-self') === '1'
+    };
+
+    buildMenu(data);
+    currentTarget = btn;
+
+    var r = btn.getBoundingClientRect();
+    menu.style.visibility = 'hidden';
+    menu.classList.add('open');
+    var mw = menu.offsetWidth || 280;
+    menu.classList.remove('open');
+
+    placeFixed(menu, r.right - mw, r.bottom + 6);
+  };
+
+  document.addEventListener('click', function (e) {
+    if (e.target.closest && e.target.closest('.ah-member-more-btn')) return;
+    if (menu.contains(e.target)) return;
+    closeMenu();
+  });
+  window.addEventListener('scroll', closeMenu, true);
+  window.addEventListener('resize', closeMenu);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeMenu(); });
+})();
 </script>
 
 </body>
