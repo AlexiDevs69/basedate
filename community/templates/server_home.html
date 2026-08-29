@@ -128,25 +128,28 @@
     .mv-btn-clear { border:none; color:#f23f42; font-weight:800; }
     .mv-btn-clear:hover { background:rgba(242,63,66,.1); }
     .mv-table-wrap { overflow-x:auto; }
-    .mv-table { width:100%; border-collapse:collapse; font-size:.82rem; }
-    .mv-table thead th { text-align:left; padding:.6rem 1rem; font-size:.68rem; font-weight:800; letter-spacing:.04em; color:var(--text-secondary); text-transform:uppercase; border-top:1px solid var(--border); border-bottom:1px solid var(--border); white-space:nowrap; }
+    .mv-table { width:100%; border-collapse:collapse; font-size:.82rem; table-layout:fixed; }
+    .mv-table thead th { text-align:left; padding:.6rem 1rem; font-size:.68rem; font-weight:800; letter-spacing:.04em; color:var(--text-secondary); text-transform:uppercase; border-top:1px solid var(--border); border-bottom:1px solid var(--border); white-space:normal; line-height:1.4; vertical-align:top; }
     .mv-table thead th.mv-th-sortable { cursor:pointer; user-select:none; }
-    .mv-th-inner { display:inline-flex; align-items:center; gap:.35rem; }
-    .mv-th-inner svg { width:12px; height:12px; opacity:.6; }
-    .mv-table tbody td { padding:.55rem 1rem; border-bottom:1px solid var(--border); vertical-align:middle; color:var(--text-primary); }
+    .mv-th-inner { display:inline-flex; align-items:flex-start; gap:.35rem; }
+    .mv-th-inner svg { width:13px; height:13px; opacity:.55; flex-shrink:0; margin-top:1px; }
+    .mv-table tbody td { padding:.55rem 1rem; border-bottom:1px solid var(--border); vertical-align:middle; color:var(--text-primary); overflow:hidden; text-overflow:ellipsis; }
+    .mv-table th:first-child, .mv-table td:first-child { padding-left:.85rem; padding-right:.4rem; overflow:visible; }
+    .mv-table th:last-child, .mv-table td:last-child { padding-left:.4rem; padding-right:.85rem; overflow:visible; }
     .mv-table tbody tr:hover { background:rgba(255,255,255,.02); }
-    .mv-check { -webkit-appearance:none; appearance:none; width:18px; height:18px; border-radius:5px; background:#2b2c31; border:1px solid #46474e; cursor:pointer; position:relative; margin:0; }
+    .mv-muted { color:var(--text-secondary); }
+    .mv-check { -webkit-appearance:none; appearance:none; width:18px; height:18px; border-radius:5px; background:#2b2c31; border:1px solid #46474e; cursor:pointer; position:relative; margin:0; flex-shrink:0; }
     .mv-check:checked { background:#5865f2; border-color:#5865f2; }
     .mv-check:checked::after { content:""; position:absolute; left:5px; top:1px; width:5px; height:9px; border:solid #fff; border-width:0 2px 2px 0; transform:rotate(45deg); }
-    .mv-user-cell { display:flex; align-items:center; gap:.6rem; min-width:180px; }
+    .mv-user-cell { display:flex; align-items:center; gap:.6rem; min-width:0; }
     .mv-avatar { width:34px; height:34px; border-radius:50%; background:#2b2d34 center/cover no-repeat; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.85rem; color:var(--text-primary); flex-shrink:0; }
-    .mv-user-name { font-weight:700; color:var(--text-primary); line-height:1.25; }
-    .mv-user-handle { font-size:.74rem; color:var(--text-secondary); line-height:1.25; }
-    .mv-role-pill { display:inline-flex; align-items:center; gap:.35rem; background:rgba(255,255,255,.06); border-radius:999px; padding:.2rem .6rem .2rem .45rem; font-size:.74rem; font-weight:700; }
+    .mv-user-name { font-weight:700; color:var(--text-primary); line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .mv-user-handle { font-size:.74rem; color:var(--text-secondary); line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .mv-role-pill { display:inline-flex; align-items:center; gap:.35rem; background:rgba(255,255,255,.06); border-radius:999px; padding:.2rem .6rem .2rem .45rem; font-size:.74rem; font-weight:700; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .mv-role-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
     .mv-row-actions { display:flex; align-items:center; gap:.3rem; justify-content:flex-end; }
-    .mv-row-action-btn { width:30px; height:30px; border:none; background:transparent; color:var(--text-secondary); border-radius:7px; cursor:pointer; display:flex; align-items:center; justify-content:center; text-decoration:none; }
-    .mv-row-action-btn:hover { background:rgba(255,255,255,.06); color:var(--text-primary); }
+    .mv-row-action-btn { width:30px; height:30px; border:none; background:rgba(0,0,0,.3); color:var(--text-secondary); border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; text-decoration:none; flex-shrink:0; }
+    .mv-row-action-btn:hover { background:rgba(255,255,255,.08); color:var(--text-primary); }
     .mv-row-action-btn svg { width:16px; height:16px; }
     .mv-footer { padding:.85rem 1.1rem; color:var(--text-secondary); font-size:.78rem; }
     .mv-footer b { color:var(--text-primary); }
@@ -1845,15 +1848,25 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
         </div>
         <div class="mv-table-wrap">
           <table class="mv-table">
+            <colgroup>
+              <col style="width:3rem">
+              <col style="width:18%">
+              <col style="width:12%">
+              <col style="width:12%">
+              <col style="width:12%">
+              <col style="width:14%">
+              <col style="width:23%">
+              <col style="width:6rem">
+            </colgroup>
             <thead>
               <tr>
-                <th style="width:2.5rem"><input type="checkbox" class="mv-check" id="mv-check-all" onchange="mvToggleAll(this)"></th>
+                <th><input type="checkbox" class="mv-check" id="mv-check-all" onchange="mvToggleAll(this)"></th>
                 <th>Имя</th>
-                <th class="mv-th-sortable" onclick="mvCycleSort()"><span class="mv-th-inner">В числе участников с<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l4-5 4 5M8 15l4 5 4-5"/></svg></span></th>
-                <th class="mv-th-sortable" onclick="mvCycleSort()"><span class="mv-th-inner">В Discord с<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l4-5 4 5M8 15l4 5 4-5"/></svg></span></th>
-                <th>Способ вступления</th>
-                <th>Роли</th>
-                <th>Сигналы</th>
+                <th class="mv-th-sortable" onclick="mvCycleSort()"><span class="mv-th-inner">В числе участников с<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="2" x2="6" y1="14" y2="14"/><line x1="10" x2="14" y1="8" y2="8"/><line x1="18" x2="22" y1="16" y2="16"/></svg></span></th>
+                <th class="mv-th-sortable" onclick="mvCycleSort()"><span class="mv-th-inner">В Discord с<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="2" x2="6" y1="14" y2="14"/><line x1="10" x2="14" y1="8" y2="8"/><line x1="18" x2="22" y1="16" y2="16"/></svg></span></th>
+                <th class="mv-th-sortable" onclick="mvCycleSort()"><span class="mv-th-inner">Способ вступления<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="2" x2="6" y1="14" y2="14"/><line x1="10" x2="14" y1="8" y2="8"/><line x1="18" x2="22" y1="16" y2="16"/></svg></span></th>
+                <th class="mv-th-sortable" onclick="mvCycleSort()"><span class="mv-th-inner">Роли<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="2" x2="6" y1="14" y2="14"/><line x1="10" x2="14" y1="8" y2="8"/><line x1="18" x2="22" y1="16" y2="16"/></svg></span></th>
+                <th class="mv-th-sortable" onclick="mvCycleSort()"><span class="mv-th-inner">Сигналы<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="2" x2="6" y1="14" y2="14"/><line x1="10" x2="14" y1="8" y2="8"/><line x1="18" x2="22" y1="16" y2="16"/></svg></span></th>
                 <th></th>
               </tr>
             </thead>
@@ -1872,9 +1885,9 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
                     </span>
                   </div>
                 </td>
-                <td>—</td>
-                <td>{{ m.created_at.strftime('%d.%m.%Y') if m.created_at else '—' }}</td>
-                <td>Неизвестно</td>
+                <td class="mv-muted">—</td>
+                <td class="mv-muted">{{ m.created_at.strftime('%d.%m.%Y') if m.created_at else '—' }}</td>
+                <td class="mv-muted">Неизвестно</td>
                 <td><span class="mv-role-pill"><span class="mv-role-dot" style="background:{{ m.role_color_start or '#5865f2' }}"></span>{{ i18n_t('common.role.' ~ item.member.role) }}</span></td>
                 <td></td>
                 <td>
@@ -1895,7 +1908,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
             </tbody>
           </table>
         </div>
-        <div class="mv-footer">Показано <b>{{ members|length }}</b> участников</div>
+        <div class="mv-footer">Показаны <b>{{ members|length }}</b> участников</div>
       </div>
     </div>
   </main>
