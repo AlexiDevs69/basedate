@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.121.8",
+      "date": "2026-08-30",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance role selection UI and styles."
+      ],
+      "source_sha": "6d43bed5ea0b9e92be03bba056bca31032d2fafa"
+    },
+    {
       "version": "1.121.7",
       "date": "2026-08-30",
       "title": "Виправлення та стабільність",
