@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.120.1",
+      "date": "2026-08-29",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Виправлено: deleteCurrentEvent form action URL."
+      ],
+      "source_sha": "9c06678b785570964d87d375fac6855c6909d320"
+    },
+    {
       "version": "1.120.0",
       "date": "2026-08-29",
       "title": "Нові можливості AlexiHub",
