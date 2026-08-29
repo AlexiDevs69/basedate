@@ -2141,7 +2141,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
         var checked = prSelectedRoles.indexOf(r) !== -1 ? 'checked' : '';
         var safe = r.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         return '<label class="pr-role-option"><input type="checkbox" ' + checked + ' onchange="prToggleRole(this, ' + JSON.stringify(r).replace(/"/g, '&quot;') + ')">' +
-          '<span class="pr-role-option-name">' + safe + '</span><span class="pr-role-count">' + map[r].length + '</span></label>';
+          '<span class="pr-role-option-name">' + safe + '</span></label>';
       }).join('');
     }
 
@@ -2156,7 +2156,9 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
     function prUpdateRoleTriggerLabel() {
       var label = document.getElementById('pr-role-trigger-label');
       if (!label) return;
-      label.textContent = prSelectedRoles.length ? prSelectedRoles.join(', ') : 'Выберите...';
+      var hasValue = prSelectedRoles.length > 0;
+      label.textContent = hasValue ? prSelectedRoles.join(', ') : 'Выберите...';
+      label.classList.toggle('pr-has-value', hasValue);
     }
 
     function prToggleRoleDropdown(e) {
@@ -2350,28 +2352,68 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
   {% endif %}
   {% if can_manage %}<div id="settings-modal" class="modal-backdrop"><form class="modal-card" method="post" action="/community/servers/{{ server.id }}/settings"><input type="hidden" name="redirect_to" value="{{ request.url.path }}"><div class="modal-head"><h2><!--i18n:common.title.server_settings-->{{ i18n_t('common.title.server_settings') }}</h2><button class="modal-close" type="button" onclick="closeModal('settings-modal')">×</button></div><label><!--i18n:server.fields.name-->{{ i18n_t('server.fields.name') }}</label><input name="name" value="{{ server.name }}" required maxlength="64"><label><!--i18n:common.text.icon_url-->{{ i18n_t('common.text.icon_url') }}</label><input name="icon_url" value="{{ server.icon_url or '' }}" placeholder="https://..."><label><!--i18n:server.fields.description-->{{ i18n_t("server.fields.description") }}</label><textarea name="description" maxlength="255" placeholder="{{ i18n_t('server.fields.description_placeholder') }}">{{ server.description or '' }}</textarea><div class="modal-actions"><button class="modal-btn secondary" type="button" onclick="closeModal('settings-modal')"><!--i18n:common.actions.cancel-->{{ i18n_t("common.actions.cancel") }}</button><button class="modal-btn" type="submit"><!--i18n:common.action.save_changes-->{{ i18n_t('common.action.save_changes') }}</button></div></form></div><div id="channel-modal" class="modal-backdrop"><form class="modal-card" method="post" action="/community/servers/{{ server.id }}/channels/create"><div class="modal-head"><h2><!--i18n:common.title.create_channel-->{{ i18n_t('common.title.create_channel') }}</h2><button class="modal-close" type="button" onclick="closeModal('channel-modal')">×</button></div><label><!--i18n:common.text.channel_name-->{{ i18n_t('common.text.channel_name') }}</label><input name="name" placeholder="general-chat" required><label><!--i18n:server.fields.description-->{{ i18n_t("server.fields.description") }}</label><input name="description" placeholder="{{ i18n_t('common.placeholder.n_ena_japan') }}" data-i18n-placeholder="common.placeholder.n_ena_japan"><div class="modal-actions"><button class="modal-btn secondary" type="button" onclick="closeModal('channel-modal')"><!--i18n:common.actions.cancel-->{{ i18n_t("common.actions.cancel") }}</button><button class="modal-btn" type="submit"><!--i18n:common.action.create-->{{ i18n_t("common.action.create") }}</button></div></form></div>
   <style id="prune-modal-styles">
-    .pr-card { width:min(480px,100%); }
-    .pr-card .modal-head h2 { font-size:1.05rem; }
-    .pr-block { margin:1rem 0; }
-    .pr-block-label { font-weight:800; font-size:.9rem; margin-bottom:.5rem; color:var(--text-primary); }
-    .pr-radio-row { display:flex; align-items:center; gap:.65rem; padding:.4rem 0; font-size:.92rem; cursor:pointer; color:var(--text-primary); }
-    .pr-radio-row input[type="radio"] { width:18px; height:18px; accent-color:#5865f2; cursor:pointer; flex:0 0 auto; }
+    @keyframes prCardIn { from { opacity:0; transform:translateY(10px) scale(.97); } to { opacity:1; transform:translateY(0) scale(1); } }
+    .modal-backdrop.open .pr-card { animation:prCardIn .24s cubic-bezier(.16,1,.3,1) both; }
+    .pr-card { width:min(480px,100%); padding:1.3rem; }
+    .pr-card .modal-head h2 { font-size:1.08rem; letter-spacing:-.01em; }
+    .pr-block { margin:1.15rem 0; }
+    .pr-block-label { font-weight:800; font-size:.9rem; margin-bottom:.65rem; color:var(--text-primary); }
+    .pr-radio-row { display:flex; align-items:center; gap:.7rem; padding:.45rem 0; font-size:.93rem; cursor:pointer; color:var(--text-primary); user-select:none; }
+    .pr-radio-row input[type="radio"] {
+      appearance:none; -webkit-appearance:none; width:20px; height:20px; flex:0 0 auto; margin:0;
+      border:2px solid #4e5058; border-radius:50%; background:transparent; cursor:pointer; position:relative;
+      transition:border-color .16s ease, background .16s ease, box-shadow .16s ease, transform .1s ease;
+    }
+    .pr-radio-row input[type="radio"]:hover { border-color:#82858e; }
+    .pr-radio-row input[type="radio"]:checked { border-color:#5865f2; box-shadow:inset 0 0 0 4px #1b1b1f, inset 0 0 0 20px #5865f2; }
+    .pr-radio-row input[type="radio"]:active { transform:scale(.9); }
+
     .pr-role-select { position:relative; }
-    .pr-role-trigger { width:100%; display:flex; align-items:center; justify-content:space-between; gap:.5rem; background:#111114; color:var(--text-primary); border:1px solid var(--border); border-radius:10px; padding:.68rem .76rem; font-family:var(--font-sans); font-size:.88rem; cursor:pointer; text-align:left; }
+    .pr-role-trigger {
+      width:100%; display:flex; align-items:center; justify-content:space-between; gap:.5rem;
+      background:#111114; color:var(--text-primary); border:1px solid var(--border); border-radius:10px;
+      padding:.72rem .8rem; font-family:var(--font-sans); font-size:.9rem; cursor:pointer; text-align:left;
+      transition:border-color .16s ease, box-shadow .16s ease;
+    }
     .pr-role-trigger:hover { border-color:var(--border-hover); }
-    .pr-role-select.open .pr-role-trigger { border-color:#5865f2; }
-    .pr-role-trigger-label { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .pr-role-chevron { width:16px; height:16px; flex:0 0 auto; transition:transform .15s ease; color:var(--text-secondary); }
-    .pr-role-select.open .pr-role-chevron { transform:rotate(180deg); }
-    .pr-role-panel { display:none; margin-top:6px; max-height:180px; overflow:auto; background:#111114; border:1px solid var(--border); border-radius:10px; padding:.35rem; }
-    .pr-role-select.open .pr-role-panel { display:block; }
-    .pr-role-option { display:flex; align-items:center; gap:.55rem; padding:.5rem .55rem; border-radius:8px; cursor:pointer; font-size:.86rem; }
+    .pr-role-select.open .pr-role-trigger { border-color:#5865f2; box-shadow:0 0 0 3px rgba(88,101,242,.18); }
+    .pr-role-trigger-label { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-secondary); }
+    .pr-role-select.open .pr-role-trigger-label.pr-has-value,
+    .pr-role-trigger-label.pr-has-value { color:var(--text-primary); }
+    .pr-role-chevron { width:16px; height:16px; flex:0 0 auto; transition:transform .2s cubic-bezier(.4,0,.2,1); color:var(--text-secondary); }
+    .pr-role-select.open .pr-role-chevron { transform:rotate(180deg); color:#5865f2; }
+
+    .pr-role-panel {
+      max-height:0; opacity:0; overflow:hidden; transform:translateY(-6px);
+      margin-top:0; padding:0 .4rem; border:1px solid transparent; border-radius:10px; background:#111114;
+      transition:max-height .26s cubic-bezier(.4,0,.2,1), opacity .2s ease, transform .2s ease, margin-top .26s cubic-bezier(.4,0,.2,1), padding .26s cubic-bezier(.4,0,.2,1), border-color .2s ease;
+      pointer-events:none;
+    }
+    .pr-role-select.open .pr-role-panel {
+      max-height:230px; opacity:1; transform:translateY(0); margin-top:8px; padding:.4rem;
+      border-color:var(--border); overflow-y:auto; pointer-events:auto;
+    }
+    .pr-role-panel::-webkit-scrollbar { width:6px; }
+    .pr-role-panel::-webkit-scrollbar-thumb { background:#35353b; border-radius:3px; }
+
+    .pr-role-option { display:flex; align-items:center; gap:.65rem; padding:.62rem .5rem; border-radius:8px; cursor:pointer; font-size:.9rem; color:var(--text-primary); user-select:none; transition:background .12s ease; }
     .pr-role-option:hover { background:rgba(255,255,255,.06); }
-    .pr-role-option input[type="checkbox"] { width:15px; height:15px; accent-color:#5865f2; flex:0 0 auto; }
     .pr-role-option-name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .pr-role-count { color:var(--text-secondary); font-size:.78rem; flex:0 0 auto; }
-    .pr-role-empty { padding:.6rem .55rem; color:var(--text-secondary); font-size:.82rem; }
-    .pr-summary { margin-top:1rem; font-size:.86rem; line-height:1.55; color:var(--text-secondary); }
+    .pr-role-option input[type="checkbox"] {
+      appearance:none; -webkit-appearance:none; width:20px; height:20px; flex:0 0 auto; margin:0;
+      border:2px solid #4e5058; border-radius:6px; background:transparent; cursor:pointer; position:relative;
+      transition:background .16s ease, border-color .16s ease, transform .1s ease;
+    }
+    .pr-role-option input[type="checkbox"]:hover { border-color:#82858e; }
+    .pr-role-option input[type="checkbox"]:checked { background:#5865f2; border-color:#5865f2; }
+    .pr-role-option input[type="checkbox"]:checked::after {
+      content:''; position:absolute; left:50%; top:44%; width:5px; height:9px;
+      border:solid #fff; border-width:0 2px 2px 0; transform:translate(-50%,-50%) rotate(45deg);
+    }
+    .pr-role-option input[type="checkbox"]:active { transform:scale(.88); }
+    .pr-role-empty { padding:.7rem .55rem; color:var(--text-secondary); font-size:.85rem; }
+
+    .pr-summary { margin-top:1.15rem; font-size:.86rem; line-height:1.6; color:var(--text-secondary); }
     .pr-summary b { color:var(--text-primary); }
     #pr-submit-btn.pr-empty { opacity:.55; }
   </style>
