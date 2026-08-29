@@ -1788,6 +1788,30 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
   </main>
 
   <script>
+    var CV_SERVER_ID = {{ server.id }};
+
+    function cvStorageKey() {
+      return 'cv-hidden-channels:' + CV_SERVER_ID;
+    }
+
+    function cvGetHiddenIds() {
+      try {
+        var raw = window.localStorage.getItem(cvStorageKey());
+        var arr = raw ? JSON.parse(raw) : [];
+        return Array.isArray(arr) ? arr.map(String) : [];
+      } catch (err) {
+        return [];
+      }
+    }
+
+    function cvSetHiddenIds(ids) {
+      try {
+        window.localStorage.setItem(cvStorageKey(), JSON.stringify(ids));
+      } catch (err) {
+        /* localStorage unavailable (private mode / quota) — state just won't persist */
+      }
+    }
+
     function cvFilterChannels(query) {
       var q = (query || '').trim().toLowerCase();
       document.querySelectorAll('.cv-row').forEach(function (row) {
@@ -1811,7 +1835,31 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
       });
       var cvRow = checkbox.closest('.cv-row');
       if (cvRow) cvRow.classList.toggle('cv-row-hidden', !visible);
+
+      var hidden = cvGetHiddenIds();
+      var idx = hidden.indexOf(channelId);
+      if (visible) {
+        if (idx !== -1) hidden.splice(idx, 1);
+      } else if (idx === -1) {
+        hidden.push(channelId);
+      }
+      cvSetHiddenIds(hidden);
     }
+
+    function cvApplyStoredVisibility() {
+      var hidden = cvGetHiddenIds();
+      if (!hidden.length) return;
+      hidden.forEach(function (channelId) {
+        var checkbox = document.querySelector('.cv-check[data-channel-id="' + channelId + '"]');
+        if (checkbox) checkbox.checked = false;
+        var cvRow = checkbox ? checkbox.closest('.cv-row') : null;
+        if (cvRow) cvRow.classList.add('cv-row-hidden');
+        document.querySelectorAll('.chan-row[data-channel-id="' + channelId + '"]').forEach(function (row) {
+          row.style.display = 'none';
+        });
+      });
+    }
+    cvApplyStoredVisibility();
 
     document.addEventListener('click', function (e) {
       var btn = e.target.closest('.cv-row-preview-btn');
