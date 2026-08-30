@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.126.0",
+      "date": "2026-08-30",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: list_member_messages_by_channel function."
+      ],
+      "source_sha": "6a958eba6552464990503834331d8bc1709a89df"
+    },
+    {
       "version": "1.125.1",
       "date": "2026-08-30",
       "title": "Оновлення AlexiHub",
