@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.121.16",
+      "date": "2026-08-30",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance checkbox styles with hover and animation."
+      ],
+      "source_sha": "6b7431d70714aa1f03bfb136b8a90eb811e4970c"
+    },
+    {
       "version": "1.121.15",
       "date": "2026-08-30",
       "title": "Оновлення AlexiHub",
