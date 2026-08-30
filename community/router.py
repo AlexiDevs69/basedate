@@ -3237,6 +3237,30 @@ async def api_moderate_server_member(
     return JSONResponse({"ok": True, "result": result, "action": action, "target_id": target_id})
 
 
+@router.get("/api/servers/{server_id}/members/{target_id}/activity-stats")
+async def api_server_member_activity_stats(
+    server_id: int,
+    target_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """Backs the moderator panel's "Активность сервера" block with real numbers."""
+    actor = await current_account(request, db)
+    if not actor:
+        return JSONResponse({"ok": False, "error": "unauthorized"}, status_code=401)
+    server = await crud.get_server_by_id(db, server_id)
+    if not server:
+        return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
+    # The panel itself is only reachable by the server owner (see AH_IS_SERVER_OWNER),
+    # so this mirrors that check server-side instead of trusting the client.
+    if actor.id != server.owner_id:
+        return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
+    if not await crud.is_server_member(db, server_id, target_id):
+        return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
+    stats = await crud.get_member_channel_activity_stats(db, server_id, target_id)
+    return JSONResponse({"ok": True, **stats})
+
+
 @router.post("/servers/{server_id}/leave")
 async def server_leave_submit(
     server_id: int,
