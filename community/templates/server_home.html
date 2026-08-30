@@ -197,7 +197,27 @@
     .ah-mod-tab svg { width:17px; height:17px; }
     .ah-mod-tab:hover { background:rgba(255,255,255,.06); color:#dbdee1; }
     .ah-mod-tab.active { background:#fff; color:#111; }
-    .ah-mod-panel-body { flex:1; min-height:0; overflow-y:auto; padding:1rem 1.1rem 1.6rem; }
+    .ah-mod-panel-body { flex:1; min-height:0; overflow:hidden; padding:0; }
+    .ah-mod-views { display:flex; width:200%; height:100%; transition:transform .28s cubic-bezier(.16,1,.3,1); }
+    .ah-mod-views.show-messages { transform:translateX(-50%); }
+    .ah-mod-view { width:50%; flex:0 0 50%; height:100%; overflow-y:auto; padding:1rem 1.1rem 1.6rem; box-sizing:border-box; }
+    .ah-mod-back-btn { display:flex; align-items:center; gap:.35rem; border:0; background:transparent; color:#fff; font-weight:800; font-size:.92rem; cursor:pointer; padding:.2rem .3rem; margin-left:-.3rem; border-radius:6px; }
+    .ah-mod-back-btn:hover { background:rgba(255,255,255,.06); }
+    .ah-mod-back-btn svg { width:18px; height:18px; flex-shrink:0; }
+    .ah-mod-messages-list { display:flex; flex-direction:column; }
+    .ah-mod-msg-channel-head { display:flex; align-items:center; gap:.5rem; padding:.55rem .65rem; margin-bottom:.7rem; border-radius:8px; background:rgba(255,255,255,.05); font-weight:800; font-size:.82rem; color:#fff; }
+    .ah-mod-msg-channel-head svg { width:16px; height:16px; color:#9ca3af; flex-shrink:0; }
+    .ah-mod-msg-channel-hash { font-size:1rem; font-weight:700; color:#9ca3af; width:16px; text-align:center; flex-shrink:0; }
+    .ah-mod-msg-card { display:flex; gap:.65rem; padding:.65rem .7rem; margin-bottom:.45rem; border-radius:10px; background:rgba(255,255,255,.03); }
+    .ah-mod-msg-avatar { width:38px; height:38px; border-radius:50%; background:#2b2d31 center/cover no-repeat; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; font-size:.85rem; box-shadow:0 0 0 2px var(--online); }
+    .ah-mod-msg-body { min-width:0; flex:1; }
+    .ah-mod-msg-meta { display:flex; align-items:baseline; gap:.4rem; flex-wrap:wrap; }
+    .ah-mod-msg-name { font-weight:800; font-size:.84rem; color:#fff; }
+    .ah-mod-msg-tag { display:inline-flex; align-items:center; gap:3px; background:#2b2d31; border:1px solid #3a3c45; border-radius:5px; padding:0 5px; font-size:.62rem; font-weight:800; color:#dbdee1; }
+    .ah-mod-msg-tag b { color:#e767ec; font-style:normal; }
+    .ah-mod-msg-time { font-size:.68rem; color:#6b7280; font-weight:650; margin-left:auto; white-space:nowrap; }
+    .ah-mod-msg-content { margin-top:.15rem; font-size:.85rem; color:#dbdee1; line-height:1.4; white-space:pre-wrap; word-break:break-word; }
+    .ah-mod-messages-empty { color:#9ca3af; font-size:.85rem; padding:1.2rem .2rem; text-align:center; }
     .ah-mod-section-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; }
     .ah-mod-section-head > span { font-weight:800; font-size:.92rem; color:#fff; }
     .ah-mod-section-head-actions { display:flex; align-items:center; gap:.6rem; }
@@ -2556,71 +2576,86 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
       <button type="button" class="ah-mod-tab active" data-mod-tab="id">ID</button>
     </div>
     <div class="ah-mod-panel-body">
-      <div class="ah-mod-section-head">
-        <span>Доступ модератора</span>
-        <div class="ah-mod-section-head-actions">
-          <button type="button" class="ah-mod-refresh-btn" title="Обновить"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg></button>
-          <span class="ah-mod-esc-hint">ESC</span>
-        </div>
-      </div>
+      <div class="ah-mod-views" id="ah-mod-views">
+        <div class="ah-mod-view ah-mod-view-main" id="ah-mod-view-main">
+          <div class="ah-mod-section-head">
+            <span>Доступ модератора</span>
+            <div class="ah-mod-section-head-actions">
+              <button type="button" class="ah-mod-refresh-btn" title="Обновить"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg></button>
+              <span class="ah-mod-esc-hint" id="ah-mod-esc-main">ESC</span>
+            </div>
+          </div>
 
-      <div class="ah-mod-block">
-        <div class="ah-mod-block-title">Активность сервера</div>
-        <button type="button" class="ah-mod-stat-row">
-          <span class="ah-mod-stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
-          <span class="ah-mod-stat-label">Сообщения</span>
-          <span id="ah-mod-stat-messages" class="ah-mod-stat-value">0</span>
-          <svg class="ah-mod-stat-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
-        </button>
-        <button type="button" class="ah-mod-stat-row">
-          <span class="ah-mod-stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
-          <span class="ah-mod-stat-label">Ссылки</span>
-          <span id="ah-mod-stat-links" class="ah-mod-stat-value">0</span>
-          <svg class="ah-mod-stat-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
-        </button>
-        <button type="button" class="ah-mod-stat-row">
-          <span class="ah-mod-stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></span>
-          <span class="ah-mod-stat-label">Медиаконтент</span>
-          <span id="ah-mod-stat-media" class="ah-mod-stat-value">0</span>
-          <svg class="ah-mod-stat-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
-        </button>
-        <button type="button" class="ah-mod-stat-row">
-          <span class="ah-mod-stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6l1 3H8z"/><path d="M6 6h12v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1z"/><path d="M12 11v5"/><path d="M12 18h.01"/></svg></span>
-          <span class="ah-mod-stat-label">Журнал аудита</span>
-          <span id="ah-mod-stat-audit" class="ah-mod-stat-value">0</span>
-          <svg class="ah-mod-stat-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
-        </button>
-      </div>
+          <div class="ah-mod-block">
+            <div class="ah-mod-block-title">Активность сервера</div>
+            <button type="button" class="ah-mod-stat-row" data-stat="messages">
+              <span class="ah-mod-stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+              <span class="ah-mod-stat-label">Сообщения</span>
+              <span id="ah-mod-stat-messages" class="ah-mod-stat-value">0</span>
+              <svg class="ah-mod-stat-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+            </button>
+            <button type="button" class="ah-mod-stat-row">
+              <span class="ah-mod-stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
+              <span class="ah-mod-stat-label">Ссылки</span>
+              <span id="ah-mod-stat-links" class="ah-mod-stat-value">0</span>
+              <svg class="ah-mod-stat-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+            </button>
+            <button type="button" class="ah-mod-stat-row">
+              <span class="ah-mod-stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></span>
+              <span class="ah-mod-stat-label">Медиаконтент</span>
+              <span id="ah-mod-stat-media" class="ah-mod-stat-value">0</span>
+              <svg class="ah-mod-stat-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+            </button>
+            <button type="button" class="ah-mod-stat-row">
+              <span class="ah-mod-stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6l1 3H8z"/><path d="M6 6h12v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1z"/><path d="M12 11v5"/><path d="M12 18h.01"/></svg></span>
+              <span class="ah-mod-stat-label">Журнал аудита</span>
+              <span id="ah-mod-stat-audit" class="ah-mod-stat-value">0</span>
+              <svg class="ah-mod-stat-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+            </button>
+          </div>
 
-      <div class="ah-mod-block">
-        <div class="ah-mod-block-title-row">
-          <span>Права для модератора</span>
-          <button type="button" class="ah-mod-all-perms">ВСЕ (<span id="ah-mod-perm-count">0</span>)<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></button>
-        </div>
-        <div id="ah-mod-perm-grid" class="ah-mod-perm-grid"></div>
-      </div>
+          <div class="ah-mod-block">
+            <div class="ah-mod-block-title-row">
+              <span>Права для модератора</span>
+              <button type="button" class="ah-mod-all-perms">ВСЕ (<span id="ah-mod-perm-count">0</span>)<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></button>
+            </div>
+            <div id="ah-mod-perm-grid" class="ah-mod-perm-grid"></div>
+          </div>
 
-      <div class="ah-mod-block">
-        <div class="ah-mod-block-title">Роли</div>
-        <button type="button" class="ah-mod-role-add" title="Добавить роль">+</button>
-      </div>
+          <div class="ah-mod-block">
+            <div class="ah-mod-block-title">Роли</div>
+            <button type="button" class="ah-mod-role-add" title="Добавить роль">+</button>
+          </div>
 
-      <div class="ah-mod-block">
-        <div class="ah-mod-block-title">Учётная запись</div>
-        <div class="ah-mod-account-row">
-          <span class="ah-mod-account-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m17 11 2 2 4-4"/></svg></span>
-          <span>Уровень проверки подтверждён</span>
-          <svg class="ah-mod-account-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <div class="ah-mod-block">
+            <div class="ah-mod-block-title">Учётная запись</div>
+            <div class="ah-mod-account-row">
+              <span class="ah-mod-account-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m17 11 2 2 4-4"/></svg></span>
+              <span>Уровень проверки подтверждён</span>
+              <svg class="ah-mod-account-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="ah-mod-account-row">
+              <span class="ah-mod-account-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18"/><path d="M8 3v4M16 3v4"/></svg></span>
+              <span>Дата регистрации в AlexiHub</span>
+              <span id="ah-mod-created" class="ah-mod-account-value">—</span>
+            </div>
+            <div class="ah-mod-account-row">
+              <span class="ah-mod-account-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22V4a1 1 0 0 1 1-1h11l3 3-3 3H5"/><path d="M4 15h12"/></svg></span>
+              <span>Дата присоединения к серверу</span>
+              <span id="ah-mod-joined" class="ah-mod-account-value">—</span>
+            </div>
+          </div>
         </div>
-        <div class="ah-mod-account-row">
-          <span class="ah-mod-account-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18"/><path d="M8 3v4M16 3v4"/></svg></span>
-          <span>Дата регистрации в AlexiHub</span>
-          <span id="ah-mod-created" class="ah-mod-account-value">—</span>
-        </div>
-        <div class="ah-mod-account-row">
-          <span class="ah-mod-account-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22V4a1 1 0 0 1 1-1h11l3 3-3 3H5"/><path d="M4 15h12"/></svg></span>
-          <span>Дата присоединения к серверу</span>
-          <span id="ah-mod-joined" class="ah-mod-account-value">—</span>
+
+        <div class="ah-mod-view ah-mod-view-messages" id="ah-mod-view-messages">
+          <div class="ah-mod-section-head">
+            <button type="button" class="ah-mod-back-btn" id="ah-mod-messages-back">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+              <span>Назад</span>
+            </button>
+            <span class="ah-mod-esc-hint" id="ah-mod-esc-messages">ESC</span>
+          </div>
+          <div id="ah-mod-messages-list" class="ah-mod-messages-list"></div>
         </div>
       </div>
     </div>
@@ -8390,6 +8425,130 @@ if (typeof window.openSelfProfileSettings !== 'function') {
       });
   }
 
+  /* ---- "Сообщения" drill-down: slides the panel body to a per-channel message list ---- */
+  var currentPanelAvatarUrl = '';
+  var currentPanelDisplayName = '';
+  var currentPanelTagGlyph = '';
+  var currentPanelTagText = '';
+  var messagesRequestSeq = 0;
+
+  var MSG_CHANNEL_ICON_RULES = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.2"/><circle cx="8.6" cy="10" r="1.6"/><path d="m21 16.5-5.6-5.6a1.5 1.5 0 0 0-2.1 0L5 19"/></svg>';
+  var MSG_CHANNEL_ICON_VOICE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15 9a4 4 0 0 1 0 6"/><path d="M18 6a8 8 0 0 1 0 12"/></svg>';
+
+  function channelIconHtml(channel) {
+    var type = (channel && channel.channel_type) || 'text';
+    var name = String((channel && channel.channel_name) || '').trim().toLowerCase();
+    if (type === 'voice') return MSG_CHANNEL_ICON_VOICE;
+    if (name === 'rules') return MSG_CHANNEL_ICON_RULES;
+    return '<span class="ah-mod-msg-channel-hash">#</span>';
+  }
+
+  function formatMsgTime(iso) {
+    if (!iso) return '';
+    try {
+      var d = new Date(iso);
+      if (isNaN(d.getTime())) return '';
+      var p = function (n) { return String(n).padStart(2, '0'); };
+      return p(d.getDate()) + '.' + p(d.getMonth() + 1) + '.' + d.getFullYear() + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+    } catch (err) {
+      return '';
+    }
+  }
+
+  function renderMessageCard(msg) {
+    var card = document.createElement('div');
+    card.className = 'ah-mod-msg-card';
+    var avatar = document.createElement('div');
+    avatar.className = 'ah-mod-msg-avatar';
+    if (currentPanelAvatarUrl) {
+      avatar.style.backgroundImage = "url('" + currentPanelAvatarUrl.replace(/'/g, '%27') + "')";
+    } else {
+      avatar.textContent = (currentPanelDisplayName || '?').slice(0, 1).toUpperCase();
+    }
+    var body = document.createElement('div');
+    body.className = 'ah-mod-msg-body';
+    var meta = document.createElement('div');
+    meta.className = 'ah-mod-msg-meta';
+    var nameEl = document.createElement('span');
+    nameEl.className = 'ah-mod-msg-name';
+    nameEl.textContent = currentPanelDisplayName || 'User';
+    meta.appendChild(nameEl);
+    if (currentPanelTagText) {
+      var tagEl = document.createElement('span');
+      tagEl.className = 'ah-mod-msg-tag';
+      tagEl.innerHTML = '<b>' + escapeHtml(currentPanelTagGlyph || '◆') + '</b>' + escapeHtml(currentPanelTagText);
+      meta.appendChild(tagEl);
+    }
+    var timeEl = document.createElement('span');
+    timeEl.className = 'ah-mod-msg-time';
+    timeEl.textContent = formatMsgTime(msg.created_at);
+    meta.appendChild(timeEl);
+    var contentEl = document.createElement('div');
+    contentEl.className = 'ah-mod-msg-content';
+    contentEl.textContent = msg.content || '';
+    body.appendChild(meta);
+    body.appendChild(contentEl);
+    card.appendChild(avatar);
+    card.appendChild(body);
+    return card;
+  }
+
+  function renderMessagesList(channels) {
+    var list = $('ah-mod-messages-list');
+    if (!list) return;
+    list.innerHTML = '';
+    if (!channels || !channels.length) {
+      var empty = document.createElement('div');
+      empty.className = 'ah-mod-messages-empty';
+      empty.textContent = 'Сообщений не найдено.';
+      list.appendChild(empty);
+      return;
+    }
+    channels.forEach(function (chan) {
+      var head = document.createElement('div');
+      head.className = 'ah-mod-msg-channel-head';
+      head.innerHTML = channelIconHtml(chan) + '<span>' + escapeHtml(chan.channel_name || 'канал') + '</span>';
+      list.appendChild(head);
+      (chan.messages || []).forEach(function (msg) { list.appendChild(renderMessageCard(msg)); });
+    });
+  }
+
+  function openMessagesView(memberId) {
+    var viewsEl = $('ah-mod-views');
+    if (viewsEl) viewsEl.classList.add('show-messages');
+    var list = $('ah-mod-messages-list');
+    if (list) {
+      list.innerHTML = '';
+      var loading = document.createElement('div');
+      loading.className = 'ah-mod-messages-empty';
+      loading.textContent = 'Загрузка…';
+      list.appendChild(loading);
+    }
+    if (!memberId || typeof CV_SERVER_ID === 'undefined') return;
+    var requestId = ++messagesRequestSeq;
+    fetch('/community/api/servers/' + CV_SERVER_ID + '/members/' + encodeURIComponent(memberId) + '/messages', { credentials: 'same-origin' })
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        if (requestId !== messagesRequestSeq) return;
+        if (!data || !data.ok) {
+          var l = $('ah-mod-messages-list');
+          if (l) l.innerHTML = '<div class="ah-mod-messages-empty">Не удалось загрузить сообщения.</div>';
+          return;
+        }
+        renderMessagesList(data.channels);
+      })
+      .catch(function () {
+        if (requestId !== messagesRequestSeq) return;
+        var l = $('ah-mod-messages-list');
+        if (l) l.innerHTML = '<div class="ah-mod-messages-empty">Не удалось загрузить сообщения.</div>';
+      });
+  }
+
+  function closeMessagesView() {
+    var viewsEl = $('ah-mod-views');
+    if (viewsEl) viewsEl.classList.remove('show-messages');
+  }
+
   function escapeHtml(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -8471,6 +8630,11 @@ if (typeof window.openSelfProfileSettings !== 'function') {
     var joinedEl = $('ah-mod-joined'); if (joinedEl) joinedEl.textContent = extra.created || '—';
 
     renderPerms(tierFor(!!opts.isOwner, extra.roleLabel));
+    closeMessagesView();
+    currentPanelAvatarUrl = extra.avatar || '';
+    currentPanelDisplayName = display;
+    currentPanelTagGlyph = extra.tagGlyph || '';
+    currentPanelTagText = extra.tagText || '';
     loadActivityStats(opts.memberId);
 
     document.querySelectorAll('#mv-tbody tr.ah-mod-row-active').forEach(function (r) { r.classList.remove('ah-mod-row-active'); });
@@ -8489,13 +8653,20 @@ if (typeof window.openSelfProfileSettings !== 'function') {
     panel.setAttribute('aria-hidden', 'true');
     document.querySelectorAll('#mv-tbody tr.ah-mod-row-active').forEach(function (r) { r.classList.remove('ah-mod-row-active'); });
     currentStatsMemberId = null;
+    closeMessagesView();
   }
 
   var closeBtn = $('ah-mod-panel-close');
   if (closeBtn) closeBtn.addEventListener('click', close);
 
-  var escHint = document.querySelector('.ah-mod-esc-hint');
-  if (escHint) escHint.addEventListener('click', close);
+  var escHintMain = $('ah-mod-esc-main');
+  if (escHintMain) escHintMain.addEventListener('click', close);
+
+  var escHintMessages = $('ah-mod-esc-messages');
+  if (escHintMessages) escHintMessages.addEventListener('click', closeMessagesView);
+
+  var messagesBackBtn = $('ah-mod-messages-back');
+  if (messagesBackBtn) messagesBackBtn.addEventListener('click', closeMessagesView);
 
   var refreshBtn = document.querySelector('.ah-mod-refresh-btn');
   if (refreshBtn) refreshBtn.addEventListener('click', function () {
@@ -8515,6 +8686,10 @@ if (typeof window.openSelfProfileSettings !== 'function') {
 
   document.querySelectorAll('.ah-mod-stat-row').forEach(function (row) {
     row.addEventListener('click', function () {
+      if (row.dataset.stat === 'messages') {
+        openMessagesView(currentStatsMemberId);
+        return;
+      }
       if (typeof window.showActionToast === 'function') window.showActionToast('Раздел в разработке');
     });
   });
@@ -8532,7 +8707,13 @@ if (typeof window.openSelfProfileSettings !== 'function') {
   document.addEventListener('keydown', function (e) {
     if (e.key !== 'Escape') return;
     var panel = $('ah-mod-panel');
-    if (panel && panel.classList.contains('open')) close();
+    if (!panel || !panel.classList.contains('open')) return;
+    var viewsEl = $('ah-mod-views');
+    if (viewsEl && viewsEl.classList.contains('show-messages')) {
+      closeMessagesView();
+      return;
+    }
+    close();
   });
 
   window.AhModPanel = { open: open, close: close };
