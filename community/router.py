@@ -3261,6 +3261,28 @@ async def api_server_member_activity_stats(
     return JSONResponse({"ok": True, **stats})
 
 
+@router.get("/api/servers/{server_id}/members/{target_id}/messages")
+async def api_server_member_messages(
+    server_id: int,
+    target_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """Message list behind the moderator panel's "Сообщения" stat row."""
+    actor = await current_account(request, db)
+    if not actor:
+        return JSONResponse({"ok": False, "error": "unauthorized"}, status_code=401)
+    server = await crud.get_server_by_id(db, server_id)
+    if not server:
+        return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
+    if actor.id != server.owner_id:
+        return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
+    if not await crud.is_server_member(db, server_id, target_id):
+        return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
+    channels = await crud.list_member_messages_by_channel(db, server_id, target_id)
+    return JSONResponse({"ok": True, "channels": channels})
+
+
 @router.post("/servers/{server_id}/leave")
 async def server_leave_submit(
     server_id: int,
