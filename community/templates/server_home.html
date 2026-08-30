@@ -1706,10 +1706,11 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
 .server-banner-image{position:absolute;inset:0;z-index:0;overflow:hidden;background:#111114}
 .server-banner-image img{width:100%;height:100%;display:block;object-fit:cover;object-position:center}
 .server-banner-image::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.62) 0,rgba(0,0,0,.18) 44%,rgba(0,0,0,.04) 72%,rgba(0,0,0,.28) 100%);pointer-events:none}
-.server-head.has-server-banner .server-head-btn{position:relative;z-index:2;color:#fff!important;text-shadow:0 1px 3px rgba(0,0,0,.88);background:transparent!important;transition:background .18s ease,backdrop-filter .18s ease;-webkit-transition:background .18s ease,-webkit-backdrop-filter .18s ease}
-.server-head.has-server-banner .server-head-btn:hover,.server-head.has-server-banner .server-head-btn.open{background:rgba(20,20,24,.45)!important;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.server-head.has-server-banner::before{content:"";position:absolute;left:0;right:0;top:0;height:46px;z-index:1;background:rgba(20,20,24,.45);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);opacity:0;transition:opacity .18s ease;pointer-events:none}
+.server-head.has-server-banner:hover::before{opacity:1}
+.server-head.has-server-banner .server-head-btn{position:relative;z-index:2;color:#fff!important;text-shadow:0 1px 3px rgba(0,0,0,.88);background:transparent!important}
 .server-head.has-server-banner .server-head-invite-btn{position:relative;z-index:2;color:#fff!important;background:transparent!important;filter:drop-shadow(0 1px 2px rgba(0,0,0,.7))}
-.server-head.has-server-banner .server-head-invite-btn:hover{background:rgba(0,0,0,.22)!important;color:#fff!important}
+.server-head.has-server-banner .server-head-invite-btn:hover{color:#fff!important}
 .server-head.has-server-banner .server-menu{top:48px!important;z-index:4}
 </style>
 {% include "i18n_runtime.html" %}
