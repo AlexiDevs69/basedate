@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.121.14",
+      "date": "2026-08-30",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: avatar badge styles and icons."
+      ],
+      "source_sha": "f70a49d33d0191fcbaa78774587e3c6acb465ea6"
+    },
+    {
       "version": "1.121.13",
       "date": "2026-08-30",
       "title": "Виправлення та стабільність",
