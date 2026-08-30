@@ -138,8 +138,15 @@
     .mv-table th:last-child, .mv-table td:last-child { padding-left:.4rem; padding-right:.85rem; overflow:visible; }
     .mv-table tbody tr:hover { background:rgba(255,255,255,.02); }
     .mv-muted { color:var(--text-secondary); }
-    .mv-check { -webkit-appearance:none; appearance:none; width:18px; height:18px; border-radius:5px; background-color:#2b2c31; border:1px solid #46474e; cursor:pointer; position:relative; margin:0; flex-shrink:0; background-repeat:no-repeat; background-position:center; }
-    .mv-check:checked { background-color:#5865f2; border-color:#5865f2; background-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='white'%20stroke-width='3.2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M5%2013l4%204L19%207'/%3E%3C/svg%3E"); background-size:11px 11px; }
+    .mv-check { -webkit-appearance:none; appearance:none; width:18px; height:18px; border-radius:5px; background-color:#2b2c31; border:1px solid #46474e; cursor:pointer; position:relative; margin:0; flex-shrink:0; background-repeat:no-repeat; background-position:center; transition:background-color .15s ease, border-color .15s ease; }
+    .mv-check:hover { border-color:#5c5e66; }
+    .mv-check:checked { background-color:#5865f2; border-color:#5865f2; background-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='white'%20stroke-width='3.2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M5%2013l4%204L19%207'/%3E%3C/svg%3E"); background-size:11px 11px; animation:mvCheckPop .32s cubic-bezier(.34,1.61,.64,1); }
+    @keyframes mvCheckPop {
+      0% { background-size:0 0; transform:scale(.6); }
+      55% { background-size:15px 15px; transform:scale(1.15); }
+      80% { background-size:9px 9px; transform:scale(.95); }
+      100% { background-size:11px 11px; transform:scale(1); }
+    }
     .mv-user-cell { display:flex; align-items:center; gap:.6rem; min-width:0; }
     .mv-avatar { width:34px; height:34px; border-radius:50%; background:#2b2d34 center/cover no-repeat; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.85rem; color:var(--text-primary); flex-shrink:0; }
     .mv-user-name { font-weight:700; color:var(--text-primary); line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
