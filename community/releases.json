@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.127.3",
+      "date": "2026-08-31",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance server banner styles and interactions."
+      ],
+      "source_sha": "2971483a86eebe55fc0d8bd0df5ef2918162df98"
+    },
+    {
       "version": "1.127.2",
       "date": "2026-08-31",
       "title": "Оновлення AlexiHub",
