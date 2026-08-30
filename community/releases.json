@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.124.0",
+      "date": "2026-08-30",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: API for server member activity stats."
+      ],
+      "source_sha": "d72c50b64a3d7c077d82585bc257b86b1fc88238"
+    },
+    {
       "version": "1.123.0",
       "date": "2026-08-30",
       "title": "Нові можливості AlexiHub",
