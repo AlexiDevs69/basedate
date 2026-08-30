@@ -179,6 +179,61 @@
     .cv-check:checked { background-color:#5865f2; border-color:#5865f2; background-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='white'%20stroke-width='3.2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M5%2013l4%204L19%207'/%3E%3C/svg%3E"); background-size:12px 12px; }
     .cv-row-hidden { opacity:.5; }
 
+    /* --- Панель "Открыть с доступом модератора" (только для владельца сервера) --- */
+    .ah-mod-panel { position:fixed; top:var(--topbar); right:0; bottom:0; width:min(420px,94vw); background:#1e1f22; border-left:1px solid #2b2d31; z-index:850; display:flex; flex-direction:column; transform:translateX(100%); transition:transform .22s cubic-bezier(.16,1,.3,1); box-shadow:-10px 0 34px rgba(0,0,0,.4); }
+    .ah-mod-panel.open { transform:translateX(0); }
+    .ah-mod-panel-close { position:absolute; top:14px; right:14px; width:30px; height:30px; border:0; border-radius:8px; background:rgba(255,255,255,.06); color:#dbdee1; font-size:19px; line-height:1; cursor:pointer; z-index:2; }
+    .ah-mod-panel-close:hover { background:rgba(255,255,255,.12); color:#fff; }
+    .ah-mod-panel-head { flex:0 0 auto; display:flex; align-items:center; gap:.7rem; padding:1.1rem 3rem 1rem 1.1rem; border-bottom:1px solid #2b2d31; }
+    .ah-mod-panel-avatar { width:46px; height:46px; border-radius:50%; background:#2b2d31 center/cover no-repeat; display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; flex-shrink:0; font-size:1.05rem; }
+    .ah-mod-panel-id { min-width:0; }
+    .ah-mod-panel-name-row { display:flex; align-items:center; gap:.4rem; min-width:0; }
+    .ah-mod-panel-name { font-weight:800; font-size:1rem; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px; }
+    .ah-mod-panel-tag { display:inline-flex; align-items:center; gap:3px; background:#2b2d31; border:1px solid #3a3c45; border-radius:5px; padding:1px 6px; font-size:.68rem; font-weight:800; color:#dbdee1; flex-shrink:0; }
+    .ah-mod-panel-tag b { color:#e767ec; font-style:normal; }
+    .ah-mod-panel-handle { font-size:.78rem; color:#9ca3af; margin-top:2px; }
+    .ah-mod-panel-tabs { flex:0 0 auto; display:flex; align-items:center; gap:.3rem; padding:.55rem .9rem; border-bottom:1px solid #2b2d31; }
+    .ah-mod-tab { width:34px; height:34px; border-radius:8px; border:0; background:transparent; color:#9ca3af; display:flex; align-items:center; justify-content:center; cursor:pointer; font-weight:800; font-size:.72rem; transition:background-color .12s ease,color .12s ease; }
+    .ah-mod-tab svg { width:17px; height:17px; }
+    .ah-mod-tab:hover { background:rgba(255,255,255,.06); color:#dbdee1; }
+    .ah-mod-tab.active { background:#fff; color:#111; }
+    .ah-mod-panel-body { flex:1; min-height:0; overflow-y:auto; padding:1rem 1.1rem 1.6rem; }
+    .ah-mod-section-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; }
+    .ah-mod-section-head > span { font-weight:800; font-size:.92rem; color:#fff; }
+    .ah-mod-section-head-actions { display:flex; align-items:center; gap:.6rem; }
+    .ah-mod-refresh-btn { width:26px; height:26px; border:0; border-radius:7px; background:rgba(255,255,255,.06); color:#9ca3af; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+    .ah-mod-refresh-btn:hover { background:rgba(255,255,255,.12); color:#fff; }
+    .ah-mod-refresh-btn svg { width:14px; height:14px; }
+    .ah-mod-esc-hint { font-size:.68rem; font-weight:800; color:#6b7280; border:1px solid #3a3c45; border-radius:5px; padding:2px 6px; cursor:pointer; background:transparent; }
+    .ah-mod-esc-hint:hover { color:#dbdee1; border-color:#5c5e66; }
+    .ah-mod-block { margin-bottom:1.3rem; }
+    .ah-mod-block-title { font-size:.68rem; font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:#9ca3af; margin-bottom:.55rem; }
+    .ah-mod-block-title-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:.55rem; }
+    .ah-mod-block-title-row > span { font-size:.68rem; font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:#9ca3af; }
+    .ah-mod-all-perms { border:0; background:transparent; color:#9ca3af; font-size:.68rem; font-weight:800; letter-spacing:.02em; cursor:pointer; display:flex; align-items:center; gap:2px; }
+    .ah-mod-all-perms:hover { color:#dbdee1; }
+    .ah-mod-stat-row { width:100%; display:flex; align-items:center; gap:.6rem; padding:.55rem .35rem; border:0; background:transparent; color:#dbdee1; cursor:pointer; border-radius:8px; text-align:left; }
+    .ah-mod-stat-row:hover { background:rgba(255,255,255,.04); }
+    .ah-mod-stat-icon { width:20px; height:20px; color:#9ca3af; flex-shrink:0; display:flex; }
+    .ah-mod-stat-icon svg { width:100%; height:100%; }
+    .ah-mod-stat-label { flex:1; font-size:.85rem; font-weight:650; }
+    .ah-mod-stat-value { font-weight:800; color:#fff; font-size:.85rem; }
+    .ah-mod-stat-chevron { width:15px; height:15px; color:#6b7280; flex-shrink:0; }
+    .ah-mod-perm-grid { display:flex; flex-wrap:wrap; gap:.4rem; }
+    .ah-mod-perm-chip { display:inline-flex; align-items:center; gap:.3rem; background:#2b2d31; border:1px solid #3a3c45; border-radius:7px; padding:.4rem .6rem; font-size:.75rem; font-weight:650; color:#dbdee1; }
+    .ah-mod-perm-chip svg { width:13px; height:13px; color:#9ca3af; flex-shrink:0; }
+    .ah-mod-perm-empty { font-size:.8rem; color:#9ca3af; line-height:1.5; padding:.4rem .1rem; }
+    .ah-mod-role-add { width:32px; height:32px; border-radius:50%; border:1px dashed #4a4d55; background:transparent; color:#9ca3af; font-size:1.1rem; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+    .ah-mod-role-add:hover { border-color:#5c5e66; color:#dbdee1; background:rgba(255,255,255,.04); }
+    .ah-mod-account-row { display:flex; align-items:center; gap:.6rem; padding:.5rem .1rem; font-size:.83rem; color:#dbdee1; }
+    .ah-mod-account-icon { width:20px; height:20px; color:#9ca3af; flex-shrink:0; display:flex; }
+    .ah-mod-account-icon svg { width:100%; height:100%; }
+    .ah-mod-account-row > span:nth-child(2) { flex:1; font-weight:650; }
+    .ah-mod-account-value { color:#9ca3af; font-weight:650; }
+    .ah-mod-account-check { width:16px; height:16px; color:#23a55a; flex-shrink:0; }
+    #mv-tbody tr.ah-mod-row-active { background:rgba(88,101,242,.14); }
+    @media (max-width:820px) { .ah-mod-panel { width:100%; } }
+
     .members-sidebar {
       position: fixed;
       right: 0;
@@ -1908,7 +1963,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
               <tr data-mv-name="{{ (m.display_name or m.username)|lower }}" data-mv-created="{{ m.created_at.timestamp() if m.created_at else 0 }}">
                 <td><input type="checkbox" class="mv-check"></td>
                 <td>
-                  <div class="mv-user-cell mini-profile-trigger profile-click" data-mini-username="{{ m.username|e }}" data-mini-display="{{ m.display_name or m.username }}" data-mini-avatar="{{ m.avatar_url or '' }}" data-mini-banner="{{ m.banner_url or '' }}" data-mini-status="{{ account.account_status if m.id == account.id else (m.account_status or 'offline') }}" data-mini-role="{{ m.role_label or item.member.role }}" data-mini-effect="{{ m.name_effect or 'none' }}" data-mini-font="{{ m.name_font or 'default' }}" data-mini-c1="{{ m.role_color_start or '#f5576c' }}" data-mini-c2="{{ m.role_color_end or '#7367f0' }}" data-mini-profile="/community/profile/{{ m.username }}" data-mini-bio="{{ m.bio or '' }}" style="cursor:pointer">
+                  <div class="mv-user-cell mini-profile-trigger profile-click" data-mini-username="{{ m.username|e }}" data-mini-display="{{ m.display_name or m.username }}" data-mini-avatar="{{ m.avatar_url or '' }}" data-mini-banner="{{ m.banner_url or '' }}" data-mini-status="{{ account.account_status if m.id == account.id else (m.account_status or 'offline') }}" data-mini-role="{{ m.role_label or item.member.role }}" data-mini-effect="{{ m.name_effect or 'none' }}" data-mini-font="{{ m.name_font or 'default' }}" data-mini-c1="{{ m.role_color_start or '#f5576c' }}" data-mini-c2="{{ m.role_color_end or '#7367f0' }}" data-mini-profile="/community/profile/{{ m.username }}" data-mini-bio="{{ m.bio or '' }}" data-tag-glyph="{{ item.server_tag.icon_glyph if item.server_tag else '' }}" data-tag-text="{{ item.server_tag.text if item.server_tag else '' }}" style="cursor:pointer">
                     <span class="mv-avatar" {% if m.avatar_url %}style="background-image:url('{{ m.avatar_url }}');"{% endif %}>{% if not m.avatar_url %}{{ m.username[:1]|upper }}{% endif %}</span>
                     <span>
                       <div class="mv-user-name">{{ m.display_name or m.username }}</div>
@@ -2479,6 +2534,97 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
   </div>
   {% endif %}
   <div id="mini-profile-popover" class="mini-profile-popover"><div class="mini-banner"></div><div class="mini-profile-body"><div id="mini-avatar" class="mini-avatar"></div><span id="mini-name" class="visual-name mini-name name-none font-default"></span><div id="mini-role" class="mini-role-line"></div><div class="mini-note"><!--i18n:common.text.mini_profile_auty_click_open_profile_if_you_need_a-->{{ i18n_t('common.text.mini_profile_auty_click_open_profile_if_you_need_a') }}</div><div class="mini-profile-actions"><a id="mini-open-profile" href="#"><!--i18n:common.action.open_profile-->{{ i18n_t('common.action.open_profile') }}</a><a id="mini-message-link" href="#" class="secondary"><!--i18n:privacy.blocking.message-->{{ i18n_t("privacy.blocking.message") }}</a></div></div></div>
+
+  <!-- Панель "Открыть с доступом модератора" — доступна только владельцу сервера -->
+  <div id="ah-mod-panel" class="ah-mod-panel" aria-hidden="true">
+    <button type="button" id="ah-mod-panel-close" class="ah-mod-panel-close" title="Закрыть (ESC)">×</button>
+    <div class="ah-mod-panel-head">
+      <div id="ah-mod-avatar" class="ah-mod-panel-avatar"></div>
+      <div class="ah-mod-panel-id">
+        <div class="ah-mod-panel-name-row">
+          <span id="ah-mod-name" class="ah-mod-panel-name">User</span>
+          <span id="ah-mod-tag" class="ah-mod-panel-tag" hidden><b id="ah-mod-tag-glyph">◆</b><span id="ah-mod-tag-text"></span></span>
+        </div>
+        <div id="ah-mod-handle" class="ah-mod-panel-handle">@user</div>
+      </div>
+    </div>
+    <div class="ah-mod-panel-tabs">
+      <button type="button" class="ah-mod-tab" data-mod-tab="messages" title="Сообщения"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
+      <button type="button" class="ah-mod-tab" data-mod-tab="user" title="Пользователь"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></button>
+      <button type="button" class="ah-mod-tab" data-mod-tab="actions" title="Действия модератора"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14.5 12.5-8 8a2.1 2.1 0 1 1-3-3l8-8"/><path d="m16 16 6-6"/><path d="m8 8 6-6a2 2 0 0 1 3 0l1 1a2 2 0 0 1 0 3l-6 6z"/></svg></button>
+      <button type="button" class="ah-mod-tab" data-mod-tab="audit" title="Журнал аудита"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></button>
+      <button type="button" class="ah-mod-tab active" data-mod-tab="id">ID</button>
+    </div>
+    <div class="ah-mod-panel-body">
+      <div class="ah-mod-section-head">
+        <span>Доступ модератора</span>
+        <div class="ah-mod-section-head-actions">
+          <button type="button" class="ah-mod-refresh-btn" title="Обновить"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg></button>
+          <span class="ah-mod-esc-hint">ESC</span>
+        </div>
+      </div>
+
+      <div class="ah-mod-block">
+        <div class="ah-mod-block-title">Активность сервера</div>
+        <button type="button" class="ah-mod-stat-row">
+          <span class="ah-mod-stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+          <span class="ah-mod-stat-label">Сообщения</span>
+          <span id="ah-mod-stat-messages" class="ah-mod-stat-value">0</span>
+          <svg class="ah-mod-stat-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+        </button>
+        <button type="button" class="ah-mod-stat-row">
+          <span class="ah-mod-stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
+          <span class="ah-mod-stat-label">Ссылки</span>
+          <span id="ah-mod-stat-links" class="ah-mod-stat-value">0</span>
+          <svg class="ah-mod-stat-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+        </button>
+        <button type="button" class="ah-mod-stat-row">
+          <span class="ah-mod-stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></span>
+          <span class="ah-mod-stat-label">Медиаконтент</span>
+          <span id="ah-mod-stat-media" class="ah-mod-stat-value">0</span>
+          <svg class="ah-mod-stat-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+        </button>
+        <button type="button" class="ah-mod-stat-row">
+          <span class="ah-mod-stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6l1 3H8z"/><path d="M6 6h12v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1z"/><path d="M12 11v5"/><path d="M12 18h.01"/></svg></span>
+          <span class="ah-mod-stat-label">Журнал аудита</span>
+          <span id="ah-mod-stat-audit" class="ah-mod-stat-value">0</span>
+          <svg class="ah-mod-stat-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+        </button>
+      </div>
+
+      <div class="ah-mod-block">
+        <div class="ah-mod-block-title-row">
+          <span>Права для модератора</span>
+          <button type="button" class="ah-mod-all-perms">ВСЕ (<span id="ah-mod-perm-count">0</span>)<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></button>
+        </div>
+        <div id="ah-mod-perm-grid" class="ah-mod-perm-grid"></div>
+      </div>
+
+      <div class="ah-mod-block">
+        <div class="ah-mod-block-title">Роли</div>
+        <button type="button" class="ah-mod-role-add" title="Добавить роль">+</button>
+      </div>
+
+      <div class="ah-mod-block">
+        <div class="ah-mod-block-title">Учётная запись</div>
+        <div class="ah-mod-account-row">
+          <span class="ah-mod-account-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m17 11 2 2 4-4"/></svg></span>
+          <span>Уровень проверки подтверждён</span>
+          <svg class="ah-mod-account-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="ah-mod-account-row">
+          <span class="ah-mod-account-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18"/><path d="M8 3v4M16 3v4"/></svg></span>
+          <span>Дата регистрации в AlexiHub</span>
+          <span id="ah-mod-created" class="ah-mod-account-value">—</span>
+        </div>
+        <div class="ah-mod-account-row">
+          <span class="ah-mod-account-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22V4a1 1 0 0 1 1-1h11l3 3-3 3H5"/><path d="M4 15h12"/></svg></span>
+          <span>Дата присоединения к серверу</span>
+          <span id="ah-mod-joined" class="ah-mod-account-value">—</span>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script>
 
@@ -8159,6 +8305,199 @@ if (typeof window.openSelfProfileSettings !== 'function') {
 
 </script>
 
+<script>window.AH_IS_SERVER_OWNER = {{ 'true' if account.id == server.owner_id else 'false' }};</script>
+<script>
+/* ---------- Панель "Открыть с доступом модератора" (только для владельца сервера) ---------- */
+(function () {
+  'use strict';
+  if (window.AhModPanel) return;
+
+  var INFO_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01"/><path d="M11 12h1v5h1"/></svg>';
+
+  var PERM_SETS = {
+    owner: {
+      total: 53,
+      chips: [
+        { label: 'Управлять каналами' },
+        { label: 'Управлять ролями' },
+        { label: 'Создавать средства выражения эмоций' },
+        { label: 'Управлять выражениями' },
+        { label: 'Управлять вебхуками (webhooks)' },
+        { label: 'Управлять сервером' },
+        { label: 'Выгоняйте, одобряйте или отклоняйте участников', info: true },
+        { label: 'Банить участников', info: true },
+        { label: 'Отправить участников подумать о своём поведении', info: true },
+        { label: 'Упоминание @everyone, @here и всех ролей' },
+        { label: 'Управлять сообщениями', info: true },
+        { label: 'Управление ветками и публикациями', info: true },
+        { label: 'Создавать события' },
+        { label: 'Управление событиями', info: true },
+        { label: 'Администратор', info: true }
+      ]
+    },
+    elevated: {
+      total: 28,
+      chips: [
+        { label: 'Управлять каналами' },
+        { label: 'Выгоняйте, одобряйте или отклоняйте участников', info: true },
+        { label: 'Банить участников', info: true },
+        { label: 'Отправить участников подумать о своём поведении', info: true },
+        { label: 'Управлять сообщениями', info: true },
+        { label: 'Управление ветками и публикациями', info: true },
+        { label: 'Создавать события' },
+        { label: 'Управление событиями', info: true }
+      ]
+    },
+    member: { total: 0, chips: [] }
+  };
+
+  function $(id) { return document.getElementById(id); }
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function tierFor(isOwnerRow, roleLabel) {
+    if (isOwnerRow) return 'owner';
+    var role = (roleLabel || '').toLowerCase();
+    if (/модерат|админ|admin|moder|helper|куратор/.test(role)) return 'elevated';
+    return 'member';
+  }
+
+  function renderPerms(tier) {
+    var grid = $('ah-mod-perm-grid');
+    var countEl = $('ah-mod-perm-count');
+    var set = PERM_SETS[tier] || PERM_SETS.member;
+    if (countEl) countEl.textContent = set.total;
+    if (!grid) return;
+    grid.innerHTML = '';
+    if (!set.chips.length) {
+      var empty = document.createElement('div');
+      empty.className = 'ah-mod-perm-empty';
+      empty.textContent = 'У этого участника нет специальных прав уровня сервера.';
+      grid.appendChild(empty);
+      return;
+    }
+    set.chips.forEach(function (p) {
+      var chip = document.createElement('span');
+      chip.className = 'ah-mod-perm-chip';
+      chip.innerHTML = (p.info ? INFO_ICON : '') + '<span>' + escapeHtml(p.label) + '</span>';
+      grid.appendChild(chip);
+    });
+  }
+
+  function deriveFromRow(row) {
+    if (!row) return {};
+    var trigger = row.querySelector('.mini-profile-trigger');
+    var cells = row.querySelectorAll('td');
+    var rolePill = row.querySelector('.mv-role-pill');
+    var moreBtn = row.querySelector('.ah-member-more-btn');
+    return {
+      avatar: trigger ? (trigger.dataset.miniAvatar || '') : '',
+      tagGlyph: trigger ? (trigger.dataset.tagGlyph || '') : '',
+      tagText: trigger ? (trigger.dataset.tagText || '') : '',
+      created: cells[3] ? cells[3].textContent.trim() : '',
+      roleLabel: rolePill ? rolePill.textContent.trim() : '',
+      isOwnerRow: moreBtn ? moreBtn.getAttribute('data-member-owner') === '1' : false
+    };
+  }
+
+  function open(opts) {
+    opts = opts || {};
+    var panel = $('ah-mod-panel');
+    if (!panel) return;
+    var extra = deriveFromRow(opts.row);
+    var display = opts.display || opts.username || 'User';
+
+    var avatarEl = $('ah-mod-avatar');
+    if (avatarEl) {
+      avatarEl.style.backgroundImage = extra.avatar ? "url('" + extra.avatar.replace(/'/g, '%27') + "')" : '';
+      avatarEl.textContent = extra.avatar ? '' : display.slice(0, 1).toUpperCase();
+    }
+    var nameEl = $('ah-mod-name'); if (nameEl) nameEl.textContent = display;
+    var handleEl = $('ah-mod-handle'); if (handleEl) handleEl.textContent = '@' + (opts.username || '');
+
+    var tagWrap = $('ah-mod-tag');
+    if (tagWrap) {
+      if (extra.tagText) {
+        tagWrap.hidden = false;
+        var glyphEl = $('ah-mod-tag-glyph'); if (glyphEl) glyphEl.textContent = extra.tagGlyph || '◆';
+        var tagTextEl = $('ah-mod-tag-text'); if (tagTextEl) tagTextEl.textContent = extra.tagText;
+      } else {
+        tagWrap.hidden = true;
+      }
+    }
+
+    var createdEl = $('ah-mod-created'); if (createdEl) createdEl.textContent = extra.created || '—';
+    var joinedEl = $('ah-mod-joined'); if (joinedEl) joinedEl.textContent = extra.created || '—';
+
+    renderPerms(tierFor(!!opts.isOwner, extra.roleLabel));
+
+    document.querySelectorAll('#mv-tbody tr.ah-mod-row-active').forEach(function (r) { r.classList.remove('ah-mod-row-active'); });
+    if (opts.row) opts.row.classList.add('ah-mod-row-active');
+
+    document.querySelectorAll('.ah-mod-tab').forEach(function (t) { t.classList.toggle('active', t.dataset.modTab === 'id'); });
+
+    panel.classList.add('open');
+    panel.setAttribute('aria-hidden', 'false');
+  }
+
+  function close() {
+    var panel = $('ah-mod-panel');
+    if (!panel) return;
+    panel.classList.remove('open');
+    panel.setAttribute('aria-hidden', 'true');
+    document.querySelectorAll('#mv-tbody tr.ah-mod-row-active').forEach(function (r) { r.classList.remove('ah-mod-row-active'); });
+  }
+
+  var closeBtn = $('ah-mod-panel-close');
+  if (closeBtn) closeBtn.addEventListener('click', close);
+
+  var escHint = document.querySelector('.ah-mod-esc-hint');
+  if (escHint) escHint.addEventListener('click', close);
+
+  var refreshBtn = document.querySelector('.ah-mod-refresh-btn');
+  if (refreshBtn) refreshBtn.addEventListener('click', function () {
+    if (typeof window.showActionToast === 'function') window.showActionToast('Обновлено');
+  });
+
+  var allPermsBtn = document.querySelector('.ah-mod-all-perms');
+  if (allPermsBtn) allPermsBtn.addEventListener('click', function () {
+    if (typeof window.showActionToast === 'function') window.showActionToast('Раздел в разработке');
+  });
+
+  var roleAddBtn = document.querySelector('.ah-mod-role-add');
+  if (roleAddBtn) roleAddBtn.addEventListener('click', function () {
+    if (typeof window.showActionToast === 'function') window.showActionToast('Раздел в разработке');
+  });
+
+  document.querySelectorAll('.ah-mod-stat-row').forEach(function (row) {
+    row.addEventListener('click', function () {
+      if (typeof window.showActionToast === 'function') window.showActionToast('Раздел в разработке');
+    });
+  });
+
+  document.querySelectorAll('.ah-mod-tab').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      document.querySelectorAll('.ah-mod-tab').forEach(function (t) { t.classList.remove('active'); });
+      tab.classList.add('active');
+      if (tab.dataset.modTab !== 'id' && typeof window.showActionToast === 'function') {
+        window.showActionToast('Раздел в разработке');
+      }
+    });
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    var panel = $('ah-mod-panel');
+    if (panel && panel.classList.contains('open')) close();
+  });
+
+  window.AhModPanel = { open: open, close: close };
+})();
+</script>
 <script>
 /* ---------- Меню действий участника (кнопка "..." в разделе "Участники") ---------- */
 (function () {
@@ -8303,7 +8642,20 @@ if (typeof window.openSelfProfileSettings !== 'function') {
     menu.appendChild(divider());
 
     menu.appendChild(makeItem({ label: 'Роли', chevron: true, onClick: function () { closeMenu(); stubToast(); } }));
-    menu.appendChild(makeItem({ label: 'Открыть с доступом модератора', onClick: function () { closeMenu(); stubToast(); } }));
+
+    if (window.AH_IS_SERVER_OWNER) {
+      menu.appendChild(makeItem({
+        label: 'Открыть с доступом модератора',
+        onClick: function () {
+          closeMenu();
+          if (window.AhModPanel && typeof window.AhModPanel.open === 'function') {
+            window.AhModPanel.open({ username: data.username, display: data.display, isOwner: data.isOwner, row: data.row });
+          } else {
+            stubToast();
+          }
+        }
+      }));
+    }
 
     if (!data.isOwner && !data.isSelf) {
       menu.appendChild(makeItem({
@@ -8345,7 +8697,8 @@ if (typeof window.openSelfProfileSettings !== 'function') {
       profile: btn.getAttribute('data-member-profile') || '#',
       isOwner: btn.getAttribute('data-member-owner') === '1',
       isSelf: btn.getAttribute('data-member-self') === '1',
-      trigger: trigger
+      trigger: trigger,
+      row: row
     };
 
     buildMenu(data);
