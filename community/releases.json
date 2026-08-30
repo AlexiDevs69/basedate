@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.121.12",
+      "date": "2026-08-30",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Hide mobile navigation and adjust layout styles."
+      ],
+      "source_sha": "c42810289aa60166cc25f368b4600f53345a1721"
+    },
+    {
       "version": "1.121.11",
       "date": "2026-08-30",
       "title": "Виправлення та стабільність",
