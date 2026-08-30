@@ -8353,6 +8353,43 @@ if (typeof window.openSelfProfileSettings !== 'function') {
 
   function $(id) { return document.getElementById(id); }
 
+  var currentStatsMemberId = null;
+  var statsRequestSeq = 0;
+
+  function setStatText(id, value) {
+    var el = $(id);
+    if (el) el.textContent = value;
+  }
+
+  function loadActivityStats(memberId) {
+    currentStatsMemberId = memberId || null;
+    setStatText('ah-mod-stat-messages', '…');
+    setStatText('ah-mod-stat-links', '…');
+    setStatText('ah-mod-stat-media', '…');
+    if (!memberId || typeof CV_SERVER_ID === 'undefined') return;
+    var requestId = ++statsRequestSeq;
+    fetch('/community/api/servers/' + CV_SERVER_ID + '/members/' + encodeURIComponent(memberId) + '/activity-stats', { credentials: 'same-origin' })
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        if (requestId !== statsRequestSeq || currentStatsMemberId !== memberId) return;
+        if (!data || !data.ok) {
+          setStatText('ah-mod-stat-messages', '—');
+          setStatText('ah-mod-stat-links', '—');
+          setStatText('ah-mod-stat-media', '—');
+          return;
+        }
+        setStatText('ah-mod-stat-messages', data.messages);
+        setStatText('ah-mod-stat-links', data.links);
+        setStatText('ah-mod-stat-media', data.media);
+      })
+      .catch(function () {
+        if (requestId !== statsRequestSeq || currentStatsMemberId !== memberId) return;
+        setStatText('ah-mod-stat-messages', '—');
+        setStatText('ah-mod-stat-links', '—');
+        setStatText('ah-mod-stat-media', '—');
+      });
+  }
+
   function escapeHtml(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -8434,6 +8471,7 @@ if (typeof window.openSelfProfileSettings !== 'function') {
     var joinedEl = $('ah-mod-joined'); if (joinedEl) joinedEl.textContent = extra.created || '—';
 
     renderPerms(tierFor(!!opts.isOwner, extra.roleLabel));
+    loadActivityStats(opts.memberId);
 
     document.querySelectorAll('#mv-tbody tr.ah-mod-row-active').forEach(function (r) { r.classList.remove('ah-mod-row-active'); });
     if (opts.row) opts.row.classList.add('ah-mod-row-active');
@@ -8450,6 +8488,7 @@ if (typeof window.openSelfProfileSettings !== 'function') {
     panel.classList.remove('open');
     panel.setAttribute('aria-hidden', 'true');
     document.querySelectorAll('#mv-tbody tr.ah-mod-row-active').forEach(function (r) { r.classList.remove('ah-mod-row-active'); });
+    currentStatsMemberId = null;
   }
 
   var closeBtn = $('ah-mod-panel-close');
@@ -8460,6 +8499,7 @@ if (typeof window.openSelfProfileSettings !== 'function') {
 
   var refreshBtn = document.querySelector('.ah-mod-refresh-btn');
   if (refreshBtn) refreshBtn.addEventListener('click', function () {
+    if (currentStatsMemberId) loadActivityStats(currentStatsMemberId);
     if (typeof window.showActionToast === 'function') window.showActionToast('Обновлено');
   });
 
@@ -8649,7 +8689,7 @@ if (typeof window.openSelfProfileSettings !== 'function') {
         onClick: function () {
           closeMenu();
           if (window.AhModPanel && typeof window.AhModPanel.open === 'function') {
-            window.AhModPanel.open({ username: data.username, display: data.display, isOwner: data.isOwner, row: data.row });
+            window.AhModPanel.open({ memberId: data.id, username: data.username, display: data.display, isOwner: data.isOwner, row: data.row });
           } else {
             stubToast();
           }
