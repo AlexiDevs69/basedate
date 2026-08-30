@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.121.13",
+      "date": "2026-08-30",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance block modal design and functionality."
+      ],
+      "source_sha": "3b83accc7b46e59973b2707757bd5a08e88a583a"
+    },
+    {
       "version": "1.121.12",
       "date": "2026-08-30",
       "title": "Виправлення та стабільність",
