@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.125.1",
+      "date": "2026-08-30",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: server home template for moderator access."
+      ],
+      "source_sha": "3a6b3d5fb0290ec75d493a07128079572b76d6b4"
+    },
+    {
       "version": "1.125.0",
       "date": "2026-08-30",
       "title": "Нові можливості AlexiHub",
