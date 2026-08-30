@@ -1522,11 +1522,38 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
 
 .ah-block-modal{position:fixed;z-index:2147483600;inset:0;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(0,0,0,.72);backdrop-filter:blur(3px)}
 .ah-block-modal.open{display:flex;animation:ahBlockFade .12s ease both}
-.ah-block-dialog{width:min(440px,calc(100vw - 32px));overflow:hidden;border:1px solid #3b3d45;border-radius:12px;background:#313338;color:#f2f3f5;box-shadow:0 28px 90px rgba(0,0,0,.65)}
-.ah-block-dialog-main{padding:22px 22px 18px}.ah-block-dialog h2{margin:0 0 10px;font-size:21px;line-height:1.2}.ah-block-dialog p{margin:0;color:#b5bac1;font-size:14px;line-height:1.5}.ah-block-dialog strong{color:#fff}
-.ah-block-dialog-actions{display:flex;justify-content:flex-end;align-items:center;gap:10px;padding:16px 22px;background:#2b2d31}
+.ah-block-dialog{width:min(480px,calc(100vw - 32px));max-height:calc(100vh - 36px);overflow-y:auto;border:1px solid #3b3d45;border-radius:16px;background:#2b2d31;color:#f2f3f5;box-shadow:0 28px 90px rgba(0,0,0,.65)}
+.ah-block-dialog strong{color:#fff}
+.ah-block-avatar-wrap{padding:26px 26px 0;text-align:center}
+.ah-block-avatar{position:relative;display:inline-grid;place-items:center;width:80px;height:80px;border-radius:50%;background:#1e1f22 center/cover no-repeat;box-shadow:0 0 0 1px rgba(255,255,255,.06) inset}
+.ah-block-avatar-fallback{font-size:28px;font-weight:900;color:#dbdee1;line-height:1}
+.ah-block-avatar-badge{position:absolute;right:-4px;bottom:-4px;width:28px;height:28px;border-radius:50%;background:#2b2d31;border:3px solid #2b2d31;display:grid;place-items:center;box-shadow:0 0 0 1px #43181a inset}
+.ah-block-avatar-badge svg{width:15px;height:15px;color:#f23f42}
+.ah-block-title-wrap{padding:14px 26px 0;text-align:center}
+.ah-block-title-wrap h2{margin:0 0 8px;font-size:20px;line-height:1.25;font-weight:800}
+.ah-block-title-wrap p{margin:0;color:#b5bac1;font-size:13.5px;line-height:1.5}
+.ah-block-points{display:grid;gap:16px;padding:20px 26px 4px}
+.ah-block-point{display:flex;align-items:flex-start;gap:12px}
+.ah-block-point-icon{flex:0 0 22px;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;margin-top:1px}
+.ah-block-point-icon svg{width:14px;height:14px}
+.ah-block-point-icon.ok{background:#3a3c43;color:#dbdee1}
+.ah-block-point-icon.warn{color:#f0b132}
+.ah-block-point-icon.warn svg{width:20px;height:20px}
+.ah-block-point b{display:block;font-size:14px;font-weight:750;color:#f2f3f5;margin-bottom:2px}
+.ah-block-point span{display:block;font-size:12.5px;color:#949ba4;line-height:1.45}
+.ah-block-too-much{padding:20px 26px 0}
+.ah-block-too-much>span{display:block;font-size:13px;font-weight:800;color:#f2f3f5;margin-bottom:10px}
+.ah-block-ignore-box{display:flex;align-items:center;justify-content:space-between;gap:14px;background:#1e1f22;border-radius:10px;padding:14px 16px}
+.ah-block-ignore-box b{display:block;font-size:14px;font-weight:750;color:#f2f3f5}
+.ah-block-ignore-box span{display:block;margin-top:4px;font-size:12.5px;color:#949ba4;line-height:1.4}
+.ah-block-ignore-btn{flex:0 0 auto;min-height:32px;padding:0 14px;border:0;border-radius:6px;background:#4e5058;color:#fff;font-weight:800;font-size:12.5px;cursor:pointer}
+.ah-block-ignore-btn:hover{background:#5d606a}
+.ah-block-guide-link{display:block;margin:16px 26px 0;color:#00a8fc;text-decoration:none;font-size:13px;font-weight:600;cursor:pointer}
+.ah-block-guide-link:hover{text-decoration:underline}
+.ah-block-dialog-actions{display:flex;justify-content:flex-end;align-items:center;gap:10px;padding:22px 26px}
 .ah-block-dialog-actions button{min-height:38px;border:0;border-radius:5px;padding:0 16px;color:#fff;font-weight:850;cursor:pointer}.ah-block-cancel{background:transparent}.ah-block-cancel:hover{text-decoration:underline}.ah-block-confirm{background:#da373c}.ah-block-confirm:hover{background:#a12828}.ah-block-confirm:disabled{opacity:.55;cursor:not-allowed}
 @keyframes ahBlockFade{from{opacity:0}to{opacity:1}}
+@media(max-width:700px){.ah-block-avatar-wrap,.ah-block-title-wrap,.ah-block-points,.ah-block-too-much{padding-left:18px;padding-right:18px}.ah-block-guide-link{margin-left:18px;margin-right:18px}.ah-block-dialog-actions{padding:18px}}
 
 .ah-content-settings{max-width:760px}.ah-content-intro{margin:-20px 0 28px;color:#b5bac1;line-height:1.5}.ah-privacy-card{padding:18px;border:1px solid #353741;border-radius:12px;background:#2b2d31;margin-bottom:26px}.ah-privacy-card h3{margin:0 0 6px;font-size:16px}.ah-privacy-card p{margin:0;color:#aeb3bd;font-size:13px;line-height:1.45}
 .ah-blocked-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:12px}.ah-blocked-heading h2{margin:0;font-size:21px}.ah-blocked-count{color:#949ba4;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.045em}
@@ -5961,15 +5988,58 @@ if (typeof window.openSelfProfileSettings !== 'function') {
     if(document.getElementById('ah-block-modal')) return;
     const c=text();
     const modal=document.createElement('div'); modal.id='ah-block-modal'; modal.className='ah-block-modal'; modal.setAttribute('aria-hidden','true');
-    modal.innerHTML=`<div class="ah-block-dialog" role="dialog" aria-modal="true"><div class="ah-block-dialog-main"><h2>${esc(c.confirmTitle)}</h2><p><span id="ah-block-confirm-copy"></span><br><br>${esc(c.confirmHint)}</p></div><div class="ah-block-dialog-actions"><button type="button" class="ah-block-cancel">${esc(c.cancel)}</button><button type="button" class="ah-block-confirm">${esc(c.block)}</button></div></div>`;
+    modal.innerHTML=`<div class="ah-block-dialog" role="dialog" aria-modal="true">
+      <div class="ah-block-avatar-wrap">
+        <div class="ah-block-avatar" id="ah-block-confirm-avatar">
+          <span class="ah-block-avatar-fallback" id="ah-block-confirm-avatar-fallback"></span>
+          <span class="ah-block-avatar-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m5 19 14-14"/></svg></span>
+        </div>
+      </div>
+      <div class="ah-block-title-wrap">
+        <h2 id="ah-block-confirm-title"></h2>
+        <p>Перекрыть возможность прямого контакта и ограничить доступ к вашим данным</p>
+      </div>
+      <div class="ah-block-points">
+        <div class="ah-block-point">
+          <span class="ah-block-point-icon ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <div><b>Запретить личные сообщения</b><span>Если хотите, вы можете сделать старые сообщения видимыми</span></div>
+        </div>
+        <div class="ah-block-point">
+          <span class="ah-block-point-icon ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <div><b>Ограничьте доступ к своему профилю и действиям</b><span>Он не увидит ваших общих друзей, описание профиля или статус</span></div>
+        </div>
+        <div class="ah-block-point">
+          <span class="ah-block-point-icon warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+          <div><b>Этот пользователь может взаимодействовать с вами в групповых чатах и на серверах</b><span>Если вы присоединитесь к тому же голосовому каналу, в котором общается он, мы вам сообщим</span></div>
+        </div>
+      </div>
+      <div class="ah-block-too-much">
+        <span>Это слишком?</span>
+        <div class="ah-block-ignore-box">
+          <div><b>Вместо этого игнорировать</b><span>Отдохните от этого пользователя — мы ему не скажем!</span></div>
+          <button type="button" class="ah-block-ignore-btn" data-block-ignore>Показать подробности</button>
+        </div>
+      </div>
+      <a class="ah-block-guide-link" data-block-guide>Ознакомиться с руководством по функциям</a>
+      <div class="ah-block-dialog-actions">
+        <button type="button" class="ah-block-cancel">${esc(c.cancel)}</button>
+        <button type="button" class="ah-block-confirm">${esc(c.block)}</button>
+      </div>
+    </div>`;
     document.body.appendChild(modal);
   }
   function openConfirm(){
     ensureConfirmModal(); closeProfileMenu();
     const username=selectedUser?.username||usernameFromMini(); if(!username) return;
+    const display=selectedUser?.display_name||username;
+    const avatar=safeImage(selectedUser?.avatar_url);
     const modal=document.getElementById('ah-block-modal');
-    const copy=document.getElementById('ah-block-confirm-copy');
-    if(copy) copy.innerHTML=esc(text().confirmText)+' <strong>@'+esc(username)+'</strong>?';
+    const title=document.getElementById('ah-block-confirm-title');
+    const avatarEl=document.getElementById('ah-block-confirm-avatar');
+    const avatarFallback=document.getElementById('ah-block-confirm-avatar-fallback');
+    if(title) title.textContent='Заблокировать '+display+'?';
+    if(avatarEl) avatarEl.style.backgroundImage=avatar?`url('${avatar}')`:'none';
+    if(avatarFallback) avatarFallback.textContent=avatar?'':display.slice(0,1).toUpperCase();
     modal?.classList.add('open'); modal?.setAttribute('aria-hidden','false');
   }
   function closeConfirm(){ const m=document.getElementById('ah-block-modal'); m?.classList.remove('open');m?.setAttribute('aria-hidden','true'); }
@@ -6061,6 +6131,7 @@ if (typeof window.openSelfProfileSettings !== 'function') {
       return;
     }
     if(!event.target.closest('#ah-profile-action-menu')) closeProfileMenu();
+    if(event.target.closest('[data-block-ignore]')||event.target.closest('[data-block-guide]')){event.preventDefault();notify('Раздел в разработке');return;}
     if(event.target.closest('.ah-block-cancel')||event.target===document.getElementById('ah-block-modal')) return closeConfirm();
     const confirm=event.target.closest('.ah-block-confirm');
     if(confirm){const username=selectedUser?.username||usernameFromMini();if(!username)return;confirm.disabled=true;confirm.textContent=text().blocking;try{await blockUser(username);closeConfirm();document.getElementById('ah-v3-mini')?.classList.remove('open');}catch(e){notify(e.message||text().actionError);}finally{confirm.disabled=false;confirm.textContent=text().block;}return;}
@@ -8211,7 +8282,19 @@ if (typeof window.openSelfProfileSettings !== 'function') {
 
     menu.appendChild(makeItem({ label: 'Изменить никнейм', onClick: function () { closeMenu(); stubToast(); } }));
     menu.appendChild(makeItem({ label: 'Игнорировать', onClick: function () { closeMenu(); stubToast(); } }));
-    menu.appendChild(makeItem({ label: 'Заблокировать', danger: true, onClick: function () { closeMenu(); stubToast(); } }));
+    menu.appendChild(makeItem({
+      label: 'Заблокировать',
+      danger: true,
+      onClick: function () {
+        closeMenu();
+        if (data.isSelf || !data.username) { stubToast(); return; }
+        if (window.AlexiHubBlocking && typeof window.AlexiHubBlocking.openBlockFor === 'function') {
+          window.AlexiHubBlocking.openBlockFor(data.username);
+        } else {
+          stubToast();
+        }
+      }
+    }));
 
     menu.appendChild(divider());
 
