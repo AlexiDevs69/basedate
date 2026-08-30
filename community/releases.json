@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.123.0",
+      "date": "2026-08-30",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: get_member_channel_activity_stats function."
+      ],
+      "source_sha": "19ba83a0238e0f5a2b21bd18f19aec899c2489e5"
+    },
+    {
       "version": "1.122.0",
       "date": "2026-08-30",
       "title": "Нові можливості AlexiHub",
