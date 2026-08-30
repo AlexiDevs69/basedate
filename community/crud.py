@@ -2674,6 +2674,55 @@ async def get_member_channel_activity_stats(db: AsyncSession, server_id: int, ac
     }
 
 
+async def list_member_messages_by_channel(
+    db: AsyncSession,
+    server_id: int,
+    account_id: int,
+    limit: int = 200,
+) -> list[dict]:
+    """Powers the moderator panel's "Сообщения" drill-down: this member's most
+    recent server messages, grouped per channel (most recently active channel
+    first, newest message first within each channel)."""
+    await ensure_message_meta_columns(db)
+    safe_limit = max(1, min(int(limit or 200), 500))
+    result = await db.execute(
+        select(ServerMessage)
+        .where(
+            ServerMessage.server_id == int(server_id),
+            ServerMessage.author_id == int(account_id),
+        )
+        .order_by(ServerMessage.created_at.desc())
+        .limit(safe_limit)
+    )
+    messages = list(result.scalars().all())
+    if not messages:
+        return []
+
+    channel_ids = {m.channel_id for m in messages}
+    chan_result = await db.execute(select(ServerChannel).where(ServerChannel.id.in_(channel_ids)))
+    channels_by_id = {c.id: c for c in chan_result.scalars().all()}
+
+    grouped: dict[int, dict] = {}
+    order: list[int] = []
+    for m in messages:
+        chan = channels_by_id.get(m.channel_id)
+        if m.channel_id not in grouped:
+            grouped[m.channel_id] = {
+                "channel_id": m.channel_id,
+                "channel_name": chan.name if chan else "неизвестный канал",
+                "channel_type": chan.channel_type if chan else "text",
+                "messages": [],
+            }
+            order.append(m.channel_id)
+        grouped[m.channel_id]["messages"].append({
+            "id": m.id,
+            "content": m.content,
+            "image_url": m.image_url,
+            "created_at": m.created_at.isoformat() if m.created_at else None,
+        })
+    return [grouped[cid] for cid in order]
+
+
 async def get_server_feed(db: AsyncSession, server_id: int, channel_id: int, limit: int = 80) -> list[dict]:
     messages = await list_server_messages(db, server_id, channel_id, limit=limit)
     feed = []
