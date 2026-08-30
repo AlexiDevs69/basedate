@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.127.8",
+      "date": "2026-08-31",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update server boost styles in server_channel.html."
+      ],
+      "source_sha": "9cf6f60113792688aaba562bac5a8f4f9ec98146"
+    },
+    {
       "version": "1.127.7",
       "date": "2026-08-31",
       "title": "Виправлення та стабільність",
