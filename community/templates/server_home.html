@@ -1527,18 +1527,17 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
 .ah-block-avatar-wrap{padding:26px 26px 0;text-align:center}
 .ah-block-avatar{position:relative;display:inline-grid;place-items:center;width:80px;height:80px;border-radius:50%;background:#1e1f22 center/cover no-repeat;box-shadow:0 0 0 1px rgba(255,255,255,.06) inset}
 .ah-block-avatar-fallback{font-size:28px;font-weight:900;color:#dbdee1;line-height:1}
-.ah-block-avatar-badge{position:absolute;right:-4px;bottom:-4px;width:28px;height:28px;border-radius:50%;background:#2b2d31;border:3px solid #2b2d31;display:grid;place-items:center;box-shadow:0 0 0 1px #43181a inset}
-.ah-block-avatar-badge svg{width:15px;height:15px;color:#f23f42}
+.ah-block-avatar-badge{position:absolute;right:-3px;bottom:-3px;width:26px;height:26px;border-radius:50%;background:#f23f42;border:3px solid #2b2d31;display:grid;place-items:center;box-sizing:content-box}
+.ah-block-avatar-badge svg{width:13px;height:13px;display:block;color:#fff;stroke:#fff}
 .ah-block-title-wrap{padding:14px 26px 0;text-align:center}
 .ah-block-title-wrap h2{margin:0 0 8px;font-size:20px;line-height:1.25;font-weight:800}
 .ah-block-title-wrap p{margin:0;color:#b5bac1;font-size:13.5px;line-height:1.5}
 .ah-block-points{display:grid;gap:16px;padding:20px 26px 4px}
 .ah-block-point{display:flex;align-items:flex-start;gap:12px}
-.ah-block-point-icon{flex:0 0 22px;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;margin-top:1px}
-.ah-block-point-icon svg{width:14px;height:14px}
-.ah-block-point-icon.ok{background:#3a3c43;color:#dbdee1}
+.ah-block-point-icon{flex:0 0 20px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;margin-top:2px}
+.ah-block-point-icon svg{width:20px;height:20px;display:block;flex:0 0 auto}
+.ah-block-point-icon.ok{color:#b5bac1}
 .ah-block-point-icon.warn{color:#f0b132}
-.ah-block-point-icon.warn svg{width:20px;height:20px}
 .ah-block-point b{display:block;font-size:14px;font-weight:750;color:#f2f3f5;margin-bottom:2px}
 .ah-block-point span{display:block;font-size:12.5px;color:#949ba4;line-height:1.45}
 .ah-block-too-much{padding:20px 26px 0}
@@ -5992,7 +5991,7 @@ if (typeof window.openSelfProfileSettings !== 'function') {
       <div class="ah-block-avatar-wrap">
         <div class="ah-block-avatar" id="ah-block-confirm-avatar">
           <span class="ah-block-avatar-fallback" id="ah-block-confirm-avatar-fallback"></span>
-          <span class="ah-block-avatar-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m5 19 14-14"/></svg></span>
+          <span class="ah-block-avatar-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></span>
         </div>
       </div>
       <div class="ah-block-title-wrap">
@@ -6001,15 +6000,15 @@ if (typeof window.openSelfProfileSettings !== 'function') {
       </div>
       <div class="ah-block-points">
         <div class="ah-block-point">
-          <span class="ah-block-point-icon ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <span class="ah-block-point-icon ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="m8.2 12.3 2.6 2.6 5-5.2"/></svg></span>
           <div><b>Запретить личные сообщения</b><span>Если хотите, вы можете сделать старые сообщения видимыми</span></div>
         </div>
         <div class="ah-block-point">
-          <span class="ah-block-point-icon ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <span class="ah-block-point-icon ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="m8.2 12.3 2.6 2.6 5-5.2"/></svg></span>
           <div><b>Ограничьте доступ к своему профилю и действиям</b><span>Он не увидит ваших общих друзей, описание профиля или статус</span></div>
         </div>
         <div class="ah-block-point">
-          <span class="ah-block-point-icon warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+          <span class="ah-block-point-icon warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span>
           <div><b>Этот пользователь может взаимодействовать с вами в групповых чатах и на серверах</b><span>Если вы присоединитесь к тому же голосовому каналу, в котором общается он, мы вам сообщим</span></div>
         </div>
       </div>
