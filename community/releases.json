@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.125.0",
+      "date": "2026-08-30",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: activity stats loading for members."
+      ],
+      "source_sha": "442900f558707dca9370085d05ac651e65ac8633"
+    },
+    {
       "version": "1.124.0",
       "date": "2026-08-30",
       "title": "Нові можливості AlexiHub",
