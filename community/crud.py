@@ -2646,6 +2646,34 @@ async def list_server_messages_after(
     return list(result.scalars().all())
 
 
+async def get_member_channel_activity_stats(db: AsyncSession, server_id: int, account_id: int) -> dict:
+    """Real counts for the moderator panel's "Активность сервера" block: how many
+    messages this member has sent across the server's channels, how many of
+    those contained a link, and how many included media (an attached image)."""
+    await ensure_message_meta_columns(db)
+    result = await db.execute(
+        select(
+            func.count(ServerMessage.id),
+            func.count(ServerMessage.id).filter(
+                or_(
+                    ServerMessage.content.ilike("%http://%"),
+                    ServerMessage.content.ilike("%https://%"),
+                )
+            ),
+            func.count(ServerMessage.id).filter(ServerMessage.image_url.isnot(None)),
+        ).where(
+            ServerMessage.server_id == int(server_id),
+            ServerMessage.author_id == int(account_id),
+        )
+    )
+    messages, links, media = result.one()
+    return {
+        "messages": int(messages or 0),
+        "links": int(links or 0),
+        "media": int(media or 0),
+    }
+
+
 async def get_server_feed(db: AsyncSession, server_id: int, channel_id: int, limit: int = 80) -> list[dict]:
     messages = await list_server_messages(db, server_id, channel_id, limit=limit)
     feed = []
