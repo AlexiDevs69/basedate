@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.121.15",
+      "date": "2026-08-30",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: checkbox styles for better appearance."
+      ],
+      "source_sha": "9694ff9422a5db0ea340d78c776bde29115d8cdf"
+    },
+    {
       "version": "1.121.14",
       "date": "2026-08-30",
       "title": "Оновлення AlexiHub",
