@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.122.0",
+      "date": "2026-08-30",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: moderator access panel for server owners."
+      ],
+      "source_sha": "48b59a8f282178769e76882a0c2cb3ad3a8a061c"
+    },
+    {
       "version": "1.121.16",
       "date": "2026-08-30",
       "title": "Виправлення та стабільність",
