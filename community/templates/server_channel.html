@@ -166,6 +166,14 @@
       padding: 0 .35rem;
       margin-bottom: .65rem;
     }
+    .members-group { margin-bottom: .2rem; }
+    .members-group[hidden] { display: none; }
+    .members-group-label { margin-top: 1.1rem; }
+    .members-group:first-of-type .members-group-label { margin-top: 0; }
+    .members-group-count { color: var(--text-secondary); }
+    .member-row.member-row-offline { opacity: .45; }
+    .member-row.member-row-offline:hover { opacity: .8; }
+    .member-row.member-row-offline .member-avatar { filter: brightness(.7) saturate(.75); }
     .member-row {
       display: flex;
       align-items: center;
@@ -1989,22 +1997,45 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
       }
     })();
   </script>
+  {% macro member_row(item) %}
+    {% set m = item.account %}
+    {% if m %}
+    {% set m_status = account.account_status if m.id == account.id else (m.account_status or 'offline') %}
+    {% set m_offline = m_status in ('offline', 'invisible') %}
+    <a href="/community/profile/{{ m.username }}" class="member-row mini-profile-trigger profile-click{{ ' member-row-offline' if m_offline else '' }}" data-account-id="{{ m.id }}" data-mini-username="{{ m.username|e }}" data-mini-display="{{ m.display_name or m.username }}" data-mini-avatar="{{ m.avatar_url or '' }}" data-mini-banner="{{ m.banner_url or '' }}" data-mini-status="{{ m_status }}" data-mini-role="{{ m.role_label or item.member.role }}" data-mini-effect="{{ m.name_effect or 'none' }}" data-mini-font="{{ m.name_font or 'default' }}" data-mini-c1="{{ m.role_color_start or '#f5576c' }}" data-mini-c2="{{ m.role_color_end or '#7367f0' }}" data-mini-profile="/community/profile/{{ m.username }}" data-mini-bio="{{ m.bio or '' }}">
+      <span class="member-avatar-wrap"><span class="member-avatar" {% if m.avatar_url %}style="background-image:url('{{ m.avatar_url }}');"{% endif %}>{% if not m.avatar_url %}{{ m.username[:1]|upper }}{% endif %}</span><span class="member-presence status-{{ m_status }}"></span></span>
+      <span class="member-info">
+        <span class="member-name-line"><span class="visual-name member-name name-{{ m.name_effect or 'none' }} font-{{ m.name_font or 'default' }}" style="--name-c1: {{ m.role_color_start or '#f5576c' }}; --name-c2: {{ m.role_color_end or '#7367f0' }};">{{ m.display_name or m.username }}</span>{% if item.server_tag %}<span class="member-server-tag ah-tag-clickable" title="{{ item.server_tag.server_name }}" data-tag-server-id="{{ item.server_tag.server_id or '' }}" data-tag-server-name="{{ item.server_tag.server_name or '' }}" data-tag-icon-glyph="{{ item.server_tag.icon_glyph or '' }}" data-tag-icon-url="{{ item.server_tag.icon_url or '' }}" data-tag-text="{{ item.server_tag.text or '' }}" data-tag-member-count="{{ item.server_tag.member_count or '' }}" data-tag-online-count="{{ item.server_tag.online_count or '' }}" data-tag-description="{{ item.server_tag.description or '' }}" data-tag-invite="{{ item.server_tag.invite_url or '' }}"><b>{{ item.server_tag.icon_glyph }}</b>{{ item.server_tag.text }}</span>{% endif %}{% if m.id == server.owner_id %}<span class="server-owner-crown" aria-label="{{ i18n_t('common.aria.nijatic_service_of_the_server') }}" data-i18n-aria-label="common.aria.nijatic_service_of_the_server" data-tooltip="{{ i18n_t('common.aria.server_owner') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.3 7.2 7.7 11l4.1-6 4.3 6 4.6-3.8-1.8 10.1H5.1L3.3 7.2Zm2.3 12.1h12.8"/></svg></span>{% endif %}</span>
+        <span class="member-role">{{ i18n_t('common.role.' ~ item.member.role) }}</span>
+      </span>
+    </a>
+    {% endif %}
+  {% endmacro %}
   <aside class="members-sidebar">
-    <div class="members-title">{{ i18n_t('server.members.count', count=(members|length)) }}</div>
+    {% set online_members = [] %}{% set offline_members = [] %}
     {% for item in members %}
       {% set m = item.account %}
       {% if m %}
-      <a href="/community/profile/{{ m.username }}" class="member-row mini-profile-trigger profile-click" data-account-id="{{ m.id }}" data-mini-username="{{ m.username|e }}" data-mini-display="{{ m.display_name or m.username }}" data-mini-avatar="{{ m.avatar_url or '' }}" data-mini-banner="{{ m.banner_url or '' }}" data-mini-status="{{ account.account_status if m.id == account.id else (m.account_status or 'offline') }}" data-mini-role="{{ m.role_label or item.member.role }}" data-mini-effect="{{ m.name_effect or 'none' }}" data-mini-font="{{ m.name_font or 'default' }}" data-mini-c1="{{ m.role_color_start or '#f5576c' }}" data-mini-c2="{{ m.role_color_end or '#7367f0' }}" data-mini-profile="/community/profile/{{ m.username }}" data-mini-bio="{{ m.bio or '' }}">
-        <span class="member-avatar-wrap"><span class="member-avatar" {% if m.avatar_url %}style="background-image:url('{{ m.avatar_url }}');"{% endif %}>{% if not m.avatar_url %}{{ m.username[:1]|upper }}{% endif %}</span><span class="member-presence status-{{ account.account_status if m.id == account.id else (m.account_status or 'offline') }}"></span></span>
-        <span class="member-info">
-          <span class="member-name-line"><span class="visual-name member-name name-{{ m.name_effect or 'none' }} font-{{ m.name_font or 'default' }}" style="--name-c1: {{ m.role_color_start or '#f5576c' }}; --name-c2: {{ m.role_color_end or '#7367f0' }};">{{ m.display_name or m.username }}</span>{% if item.server_tag %}<span class="member-server-tag ah-tag-clickable" title="{{ item.server_tag.server_name }}" data-tag-server-id="{{ item.server_tag.server_id or '' }}" data-tag-server-name="{{ item.server_tag.server_name or '' }}" data-tag-icon-glyph="{{ item.server_tag.icon_glyph or '' }}" data-tag-icon-url="{{ item.server_tag.icon_url or '' }}" data-tag-text="{{ item.server_tag.text or '' }}" data-tag-member-count="{{ item.server_tag.member_count or '' }}" data-tag-online-count="{{ item.server_tag.online_count or '' }}" data-tag-description="{{ item.server_tag.description or '' }}" data-tag-invite="{{ item.server_tag.invite_url or '' }}"><b>{{ item.server_tag.icon_glyph }}</b>{{ item.server_tag.text }}</span>{% endif %}{% if m.id == server.owner_id %}<span class="server-owner-crown" aria-label="{{ i18n_t('common.aria.nijatic_service_of_the_server') }}" data-i18n-aria-label="common.aria.nijatic_service_of_the_server" data-tooltip="{{ i18n_t('common.aria.server_owner') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.3 7.2 7.7 11l4.1-6 4.3 6 4.6-3.8-1.8 10.1H5.1L3.3 7.2Zm2.3 12.1h12.8"/></svg></span>{% endif %}</span>
-          <span class="member-role">{{ i18n_t('common.role.' ~ item.member.role) }}</span>
-        </span>
-      </a>
+        {% set m_status = account.account_status if m.id == account.id else (m.account_status or 'offline') %}
+        {% if m_status in ('offline', 'invisible') %}
+          {% set _ = offline_members.append(item) %}
+        {% else %}
+          {% set _ = online_members.append(item) %}
+        {% endif %}
       {% endif %}
+    {% endfor %}
+    {% if members|length %}
+      <div class="members-group" id="members-online-group">
+        <div class="members-title members-group-label" id="members-online-label">В сети — <span class="members-group-count">{{ online_members|length }}</span></div>
+        {% for item in online_members %}{{ member_row(item) }}{% endfor %}
+      </div>
+      <div class="members-group" id="members-offline-group"{% if not offline_members|length %} hidden{% endif %}>
+        <div class="members-title members-group-label" id="members-offline-label">Не в сети — <span class="members-group-count">{{ offline_members|length }}</span></div>
+        {% for item in offline_members %}{{ member_row(item) }}{% endfor %}
+      </div>
     {% else %}
       <div class="empty-members"><!--i18n:common.text.no_participants-->{{ i18n_t('common.text.no_participants') }}</div>
-    {% endfor %}
+    {% endif %}
   </aside>
 
   <main class="chat-main" id="channel-main">
@@ -7186,6 +7217,31 @@ body .composer-wrap{
     }
   }
 
+  function updateMembersGroupCount(groupId) {
+    var group = document.getElementById(groupId);
+    if (!group) return;
+    var count = group.querySelectorAll('.member-row').length;
+    var countEl = group.querySelector('.members-group-count');
+    if (countEl) countEl.textContent = String(count);
+    if (groupId === 'members-offline-group') {
+      if (count > 0) group.removeAttribute('hidden');
+      else group.setAttribute('hidden', '');
+    }
+  }
+
+  function moveMemberRowToGroup(row, isOffline) {
+    var onlineGroup = document.getElementById('members-online-group');
+    var offlineGroup = document.getElementById('members-offline-group');
+    if (!onlineGroup || !offlineGroup) return;
+    row.classList.toggle('member-row-offline', isOffline);
+    var targetGroup = isOffline ? offlineGroup : onlineGroup;
+    if (row.parentElement !== targetGroup) {
+      targetGroup.appendChild(row);
+      updateMembersGroupCount('members-online-group');
+      updateMembersGroupCount('members-offline-group');
+    }
+  }
+
   function setRowPresence(row, status, online, username) {
     if (!row) return;
     var normalized = normalizedPresence(status, online);
@@ -7211,6 +7267,10 @@ body .composer-wrap{
         dot.classList.add('status-' + normalized);
         dot.classList.add(normalized);
       }
+    }
+
+    if (row.classList.contains('member-row')) {
+      moveMemberRowToGroup(row, normalized === 'offline');
     }
 
     var rowUsername = username || row.dataset.miniUsername || row.dataset.name || '';
