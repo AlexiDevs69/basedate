@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.127.18",
+      "date": "2026-08-31",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance tab styles with hover and active effects."
+      ],
+      "source_sha": "adbcc3ecb43a518799654b65c758b1f26b07a278"
+    },
+    {
       "version": "1.127.17",
       "date": "2026-08-31",
       "title": "Виправлення та стабільність",
