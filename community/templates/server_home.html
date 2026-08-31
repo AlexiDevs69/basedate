@@ -7945,6 +7945,7 @@ if (typeof window.openSelfProfileSettings !== 'function') {
     + '.ahctx-item.danger{color:#f23f42;}'
     + '.ahctx-item.danger:hover{background:#da373c;color:#fff;}'
     + '.ahctx-item.disabled{opacity:.42;pointer-events:none;}'
+    + '.ahctx-item.ahctx-bright{color:#fff;}'
     + '.ahctx-item .ahctx-label{display:flex;flex-direction:column;min-width:0;}'
     + '.ahctx-item .ahctx-sub{font-size:11px;font-weight:600;color:#949ba4;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
     + '.ahctx-item:hover .ahctx-sub,.ahctx-item.open-sub .ahctx-sub{color:rgba(255,255,255,.75);}'
@@ -8902,9 +8903,13 @@ if (typeof window.openSelfProfileSettings !== 'function') {
   }
 
   function makeItem(opts) {
-    // opts: {label, danger, chevron, leftBadge, onClick}
+    // opts: {label, danger, chevron, leftBadge, onClick, restricted}
+    // restricted === true  -> нет доступа / свой профиль: пункт темнее (серый) и неактивен
+    // restricted === false -> есть доступ: пункт белый
+    // restricted === undefined -> обычный пункт (Профиль, Копировать ID), цвет не меняем
     var el = document.createElement('div');
-    el.className = 'ahctx-item' + (opts.danger ? ' danger' : '');
+    var stateClass = opts.restricted === true ? ' disabled' : (opts.restricted === false ? ' ahctx-bright' : '');
+    el.className = 'ahctx-item' + (opts.danger ? ' danger' : '') + stateClass;
     el.setAttribute('role', 'menuitem');
     if (opts.leftBadge) {
       var badge = document.createElement('span');
@@ -8957,6 +8962,12 @@ if (typeof window.openSelfProfileSettings !== 'function') {
   function buildMenu(data) {
     menu.innerHTML = '';
 
+    /* Доступ модератора есть только у владельца сервера. Пункты действий
+       выглядят темнее/серыми, если смотришь свой же профиль или доступа нет;
+       если доступ есть (и это не ты сам) — пункты становятся белыми. */
+    var hasAccess = !!window.AH_IS_SERVER_OWNER;
+    var restricted = data.isSelf || !hasAccess;
+
     menu.appendChild(makeItem({
       label: 'Профиль',
       onClick: function (e) { closeMenu(); openFullProfileFor(data, e); }
@@ -8964,6 +8975,7 @@ if (typeof window.openSelfProfileSettings !== 'function') {
 
     menu.appendChild(makeItem({
       label: 'Написать сообщение',
+      restricted: restricted,
       onClick: function () {
         closeMenu();
         if (data.isSelf) { stubToast(); return; }
@@ -8973,11 +8985,12 @@ if (typeof window.openSelfProfileSettings !== 'function') {
 
     menu.appendChild(divider());
 
-    menu.appendChild(makeItem({ label: 'Изменить никнейм', onClick: function () { closeMenu(); stubToast(); } }));
-    menu.appendChild(makeItem({ label: 'Игнорировать', onClick: function () { closeMenu(); stubToast(); } }));
+    menu.appendChild(makeItem({ label: 'Изменить никнейм', restricted: restricted, onClick: function () { closeMenu(); stubToast(); } }));
+    menu.appendChild(makeItem({ label: 'Игнорировать', restricted: restricted, onClick: function () { closeMenu(); stubToast(); } }));
     menu.appendChild(makeItem({
       label: 'Заблокировать',
       danger: true,
+      restricted: restricted ? true : undefined,
       onClick: function () {
         closeMenu();
         if (data.isSelf || !data.username) { stubToast(); return; }
@@ -8991,7 +9004,7 @@ if (typeof window.openSelfProfileSettings !== 'function') {
 
     menu.appendChild(divider());
 
-    menu.appendChild(makeItem({ label: 'Роли', chevron: true, onClick: function () { closeMenu(); stubToast(); } }));
+    menu.appendChild(makeItem({ label: 'Роли', chevron: true, restricted: restricted, onClick: function () { closeMenu(); stubToast(); } }));
 
     if (window.AH_IS_SERVER_OWNER) {
       menu.appendChild(makeItem({
@@ -9011,11 +9024,13 @@ if (typeof window.openSelfProfileSettings !== 'function') {
       menu.appendChild(makeItem({
         label: 'Отправить ' + data.display + ' в тайм-аут',
         danger: true,
+        restricted: !hasAccess ? true : undefined,
         onClick: function () { closeMenu(); stubToast(); }
       }));
       menu.appendChild(makeItem({
         label: 'Выгнать ' + data.display,
         danger: true,
+        restricted: !hasAccess ? true : undefined,
         onClick: function () { closeMenu(); stubToast(); }
       }));
     }
