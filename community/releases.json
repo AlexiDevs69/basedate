@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.127.13",
+      "date": "2026-08-31",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update styles and structure in server_home.html."
+      ],
+      "source_sha": "6c1eabf7256e35fc491427c38702812d06333dbd"
+    },
+    {
       "version": "1.127.12",
       "date": "2026-08-31",
       "title": "Виправлення та стабільність",
