@@ -3641,7 +3641,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   const $=(s,r=document)=>r.querySelector(s);
   function txt(el){return (el&&el.textContent||'').replace(/\s+/g,' ').trim()}
   function bg(el){ if(!el)return''; let b=getComputedStyle(el).backgroundImage||''; let m=b.match(/url\(["']?([^"')]+)["']?\)/); return m?m[1]:''; }
-  function clean(s){return (s||'').replace(/^@/,'').replace(/\s*(online|live|connecting|reconnecting|офлайн|в мережі|не турбувати|неактивний)\s*$/i,'').trim();}
+  function clean(s){return (s||'').replace(/^@/,'').replace(/\s*(online|live|connecting|reconnecting|офлайн|в сети|не турбувати|неактивний)\s*$/i,'').trim();}
   function safeUrl(v){return String(v||'').replace(/'/g,'%27')}
   let active=null;
   function selfAvatar(){return bg($('.account-panel .account-avatar'))||bg($('.user-panel .avatar'))||bg($('.me-avatar'))||''}
@@ -9276,7 +9276,7 @@ document.addEventListener('alexihub:block-status-changed',event=>{const detail=e
         <span class="ah-tag-preview-chip" id="ah-tag-preview-chip" hidden></span>
       </div>
       <div class="ah-tag-preview-stats" id="ah-tag-preview-stats" hidden>
-        <span><i class="ah-tag-preview-dot"></i><b id="ah-tag-preview-online">0</b>&nbsp;в мережі</span>
+        <span><i class="ah-tag-preview-dot"></i><b id="ah-tag-preview-online">0</b>&nbsp;в сети</span>
         <span><i class="ah-tag-preview-dot muted"></i><b id="ah-tag-preview-members">0</b>&nbsp;учасників</span>
       </div>
     </div>
