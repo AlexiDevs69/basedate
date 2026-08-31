@@ -245,8 +245,9 @@
     .ah-mod-refresh-btn { width:26px; height:26px; border:0; border-radius:7px; background:rgba(255,255,255,.06); color:#9ca3af; display:flex; align-items:center; justify-content:center; cursor:pointer; }
     .ah-mod-refresh-btn:hover { background:rgba(255,255,255,.12); color:#fff; }
     .ah-mod-refresh-btn svg { width:14px; height:14px; }
-    .ah-mod-esc-hint { font-size:.68rem; font-weight:800; color:#6b7280; border:1px solid #3a3c45; border-radius:5px; padding:2px 6px; cursor:pointer; background:transparent; }
-    .ah-mod-esc-hint:hover { color:#dbdee1; border-color:#5c5e66; }
+    .ah-mod-esc-hint { display:inline-flex; align-items:center; justify-content:center; min-width:30px; height:22px; padding:0 7px; font-size:.66rem; font-weight:800; font-family:var(--font-mono); letter-spacing:.02em; color:#c9cbd1; background:linear-gradient(180deg,#3d3f48,#2b2d33); border:1px solid #1b1c1f; border-radius:6px; box-shadow:0 2px 0 0 #17181b, inset 0 1px 0 rgba(255,255,255,.09); cursor:pointer; user-select:none; transition:transform .08s ease, box-shadow .08s ease, background .12s ease, color .12s ease; }
+    .ah-mod-esc-hint:hover { color:#fff; background:linear-gradient(180deg,#46484f,#313339); }
+    .ah-mod-esc-hint:active, .ah-mod-esc-hint.is-pressed { transform:translateY(2px); box-shadow:0 0 0 0 #17181b, inset 0 1px 3px rgba(0,0,0,.45); background:linear-gradient(180deg,#2b2d33,#232428); }
     .ah-mod-block { margin-bottom:1.3rem; }
     .ah-mod-block-title { font-size:.92rem; font-weight:800; color:#f2f3f5; margin-bottom:.6rem; }
     .ah-mod-block-title-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:.6rem; }
@@ -8774,14 +8775,22 @@ if (typeof window.openSelfProfileSettings !== 'function') {
     closeMessagesView();
   }
 
+  function pulseEscHint(el) {
+    if (!el) return;
+    el.classList.remove('is-pressed');
+    void el.offsetWidth;
+    el.classList.add('is-pressed');
+    setTimeout(function () { el.classList.remove('is-pressed'); }, 140);
+  }
+
   var closeBtn = $('ah-mod-panel-close');
   if (closeBtn) closeBtn.addEventListener('click', close);
 
   var escHintMain = $('ah-mod-esc-main');
-  if (escHintMain) escHintMain.addEventListener('click', close);
+  if (escHintMain) escHintMain.addEventListener('click', function () { pulseEscHint(escHintMain); close(); });
 
   var escHintMessages = $('ah-mod-esc-messages');
-  if (escHintMessages) escHintMessages.addEventListener('click', closeMessagesView);
+  if (escHintMessages) escHintMessages.addEventListener('click', function () { pulseEscHint(escHintMessages); closeMessagesView(); });
 
   var messagesBackBtn = $('ah-mod-messages-back');
   if (messagesBackBtn) messagesBackBtn.addEventListener('click', closeMessagesView);
@@ -8875,9 +8884,11 @@ if (typeof window.openSelfProfileSettings !== 'function') {
     if (!panel || !panel.classList.contains('open')) return;
     var viewsEl = $('ah-mod-views');
     if (viewsEl && viewsEl.classList.contains('show-messages')) {
+      pulseEscHint(escHintMessages);
       closeMessagesView();
       return;
     }
+    pulseEscHint(escHintMain);
     close();
   });
 
