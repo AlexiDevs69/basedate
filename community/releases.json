@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.127.29",
+      "date": "2026-08-31",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено продуктивність: Russian translations for user status."
+      ],
+      "source_sha": "90ba727a6f1eccdbc3aaf0aeba3081b0f38b3a54"
+    },
+    {
       "version": "1.127.28",
       "date": "2026-08-31",
       "title": "Виправлення та стабільність",
