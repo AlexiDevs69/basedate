@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.127.21",
+      "date": "2026-08-31",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance menu item options with access restrictions."
+      ],
+      "source_sha": "311343df7f811d43f2b9e5722a0630224aefe543"
+    },
+    {
       "version": "1.127.20",
       "date": "2026-08-31",
       "title": "Виправлення та стабільність",
