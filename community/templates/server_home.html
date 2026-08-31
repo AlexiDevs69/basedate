@@ -180,33 +180,34 @@
     .cv-row-hidden { opacity:.5; }
 
     /* --- Панель "Открыть с доступом модератора" (только для владельца сервера) --- */
-    .ah-mod-panel { position:fixed; top:var(--topbar); right:0; bottom:0; width:min(420px,94vw); background:#1e1f22; border-left:1px solid #2b2d31; z-index:850; display:flex; flex-direction:column; transform:translateX(100%); transition:transform .22s cubic-bezier(.16,1,.3,1); box-shadow:-10px 0 34px rgba(0,0,0,.4); }
+    .ah-mod-panel { position:fixed; top:var(--topbar); right:0; bottom:0; width:min(420px,94vw); background:#1e1f22; border-left:1px solid #2b2d31; border-radius:14px 0 0 0; z-index:850; display:flex; flex-direction:column; transform:translateX(100%); transition:transform .22s cubic-bezier(.16,1,.3,1); box-shadow:-10px 0 34px rgba(0,0,0,.4); overflow:hidden; }
     .ah-mod-panel.open { transform:translateX(0); }
-    .ah-mod-panel-close { position:absolute; top:14px; right:14px; width:30px; height:30px; border:0; border-radius:8px; background:rgba(255,255,255,.06); color:#dbdee1; font-size:19px; line-height:1; cursor:pointer; z-index:2; }
+    .ah-mod-panel-close { position:absolute; top:14px; right:14px; width:30px; height:30px; border:0; border-radius:8px; background:rgba(255,255,255,.06); color:#dbdee1; font-size:19px; line-height:1; cursor:pointer; z-index:2; transition:background-color .12s ease,color .12s ease; }
     .ah-mod-panel-close:hover { background:rgba(255,255,255,.12); color:#fff; }
-    .ah-mod-panel-head { flex:0 0 auto; display:flex; align-items:center; gap:.7rem; padding:1.1rem 3rem 1rem 1.1rem; border-bottom:1px solid #2b2d31; }
-    .ah-mod-panel-avatar { width:46px; height:46px; border-radius:50%; background:#2b2d31 center/cover no-repeat; display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; flex-shrink:0; font-size:1.05rem; }
+    .ah-mod-panel-head { flex:0 0 auto; display:flex; align-items:center; gap:.75rem; padding:1.15rem 3rem 1.15rem 1.15rem; background:#202226; border-bottom:1px solid #2b2d31; }
+    .ah-mod-panel-avatar { width:48px; height:48px; border-radius:50%; background:#2b2d31 center/cover no-repeat; display:flex; align-items:center; justify-content:center; font-weight:800; color:#fff; flex-shrink:0; font-size:1.05rem; }
     .ah-mod-panel-avatar-wrap { position:relative; flex-shrink:0; }
-    .ah-mod-panel-status { position:absolute; right:-2px; bottom:-2px; width:16px; height:16px; border-radius:50%; background:#80848e; box-shadow:0 0 0 3px #1e1f22; display:flex; align-items:center; justify-content:center; }
+    .ah-mod-panel-status { position:absolute; right:-2px; bottom:-2px; width:17px; height:17px; border-radius:50%; background:#80848e; box-shadow:0 0 0 3px #202226; display:flex; align-items:center; justify-content:center; }
     .ah-mod-panel-status.status-online { background:#23a55a; }
     .ah-mod-panel-status.status-idle { background:#f0b232; }
     .ah-mod-panel-status.status-dnd { background:#ed4245; }
     .ah-mod-panel-status.status-offline, .ah-mod-panel-status.status-invisible { background:#80848e; }
-    .ah-mod-panel-status-glyph { display:block; background:#1e1f22; }
-    .ah-mod-panel-status.status-dnd .ah-mod-panel-status-glyph { width:8px; height:2.4px; border-radius:2px; }
-    .ah-mod-panel-status.status-idle .ah-mod-panel-status-glyph { width:9px; height:9px; border-radius:50%; transform:translate(-3px,-3px); }
+    .ah-mod-panel-status-glyph { display:block; background:#202226; }
+    .ah-mod-panel-status.status-dnd .ah-mod-panel-status-glyph { width:8.5px; height:2.6px; border-radius:2px; }
+    .ah-mod-panel-status.status-idle .ah-mod-panel-status-glyph { width:9.5px; height:9.5px; border-radius:50%; transform:translate(-3px,-3px); }
     .ah-mod-panel-id { min-width:0; }
-    .ah-mod-panel-name-row { display:flex; align-items:center; gap:.4rem; min-width:0; }
-    .ah-mod-panel-name { font-weight:800; font-size:1rem; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px; }
-    .ah-mod-panel-tag { display:inline-flex; align-items:center; gap:4px; background:#2b2d31; border-radius:6px; padding:2px 7px; font-size:.7rem; font-weight:800; color:#f2f3f5; flex-shrink:0; }
-    .ah-mod-panel-tag b { font-style:normal; }
-    .ah-mod-panel-handle { font-size:.78rem; color:#9ca3af; margin-top:2px; }
-    .ah-mod-panel-tabs { flex:0 0 auto; display:flex; align-items:stretch; padding:0; border-bottom:1px solid #2b2d31; }
-    .ah-mod-tab { flex:1 1 0; min-width:0; height:46px; border:0; border-right:1px solid #2b2d31; background:transparent; color:#9ca3af; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; }
+    .ah-mod-panel-name-row { display:flex; align-items:center; gap:.45rem; min-width:0; }
+    .ah-mod-panel-name { font-weight:800; font-size:1.02rem; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:190px; }
+    .ah-mod-panel-tag { display:inline-flex; align-items:center; gap:5px; background:#35373d; border-radius:8px; padding:3px 9px 3px 7px; font-size:.72rem; font-weight:800; letter-spacing:.01em; color:#f2f3f5; flex-shrink:0; }
+    .ah-mod-panel-tag b { font-style:normal; font-size:1rem; line-height:1; display:flex; align-items:center; }
+    .ah-mod-panel-handle { font-size:.8rem; color:#9ca3af; font-weight:600; margin-top:3px; }
+    .ah-mod-panel-tabs { flex:0 0 auto; display:flex; align-items:stretch; padding:0; background:#1e1f22; border-bottom:1px solid #2b2d31; }
+    .ah-mod-tab { flex:1 1 0; min-width:0; height:52px; border:0; border-right:1px solid #2b2d31; background:transparent; color:#8b8f98; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; }
     .ah-mod-tab:last-child { border-right:0; }
-    .ah-mod-tab-badge { width:36px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.74rem; color:inherit; transition:background-color .12s ease,color .12s ease; }
-    .ah-mod-tab-badge svg { width:18px; height:18px; }
-    .ah-mod-tab:hover .ah-mod-tab-badge:not(.active) { background:rgba(255,255,255,.08); color:#dbdee1; }
+    .ah-mod-tab-badge { width:38px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.76rem; color:inherit; transition:background-color .14s ease,color .14s ease,transform .14s ease; }
+    .ah-mod-tab-badge svg { width:20px; height:20px; }
+    .ah-mod-tab:hover .ah-mod-tab-badge:not(.active) { background:rgba(255,255,255,.09); color:#dbdee1; }
+    .ah-mod-tab:active .ah-mod-tab-badge:not(.active) { transform:scale(.92); }
     .ah-mod-tab-badge.active { background:#fff; color:#111214; }
     .ah-mod-panel-body { flex:1; min-height:0; overflow:hidden; padding:0; }
     .ah-mod-views { display:flex; width:200%; height:100%; transition:transform .28s cubic-bezier(.16,1,.3,1); }
