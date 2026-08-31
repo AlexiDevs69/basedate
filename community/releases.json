@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.127.17",
+      "date": "2026-08-31",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance mod tab tooltips and ID copy feature."
+      ],
+      "source_sha": "2ca22cbb11c6e2aa016d0a5c17ae97c5ca332f7b"
+    },
+    {
       "version": "1.127.16",
       "date": "2026-08-31",
       "title": "Оновлення AlexiHub",
