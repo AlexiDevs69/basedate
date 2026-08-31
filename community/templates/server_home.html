@@ -8852,11 +8852,6 @@ if (typeof window.openSelfProfileSettings !== 'function') {
         if (!currentPanelMemberId) return;
         var onCopied = function () {
           if (typeof window.showActionToast === 'function') window.showActionToast('ID скопирован');
-          if (badge) {
-            var old = badge.textContent;
-            badge.textContent = '✓';
-            setTimeout(function () { badge.textContent = old; }, 1100);
-          }
         };
         var onFailed = function () {
           if (typeof window.showActionToast === 'function') window.showActionToast('Не удалось скопировать ID');
