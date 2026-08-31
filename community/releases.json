@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.127.16",
+      "date": "2026-08-31",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: user tag and profile data attributes."
+      ],
+      "source_sha": "c82515e300a2fdbc9edeb15b7b92f2cdc0e833a5"
+    },
+    {
       "version": "1.127.15",
       "date": "2026-08-31",
       "title": "Виправлення та стабільність",
