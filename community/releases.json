@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.127.25",
+      "date": "2026-08-31",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Remove badge text update on ID copy."
+      ],
+      "source_sha": "4cc6c5d65332b2d458a52569cb9d90536baa39eb"
+    },
+    {
       "version": "1.127.24",
       "date": "2026-08-31",
       "title": "Виправлення та стабільність",
