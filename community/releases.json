@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.127.22",
+      "date": "2026-08-31",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance tab badge styles and copy ID functionality."
+      ],
+      "source_sha": "35f366d669e4dbb7af2a7f13182002a70d28e343"
+    },
+    {
       "version": "1.127.21",
       "date": "2026-08-31",
       "title": "Виправлення та стабільність",
