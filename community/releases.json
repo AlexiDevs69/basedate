@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.127.30",
+      "date": "2026-08-31",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update language from Ukrainian to Russian."
+      ],
+      "source_sha": "ff32d71298f4004b9803bc926a4bff64db141bf2"
+    },
+    {
       "version": "1.127.29",
       "date": "2026-08-31",
       "title": "Оновлення AlexiHub",
