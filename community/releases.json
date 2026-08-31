@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.127.15",
+      "date": "2026-08-31",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance moderator panel styling and layout."
+      ],
+      "source_sha": "50f00bd17c21678c2c2de4c5aa665089dac4b0f5"
+    },
+    {
       "version": "1.127.14",
       "date": "2026-08-31",
       "title": "Оновлення AlexiHub",
