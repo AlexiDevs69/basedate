@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.127.26",
+      "date": "2026-08-31",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: tab badge activation logic."
+      ],
+      "source_sha": "c2ed0eee6c918bfc3cc069d20cf0b23944b32260"
+    },
+    {
       "version": "1.127.25",
       "date": "2026-08-31",
       "title": "Виправлення та стабільність",
