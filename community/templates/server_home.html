@@ -8838,7 +8838,6 @@ if (typeof window.openSelfProfileSettings !== 'function') {
     tab.addEventListener('click', function () {
       document.querySelectorAll('.ah-mod-tab-badge').forEach(function (b) { b.classList.remove('active'); });
       var badge = tab.querySelector('.ah-mod-tab-badge');
-      if (badge) badge.classList.add('active');
 
       if (tab.dataset.modTab === 'messages') {
         if (currentPanelUsername) {
