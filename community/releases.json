@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.127.32",
+      "date": "2026-08-31",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: user status labels for consistency."
+      ],
+      "source_sha": "b1ea2a87c3c61b9975766e4ca0999646a9657729"
+    },
+    {
       "version": "1.127.31",
       "date": "2026-08-31",
       "title": "Виправлення та стабільність",
