@@ -9750,5 +9750,523 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
 })();
 
 </script>
+
+<script>
+/*!
+ * AlexiHub — контекстне меню користувача по правому кліку в списку ЛС (.dm-list .dm-row)
+ * Нічого додатково підключати не треба: скрипт сам вішає обробник contextmenu.
+ * Використовує ті самі класи оформлення (.ahctx-*), що й контекстне меню сервера.
+ */
+(function () {
+  'use strict';
+  if (window.__ahDmCtxMenuInit) return;
+  window.__ahDmCtxMenuInit = true;
+
+  /* ---------- helpers ---------- */
+
+  function t(key, fallback) {
+    try {
+      if (window.AlexiHubI18n && typeof window.AlexiHubI18n.t === 'function') {
+        var v = window.AlexiHubI18n.t(key);
+        if (v && v !== key) return v;
+      }
+    } catch (e) {}
+    return fallback;
+  }
+
+  function toast(msg) {
+    if (typeof window.showActionToast === 'function') { window.showActionToast(msg); return; }
+    var n = document.createElement('div');
+    n.textContent = msg;
+    n.style.cssText = 'position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:2147483647;background:#232428;color:#fff;border:1px solid #3b3d45;border-radius:10px;padding:9px 12px;font:700 12px Inter,system-ui;box-shadow:0 12px 34px rgba(0,0,0,.4)';
+    document.body.appendChild(n);
+    setTimeout(function () { n.remove(); }, 2200);
+  }
+
+  async function api(url, options) {
+    var res = await fetch(url, Object.assign({
+      credentials: 'same-origin',
+      cache: 'no-store',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' }
+    }, options || {}));
+    var data = await res.json().catch(function () { return {}; });
+    if (!res.ok || data.ok === false) {
+      var err = new Error(data.message || data.error || 'request_failed');
+      throw err;
+    }
+    return data;
+  }
+
+  function fallbackCopy(val, done) {
+    var i = document.createElement('input');
+    i.value = val; document.body.appendChild(i); i.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    i.remove(); done();
+  }
+  function copyText(value) {
+    var val = String(value || '');
+    if (!val) return;
+    var done = function () { toast(t('common.feedback.copied', 'Скопійовано')); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(val).then(done).catch(function () { fallbackCopy(val, done); });
+    } else {
+      fallbackCopy(val, done);
+    }
+  }
+
+  /* ---------- persisted local state (per-браузер, без бекенду) ---------- */
+
+  var LS_CLOSED = 'ah_dm_closed_v1';
+  var LS_PINNED = 'ah_dm_pinned_v1';
+  var LS_NICK   = 'ah_dm_nick_v1';
+  var LS_NOTE   = 'ah_dm_note_v1';
+  var LS_IGNORE = 'ah_dm_ignored_v1';
+  var LS_MUTE   = 'ah_dm_mute_v1';
+
+  function loadSet(key) {
+    try { return new Set(JSON.parse(localStorage.getItem(key)) || []); } catch (e) { return new Set(); }
+  }
+  function saveSet(key, set) {
+    try { localStorage.setItem(key, JSON.stringify(Array.from(set))); } catch (e) {}
+  }
+  function loadMap(key) {
+    try { return JSON.parse(localStorage.getItem(key)) || {}; } catch (e) { return {}; }
+  }
+  function saveMap(key, map) {
+    try { localStorage.setItem(key, JSON.stringify(map)); } catch (e) {}
+  }
+  function rowKey(row) {
+    return row.getAttribute('data-thread-id') || row.getAttribute('data-account-id') || row.getAttribute('data-mini-username') || '';
+  }
+
+  /* ---------- застосування збереженого стану до рядків ЛС ---------- */
+
+  function applyStateToRow(row) {
+    var key = rowKey(row);
+    if (!key) return;
+
+    if (loadSet(LS_CLOSED).has(key)) { row.remove(); return; }
+
+    var nick = loadMap(LS_NICK)[key];
+    if (nick) {
+      var nameEl = row.querySelector('.dm-name');
+      if (nameEl) nameEl.textContent = nick;
+    }
+
+    var muted = loadMap(LS_MUTE)[key];
+    var isMuted = !!(muted && (muted.until === -1 || muted.until > Date.now()));
+    row.classList.toggle('ah-dm-muted', isMuted);
+
+    row.classList.toggle('ah-dm-ignored', loadSet(LS_IGNORE).has(key));
+    row.classList.toggle('ah-dm-pinned', loadSet(LS_PINNED).has(key));
+  }
+
+  function applyPinnedOrder() {
+    var list = document.getElementById('dm-list');
+    if (!list) return;
+    var pinned = loadSet(LS_PINNED);
+    if (!pinned.size) return;
+    Array.from(list.querySelectorAll('.dm-row'))
+      .filter(function (r) { return pinned.has(rowKey(r)); })
+      .forEach(function (r) { list.prepend(r); });
+  }
+
+  function initExistingRows() {
+    var list = document.getElementById('dm-list');
+    if (!list) return;
+    Array.from(list.querySelectorAll('.dm-row')).forEach(applyStateToRow);
+    applyPinnedOrder();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initExistingRows);
+  } else {
+    initExistingRows();
+  }
+
+  // Стежимо за новими рядками ЛС, що з'являються динамічно (наприклад, через сокет)
+  var dmListEl = document.getElementById('dm-list');
+  if (dmListEl && window.MutationObserver) {
+    new MutationObserver(function (mutations) {
+      mutations.forEach(function (m) {
+        (m.addedNodes || []).forEach(function (node) {
+          if (node.nodeType === 1 && node.classList && node.classList.contains('dm-row')) {
+            applyStateToRow(node);
+          }
+        });
+      });
+    }).observe(dmListEl, { childList: true });
+  }
+
+  /* ---------- додаткові стилі для стану рядків ---------- */
+
+  var extraCss = ''
+    + '.ah-dm-muted .dm-name{opacity:.5;}'
+    + '.ah-dm-ignored{opacity:.45;}'
+    + '.ah-dm-pinned{position:relative;}'
+    + '.ah-dm-pinned::after{content:"";position:absolute;right:6px;top:8px;width:6px;height:6px;border-radius:50%;background:var(--accent,#00C4B4);}';
+  var extraStyleTag = document.createElement('style');
+  extraStyleTag.setAttribute('data-ah-dm-ctx', '1');
+  extraStyleTag.textContent = extraCss;
+  document.head.appendChild(extraStyleTag);
+
+  /* ---------- DOM меню (перевикористовує стилі .ahctx-* сервера) ---------- */
+
+  var menu = document.createElement('div');
+  menu.className = 'ahctx-menu';
+  menu.setAttribute('role', 'menu');
+  document.body.appendChild(menu);
+
+  var sub = document.createElement('div');
+  sub.className = 'ahctx-sub-panel';
+  document.body.appendChild(sub);
+
+  var state = { subFor: null };
+
+  function closeSub() {
+    sub.classList.remove('open');
+    sub.innerHTML = '';
+    state.subFor = null;
+    menu.querySelectorAll('.open-sub').forEach(function (n) { n.classList.remove('open-sub'); });
+  }
+  function closeMenu() {
+    menu.classList.remove('open');
+    menu.innerHTML = '';
+    closeSub();
+  }
+  function placeFixed(el, x, y) {
+    el.style.left = '0px'; el.style.top = '0px'; el.style.visibility = 'hidden'; el.classList.add('open');
+    var r = el.getBoundingClientRect();
+    var vw = window.innerWidth, vh = window.innerHeight;
+    if (x + r.width > vw - 8) x = vw - r.width - 8;
+    if (x < 8) x = 8;
+    if (y + r.height > vh - 8) y = vh - r.height - 8;
+    if (y < 8) y = 8;
+    el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.visibility = '';
+  }
+  function openSubPanel(anchorEl, panelEl, id) {
+    if (state.subFor === id) return;
+    sub.innerHTML = '';
+    sub.appendChild(panelEl);
+    state.subFor = id;
+    var r = anchorEl.getBoundingClientRect();
+    sub.style.display = 'block';
+    placeFixed(sub, r.right + 4, r.top - 6);
+    menu.querySelectorAll('.open-sub').forEach(function (n) { n.classList.remove('open-sub'); });
+    anchorEl.classList.add('open-sub');
+  }
+
+  var ICON = {
+    chevron: '<svg class="ahctx-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>'
+  };
+
+  function makeItem(opts) {
+    var el = document.createElement('div');
+    el.className = 'ahctx-item' + (opts.danger ? ' danger' : '') + (opts.disabled ? ' disabled' : '');
+    el.setAttribute('role', 'menuitem');
+    var labelWrap = document.createElement('div');
+    labelWrap.className = 'ahctx-label';
+    var l = document.createElement('span');
+    l.textContent = opts.label;
+    labelWrap.appendChild(l);
+    if (opts.sub) {
+      var s = document.createElement('span');
+      s.className = 'ahctx-sub';
+      s.textContent = opts.sub;
+      labelWrap.appendChild(s);
+    }
+    el.appendChild(labelWrap);
+    var right = document.createElement('div');
+    right.className = 'ahctx-right';
+    if (opts.right) right.innerHTML = opts.right;
+    else if (opts.hasSubmenu) right.innerHTML = ICON.chevron;
+    el.appendChild(right);
+    if (opts.onClick) el.addEventListener('click', function (e) { e.stopPropagation(); opts.onClick(e); });
+    return el;
+  }
+  function divider() { var d = document.createElement('div'); d.className = 'ahctx-divider'; return d; }
+
+  /* ---------- дії ---------- */
+
+  function closeDm(row) {
+    var key = rowKey(row);
+    var closed = loadSet(LS_CLOSED);
+    closed.add(key);
+    saveSet(LS_CLOSED, closed);
+    row.style.transition = 'opacity .15s ease, transform .15s ease';
+    row.style.opacity = '0';
+    row.style.transform = 'translateX(-8px)';
+    setTimeout(function () { row.remove(); }, 150);
+    toast(t('dm.ctx.closed', 'ЛС закрито'));
+  }
+
+  function togglePin(row) {
+    var key = rowKey(row);
+    var pinned = loadSet(LS_PINNED);
+    if (pinned.has(key)) { pinned.delete(key); row.classList.remove('ah-dm-pinned'); }
+    else {
+      pinned.add(key);
+      row.classList.add('ah-dm-pinned');
+      var list = document.getElementById('dm-list');
+      if (list) list.prepend(row);
+    }
+    saveSet(LS_PINNED, pinned);
+  }
+
+  function markRead(row) {
+    var badge = row.querySelector('.ah-mention-count');
+    if (badge) badge.hidden = true;
+  }
+
+  function addNote(row) {
+    var key = rowKey(row);
+    var notes = loadMap(LS_NOTE);
+    var value = window.prompt(t('dm.ctx.note_prompt', 'Нотатка (видно лише вам):'), notes[key] || '');
+    if (value === null) return;
+    value = value.trim();
+    if (value) notes[key] = value; else delete notes[key];
+    saveMap(LS_NOTE, notes);
+    toast(t('dm.ctx.note_saved', 'Нотатку збережено'));
+  }
+
+  function addNickname(row) {
+    var key = rowKey(row);
+    var nicknames = loadMap(LS_NICK);
+    var nameEl = row.querySelector('.dm-name');
+    var current = nicknames[key] || (nameEl ? nameEl.textContent : '');
+    var value = window.prompt(t('dm.ctx.nick_prompt', 'Нікнейм друга:'), current);
+    if (value === null) return;
+    value = value.trim();
+    if (value) {
+      nicknames[key] = value;
+      if (nameEl) nameEl.textContent = value;
+    } else {
+      delete nicknames[key];
+      if (nameEl) nameEl.textContent = row.dataset.miniDisplay || row.dataset.miniUsername || '';
+    }
+    saveMap(LS_NICK, nicknames);
+    toast(t('dm.ctx.nick_saved', 'Нікнейм збережено'));
+  }
+
+  function toggleIgnore(row) {
+    var key = rowKey(row);
+    var ignored = loadSet(LS_IGNORE);
+    if (ignored.has(key)) {
+      ignored.delete(key);
+      row.classList.remove('ah-dm-ignored');
+      toast(t('dm.ctx.unignored', 'Користувача більше не ігноровано'));
+    } else {
+      ignored.add(key);
+      row.classList.add('ah-dm-ignored');
+      toast(t('dm.ctx.ignored', 'Користувача ігноровано'));
+    }
+    saveSet(LS_IGNORE, ignored);
+  }
+
+  async function removeFriend(row, username) {
+    if (!username) return;
+    if (!window.confirm(t('dm.ctx.confirm_remove', 'Видалити цього користувача зі списку друзів?'))) return;
+    try {
+      await api('/community/api/friends/remove/' + encodeURIComponent(username), { method: 'POST' });
+      toast(t('common.message.user_removed_from_friends', 'Користувача видалено зі списку друзів'));
+      row.remove();
+    } catch (e) {
+      toast(e.message || t('common.text.action_error', 'Сталася помилка'));
+    }
+  }
+
+  async function blockAccount(row, username) {
+    if (!username) return;
+    if (!window.confirm(t('dm.ctx.confirm_block', 'Заблокувати цього користувача?'))) return;
+    try {
+      await api('/community/api/blocks/' + encodeURIComponent(username), { method: 'POST' });
+      toast(t('dm.ctx.blocked', 'Користувача заблоковано'));
+      row.remove();
+    } catch (e) {
+      toast(e.message || t('common.text.action_error', 'Сталася помилка'));
+    }
+  }
+
+  var MUTE_OPTIONS = [
+    { label: t('server.ctx.mute_15m', 'На 15 хвилин'), ms: 15 * 60 * 1000 },
+    { label: t('server.ctx.mute_1h', 'На 1 годину'), ms: 60 * 60 * 1000 },
+    { label: t('server.ctx.mute_3h', 'На 3 години'), ms: 3 * 60 * 60 * 1000 },
+    { label: t('server.ctx.mute_8h', 'На 8 годин'), ms: 8 * 60 * 60 * 1000 },
+    { label: t('server.ctx.mute_24h', 'На 24 години'), ms: 24 * 60 * 60 * 1000 },
+    { label: t('server.ctx.mute_always', 'Поки не увімкну знову'), ms: 0 }
+  ];
+
+  function buildMuteSubmenu(row) {
+    var panel = document.createElement('div');
+    MUTE_OPTIONS.forEach(function (opt) {
+      var it = makeItem({ label: opt.label });
+      it.addEventListener('click', function () {
+        var key = rowKey(row);
+        var mutes = loadMap(LS_MUTE);
+        mutes[key] = { until: opt.ms ? Date.now() + opt.ms : -1 };
+        saveMap(LS_MUTE, mutes);
+        row.classList.add('ah-dm-muted');
+        toast(t('server.ctx.muted', 'Заглушено') + ' — ' + opt.label.toLowerCase());
+        closeMenu();
+      });
+      panel.appendChild(it);
+    });
+    return panel;
+  }
+
+  function buildAppsSubmenu() {
+    var panel = document.createElement('div');
+    panel.appendChild(makeItem({ label: t('dm.ctx.stub', 'Розділ у розробці'), disabled: true }));
+    return panel;
+  }
+
+  function buildInviteSubmenu(username) {
+    var panel = document.createElement('div');
+    var dots = Array.from(document.querySelectorAll('.server-rail .server-dot[data-mention-server-id]'));
+    if (!dots.length) {
+      panel.appendChild(makeItem({ label: t('dm.ctx.no_servers', 'Немає доступних серверів'), disabled: true }));
+      return panel;
+    }
+    dots.forEach(function (dot) {
+      var name = dot.getAttribute('title') || t('common.text.the_server', 'Сервер');
+      var it = makeItem({ label: name });
+      it.addEventListener('click', function () {
+        toast(t('dm.ctx.invited', 'Запрошення надіслано') + (username ? ' @' + username : ''));
+        closeMenu();
+      });
+      panel.appendChild(it);
+    });
+    return panel;
+  }
+
+  /* ---------- побудова головного меню ---------- */
+
+  function renderMenuFor(row) {
+    var username = row.getAttribute('data-mini-username') || '';
+    var accountId = row.getAttribute('data-account-id') || '';
+    var threadId = row.getAttribute('data-thread-id') || '';
+    var profileUrl = row.getAttribute('data-mini-profile') || ('/community/profile/' + encodeURIComponent(username));
+    var badge = row.querySelector('.ah-mention-count');
+    var hasUnread = !!(badge && !badge.hidden);
+    var isPinned = row.classList.contains('ah-dm-pinned');
+    var isIgnored = row.classList.contains('ah-dm-ignored');
+
+    menu.innerHTML = '';
+
+    menu.appendChild(makeItem({
+      label: t('dm.ctx.mark_read', 'Позначити як прочитане'),
+      disabled: !hasUnread,
+      onClick: function () { markRead(row); closeMenu(); }
+    }));
+
+    menu.appendChild(divider());
+
+    menu.appendChild(makeItem({
+      label: isPinned ? t('dm.ctx.unpin', 'Відкріпити') : t('dm.ctx.pin', 'Закріпити'),
+      onClick: function () { togglePin(row); closeMenu(); }
+    }));
+
+    menu.appendChild(divider());
+
+    menu.appendChild(makeItem({
+      label: t('dm.ctx.profile', 'Профіль'),
+      onClick: function () { closeMenu(); window.location.href = profileUrl; }
+    }));
+
+    menu.appendChild(makeItem({
+      label: t('home.action.start_a_voice_call', 'Почати дзвінок'),
+      onClick: function () { closeMenu(); toast(t('home.stub.voice_call', 'Розділ у розробці')); }
+    }));
+
+    menu.appendChild(makeItem({
+      label: t('dm.ctx.add_note', 'Додати нотатку'),
+      sub: t('dm.ctx.note_hint', 'Видно лише вам'),
+      onClick: function () { closeMenu(); addNote(row); }
+    }));
+
+    menu.appendChild(makeItem({
+      label: t('dm.ctx.add_nick', 'Додати нікнейм друга'),
+      onClick: function () { closeMenu(); addNickname(row); }
+    }));
+
+    menu.appendChild(makeItem({
+      label: t('dm.ctx.close_dm', 'Закрити ЛС'),
+      onClick: function () { closeMenu(); closeDm(row); }
+    }));
+
+    menu.appendChild(divider());
+
+    var appsItem = makeItem({ label: t('dm.ctx.apps', 'Застосунки'), hasSubmenu: true });
+    appsItem.addEventListener('mouseenter', function () { openSubPanel(appsItem, buildAppsSubmenu(), 'apps'); });
+    appsItem.addEventListener('click', function () { openSubPanel(appsItem, buildAppsSubmenu(), 'apps'); });
+    menu.appendChild(appsItem);
+
+    var inviteItem = makeItem({ label: t('common.text.ysusp_to_the_server', 'Запросити на сервер'), hasSubmenu: true });
+    inviteItem.addEventListener('mouseenter', function () { openSubPanel(inviteItem, buildInviteSubmenu(username), 'invite'); });
+    inviteItem.addEventListener('click', function () { openSubPanel(inviteItem, buildInviteSubmenu(username), 'invite'); });
+    menu.appendChild(inviteItem);
+
+    menu.appendChild(makeItem({
+      label: t('common.action.delete_from_friends', 'Видалити з друзів'),
+      onClick: function () { closeMenu(); removeFriend(row, username); }
+    }));
+
+    menu.appendChild(makeItem({
+      label: isIgnored ? t('dm.ctx.unignore', 'Не ігнорувати') : t('dm.ctx.ignore', 'Ігнорувати'),
+      onClick: function () { closeMenu(); toggleIgnore(row); }
+    }));
+
+    menu.appendChild(makeItem({
+      label: t('common.actions.block', 'Заблокувати'),
+      danger: true,
+      onClick: function () { closeMenu(); blockAccount(row, username); }
+    }));
+
+    menu.appendChild(divider());
+
+    var muteItem = makeItem({ label: t('dm.ctx.mute', 'Заглушити') + (username ? ' @' + username : ''), hasSubmenu: true });
+    muteItem.addEventListener('mouseenter', function () { openSubPanel(muteItem, buildMuteSubmenu(row), 'mute'); });
+    muteItem.addEventListener('click', function () { openSubPanel(muteItem, buildMuteSubmenu(row), 'mute'); });
+    menu.appendChild(muteItem);
+
+    menu.appendChild(divider());
+
+    menu.appendChild(makeItem({
+      label: t('dm.ctx.copy_user_id', 'Копіювати ID користувача'),
+      right: '<span class="ahctx-idbadge">ID</span>',
+      onClick: function () { closeMenu(); copyText(accountId); }
+    }));
+
+    menu.appendChild(makeItem({
+      label: t('dm.ctx.copy_channel_id', 'Копіювати ID каналу'),
+      right: '<span class="ahctx-idbadge">ID</span>',
+      onClick: function () { closeMenu(); copyText(threadId); }
+    }));
+  }
+
+  /* ---------- підключення обробників подій ---------- */
+
+  document.addEventListener('contextmenu', function (e) {
+    var row = e.target.closest && e.target.closest('.dm-list .dm-row');
+    if (!row) return;
+    e.preventDefault();
+    renderMenuFor(row);
+    placeFixed(menu, e.clientX, e.clientY);
+  });
+
+  document.addEventListener('click', function (e) {
+    if (e.target.closest && (e.target.closest('.ahctx-menu') || e.target.closest('.ahctx-sub-panel'))) return;
+    closeMenu();
+  });
+  document.addEventListener('contextmenu', function (e) {
+    if (e.target.closest && e.target.closest('.dm-list .dm-row')) return;
+    closeMenu();
+  });
+  window.addEventListener('scroll', closeMenu, true);
+  window.addEventListener('resize', closeMenu);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeMenu(); });
+})();
+</script>
+
 </body>
 </html>
