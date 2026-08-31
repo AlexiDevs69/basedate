@@ -198,8 +198,7 @@
     .ah-mod-panel-id { min-width:0; }
     .ah-mod-panel-name-row { display:flex; align-items:center; gap:.45rem; min-width:0; }
     .ah-mod-panel-name { font-weight:800; font-size:1.02rem; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:190px; }
-    .ah-mod-panel-tag { display:inline-flex; align-items:center; gap:5px; background:#35373d; border-radius:8px; padding:3px 9px 3px 7px; font-size:.72rem; font-weight:800; letter-spacing:.01em; color:#f2f3f5; flex-shrink:0; }
-    .ah-mod-panel-tag b { font-style:normal; font-size:1rem; line-height:1; display:flex; align-items:center; }
+    .ah-mod-panel-name-row .ah-v3-tag { margin-top:0; flex-shrink:0; }
     .ah-mod-panel-handle { font-size:.8rem; color:#9ca3af; font-weight:600; margin-top:3px; }
     .ah-mod-panel-tabs { flex:0 0 auto; display:flex; align-items:stretch; padding:0; background:#1e1f22; border-bottom:1px solid #2b2d31; }
     .ah-mod-tab { flex:1 1 0; min-width:0; height:52px; border:0; border-right:1px solid #2b2d31; background:transparent; color:#8b8f98; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; }
@@ -2032,7 +2031,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
               <tr data-mv-name="{{ (m.display_name or m.username)|lower }}" data-mv-created="{{ m.created_at.timestamp() if m.created_at else 0 }}">
                 <td><input type="checkbox" class="mv-check"></td>
                 <td>
-                  <div class="mv-user-cell mini-profile-trigger profile-click" data-mini-username="{{ m.username|e }}" data-mini-display="{{ m.display_name or m.username }}" data-mini-avatar="{{ m.avatar_url or '' }}" data-mini-banner="{{ m.banner_url or '' }}" data-mini-status="{{ account.account_status if m.id == account.id else (m.account_status or 'offline') }}" data-mini-role="{{ m.role_label or item.member.role }}" data-mini-effect="{{ m.name_effect or 'none' }}" data-mini-font="{{ m.name_font or 'default' }}" data-mini-c1="{{ m.role_color_start or '#f5576c' }}" data-mini-c2="{{ m.role_color_end or '#7367f0' }}" data-mini-profile="/community/profile/{{ m.username }}" data-mini-bio="{{ m.bio or '' }}" data-tag-glyph="{{ item.server_tag.icon_glyph if item.server_tag else '' }}" data-tag-text="{{ item.server_tag.text if item.server_tag else '' }}" style="cursor:pointer">
+                  <div class="mv-user-cell mini-profile-trigger profile-click" data-mini-username="{{ m.username|e }}" data-mini-display="{{ m.display_name or m.username }}" data-mini-avatar="{{ m.avatar_url or '' }}" data-mini-banner="{{ m.banner_url or '' }}" data-mini-status="{{ account.account_status if m.id == account.id else (m.account_status or 'offline') }}" data-mini-role="{{ m.role_label or item.member.role }}" data-mini-effect="{{ m.name_effect or 'none' }}" data-mini-font="{{ m.name_font or 'default' }}" data-mini-c1="{{ m.role_color_start or '#f5576c' }}" data-mini-c2="{{ m.role_color_end or '#7367f0' }}" data-mini-profile="/community/profile/{{ m.username }}" data-mini-bio="{{ m.bio or '' }}" data-tag-glyph="{{ item.server_tag.icon_glyph if item.server_tag else '' }}" data-tag-text="{{ item.server_tag.text if item.server_tag else '' }}" data-tag-server-id="{{ item.server_tag.server_id if item.server_tag else '' }}" data-tag-server-name="{{ item.server_tag.server_name if item.server_tag else '' }}" data-tag-icon-url="{{ item.server_tag.icon_url if item.server_tag else '' }}" data-tag-member-count="{{ item.server_tag.member_count if item.server_tag else '' }}" data-tag-online-count="{{ item.server_tag.online_count if item.server_tag else '' }}" data-tag-description="{{ item.server_tag.description if item.server_tag else '' }}" data-tag-invite="{{ item.server_tag.invite_url if item.server_tag else '' }}" style="cursor:pointer">
                     <span class="mv-avatar" {% if m.avatar_url %}style="background-image:url('{{ m.avatar_url }}');"{% endif %}>{% if not m.avatar_url %}{{ m.username[:1]|upper }}{% endif %}</span>
                     <span>
                       <div class="mv-user-name">{{ m.display_name or m.username }}</div>
@@ -2615,7 +2614,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
       <div class="ah-mod-panel-id">
         <div class="ah-mod-panel-name-row">
           <span id="ah-mod-name" class="ah-mod-panel-name">User</span>
-          <span id="ah-mod-tag" class="ah-mod-panel-tag" hidden><b id="ah-mod-tag-glyph">◆</b><span id="ah-mod-tag-text"></span></span>
+          <span id="ah-mod-tag" class="ah-v3-tag ah-tag-clickable" hidden><b id="ah-mod-tag-glyph">◆</b><span id="ah-mod-tag-text"></span></span>
         </div>
         <div id="ah-mod-handle" class="ah-mod-panel-handle">@user</div>
       </div>
@@ -8681,6 +8680,13 @@ if (typeof window.openSelfProfileSettings !== 'function') {
       status: trigger ? (trigger.dataset.miniStatus || '') : '',
       tagGlyph: trigger ? (trigger.dataset.tagGlyph || '') : '',
       tagText: trigger ? (trigger.dataset.tagText || '') : '',
+      tagServerId: trigger ? (trigger.dataset.tagServerId || '') : '',
+      tagServerName: trigger ? (trigger.dataset.tagServerName || '') : '',
+      tagIconUrl: trigger ? (trigger.dataset.tagIconUrl || '') : '',
+      tagMemberCount: trigger ? (trigger.dataset.tagMemberCount || '') : '',
+      tagOnlineCount: trigger ? (trigger.dataset.tagOnlineCount || '') : '',
+      tagDescription: trigger ? (trigger.dataset.tagDescription || '') : '',
+      tagInvite: trigger ? (trigger.dataset.tagInvite || '') : '',
       created: cells[3] ? cells[3].textContent.trim() : '',
       roleLabel: rolePill ? rolePill.textContent.trim() : '',
       isOwnerRow: moreBtn ? moreBtn.getAttribute('data-member-owner') === '1' : false
@@ -8709,6 +8715,16 @@ if (typeof window.openSelfProfileSettings !== 'function') {
         tagWrap.hidden = false;
         var glyphEl = $('ah-mod-tag-glyph'); if (glyphEl) glyphEl.textContent = extra.tagGlyph || '◆';
         var tagTextEl = $('ah-mod-tag-text'); if (tagTextEl) tagTextEl.textContent = extra.tagText;
+        tagWrap.title = extra.tagServerName || '';
+        tagWrap.setAttribute('data-tag-server-id', extra.tagServerId || '');
+        tagWrap.setAttribute('data-tag-server-name', extra.tagServerName || '');
+        tagWrap.setAttribute('data-tag-icon-glyph', extra.tagGlyph || '');
+        tagWrap.setAttribute('data-tag-icon-url', extra.tagIconUrl || '');
+        tagWrap.setAttribute('data-tag-text', extra.tagText || '');
+        tagWrap.setAttribute('data-tag-member-count', extra.tagMemberCount || '');
+        tagWrap.setAttribute('data-tag-online-count', extra.tagOnlineCount || '');
+        tagWrap.setAttribute('data-tag-description', extra.tagDescription || '');
+        tagWrap.setAttribute('data-tag-invite', extra.tagInvite || '');
       } else {
         tagWrap.hidden = true;
       }
