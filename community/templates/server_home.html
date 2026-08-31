@@ -215,7 +215,7 @@
     .ah-mod-tab-badge { width:40px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.8rem; color:inherit; transition:background-color .14s ease,color .14s ease,transform .14s ease; }
     .ah-mod-tab-badge svg { width:23px; height:23px; }
     .ah-mod-tab:active .ah-mod-tab-badge:not(.active) { transform:scale(.92); }
-    .ah-mod-tab-badge.active:not(:has(svg)) { background:#fff; color:#111214; }
+    .ah-mod-tab-badge.active { background:rgba(255,255,255,.12); color:#fff; }
     .ah-mod-panel-body { flex:1; min-height:0; overflow:hidden; padding:0; }
     .ah-mod-views { display:flex; width:200%; height:100%; transition:transform .28s cubic-bezier(.16,1,.3,1); }
     .ah-mod-views.show-messages { transform:translateX(-50%); }
@@ -8525,6 +8525,7 @@ if (typeof window.openSelfProfileSettings !== 'function') {
   var currentPanelTagGlyph = '';
   var currentPanelTagText = '';
   var currentPanelMemberId = '';
+  var currentPanelUsername = '';
   var messagesRequestSeq = 0;
 
   var MSG_CHANNEL_ICON_RULES = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.2"/><circle cx="8.6" cy="10" r="1.6"/><path d="m21 16.5-5.6-5.6a1.5 1.5 0 0 0-2.1 0L5 19"/></svg>';
@@ -8750,6 +8751,7 @@ if (typeof window.openSelfProfileSettings !== 'function') {
     currentPanelTagGlyph = extra.tagGlyph || '';
     currentPanelTagText = extra.tagText || '';
     currentPanelMemberId = opts.memberId != null ? String(opts.memberId) : '';
+    currentPanelUsername = opts.username || '';
     loadActivityStats(opts.memberId);
     syncAllStatChevrons();
 
@@ -8813,21 +8815,63 @@ if (typeof window.openSelfProfileSettings !== 'function') {
     });
   });
 
+  function fallbackCopyId(val, done, fail) {
+    try {
+      var i = document.createElement('input');
+      i.value = val;
+      i.style.position = 'fixed';
+      i.style.opacity = '0';
+      i.style.pointerEvents = 'none';
+      document.body.appendChild(i);
+      i.select();
+      i.setSelectionRange(0, val.length);
+      var ok = document.execCommand('copy');
+      i.remove();
+      if (ok) { if (typeof done === 'function') done(); }
+      else { if (typeof fail === 'function') fail(); }
+    } catch (e) {
+      if (typeof fail === 'function') fail();
+    }
+  }
+
   document.querySelectorAll('.ah-mod-tab').forEach(function (tab) {
     tab.addEventListener('click', function () {
       document.querySelectorAll('.ah-mod-tab-badge').forEach(function (b) { b.classList.remove('active'); });
       var badge = tab.querySelector('.ah-mod-tab-badge');
       if (badge) badge.classList.add('active');
-      if (tab.dataset.modTab === 'id') {
-        if (currentPanelMemberId && navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(currentPanelMemberId).then(function () {
-            if (typeof window.showActionToast === 'function') window.showActionToast('ID скопирован');
-          }).catch(function () {
-            if (typeof window.showActionToast === 'function') window.showActionToast('Не удалось скопировать ID');
-          });
+
+      if (tab.dataset.modTab === 'messages') {
+        if (currentPanelUsername) {
+          location.href = '/community/dm/' + encodeURIComponent(currentPanelUsername);
+        } else if (typeof window.showActionToast === 'function') {
+          window.showActionToast('Раздел в разработке');
         }
         return;
       }
+
+      if (tab.dataset.modTab === 'id') {
+        if (!currentPanelMemberId) return;
+        var onCopied = function () {
+          if (typeof window.showActionToast === 'function') window.showActionToast('ID скопирован');
+          if (badge) {
+            var old = badge.textContent;
+            badge.textContent = '✓';
+            setTimeout(function () { badge.textContent = old; }, 1100);
+          }
+        };
+        var onFailed = function () {
+          if (typeof window.showActionToast === 'function') window.showActionToast('Не удалось скопировать ID');
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(currentPanelMemberId).then(onCopied).catch(function () {
+            fallbackCopyId(currentPanelMemberId, onCopied, onFailed);
+          });
+        } else {
+          fallbackCopyId(currentPanelMemberId, onCopied, onFailed);
+        }
+        return;
+      }
+
       if (typeof window.showActionToast === 'function') {
         window.showActionToast('Раздел в разработке');
       }
