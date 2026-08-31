@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.127.27",
+      "date": "2026-08-31",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance escape hint button styling and interaction."
+      ],
+      "source_sha": "9d5b359002c64a3eb355d2a5263bec09cbcf1fb0"
+    },
+    {
       "version": "1.127.26",
       "date": "2026-08-31",
       "title": "Оновлення AlexiHub",
