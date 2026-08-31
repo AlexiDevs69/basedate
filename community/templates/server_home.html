@@ -8758,10 +8758,7 @@ if (typeof window.openSelfProfileSettings !== 'function') {
     document.querySelectorAll('#mv-tbody tr.ah-mod-row-active').forEach(function (r) { r.classList.remove('ah-mod-row-active'); });
     if (opts.row) opts.row.classList.add('ah-mod-row-active');
 
-    document.querySelectorAll('.ah-mod-tab').forEach(function (t) {
-      var badge = t.querySelector('.ah-mod-tab-badge');
-      if (badge) badge.classList.toggle('active', t.dataset.modTab === 'id');
-    });
+    document.querySelectorAll('.ah-mod-tab-badge').forEach(function (b) { b.classList.remove('active'); });
 
     panel.classList.add('open');
     panel.setAttribute('aria-hidden', 'false');
