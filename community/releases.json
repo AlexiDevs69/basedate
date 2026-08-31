@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.127.31",
+      "date": "2026-08-31",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance member display with online/offline separation."
+      ],
+      "source_sha": "841b5d0d0bb150bf1ac031e71e1a25ad49fa14b6"
+    },
+    {
       "version": "1.127.30",
       "date": "2026-08-31",
       "title": "Виправлення та стабільність",
