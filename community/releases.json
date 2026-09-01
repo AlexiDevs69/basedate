@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.130.4",
+      "date": "2026-09-01",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update styles for ahctx-menu and ahctx-sub-panel."
+      ],
+      "source_sha": "d870863cc8758e40aa1c5f58093ab812e082a9a5"
+    },
+    {
       "version": "1.130.3",
       "date": "2026-09-01",
       "title": "Виправлення та стабільність",
