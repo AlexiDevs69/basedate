@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.130.0",
+      "date": "2026-09-01",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: pinning feature for direct messages."
+      ],
+      "source_sha": "dbef3dddc1707afd8aeac80c9054596b28f88540"
+    },
+    {
       "version": "1.129.1",
       "date": "2026-09-01",
       "title": "Виправлення та стабільність",
