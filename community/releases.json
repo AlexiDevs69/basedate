@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.130.3",
+      "date": "2026-09-01",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update text for Russian localization in home.html."
+      ],
+      "source_sha": "dfcedb53622595c48bc236c48bfe89c8a790dc34"
+    },
+    {
       "version": "1.130.2",
       "date": "2026-09-01",
       "title": "Оновлення AlexiHub",
