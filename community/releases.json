@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.130.2",
+      "date": "2026-09-01",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: SVG icons and style adjustments."
+      ],
+      "source_sha": "142afe8e958548f9534a81690802ef1a7b41007f"
+    },
+    {
       "version": "1.130.1",
       "date": "2026-09-01",
       "title": "Виправлення та стабільність",
