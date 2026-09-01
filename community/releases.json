@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.129.1",
+      "date": "2026-09-01",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance DM row state and pinning logic."
+      ],
+      "source_sha": "a3472a082402a20426f2e1e1da9d460056da5ce7"
+    },
+    {
       "version": "1.129.0",
       "date": "2026-09-01",
       "title": "Нові можливості AlexiHub",
