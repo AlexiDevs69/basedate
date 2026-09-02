@@ -8335,14 +8335,14 @@ document.addEventListener('DOMContentLoaded', async function(){
   /* ---------- styles ---------- */
 
   var css = ''
-    + '.ahctx-menu{position:fixed;z-index:99999;min-width:264px;max-width:300px;background:#111214;border:1px solid #2b2d31;border-radius:10px;padding:6px;box-shadow:0 18px 50px rgba(0,0,0,.5);font-family:Inter,system-ui,sans-serif;color:#dbdee1;font-size:13.5px;display:none;user-select:none;}'
+    + '.ahctx-menu{position:fixed;z-index:99999;min-width:268px;max-width:310px;background:#27272c;border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:6px;box-shadow:0 18px 50px rgba(0,0,0,.5);font-family:Inter,system-ui,sans-serif;color:#f5f5f6;font-size:14.5px;display:none;user-select:none;}'
     + '.ahctx-menu.open{display:block;animation:ahctxPop .12s ease-out;}'
     + '@keyframes ahctxPop{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}'
-    + '.ahctx-item{position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 8px;border-radius:5px;cursor:pointer;font-weight:600;line-height:1.15;}'
+    + '.ahctx-item{position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;border-radius:6px;cursor:pointer;font-weight:700;line-height:1.2;}'
     + '.ahctx-item:hover,.ahctx-item.open-sub{background:#4752c4;color:#fff;}'
-    + '.ahctx-item.danger{color:#f23f42;}'
+    + '.ahctx-item.danger{color:#fa7d76;}'
     + '.ahctx-item.danger:hover{background:#da373c;color:#fff;}'
-    + '.ahctx-item.disabled{opacity:.42;pointer-events:none;}'
+    + '.ahctx-item.disabled{opacity:.5;pointer-events:none;}'
     + '.ahctx-item .ahctx-label{display:flex;flex-direction:column;min-width:0;}'
     + '.ahctx-item .ahctx-sub{font-size:11px;font-weight:600;color:#949ba4;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
     + '.ahctx-item:hover .ahctx-sub,.ahctx-item.open-sub .ahctx-sub{color:rgba(255,255,255,.75);}'
@@ -8360,7 +8360,7 @@ document.addEventListener('DOMContentLoaded', async function(){
     + '.ahctx-item:hover .ahctx-idbadge,.ahctx-item.open-sub .ahctx-idbadge{background:rgba(255,255,255,.25);color:#fff;}'
     + '.ahctx-divider{height:1px;background:rgba(255,255,255,.08);margin:6px 4px;}'
     + '.ahctx-sep-label{padding:6px 8px 2px;font-size:11px;font-weight:800;letter-spacing:.02em;color:#949ba4;text-transform:uppercase;}'
-    + '.ahctx-sub-panel{position:fixed;z-index:100000;min-width:230px;max-width:290px;background:#111214;border:1px solid #2b2d31;border-radius:10px;padding:6px;box-shadow:0 18px 50px rgba(0,0,0,.5);font-family:Inter,system-ui,sans-serif;color:#dbdee1;font-size:13.5px;display:none;}'
+    + '.ahctx-sub-panel{position:fixed;z-index:100000;min-width:230px;max-width:290px;background:#27272c;border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:6px;box-shadow:0 18px 50px rgba(0,0,0,.5);font-family:Inter,system-ui,sans-serif;color:#f5f5f6;font-size:14.5px;display:none;}'
     + '.ahctx-sub-panel.open{display:block;animation:ahctxPop .12s ease-out;}'
     + '.ahctx-sub-panel .ahctx-item{cursor:pointer;}'
     + '.ahctx-sub-panel .ahctx-item:hover{background:#3b3d45;color:#fff;}'
@@ -9242,6 +9242,22 @@ document.addEventListener('DOMContentLoaded', async function(){
       toast(e.message || t('common.text.action_error', 'Сталася помилка'));
     }
   }
+
+  document.addEventListener('alexihub:friend-removed', function (e) {
+    var username = e.detail && e.detail.username;
+    if (!username) return;
+    document.querySelectorAll('.dm-list .dm-row[data-mini-username]').forEach(function (r) {
+      if (r.getAttribute('data-mini-username') === username) r.remove();
+    });
+  });
+
+  document.addEventListener('alexihub:block-status-changed', function (e) {
+    var d = e.detail || {};
+    if (!d.username || !d.blocked_by_me) return;
+    document.querySelectorAll('.dm-list .dm-row[data-mini-username]').forEach(function (r) {
+      if (r.getAttribute('data-mini-username') === d.username) r.remove();
+    });
+  });
 
   var MUTE_OPTIONS = [
     { label: t('server.ctx.mute_15m', 'На 15 хвилин'), ms: 15 * 60 * 1000 },
