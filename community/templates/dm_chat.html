@@ -1347,7 +1347,7 @@
       <div id="dm-dropzone-overlay" class="dm-dropzone-overlay"><div class="dm-dropzone-inner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg><span data-i18n="common.text.send_a_file"><!--i18n:common.text.send_a_file-->{{ i18n_t('common.text.send_a_file') }}</span></div></div>
       <header class="topbar">
         <div class="top-title"><span class="avatar" {% if other.avatar_url %}style="background-image:url('{{ other.avatar_url }}')"{% endif %}>{% if not other.avatar_url %}{{ other.username[:1]|upper }}{% endif %}{% if other_visible %}<span class="presence status-{{ other_status }}"></span>{% endif %}</span>{{ other.display_name or other.username }} <span id="live-status" class="live"><!--i18n:dm.text.connecting-->{{ i18n_t("dm.text.connecting") }}</span></div>
-        <div class="top-actions"><button title="{{ i18n_t('dm.aria.call') }}" data-i18n-title="dm.aria.call" onclick="showActionToast(window.AlexiHubI18n.t('dm.stub.calls'))"><svg class="icon"><use href="#i-phone"></use></svg></button><button title="{{ i18n_t('dm.aria.video') }}" data-i18n-title="dm.aria.video" onclick="showActionToast(window.AlexiHubI18n.t('dm.stub.video'))"><svg class="icon"><use href="#i-video"></use></svg></button><button id="dm-pin-trigger-btn" title="{{ i18n_t('dm.aria.pin') }}" data-i18n-title="dm.aria.pin"><svg class="icon"><use href="#i-pin"></use></svg></button>{% if friend_status != 'friends' %}<button title="{% if friend_status == 'pending_sent' %}{{ i18n_t('dm.friend.request_sent') }}{% elif friend_status == 'pending_received' %}{{ i18n_t('dm.friend.request_accept') }}{% else %}{{ i18n_t('ui.add_friend') }}{% endif %}" onclick="showActionToast(window.AlexiHubI18n.t('dm.stub.friendship'))"><svg class="icon"><use href="#i-invite"></use></svg></button>{% endif %}<input class="top-search" id="message-search" placeholder="{{ i18n_t('dm.search_conversation', username=other.username) }}"><button title="{{ i18n_t('settings.search_placeholder') }}" data-i18n-title="settings.search_placeholder" onclick="document.getElementById('message-search')?.focus()"><svg class="icon"><use href="#i-search"></use></svg></button></div>
+        <div class="top-actions"><button id="dm-call-audio-btn" title="{{ i18n_t('dm.aria.call') }}" data-i18n-title="dm.aria.call" onclick="window.AlexiHubCalls&&window.AlexiHubCalls.startCall(false)"><svg class="icon"><use href="#i-phone"></use></svg></button><button id="dm-call-video-btn" title="{{ i18n_t('dm.aria.video') }}" data-i18n-title="dm.aria.video" onclick="window.AlexiHubCalls&&window.AlexiHubCalls.startCall(true)"><svg class="icon"><use href="#i-video"></use></svg></button><button id="dm-pin-trigger-btn" title="{{ i18n_t('dm.aria.pin') }}" data-i18n-title="dm.aria.pin"><svg class="icon"><use href="#i-pin"></use></svg></button>{% if friend_status != 'friends' %}<button title="{% if friend_status == 'pending_sent' %}{{ i18n_t('dm.friend.request_sent') }}{% elif friend_status == 'pending_received' %}{{ i18n_t('dm.friend.request_accept') }}{% else %}{{ i18n_t('ui.add_friend') }}{% endif %}" onclick="showActionToast(window.AlexiHubI18n.t('dm.stub.friendship'))"><svg class="icon"><use href="#i-invite"></use></svg></button>{% endif %}<input class="top-search" id="message-search" placeholder="{{ i18n_t('dm.search_conversation', username=other.username) }}"><button title="{{ i18n_t('settings.search_placeholder') }}" data-i18n-title="settings.search_placeholder" onclick="document.getElementById('message-search')?.focus()"><svg class="icon"><use href="#i-search"></use></svg></button></div>
       </header>
       <section id="messages" class="messages">
         <div class="dm-start"><span class="avatar" {% if other.avatar_url %}style="background-image:url('{{ other.avatar_url }}')"{% endif %}>{% if not other.avatar_url %}{{ other.username[:1]|upper }}{% endif %}{% if other_visible %}<span class="presence status-{{ other_status }}"></span>{% endif %}</span><h1>{{ other.display_name or other.username }}</h1><div class="profile-handle">@{{ other.username }}</div><p><!--i18n:dm.text.this_is_the_beginning_of_your_personal_dialogue-->{{ i18n_t('dm.text.this_is_the_beginning_of_your_personal_dialogue') }}</p></div>
@@ -2055,6 +2055,7 @@ function appendDmRealtimeMessage(data){
 
 function handleDmRealtimeData(data){
   if(!data||typeof data!=='object')return;
+  if(window.AlexiHubCalls&&window.AlexiHubCalls.handleDmSignal(data))return;
   if(data.type==='message')appendDmRealtimeMessage(data);
   if(data.type==='message_sync'){
     (Array.isArray(data.events)?data.events:[]).forEach(appendDmRealtimeMessage);
@@ -6526,7 +6527,447 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
 })();
 </script>
 
+<style id="ah-calls-css">
+#ah-call-overlay{position:fixed;inset:0;z-index:2147483646;display:flex;align-items:center;justify-content:center;background:rgba(6,6,8,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .18s ease,visibility 0s linear .18s;font-family:var(--font)}
+#ah-call-overlay.show{opacity:1;visibility:visible;pointer-events:auto;transition:opacity .18s ease}
+.ah-call-card{width:min(380px,calc(100vw - 32px));background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:32px 24px 24px;display:flex;flex-direction:column;align-items:center;text-align:center;box-shadow:0 24px 72px rgba(0,0,0,.5);transition:width .2s ease,padding .2s ease}
+.ah-call-avatar-wrap{position:relative;width:96px;height:96px;margin-bottom:16px;flex:0 0 auto}
+.ah-call-avatar{width:96px;height:96px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:800;background-size:cover;background-position:center;overflow:hidden}
+.ah-call-avatar-wrap.ringing::before,.ah-call-avatar-wrap.ringing::after{content:'';position:absolute;inset:0;border-radius:50%;border:2px solid var(--accent);opacity:.6;animation:ahCallPulse 1.6s ease-out infinite}
+.ah-call-avatar-wrap.ringing::after{animation-delay:.5s}
+@keyframes ahCallPulse{0%{transform:scale(1);opacity:.6}100%{transform:scale(1.55);opacity:0}}
+.ah-call-name{font-size:18px;font-weight:800;color:var(--text);margin-bottom:4px}
+.ah-call-status{font-size:13px;font-weight:600;color:var(--muted);margin-bottom:22px}
+.ah-call-status.ah-call-timer{color:var(--text);font-variant-numeric:tabular-nums}
+.ah-call-actions{display:flex;gap:16px;align-items:center;justify-content:center}
+.ah-call-btn{width:52px;height:52px;border-radius:50%;border:none;flex:0 0 auto;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;transition:transform .1s ease,filter .12s ease}
+.ah-call-btn:active{transform:scale(.92)}
+.ah-call-btn svg{width:22px;height:22px}
+.ah-call-btn.accept{background:var(--green)}
+.ah-call-btn.decline,.ah-call-btn.end{background:var(--red)}
+.ah-call-btn.decline svg,.ah-call-btn.end svg{transform:rotate(135deg)}
+.ah-call-btn.toggle{background:var(--panel2);color:var(--text)}
+.ah-call-btn.toggle.off{background:var(--red);color:#fff}
+.ah-call-btn.toggle svg{width:20px;height:20px}
+#ah-call-overlay.active .ah-call-card{width:min(920px,calc(100vw - 32px));padding:20px}
+#ah-call-overlay.active.audio-call .ah-call-card{width:min(380px,calc(100vw - 32px));padding:32px 24px 24px}
+.ah-call-video-stage{position:relative;width:100%;aspect-ratio:16/10;max-height:70vh;background:#000;border-radius:14px;overflow:hidden;margin-bottom:18px}
+.ah-call-video-remote{width:100%;height:100%;object-fit:cover}
+.ah-call-video-local{position:absolute;right:12px;bottom:12px;width:140px;height:96px;border-radius:10px;object-fit:cover;background:#000;border:2px solid rgba(255,255,255,.15);transform:scaleX(-1)}
+#ah-call-banner{position:fixed;top:14px;left:50%;transform:translateX(-50%) translateY(-140%);z-index:2147483647;background:rgba(28,28,28,.97);border:1px solid var(--border);border-radius:14px;padding:10px 12px 10px 10px;display:flex;align-items:center;gap:10px;box-shadow:0 16px 48px rgba(0,0,0,.45);transition:transform .24s cubic-bezier(.2,.82,.25,1);font-family:var(--font)}
+#ah-call-banner.show{transform:translateX(-50%) translateY(0)}
+.ah-call-banner-avatar{width:36px;height:36px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;background-size:cover;background-position:center;flex:0 0 auto}
+.ah-call-banner-text{display:flex;flex-direction:column;line-height:1.25;margin-right:6px}
+.ah-call-banner-text b{color:var(--text);font-size:13px}
+.ah-call-banner-text span{color:var(--muted);font-size:11px;font-weight:600}
+.ah-call-banner-actions{display:flex;gap:6px}
+.ah-call-banner-btn{width:32px;height:32px;border-radius:50%;border:none;flex:0 0 auto;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff}
+.ah-call-banner-btn.accept{background:var(--green)}
+.ah-call-banner-btn.decline{background:var(--red)}
+.ah-call-banner-btn.decline svg{transform:rotate(135deg)}
+.ah-call-banner-btn svg{width:15px;height:15px}
+@media(max-width:620px){.ah-call-card{padding:26px 18px 20px}#ah-call-overlay.active .ah-call-card{padding:14px}}
+@media(prefers-reduced-motion:reduce){.ah-call-avatar-wrap.ringing::before,.ah-call-avatar-wrap.ringing::after{animation:none;opacity:0}}
+</style>
+<script id="ah-calls-js">
+(function(){
+  'use strict';
+  if(window.AlexiHubCalls) return;
 
+  var THREAD_ID={{ thread.id|tojson }};
+  var ME_ID={{ account.id|tojson }};
+  var OTHER={
+    id:{{ other.id|tojson }},
+    username:{{ other.username|tojson }},
+    display:{{ (other.display_name or other.username)|tojson }},
+    avatar:{{ (other.avatar_url or '')|tojson }}
+  };
+  var ICE_SERVERS=[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302']}];
+  var RING_TIMEOUT_MS=45000;
+
+  function tr(key,fallback){
+    try{
+      if(window.AlexiHubI18n&&typeof window.AlexiHubI18n.t==='function'){
+        var v=window.AlexiHubI18n.t(key);
+        if(v&&v!==key)return v;
+      }
+    }catch(e){}
+    return fallback;
+  }
+  function toast(msg){ if(typeof window.showActionToast==='function')window.showActionToast(msg); }
+  function sendSignal(payload){ return (typeof sendDmSocket==='function')?sendDmSocket(payload):false; }
+
+  var pc=null,localStream=null,remoteStream=null;
+  var role=null;          // 'caller' | 'callee'
+  var status='idle';      // 'idle' | 'outgoing' | 'incoming' | 'active'
+  var isVideo=false;
+  var pendingOfferSdp=null;
+  var remoteCandidateQueue=[];
+  var remoteDescSet=false;
+  var ringTimer=null,callTimer=null,callStartedAt=0;
+  var micOn=true,camOn=true;
+
+  var ICONS={
+    phone:'<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.11 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.33 1.77.62 2.61a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.47-1.19a2 2 0 0 1 2.11-.45c.84.29 1.71.5 2.61.62A2 2 0 0 1 22 16.92z"/>',
+    mic:'<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>',
+    micOff:'<line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"/><path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>',
+    cam:'<path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>',
+    camOff:'<path d="M16 16v1a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2m4 0h4a2 2 0 0 1 2 2v6.5l4 3.5V7l-4 3.5"/><line x1="1" y1="1" x2="23" y2="23"/>'
+  };
+  function iconMarkup(name){
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(ICONS[name]||'')+'</svg>';
+  }
+  function svgBtn(cls,iconName,onClick,label){
+    var b=document.createElement('button');
+    b.type='button';
+    b.className='ah-call-btn '+cls;
+    b.setAttribute('aria-label',label||'');
+    b.innerHTML=iconMarkup(iconName);
+    b.addEventListener('click',onClick);
+    return b;
+  }
+
+  function setAvatarEl(el,url,name){
+    el.textContent='';
+    if(url){el.style.backgroundImage="url('"+url+"')";}
+    else{el.style.backgroundImage='';el.textContent=String(name||'?').trim().charAt(0).toUpperCase();}
+  }
+
+  function els(){
+    var root=document.getElementById('ah-call-overlay');
+    if(root)return root;
+    root=document.createElement('div');
+    root.id='ah-call-overlay';
+    root.innerHTML=(
+      '<div class="ah-call-card">'+
+        '<div class="ah-call-video-stage" id="ah-call-video-stage" style="display:none">'+
+          '<video id="ah-call-video-remote" class="ah-call-video-remote" autoplay playsinline></video>'+
+          '<video id="ah-call-video-local" class="ah-call-video-local" autoplay playsinline muted></video>'+
+        '</div>'+
+        '<div class="ah-call-avatar-wrap" id="ah-call-avatar-wrap"><div class="ah-call-avatar" id="ah-call-avatar"></div></div>'+
+        '<div class="ah-call-name" id="ah-call-name"></div>'+
+        '<div class="ah-call-status" id="ah-call-status"></div>'+
+        '<div class="ah-call-actions" id="ah-call-actions"></div>'+
+      '</div>'
+    );
+    document.body.appendChild(root);
+    return root;
+  }
+
+  function renderCaller(name,avatarUrl){
+    var nameEl=document.getElementById('ah-call-name'); if(nameEl)nameEl.textContent=name;
+    var avEl=document.getElementById('ah-call-avatar'); if(avEl)setAvatarEl(avEl,avatarUrl,name);
+  }
+  function renderActions(list){
+    var wrap=document.getElementById('ah-call-actions');
+    if(!wrap)return;
+    wrap.innerHTML='';
+    list.forEach(function(btn){wrap.appendChild(btn)});
+  }
+  function setStatusText(text,isTimer){
+    var el=document.getElementById('ah-call-status');
+    if(!el)return;
+    el.classList.toggle('ah-call-timer',!!isTimer);
+    el.textContent=text;
+  }
+
+  function stopMedia(){
+    if(localStream){ localStream.getTracks().forEach(function(t){try{t.stop()}catch(e){}}); localStream=null; }
+    remoteStream=null;
+    var lv=document.getElementById('ah-call-video-local'); if(lv)lv.srcObject=null;
+    var rv=document.getElementById('ah-call-video-remote'); if(rv)rv.srcObject=null;
+  }
+  function closePc(){ if(pc){ try{pc.close()}catch(e){} pc=null; } }
+  function clearTimers(){ clearTimeout(ringTimer); ringTimer=null; clearInterval(callTimer); callTimer=null; }
+
+  function teardown(){
+    clearTimers();
+    stopMedia();
+    closePc();
+    role=null; status='idle'; isVideo=false;
+    pendingOfferSdp=null; remoteCandidateQueue=[]; remoteDescSet=false;
+    micOn=true; camOn=true;
+    var root=document.getElementById('ah-call-overlay');
+    if(root){
+      root.classList.remove('show','active','audio-call');
+      var stage=document.getElementById('ah-call-video-stage'); if(stage)stage.style.display='none';
+    }
+    var wrap=document.getElementById('ah-call-avatar-wrap'); if(wrap)wrap.classList.remove('ringing');
+    hideBanner();
+  }
+
+  function createPc(){
+    pc=new RTCPeerConnection({iceServers:ICE_SERVERS});
+    pc.onicecandidate=function(e){
+      if(e.candidate)sendSignal({type:'call_ice_candidate',candidate:(e.candidate.toJSON?e.candidate.toJSON():e.candidate)});
+    };
+    pc.ontrack=function(e){
+      remoteStream=(e.streams&&e.streams[0])?e.streams[0]:remoteStream;
+      var rv=document.getElementById('ah-call-video-remote');
+      if(rv&&remoteStream)rv.srcObject=remoteStream;
+    };
+    pc.onconnectionstatechange=function(){
+      if(!pc)return;
+      if(pc.connectionState==='failed'||pc.connectionState==='disconnected'){
+        if(status==='active'){ toast(tr('dm.call.connection_lost','З’єднання під час дзвінка втрачено')); endCall(); }
+      }
+    };
+    return pc;
+  }
+
+  function getMedia(video){
+    return navigator.mediaDevices.getUserMedia({audio:true,video:video?{width:{ideal:1280},height:{ideal:720}}:false});
+  }
+  function attachLocalStream(stream,video){
+    localStream=stream;
+    if(video){ var lv=document.getElementById('ah-call-video-local'); if(lv)lv.srcObject=stream; }
+    stream.getTracks().forEach(function(track){ if(pc)pc.addTrack(track,stream); });
+  }
+  function flushRemoteCandidates(){
+    if(!pc)return;
+    var q=remoteCandidateQueue; remoteCandidateQueue=[];
+    q.forEach(function(c){ pc.addIceCandidate(new RTCIceCandidate(c)).catch(function(){}); });
+  }
+  function startTimer(){
+    callStartedAt=Date.now();
+    updateTimer();
+    callTimer=setInterval(updateTimer,1000);
+  }
+  function updateTimer(){
+    var secs=Math.max(0,Math.floor((Date.now()-callStartedAt)/1000));
+    var m=String(Math.floor(secs/60)); if(m.length<2)m='0'+m;
+    var s=String(secs%60); if(s.length<2)s='0'+s;
+    setStatusText(m+':'+s,true);
+  }
+
+  function startCall(video){
+    if(status!=='idle'){ toast(tr('dm.call.already_in_call','Ви вже на дзвінку')); return; }
+    if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)){
+      toast(tr('dm.call.unsupported','Ваш браузер не підтримує дзвінки')); return;
+    }
+    role='caller'; status='outgoing'; isVideo=!!video;
+    var root=els();
+    root.classList.toggle('audio-call',!isVideo);
+    renderCaller(OTHER.display,OTHER.avatar);
+    var wrap=document.getElementById('ah-call-avatar-wrap'); if(wrap)wrap.classList.add('ringing');
+    var stage=document.getElementById('ah-call-video-stage'); if(stage)stage.style.display=isVideo?'block':'none';
+    setStatusText(tr('dm.call.calling','Виклик...'),false);
+    renderActions([svgBtn('end','phone',function(){ endCall(); },tr('dm.call.cancel','Скасувати'))]);
+    root.classList.add('show');
+
+    getMedia(isVideo).then(function(stream){
+      if(status!=='outgoing'){ stream.getTracks().forEach(function(t){try{t.stop()}catch(e){}}); return; }
+      createPc();
+      attachLocalStream(stream,isVideo);
+      return pc.createOffer().then(function(offer){ return pc.setLocalDescription(offer); }).then(function(){
+        var ok=sendSignal({type:'call_offer',sdp:pc.localDescription});
+        if(!ok){
+          toast(tr('dm.call.no_connection','Немає з’єднання із сервером'));
+          teardown();
+        }else{
+          ringTimer=setTimeout(function(){ if(status==='outgoing'){ toast(tr('dm.call.no_answer','Немає відповіді')); endCall(); } },RING_TIMEOUT_MS);
+        }
+      });
+    }).catch(function(){
+      toast(tr('dm.call.media_denied','Не вдалося отримати доступ до мікрофона або камери'));
+      teardown();
+    });
+  }
+
+  function onCallOffer(data){
+    if(Number(data.from_account_id)===ME_ID)return; // our own echo
+    if(status!=='idle'){ sendSignal({type:'call_reject'}); return; }
+    role='callee'; status='incoming'; pendingOfferSdp=data.sdp;
+    isVideo=!!(data.sdp&&data.sdp.sdp&&data.sdp.sdp.indexOf('m=video')!==-1);
+    var root=els();
+    root.classList.toggle('audio-call',!isVideo);
+    renderCaller(OTHER.display,OTHER.avatar);
+    var wrap=document.getElementById('ah-call-avatar-wrap'); if(wrap)wrap.classList.add('ringing');
+    var stage=document.getElementById('ah-call-video-stage'); if(stage)stage.style.display='none';
+    setStatusText(isVideo?tr('dm.call.incoming_video','Вхідний відеодзвінок'):tr('dm.call.incoming_audio','Вхідний дзвінок'),false);
+    renderActions([
+      svgBtn('decline','phone',function(){ declineCall(); },tr('common.action.decline','Відхилити')),
+      svgBtn('accept','phone',function(){ acceptCall(); },tr('common.action.accept','Прийняти'))
+    ]);
+    root.classList.add('show');
+    ringTimer=setTimeout(function(){ if(status==='incoming')declineCall(); },RING_TIMEOUT_MS);
+  }
+
+  function acceptCall(){
+    if(status!=='incoming'||!pendingOfferSdp)return;
+    clearTimeout(ringTimer);
+    var offer=pendingOfferSdp;
+    getMedia(isVideo).then(function(stream){
+      createPc();
+      attachLocalStream(stream,isVideo);
+      return pc.setRemoteDescription(new RTCSessionDescription(offer));
+    }).then(function(){
+      remoteDescSet=true; flushRemoteCandidates();
+      return pc.createAnswer();
+    }).then(function(answer){ return pc.setLocalDescription(answer); }).then(function(){
+      sendSignal({type:'call_answer',sdp:pc.localDescription});
+      goActive();
+    }).catch(function(){
+      toast(tr('dm.call.media_denied','Не вдалося отримати доступ до мікрофона або камери'));
+      sendSignal({type:'call_reject'});
+      teardown();
+    });
+  }
+
+  function declineCall(){
+    if(status!=='incoming')return;
+    sendSignal({type:'call_reject'});
+    teardown();
+  }
+
+  function onCallAnswer(data){
+    if(Number(data.from_account_id)===ME_ID)return;
+    if(status!=='outgoing'||!pc)return;
+    clearTimeout(ringTimer);
+    pc.setRemoteDescription(new RTCSessionDescription(data.sdp)).then(function(){
+      remoteDescSet=true; flushRemoteCandidates();
+      goActive();
+    }).catch(function(){ toast(tr('dm.call.failed','Не вдалося встановити з’єднання')); endCall(); });
+  }
+
+  function onIceCandidate(data){
+    if(Number(data.from_account_id)===ME_ID)return;
+    if(!data.candidate)return;
+    if(pc&&remoteDescSet){ pc.addIceCandidate(new RTCIceCandidate(data.candidate)).catch(function(){}); }
+    else{ remoteCandidateQueue.push(data.candidate); }
+  }
+
+  function onCallBusy(data){
+    // from_account_id is whoever's own offer just got rejected as busy -- only react if that's us.
+    if(Number(data.from_account_id)===ME_ID&&status==='outgoing'){
+      toast(tr('dm.call.busy','Співрозмовник зараз на іншому дзвінку'));
+      teardown(); // local only -- the server never created a call for this rejected attempt
+    }
+  }
+
+  function onCallReject(data){
+    if(status==='outgoing'||status==='incoming'){
+      toast(tr('dm.call.declined','Дзвінок відхилено'));
+      teardown();
+    }
+  }
+
+  function onCallEnd(data){
+    if(status==='idle')return;
+    var wasActive=status==='active';
+    teardown();
+    if(!wasActive)toast(tr('dm.call.missed','Дзвінок скасовано'));
+  }
+
+  function goActive(){
+    status='active';
+    var wrap=document.getElementById('ah-call-avatar-wrap'); if(wrap)wrap.classList.remove('ringing');
+    els().classList.add('active');
+    var stage=document.getElementById('ah-call-video-stage'); if(stage)stage.style.display=isVideo?'block':'none';
+    var buttons=[svgBtn('toggle mic','mic',toggleMic,tr('common.aria.mute','Вимкнути мікрофон'))];
+    if(isVideo)buttons.push(svgBtn('toggle cam','cam',toggleCam,tr('dm.call.toggle_camera','Увімкнути/вимкнути камеру')));
+    buttons.push(svgBtn('end','phone',function(){ endCall(); },tr('dm.call.hang_up','Завершити')));
+    renderActions(buttons);
+    startTimer();
+  }
+
+  function toggleMic(){
+    if(!localStream)return;
+    micOn=!micOn;
+    localStream.getAudioTracks().forEach(function(t){t.enabled=micOn});
+    var btn=document.querySelector('.ah-call-btn.mic');
+    if(btn){ btn.classList.toggle('off',!micOn); btn.innerHTML=iconMarkup(micOn?'mic':'micOff'); }
+  }
+  function toggleCam(){
+    if(!localStream)return;
+    camOn=!camOn;
+    localStream.getVideoTracks().forEach(function(t){t.enabled=camOn});
+    var btn=document.querySelector('.ah-call-btn.cam');
+    if(btn){ btn.classList.toggle('off',!camOn); btn.innerHTML=iconMarkup(camOn?'cam':'camOff'); }
+  }
+
+  function endCall(){
+    if(status==='idle')return;
+    sendSignal({type:'call_end'});
+    teardown();
+  }
+
+  function handleDmSignal(data){
+    if(!data||!data.type)return false;
+    switch(data.type){
+      case 'call_offer': onCallOffer(data); return true;
+      case 'call_answer': onCallAnswer(data); return true;
+      case 'call_ice_candidate': onIceCandidate(data); return true;
+      case 'call_busy': onCallBusy(data); return true;
+      case 'call_reject': onCallReject(data); return true;
+      case 'call_end': onCallEnd(data); return true;
+      default: return false;
+    }
+  }
+
+  // ---- cross-thread ringing banner (fires from the account-level socket when
+  // an incoming call arrives for a DM thread other than the one open here) ----
+  var bannerTimer=null;
+  function bannerEl(){
+    var b=document.getElementById('ah-call-banner');
+    if(b)return b;
+    b=document.createElement('div');
+    b.id='ah-call-banner';
+    document.body.appendChild(b);
+    return b;
+  }
+  function hideBanner(){
+    var b=document.getElementById('ah-call-banner');
+    if(b)b.classList.remove('show');
+    clearTimeout(bannerTimer);
+  }
+  function onAccountIncomingCall(data){
+    if(!data||Number(data.thread_id)===THREAD_ID)return; // this thread handles it via its own channel already
+    if(status!=='idle')return;
+    var caller=data.caller||{};
+    var b=bannerEl();
+    b.innerHTML='';
+    var av=document.createElement('div'); av.className='ah-call-banner-avatar'; setAvatarEl(av,caller.avatar_url,caller.display_name||caller.username);
+    var txt=document.createElement('div'); txt.className='ah-call-banner-text';
+    var strong=document.createElement('b'); strong.textContent=caller.display_name||caller.username||'?';
+    var span=document.createElement('span'); span.textContent=tr('dm.call.incoming_audio','Вхідний дзвінок');
+    txt.appendChild(strong); txt.appendChild(span);
+    var actions=document.createElement('div'); actions.className='ah-call-banner-actions';
+    var accept=document.createElement('button'); accept.type='button'; accept.className='ah-call-banner-btn accept'; accept.setAttribute('aria-label',tr('common.action.accept','Прийняти')); accept.innerHTML=iconMarkup('phone');
+    accept.addEventListener('click',function(){
+      hideBanner();
+      if(caller.username)location.href='/community/dm/'+encodeURIComponent(caller.username);
+    });
+    var decline=document.createElement('button'); decline.type='button'; decline.className='ah-call-banner-btn decline'; decline.setAttribute('aria-label',tr('common.action.decline','Відхилити')); decline.innerHTML=iconMarkup('phone');
+    decline.addEventListener('click',function(){
+      hideBanner();
+      try{
+        var proto=location.protocol==='https:'?'wss':'ws';
+        var s=new WebSocket(proto+'://'+location.host+'/community/ws/dm/'+data.thread_id);
+        s.onopen=function(){ try{s.send(JSON.stringify({type:'call_reject'}))}catch(e){} setTimeout(function(){try{s.close()}catch(e){}},400); };
+      }catch(e){}
+    });
+    actions.appendChild(accept); actions.appendChild(decline);
+    b.appendChild(av); b.appendChild(txt); b.appendChild(actions);
+    requestAnimationFrame(function(){ b.classList.add('show'); });
+    clearTimeout(bannerTimer);
+    bannerTimer=setTimeout(hideBanner,RING_TIMEOUT_MS);
+  }
+
+  window.addEventListener('pagehide',function(){
+    if(status!=='idle'){ try{sendSignal({type:'call_end'})}catch(e){} }
+  });
+
+  window.AlexiHubCalls={
+    startCall:startCall,
+    acceptCall:acceptCall,
+    declineCall:declineCall,
+    endCall:endCall,
+    handleDmSignal:handleDmSignal,
+    onAccountIncomingCall:onAccountIncomingCall
+  };
+})();
+</script>
 
 <script>
 (function () {
@@ -6830,6 +7271,10 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     var data;
     try { data = JSON.parse(event.data); } catch (error) { return; }
     if (window.AlexiHubGlobalOverlay && window.AlexiHubGlobalOverlay.handle(data)) return;
+    if (data.type === 'incoming_call') {
+      if (window.AlexiHubCalls) window.AlexiHubCalls.onAccountIncomingCall(data);
+      return;
+    }
     if (data.type === 'presence') {
       updatePresence(data.account_id, data.status, data.online, data.username, data.display_name);
       return;
