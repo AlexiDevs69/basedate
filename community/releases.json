@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.134.0",
+      "date": "2026-09-02",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: WebRTC call signaling for DM threads."
+      ],
+      "source_sha": "ce86fb0160d195a8e46f1ffd663df9f95a028149"
+    },
+    {
       "version": "1.133.1",
       "date": "2026-09-02",
       "title": "Виправлення та стабільність",
