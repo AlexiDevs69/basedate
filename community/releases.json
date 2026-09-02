@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.131.0",
+      "date": "2026-09-02",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: unfriend and block event listeners."
+      ],
+      "source_sha": "9aa5cef8acea3cc2f72ad82e479714928e257179"
+    },
+    {
       "version": "1.130.5",
       "date": "2026-09-02",
       "title": "Виправлення та стабільність",
