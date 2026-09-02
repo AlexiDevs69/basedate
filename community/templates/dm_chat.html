@@ -8682,7 +8682,7 @@ document.addEventListener('DOMContentLoaded', async function(){
 
   function copyServerId(id, dot) {
     var val = String(id);
-    var done = function () { toast(t('common.feedback.copied', 'Скопійовано')); };
+    var done = function () { toast(t('common.feedback.copied', 'Скопировано')); };
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(val).then(done).catch(function () { fallbackCopy(val, done); });
     } else {
@@ -8712,12 +8712,12 @@ document.addEventListener('DOMContentLoaded', async function(){
   /* ---------- submenus ---------- */
 
   var MUTE_OPTIONS = [
-    { key: '15m', label: t('server.ctx.mute_15m', 'На 15 хвилин'), ms: 15 * 60 * 1000 },
+    { key: '15m', label: t('server.ctx.mute_15m', 'На 15 минут'), ms: 15 * 60 * 1000 },
     { key: '1h', label: t('server.ctx.mute_1h', 'На 1 годину'), ms: 60 * 60 * 1000 },
     { key: '3h', label: t('server.ctx.mute_3h', 'На 3 години'), ms: 3 * 60 * 60 * 1000 },
     { key: '8h', label: t('server.ctx.mute_8h', 'На 8 годин'), ms: 8 * 60 * 60 * 1000 },
-    { key: '24h', label: t('server.ctx.mute_24h', 'На 24 години'), ms: 24 * 60 * 60 * 1000 },
-    { key: 'always', label: t('server.ctx.mute_always', 'Поки не увімкну знову'), ms: 0 }
+    { key: '24h', label: t('server.ctx.mute_24h', 'На 24 часа'), ms: 24 * 60 * 60 * 1000 },
+    { key: 'always', label: t('server.ctx.mute_always', 'Пока не включу снова'), ms: 0 }
   ];
 
   function buildMuteSubmenu(id, dot) {
@@ -8813,7 +8813,7 @@ document.addEventListener('DOMContentLoaded', async function(){
     var d0 = document.createElement('div'); d0.className = 'ahctx-divider'; menu.appendChild(d0);
 
     menu.appendChild(makeItem({
-      label: t('common.text.ysusp_to_the_server', 'Запросити на сервер'),
+      label: t('common.text.ysusp_to_the_server', 'Пригласить на сервер'),
       onClick: function () { openInvite(id, isActive); }
     }));
 
@@ -8998,7 +8998,7 @@ document.addEventListener('DOMContentLoaded', async function(){
   function copyText(value) {
     var val = String(value || '');
     if (!val) return;
-    var done = function () { toast(t('common.feedback.copied', 'Скопійовано')); };
+    var done = function () { toast(t('common.feedback.copied', 'Скопировано')); };
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(val).then(done).catch(function () { fallbackCopy(val, done); });
     } else {
@@ -9111,7 +9111,7 @@ document.addEventListener('DOMContentLoaded', async function(){
       if (!existing) {
         var badge = document.createElement('span');
         badge.className = 'ah-dm-pin-badge';
-        badge.title = t('dm.ctx.pinned_badge', 'Закріплено');
+        badge.title = t('dm.ctx.pinned_badge', 'Закреплено');
         badge.innerHTML = PIN_ICON_SVG;
         wrap.appendChild(badge);
       }
@@ -9310,7 +9310,7 @@ document.addEventListener('DOMContentLoaded', async function(){
     row.style.opacity = '0';
     row.style.transform = 'translateX(-8px)';
     setTimeout(function () { row.remove(); }, 150);
-    toast(t('dm.ctx.closed', 'ЛС закрито'));
+    toast(t('dm.ctx.closed', 'ЛС закрыто'));
   }
 
   function togglePin(row) {
@@ -9331,12 +9331,12 @@ document.addEventListener('DOMContentLoaded', async function(){
   function addNote(row) {
     var key = rowKey(row);
     var notes = loadMap(LS_NOTE);
-    var value = window.prompt(t('dm.ctx.note_prompt', 'Нотатка (видно лише вам):'), notes[key] || '');
+    var value = window.prompt(t('dm.ctx.note_prompt', 'Заметка (видна только вам):'), notes[key] || '');
     if (value === null) return;
     value = value.trim();
     if (value) notes[key] = value; else delete notes[key];
     saveMap(LS_NOTE, notes);
-    toast(t('dm.ctx.note_saved', 'Нотатку збережено'));
+    toast(t('dm.ctx.note_saved', 'Заметка сохранена'));
   }
 
   function addNickname(row) {
@@ -9344,7 +9344,7 @@ document.addEventListener('DOMContentLoaded', async function(){
     var nicknames = loadMap(LS_NICK);
     var nameEl = row.querySelector('.dm-name');
     var current = nicknames[key] || (nameEl ? nameEl.textContent : '');
-    var value = window.prompt(t('dm.ctx.nick_prompt', 'Нікнейм друга:'), current);
+    var value = window.prompt(t('dm.ctx.nick_prompt', 'Никнейм друга:'), current);
     if (value === null) return;
     value = value.trim();
     if (value) {
@@ -9355,7 +9355,7 @@ document.addEventListener('DOMContentLoaded', async function(){
       if (nameEl) nameEl.textContent = row.dataset.miniDisplay || row.dataset.miniUsername || '';
     }
     saveMap(LS_NICK, nicknames);
-    toast(t('dm.ctx.nick_saved', 'Нікнейм збережено'));
+    toast(t('dm.ctx.nick_saved', 'Никнейм сохранён'));
   }
 
   function toggleIgnore(row) {
@@ -9364,11 +9364,11 @@ document.addEventListener('DOMContentLoaded', async function(){
     if (ignored.has(key)) {
       ignored.delete(key);
       row.classList.remove('ah-dm-ignored');
-      toast(t('dm.ctx.unignored', 'Користувача більше не ігноровано'));
+      toast(t('dm.ctx.unignored', 'Пользователь больше не игнорируется'));
     } else {
       ignored.add(key);
       row.classList.add('ah-dm-ignored');
-      toast(t('dm.ctx.ignored', 'Користувача ігноровано'));
+      toast(t('dm.ctx.ignored', 'Пользователь игнорируется'));
     }
     saveSet(LS_IGNORE, ignored);
   }
@@ -9379,13 +9379,13 @@ document.addEventListener('DOMContentLoaded', async function(){
       window.ahOpenUnfriendFor(username);
       return;
     }
-    if (!window.confirm(t('dm.ctx.confirm_remove', 'Видалити цього користувача зі списку друзів?'))) return;
+    if (!window.confirm(t('dm.ctx.confirm_remove', 'Удалить этого пользователя из списка друзей?'))) return;
     try {
       await api('/community/api/friends/remove/' + encodeURIComponent(username), { method: 'POST' });
-      toast(t('common.message.user_removed_from_friends', 'Користувача видалено зі списку друзів'));
+      toast(t('common.message.user_removed_from_friends', 'Пользователь удалён из списка друзей'));
       row.remove();
     } catch (e) {
-      toast(e.message || t('common.text.action_error', 'Сталася помилка'));
+      toast(e.message || t('common.text.action_error', 'Произошла ошибка'));
     }
   }
 
@@ -9395,13 +9395,13 @@ document.addEventListener('DOMContentLoaded', async function(){
       window.AlexiHubBlocking.openBlockFor(username);
       return;
     }
-    if (!window.confirm(t('dm.ctx.confirm_block', 'Заблокувати цього користувача?'))) return;
+    if (!window.confirm(t('dm.ctx.confirm_block', 'Заблокировать этого пользователя?'))) return;
     try {
       await api('/community/api/blocks/' + encodeURIComponent(username), { method: 'POST' });
-      toast(t('dm.ctx.blocked', 'Користувача заблоковано'));
+      toast(t('dm.ctx.blocked', 'Пользователь заблокирован'));
       row.remove();
     } catch (e) {
-      toast(e.message || t('common.text.action_error', 'Сталася помилка'));
+      toast(e.message || t('common.text.action_error', 'Произошла ошибка'));
     }
   }
 
@@ -9422,12 +9422,12 @@ document.addEventListener('DOMContentLoaded', async function(){
   });
 
   var MUTE_OPTIONS = [
-    { label: t('server.ctx.mute_15m', 'На 15 хвилин'), ms: 15 * 60 * 1000 },
+    { label: t('server.ctx.mute_15m', 'На 15 минут'), ms: 15 * 60 * 1000 },
     { label: t('server.ctx.mute_1h', 'На 1 годину'), ms: 60 * 60 * 1000 },
     { label: t('server.ctx.mute_3h', 'На 3 години'), ms: 3 * 60 * 60 * 1000 },
     { label: t('server.ctx.mute_8h', 'На 8 годин'), ms: 8 * 60 * 60 * 1000 },
-    { label: t('server.ctx.mute_24h', 'На 24 години'), ms: 24 * 60 * 60 * 1000 },
-    { label: t('server.ctx.mute_always', 'Поки не увімкну знову'), ms: 0 }
+    { label: t('server.ctx.mute_24h', 'На 24 часа'), ms: 24 * 60 * 60 * 1000 },
+    { label: t('server.ctx.mute_always', 'Пока не включу снова'), ms: 0 }
   ];
 
   function buildMuteSubmenu(row) {
@@ -9450,7 +9450,7 @@ document.addEventListener('DOMContentLoaded', async function(){
 
   function buildAppsSubmenu() {
     var panel = document.createElement('div');
-    panel.appendChild(makeItem({ label: t('dm.ctx.stub', 'Розділ у розробці'), disabled: true }));
+    panel.appendChild(makeItem({ label: t('dm.ctx.stub', 'Раздел в разработке'), disabled: true }));
     return panel;
   }
 
@@ -9458,14 +9458,14 @@ document.addEventListener('DOMContentLoaded', async function(){
     var panel = document.createElement('div');
     var dots = Array.from(document.querySelectorAll('.server-rail .server-dot[data-mention-server-id]'));
     if (!dots.length) {
-      panel.appendChild(makeItem({ label: t('dm.ctx.no_servers', 'Немає доступних серверів'), disabled: true }));
+      panel.appendChild(makeItem({ label: t('dm.ctx.no_servers', 'Нет доступных серверов'), disabled: true }));
       return panel;
     }
     dots.forEach(function (dot) {
       var name = dot.getAttribute('title') || t('common.text.the_server', 'Сервер');
       var it = makeItem({ label: name });
       it.addEventListener('click', function () {
-        toast(t('dm.ctx.invited', 'Запрошення надіслано') + (username ? ' @' + username : ''));
+        toast(t('dm.ctx.invited', 'Приглашение отправлено') + (username ? ' @' + username : ''));
         closeMenu();
       });
       panel.appendChild(it);
@@ -9488,7 +9488,7 @@ document.addEventListener('DOMContentLoaded', async function(){
     menu.innerHTML = '';
 
     menu.appendChild(makeItem({
-      label: t('dm.ctx.mark_read', 'Позначити як прочитане'),
+      label: t('dm.ctx.mark_read', 'Пометить как прочитанное'),
       disabled: !hasUnread,
       onClick: function () { markRead(row); closeMenu(); }
     }));
@@ -9496,7 +9496,7 @@ document.addEventListener('DOMContentLoaded', async function(){
     menu.appendChild(divider());
 
     menu.appendChild(makeItem({
-      label: isPinned ? t('dm.ctx.unpin', 'Відкріпити') : t('dm.ctx.pin', 'Закріпити'),
+      label: isPinned ? t('dm.ctx.unpin', 'Открепить') : t('dm.ctx.pin', 'Закрепить'),
       icon: ICON.pin,
       onClick: function () { togglePin(row); closeMenu(); }
     }));
@@ -9504,7 +9504,7 @@ document.addEventListener('DOMContentLoaded', async function(){
     menu.appendChild(divider());
 
     menu.appendChild(makeItem({
-      label: t('dm.ctx.profile', 'Профіль'),
+      label: t('dm.ctx.profile', 'Профиль'),
       onClick: function () {
         closeMenu();
         if (typeof window.ahOpenFullProfile === 'function') {
@@ -9516,57 +9516,57 @@ document.addEventListener('DOMContentLoaded', async function(){
     }));
 
     menu.appendChild(makeItem({
-      label: t('home.action.start_a_voice_call', 'Почати дзвінок'),
-      onClick: function () { closeMenu(); toast(t('home.stub.voice_call', 'Розділ у розробці')); }
+      label: t('home.action.start_a_voice_call', 'Начать звонок'),
+      onClick: function () { closeMenu(); toast(t('home.stub.voice_call', 'Раздел в разработке')); }
     }));
 
     menu.appendChild(makeItem({
-      label: t('dm.ctx.add_note', 'Додати нотатку'),
-      sub: t('dm.ctx.note_hint', 'Видно лише вам'),
+      label: t('dm.ctx.add_note', 'Добавить заметку'),
+      sub: t('dm.ctx.note_hint', 'Видна только вам'),
       onClick: function () { closeMenu(); addNote(row); }
     }));
 
     menu.appendChild(makeItem({
-      label: t('dm.ctx.add_nick', 'Додати нікнейм друга'),
+      label: t('dm.ctx.add_nick', 'Добавить никнейм друга'),
       onClick: function () { closeMenu(); addNickname(row); }
     }));
 
     menu.appendChild(makeItem({
-      label: t('dm.ctx.close_dm', 'Закрити ЛС'),
+      label: t('dm.ctx.close_dm', 'Закрыть ЛС'),
       onClick: function () { closeMenu(); closeDm(row); }
     }));
 
     menu.appendChild(divider());
 
-    var appsItem = makeItem({ label: t('dm.ctx.apps', 'Застосунки'), hasSubmenu: true });
+    var appsItem = makeItem({ label: t('dm.ctx.apps', 'Приложения'), hasSubmenu: true });
     appsItem.addEventListener('mouseenter', function () { openSubPanel(appsItem, buildAppsSubmenu(), 'apps'); });
     appsItem.addEventListener('click', function () { openSubPanel(appsItem, buildAppsSubmenu(), 'apps'); });
     menu.appendChild(appsItem);
 
-    var inviteItem = makeItem({ label: t('common.text.ysusp_to_the_server', 'Запросити на сервер'), hasSubmenu: true });
+    var inviteItem = makeItem({ label: t('common.text.ysusp_to_the_server', 'Пригласить на сервер'), hasSubmenu: true });
     inviteItem.addEventListener('mouseenter', function () { openSubPanel(inviteItem, buildInviteSubmenu(username), 'invite'); });
     inviteItem.addEventListener('click', function () { openSubPanel(inviteItem, buildInviteSubmenu(username), 'invite'); });
     menu.appendChild(inviteItem);
 
     menu.appendChild(makeItem({
-      label: t('common.action.delete_from_friends', 'Видалити з друзів'),
+      label: t('common.action.delete_from_friends', 'Удалить из друзей'),
       onClick: function () { closeMenu(); removeFriend(row, username); }
     }));
 
     menu.appendChild(makeItem({
-      label: isIgnored ? t('dm.ctx.unignore', 'Не ігнорувати') : t('dm.ctx.ignore', 'Ігнорувати'),
+      label: isIgnored ? t('dm.ctx.unignore', 'Не игнорировать') : t('dm.ctx.ignore', 'Игнорировать'),
       onClick: function () { closeMenu(); toggleIgnore(row); }
     }));
 
     menu.appendChild(makeItem({
-      label: t('common.actions.block', 'Заблокувати'),
+      label: t('common.actions.block', 'Заблокировать'),
       danger: true,
       onClick: function () { closeMenu(); blockAccount(row, username); }
     }));
 
     menu.appendChild(divider());
 
-    var muteItem = makeItem({ label: t('dm.ctx.mute', 'Заглушити') + (username ? ' @' + username : ''), hasSubmenu: true });
+    var muteItem = makeItem({ label: t('dm.ctx.mute', 'Заглушить') + (username ? ' @' + username : ''), hasSubmenu: true });
     muteItem.addEventListener('mouseenter', function () { openSubPanel(muteItem, buildMuteSubmenu(row), 'mute'); });
     muteItem.addEventListener('click', function () { openSubPanel(muteItem, buildMuteSubmenu(row), 'mute'); });
     menu.appendChild(muteItem);
@@ -9574,13 +9574,13 @@ document.addEventListener('DOMContentLoaded', async function(){
     menu.appendChild(divider());
 
     menu.appendChild(makeItem({
-      label: t('dm.ctx.copy_user_id', 'Копіювати ID користувача'),
+      label: t('dm.ctx.copy_user_id', 'Копировать ID пользователя'),
       icon: '<span class="ahctx-idbadge">ID</span>',
       onClick: function () { closeMenu(); copyText(accountId); }
     }));
 
     menu.appendChild(makeItem({
-      label: t('dm.ctx.copy_channel_id', 'Копіювати ID каналу'),
+      label: t('dm.ctx.copy_channel_id', 'Копировать ID канала'),
       icon: '<span class="ahctx-idbadge">ID</span>',
       onClick: function () { closeMenu(); copyText(threadId); }
     }));
