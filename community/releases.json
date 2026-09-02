@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.131.1",
+      "date": "2026-09-02",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: styles and add event listeners in dm_chat."
+      ],
+      "source_sha": "3e5f1c31c4346274e0af80432dd5344ed7abd5d2"
+    },
+    {
       "version": "1.131.0",
       "date": "2026-09-02",
       "title": "Нові можливості AlexiHub",
