@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.131.2",
+      "date": "2026-09-02",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: pin badge handling in dm_chat.html."
+      ],
+      "source_sha": "b98e285f3039742bfa27698bde53e2dd04678c13"
+    },
+    {
       "version": "1.131.1",
       "date": "2026-09-02",
       "title": "Оновлення AlexiHub",
