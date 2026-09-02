@@ -34,7 +34,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from community import auth, crud
+from community import auth, calls, crud
 from config import get_settings
 from database import AsyncSessionLocal, get_db
 
@@ -5204,6 +5204,18 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
             if event_type in {"leave", "disconnect", "close"}:
                 break
 
+            if event_type.startswith("call_"):
+                await calls.handle_message(
+                    data,
+                    account_id=account_id,
+                    thread=thread,
+                    key=key,
+                    realtime_channels=realtime_channels,
+                    account_realtime=account_realtime,
+                    caller_profile=profile,
+                )
+                continue
+
             if event_type == "sync":
                 try:
                     after_id = max(0, int(data.get("after_id") or 0))
@@ -5363,6 +5375,7 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
         except Exception:
             pass
     finally:
+        calls.handle_disconnect(account_id)
         await account_realtime.disconnect(int(account_id), websocket)
 
 
