@@ -1444,6 +1444,145 @@
   </form>
 </div>
 
+<style>
+.ah-unfriend-backdrop{
+  position:fixed;inset:0;z-index:9600;display:none;align-items:center;justify-content:center;
+  padding:20px;background:rgba(0,0,0,.72);backdrop-filter:blur(1px);
+}
+.ah-unfriend-backdrop.open{display:flex;animation:ahUnfriendFade .14s ease both;}
+@keyframes ahUnfriendFade{from{opacity:0}to{opacity:1}}
+.ah-unfriend-dialog{
+  width:min(440px,calc(100vw - 32px));overflow:hidden;border:1px solid #3a3c43;
+  border-radius:12px;background:#24252b;color:#f2f3f5;box-shadow:0 22px 70px rgba(0,0,0,.58);
+  animation:ahUnfriendPop .16s cubic-bezier(.2,.75,.2,1) both;
+}
+@keyframes ahUnfriendPop{from{opacity:0;transform:translateY(8px) scale(.975)}to{opacity:1;transform:translateY(0) scale(1)}}
+.ah-unfriend-body{position:relative;padding:22px 22px 20px;}
+.ah-unfriend-title{margin:0 36px 10px 0;font-size:20px;font-weight:900;line-height:1.2;}
+.ah-unfriend-copy{margin:0;color:#b5bac1;font-size:14px;line-height:1.45;}
+.ah-unfriend-close{
+  position:absolute;top:14px;right:14px;width:32px;height:32px;display:grid;place-items:center;
+  border:0;border-radius:8px;background:transparent;color:#b5bac1;cursor:pointer;font-size:24px;line-height:1;
+}
+.ah-unfriend-close:hover{background:#313338;color:#fff;}
+.ah-unfriend-actions{display:flex;justify-content:flex-end;gap:10px;padding:16px 22px;background:#1e1f22;}
+.ah-unfriend-actions button{
+  min-width:132px;min-height:38px;border:0;border-radius:5px;padding:8px 14px;color:#fff;
+  font:inherit;font-weight:800;cursor:pointer;
+}
+.ah-unfriend-cancel{background:#4e5058;}
+.ah-unfriend-cancel:hover{background:#5b5d66;}
+.ah-unfriend-confirm{background:#da373c;}
+.ah-unfriend-confirm:hover{background:#a1282c;}
+.ah-unfriend-confirm:disabled{opacity:.58;cursor:wait;}
+</style>
+<div id="ah-unfriend-modal" class="ah-unfriend-backdrop" aria-hidden="true">
+  <div class="ah-unfriend-dialog" role="dialog" aria-modal="true" aria-labelledby="ah-unfriend-title">
+    <div class="ah-unfriend-body">
+      <button type="button" class="ah-unfriend-close" aria-label="{{ i18n_t('common.actions.close') }}" data-i18n-aria-label="common.actions.close" onclick="closeUnfriendConfirmation()">×</button>
+      <h2 id="ah-unfriend-title" class="ah-unfriend-title"><!--i18n:common.action.delete_from_friends-->{{ i18n_t('common.action.delete_from_friends') }}</h2>
+      <p id="ah-unfriend-copy" class="ah-unfriend-copy"><!--i18n:home.text.sure_you_are_sure_you_want_to_remove_the_user-->{{ i18n_t('home.text.sure_you_are_sure_you_want_to_remove_the_user') }}</p>
+    </div>
+    <div class="ah-unfriend-actions">
+      <button type="button" class="ah-unfriend-cancel" onclick="closeUnfriendConfirmation()"><!--i18n:common.actions.cancel-->{{ i18n_t('common.actions.cancel') }}</button>
+      <button id="ah-unfriend-confirm" type="button" class="ah-unfriend-confirm" onclick="confirmUnfriend()"><!--i18n:common.action.delete_from_friends-->{{ i18n_t('common.action.delete_from_friends') }}</button>
+    </div>
+  </div>
+</div>
+<script id="ah-unfriend-dm-script">
+(function(){
+  if (window.__ahUnfriendDmInit) return;
+  window.__ahUnfriendDmInit = true;
+
+  let selectedUsername = '';
+  let removing = false;
+  const modal = () => document.getElementById('ah-unfriend-modal');
+
+  window.openUnfriendConfirmation = function(){
+    if(!selectedUsername) return;
+    const overlay = modal();
+    const title = document.getElementById('ah-unfriend-title');
+    const copy = document.getElementById('ah-unfriend-copy');
+
+    if(title) title.textContent = window.AlexiHubI18n.t("common.text.delete_c5ed036") + selectedUsername + "'";
+    if(copy) copy.textContent = window.AlexiHubI18n.t("common.text.you_are_sure_that_you_want_to_remove_the_user") + selectedUsername + window.AlexiHubI18n.t("common.text.a_list_of_friends");
+
+    if(overlay){
+      overlay.classList.add('open');
+      overlay.setAttribute('aria-hidden','false');
+    }
+    setTimeout(() => document.getElementById('ah-unfriend-confirm')?.focus(), 20);
+  };
+
+  window.ahOpenUnfriendFor = function(username){
+    if(!username) return;
+    selectedUsername = username;
+    window.openUnfriendConfirmation();
+  };
+
+  window.closeUnfriendConfirmation = function(){
+    if(removing) return;
+    const overlay = modal();
+    if(overlay){
+      overlay.classList.remove('open');
+      overlay.setAttribute('aria-hidden','true');
+    }
+  };
+
+  window.confirmUnfriend = async function(){
+    if(removing || !selectedUsername) return;
+    const username = selectedUsername;
+    const confirmButton = document.getElementById('ah-unfriend-confirm');
+
+    removing = true;
+    if(confirmButton){
+      confirmButton.disabled = true;
+      confirmButton.textContent = window.AlexiHubI18n.t("common.label.deleting");
+    }
+
+    try{
+      const response = await fetch('/community/api/friends/remove/' + encodeURIComponent(username), {
+        method:'POST',
+        credentials:'same-origin',
+        headers:{'Accept':'application/json'}
+      });
+      const data = await response.json().catch(() => ({}));
+      if(!response.ok) throw new Error(data.error || 'remove_failed');
+
+      document.dispatchEvent(new CustomEvent('alexihub:friend-removed', { detail: { username } }));
+
+      const overlay = modal();
+      if(overlay){
+        overlay.classList.remove('open');
+        overlay.setAttribute('aria-hidden','true');
+      }
+      selectedUsername = '';
+      if(typeof window.showActionToast === 'function') window.showActionToast(window.AlexiHubI18n.t("common.message.user_removed_from_friends"));
+    }catch(error){
+      if(typeof window.showActionToast === 'function') window.showActionToast(window.AlexiHubI18n.t("common.message.nerguishment_of_removing_the_user_from_friends"));
+    }finally{
+      removing = false;
+      if(confirmButton){
+        confirmButton.disabled = false;
+        confirmButton.textContent = window.AlexiHubI18n.t("common.action.delete_from_friends");
+      }
+    }
+  };
+
+  document.addEventListener('click', function(event){
+    const overlay = modal();
+    if(overlay?.classList.contains('open') && event.target === overlay){
+      window.closeUnfriendConfirmation();
+    }
+  });
+
+  document.addEventListener('keydown', function(event){
+    if(event.key !== 'Escape') return;
+    if(modal()?.classList.contains('open')) window.closeUnfriendConfirmation();
+  });
+})();
+</script>
+
 
 <div id="ah-forward-modal" class="ah-forward-backdrop" aria-hidden="true">
   <div class="ah-forward-modal" role="dialog" aria-modal="true">
@@ -2571,6 +2710,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     refreshFriendState(active);
   }
   function closeFull(){const ov=$('#ah-v3-overlay');if(ov)ov.classList.remove('open');closeFullMenu();hideFullTooltip()}
+  window.ahOpenFullProfile = function(el){ if(!el) return; active = dataFrom(el); openFull(); };
   document.addEventListener('click',function(e){
     if(e.target.closest('#ah-v3-mini,#ah-v3-overlay')) return;
     const mutualTrigger=e.target.closest('[data-mini-open-mutual]');
