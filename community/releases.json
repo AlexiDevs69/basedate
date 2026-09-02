@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.133.1",
+      "date": "2026-09-02",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Integrate calls module into router for event handling."
+      ],
+      "source_sha": "d44c5f30c4eb16f41374137b05356bb5d7effef2"
+    },
+    {
       "version": "1.133.0",
       "date": "2026-09-02",
       "title": "Нові можливості AlexiHub",
