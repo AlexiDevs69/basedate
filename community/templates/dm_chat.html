@@ -8946,20 +8946,34 @@ document.addEventListener('DOMContentLoaded', async function(){
 
   var PIN_ICON_SVG = '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M9.828.722a.5.5 0 0 1 .354.146l4.95 4.95a.5.5 0 0 1 0 .707c-.48.48-1.072.588-1.503.588-.177 0-.335-.018-.46-.039l-3.134 3.134a5.927 5.927 0 0 1 .16 1.013c.046.702-.032 1.687-.72 2.375a.5.5 0 0 1-.707 0l-2.828-2.828-3.182 3.182c-.195.195-1.219.902-1.414.707-.195-.195.512-1.22.707-1.414l3.182-3.182-2.828-2.828a.5.5 0 0 1 0-.707c.688-.688 1.673-.766 2.375-.72a5.926 5.926 0 0 1 1.013.16l3.134-3.133a2.772 2.772 0 0 1-.04-.461c0-.43.108-1.022.589-1.503a.5.5 0 0 1 .353-.146z"/></svg>';
 
+  function getTrailWrap(row) {
+    var wrap = null;
+    Array.prototype.forEach.call(row.children, function (ch) {
+      if (ch.classList && ch.classList.contains('ah-dm-trail')) wrap = ch;
+    });
+    if (wrap) return wrap;
+    var mention = null;
+    Array.prototype.forEach.call(row.children, function (ch) {
+      if (ch.classList && ch.classList.contains('ah-mention-count')) mention = ch;
+    });
+    wrap = document.createElement('span');
+    wrap.className = 'ah-dm-trail';
+    row.appendChild(wrap);
+    if (mention) wrap.appendChild(mention);
+    return wrap;
+  }
+
   function setPinState(row, pinned) {
     row.classList.toggle('ah-dm-pinned', pinned);
-    var meta = row.querySelector('.dm-meta');
-    if (!meta) return;
-    var existing = meta.querySelector('.ah-dm-pin-badge');
+    var wrap = getTrailWrap(row);
+    var existing = wrap.querySelector('.ah-dm-pin-badge');
     if (pinned) {
       if (!existing) {
         var badge = document.createElement('span');
         badge.className = 'ah-dm-pin-badge';
         badge.title = t('dm.ctx.pinned_badge', 'Закріплено');
         badge.innerHTML = PIN_ICON_SVG;
-        var nameEl = meta.querySelector('.dm-name');
-        if (nameEl) nameEl.insertAdjacentElement('afterend', badge);
-        else meta.insertBefore(badge, meta.firstChild);
+        wrap.appendChild(badge);
       }
     } else if (existing) {
       existing.remove();
@@ -9044,8 +9058,8 @@ document.addEventListener('DOMContentLoaded', async function(){
   var extraCss = ''
     + '.ah-dm-muted .dm-name{opacity:.5;}'
     + '.ah-dm-ignored{opacity:.45;}'
-    + '.ah-dm-pin-badge{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;margin-left:5px;border-radius:4px;background:#2b2d31;border:1px solid #4a4c54;color:#00C4B4;vertical-align:middle;flex:0 0 auto;}'
-    + '.ah-dm-pin-badge svg{width:9px;height:9px;display:block;}'
+    + '.ah-dm-pin-badge{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;background:transparent;border:0;padding:0;margin:0;color:#00C4B4;vertical-align:middle;flex:0 0 auto;}'
+    + '.ah-dm-pin-badge svg{width:13px;height:13px;display:block;}'
     + '.ahctx-left{display:flex;align-items:center;gap:9px;min-width:0;flex:1 1 auto;}'
     + '.ahctx-icon{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;min-width:16px;color:#b5bac1;}'
     + '.ahctx-icon svg{width:16px;height:16px;display:block;}'
@@ -9221,6 +9235,10 @@ document.addEventListener('DOMContentLoaded', async function(){
 
   async function removeFriend(row, username) {
     if (!username) return;
+    if (typeof window.ahOpenUnfriendFor === 'function') {
+      window.ahOpenUnfriendFor(username);
+      return;
+    }
     if (!window.confirm(t('dm.ctx.confirm_remove', 'Видалити цього користувача зі списку друзів?'))) return;
     try {
       await api('/community/api/friends/remove/' + encodeURIComponent(username), { method: 'POST' });
@@ -9233,6 +9251,10 @@ document.addEventListener('DOMContentLoaded', async function(){
 
   async function blockAccount(row, username) {
     if (!username) return;
+    if (window.AlexiHubBlocking && typeof window.AlexiHubBlocking.openBlockFor === 'function') {
+      window.AlexiHubBlocking.openBlockFor(username);
+      return;
+    }
     if (!window.confirm(t('dm.ctx.confirm_block', 'Заблокувати цього користувача?'))) return;
     try {
       await api('/community/api/blocks/' + encodeURIComponent(username), { method: 'POST' });
@@ -9343,7 +9365,14 @@ document.addEventListener('DOMContentLoaded', async function(){
 
     menu.appendChild(makeItem({
       label: t('dm.ctx.profile', 'Профіль'),
-      onClick: function () { closeMenu(); window.location.href = profileUrl; }
+      onClick: function () {
+        closeMenu();
+        if (typeof window.ahOpenFullProfile === 'function') {
+          window.ahOpenFullProfile(row);
+        } else {
+          window.location.href = profileUrl;
+        }
+      }
     }));
 
     menu.appendChild(makeItem({
