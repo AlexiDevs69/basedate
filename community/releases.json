@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.132.1",
+      "date": "2026-09-02",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update text from Ukrainian to Russian in dm_chat.html."
+      ],
+      "source_sha": "21d7faf6dfad4cd73fc21d0e877bb33ad40f3078"
+    },
+    {
       "version": "1.132.0",
       "date": "2026-09-02",
       "title": "Нові можливості AlexiHub",
