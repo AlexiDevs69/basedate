@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.130.5",
+      "date": "2026-09-02",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance DM trail and profile opening functionality."
+      ],
+      "source_sha": "913230cb9575662a5e5e378400dbf4f4ebc78334"
+    },
+    {
       "version": "1.130.4",
       "date": "2026-09-01",
       "title": "Виправлення та стабільність",
