@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.133.0",
+      "date": "2026-09-02",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: nickname modal functionality."
+      ],
+      "source_sha": "5c020e2718d63f3f74be2d06ab92b885e7b1005c"
+    },
+    {
       "version": "1.132.2",
       "date": "2026-09-02",
       "title": "Виправлення та стабільність",
