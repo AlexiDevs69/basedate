@@ -4604,6 +4604,12 @@ document.addEventListener('DOMContentLoaded',()=>{
     setTimeout(() => document.getElementById('ah-unfriend-confirm')?.focus(), 20);
   };
 
+  window.ahOpenUnfriendFor = function(username){
+    if(!username) return;
+    selectedUsername = username;
+    window.openUnfriendConfirmation();
+  };
+
   window.closeUnfriendConfirmation = function(){
     if(removing) return;
     const overlay = modal();
@@ -4690,6 +4696,7 @@ document.addEventListener('DOMContentLoaded',()=>{
       updateFriendPage('online', window.AlexiHubI18n.t("status.online"));
       updateFriendPage('all', window.AlexiHubI18n.t("common.text.all_friends"));
       updateActiveContacts(username);
+      document.dispatchEvent(new CustomEvent('alexihub:friend-removed', { detail: { username } }));
 
       document.getElementById('ah-v3-mini')?.classList.remove('open');
 
@@ -10186,6 +10193,10 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
 
   async function removeFriend(row, username) {
     if (!username) return;
+    if (typeof window.ahOpenUnfriendFor === 'function') {
+      window.ahOpenUnfriendFor(username);
+      return;
+    }
     if (!window.confirm(t('dm.ctx.confirm_remove', 'Удалить этого пользователя из списка друзей?'))) return;
     try {
       await api('/community/api/friends/remove/' + encodeURIComponent(username), { method: 'POST' });
@@ -10198,6 +10209,10 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
 
   async function blockAccount(row, username) {
     if (!username) return;
+    if (window.AlexiHubBlocking && typeof window.AlexiHubBlocking.openBlockFor === 'function') {
+      window.AlexiHubBlocking.openBlockFor(username);
+      return;
+    }
     if (!window.confirm(t('dm.ctx.confirm_block', 'Заблокировать этого пользователя?'))) return;
     try {
       await api('/community/api/blocks/' + encodeURIComponent(username), { method: 'POST' });
@@ -10207,6 +10222,22 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
       toast(e.message || t('common.text.action_error', 'Произошла ошибка'));
     }
   }
+
+  document.addEventListener('alexihub:friend-removed', function (e) {
+    var username = e.detail && e.detail.username;
+    if (!username) return;
+    document.querySelectorAll('.dm-list .dm-row[data-mini-username]').forEach(function (r) {
+      if (r.getAttribute('data-mini-username') === username) r.remove();
+    });
+  });
+
+  document.addEventListener('alexihub:block-status-changed', function (e) {
+    var d = e.detail || {};
+    if (!d.username || !d.blocked_by_me) return;
+    document.querySelectorAll('.dm-list .dm-row[data-mini-username]').forEach(function (r) {
+      if (r.getAttribute('data-mini-username') === d.username) r.remove();
+    });
+  });
 
   var MUTE_OPTIONS = [
     { label: t('server.ctx.mute_15m', 'На 15 минут'), ms: 15 * 60 * 1000 },
