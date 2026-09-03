@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.134.2",
+      "date": "2026-09-03",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance call UI with unmute button and video stage handling."
+      ],
+      "source_sha": "c85eedad6644155d95ba351dc0e00f37010a9501"
+    },
+    {
       "version": "1.134.1",
       "date": "2026-09-03",
       "title": "Виправлення та стабільність",
