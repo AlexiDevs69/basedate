@@ -6552,8 +6552,12 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
 #ah-call-overlay.active .ah-call-card{width:min(920px,calc(100vw - 32px));padding:20px}
 #ah-call-overlay.active.audio-call .ah-call-card{width:min(380px,calc(100vw - 32px));padding:32px 24px 24px}
 .ah-call-video-stage{position:relative;width:100%;aspect-ratio:16/10;max-height:70vh;background:#000;border-radius:14px;overflow:hidden;margin-bottom:18px}
+.ah-call-video-stage.audio-hidden{position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;margin:0;max-height:none;left:-9999px}
 .ah-call-video-remote{width:100%;height:100%;object-fit:cover}
 .ah-call-video-local{position:absolute;right:12px;bottom:12px;width:140px;height:96px;border-radius:10px;object-fit:cover;background:#000;border:2px solid rgba(255,255,255,.15);transform:scaleX(-1)}
+.ah-call-unmute-btn{margin:2px 0 14px;border:1px solid var(--border);background:var(--panel2);color:var(--text);font:700 12px var(--font);border-radius:999px;padding:7px 14px;cursor:pointer;align-items:center;gap:6px;display:none}
+.ah-call-unmute-btn.show{display:inline-flex}
+.ah-call-unmute-btn svg{width:15px;height:15px}
 #ah-call-banner{position:fixed;top:14px;left:50%;transform:translateX(-50%) translateY(-140%);z-index:2147483647;background:rgba(28,28,28,.97);border:1px solid var(--border);border-radius:14px;padding:10px 12px 10px 10px;display:flex;align-items:center;gap:10px;box-shadow:0 16px 48px rgba(0,0,0,.45);transition:transform .24s cubic-bezier(.2,.82,.25,1);font-family:var(--font)}
 #ah-call-banner.show{transform:translateX(-50%) translateY(0)}
 .ah-call-banner-avatar{width:36px;height:36px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;background-size:cover;background-position:center;flex:0 0 auto}
@@ -6604,7 +6608,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   var pendingOfferSdp=null;
   var remoteCandidateQueue=[];
   var remoteDescSet=false;
-  var ringTimer=null,callTimer=null,callStartedAt=0;
+  var ringTimer=null,callTimer=null,callStartedAt=0,iceWatchdog=null;
   var micOn=true,camOn=true;
 
   var ICONS={
@@ -6640,13 +6644,14 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     root.id='ah-call-overlay';
     root.innerHTML=(
       '<div class="ah-call-card">'+
-        '<div class="ah-call-video-stage" id="ah-call-video-stage" style="display:none">'+
+        '<div class="ah-call-video-stage audio-hidden" id="ah-call-video-stage">'+
           '<video id="ah-call-video-remote" class="ah-call-video-remote" autoplay playsinline></video>'+
           '<video id="ah-call-video-local" class="ah-call-video-local" autoplay playsinline muted></video>'+
         '</div>'+
         '<div class="ah-call-avatar-wrap" id="ah-call-avatar-wrap"><div class="ah-call-avatar" id="ah-call-avatar"></div></div>'+
         '<div class="ah-call-name" id="ah-call-name"></div>'+
         '<div class="ah-call-status" id="ah-call-status"></div>'+
+        '<button type="button" id="ah-call-unmute-btn" class="ah-call-unmute-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg><span></span></button>'+
         '<div class="ah-call-actions" id="ah-call-actions"></div>'+
       '</div>'
     );
@@ -6678,7 +6683,31 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     var rv=document.getElementById('ah-call-video-remote'); if(rv)rv.srcObject=null;
   }
   function closePc(){ if(pc){ try{pc.close()}catch(e){} pc=null; } }
-  function clearTimers(){ clearTimeout(ringTimer); ringTimer=null; clearInterval(callTimer); callTimer=null; }
+  function clearTimers(){ clearTimeout(ringTimer); ringTimer=null; clearInterval(callTimer); callTimer=null; clearTimeout(iceWatchdog); iceWatchdog=null; }
+
+  function setStageVisible(video){
+    var stage=document.getElementById('ah-call-video-stage');
+    if(stage)stage.classList.toggle('audio-hidden',!video);
+  }
+  function hideUnmuteHint(){
+    var btn=document.getElementById('ah-call-unmute-btn');
+    if(btn)btn.classList.remove('show');
+  }
+  function showUnmuteHint(){
+    var btn=document.getElementById('ah-call-unmute-btn');
+    if(!btn)return;
+    var span=btn.querySelector('span'); if(span)span.textContent=tr('dm.call.tap_to_hear','Немає звуку — натисніть тут');
+    btn.classList.add('show');
+    btn.onclick=function(){
+      var rv=document.getElementById('ah-call-video-remote');
+      if(rv){
+        rv.muted=false;
+        var p=rv.play();
+        if(p&&p.catch)p.catch(function(){});
+      }
+      hideUnmuteHint();
+    };
+  }
 
   function teardown(){
     clearTimers();
@@ -6690,8 +6719,9 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     var root=document.getElementById('ah-call-overlay');
     if(root){
       root.classList.remove('show','active','audio-call');
-      var stage=document.getElementById('ah-call-video-stage'); if(stage)stage.style.display='none';
+      setStageVisible(false);
     }
+    hideUnmuteHint();
     var wrap=document.getElementById('ah-call-avatar-wrap'); if(wrap)wrap.classList.remove('ringing');
     hideBanner();
   }
@@ -6704,10 +6734,17 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     pc.ontrack=function(e){
       remoteStream=(e.streams&&e.streams[0])?e.streams[0]:remoteStream;
       var rv=document.getElementById('ah-call-video-remote');
-      if(rv&&remoteStream)rv.srcObject=remoteStream;
+      if(rv&&remoteStream){
+        rv.srcObject=remoteStream;
+        var p=rv.play();
+        if(p&&p.catch)p.catch(function(){ showUnmuteHint(); });
+      }
     };
     pc.onconnectionstatechange=function(){
       if(!pc)return;
+      if(pc.connectionState==='connected'||pc.connectionState==='completed'){
+        clearTimeout(iceWatchdog); iceWatchdog=null;
+      }
       if(pc.connectionState==='failed'||pc.connectionState==='disconnected'){
         if(status==='active'){ toast(tr('dm.call.connection_lost','З’єднання під час дзвінка втрачено')); endCall(); }
       }
@@ -6750,7 +6787,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     root.classList.toggle('audio-call',!isVideo);
     renderCaller(OTHER.display,OTHER.avatar);
     var wrap=document.getElementById('ah-call-avatar-wrap'); if(wrap)wrap.classList.add('ringing');
-    var stage=document.getElementById('ah-call-video-stage'); if(stage)stage.style.display=isVideo?'block':'none';
+    setStageVisible(isVideo);
     setStatusText(tr('dm.call.calling','Виклик...'),false);
     renderActions([svgBtn('end','phone',function(){ endCall(); },tr('dm.call.cancel','Скасувати'))]);
     root.classList.add('show');
@@ -6783,7 +6820,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     root.classList.toggle('audio-call',!isVideo);
     renderCaller(OTHER.display,OTHER.avatar);
     var wrap=document.getElementById('ah-call-avatar-wrap'); if(wrap)wrap.classList.add('ringing');
-    var stage=document.getElementById('ah-call-video-stage'); if(stage)stage.style.display='none';
+    setStageVisible(false);
     setStatusText(isVideo?tr('dm.call.incoming_video','Вхідний відеодзвінок'):tr('dm.call.incoming_audio','Вхідний дзвінок'),false);
     renderActions([
       svgBtn('decline','phone',function(){ declineCall(); },tr('common.action.decline','Відхилити')),
@@ -6797,12 +6834,12 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     if(status!=='incoming'||!pendingOfferSdp)return;
     clearTimeout(ringTimer);
     var offer=pendingOfferSdp;
-    getMedia(isVideo).then(function(stream){
-      createPc();
-      attachLocalStream(stream,isVideo);
-      return pc.setRemoteDescription(new RTCSessionDescription(offer));
-    }).then(function(){
+    createPc();
+    pc.setRemoteDescription(new RTCSessionDescription(offer)).then(function(){
       remoteDescSet=true; flushRemoteCandidates();
+      return getMedia(isVideo);
+    }).then(function(stream){
+      attachLocalStream(stream,isVideo);
       return pc.createAnswer();
     }).then(function(answer){ return pc.setLocalDescription(answer); }).then(function(){
       sendSignal({type:'call_answer',sdp:pc.localDescription});
@@ -6863,12 +6900,18 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     status='active';
     var wrap=document.getElementById('ah-call-avatar-wrap'); if(wrap)wrap.classList.remove('ringing');
     els().classList.add('active');
-    var stage=document.getElementById('ah-call-video-stage'); if(stage)stage.style.display=isVideo?'block':'none';
+    setStageVisible(isVideo);
     var buttons=[svgBtn('toggle mic','mic',toggleMic,tr('common.aria.mute','Вимкнути мікрофон'))];
     if(isVideo)buttons.push(svgBtn('toggle cam','cam',toggleCam,tr('dm.call.toggle_camera','Увімкнути/вимкнути камеру')));
     buttons.push(svgBtn('end','phone',function(){ endCall(); },tr('dm.call.hang_up','Завершити')));
     renderActions(buttons);
     startTimer();
+    clearTimeout(iceWatchdog);
+    iceWatchdog=setTimeout(function(){
+      if(pc&&status==='active'&&pc.connectionState!=='connected'&&pc.connectionState!=='completed'){
+        toast(tr('dm.call.connection_slow','Не вдається встановити медіа-з’єднання. Можливо, потрібен TURN-сервер або інша мережа'));
+      }
+    },8000);
   }
 
   function toggleMic(){
