@@ -43,7 +43,7 @@
 
     .app {
       display: grid;
-      grid-template-columns: 72px 240px 1fr 300px 72px;
+      grid-template-columns: 72px 240px 1fr 300px;
       height: 100vh;
       min-width: 0;
       position: relative;
@@ -137,22 +137,6 @@
     }
     .server-dot.home-dot { background: linear-gradient(135deg, #00C4B4, #00A89B); }
     .server-sep { width: 32px; height: 2px; background: #24252b; border-radius: 9px; }
-
-    /* right-side self rail — mirrors the server rail on the opposite edge:
-       own avatar (with live status) up top, quick-action buttons stacked below */
-    .self-rail {
-      background: transparent;
-      padding: 8px 8px 12px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-      overflow-y: auto;
-      overflow-x: visible;
-      border-left: 0;
-      position: relative;
-    }
-    .self-rail .server-sep { flex: 0 0 auto; width: 26px; }
 
     /* left dm sidebar */
     .dm-sidebar {
@@ -263,54 +247,41 @@
     .dm-snippet { display: none; }
     .empty-note { color: var(--muted2); font-size: 12px; padding: 6px 10px 12px; }
 
-    .dm-list { padding: 0 8px; overflow-y: auto; min-height: 0; flex: 1; }
-    .server-rail { padding-bottom: 12px; }
-
-    /* own profile block, now living at the top of .self-rail */
+    .dm-sidebar { padding-bottom: 0; }
+    .dm-list { padding: 0 8px 72px; overflow-y: auto; min-height: 0; flex: 1; }
+    .server-rail { padding-bottom: 76px; }
     .user-panel {
-      position: relative;
-      width: 100%;
+      position: fixed;
+      left: 8px;
+      right: auto;
+      bottom: 8px;
+      width: calc(72px + 240px - 16px);
       z-index: 60;
-      background: transparent;
-      border: 0;
-      box-shadow: none;
+      background: #232428;
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 16px;
+      box-shadow: 0 14px 34px rgba(0,0,0,.5), 0 2px 8px rgba(0,0,0,.35);
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
       align-items: center;
-      padding: 0;
-      gap: 0;
-      text-align: center;
-      cursor: pointer;
+      padding: 6px 8px;
+      gap: 6px;
+      text-align: left;
+    }
+    .user-panel .avatar {
+      width: 38px;
+      height: 38px;
+      font-size: 15px;
+      box-shadow: none;
       flex: 0 0 auto;
     }
-    .self-rail .user-panel .avatar {
-      width: 56px;
-      height: 56px;
-      font-size: 20px;
-      box-shadow: 0 0 0 3px var(--app), 0 0 0 2px rgba(0,196,180,.4);
-      transition: box-shadow 0.16s ease;
-    }
-    .user-panel:hover .avatar { box-shadow: 0 0 0 3px var(--app), 0 0 0 2px var(--accent); }
-    .self-rail .user-panel .avatar .presence {
-      width: 15px;
-      height: 15px;
+    .user-panel .avatar .presence {
+      width: 14px;
+      height: 14px;
       border-width: 3px;
       right: -1px;
       bottom: -1px;
-      border-color: var(--app);
-    }
-    /* name / status text is kept in the DOM for scripts that read it,
-       but the narrow icon rail has no room to display it */
-    .self-rail .user-info {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0,0,0,0);
-      white-space: nowrap;
-      border: 0;
+      border-color: #232428;
     }
     .user-info { min-width: 0; flex: 1; width: 100%; }
     .user-info b { display: block; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -321,17 +292,18 @@
     .status-dnd { background: var(--red) !important; }
     .status-invisible { background: var(--gray) !important; }
     .status-menu {
-      position: absolute;
-      top: 6px;
-      right: 78px;
-      width: 208px;
+      position: fixed;
+      left: 8px;
+      right: auto;
+      bottom: 62px;
+      width: calc(72px + 240px - 16px);
       background: #24252b;
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 8px;
       box-shadow: 0 18px 40px rgba(0,0,0,.42);
       display: none;
-      z-index: 80;
+      z-index: 61;
     }
     .status-menu.open { display: block; }
     .status-menu button {
@@ -350,20 +322,16 @@
     }
     .status-menu button:hover { background: var(--hover); }
     .status-menu small { display:block; color: var(--muted2); font-size: 11px; margin-top: 1px; }
-    .user-panel .status-trigger { cursor: pointer; }
-
-    /* quick-action buttons stacked underneath the avatar, server-dot style */
-    .user-actions { display: flex; gap: 4px; }
-    .self-rail .user-actions {
-      flex-direction: column;
-      align-items: center;
-      width: auto;
-      gap: 6px;
-      flex: 0 0 auto;
-    }
+    .user-panel .status-trigger { cursor: pointer; border-radius: 7px; padding: 2px 4px; min-width: 0; flex: 1 1 auto; }
+    .user-panel .status-trigger:hover { background: var(--hover); }
+    .user-panel .user-info > b { text-align: left !important; }
+    .user-panel .user-info > span,
+    .user-panel .user-info > .account-username { justify-content: flex-start !important; text-align: left !important; }
+    .user-actions { display: flex; gap: 2px; align-items: center; }
+    .user-panel .user-actions { justify-content: flex-end; width: auto; flex: 0 0 auto; }
     .user-actions button {
-      width: 28px;
-      height: 28px;
+      width: 30px;
+      height: 30px;
       border: 0;
       border-radius: 6px;
       background: transparent;
@@ -373,40 +341,20 @@
       align-items: center;
       justify-content: center;
     }
-    .user-actions button:hover { background: var(--hover); color: var(--text); }
-    .self-rail .user-actions button {
-      width: 36px !important;
-      height: 36px !important;
-      border-radius: 12px !important;
-      background: var(--panel) !important;
-      color: var(--muted) !important;
-      transition: 0.16s ease;
-    }
-    .self-rail .user-actions button:hover {
-      background: var(--hover) !important;
-      color: var(--text) !important;
-      border-radius: 10px !important;
-    }
-    .self-rail .user-actions button.voice-control.off {
-      background: rgba(242,63,66,.16) !important;
-      color: #f23f42 !important;
-    }
-    .self-rail-more {
-      width: 36px;
-      height: 36px;
-      flex: 0 0 auto;
-      border: 0;
-      border-radius: 12px;
-      background: var(--panel);
+    .user-actions .user-action-chevron {
+      width: 14px !important;
+      height: 30px !important;
       color: var(--muted);
+      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      cursor: pointer;
-      transition: 0.16s ease;
+      background: transparent;
+      border: 0;
+      padding: 0;
     }
-    .self-rail-more:hover { background: var(--hover); color: var(--text); border-radius: 10px; }
-    .self-rail-more svg { fill: currentColor; stroke: none; width: 15px; height: 15px; }
+    .user-actions .user-action-chevron svg { width: 12px !important; height: 12px !important; }
+    .user-actions button:hover { background: var(--hover); color: var(--text); }
 
     /* center */
     .main { background: var(--main); display: flex; flex-direction: column; min-width: 0; }
@@ -512,14 +460,13 @@
     .online-list { display: flex; flex-direction: column; gap: 2px; }
 
     @media (max-width: 1050px) {
-      .app { grid-template-columns: 72px 240px 1fr 72px; }
+      .app { grid-template-columns: 72px 240px 1fr; }
       .right { display: none; }
     }
     @media (max-width: 760px) {
       .app { grid-template-columns: 64px 1fr; }
       .dm-sidebar { display: none; }
       .right { display: none; }
-      .self-rail { display: none; }
     }
   
 
@@ -573,8 +520,7 @@
         overflow: hidden !important;
       }
       .dm-sidebar,
-      .right,
-      .self-rail { display: none !important; }
+      .right { display: none !important; }
       .main {
         min-width: 0 !important;
         width: 100% !important;
@@ -1499,7 +1445,7 @@
   background:linear-gradient(90deg,#7c3aed,#c026d3);color:#fff;
   font-size:10px;font-weight:950;letter-spacing:.025em;box-shadow:0 0 16px rgba(168,85,247,.22);
 }
-.app.nitro-open{grid-template-columns:72px 240px minmax(0,1fr) 72px;}
+.app.nitro-open{grid-template-columns:72px 240px minmax(0,1fr);}
 .app.nitro-open .right{display:none!important;}
 .app.nitro-open .friend-topbar,
 .app.nitro-open .friend-content{display:none!important;}
@@ -2087,7 +2033,7 @@
     @media(prefers-reduced-motion:reduce){.ah-inbox-panel.open,.ah-inbox-filter.open{animation:none}.ah-inbox-icon-btn,.ah-inbox-message{transition:none}}
   </style>
   <style id="ah-season-store-css">
-    .app.store-open{grid-template-columns:72px 240px minmax(0,1fr) 72px}
+    .app.store-open{grid-template-columns:72px 240px minmax(0,1fr)}
     .app.store-open .right{display:none!important}
     .app.store-open .friend-topbar,
     .app.store-open .friend-content{display:none!important}
@@ -2416,6 +2362,28 @@ body.ah-store-product-open{overflow:hidden}
         {% else %}
         <div class="empty-note"><!--i18n:home.text.there_are_no_dialogues_yet_eough_a_friend_below-->{{ i18n_t('home.text.there_are_no_dialogues_yet_eough_a_friend_below') }}</div>
         {% endfor %}
+      </div>
+
+      {% set my_status = account.account_status or 'online' %}
+      <div class="user-panel mini-profile-trigger" data-mini-username="{{ account.username }}" data-mini-display="{{ account.display_name or account.username }}" data-mini-avatar="{{ account.avatar_url or '' }}" data-mini-banner="{{ account.banner_url or '' }}" data-mini-status="{{ account.account_status or 'online' }}" data-mini-role="{{ account.role_label or 'online' }}" data-mini-c1="{{ account.role_color_start or '#00C4B4' }}" data-mini-c2="{{ account.role_color_end or '#0A0A0A' }}" data-mini-profile="/community/profile/{{ account.username }}" data-mini-bio="{{ account.bio or '' }}">
+        <span class="avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}')"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}<span id="my-avatar-status" class="presence status-{{ my_status }}"></span></span>
+        <div class="user-info status-trigger" onclick="openSelfProfile()">
+          <b>{{ account.display_name or account.username }}</b>
+          <span><i id="my-status-dot" class="status-dot status-{{ my_status }}"></i><span id="my-status-label">{{ i18n_t('status.' ~ my_status) }}</span></span><small class="account-username">@{{ account.username }}</small>
+        </div>
+        <div class="user-actions">
+          <button class="voice-control" data-audio-kind="mic" title="{{ i18n_t('common.aria.mute') }}" data-i18n-title="common.aria.mute" onclick="toggleAudioControl(this,'mic')"><svg class="icon icon-sm"><use href="#i-mic"></use></svg></button>
+          <button type="button" class="user-action-chevron" title="{{ i18n_t('common.aria.mute') }}" data-i18n-title="common.aria.mute" onclick="showActionToast(window.AlexiHubI18n.t('home.stub.appearance'))"><svg class="icon" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
+          <button class="voice-control" data-audio-kind="headphones" title="{{ i18n_t('common.aria.deafen') }}" data-i18n-title="common.aria.deafen" onclick="toggleAudioControl(this,'headphones')"><svg class="icon icon-sm"><use href="#i-headphones"></use></svg></button>
+          <button type="button" class="user-action-chevron" title="{{ i18n_t('common.aria.deafen') }}" data-i18n-title="common.aria.deafen" onclick="showActionToast(window.AlexiHubI18n.t('home.stub.appearance'))"><svg class="icon" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg></button>
+          <button title="{{ i18n_t('common.aria.settings') }}" data-i18n-title="common.aria.settings" onclick="openUserSettings()"><svg class="icon icon-sm"><use href="#i-settings"></use></svg></button>
+        </div>
+        <div id="status-menu" class="status-menu">
+          <button onclick="setPresenceStatus('online')"><i class="status-dot status-online"></i><span><b><!--i18n:common.text.online-->{{ i18n_t('common.text.online') }}</b><small><!--i18n:common.text.text_a4074ad-->{{ i18n_t('common.text.text_a4074ad') }}</small></span></button>
+          <button onclick="setPresenceStatus('idle')"><i class="status-dot status-idle"></i><span><b><!--i18n:status.idle-->{{ i18n_t('status.idle') }}</b><small><!--i18n:common.text.text_baf2a9c-->{{ i18n_t('common.text.text_baf2a9c') }}</small></span></button>
+          <button onclick="setPresenceStatus('dnd')"><i class="status-dot status-dnd"></i><span><b><!--i18n:status.dnd-->{{ i18n_t('status.dnd') }}</b><small><!--i18n:common.text.text_9fda25e-->{{ i18n_t('common.text.text_9fda25e') }}</small></span></button>
+          <button onclick="setPresenceStatus('invisible')"><i class="status-dot status-invisible"></i><span><b><!--i18n:status.invisible-->{{ i18n_t('status.invisible') }}</b><small><!--i18n:common.text.text_87b603c-->{{ i18n_t('common.text.text_87b603c') }}</small></span></button>
+        </div>
       </div>
     </aside>
 
@@ -3114,38 +3082,6 @@ body.ah-store-product-open{overflow:hidden}
       {% if shown_active.value == 0 %}
       <div class="active-contact-card" data-active-contacts-empty="1"><div class="active-contact-top"><span class="active-contact-title"><b><!--i18n:common.text.show_quietly-->{{ i18n_t('common.text.show_quietly') }}</b><span><!--i18n:common.text.active_friends_will_appear_here-->{{ i18n_t('common.text.active_friends_will_appear_here') }}</span></span></div></div>
       {% endif %}
-    </aside>
-
-    <aside class="self-rail">
-      {% set my_status = account.account_status or 'online' %}
-      <div class="user-panel mini-profile-trigger" data-mini-username="{{ account.username }}" data-mini-display="{{ account.display_name or account.username }}" data-mini-avatar="{{ account.avatar_url or '' }}" data-mini-banner="{{ account.banner_url or '' }}" data-mini-status="{{ account.account_status or 'online' }}" data-mini-role="{{ account.role_label or 'online' }}" data-mini-c1="{{ account.role_color_start or '#00C4B4' }}" data-mini-c2="{{ account.role_color_end or '#0A0A0A' }}" data-mini-profile="/community/profile/{{ account.username }}" data-mini-bio="{{ account.bio or '' }}" title="{{ account.display_name or account.username }}">
-        <span class="avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}')"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}<span id="my-avatar-status" class="presence status-{{ my_status }}"></span></span>
-        <div class="user-info status-trigger" onclick="openSelfProfile()">
-          <b>{{ account.display_name or account.username }}</b>
-          <span><i id="my-status-dot" class="status-dot status-{{ my_status }}"></i><span id="my-status-label">{{ i18n_t('status.' ~ my_status) }}</span></span><small class="account-username">@{{ account.username }}</small>
-        </div>
-      </div>
-
-      <div class="server-sep"></div>
-
-      <div class="user-actions">
-        <button class="voice-control" data-audio-kind="mic" title="{{ i18n_t('common.aria.mute') }}" data-i18n-title="common.aria.mute" onclick="toggleAudioControl(this,'mic')"><svg class="icon icon-sm"><use href="#i-mic"></use></svg></button>
-        <button class="voice-control" data-audio-kind="headphones" title="{{ i18n_t('common.aria.deafen') }}" data-i18n-title="common.aria.deafen" onclick="toggleAudioControl(this,'headphones')"><svg class="icon icon-sm"><use href="#i-headphones"></use></svg></button>
-        <button title="{{ i18n_t('common.aria.settings') }}" data-i18n-title="common.aria.settings" onclick="openUserSettings()"><svg class="icon icon-sm"><use href="#i-settings"></use></svg></button>
-      </div>
-
-      <div class="server-sep"></div>
-
-      <button class="self-rail-more" type="button" title="Інші функції" onclick="showActionToast('Незабаром тут зʼявляться додаткові функції')">
-        <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg>
-      </button>
-
-      <div id="status-menu" class="status-menu">
-        <button onclick="setPresenceStatus('online')"><i class="status-dot status-online"></i><span><b><!--i18n:common.text.online-->{{ i18n_t('common.text.online') }}</b><small><!--i18n:common.text.text_a4074ad-->{{ i18n_t('common.text.text_a4074ad') }}</small></span></button>
-        <button onclick="setPresenceStatus('idle')"><i class="status-dot status-idle"></i><span><b><!--i18n:status.idle-->{{ i18n_t('status.idle') }}</b><small><!--i18n:common.text.text_baf2a9c-->{{ i18n_t('common.text.text_baf2a9c') }}</small></span></button>
-        <button onclick="setPresenceStatus('dnd')"><i class="status-dot status-dnd"></i><span><b><!--i18n:status.dnd-->{{ i18n_t('status.dnd') }}</b><small><!--i18n:common.text.text_9fda25e-->{{ i18n_t('common.text.text_9fda25e') }}</small></span></button>
-        <button onclick="setPresenceStatus('invisible')"><i class="status-dot status-invisible"></i><span><b><!--i18n:status.invisible-->{{ i18n_t('status.invisible') }}</b><small><!--i18n:common.text.text_87b603c-->{{ i18n_t('common.text.text_87b603c') }}</small></span></button>
-      </div>
     </aside>
 
   </div>
