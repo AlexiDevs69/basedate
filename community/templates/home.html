@@ -141,18 +141,18 @@
     /* right-side self rail — mirrors the server rail on the opposite edge:
        own avatar (with live status) up top, quick-action buttons stacked below */
     .self-rail {
-      background: var(--rail);
-      padding: 14px 10px;
+      background: transparent;
+      padding: 8px 8px 12px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       overflow-y: auto;
       overflow-x: visible;
-      border-left: 1px solid #111;
+      border-left: 0;
       position: relative;
     }
-    .self-rail .server-sep { flex: 0 0 auto; }
+    .self-rail .server-sep { flex: 0 0 auto; width: 26px; }
 
     /* left dm sidebar */
     .dm-sidebar {
@@ -284,20 +284,20 @@
       flex: 0 0 auto;
     }
     .self-rail .user-panel .avatar {
-      width: 48px;
-      height: 48px;
-      font-size: 18px;
-      box-shadow: 0 0 0 3px var(--rail), 0 0 0 2px rgba(0,196,180,.4);
+      width: 56px;
+      height: 56px;
+      font-size: 20px;
+      box-shadow: 0 0 0 3px var(--app), 0 0 0 2px rgba(0,196,180,.4);
       transition: box-shadow 0.16s ease;
     }
-    .user-panel:hover .avatar { box-shadow: 0 0 0 3px var(--rail), 0 0 0 2px var(--accent); }
+    .user-panel:hover .avatar { box-shadow: 0 0 0 3px var(--app), 0 0 0 2px var(--accent); }
     .self-rail .user-panel .avatar .presence {
-      width: 14px;
-      height: 14px;
+      width: 15px;
+      height: 15px;
       border-width: 3px;
       right: -1px;
       bottom: -1px;
-      border-color: var(--rail);
+      border-color: var(--app);
     }
     /* name / status text is kept in the DOM for scripts that read it,
        but the narrow icon rail has no room to display it */
@@ -358,7 +358,7 @@
       flex-direction: column;
       align-items: center;
       width: auto;
-      gap: 8px;
+      gap: 6px;
       flex: 0 0 auto;
     }
     .user-actions button {
@@ -375,9 +375,9 @@
     }
     .user-actions button:hover { background: var(--hover); color: var(--text); }
     .self-rail .user-actions button {
-      width: 42px !important;
-      height: 42px !important;
-      border-radius: 14px !important;
+      width: 36px !important;
+      height: 36px !important;
+      border-radius: 12px !important;
       background: var(--panel) !important;
       color: var(--muted) !important;
       transition: 0.16s ease;
@@ -385,18 +385,18 @@
     .self-rail .user-actions button:hover {
       background: var(--hover) !important;
       color: var(--text) !important;
-      border-radius: 12px !important;
+      border-radius: 10px !important;
     }
     .self-rail .user-actions button.voice-control.off {
       background: rgba(242,63,66,.16) !important;
       color: #f23f42 !important;
     }
     .self-rail-more {
-      width: 42px;
-      height: 42px;
+      width: 36px;
+      height: 36px;
       flex: 0 0 auto;
       border: 0;
-      border-radius: 14px;
+      border-radius: 12px;
       background: var(--panel);
       color: var(--muted);
       display: flex;
@@ -405,8 +405,8 @@
       cursor: pointer;
       transition: 0.16s ease;
     }
-    .self-rail-more:hover { background: var(--hover); color: var(--text); border-radius: 12px; }
-    .self-rail-more svg { fill: currentColor; stroke: none; }
+    .self-rail-more:hover { background: var(--hover); color: var(--text); border-radius: 10px; }
+    .self-rail-more svg { fill: currentColor; stroke: none; width: 15px; height: 15px; }
 
     /* center */
     .main { background: var(--main); display: flex; flex-direction: column; min-width: 0; }
