@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.135.1",
+      "date": "2026-09-06",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: self-rail and user actions styles."
+      ],
+      "source_sha": "22338716d515bb80bdc85764d683c607dd5285da"
+    },
+    {
       "version": "1.135.0",
       "date": "2026-09-06",
       "title": "Нові можливості AlexiHub",
