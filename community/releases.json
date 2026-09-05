@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.135.2",
+      "date": "2026-09-06",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: layout by removing self-rail and updating styles."
+      ],
+      "source_sha": "6ace9c49a155178a92a430096086daa0307d2d70"
+    },
+    {
       "version": "1.135.1",
       "date": "2026-09-06",
       "title": "Оновлення AlexiHub",
