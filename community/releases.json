@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.135.0",
+      "date": "2026-09-06",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: self-rail for user profile and actions."
+      ],
+      "source_sha": "a433ceeb207f1b62a5e9b478e89f7c2ce749097d"
+    },
+    {
       "version": "1.134.3",
       "date": "2026-09-06",
       "title": "Оновлення AlexiHub",
