@@ -272,8 +272,20 @@
     }
     .story-progress-fill { height: 100%; width: 0%; background: #fff; border-radius: 3px; }
     .story-progress-seg.done .story-progress-fill { width: 100%; }
-    .story-progress-seg.active .story-progress-fill { animation: storyFill linear forwards; }
-    @keyframes storyFill { from { width: 0% } to { width: 100% } }
+    .story-progress-seg.active .story-progress-fill { transition: width linear; }
+    .story-viewer-caption {
+      position: absolute;
+      left: 14px; right: 14px; bottom: 18px;
+      z-index: 3;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.4;
+      text-shadow: 0 1px 6px rgba(0,0,0,.7);
+      display: none;
+      word-break: break-word;
+    }
+    .story-viewer-caption.show { display: block; }
     .story-viewer-head {
       position: absolute;
       top: 22px; left: 12px; right: 12px;
@@ -328,6 +340,90 @@
     .story-viewer-nav.next { right: -52px; }
     .story-viewer-nav.prev .icon { transform: rotate(180deg); }
     @media (max-width: 900px) { .story-viewer-nav { display: none; } }
+
+    /* story compose (превью перед публикацией) */
+    .story-compose-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.9);
+      z-index: 950;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .story-compose-overlay.show { display: flex; }
+    .story-compose-card {
+      position: relative;
+      width: min(420px, 92vw);
+      height: min(760px, 88vh);
+      border-radius: 14px;
+      overflow: hidden;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+    }
+    .story-compose-media {
+      position: absolute;
+      inset: 0;
+      background: #111 center/cover no-repeat;
+    }
+    .story-compose-top {
+      position: absolute;
+      top: 14px; left: 14px; right: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 3;
+    }
+    .story-compose-top .story-viewer-close { margin-left: 0; }
+    .story-compose-hint {
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      background: rgba(0,0,0,.4);
+      padding: 6px 10px;
+      border-radius: 20px;
+    }
+    .story-compose-footer {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px;
+      background: linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.55) 45%, rgba(0,0,0,.85));
+      z-index: 3;
+    }
+    .story-compose-input {
+      flex: 1;
+      height: 44px;
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,.25);
+      background: rgba(20,20,20,.55);
+      color: #fff;
+      padding: 0 18px;
+      outline: none;
+      font-size: 14px;
+    }
+    .story-compose-input::placeholder { color: rgba(255,255,255,.6); }
+    .story-compose-send {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #04211e;
+      border: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex: 0 0 auto;
+      transition: opacity .15s ease, transform .1s ease;
+    }
+    .story-compose-send .icon { stroke: #04211e; }
+    .story-compose-send:disabled { opacity: .45; cursor: default; }
+    .story-compose-send:active:not(:disabled) { transform: scale(.92); }
+    .story-compose-send.loading .icon { animation: storySpin .8s linear infinite; }
+    @keyframes storySpin { to { transform: rotate(360deg); } }
 
     .nav { padding: 10px 8px; display: flex; flex-direction: column; gap: 2px; }
     .nav-item {
@@ -10747,12 +10843,27 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
       <button type="button" class="story-viewer-close" id="story-viewer-close"><svg class="icon icon-sm"><use href="#i-close"></use></svg></button>
     </div>
     <div class="story-viewer-media" id="story-viewer-media"></div>
+    <div class="story-viewer-caption" id="story-viewer-caption"></div>
     <div class="story-tap-zone story-tap-prev" id="story-tap-prev"></div>
     <div class="story-tap-zone story-tap-next" id="story-tap-next"></div>
   </div>
   <button type="button" class="story-viewer-nav next" id="story-viewer-next-user" aria-label="{{ i18n_t('stories.aria.next_user') }}"><svg class="icon"><use href="#i-arrow-right"></use></svg></button>
 </div>
 <input type="file" id="story-upload-input" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none">
+
+<div class="story-compose-overlay" id="story-compose-overlay" role="dialog" aria-modal="true" aria-label="{{ i18n_t('stories.aria.compose') }}">
+  <div class="story-compose-card" id="story-compose-card">
+    <div class="story-compose-media" id="story-compose-media"></div>
+    <div class="story-compose-top">
+      <button type="button" class="story-viewer-close" id="story-compose-back"><svg class="icon icon-sm"><use href="#i-close"></use></svg></button>
+      <span class="story-compose-hint"><!--i18n:stories.text.new_story-->{{ i18n_t('stories.text.new_story') }}</span>
+    </div>
+    <div class="story-compose-footer">
+      <input type="text" id="story-compose-caption" class="story-compose-input" maxlength="200" autocomplete="off" placeholder="{{ i18n_t('stories.placeholder.caption') }}">
+      <button type="button" class="story-compose-send" id="story-compose-send"><svg class="icon icon-sm"><use href="#i-arrow-right"></use></svg></button>
+    </div>
+  </div>
+</div>
 
 <script>
 (function () {
@@ -10853,8 +10964,16 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   var nameEl = document.getElementById('story-viewer-name');
   var timeEl = document.getElementById('story-viewer-time');
   var avatarEl = document.getElementById('story-viewer-avatar');
+  var captionEl = document.getElementById('story-viewer-caption');
   var deleteBtn = document.getElementById('story-viewer-delete');
   var uploadInput = document.getElementById('story-upload-input');
+  var composeOverlay = document.getElementById('story-compose-overlay');
+  var composeMedia = document.getElementById('story-compose-media');
+  var composeCaption = document.getElementById('story-compose-caption');
+  var composeSend = document.getElementById('story-compose-send');
+  var composeBack = document.getElementById('story-compose-back');
+  var composeFile = null;
+  var composeObjectUrl = null;
 
   var curList = [], curUserIdx = -1, curItemIdx = 0, timer = null;
   var STORY_MS = 5000;
@@ -10881,8 +11000,22 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     var user = curList[curUserIdx];
     progressRow.innerHTML = user.items.map(function (_, i) {
       var cls = i < curItemIdx ? 'done' : (i === curItemIdx ? 'active' : '');
-      return '<span class="story-progress-seg ' + cls + '"><span class="story-progress-fill" style="' + (i === curItemIdx ? 'animation-duration:' + STORY_MS + 'ms' : '') + '"></span></span>';
+      return '<span class="story-progress-seg ' + cls + '"><span class="story-progress-fill"></span></span>';
     }).join('');
+    var activeFill = progressRow.querySelector('.story-progress-seg.active .story-progress-fill');
+    if (!activeFill) return;
+    // Ставимо смугу в 0% без анімації, змушуємо браузер це "побачити" (reflow),
+    // і лише тоді запускаємо transition до 100% — так вона гарантовано рухається,
+    // навіть щойно вставлена в DOM.
+    activeFill.style.transitionDuration = '0ms';
+    activeFill.style.width = '0%';
+    void activeFill.offsetWidth;
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        activeFill.style.transitionDuration = STORY_MS + 'ms';
+        activeFill.style.width = '100%';
+      });
+    });
   }
 
   function showItem() {
@@ -10898,9 +11031,18 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     if (item.type === 'image') {
       mediaEl.style.background = 'url(\'' + item.image_url + '\') center/cover no-repeat';
       mediaEl.textContent = '';
+      if (item.caption) {
+        captionEl.textContent = item.caption;
+        captionEl.classList.add('show');
+      } else {
+        captionEl.textContent = '';
+        captionEl.classList.remove('show');
+      }
     } else {
       mediaEl.style.background = item.bg || 'linear-gradient(135deg,#232323,#0A0A0A)';
       mediaEl.textContent = item.text || '';
+      captionEl.textContent = '';
+      captionEl.classList.remove('show');
     }
     deleteBtn.style.display = user.mine ? '' : 'none';
     renderProgress();
@@ -10976,19 +11118,67 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   }
 
   if (uploadInput) {
-    uploadInput.addEventListener('change', async function () {
+    uploadInput.addEventListener('change', function () {
       var file = uploadInput.files && uploadInput.files[0];
       uploadInput.value = '';
       if (!file) return;
+      openCompose(file);
+    });
+  }
+
+  function openCompose(file) {
+    composeFile = file;
+    if (composeObjectUrl) URL.revokeObjectURL(composeObjectUrl);
+    composeObjectUrl = URL.createObjectURL(file);
+    composeMedia.style.backgroundImage = 'url(\'' + composeObjectUrl + '\')';
+    composeCaption.value = '';
+    composeSend.disabled = false;
+    composeSend.classList.remove('loading');
+    composeOverlay.classList.add('show');
+    setTimeout(function () { composeCaption.focus(); }, 50);
+  }
+
+  function closeCompose() {
+    composeOverlay.classList.remove('show');
+    if (composeObjectUrl) { URL.revokeObjectURL(composeObjectUrl); composeObjectUrl = null; }
+    composeMedia.style.backgroundImage = '';
+    composeFile = null;
+  }
+
+  if (composeBack) composeBack.addEventListener('click', closeCompose);
+  if (composeOverlay) {
+    composeOverlay.addEventListener('click', function (e) { if (e.target === composeOverlay) closeCompose(); });
+  }
+  if (composeCaption) {
+    composeCaption.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); composeSend.click(); }
+    });
+  }
+  document.addEventListener('keydown', function (e) {
+    if (composeOverlay && composeOverlay.classList.contains('show') && e.key === 'Escape') closeCompose();
+  });
+
+  if (composeSend) {
+    composeSend.addEventListener('click', async function () {
+      if (!composeFile || composeSend.disabled) return;
+      var caption = composeCaption.value.trim();
+      composeSend.disabled = true;
+      composeSend.classList.add('loading');
       try {
-        notify(t('stories.text.uploading', 'Загрузка истории…'));
-        var url = await uploadImage(file);
-        var res = await api('/community/api/stories', { method: 'POST', body: JSON.stringify({ type: 'image', image_url: url }) });
-        MY_STORIES.push(res.story);
+        var url = await uploadImage(composeFile);
+        var body = { type: 'image', image_url: url };
+        if (caption) body.caption = caption;
+        var res = await api('/community/api/stories', { method: 'POST', body: JSON.stringify(body) });
+        var story = (res && res.story) ? res.story : { id: 'local-' + Date.now(), type: 'image', image_url: url, created_at: new Date().toISOString(), seen: false };
+        if (caption && !story.caption) story.caption = caption;
+        MY_STORIES.push(story);
         renderRail();
+        closeCompose();
         openAt(ME.username);
       } catch (e) {
         notify(e.message || t('common.text.action_error', 'Произошла ошибка'));
+        composeSend.disabled = false;
+        composeSend.classList.remove('loading');
       }
     });
   }
