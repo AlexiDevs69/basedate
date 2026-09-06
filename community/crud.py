@@ -8712,6 +8712,7 @@ async def save_link_preview_cache(
 
 STORY_TYPES = {"image", "text"}
 STORY_TTL_HOURS = 24
+STORY_DEFAULT_BG = "linear-gradient(135deg,#232323,#0A0A0A)"
 
 _STORY_TABLES_READY = False
 
@@ -8728,8 +8729,7 @@ async def ensure_story_tables(db: AsyncSession) -> None:
             type VARCHAR(16) NOT NULL DEFAULT 'image',
             image_url TEXT,
             text_content TEXT,
-            background_start VARCHAR(16),
-            background_end VARCHAR(16),
+            bg VARCHAR(255),
             created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
             expires_at TIMESTAMP WITH TIME ZONE NOT NULL
         )
@@ -8750,24 +8750,18 @@ async def ensure_story_tables(db: AsyncSession) -> None:
     _STORY_TABLES_READY = True
 
 
-def _story_row_to_payload(row, *, author: Account | None, viewed: bool = False, view_count: int | None = None) -> dict:
+def _story_item_payload(row, *, seen: bool = False) -> dict:
+    """Flat item shape the front-end expects inside a user's `items` array
+    (see loadFeed()/showItem() in home.html: item.id/type/text/image_url/bg/
+    created_at/seen -- no nested author object here, that lives one level up)."""
     return {
         "id": int(row["id"]),
         "type": row["type"],
         "image_url": row["image_url"] or "",
         "text": row["text_content"] or "",
-        "background_start": row["background_start"] or "",
-        "background_end": row["background_end"] or "",
+        "bg": row["bg"] or (STORY_DEFAULT_BG if row["type"] == "text" else ""),
         "created_at": row["created_at"].isoformat() if row["created_at"] else None,
-        "expires_at": row["expires_at"].isoformat() if row["expires_at"] else None,
-        "viewed": bool(viewed),
-        **({"view_count": int(view_count)} if view_count is not None else {}),
-        "author": {
-            "id": author.id,
-            "username": author.username,
-            "display_name": author.display_name or author.username,
-            "avatar_url": author.avatar_url or "",
-        } if author else None,
+        "seen": bool(seen),
     }
 
 
@@ -8778,8 +8772,7 @@ async def create_story(
     type_: str = "image",
     image_url: str | None = None,
     text_content: str | None = None,
-    background_start: str | None = None,
-    background_end: str | None = None,
+    bg: str | None = None,
 ) -> dict | None:
     """Create a story that expires after STORY_TTL_HOURS. Returns None on bad input."""
     await ensure_story_tables(db)
@@ -8793,43 +8786,38 @@ async def create_story(
 
     expires_at = datetime.now(timezone.utc) + timedelta(hours=STORY_TTL_HOURS)
     row = (await db.execute(text("""
-        INSERT INTO community_stories
-            (author_id, type, image_url, text_content, background_start, background_end, expires_at)
-        VALUES
-            (:author_id, :type, :image_url, :text_content, :background_start, :background_end, :expires_at)
-        RETURNING id, type, image_url, text_content, background_start, background_end, created_at, expires_at
+        INSERT INTO community_stories (author_id, type, image_url, text_content, bg, expires_at)
+        VALUES (:author_id, :type, :image_url, :text_content, :bg, :expires_at)
+        RETURNING id, type, image_url, text_content, bg, created_at, expires_at
     """), {
         "author_id": int(author_id),
         "type": clean_type,
         "image_url": (image_url or "").strip()[:2048] or None,
         "text_content": (text_content or "").strip()[:500] or None,
-        "background_start": (background_start or "").strip()[:16] or None,
-        "background_end": (background_end or "").strip()[:16] or None,
+        "bg": (bg or "").strip()[:255] or None,
         "expires_at": expires_at,
     })).mappings().first()
     await db.commit()
-    author = await get_account_by_id(db, author_id)
-    return _story_row_to_payload(row, author=author)
+    return _story_item_payload(row, seen=False)
 
 
 async def list_own_active_stories(db: AsyncSession, account_id: int) -> list[dict]:
-    """All of the caller's own not-yet-expired stories, oldest first, with view counts."""
+    """Flat list of the caller's own not-yet-expired story items, oldest first
+    -- this is what home.html reads as `mine.items`."""
     await ensure_story_tables(db)
     rows = (await db.execute(text("""
-        SELECT s.id, s.type, s.image_url, s.text_content, s.background_start, s.background_end,
-               s.created_at, s.expires_at,
-               (SELECT COUNT(*) FROM community_story_views v WHERE v.story_id = s.id) AS view_count
-        FROM community_stories s
-        WHERE s.author_id = :account_id AND s.expires_at > NOW()
-        ORDER BY s.created_at ASC
+        SELECT id, type, image_url, text_content, bg, created_at, expires_at
+        FROM community_stories
+        WHERE author_id = :account_id AND expires_at > NOW()
+        ORDER BY created_at ASC
     """), {"account_id": int(account_id)})).mappings().all()
-    author = await get_account_by_id(db, account_id)
-    return [_story_row_to_payload(row, author=author, view_count=row["view_count"]) for row in rows]
+    return [_story_item_payload(row, seen=True) for row in rows]
 
 
 async def list_friends_stories_feed(db: AsyncSession, account_id: int) -> list[dict]:
-    """Friends' active stories, grouped by author. Authors with unseen stories sort first,
-    then by most recent story."""
+    """Friends' active stories, grouped by author: [{username, display_name,
+    avatar_url, items: [...]}] -- this is what home.html reads as `feed.stories`.
+    Authors with unseen stories sort first, then by most recent story."""
     await ensure_story_tables(db)
     friends = await list_friends(db, account_id)
     authors_by_id = {int(f.id): f for f in friends}
@@ -8837,9 +8825,9 @@ async def list_friends_stories_feed(db: AsyncSession, account_id: int) -> list[d
         return []
 
     rows = (await db.execute(text("""
-        SELECT s.id, s.author_id, s.type, s.image_url, s.text_content, s.background_start,
-               s.background_end, s.created_at, s.expires_at,
-               (v.viewer_id IS NOT NULL) AS viewed
+        SELECT s.id, s.author_id, s.type, s.image_url, s.text_content, s.bg,
+               s.created_at, s.expires_at,
+               (v.viewer_id IS NOT NULL) AS seen
         FROM community_stories s
         LEFT JOIN community_story_views v ON v.story_id = s.id AND v.viewer_id = :viewer_id
         WHERE s.author_id = ANY(:author_ids) AND s.expires_at > NOW()
@@ -8852,21 +8840,21 @@ async def list_friends_stories_feed(db: AsyncSession, account_id: int) -> list[d
 
     feed = []
     for author_id, story_rows in grouped.items():
-        author = authors_by_id.get(author_id)
-        stories = [
-            _story_row_to_payload(r, author=author, viewed=bool(r["viewed"]))
-            for r in story_rows
-        ]
+        author = authors_by_id[author_id]
+        items = [_story_item_payload(r, seen=bool(r["seen"])) for r in story_rows]
         feed.append({
-            "author": stories[0]["author"],
-            "stories": [{k: v for k, v in s.items() if k != "author"} for s in stories],
-            "has_unseen": any(not s["viewed"] for s in stories),
+            "username": author.username,
+            "display_name": author.display_name or author.username,
+            "avatar_url": author.avatar_url or "",
+            "items": items,
             "_latest": story_rows[-1]["created_at"],
+            "_has_unseen": any(not it["seen"] for it in items),
         })
 
-    feed.sort(key=lambda item: (not item["has_unseen"], -(item["_latest"].timestamp() if item["_latest"] else 0)))
-    for item in feed:
-        item.pop("_latest", None)
+    feed.sort(key=lambda u: (not u["_has_unseen"], -(u["_latest"].timestamp() if u["_latest"] else 0)))
+    for user in feed:
+        user.pop("_latest", None)
+        user.pop("_has_unseen", None)
     return feed
 
 
