@@ -415,6 +415,12 @@
     .account-actions { display: flex; align-items: center; gap: .25rem; }
     .account-actions a { width: 27px; height: 27px; border-radius: 7px; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); text-decoration: none; font-size: .82rem; }
     .account-actions a:hover { background: rgba(255,255,255,.08); color: var(--text-primary); }
+    /* AlexiHub: island failsafe — floating self-panel must always stay above the server rail (ported from server_home).
+       .account-panel is a child of .server-sidebar, and .server-sidebar (position:fixed) forms its own stacking
+       context, so .account-panel's own z-index can never outrank .server-rail unless the parent does too. */
+    .server-rail{z-index:1!important}
+    .server-sidebar{z-index:200!important}
+    .account-panel{z-index:500!important;isolation:isolate}
     .modal-backdrop { position: fixed; inset: 0; z-index: 700; background: rgba(0,0,0,.62); display: none; align-items: center; justify-content: center; padding: 1.4rem; backdrop-filter: blur(4px); }
     .modal-backdrop.open { display: flex; }
     .modal-card { width: min(520px, 100%); max-height: 86vh; overflow: auto; background: #1b1b1f; border: 1px solid #303036; border-radius: 16px; box-shadow: 0 24px 70px rgba(0,0,0,.55); padding: 1rem; }
