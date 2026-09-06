@@ -270,7 +270,7 @@
       background: rgba(255,255,255,.3);
       overflow: hidden;
     }
-    .story-progress-fill { height: 100%; width: 0%; background: #fff; border-radius: 3px; }
+    .story-progress-fill { display: block; height: 100%; width: 0%; background: #fff; border-radius: 3px; }
     .story-progress-seg.done .story-progress-fill { width: 100%; }
     .story-progress-seg.active .story-progress-fill { transition: width linear; }
     .story-viewer-caption {
@@ -10885,7 +10885,10 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   var DEMO_FRIEND_STORIES = [
     {
       username: 'nova', display_name: 'Nova', avatar_url: '',
-      items: [{ id: 'demo-1', type: 'text', text: 'Це приклад історії ✨', bg: 'linear-gradient(135deg,#00C4B4,#0A0A0A)', created_at: new Date(Date.now() - 3600e3).toISOString(), seen: false }],
+      items: [
+        { id: 'demo-1', type: 'text', text: 'Це приклад історії ✨', bg: 'linear-gradient(135deg,#00C4B4,#0A0A0A)', created_at: new Date(Date.now() - 3600e3).toISOString(), seen: false },
+        { id: 'demo-1b', type: 'image', image_url: 'https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=800', caption: 'Прогулянка на заході сонця 🌅', created_at: new Date(Date.now() - 3500e3).toISOString(), seen: false },
+      ],
     },
     {
       username: 'kairo', display_name: 'Kairo', avatar_url: '',
