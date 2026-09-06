@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.136.0",
+      "date": "2026-09-06",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: story viewer and stories rail layout."
+      ],
+      "source_sha": "43c77e79bb6c31050298ea1055e3dd9ea21afc2b"
+    },
+    {
       "version": "1.135.13",
       "date": "2026-09-06",
       "title": "Виправлення та стабільність",
