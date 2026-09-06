@@ -5657,6 +5657,70 @@ async def api_unblock_account(username: str, request: Request, db: AsyncSession 
     })
 
 
+# --- Stories (24h ephemeral photo/text updates shown to friends) ------------
+
+@router.get("/api/stories")
+async def api_stories_feed(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return _settings_error("Потрібно знову увійти в акаунт.", 401, "not_authenticated")
+    feed = await crud.list_friends_stories_feed(db, int(account.id))
+    return JSONResponse({"ok": True, "feed": feed})
+
+
+@router.get("/api/stories/mine")
+async def api_stories_mine(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return _settings_error("Потрібно знову увійти в акаунт.", 401, "not_authenticated")
+    stories = await crud.list_own_active_stories(db, int(account.id))
+    return JSONResponse({"ok": True, "stories": stories})
+
+
+@router.post("/api/stories")
+async def api_stories_create(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return _settings_error("Потрібно знову увійти в акаунт.", 401, "not_authenticated")
+    try:
+        body = await request.json()
+    except Exception:
+        return _settings_error("Некоректний запит.", 400, "bad_request")
+
+    story = await crud.create_story(
+        db,
+        int(account.id),
+        type_=str(body.get("type") or "image"),
+        image_url=body.get("image_url"),
+        text_content=body.get("text"),
+        background_start=body.get("background_start"),
+        background_end=body.get("background_end"),
+    )
+    if not story:
+        return _settings_error("Не вдалося створити історію.", 400, "invalid_story")
+    return JSONResponse({"ok": True, "story": story})
+
+
+@router.post("/api/stories/{story_id}/view")
+async def api_stories_mark_viewed(story_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return _settings_error("Потрібно знову увійти в акаунт.", 401, "not_authenticated")
+    if not await crud.mark_story_viewed(db, story_id, int(account.id)):
+        return _settings_error("Історію не знайдено.", 404, "not_found")
+    return JSONResponse({"ok": True})
+
+
+@router.delete("/api/stories/{story_id}")
+async def api_stories_delete(story_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return _settings_error("Потрібно знову увійти в акаунт.", 401, "not_authenticated")
+    if not await crud.delete_story(db, story_id, int(account.id)):
+        return _settings_error("Історію не знайдено або вона вже видалена.", 404, "not_found")
+    return JSONResponse({"ok": True})
+
+
 # --- Data & Privacy ---------------------------------------------------------
 
 @router.get("/api/privacy")
