@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.138.5",
+      "date": "2026-09-06",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance story viewer and compose overlay features."
+      ],
+      "source_sha": "20640aa3dccb0cfc393787196491728378a964de"
+    },
+    {
       "version": "1.138.4",
       "date": "2026-09-06",
       "title": "Виправлення та стабільність",
