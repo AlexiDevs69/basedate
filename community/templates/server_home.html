@@ -7641,6 +7641,11 @@ if (typeof window.openSelfProfileSettings !== 'function') {
     /* AlexiHub: island failsafe — floating self-panel must always stay above the server rail */
     .server-rail{z-index:1!important}
     .server-rail .server-dot,.server-rail .server-dot:hover,.server-rail .server-dot.active,.server-rail .server-dot::before,.server-rail .server-dot.active::before{z-index:1!important}
+    /* .account-panel is a child of .server-sidebar, and .server-sidebar (position:fixed) forms its own
+       stacking context. Without this, .account-panel's z-index only competes *inside* that context and
+       can never rise above .server-rail — the parent's own z-index (previously auto, and 40 on mobile
+       vs. the rail's 120) decides who wins first. Raising the parent above the rail lets the island escape. */
+    .server-sidebar{z-index:200!important}
     .account-panel{z-index:500!important;isolation:isolate}
   </style>
       <aside id="ah-inbox-panel" class="ah-inbox-panel" role="dialog" aria-modal="false" aria-labelledby="ah-inbox-title" aria-hidden="true">
