@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.140.0",
+      "date": "2026-09-06",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: caption parameter to story creation."
+      ],
+      "source_sha": "f14f9cd2cd719d0ae19de39450884500685a1c5d"
+    },
+    {
       "version": "1.139.0",
       "date": "2026-09-06",
       "title": "Нові можливості AlexiHub",
