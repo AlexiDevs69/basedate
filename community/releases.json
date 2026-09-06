@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.138.0",
+      "date": "2026-09-06",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: ephemeral stories feature in community CRUD."
+      ],
+      "source_sha": "ca010f42ec61599fc5daa29a84ae7fd2a8013b1f"
+    },
+    {
       "version": "1.137.0",
       "date": "2026-09-06",
       "title": "Нові можливості AlexiHub",
