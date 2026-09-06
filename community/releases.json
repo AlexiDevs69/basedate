@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.138.3",
+      "date": "2026-09-06",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: story background handling and payload structure."
+      ],
+      "source_sha": "c927c9aa113773a979770e072a2d21b2d4dd0630"
+    },
+    {
       "version": "1.138.2",
       "date": "2026-09-06",
       "title": "Виправлення та стабільність",
