@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.135.13",
+      "date": "2026-09-06",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Виправлено: HTML structure and add mobile responsiveness."
+      ],
+      "source_sha": "3e17f4f98642206098c7e8176a80a0045ce55b11"
+    },
+    {
       "version": "1.135.12",
       "date": "2026-09-06",
       "title": "Виправлення та стабільність",
