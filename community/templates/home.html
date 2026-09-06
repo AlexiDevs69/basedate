@@ -10884,7 +10884,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   // (наприклад, поки бекенд-частина не додана) -- щоб верстку можна було одразу оцінити візуально.
   var DEMO_FRIEND_STORIES = [
     {
-      username: 'nova', display_name: 'Nova', avatar_url: '',
+      username: 'nova', display_name: 'Nova', avatar_url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200',
       items: [
         { id: 'demo-1', type: 'text', text: 'Це приклад історії ✨', bg: 'linear-gradient(135deg,#00C4B4,#0A0A0A)', created_at: new Date(Date.now() - 3600e3).toISOString(), seen: false },
         { id: 'demo-1b', type: 'image', image_url: 'https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=800', caption: 'Прогулянка на заході сонця 🌅', created_at: new Date(Date.now() - 3500e3).toISOString(), seen: false },
@@ -10911,7 +10911,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   var USING_DEMO = false;
 
   function avatarStyle(url, name) {
-    if (url) return { style: 'background-image:url(\'' + url + '\')', text: '' };
+    if (url) return { style: "background-image:url('" + String(url).replace(/'/g, '%27') + "')", text: '' };
     return { style: '', text: (name || '?').slice(0, 1).toUpperCase() };
   }
 
@@ -10937,7 +10937,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
       html += '' +
         '<button type="button" class="story-item" onclick="AlexiHubStories.open(\'' + user.username + '\')">' +
           '<span class="story-ring ' + (seen ? 'seen' : 'unseen') + '">' +
-            '<span class="story-ring-inner"><span class="avatar" ' + ua.style + '>' + ua.text + '</span></span>' +
+            '<span class="story-ring-inner"><span class="avatar"' + (ua.style ? ' style="' + ua.style.replace(/"/g, '&quot;') + '"' : '') + '>' + ua.text + '</span></span>' +
           '</span>' +
           '<span class="story-label">' + (user.display_name || user.username) + '</span>' +
         '</button>';
