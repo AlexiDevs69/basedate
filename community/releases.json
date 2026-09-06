@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.135.11",
+      "date": "2026-09-06",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: user panel styles for fixed positioning."
+      ],
+      "source_sha": "55dccc2c2d051fd8a512e8ddfdcde73a6bbe072b"
+    },
+    {
       "version": "1.135.10",
       "date": "2026-09-06",
       "title": "Оновлення AlexiHub",
