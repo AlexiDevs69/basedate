@@ -161,6 +161,173 @@
     }
     .search::placeholder { color: var(--muted2); }
 
+    /* stories rail */
+    .stories-rail {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 12px 14px 10px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scrollbar-width: none;
+      border-bottom: 1px solid #1f2026;
+    }
+    .stories-rail::-webkit-scrollbar { display: none; }
+    .story-item {
+      background: none;
+      border: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      width: 60px;
+      flex: 0 0 auto;
+      cursor: pointer;
+      color: var(--muted);
+    }
+    .story-ring {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      padding: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: conic-gradient(from 180deg, var(--accent), #22d3ee, var(--accent));
+      position: relative;
+      flex: 0 0 auto;
+    }
+    .story-ring.seen { background: var(--border); }
+    .story-ring.story-ring-empty { background: var(--border); }
+    .story-ring-inner {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: var(--side);
+      padding: 2px;
+      display: flex;
+    }
+    .story-ring .avatar { width: 100%; height: 100%; font-size: 16px; }
+    .story-add-badge {
+      position: absolute;
+      right: -2px;
+      bottom: -2px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #04211e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid var(--side);
+    }
+    .story-add-badge .icon { width: 11px; height: 11px; stroke-width: 3; }
+    .story-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      max-width: 60px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      text-align: center;
+    }
+
+    /* story viewer */
+    .story-viewer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.88);
+      z-index: 900;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .story-viewer-overlay.show { display: flex; }
+    .story-viewer-card {
+      position: relative;
+      width: min(420px, 92vw);
+      height: min(760px, 88vh);
+      border-radius: 14px;
+      overflow: hidden;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+    }
+    .story-progress-row {
+      position: absolute;
+      top: 10px; left: 10px; right: 10px;
+      display: flex;
+      gap: 4px;
+      z-index: 3;
+    }
+    .story-progress-seg {
+      flex: 1;
+      height: 3px;
+      border-radius: 3px;
+      background: rgba(255,255,255,.3);
+      overflow: hidden;
+    }
+    .story-progress-fill { height: 100%; width: 0%; background: #fff; border-radius: 3px; }
+    .story-progress-seg.done .story-progress-fill { width: 100%; }
+    .story-progress-seg.active .story-progress-fill { animation: storyFill linear forwards; }
+    @keyframes storyFill { from { width: 0% } to { width: 100% } }
+    .story-viewer-head {
+      position: absolute;
+      top: 22px; left: 12px; right: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 3;
+      color: #fff;
+    }
+    .story-viewer-head .avatar { width: 30px; height: 30px; }
+    .story-viewer-headname { font-weight: 700; font-size: 13px; }
+    .story-viewer-headtime { font-size: 11px; color: rgba(255,255,255,.65); }
+    .story-viewer-close {
+      margin-left: auto;
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.12);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff;
+      border: 0;
+      cursor: pointer;
+    }
+    .story-viewer-media {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #111 center/cover no-repeat;
+      color: #fff;
+      font-size: 20px;
+      font-weight: 700;
+      text-align: center;
+      padding: 40px 24px;
+    }
+    .story-tap-zone { position: absolute; top: 0; bottom: 0; width: 34%; z-index: 2; cursor: pointer; }
+    .story-tap-prev { left: 0; }
+    .story-tap-next { right: 0; }
+    .story-viewer-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.12);
+      color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      border: 0;
+      cursor: pointer;
+      z-index: 4;
+    }
+    .story-viewer-nav.prev { left: -52px; }
+    .story-viewer-nav.next { right: -52px; }
+    .story-viewer-nav.prev .icon { transform: rotate(180deg); }
+    @media (max-width: 900px) { .story-viewer-nav { display: none; } }
+
     .nav { padding: 10px 8px; display: flex; flex-direction: column; gap: 2px; }
     .nav-item {
       height: 42px;
@@ -2317,6 +2484,19 @@ body.ah-store-product-open{overflow:hidden}
     <aside class="dm-sidebar">
       <div class="search-wrap">
         <input class="search" id="dm-search" placeholder="{{ i18n_t('dm.search_or_start') }}" data-i18n-placeholder="dm.search_or_start">
+      </div>
+
+      <div class="stories-rail" id="stories-rail">
+        <button type="button" class="story-item story-item-self" onclick="AlexiHubStories.openSelf()">
+          <span class="story-ring story-ring-empty">
+            <span class="story-ring-inner">
+              <span class="avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}')"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}</span>
+            </span>
+            <span class="story-add-badge"><svg class="icon icon-sm"><use href="#i-plus"></use></svg></span>
+          </span>
+          <span class="story-label">{{ i18n_t('stories.text.your_story', 'Ваша история') }}</span>
+        </button>
+        <div id="stories-rail-list" style="display:contents"></div>
       </div>
 
       <nav class="nav home-nav" aria-label="{{ i18n_t('common.aria.home_navigation') }}" data-i18n-aria-label="common.aria.home_navigation">
@@ -10549,6 +10729,198 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   window.addEventListener('scroll', closeMenu, true);
   window.addEventListener('resize', closeMenu);
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeMenu(); });
+})();
+</script>
+
+<div class="story-viewer-overlay" id="story-viewer-overlay" role="dialog" aria-modal="true" aria-label="{{ i18n_t('stories.aria.viewer', 'Просмотр историй') }}">
+  <button type="button" class="story-viewer-nav prev" id="story-viewer-prev-user" aria-label="{{ i18n_t('stories.aria.prev_user', 'Предыдущий') }}"><svg class="icon"><use href="#i-arrow-right"></use></svg></button>
+  <div class="story-viewer-card" id="story-viewer-card">
+    <div class="story-progress-row" id="story-progress-row"></div>
+    <div class="story-viewer-head">
+      <span class="avatar" id="story-viewer-avatar"></span>
+      <span>
+        <div class="story-viewer-headname" id="story-viewer-name"></div>
+        <div class="story-viewer-headtime" id="story-viewer-time"></div>
+      </span>
+      <button type="button" class="story-viewer-close" id="story-viewer-close"><svg class="icon icon-sm"><use href="#i-close"></use></svg></button>
+    </div>
+    <div class="story-viewer-media" id="story-viewer-media"></div>
+    <div class="story-tap-zone story-tap-prev" id="story-tap-prev"></div>
+    <div class="story-tap-zone story-tap-next" id="story-tap-next"></div>
+  </div>
+  <button type="button" class="story-viewer-nav next" id="story-viewer-next-user" aria-label="{{ i18n_t('stories.aria.next_user', 'Следующий') }}"><svg class="icon"><use href="#i-arrow-right"></use></svg></button>
+</div>
+
+<script>
+(function () {
+  var t = (window.AlexiHubI18n && window.AlexiHubI18n.t) ? window.AlexiHubI18n.t : function (k, fb) { return fb || k; };
+
+  // ДЕМО-дані, поки бекенд не віддає реальний фід історій.
+  // Реальна інтеграція: бекенд рендерить window.__ALEXIHUB_STORIES__ = {{ stories_json|tojson }}
+  // (масив об'єктів { username, display_name, avatar_url, items: [{ id, type: 'image'|'text', image_url, text, bg, created_at }] })
+  // ДО підключення цього <script>, і тоді ця демо-заглушка просто не використовується.
+  var DEMO_STORIES = [
+    {
+      username: 'nova',
+      display_name: 'Nova',
+      avatar_url: '',
+      items: [
+        { id: 'demo-1', type: 'text', text: 'Це приклад історії ✨', bg: 'linear-gradient(135deg,#00C4B4,#0A0A0A)', created_at: Date.now() - 3600e3 }
+      ]
+    },
+    {
+      username: 'kairo',
+      display_name: 'Kairo',
+      avatar_url: '',
+      items: [
+        { id: 'demo-2a', type: 'text', text: 'Перший слайд', bg: 'linear-gradient(135deg,#f0b232,#0A0A0A)', created_at: Date.now() - 7200e3 },
+        { id: 'demo-2b', type: 'text', text: 'Другий слайд', bg: 'linear-gradient(135deg,#ef4444,#0A0A0A)', created_at: Date.now() - 7100e3 }
+      ]
+    }
+  ];
+
+  var STORIES = (window.__ALEXIHUB_STORIES__ && window.__ALEXIHUB_STORIES__.length) ? window.__ALEXIHUB_STORIES__ : DEMO_STORIES;
+
+  var LS_SEEN = 'ah_stories_seen_v1';
+  function loadSeen() { try { return JSON.parse(localStorage.getItem(LS_SEEN) || '{}'); } catch (e) { return {}; } }
+  function saveSeen(map) { try { localStorage.setItem(LS_SEEN, JSON.stringify(map)); } catch (e) {} }
+  var seenMap = loadSeen();
+
+  function userSeen(user) { return user.items.every(function (it) { return seenMap[it.id]; }); }
+
+  function avatarStyle(url, name) {
+    if (url) return { style: 'background-image:url(\'' + url + '\')', text: '' };
+    return { style: '', text: (name || '?').slice(0, 1).toUpperCase() };
+  }
+
+  var railList = document.getElementById('stories-rail-list');
+
+  function renderRail() {
+    if (!railList) return;
+    var html = '';
+    STORIES.forEach(function (user) {
+      var ua = avatarStyle(user.avatar_url, user.display_name);
+      var seen = userSeen(user);
+      html += '' +
+        '<button type="button" class="story-item" onclick="AlexiHubStories.open(\'' + user.username + '\')">' +
+          '<span class="story-ring ' + (seen ? 'seen' : 'unseen') + '">' +
+            '<span class="story-ring-inner"><span class="avatar" ' + ua.style + '>' + ua.text + '</span></span>' +
+          '</span>' +
+          '<span class="story-label">' + (user.display_name || user.username) + '</span>' +
+        '</button>';
+    });
+    railList.innerHTML = html;
+  }
+
+  var overlay = document.getElementById('story-viewer-overlay');
+  var progressRow = document.getElementById('story-progress-row');
+  var mediaEl = document.getElementById('story-viewer-media');
+  var nameEl = document.getElementById('story-viewer-name');
+  var timeEl = document.getElementById('story-viewer-time');
+  var avatarEl = document.getElementById('story-viewer-avatar');
+
+  var curUserIdx = -1, curItemIdx = 0, timer = null;
+  var STORY_MS = 5000;
+
+  function fmtTime(ts) {
+    var mins = Math.round((Date.now() - ts) / 60000);
+    if (mins < 60) return mins + ' ' + t('common.unit.min_ago', 'хв тому');
+    return Math.round(mins / 60) + ' ' + t('common.unit.hour_ago', 'год тому');
+  }
+
+  function clearTimer() { if (timer) { clearTimeout(timer); timer = null; } }
+
+  function markSeen(item) {
+    if (!seenMap[item.id]) {
+      seenMap[item.id] = true;
+      saveSeen(seenMap);
+      renderRail();
+      // Реальна інтеграція:
+      // api('/community/api/stories/' + item.id + '/view', { method: 'POST' }).catch(function(){});
+    }
+  }
+
+  function renderProgress() {
+    var user = STORIES[curUserIdx];
+    progressRow.innerHTML = user.items.map(function (_, i) {
+      var cls = i < curItemIdx ? 'done' : (i === curItemIdx ? 'active' : '');
+      return '<span class="story-progress-seg ' + cls + '"><span class="story-progress-fill" style="' + (i === curItemIdx ? 'animation-duration:' + STORY_MS + 'ms' : '') + '"></span></span>';
+    }).join('');
+  }
+
+  function showItem() {
+    var user = STORIES[curUserIdx];
+    var item = user.items[curItemIdx];
+    if (!item) return;
+    clearTimer();
+    var ua = avatarStyle(user.avatar_url, user.display_name);
+    avatarEl.setAttribute('style', ua.style);
+    avatarEl.textContent = ua.text;
+    nameEl.textContent = user.display_name || user.username;
+    timeEl.textContent = fmtTime(item.created_at);
+    if (item.type === 'image') {
+      mediaEl.style.background = 'url(\'' + item.image_url + '\') center/cover no-repeat';
+      mediaEl.textContent = '';
+    } else {
+      mediaEl.style.background = item.bg || 'linear-gradient(135deg,#232323,#0A0A0A)';
+      mediaEl.textContent = item.text || '';
+    }
+    renderProgress();
+    markSeen(item);
+    timer = setTimeout(nextItem, STORY_MS);
+  }
+
+  function nextItem() {
+    var user = STORIES[curUserIdx];
+    if (curItemIdx < user.items.length - 1) { curItemIdx++; showItem(); } else { nextUser(); }
+  }
+  function prevItem() {
+    if (curItemIdx > 0) { curItemIdx--; showItem(); } else { prevUser(); }
+  }
+  function nextUser() {
+    if (curUserIdx < STORIES.length - 1) { curUserIdx++; curItemIdx = 0; showItem(); } else { close(); }
+  }
+  function prevUser() {
+    if (curUserIdx > 0) { curUserIdx--; curItemIdx = 0; showItem(); }
+  }
+
+  function open(username) {
+    var idx = STORIES.findIndex(function (u) { return u.username === username; });
+    if (idx === -1) return;
+    curUserIdx = idx;
+    curItemIdx = 0;
+    overlay.classList.add('show');
+    showItem();
+  }
+
+  function close() {
+    clearTimer();
+    overlay.classList.remove('show');
+  }
+
+  function openSelf() {
+    // Тут має відкриватись не переглядач, а завантаження нової історії
+    // (вибір файлу -> POST /community/api/stories). Поки заглушка:
+    if (window.toast) toast(t('stories.stub.upload_soon', 'Загрузка историй скоро появится'));
+    else alert(t('stories.stub.upload_soon', 'Загрузка историй скоро появится'));
+  }
+
+  document.getElementById('story-tap-next').addEventListener('click', nextItem);
+  document.getElementById('story-tap-prev').addEventListener('click', prevItem);
+  document.getElementById('story-viewer-next-user').addEventListener('click', nextUser);
+  document.getElementById('story-viewer-prev-user').addEventListener('click', prevUser);
+  document.getElementById('story-viewer-close').addEventListener('click', close);
+  overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
+  document.addEventListener('keydown', function (e) {
+    if (!overlay.classList.contains('show')) return;
+    if (e.key === 'Escape') close();
+    if (e.key === 'ArrowRight') nextItem();
+    if (e.key === 'ArrowLeft') prevItem();
+  });
+
+  window.AlexiHubStories = { open: open, openSelf: openSelf, close: close, refresh: function (data) { STORIES = data || STORIES; renderRail(); } };
+
+  renderRail();
 })();
 </script>
 
