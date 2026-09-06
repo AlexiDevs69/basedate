@@ -8701,3 +8701,199 @@ async def save_link_preview_cache(
         "ttl_seconds": ttl,
     })
     await db.commit()
+
+
+# ============================================================================
+# Ephemeral "stories" (24h photo/text updates shown to friends).
+# Short-lived and non-critical to the core schema, so this follows the same
+# idempotent create-on-first-use pattern as pins/reactions/link-preview-cache
+# above rather than a declarative model + migration.
+# ============================================================================
+
+STORY_TYPES = {"image", "text"}
+STORY_TTL_HOURS = 24
+
+_STORY_TABLES_READY = False
+
+
+async def ensure_story_tables(db: AsyncSession) -> None:
+    """Create the stories tables once per worker, safely and idempotently."""
+    global _STORY_TABLES_READY
+    if _STORY_TABLES_READY:
+        return
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_stories (
+            id SERIAL PRIMARY KEY,
+            author_id INTEGER NOT NULL REFERENCES community_accounts(id) ON DELETE CASCADE,
+            type VARCHAR(16) NOT NULL DEFAULT 'image',
+            image_url TEXT,
+            text_content TEXT,
+            background_start VARCHAR(16),
+            background_end VARCHAR(16),
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+            expires_at TIMESTAMP WITH TIME ZONE NOT NULL
+        )
+    """))
+    await db.execute(text(
+        "CREATE INDEX IF NOT EXISTS ix_community_stories_author_expires "
+        "ON community_stories (author_id, expires_at DESC)"
+    ))
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_story_views (
+            story_id INTEGER NOT NULL REFERENCES community_stories(id) ON DELETE CASCADE,
+            viewer_id INTEGER NOT NULL REFERENCES community_accounts(id) ON DELETE CASCADE,
+            viewed_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+            PRIMARY KEY (story_id, viewer_id)
+        )
+    """))
+    await db.commit()
+    _STORY_TABLES_READY = True
+
+
+def _story_row_to_payload(row, *, author: Account | None, viewed: bool = False, view_count: int | None = None) -> dict:
+    return {
+        "id": int(row["id"]),
+        "type": row["type"],
+        "image_url": row["image_url"] or "",
+        "text": row["text_content"] or "",
+        "background_start": row["background_start"] or "",
+        "background_end": row["background_end"] or "",
+        "created_at": row["created_at"].isoformat() if row["created_at"] else None,
+        "expires_at": row["expires_at"].isoformat() if row["expires_at"] else None,
+        "viewed": bool(viewed),
+        **({"view_count": int(view_count)} if view_count is not None else {}),
+        "author": {
+            "id": author.id,
+            "username": author.username,
+            "display_name": author.display_name or author.username,
+            "avatar_url": author.avatar_url or "",
+        } if author else None,
+    }
+
+
+async def create_story(
+    db: AsyncSession,
+    author_id: int,
+    *,
+    type_: str = "image",
+    image_url: str | None = None,
+    text_content: str | None = None,
+    background_start: str | None = None,
+    background_end: str | None = None,
+) -> dict | None:
+    """Create a story that expires after STORY_TTL_HOURS. Returns None on bad input."""
+    await ensure_story_tables(db)
+    clean_type = (type_ or "image").strip().lower()
+    if clean_type not in STORY_TYPES:
+        return None
+    if clean_type == "image" and not (image_url or "").strip():
+        return None
+    if clean_type == "text" and not (text_content or "").strip():
+        return None
+
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=STORY_TTL_HOURS)
+    row = (await db.execute(text("""
+        INSERT INTO community_stories
+            (author_id, type, image_url, text_content, background_start, background_end, expires_at)
+        VALUES
+            (:author_id, :type, :image_url, :text_content, :background_start, :background_end, :expires_at)
+        RETURNING id, type, image_url, text_content, background_start, background_end, created_at, expires_at
+    """), {
+        "author_id": int(author_id),
+        "type": clean_type,
+        "image_url": (image_url or "").strip()[:2048] or None,
+        "text_content": (text_content or "").strip()[:500] or None,
+        "background_start": (background_start or "").strip()[:16] or None,
+        "background_end": (background_end or "").strip()[:16] or None,
+        "expires_at": expires_at,
+    })).mappings().first()
+    await db.commit()
+    author = await get_account_by_id(db, author_id)
+    return _story_row_to_payload(row, author=author)
+
+
+async def list_own_active_stories(db: AsyncSession, account_id: int) -> list[dict]:
+    """All of the caller's own not-yet-expired stories, oldest first, with view counts."""
+    await ensure_story_tables(db)
+    rows = (await db.execute(text("""
+        SELECT s.id, s.type, s.image_url, s.text_content, s.background_start, s.background_end,
+               s.created_at, s.expires_at,
+               (SELECT COUNT(*) FROM community_story_views v WHERE v.story_id = s.id) AS view_count
+        FROM community_stories s
+        WHERE s.author_id = :account_id AND s.expires_at > NOW()
+        ORDER BY s.created_at ASC
+    """), {"account_id": int(account_id)})).mappings().all()
+    author = await get_account_by_id(db, account_id)
+    return [_story_row_to_payload(row, author=author, view_count=row["view_count"]) for row in rows]
+
+
+async def list_friends_stories_feed(db: AsyncSession, account_id: int) -> list[dict]:
+    """Friends' active stories, grouped by author. Authors with unseen stories sort first,
+    then by most recent story."""
+    await ensure_story_tables(db)
+    friends = await list_friends(db, account_id)
+    authors_by_id = {int(f.id): f for f in friends}
+    if not authors_by_id:
+        return []
+
+    rows = (await db.execute(text("""
+        SELECT s.id, s.author_id, s.type, s.image_url, s.text_content, s.background_start,
+               s.background_end, s.created_at, s.expires_at,
+               (v.viewer_id IS NOT NULL) AS viewed
+        FROM community_stories s
+        LEFT JOIN community_story_views v ON v.story_id = s.id AND v.viewer_id = :viewer_id
+        WHERE s.author_id = ANY(:author_ids) AND s.expires_at > NOW()
+        ORDER BY s.author_id, s.created_at ASC
+    """), {"viewer_id": int(account_id), "author_ids": list(authors_by_id.keys())})).mappings().all()
+
+    grouped: dict[int, list] = {}
+    for row in rows:
+        grouped.setdefault(int(row["author_id"]), []).append(row)
+
+    feed = []
+    for author_id, story_rows in grouped.items():
+        author = authors_by_id.get(author_id)
+        stories = [
+            _story_row_to_payload(r, author=author, viewed=bool(r["viewed"]))
+            for r in story_rows
+        ]
+        feed.append({
+            "author": stories[0]["author"],
+            "stories": [{k: v for k, v in s.items() if k != "author"} for s in stories],
+            "has_unseen": any(not s["viewed"] for s in stories),
+            "_latest": story_rows[-1]["created_at"],
+        })
+
+    feed.sort(key=lambda item: (not item["has_unseen"], -(item["_latest"].timestamp() if item["_latest"] else 0)))
+    for item in feed:
+        item.pop("_latest", None)
+    return feed
+
+
+async def mark_story_viewed(db: AsyncSession, story_id: int, viewer_id: int) -> bool:
+    """Record a view. Returns False if the story does not exist or already expired."""
+    await ensure_story_tables(db)
+    row = (await db.execute(text(
+        "SELECT author_id FROM community_stories WHERE id = :story_id AND expires_at > NOW()"
+    ), {"story_id": int(story_id)})).mappings().first()
+    if not row:
+        return False
+    if int(row["author_id"]) == int(viewer_id):
+        return True
+    await db.execute(text("""
+        INSERT INTO community_story_views (story_id, viewer_id)
+        VALUES (:story_id, :viewer_id)
+        ON CONFLICT DO NOTHING
+    """), {"story_id": int(story_id), "viewer_id": int(viewer_id)})
+    await db.commit()
+    return True
+
+
+async def delete_story(db: AsyncSession, story_id: int, account_id: int) -> bool:
+    """Delete a story, but only if it belongs to account_id."""
+    await ensure_story_tables(db)
+    result = await db.execute(text(
+        "DELETE FROM community_stories WHERE id = :story_id AND author_id = :account_id"
+    ), {"story_id": int(story_id), "account_id": int(account_id)})
+    await db.commit()
+    return bool(result.rowcount)
