@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.135.5",
+      "date": "2026-09-06",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Increase z-index of account panel for visibility."
+      ],
+      "source_sha": "c7a4cb63f1709d72363e587814ee2ac3a791775d"
+    },
+    {
       "version": "1.135.4",
       "date": "2026-09-06",
       "title": "Оновлення AlexiHub",
