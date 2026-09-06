@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.138.1",
+      "date": "2026-09-06",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance story upload and viewer features."
+      ],
+      "source_sha": "f73e03555267c0e93a59557d133817261d877115"
+    },
+    {
       "version": "1.138.0",
       "date": "2026-09-06",
       "title": "Нові можливості AlexiHub",
