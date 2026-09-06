@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.138.2",
+      "date": "2026-09-06",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Remove unnecessary translation argument in home.html."
+      ],
+      "source_sha": "08711f33f72c60a788b8eb96bffe32ae130aa3b7"
+    },
+    {
       "version": "1.138.1",
       "date": "2026-09-06",
       "title": "Виправлення та стабільність",
