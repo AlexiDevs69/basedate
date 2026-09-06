@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.140.1",
+      "date": "2026-09-06",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update avatar URLs and improve avatar style handling."
+      ],
+      "source_sha": "9b5e3ed3c286a37eee3a54da50b78c70ad069958"
+    },
+    {
       "version": "1.140.0",
       "date": "2026-09-06",
       "title": "Нові можливості AlexiHub",
