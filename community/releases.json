@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.138.6",
+      "date": "2026-09-06",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update story progress fill and demo friend stories."
+      ],
+      "source_sha": "191a7cb4cc8cc8b1b5fb384bb529017bd074f2a6"
+    },
+    {
       "version": "1.138.5",
       "date": "2026-09-06",
       "title": "Виправлення та стабільність",
