@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.137.0",
+      "date": "2026-09-06",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: API endpoints for stories management."
+      ],
+      "source_sha": "f896ff848c3433700c41e7d0b94132c2e7bd30f2"
+    },
+    {
       "version": "1.136.0",
       "date": "2026-09-06",
       "title": "Нові можливості AlexiHub",
