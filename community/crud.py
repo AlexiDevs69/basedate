@@ -8730,10 +8730,14 @@ async def ensure_story_tables(db: AsyncSession) -> None:
             image_url TEXT,
             text_content TEXT,
             bg VARCHAR(255),
+            caption VARCHAR(500),
             created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
             expires_at TIMESTAMP WITH TIME ZONE NOT NULL
         )
     """))
+    # create_all()/CREATE TABLE IF NOT EXISTS above does not add columns to an
+    # already-existing table on Render -- this upgrades old deployments in place.
+    await db.execute(text("ALTER TABLE community_stories ADD COLUMN IF NOT EXISTS caption VARCHAR(500)"))
     await db.execute(text(
         "CREATE INDEX IF NOT EXISTS ix_community_stories_author_expires "
         "ON community_stories (author_id, expires_at DESC)"
@@ -8760,6 +8764,7 @@ def _story_item_payload(row, *, seen: bool = False) -> dict:
         "image_url": row["image_url"] or "",
         "text": row["text_content"] or "",
         "bg": row["bg"] or (STORY_DEFAULT_BG if row["type"] == "text" else ""),
+        "caption": row["caption"] or "",
         "created_at": row["created_at"].isoformat() if row["created_at"] else None,
         "seen": bool(seen),
     }
@@ -8773,8 +8778,11 @@ async def create_story(
     image_url: str | None = None,
     text_content: str | None = None,
     bg: str | None = None,
+    caption: str | None = None,
 ) -> dict | None:
-    """Create a story that expires after STORY_TTL_HOURS. Returns None on bad input."""
+    """Create a story that expires after STORY_TTL_HOURS. Returns None on bad input.
+    `caption` is only meaningful for image stories (text stories already are
+    their own caption) -- it is silently dropped for type "text"."""
     await ensure_story_tables(db)
     clean_type = (type_ or "image").strip().lower()
     if clean_type not in STORY_TYPES:
@@ -8784,17 +8792,22 @@ async def create_story(
     if clean_type == "text" and not (text_content or "").strip():
         return None
 
+    clean_caption = (caption or "").strip()[:500] or None
+    if clean_type != "image":
+        clean_caption = None
+
     expires_at = datetime.now(timezone.utc) + timedelta(hours=STORY_TTL_HOURS)
     row = (await db.execute(text("""
-        INSERT INTO community_stories (author_id, type, image_url, text_content, bg, expires_at)
-        VALUES (:author_id, :type, :image_url, :text_content, :bg, :expires_at)
-        RETURNING id, type, image_url, text_content, bg, created_at, expires_at
+        INSERT INTO community_stories (author_id, type, image_url, text_content, bg, caption, expires_at)
+        VALUES (:author_id, :type, :image_url, :text_content, :bg, :caption, :expires_at)
+        RETURNING id, type, image_url, text_content, bg, caption, created_at, expires_at
     """), {
         "author_id": int(author_id),
         "type": clean_type,
         "image_url": (image_url or "").strip()[:2048] or None,
         "text_content": (text_content or "").strip()[:500] or None,
         "bg": (bg or "").strip()[:255] or None,
+        "caption": clean_caption,
         "expires_at": expires_at,
     })).mappings().first()
     await db.commit()
@@ -8806,7 +8819,7 @@ async def list_own_active_stories(db: AsyncSession, account_id: int) -> list[dic
     -- this is what home.html reads as `mine.items`."""
     await ensure_story_tables(db)
     rows = (await db.execute(text("""
-        SELECT id, type, image_url, text_content, bg, created_at, expires_at
+        SELECT id, type, image_url, text_content, bg, caption, created_at, expires_at
         FROM community_stories
         WHERE author_id = :account_id AND expires_at > NOW()
         ORDER BY created_at ASC
@@ -8825,7 +8838,7 @@ async def list_friends_stories_feed(db: AsyncSession, account_id: int) -> list[d
         return []
 
     rows = (await db.execute(text("""
-        SELECT s.id, s.author_id, s.type, s.image_url, s.text_content, s.bg,
+        SELECT s.id, s.author_id, s.type, s.image_url, s.text_content, s.bg, s.caption,
                s.created_at, s.expires_at,
                (v.viewer_id IS NOT NULL) AS seen
         FROM community_stories s
