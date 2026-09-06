@@ -199,6 +199,7 @@
     }
     .story-ring.seen { background: var(--border); }
     .story-ring.story-ring-empty { background: var(--border); }
+    .story-ring.mine-has { background: var(--accent); }
     .story-ring-inner {
       width: 100%;
       height: 100%;
@@ -2487,12 +2488,12 @@ body.ah-store-product-open{overflow:hidden}
       </div>
 
       <div class="stories-rail" id="stories-rail">
-        <button type="button" class="story-item story-item-self" onclick="AlexiHubStories.openSelf()">
+        <button type="button" class="story-item story-item-self" data-username="{{ account.username }}" data-display="{{ account.display_name or account.username }}" data-avatar="{{ account.avatar_url or '' }}" onclick="AlexiHubStories.openSelf()">
           <span class="story-ring story-ring-empty">
             <span class="story-ring-inner">
               <span class="avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}')"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}</span>
             </span>
-            <span class="story-add-badge"><svg class="icon icon-sm"><use href="#i-plus"></use></svg></span>
+            <span class="story-add-badge" onclick="event.stopPropagation(); AlexiHubStories.addNew()"><svg class="icon icon-sm"><use href="#i-plus"></use></svg></span>
           </span>
           <span class="story-label">{{ i18n_t('stories.text.your_story', 'Ваша история') }}</span>
         </button>
@@ -10742,6 +10743,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
         <div class="story-viewer-headname" id="story-viewer-name"></div>
         <div class="story-viewer-headtime" id="story-viewer-time"></div>
       </span>
+      <button type="button" class="story-viewer-close" id="story-viewer-delete" style="display:none; background:rgba(239,68,68,.25); margin-left:8px;" title="{{ i18n_t('stories.action.delete', 'Удалить') }}"><svg class="icon icon-sm"><use href="#i-close"></use></svg></button>
       <button type="button" class="story-viewer-close" id="story-viewer-close"><svg class="icon icon-sm"><use href="#i-close"></use></svg></button>
     </div>
     <div class="story-viewer-media" id="story-viewer-media"></div>
@@ -10750,57 +10752,74 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   </div>
   <button type="button" class="story-viewer-nav next" id="story-viewer-next-user" aria-label="{{ i18n_t('stories.aria.next_user', 'Следующий') }}"><svg class="icon"><use href="#i-arrow-right"></use></svg></button>
 </div>
+<input type="file" id="story-upload-input" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none">
 
 <script>
 (function () {
   var t = (window.AlexiHubI18n && window.AlexiHubI18n.t) ? window.AlexiHubI18n.t : function (k, fb) { return fb || k; };
+  var notify = window.toast ? window.toast : function (msg) { console.log(msg); };
 
-  // ДЕМО-дані, поки бекенд не віддає реальний фід історій.
-  // Реальна інтеграція: бекенд рендерить window.__ALEXIHUB_STORIES__ = {{ stories_json|tojson }}
-  // (масив об'єктів { username, display_name, avatar_url, items: [{ id, type: 'image'|'text', image_url, text, bg, created_at }] })
-  // ДО підключення цього <script>, і тоді ця демо-заглушка просто не використовується.
-  var DEMO_STORIES = [
+  async function api(url, options) {
+    var response = await fetch(url, Object.assign({
+      credentials: 'same-origin',
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    }, options || {}));
+    var data = await response.json().catch(function () { return {}; });
+    if (!response.ok || data.ok === false) throw new Error(data.message || data.error || 'request_failed');
+    return data;
+  }
+
+  // ДЕМО-фолбек: показується тільки якщо /community/api/stories ще не задеплоєний
+  // (наприклад, поки бекенд-частина не додана) -- щоб верстку можна було одразу оцінити візуально.
+  var DEMO_FRIEND_STORIES = [
     {
-      username: 'nova',
-      display_name: 'Nova',
-      avatar_url: '',
-      items: [
-        { id: 'demo-1', type: 'text', text: 'Це приклад історії ✨', bg: 'linear-gradient(135deg,#00C4B4,#0A0A0A)', created_at: Date.now() - 3600e3 }
-      ]
+      username: 'nova', display_name: 'Nova', avatar_url: '',
+      items: [{ id: 'demo-1', type: 'text', text: 'Це приклад історії ✨', bg: 'linear-gradient(135deg,#00C4B4,#0A0A0A)', created_at: new Date(Date.now() - 3600e3).toISOString(), seen: false }],
     },
     {
-      username: 'kairo',
-      display_name: 'Kairo',
-      avatar_url: '',
+      username: 'kairo', display_name: 'Kairo', avatar_url: '',
       items: [
-        { id: 'demo-2a', type: 'text', text: 'Перший слайд', bg: 'linear-gradient(135deg,#f0b232,#0A0A0A)', created_at: Date.now() - 7200e3 },
-        { id: 'demo-2b', type: 'text', text: 'Другий слайд', bg: 'linear-gradient(135deg,#ef4444,#0A0A0A)', created_at: Date.now() - 7100e3 }
-      ]
-    }
+        { id: 'demo-2a', type: 'text', text: 'Перший слайд', bg: 'linear-gradient(135deg,#f0b232,#0A0A0A)', created_at: new Date(Date.now() - 7200e3).toISOString(), seen: false },
+        { id: 'demo-2b', type: 'text', text: 'Другий слайд', bg: 'linear-gradient(135deg,#ef4444,#0A0A0A)', created_at: new Date(Date.now() - 7100e3).toISOString(), seen: false },
+      ],
+    },
   ];
 
-  var STORIES = (window.__ALEXIHUB_STORIES__ && window.__ALEXIHUB_STORIES__.length) ? window.__ALEXIHUB_STORIES__ : DEMO_STORIES;
+  var selfBtn = document.querySelector('.story-item-self');
+  var ME = {
+    username: selfBtn ? selfBtn.getAttribute('data-username') : '',
+    display_name: selfBtn ? selfBtn.getAttribute('data-display') : t('stories.text.you', 'Вы'),
+    avatar_url: selfBtn ? selfBtn.getAttribute('data-avatar') : '',
+  };
 
-  var LS_SEEN = 'ah_stories_seen_v1';
-  function loadSeen() { try { return JSON.parse(localStorage.getItem(LS_SEEN) || '{}'); } catch (e) { return {}; } }
-  function saveSeen(map) { try { localStorage.setItem(LS_SEEN, JSON.stringify(map)); } catch (e) {} }
-  var seenMap = loadSeen();
-
-  function userSeen(user) { return user.items.every(function (it) { return seenMap[it.id]; }); }
+  var MY_STORIES = [];
+  var FRIEND_STORIES = [];
+  var USING_DEMO = false;
 
   function avatarStyle(url, name) {
     if (url) return { style: 'background-image:url(\'' + url + '\')', text: '' };
     return { style: '', text: (name || '?').slice(0, 1).toUpperCase() };
   }
 
+  function viewList() {
+    var list = [];
+    if (MY_STORIES.length) list.push({ username: ME.username, display_name: ME.display_name, avatar_url: ME.avatar_url, items: MY_STORIES, mine: true });
+    return list.concat(FRIEND_STORIES);
+  }
+
+  var selfRing = selfBtn ? selfBtn.querySelector('.story-ring') : null;
   var railList = document.getElementById('stories-rail-list');
 
   function renderRail() {
+    if (selfRing) {
+      selfRing.classList.remove('story-ring-empty', 'mine-has');
+      selfRing.classList.add(MY_STORIES.length ? 'mine-has' : 'story-ring-empty');
+    }
     if (!railList) return;
     var html = '';
-    STORIES.forEach(function (user) {
+    FRIEND_STORIES.forEach(function (user) {
       var ua = avatarStyle(user.avatar_url, user.display_name);
-      var seen = userSeen(user);
+      var seen = user.items.every(function (it) { return it.seen; });
       html += '' +
         '<button type="button" class="story-item" onclick="AlexiHubStories.open(\'' + user.username + '\')">' +
           '<span class="story-ring ' + (seen ? 'seen' : 'unseen') + '">' +
@@ -10812,36 +10831,54 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     railList.innerHTML = html;
   }
 
+  async function loadFeed() {
+    try {
+      var mine = await api('/community/api/stories/mine');
+      var feed = await api('/community/api/stories');
+      MY_STORIES = mine.items || [];
+      FRIEND_STORIES = feed.stories || [];
+      USING_DEMO = false;
+    } catch (e) {
+      // Ендпоінти ще не задеплоєні на бекенді -- показуємо демо, щоб верстка не була порожньою.
+      MY_STORIES = [];
+      FRIEND_STORIES = DEMO_FRIEND_STORIES;
+      USING_DEMO = true;
+    }
+    renderRail();
+  }
+
   var overlay = document.getElementById('story-viewer-overlay');
   var progressRow = document.getElementById('story-progress-row');
   var mediaEl = document.getElementById('story-viewer-media');
   var nameEl = document.getElementById('story-viewer-name');
   var timeEl = document.getElementById('story-viewer-time');
   var avatarEl = document.getElementById('story-viewer-avatar');
+  var deleteBtn = document.getElementById('story-viewer-delete');
+  var uploadInput = document.getElementById('story-upload-input');
 
-  var curUserIdx = -1, curItemIdx = 0, timer = null;
+  var curList = [], curUserIdx = -1, curItemIdx = 0, timer = null;
   var STORY_MS = 5000;
 
-  function fmtTime(ts) {
-    var mins = Math.round((Date.now() - ts) / 60000);
+  function fmtTime(iso) {
+    var mins = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+    if (mins < 1) return t('common.unit.just_now', 'щойно');
     if (mins < 60) return mins + ' ' + t('common.unit.min_ago', 'хв тому');
     return Math.round(mins / 60) + ' ' + t('common.unit.hour_ago', 'год тому');
   }
 
   function clearTimer() { if (timer) { clearTimeout(timer); timer = null; } }
 
-  function markSeen(item) {
-    if (!seenMap[item.id]) {
-      seenMap[item.id] = true;
-      saveSeen(seenMap);
-      renderRail();
-      // Реальна інтеграція:
-      // api('/community/api/stories/' + item.id + '/view', { method: 'POST' }).catch(function(){});
+  function markSeen(user, item) {
+    if (item.seen) return;
+    item.seen = true;
+    renderRail();
+    if (!USING_DEMO && !user.mine) {
+      api('/community/api/stories/' + item.id + '/view', { method: 'POST' }).catch(function () {});
     }
   }
 
   function renderProgress() {
-    var user = STORIES[curUserIdx];
+    var user = curList[curUserIdx];
     progressRow.innerHTML = user.items.map(function (_, i) {
       var cls = i < curItemIdx ? 'done' : (i === curItemIdx ? 'active' : '');
       return '<span class="story-progress-seg ' + cls + '"><span class="story-progress-fill" style="' + (i === curItemIdx ? 'animation-duration:' + STORY_MS + 'ms' : '') + '"></span></span>';
@@ -10849,7 +10886,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   }
 
   function showItem() {
-    var user = STORIES[curUserIdx];
+    var user = curList[curUserIdx];
     var item = user.items[curItemIdx];
     if (!item) return;
     clearTimer();
@@ -10865,27 +10902,29 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
       mediaEl.style.background = item.bg || 'linear-gradient(135deg,#232323,#0A0A0A)';
       mediaEl.textContent = item.text || '';
     }
+    deleteBtn.style.display = user.mine ? '' : 'none';
     renderProgress();
-    markSeen(item);
+    markSeen(user, item);
     timer = setTimeout(nextItem, STORY_MS);
   }
 
   function nextItem() {
-    var user = STORIES[curUserIdx];
+    var user = curList[curUserIdx];
     if (curItemIdx < user.items.length - 1) { curItemIdx++; showItem(); } else { nextUser(); }
   }
   function prevItem() {
     if (curItemIdx > 0) { curItemIdx--; showItem(); } else { prevUser(); }
   }
   function nextUser() {
-    if (curUserIdx < STORIES.length - 1) { curUserIdx++; curItemIdx = 0; showItem(); } else { close(); }
+    if (curUserIdx < curList.length - 1) { curUserIdx++; curItemIdx = 0; showItem(); } else { close(); }
   }
   function prevUser() {
     if (curUserIdx > 0) { curUserIdx--; curItemIdx = 0; showItem(); }
   }
 
-  function open(username) {
-    var idx = STORIES.findIndex(function (u) { return u.username === username; });
+  function openAt(username) {
+    curList = viewList();
+    var idx = curList.findIndex(function (u) { return u.username === username; });
     if (idx === -1) return;
     curUserIdx = idx;
     curItemIdx = 0;
@@ -10893,16 +10932,65 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     showItem();
   }
 
+  function open(username) { openAt(username); }
+
   function close() {
     clearTimer();
     overlay.classList.remove('show');
   }
 
+  async function deleteCurrent() {
+    var user = curList[curUserIdx];
+    var item = user.items[curItemIdx];
+    if (!user.mine || !item) return;
+    if (!window.confirm(t('stories.confirm.delete', 'Видалити цю історію?'))) return;
+    try {
+      if (!USING_DEMO) await api('/community/api/stories/' + item.id, { method: 'DELETE' });
+      user.items.splice(curItemIdx, 1);
+      MY_STORIES = user.items;
+      if (!user.items.length) { close(); renderRail(); return; }
+      if (curItemIdx >= user.items.length) curItemIdx = user.items.length - 1;
+      renderRail();
+      showItem();
+    } catch (e) {
+      notify(t('common.text.action_error', 'Произошла ошибка'));
+    }
+  }
+
   function openSelf() {
-    // Тут має відкриватись не переглядач, а завантаження нової історії
-    // (вибір файлу -> POST /community/api/stories). Поки заглушка:
-    if (window.toast) toast(t('stories.stub.upload_soon', 'Загрузка историй скоро появится'));
-    else alert(t('stories.stub.upload_soon', 'Загрузка историй скоро появится'));
+    if (MY_STORIES.length) { openAt(ME.username); return; }
+    addNew();
+  }
+
+  function addNew() {
+    if (uploadInput) uploadInput.click();
+  }
+
+  async function uploadImage(file) {
+    var form = new FormData();
+    form.append('file', file);
+    var response = await fetch('/community/api/upload-image', { method: 'POST', credentials: 'same-origin', body: form });
+    var data = await response.json().catch(function () { return {}; });
+    if (!response.ok || data.ok === false) throw new Error(data.message || data.error || 'upload_failed');
+    return data.url;
+  }
+
+  if (uploadInput) {
+    uploadInput.addEventListener('change', async function () {
+      var file = uploadInput.files && uploadInput.files[0];
+      uploadInput.value = '';
+      if (!file) return;
+      try {
+        notify(t('stories.text.uploading', 'Загрузка истории…'));
+        var url = await uploadImage(file);
+        var res = await api('/community/api/stories', { method: 'POST', body: JSON.stringify({ type: 'image', image_url: url }) });
+        MY_STORIES.push(res.story);
+        renderRail();
+        openAt(ME.username);
+      } catch (e) {
+        notify(e.message || t('common.text.action_error', 'Произошла ошибка'));
+      }
+    });
   }
 
   document.getElementById('story-tap-next').addEventListener('click', nextItem);
@@ -10910,6 +10998,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   document.getElementById('story-viewer-next-user').addEventListener('click', nextUser);
   document.getElementById('story-viewer-prev-user').addEventListener('click', prevUser);
   document.getElementById('story-viewer-close').addEventListener('click', close);
+  deleteBtn.addEventListener('click', deleteCurrent);
   overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
   document.addEventListener('keydown', function (e) {
     if (!overlay.classList.contains('show')) return;
@@ -10918,9 +11007,9 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     if (e.key === 'ArrowLeft') prevItem();
   });
 
-  window.AlexiHubStories = { open: open, openSelf: openSelf, close: close, refresh: function (data) { STORIES = data || STORIES; renderRail(); } };
+  window.AlexiHubStories = { open: open, openSelf: openSelf, addNew: addNew, close: close, reload: loadFeed };
 
-  renderRail();
+  loadFeed();
 })();
 </script>
 
