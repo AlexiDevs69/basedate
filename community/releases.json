@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.135.3",
+      "date": "2026-09-06",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance user actions and presence status in DM chat."
+      ],
+      "source_sha": "bc8b7ec6fd55c131cfcb11a99bd55077eef4d689"
+    },
+    {
       "version": "1.135.2",
       "date": "2026-09-06",
       "title": "Оновлення AlexiHub",
