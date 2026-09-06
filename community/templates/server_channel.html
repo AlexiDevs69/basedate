@@ -405,10 +405,11 @@
     .menu-form.danger button:hover { background: rgba(239,68,68,.12); color: #ff8585; }
     .menu-ico { color: var(--text-secondary); font-weight: 900; font-size: .95rem; }
     .menu-divider { height: 1px; background: rgba(255,255,255,.08); margin: .42rem .35rem; }
-    .sidebar-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: .82rem .75rem; }
-    .account-panel { flex: 0 0 auto; height: 58px; background: #18181a; border-top: 1px solid var(--border); display: flex; align-items: center; gap: .62rem; padding: .5rem .58rem; cursor: pointer; position: relative; z-index: 80; }
-    .account-panel:hover { background: #202024; }
-    .account-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-header) center/cover no-repeat; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); color: var(--text-secondary); font-weight: 800; }
+    .sidebar-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: .82rem .75rem 76px; }
+    /* AlexiHub: floating self-panel "island" — ported from server_home to match its look/behavior exactly. */
+    .account-panel { position: fixed; left: 8px; right: auto; bottom: 8px; width: calc(72px + 240px - 16px); background: #232428; border: 1px solid rgba(255,255,255,.06); border-radius: 16px; box-shadow: 0 14px 34px rgba(0,0,0,.5), 0 2px 8px rgba(0,0,0,.35); display: flex; align-items: center; gap: .5rem; padding: 6px 8px; cursor: pointer; }
+    .account-panel:hover { background: #26272c; }
+    .account-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--bg-header) center/cover no-repeat; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); color: var(--text-secondary); font-weight: 800; }
     .account-meta { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: .03rem; }
     .account-name { max-width: 122px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .account-status { color: #a1a1aa; font-size: .69rem; font-weight: 700; }
