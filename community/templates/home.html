@@ -2495,7 +2495,7 @@ body.ah-store-product-open{overflow:hidden}
             </span>
             <span class="story-add-badge" onclick="event.stopPropagation(); AlexiHubStories.addNew()"><svg class="icon icon-sm"><use href="#i-plus"></use></svg></span>
           </span>
-          <span class="story-label">{{ i18n_t('stories.text.your_story', 'Ваша история') }}</span>
+          <span class="story-label">{{ i18n_t('stories.text.your_story') }}</span>
         </button>
         <div id="stories-rail-list" style="display:contents"></div>
       </div>
@@ -10733,8 +10733,8 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
 })();
 </script>
 
-<div class="story-viewer-overlay" id="story-viewer-overlay" role="dialog" aria-modal="true" aria-label="{{ i18n_t('stories.aria.viewer', 'Просмотр историй') }}">
-  <button type="button" class="story-viewer-nav prev" id="story-viewer-prev-user" aria-label="{{ i18n_t('stories.aria.prev_user', 'Предыдущий') }}"><svg class="icon"><use href="#i-arrow-right"></use></svg></button>
+<div class="story-viewer-overlay" id="story-viewer-overlay" role="dialog" aria-modal="true" aria-label="{{ i18n_t('stories.aria.viewer') }}">
+  <button type="button" class="story-viewer-nav prev" id="story-viewer-prev-user" aria-label="{{ i18n_t('stories.aria.prev_user') }}"><svg class="icon"><use href="#i-arrow-right"></use></svg></button>
   <div class="story-viewer-card" id="story-viewer-card">
     <div class="story-progress-row" id="story-progress-row"></div>
     <div class="story-viewer-head">
@@ -10743,14 +10743,14 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
         <div class="story-viewer-headname" id="story-viewer-name"></div>
         <div class="story-viewer-headtime" id="story-viewer-time"></div>
       </span>
-      <button type="button" class="story-viewer-close" id="story-viewer-delete" style="display:none; background:rgba(239,68,68,.25); margin-left:8px;" title="{{ i18n_t('stories.action.delete', 'Удалить') }}"><svg class="icon icon-sm"><use href="#i-close"></use></svg></button>
+      <button type="button" class="story-viewer-close" id="story-viewer-delete" style="display:none; background:rgba(239,68,68,.25); margin-left:8px;" title="{{ i18n_t('stories.action.delete') }}"><svg class="icon icon-sm"><use href="#i-close"></use></svg></button>
       <button type="button" class="story-viewer-close" id="story-viewer-close"><svg class="icon icon-sm"><use href="#i-close"></use></svg></button>
     </div>
     <div class="story-viewer-media" id="story-viewer-media"></div>
     <div class="story-tap-zone story-tap-prev" id="story-tap-prev"></div>
     <div class="story-tap-zone story-tap-next" id="story-tap-next"></div>
   </div>
-  <button type="button" class="story-viewer-nav next" id="story-viewer-next-user" aria-label="{{ i18n_t('stories.aria.next_user', 'Следующий') }}"><svg class="icon"><use href="#i-arrow-right"></use></svg></button>
+  <button type="button" class="story-viewer-nav next" id="story-viewer-next-user" aria-label="{{ i18n_t('stories.aria.next_user') }}"><svg class="icon"><use href="#i-arrow-right"></use></svg></button>
 </div>
 <input type="file" id="story-upload-input" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none">
 
