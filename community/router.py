@@ -5694,6 +5694,7 @@ async def api_stories_create(request: Request, db: AsyncSession = Depends(get_db
         image_url=body.get("image_url"),
         text_content=body.get("text"),
         bg=body.get("bg"),
+        caption=body.get("caption"),
     )
     if not story:
         return _settings_error("Не вдалося створити історію.", 400, "invalid_story")
