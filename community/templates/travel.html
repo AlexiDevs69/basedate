@@ -30,8 +30,12 @@
     .side-nav{padding:12px 8px;display:grid;gap:4px}
     .side-link{height:48px;border-radius:8px;padding:0 12px;display:flex;align-items:center;gap:12px;color:var(--muted);font-size:16px;font-weight:600}
     .side-link:hover,.side-link.active{background:#2b2d31;color:white}.side-link svg{width:24px;height:24px}
-    .user-panel{height:56px;margin-top:auto;padding:8px;background:#17181d;border-top:1px solid #22242b;display:flex;align-items:center;gap:8px;position:relative;z-index:80;flex:0 0 auto;cursor:pointer}
-    .user-panel:hover{background:#202024}
+    /* AlexiHub: floating self-panel "island" — ported from server_home to match its look/behavior.
+       Note: unlike server_home/server_channel, .server-rail and .side here are plain in-flow grid
+       items (no position:fixed), so there's no stacking-context trap — .user-panel only needs to
+       become position:fixed itself with a z-index above everything it now overlaps. */
+    .user-panel{position:fixed;left:8px;right:auto;bottom:8px;width:calc(72px + 230px - 16px);margin-top:0;padding:8px;background:#232428;border:1px solid rgba(255,255,255,.06);border-radius:16px;box-shadow:0 14px 34px rgba(0,0,0,.5),0 2px 8px rgba(0,0,0,.35);display:flex;align-items:center;gap:8px;z-index:500;isolation:isolate;flex:0 0 auto;cursor:pointer}
+    .user-panel:hover{background:#26272c}
     .user-panel .avatar{width:36px;height:36px;border-radius:50%;background:#16171b center/cover no-repeat;flex:0 0 36px;display:flex;align-items:center;justify-content:center;color:#b5bac1;font-weight:800;position:relative}
     .user-panel .avatar .presence{position:absolute;right:-1px;bottom:-1px;width:12px;height:12px;border:3px solid #17181d;border-radius:50%;background:var(--green)}
     .user-panel:hover .avatar .presence{border-color:#202024}
@@ -46,7 +50,7 @@
     .user-actions button:hover{background:#2e3038;color:#fff}.user-actions svg{width:17px;height:17px;display:block;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
     .user-actions .voice-control{position:relative;transition:background .16s ease,color .16s ease,transform .12s ease}.user-actions .voice-control:active{transform:scale(.88)}
     .voice-control.off{color:var(--red);background:rgba(242,63,67,.1);position:relative}.voice-control.off:after{content:"";position:absolute;width:20px;height:2px;border-radius:2px;background:currentColor;transform:rotate(-45deg)}
-    .status-menu{position:absolute;left:8px;bottom:62px;width:214px;padding:6px;background:#24252b;border:1px solid #3b3d45;border-radius:8px;box-shadow:0 14px 32px rgba(0,0,0,.45);display:none;z-index:70}
+    .status-menu{position:absolute;left:8px;bottom:62px;width:214px;padding:6px;background:#24252b;border:1px solid #3b3d45;border-radius:8px;box-shadow:0 14px 32px rgba(0,0,0,.45);display:none;z-index:510}
     .status-menu.open{display:block;animation:menu-pop .14s ease}.status-menu button{width:100%;height:38px;border:0;border-radius:5px;background:transparent;color:#dbdee1;display:flex;align-items:center;gap:10px;padding:0 10px;text-align:left;cursor:pointer;font-weight:600}
     .status-menu button:hover{background:#35373e;color:#fff}.status-menu .status-choice-dot{width:10px;height:10px;border-radius:50%;flex:0 0 auto}.status-menu small{display:block;color:var(--dim);font-weight:500}
 /* === AlexiHub final Discord-like polish === */
