@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.139.0",
+      "date": "2026-09-06",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: caption column to community_stories table."
+      ],
+      "source_sha": "8e723b1466d8ee1e316043027d9804dadbac05bf"
+    },
+    {
       "version": "1.138.6",
       "date": "2026-09-06",
       "title": "Виправлення та стабільність",
