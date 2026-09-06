@@ -5664,8 +5664,8 @@ async def api_stories_feed(request: Request, db: AsyncSession = Depends(get_db))
     account = await current_account(request, db)
     if not account:
         return _settings_error("Потрібно знову увійти в акаунт.", 401, "not_authenticated")
-    feed = await crud.list_friends_stories_feed(db, int(account.id))
-    return JSONResponse({"ok": True, "feed": feed})
+    stories = await crud.list_friends_stories_feed(db, int(account.id))
+    return JSONResponse({"ok": True, "stories": stories})
 
 
 @router.get("/api/stories/mine")
@@ -5673,8 +5673,8 @@ async def api_stories_mine(request: Request, db: AsyncSession = Depends(get_db))
     account = await current_account(request, db)
     if not account:
         return _settings_error("Потрібно знову увійти в акаунт.", 401, "not_authenticated")
-    stories = await crud.list_own_active_stories(db, int(account.id))
-    return JSONResponse({"ok": True, "stories": stories})
+    items = await crud.list_own_active_stories(db, int(account.id))
+    return JSONResponse({"ok": True, "items": items})
 
 
 @router.post("/api/stories")
@@ -5693,8 +5693,7 @@ async def api_stories_create(request: Request, db: AsyncSession = Depends(get_db
         type_=str(body.get("type") or "image"),
         image_url=body.get("image_url"),
         text_content=body.get("text"),
-        background_start=body.get("background_start"),
-        background_end=body.get("background_end"),
+        bg=body.get("bg"),
     )
     if not story:
         return _settings_error("Не вдалося створити історію.", 400, "invalid_story")
