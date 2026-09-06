@@ -7638,6 +7638,10 @@ if (typeof window.openSelfProfileSettings !== 'function') {
     .ah-inbox-load-more:disabled{opacity:.55;cursor:wait}
     @media(max-width:720px){.ah-inbox-panel{inset:0;width:100vw;height:100vh;border:0;border-radius:0}.ah-inbox-head{padding-top:env(safe-area-inset-top);height:calc(58px + env(safe-area-inset-top))}.ah-inbox-body{padding-left:10px;padding-right:10px}.ah-inbox-message-main{padding-right:0}.ah-inbox-message-actions{position:static;grid-column:2;opacity:1;transform:none;justify-content:flex-end;margin-top:7px}.ah-inbox-filter{right:0;width:min(272px,calc(100vw - 32px))}}
     @media(prefers-reduced-motion:reduce){.ah-inbox-panel.open,.ah-inbox-filter.open{animation:none}.ah-inbox-icon-btn,.ah-inbox-message{transition:none}}
+    /* AlexiHub: island failsafe — floating self-panel must always stay above the server rail */
+    .server-rail{z-index:1!important}
+    .server-rail .server-dot,.server-rail .server-dot:hover,.server-rail .server-dot.active,.server-rail .server-dot::before,.server-rail .server-dot.active::before{z-index:1!important}
+    .account-panel{z-index:500!important;isolation:isolate}
   </style>
       <aside id="ah-inbox-panel" class="ah-inbox-panel" role="dialog" aria-modal="false" aria-labelledby="ah-inbox-title" aria-hidden="true">
         <div class="ah-inbox-head">
