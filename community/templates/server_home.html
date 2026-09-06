@@ -661,7 +661,7 @@
       .server-head { height: 64px !important; padding: 0 12px !important; }
       .server-head-btn { height: 44px !important; font-size: 1.08rem !important; border-radius: 13px !important; }
       .server-menu { top: 58px !important; left: 10px !important; right: 10px !important; }
-      .account-panel { left: 8px !important; width: calc(100vw - 16px) !important; }
+      .account-panel { left: 8px !important; width: calc(100vw - 16px) !important; bottom: calc(8px + env(safe-area-inset-bottom)) !important; border-radius: 20px !important; z-index: 150 !important; box-shadow: 0 18px 44px rgba(0,0,0,.42) !important; }
       .sidebar-scroll {
         overflow-y: auto !important;
         padding: 14px 14px calc(84px + env(safe-area-inset-bottom)) !important;
@@ -685,15 +685,6 @@
         background: transparent !important;
       }
       .sidebar-plus:hover { background: rgba(255,255,255,.08) !important; color: #fff !important; }
-      .account-panel {
-        position: fixed !important;
-        left: 72px !important;
-        right: 8px !important;
-        bottom: calc(8px + env(safe-area-inset-bottom)) !important;
-        border-radius: 20px !important;
-        z-index: 150 !important;
-        box-shadow: 0 18px 44px rgba(0,0,0,.42) !important;
-      }
     }
 
   
