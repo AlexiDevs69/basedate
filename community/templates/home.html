@@ -300,14 +300,31 @@
     .story-viewer-headtime { font-size: 11px; color: rgba(255,255,255,.65); }
     .story-viewer-close {
       margin-left: auto;
-      width: 30px; height: 30px;
+      width: 32px; height: 32px;
       border-radius: 50%;
       background: rgba(255,255,255,.12);
       display: flex; align-items: center; justify-content: center;
       color: #fff;
       border: 0;
       cursor: pointer;
+      transition: background .15s ease, transform .12s ease, color .15s ease;
     }
+    .story-viewer-close:hover {
+      background: rgba(255,255,255,.22);
+      transform: scale(1.06);
+    }
+    .story-viewer-close:active { transform: scale(.9); }
+    .story-viewer-delete {
+      background: rgba(239,68,68,.16);
+      color: #ff8080;
+      margin-left: 8px;
+    }
+    .story-viewer-delete:hover {
+      background: var(--red);
+      color: #fff;
+      transform: scale(1.06);
+    }
+    .story-viewer-delete:active { transform: scale(.9); }
     .story-viewer-media {
       flex: 1;
       display: flex;
@@ -335,7 +352,10 @@
       border: 0;
       cursor: pointer;
       z-index: 4;
+      transition: background .15s ease, transform .12s ease;
     }
+    .story-viewer-nav:hover { background: rgba(255,255,255,.24); }
+    .story-viewer-nav:active { transform: translateY(-50%) scale(.9); }
     .story-viewer-nav.prev { left: -52px; }
     .story-viewer-nav.next { right: -52px; }
     .story-viewer-nav.prev .icon { transform: rotate(180deg); }
@@ -2556,6 +2576,7 @@ body.ah-store-product-open{overflow:hidden}
     <symbol id="i-heart" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21.3l7.8-7.8 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/></symbol>
     <symbol id="i-gift" viewBox="0 0 24 24"><path d="M20 12v9H4v-9"/><path d="M2 7h20v5H2z"/><path d="M12 7v14"/><path d="M12 7H7.5a2.5 2.5 0 1 1 2.2-3.7L12 7Zm0 0h4.5a2.5 2.5 0 1 0-2.2-3.7L12 7Z"/></symbol>
     <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></symbol>
   </svg>
 
   <div id="connection-bar" class="connection-bar" role="status" aria-live="polite">
@@ -10839,7 +10860,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
         <div class="story-viewer-headname" id="story-viewer-name"></div>
         <div class="story-viewer-headtime" id="story-viewer-time"></div>
       </span>
-      <button type="button" class="story-viewer-close" id="story-viewer-delete" style="display:none; background:rgba(239,68,68,.25); margin-left:8px;" title="{{ i18n_t('stories.action.delete') }}"><svg class="icon icon-sm"><use href="#i-close"></use></svg></button>
+      <button type="button" class="story-viewer-close story-viewer-delete" id="story-viewer-delete" style="display:none;" title="{{ i18n_t('stories.action.delete') }}"><svg class="icon icon-sm"><use href="#i-trash"></use></svg></button>
       <button type="button" class="story-viewer-close" id="story-viewer-close"><svg class="icon icon-sm"><use href="#i-close"></use></svg></button>
     </div>
     <div class="story-viewer-media" id="story-viewer-media"></div>
