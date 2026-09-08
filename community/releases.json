@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.140.2",
+      "date": "2026-09-09",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update styles and buttons in home.html."
+      ],
+      "source_sha": "498c09b5e3720dbba69b11db029239de6db36c53"
+    },
+    {
       "version": "1.140.1",
       "date": "2026-09-06",
       "title": "Виправлення та стабільність",
