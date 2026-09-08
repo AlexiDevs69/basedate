@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.141.0",
+      "date": "2026-09-09",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: animations for story viewer transitions."
+      ],
+      "source_sha": "a1c1e4ca6a92981c539f85f1dec1b39cad7503e1"
+    },
+    {
       "version": "1.140.2",
       "date": "2026-09-09",
       "title": "Виправлення та стабільність",
