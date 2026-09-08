@@ -10900,7 +10900,15 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
 
 <script>
 (function () {
-  var t = (window.AlexiHubI18n && window.AlexiHubI18n.t) ? window.AlexiHubI18n.t : function (k, fb) { return fb || k; };
+  function t(key, fallback) {
+    try {
+      if (window.AlexiHubI18n && typeof window.AlexiHubI18n.t === 'function') {
+        var v = window.AlexiHubI18n.t(key);
+        if (v && v !== key) return v;
+      }
+    } catch (e) {}
+    return fallback;
+  }
   var notify = window.toast ? window.toast : function (msg) { console.log(msg); };
 
   async function api(url, options) {
