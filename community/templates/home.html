@@ -337,6 +337,18 @@
       text-align: center;
       padding: 40px 24px;
     }
+    @keyframes storyMediaInNext {
+      from { opacity: 0; transform: translateX(26px) scale(1.03); }
+      to { opacity: 1; transform: translateX(0) scale(1); }
+    }
+    @keyframes storyMediaInPrev {
+      from { opacity: 0; transform: translateX(-26px) scale(1.03); }
+      to { opacity: 1; transform: translateX(0) scale(1); }
+    }
+    .story-viewer-media.anim-next { animation: storyMediaInNext .3s cubic-bezier(.2,.7,.3,1); }
+    .story-viewer-media.anim-prev { animation: storyMediaInPrev .3s cubic-bezier(.2,.7,.3,1); }
+    .story-viewer-caption.anim-next { animation: storyMediaInNext .3s cubic-bezier(.2,.7,.3,1); }
+    .story-viewer-caption.anim-prev { animation: storyMediaInPrev .3s cubic-bezier(.2,.7,.3,1); }
     .story-tap-zone { position: absolute; top: 0; bottom: 0; width: 34%; z-index: 2; cursor: pointer; }
     .story-tap-prev { left: 0; }
     .story-tap-next { right: 0; }
@@ -10947,8 +10959,13 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
 
   function renderRail() {
     if (selfRing) {
-      selfRing.classList.remove('story-ring-empty', 'mine-has');
-      selfRing.classList.add(MY_STORIES.length ? 'mine-has' : 'story-ring-empty');
+      selfRing.classList.remove('story-ring-empty', 'mine-has', 'seen');
+      if (!MY_STORIES.length) {
+        selfRing.classList.add('story-ring-empty');
+      } else {
+        var mineSeen = MY_STORIES.every(function (it) { return it.seen; });
+        selfRing.classList.add(mineSeen ? 'seen' : 'mine-has');
+      }
     }
     if (!railList) return;
     var html = '';
@@ -11042,7 +11059,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     });
   }
 
-  function showItem() {
+  function showItem(dir) {
     var user = curList[curUserIdx];
     var item = user.items[curItemIdx];
     if (!item) return;
@@ -11069,6 +11086,12 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
       captionEl.classList.remove('show');
     }
     deleteBtn.style.display = user.mine ? '' : 'none';
+    var animCls = dir === 'prev' ? 'anim-prev' : 'anim-next';
+    mediaEl.classList.remove('anim-next', 'anim-prev');
+    captionEl.classList.remove('anim-next', 'anim-prev');
+    void mediaEl.offsetWidth;
+    mediaEl.classList.add(animCls);
+    captionEl.classList.add(animCls);
     renderProgress();
     markSeen(user, item);
     timer = setTimeout(nextItem, STORY_MS);
@@ -11076,16 +11099,16 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
 
   function nextItem() {
     var user = curList[curUserIdx];
-    if (curItemIdx < user.items.length - 1) { curItemIdx++; showItem(); } else { nextUser(); }
+    if (curItemIdx < user.items.length - 1) { curItemIdx++; showItem('next'); } else { nextUser(); }
   }
   function prevItem() {
-    if (curItemIdx > 0) { curItemIdx--; showItem(); } else { prevUser(); }
+    if (curItemIdx > 0) { curItemIdx--; showItem('prev'); } else { prevUser(); }
   }
   function nextUser() {
-    if (curUserIdx < curList.length - 1) { curUserIdx++; curItemIdx = 0; showItem(); } else { close(); }
+    if (curUserIdx < curList.length - 1) { curUserIdx++; curItemIdx = 0; showItem('next'); } else { close(); }
   }
   function prevUser() {
-    if (curUserIdx > 0) { curUserIdx--; curItemIdx = 0; showItem(); }
+    if (curUserIdx > 0) { curUserIdx--; curItemIdx = 0; showItem('prev'); }
   }
 
   function openAt(username) {
@@ -11095,7 +11118,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     curUserIdx = idx;
     curItemIdx = 0;
     overlay.classList.add('show');
-    showItem();
+    showItem('next');
   }
 
   function open(username) { openAt(username); }
