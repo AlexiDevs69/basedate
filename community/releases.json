@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.142.0",
+      "date": "2026-09-09",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: new translations to uk.json."
+      ],
+      "source_sha": "5bb9cbbedda3591dd97933e3ac3230d972b4228c"
+    },
+    {
       "version": "1.141.1",
       "date": "2026-09-09",
       "title": "Оновлення AlexiHub",
