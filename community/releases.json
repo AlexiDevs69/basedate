@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.141.1",
+      "date": "2026-09-09",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено продуктивність: translation function in home.html."
+      ],
+      "source_sha": "884de00e5e1bce9859544d6843589cdecd2ce4e3"
+    },
+    {
       "version": "1.141.0",
       "date": "2026-09-09",
       "title": "Нові можливості AlexiHub",
