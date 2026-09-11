@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.146.2",
+      "date": "2026-09-11",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance user panel with created date attribute."
+      ],
+      "source_sha": "8352be4c3503ef65e4e86113a46a47156904f3f5"
+    },
+    {
       "version": "1.146.1",
       "date": "2026-09-11",
       "title": "Виправлення та стабільність",
