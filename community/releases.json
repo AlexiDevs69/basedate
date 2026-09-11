@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.144.2",
+      "date": "2026-09-11",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Revamp Halloween hero section with new graphics."
+      ],
+      "source_sha": "81a6c20fe426c9225a02b66ae9346533edf9861d"
+    },
+    {
       "version": "1.144.1",
       "date": "2026-09-11",
       "title": "Виправлення та стабільність",
