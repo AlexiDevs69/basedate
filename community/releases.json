@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.146.0",
+      "date": "2026-09-11",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: account creation date to mini-profile."
+      ],
+      "source_sha": "2b026ff244f7a9c03faedf0ba5eb7939153da786"
+    },
+    {
       "version": "1.145.2",
       "date": "2026-09-11",
       "title": "Виправлення та стабільність",
