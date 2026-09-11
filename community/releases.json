@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.144.3",
+      "date": "2026-09-11",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance pumpkin SVG graphics in home.html."
+      ],
+      "source_sha": "f4714a8b8f02a2b326051948eb5c1aa5739d1171"
+    },
+    {
       "version": "1.144.2",
       "date": "2026-09-11",
       "title": "Виправлення та стабільність",
