@@ -2386,7 +2386,7 @@
     .ah-store-pass-emblem{width:152px;height:152px;position:relative;display:grid;place-items:center;filter:drop-shadow(0 17px 25px rgba(0,0,0,.3));transition:transform .35s cubic-bezier(.2,.8,.2,1)}
     .ah-store-pass-card:hover .ah-store-pass-emblem{transform:translateY(-7px) rotate(-3deg) scale(1.035)}
     .ah-store-pass-emblem::before{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 34% 30%,#ffb454,#ff8c1a 46%,#9333ea 100%);box-shadow:inset 0 0 0 2px rgba(255,255,255,.42),inset 0 -16px 28px rgba(40,10,50,.3),0 0 0 8px rgba(255,181,71,.09),0 0 34px rgba(255,140,26,.35)}
-    .ah-store-pass-pumpkin{position:relative;z-index:1;display:grid;place-items:center;width:84px;height:84px;font-size:58px;line-height:1;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35));animation:ahPumpkinBob 3.2s ease-in-out infinite}
+    .ah-store-pass-pumpkin{position:relative;z-index:1;width:100px;height:100px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.4));animation:ahPumpkinBob 3.2s ease-in-out infinite}
     @keyframes ahPumpkinBob{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-6px) rotate(4deg)}}
     .ah-store-pass-ring{position:absolute;width:228px;height:228px;border:1px solid rgba(255,181,71,.18);border-radius:50%;box-shadow:0 0 0 22px rgba(255,181,71,.025),0 0 0 48px rgba(255,181,71,.015)}
     .ah-store-pass-details{position:relative;z-index:2;max-height:0;overflow:hidden;border-top:1px solid transparent;background:rgba(24,9,20,.22);opacity:0;transition:max-height .42s cubic-bezier(.2,.8,.2,1),opacity .24s ease,border-color .24s ease}
@@ -2433,22 +2433,16 @@
     @media(max-width:680px){.ah-store-task-grid,.ah-store-giveaways{grid-template-columns:1fr}.ah-store-task:last-child{grid-column:auto}.ah-store-pass-dashboard{padding:18px}.ah-store-progress-card{grid-template-columns:auto minmax(0,1fr);padding:14px}.ah-store-xp-total{grid-column:1/-1;display:flex;align-items:center;gap:7px;text-align:left}.ah-store-field-row{grid-template-columns:1fr}.ah-store-live-head{display:block}.ah-store-live-actions{margin-top:10px}.ah-store-create-drop{width:100%;justify-content:center}.ah-store-pass-card.is-expanded .ah-store-pass-details{max-height:2200px}}
     @media(prefers-reduced-motion:reduce){.ah-store-scroll{scroll-behavior:auto}.ah-store-hero-button,.ah-store-pass-card,.ah-store-pass-emblem,.ah-store-pass-details,.ah-store-pass-button,.ah-store-xp-fill,.ah-store-toast{transition:none!important}.ah-store-loading::after{animation:none}}
 
-    /* --- Halloween hero critters --- */
-    .ah-store-hero-critters{position:absolute;inset:0;z-index:1;overflow:hidden;pointer-events:none}
-    .ah-critter{position:absolute;font-size:26px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.4));opacity:.85}
-    .ah-critter.moon{right:6%;top:9%;font-size:64px;opacity:.9;filter:drop-shadow(0 0 22px rgba(255,224,178,.45))}
-    .ah-critter.bat{font-size:22px;animation:ahBatFly 9s linear infinite}
-    .b1{top:18%;left:-5%;animation-delay:0s}
-    .b2{top:34%;left:-5%;animation-delay:-3s;font-size:16px}
-    .b3{top:8%;left:-5%;animation-delay:-6s;font-size:19px}
-    @keyframes ahBatFly{0%{transform:translate(0,0) scale(1)}25%{transform:translate(28vw,-14px) scale(1.05)}50%{transform:translate(56vw,6px) scale(.95)}75%{transform:translate(84vw,-10px) scale(1.05)}100%{transform:translate(112vw,0) scale(1)}}
-    .ah-critter.pumpkin{font-size:30px;animation:ahPumpkinBob 3.6s ease-in-out infinite}
-    .p1{right:14%;bottom:9%;animation-delay:-.6s}
-    .p2{right:24%;bottom:16%;font-size:20px;animation-delay:-2s}
-    .ah-critter.ghost{left:8%;bottom:12%;font-size:34px;opacity:.5;animation:ahGhostFloat 6s ease-in-out infinite}
-    @keyframes ahGhostFloat{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(-16px);opacity:.7}}
-    @media(max-width:680px){.ah-critter.moon{font-size:44px}.ah-critter.bat{display:none}}
-    @media(prefers-reduced-motion:reduce){.ah-critter{animation:none!important}}
+    /* --- Halloween hero illustration --- */
+    .ah-store-hero-art{position:absolute;inset:0;z-index:1;overflow:hidden;pointer-events:none}
+    .ah-hero-scene{position:absolute;inset:0;width:100%;height:100%;display:block}
+    .ah-critter-fly{position:absolute;width:34px;height:auto;opacity:.9;filter:drop-shadow(0 4px 8px rgba(0,0,0,.5));animation:ahBatFly 10s linear infinite}
+    .ah-critter-fly.b1{top:16%;left:-8%;animation-duration:11s}
+    .ah-critter-fly.b2{top:30%;left:-8%;width:22px;animation-duration:8.5s;animation-delay:-4s}
+    @keyframes ahBatFly{0%{transform:translate(0,0) scale(1)}25%{transform:translate(30vw,-16px) scale(1.05) rotate(-4deg)}50%{transform:translate(58vw,4px) scale(.95) rotate(3deg)}75%{transform:translate(86vw,-12px) scale(1.05) rotate(-3deg)}100%{transform:translate(114vw,0) scale(1)}}
+    .ah-hero-cobweb{position:absolute;top:0;left:0;width:120px;height:120px;opacity:.8}
+    @media(max-width:680px){.ah-critter-fly{display:none}.ah-hero-cobweb{width:80px;height:80px}}
+    @media(prefers-reduced-motion:reduce){.ah-critter-fly{animation:none!important}.ah-hero-scene animate{display:none}}
   </style>
 <style id="ah-store-studio-css">
 .ah-store-catalog,.ah-store-theme-gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
@@ -3015,14 +3009,124 @@ body.ah-store-product-open{overflow:hidden}
               <label class="ah-store-sort"><span><!--i18n:home.text.sort-->{{ i18n_t('home.text.sort') }}</span><select id="ah-store-sort-select" onchange="updateStoreSort(this.value)"><option value="new"><!--i18n:home.text.first_the_novelties-->{{ i18n_t('home.text.first_the_novelties') }}</option><option value="title"><!--i18n:home.text.the_name_33f30bf-->{{ i18n_t('home.text.the_name_33f30bf') }}</option><option value="ending"><!--i18n:home.text.yllate_will_end_soon-->{{ i18n_t('home.text.yllate_will_end_soon') }}</option></select></label>
             </section>
             <section class="ah-store-hero" data-store-block="featured" aria-labelledby="ah-store-season-title">
-              <div class="ah-store-hero-critters" aria-hidden="true">
-                <span class="ah-critter bat b1">🦇</span>
-                <span class="ah-critter bat b2">🦇</span>
-                <span class="ah-critter bat b3">🦇</span>
-                <span class="ah-critter pumpkin p1">🎃</span>
-                <span class="ah-critter pumpkin p2">🎃</span>
-                <span class="ah-critter ghost g1">👻</span>
-                <span class="ah-critter moon">🌕</span>
+              <div class="ah-store-hero-art" aria-hidden="true">
+                <svg class="ah-hero-scene" viewBox="0 0 900 460" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <radialGradient id="ahMoonGlow" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stop-color="#fff3d6"/>
+                      <stop offset="45%" stop-color="#ffdfa0"/>
+                      <stop offset="100%" stop-color="#ffdfa0" stop-opacity="0"/>
+                    </radialGradient>
+                    <radialGradient id="ahPumpkinGlow" cx="50%" cy="55%" r="55%">
+                      <stop offset="0%" stop-color="#ff8c1a" stop-opacity=".55"/>
+                      <stop offset="100%" stop-color="#ff8c1a" stop-opacity="0"/>
+                    </radialGradient>
+                    <linearGradient id="ahPumpkinBody" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#ffb454"/>
+                      <stop offset="55%" stop-color="#ff8c1a"/>
+                      <stop offset="100%" stop-color="#c9560c"/>
+                    </linearGradient>
+                    <linearGradient id="ahHillGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#1c0e2e"/>
+                      <stop offset="100%" stop-color="#0c0616"/>
+                    </linearGradient>
+                    <linearGradient id="ahFogGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#160a24" stop-opacity="0"/>
+                      <stop offset="100%" stop-color="#0c0616" stop-opacity=".9"/>
+                    </linearGradient>
+                    <filter id="ahGlow" x="-60%" y="-60%" width="220%" height="220%">
+                      <feGaussianBlur stdDeviation="6" result="blur"/>
+                      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                  </defs>
+
+                  <!-- stars -->
+                  <g fill="#ffe9c2">
+                    <circle cx="120" cy="60" r="1.6" opacity=".8"><animate attributeName="opacity" values=".8;.2;.8" dur="3.4s" repeatCount="indefinite"/></circle>
+                    <circle cx="210" cy="110" r="1.2" opacity=".6"><animate attributeName="opacity" values=".3;.9;.3" dur="4.1s" repeatCount="indefinite"/></circle>
+                    <circle cx="330" cy="55" r="1.8" opacity=".7"><animate attributeName="opacity" values=".7;.25;.7" dur="2.8s" repeatCount="indefinite"/></circle>
+                    <circle cx="430" cy="95" r="1.3" opacity=".5"><animate attributeName="opacity" values=".2;.8;.2" dur="3.7s" repeatCount="indefinite"/></circle>
+                    <circle cx="60" cy="140" r="1.4" opacity=".6"/>
+                    <circle cx="500" cy="60" r="1.2" opacity=".5"/>
+                  </g>
+
+                  <!-- moon -->
+                  <circle cx="740" cy="95" r="110" fill="url(#ahMoonGlow)"/>
+                  <circle cx="740" cy="95" r="46" fill="#fff3d6"/>
+                  <circle cx="726" cy="80" r="6" fill="#f2d8a0" opacity=".55"/>
+                  <circle cx="754" cy="104" r="9" fill="#f2d8a0" opacity=".45"/>
+                  <circle cx="748" cy="76" r="4" fill="#f2d8a0" opacity=".5"/>
+
+                  <!-- bats -->
+                  <g fill="#160a24">
+                    <path d="M180 130c-16-14-34-10-40 2 10-2 18 1 24 8-8 0-16 4-20 12 10-3 18-1 24 4 6-5 14-7 24-4-4-8-12-12-20-12 6-7 14-10 24-8-6-12-24-16-40-2z" opacity=".85"/>
+                    <path d="M600 150c-11-9-23-7-27 1 7-1 12 1 16 5-5 0-11 3-13 8 7-2 12-1 16 3 4-3 9-5 16-3-3-5-9-8-13-8 4-4 9-6 16-5-4-8-16-11-27-1z" opacity=".7"/>
+                    <path d="M330 190c-9-7-19-6-22 1 6-1 10 1 13 4-4 0-9 2-11 6 6-2 10-1 13 2 3-3 8-4 13-2-2-4-7-6-11-6 3-3 7-5 13-4-3-7-13-9-22-1z" opacity=".55"/>
+                  </g>
+
+                  <!-- bare tree -->
+                  <g stroke="#0f0819" stroke-width="6" stroke-linecap="round" fill="none" opacity=".9">
+                    <path d="M70 460 C68 380 58 340 66 300 C72 268 55 250 40 232"/>
+                    <path d="M66 300 C74 276 96 268 112 244"/>
+                    <path d="M68 340 C50 330 34 332 18 316"/>
+                    <path d="M70 460 C74 400 90 360 104 330"/>
+                  </g>
+
+                  <!-- hill -->
+                  <path d="M0 330 C120 280 220 300 320 320 C430 344 520 300 620 312 C720 324 820 300 900 320 L900 460 L0 460 Z" fill="url(#ahHillGrad)"/>
+
+                  <!-- pumpkins on the hill -->
+                  <g transform="translate(560,300) scale(0.85)">
+                    <ellipse cx="0" cy="35" rx="70" ry="38" fill="url(#ahPumpkinGlow)"/>
+                    <path d="M0 -18 C4 -30 -4 -30 0 -40" stroke="#5a3a1c" stroke-width="6" stroke-linecap="round" fill="none"/>
+                    <path d="M-2 -38 C10 -46 24 -42 26 -30" stroke="#3d6b2f" stroke-width="5" stroke-linecap="round" fill="none"/>
+                    <ellipse cx="0" cy="10" rx="58" ry="42" fill="url(#ahPumpkinBody)"/>
+                    <path d="M-40 -22 C-46 4 -46 26 -38 40" stroke="#a8430a" stroke-width="3" fill="none" opacity=".55"/>
+                    <path d="M-14 -30 C-20 2 -20 30 -13 44" stroke="#a8430a" stroke-width="3" fill="none" opacity=".55"/>
+                    <path d="M14 -30 C20 2 20 30 13 44" stroke="#a8430a" stroke-width="3" fill="none" opacity=".55"/>
+                    <path d="M40 -22 C46 4 46 26 38 40" stroke="#a8430a" stroke-width="3" fill="none" opacity=".55"/>
+                    <g fill="#fff3c4" filter="url(#ahGlow)">
+                      <path d="M-30 0 L-14 0 L-22 -16 Z"/>
+                      <path d="M14 0 L30 0 L22 -16 Z"/>
+                      <path d="M-24 16 Q0 34 24 16 Q14 26 0 26 Q-14 26 -24 16 Z"/>
+                    </g>
+                  </g>
+
+                  <g transform="translate(690,330) scale(0.55)">
+                    <ellipse cx="0" cy="35" rx="70" ry="38" fill="url(#ahPumpkinGlow)"/>
+                    <path d="M-2 -38 C10 -46 24 -42 26 -30" stroke="#3d6b2f" stroke-width="6" stroke-linecap="round" fill="none"/>
+                    <ellipse cx="0" cy="10" rx="58" ry="42" fill="url(#ahPumpkinBody)"/>
+                    <g fill="#fff3c4" filter="url(#ahGlow)">
+                      <path d="M-30 0 L-14 0 L-22 -16 Z"/>
+                      <path d="M14 0 L30 0 L22 -16 Z"/>
+                      <path d="M-24 16 Q0 34 24 16 Q14 26 0 26 Q-14 26 -24 16 Z"/>
+                    </g>
+                  </g>
+
+                  <g transform="translate(455,340) scale(0.42)">
+                    <ellipse cx="0" cy="35" rx="70" ry="38" fill="url(#ahPumpkinGlow)"/>
+                    <path d="M-2 -38 C10 -46 24 -42 26 -30" stroke="#3d6b2f" stroke-width="6" stroke-linecap="round" fill="none"/>
+                    <ellipse cx="0" cy="10" rx="58" ry="42" fill="url(#ahPumpkinBody)"/>
+                    <g fill="#fff3c4" filter="url(#ahGlow)">
+                      <path d="M-30 0 L-14 0 L-22 -16 Z"/>
+                      <path d="M14 0 L30 0 L22 -16 Z"/>
+                      <path d="M-24 16 Q0 34 24 16 Q14 26 0 26 Q-14 26 -24 16 Z"/>
+                    </g>
+                  </g>
+
+                  <!-- fog -->
+                  <rect x="0" y="380" width="900" height="80" fill="url(#ahFogGrad)"/>
+                </svg>
+                <span class="ah-critter-fly bat-fly b1"><svg viewBox="0 0 40 24"><path d="M20 12c-6-9-18-7-20 2 6-2 11 0 15 5-5 0-10 2-13 7 6-2 11-1 15 3 4-4 9-5 15-3-3-5-8-7-13-7 4-5 9-7 15-5-2-9-14-11-20-2z" fill="#160a24"/></svg></span>
+                <span class="ah-critter-fly bat-fly b2"><svg viewBox="0 0 40 24"><path d="M20 12c-6-9-18-7-20 2 6-2 11 0 15 5-5 0-10 2-13 7 6-2 11-1 15 3 4-4 9-5 15-3-3-5-8-7-13-7 4-5 9-7 15-5-2-9-14-11-20-2z" fill="#160a24"/></svg></span>
+                <svg class="ah-hero-cobweb" viewBox="0 0 120 120" aria-hidden="true">
+                  <g fill="none" stroke="rgba(255,224,178,.28)" stroke-width="1">
+                    <path d="M0 0 L120 0 M0 0 L0 120 M0 0 L60 20 M0 0 L20 60 M0 0 L100 8 M0 0 L8 100"/>
+                    <path d="M0 0 Q30 6 40 40 Q10 30 0 0"/>
+                    <path d="M0 0 Q54 12 70 70 Q20 54 0 0"/>
+                    <path d="M0 0 Q80 16 100 100 Q30 80 0 0"/>
+                  </g>
+                </svg>
               </div>
               <div class="ah-store-countdown">
                 <div class="ah-store-countdown-label"><span><!--i18n:home.text.natebianth_of_the_end_of_summer-->{{ i18n_t('home.text.natebianth_of_the_end_of_summer') }}</span><span><!--i18n:home.text.august_31-->{{ i18n_t('home.text.august_31') }}</span></div>
@@ -3060,7 +3164,32 @@ body.ah-store-product-open{overflow:hidden}
                 </div>
                 <div class="ah-store-pass-art" aria-hidden="true">
                   <span class="ah-store-pass-ring"></span>
-                  <span class="ah-store-pass-emblem"><span class="ah-store-pass-pumpkin" role="img" aria-label="Halloween pumpkin">🎃</span></span>
+                  <span class="ah-store-pass-emblem">                  <svg class="ah-store-pass-pumpkin" viewBox="0 0 160 160" role="img" aria-label="Halloween pumpkin">
+                    <defs>
+                      <linearGradient id="ahPassPumpkinBody" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#ffcf85"/>
+                        <stop offset="45%" stop-color="#ff8c1a"/>
+                        <stop offset="100%" stop-color="#c9560c"/>
+                      </linearGradient>
+                      <filter id="ahPassGlow" x="-80%" y="-80%" width="260%" height="260%">
+                        <feGaussianBlur stdDeviation="4" result="b"/>
+                        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+                      </filter>
+                    </defs>
+                    <ellipse cx="80" cy="100" rx="62" ry="30" fill="#ff8c1a" opacity=".22"/>
+                    <path d="M80 22c6-14-4-22 4-32" stroke="#5a3a1c" stroke-width="7" stroke-linecap="round" fill="none"/>
+                    <path d="M84 20c12-10 28-6 30 6" stroke="#3d6b2f" stroke-width="6" stroke-linecap="round" fill="none"/>
+                    <ellipse cx="80" cy="90" rx="64" ry="48" fill="url(#ahPassPumpkinBody)"/>
+                    <path d="M32 55C24 90 24 120 34 142" stroke="#a8430a" stroke-width="4" fill="none" opacity=".55"/>
+                    <path d="M56 42C46 84 46 128 55 150" stroke="#a8430a" stroke-width="4" fill="none" opacity=".55"/>
+                    <path d="M104 42C114 84 114 128 105 150" stroke="#a8430a" stroke-width="4" fill="none" opacity=".55"/>
+                    <path d="M128 55C136 90 136 120 126 142" stroke="#a8430a" stroke-width="4" fill="none" opacity=".55"/>
+                    <g fill="#fff3c4" filter="url(#ahPassGlow)">
+                      <path d="M46 82 L70 82 L54 54 Z"/>
+                      <path d="M114 82 L90 82 L106 54 Z"/>
+                      <path d="M50 104 Q80 136 110 104 Q95 120 80 120 Q65 120 50 104 Z"/>
+                    </g>
+                  </svg></span>
                 </div>
               </div>
               <div id="ah-store-pass-details" class="ah-store-pass-details">
