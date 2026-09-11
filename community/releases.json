@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.145.0",
+      "date": "2026-09-11",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: created date to user profile elements."
+      ],
+      "source_sha": "5571aeb0ad125957c54ea701ee752a5c2d6f5d09"
+    },
+    {
       "version": "1.144.3",
       "date": "2026-09-11",
       "title": "Виправлення та стабільність",
