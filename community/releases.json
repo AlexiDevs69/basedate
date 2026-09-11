@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.145.1",
+      "date": "2026-09-11",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update print statement from 'Hello' to 'Goodbye'."
+      ],
+      "source_sha": "bddcad097318bb8f9874b23647a9236b1f4b76cc"
+    },
+    {
       "version": "1.145.0",
       "date": "2026-09-11",
       "title": "Нові можливості AlexiHub",
