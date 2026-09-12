@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.147.0",
+      "date": "2026-09-13",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: emoji picker in story compose section."
+      ],
+      "source_sha": "1bc0148fef38c0a248205edd7af96186fe7ef089"
+    },
+    {
       "version": "1.146.2",
       "date": "2026-09-11",
       "title": "Виправлення та стабільність",
