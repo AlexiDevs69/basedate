@@ -457,6 +457,96 @@
     .story-compose-send.loading .icon { animation: storySpin .8s linear infinite; }
     @keyframes storySpin { to { transform: rotate(360deg); } }
 
+    /* story caption emoji button + picker */
+    .story-emoji-btn {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: rgba(20,20,20,.55);
+      border: 1px solid rgba(255,255,255,.25);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex: 0 0 auto;
+      transition: background .15s ease, transform .1s ease;
+    }
+    .story-emoji-btn .icon { width: 20px; height: 20px; }
+    .story-emoji-btn:hover { background: rgba(255,255,255,.16); }
+    .story-emoji-btn:active { transform: scale(.92); }
+    .story-emoji-btn.active { background: var(--accent); border-color: var(--accent); color: #04211e; }
+
+    .story-emoji-picker {
+      position: fixed;
+      width: 300px;
+      max-height: 360px;
+      background: #2b2d31;
+      border: 1px solid #3a3d45;
+      border-radius: 12px;
+      box-shadow: 0 22px 70px rgba(0,0,0,.55);
+      z-index: 970;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      color: #f2f3f5;
+    }
+    .story-emoji-picker.open { display: flex; }
+    .story-emoji-search-row { padding: 10px 10px 8px; flex: 0 0 auto; }
+    .story-emoji-search {
+      width: 100%;
+      height: 34px;
+      border: 2px solid #00C4B4;
+      border-radius: 8px;
+      background: #111214;
+      color: #fff;
+      padding: 0 10px;
+      outline: 0;
+      font-weight: 700;
+      font-size: 13px;
+      box-sizing: border-box;
+    }
+    .story-emoji-search::placeholder { color: #9aa0aa; }
+    .story-emoji-rail {
+      display: flex;
+      gap: 4px;
+      padding: 0 8px 8px;
+      overflow-x: auto;
+      flex: 0 0 auto;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .story-emoji-rail-btn {
+      width: 30px; height: 30px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex: 0 0 auto;
+    }
+    .story-emoji-rail-btn:hover, .story-emoji-rail-btn.active { background: #41434a; }
+    .story-emoji-grid-wrap { flex: 1 1 auto; overflow-y: auto; padding: 6px 8px 10px; }
+    .story-emoji-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+    .story-emoji-grid button {
+      border: 0;
+      background: transparent;
+      border-radius: 8px;
+      font-size: 20px;
+      line-height: 1;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .story-emoji-grid button:hover { background: rgba(255,255,255,.09); }
+    .story-emoji-empty { padding: 20px; text-align: center; color: #b5bac1; font-size: 12px; font-weight: 700; }
+    @media (max-width: 480px) {
+      .story-emoji-picker { width: 92vw; left: 4vw !important; right: auto !important; }
+    }
+
     .nav { padding: 10px 8px; display: flex; flex-direction: column; gap: 2px; }
     .nav-item {
       height: 42px;
@@ -11056,9 +11146,20 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     </div>
     <div class="story-compose-footer">
       <input type="text" id="story-compose-caption" class="story-compose-input" maxlength="200" autocomplete="off" placeholder="{{ i18n_t('stories.placeholder.caption') }}">
+      <button type="button" class="story-emoji-btn" id="story-emoji-btn" title="{{ i18n_t('stories.action.emoji') }}" aria-label="{{ i18n_t('stories.action.emoji') }}">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8.5 14.2c1.6 1.4 5.4 1.4 7 0"/><path d="M9 9h.01"/><path d="M15 9h.01"/></svg>
+      </button>
       <button type="button" class="story-compose-send" id="story-compose-send"><svg class="icon icon-sm"><use href="#i-arrow-right"></use></svg></button>
     </div>
   </div>
+</div>
+
+<div class="story-emoji-picker" id="story-emoji-picker" role="dialog" aria-label="{{ i18n_t('stories.aria.emoji_picker') }}">
+  <div class="story-emoji-search-row">
+    <input type="text" class="story-emoji-search" id="story-emoji-search" autocomplete="off" placeholder="{{ i18n_t('stories.placeholder.find_emoji') }}">
+  </div>
+  <div class="story-emoji-rail" id="story-emoji-rail"></div>
+  <div class="story-emoji-grid-wrap" id="story-emoji-grid-wrap"></div>
 </div>
 
 <script>
@@ -11186,6 +11287,11 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   var composeBack = document.getElementById('story-compose-back');
   var composeFile = null;
   var composeObjectUrl = null;
+  var emojiBtn = document.getElementById('story-emoji-btn');
+  var emojiPicker = document.getElementById('story-emoji-picker');
+  var emojiSearch = document.getElementById('story-emoji-search');
+  var emojiRail = document.getElementById('story-emoji-rail');
+  var emojiGridWrap = document.getElementById('story-emoji-grid-wrap');
 
   var curList = [], curUserIdx = -1, curItemIdx = 0, timer = null;
   var STORY_MS = 5000;
@@ -11361,7 +11467,215 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     if (composeObjectUrl) { URL.revokeObjectURL(composeObjectUrl); composeObjectUrl = null; }
     composeMedia.style.backgroundImage = '';
     composeFile = null;
+    closeEmojiPicker();
   }
+
+  // ---- Емодзі-піквер для підпису історії (те саме вікно, що й для медіа, але тільки емодзі) ----
+  var EMOJI_CATS = [
+    { key: 'smileys', label: t('stories.emoji_cat.smileys', 'Смайли'), icon: '😀', items: [
+      ['😀','grinning'], ['😃','smiley'], ['😄','happy'], ['😁','beaming'], ['😆','laughing'], ['😅','sweat smile'],
+      ['🤣','rofl'], ['😂','joy tears'], ['🙂','slight smile'], ['🙃','upside down'], ['😉','wink'], ['😊','blush'],
+      ['😇','halo angel'], ['🥰','hearts love'], ['😍','heart eyes'], ['🤩','star struck'], ['😘','kiss heart'], ['😗','kissing'],
+      ['😚','kiss closed'], ['😙','kiss smile'], ['😋','yum tongue'], ['😛','tongue'], ['😜','wink tongue'], ['🤪','zany crazy'],
+      ['😝','squint tongue'], ['🤑','money mouth'], ['🤗','hug'], ['🤭','giggle'], ['🤫','shh quiet'], ['🤔','thinking'],
+      ['🤨','raised brow'], ['😐','neutral'], ['😑','expressionless'], ['😶','no mouth'], ['😏','smirk'], ['😒','unamused'],
+      ['🙄','eye roll'], ['😬','grimace'], ['🤥','lying pinocchio'], ['😌','relieved'], ['😔','pensive sad'], ['😪','sleepy'],
+      ['🤤','drool'], ['😴','sleep zzz'], ['😷','mask sick'], ['🤒','thermometer'], ['🤕','bandage hurt'], ['🤢','nauseated'],
+      ['🤮','vomit'], ['🤧','sneeze'], ['🥵','hot'], ['🥶','cold'], ['🥴','woozy'], ['😵','dizzy'],
+      ['🤯','mind blown'], ['🤠','cowboy'], ['🥳','party'], ['🥸','disguise'], ['😎','sunglasses cool'], ['🤓','nerd'],
+      ['🧐','monocle'], ['😕','confused'], ['😟','worried'], ['🙁','frown'], ['☹️','frowning'], ['😮','open mouth wow'],
+      ['😯','hushed'], ['😲','astonished'], ['😳','flushed'], ['🥺','pleading puppy'], ['😦','frowning open'], ['😧','anguished'],
+      ['😨','fearful'], ['😰','anxious sweat'], ['😥','sad relieved'], ['😢','cry'], ['😭','sob loud cry'], ['😱','scream fear'],
+      ['😖','confounded'], ['😣','persevere'], ['😞','disappointed'], ['😓','downcast sweat'], ['😩','weary'], ['😫','tired'],
+      ['🥱','yawn'], ['😤','triumph steam'], ['😡','rage angry'], ['😠','angry'], ['🤬','cursing'], ['😈','devil smile']
+    ]},
+    { key: 'gestures', label: t('stories.emoji_cat.gestures', 'Жести й люди'), icon: '👋', items: [
+      ['👋','wave'], ['🤚','raised back hand'], ['🖐️','hand fingers'], ['✋','raised hand'], ['🖖','vulcan'], ['👌','ok hand'],
+      ['🤌','pinched fingers'], ['🤏','pinch'], ['✌️','victory peace'], ['🤞','crossed fingers'], ['🤟','love you gesture'], ['🤘','rock on'],
+      ['🤙','call me'], ['👈','point left'], ['👉','point right'], ['👆','point up'], ['👇','point down'], ['☝️','index up'],
+      ['👍','thumbs up'], ['👎','thumbs down'], ['✊','fist'], ['👊','fist bump'], ['🤛','left fist'], ['🤜','right fist'],
+      ['👏','clap'], ['🙌','raise hands'], ['👐','open hands'], ['🤲','palms up'], ['🤝','handshake'], ['🙏','pray thanks'],
+      ['✍️','writing hand'], ['💪','muscle strong'], ['🦾','mechanical arm'], ['🫶','heart hands'], ['❤️‍🔥','heart fire'], ['💋','kiss lips'],
+      ['👶','baby'], ['🧒','child'], ['👦','boy'], ['👧','girl'], ['🧑','person'], ['👨','man'],
+      ['👩','woman'], ['🧓','older person'], ['👴','old man'], ['👵','old woman'], ['🤦','facepalm'], ['🤷','shrug'],
+      ['💃','dance woman'], ['🕺','dance man'], ['👯','bunny ears dance'], ['🧘','meditate'], ['👀','eyes'], ['👣','footprints']
+    ]},
+    { key: 'animals', label: t('stories.emoji_cat.animals', 'Тварини й природа'), icon: '🐶', items: [
+      ['🐶','dog'], ['🐱','cat'], ['🐭','mouse'], ['🐹','hamster'], ['🐰','rabbit'], ['🦊','fox'],
+      ['🐻','bear'], ['🐼','panda'], ['🐨','koala'], ['🐯','tiger'], ['🦁','lion'], ['🐮','cow'],
+      ['🐷','pig'], ['🐸','frog'], ['🐵','monkey'], ['🐔','chicken'], ['🐧','penguin'], ['🐦','bird'],
+      ['🦆','duck'], ['🦅','eagle'], ['🦉','owl'], ['🦇','bat'], ['🐺','wolf'], ['🐗','boar'],
+      ['🐴','horse'], ['🦄','unicorn'], ['🐝','bee'], ['🐛','bug'], ['🦋','butterfly'], ['🐌','snail'],
+      ['🐞','ladybug'], ['🐢','turtle'], ['🐍','snake'], ['🦎','lizard'], ['🐙','octopus'], ['🐬','dolphin'],
+      ['🐳','whale'], ['🐟','fish'], ['🦈','shark'], ['🐊','crocodile'], ['🐘','elephant'], ['🦒','giraffe'],
+      ['🦓','zebra'], ['🐪','camel'], ['🦘','kangaroo'], ['🐄','ox'], ['🐓','rooster'], ['🌵','cactus'],
+      ['🌲','tree'], ['🌴','palm'], ['🌸','blossom'], ['🌹','rose'], ['🌻','sunflower'], ['🍀','clover luck'],
+      ['🌈','rainbow'], ['⭐','star'], ['🌙','moon'], ['☀️','sun'], ['⛅','cloud sun'], ['❄️','snowflake']
+    ]},
+    { key: 'food', label: t('stories.emoji_cat.food', 'Їжа й напої'), icon: '🍎', items: [
+      ['🍎','apple'], ['🍌','banana'], ['🍇','grapes'], ['🍓','strawberry'], ['🍒','cherry'], ['🍉','watermelon'],
+      ['🍑','peach'], ['🍍','pineapple'], ['🥑','avocado'], ['🍅','tomato'], ['🌽','corn'], ['🥕','carrot'],
+      ['🍞','bread'], ['🥐','croissant'], ['🧀','cheese'], ['🍗','chicken leg'], ['🍔','burger'], ['🍟','fries'],
+      ['🍕','pizza'], ['🌭','hotdog'], ['🌮','taco'], ['🌯','burrito'], ['🍜','ramen'], ['🍣','sushi'],
+      ['🍩','donut'], ['🍪','cookie'], ['🎂','cake'], ['🍰','shortcake'], ['🍫','chocolate'], ['🍿','popcorn'],
+      ['🍦','ice cream'], ['🍭','lollipop'], ['☕','coffee'], ['🍵','tea'], ['🧃','juice box'], ['🥤','drink cup'],
+      ['🍺','beer'], ['🍷','wine'], ['🍾','champagne'], ['🍹','cocktail']
+    ]},
+    { key: 'activities', label: t('stories.emoji_cat.activities', 'Активності'), icon: '⚽', items: [
+      ['⚽','soccer'], ['🏀','basketball'], ['🏈','football'], ['⚾','baseball'], ['🎾','tennis'], ['🏐','volleyball'],
+      ['🏉','rugby'], ['🎱','pool 8ball'], ['🏓','ping pong'], ['🏸','badminton'], ['🥊','boxing'], ['🥋','martial arts'],
+      ['🎯','dart target'], ['🎳','bowling'], ['🎮','game controller'], ['🎲','dice'], ['🧩','puzzle'], ['🎸','guitar'],
+      ['🎤','microphone'], ['🎧','headphones'], ['🎬','movie clapper'], ['🎨','art palette'], ['🎭','theater masks'], ['🏆','trophy'],
+      ['🥇','gold medal'], ['🚴','cycling'], ['🏃','running'], ['🏊','swimming'], ['🧗','climbing'], ['🎣','fishing']
+    ]},
+    { key: 'travel', label: t('stories.emoji_cat.travel', 'Подорожі'), icon: '✈️', items: [
+      ['🚗','car'], ['🚕','taxi'], ['🚌','bus'], ['🏍️','motorcycle'], ['🚲','bicycle'], ['🚀','rocket'],
+      ['✈️','plane'], ['🚁','helicopter'], ['🚢','ship'], ['⛵','sailboat'], ['🚆','train'], ['🚂','locomotive'],
+      ['🗽','statue liberty'], ['🗼','tower'], ['🏰','castle'], ['🏝️','island'], ['🏔️','mountain'], ['🌋','volcano'],
+      ['🏕️','camping'], ['🏖️','beach'], ['🏙️','city'], ['🌃','night city'], ['🌉','bridge night'], ['🎡','ferris wheel'],
+      ['🎢','roller coaster'], ['⛺','tent']
+    ]},
+    { key: 'objects', label: t('stories.emoji_cat.objects', 'Предмети'), icon: '💡', items: [
+      ['📱','phone'], ['💻','laptop'], ['⌨️','keyboard'], ['🖥️','desktop'], ['📷','camera'], ['🎥','video camera'],
+      ['📺','tv'], ['💡','lightbulb'], ['🔦','flashlight'], ['🕯️','candle'], ['📚','books'], ['✏️','pencil'],
+      ['🖊️','pen'], ['📌','pin'], ['📎','paperclip'], ['✂️','scissors'], ['🔒','lock'], ['🔑','key'],
+      ['🎁','gift'], ['🎈','balloon'], ['🎉','party popper'], ['🎊','confetti ball'], ['🕹️','joystick'], ['💰','money bag'],
+      ['💳','credit card'], ['⏰','alarm clock'], ['📅','calendar'], ['🧳','suitcase'], ['🎓','graduation cap'], ['💊','pill']
+    ]},
+    { key: 'symbols', label: t('stories.emoji_cat.symbols', 'Символи'), icon: '❤️', items: [
+      ['❤️','red heart'], ['🧡','orange heart'], ['💛','yellow heart'], ['💚','green heart'], ['💙','blue heart'], ['💜','purple heart'],
+      ['🖤','black heart'], ['🤍','white heart'], ['🤎','brown heart'], ['💔','broken heart'], ['💕','two hearts'], ['💖','sparkling heart'],
+      ['💗','growing heart'], ['💘','cupid heart'], ['💝','heart gift'], ['💯','hundred'], ['✅','check mark'], ['❌','cross mark'],
+      ['❗','exclamation'], ['❓','question'], ['⚡','lightning'], ['🔥','fire'], ['✨','sparkles'], ['💥','boom'],
+      ['💫','dizzy star'], ['💤','sleep zzz sym'], ['♻️','recycle'], ['⚠️','warning'], ['♥️','heart suit'], ['🔞','18 plus']
+    ]},
+    { key: 'flags', label: t('stories.emoji_cat.flags', 'Прапори'), icon: '🏳️', items: [
+      ['🇺🇦','ukraine'], ['🏳️','white flag'], ['🏴','black flag'], ['🏁','checkered flag'], ['🚩','triangular flag'], ['🏳️‍🌈','rainbow flag'],
+      ['🇺🇸','usa'], ['🇬🇧','uk'], ['🇩🇪','germany'], ['🇫🇷','france'], ['🇵🇱','poland'], ['🇮🇹','italy'],
+      ['🇪🇸','spain'], ['🇨🇦','canada'], ['🇯🇵','japan'], ['🇰🇷','korea'], ['🇨🇳','china'], ['🇧🇷','brazil']
+    ]}
+  ];
+
+  var emojiActiveCat = EMOJI_CATS[0].key;
+  var emojiPickerBuilt = false;
+  var lastCaretPos = null;
+
+  function updateCaret() {
+    if (!composeCaption) return;
+    lastCaretPos = { start: composeCaption.selectionStart, end: composeCaption.selectionEnd };
+  }
+
+  function renderEmojiRail() {
+    emojiRail.innerHTML = EMOJI_CATS.map(function (cat) {
+      return '<button type="button" class="story-emoji-rail-btn' + (cat.key === emojiActiveCat ? ' active' : '') +
+        '" data-cat="' + cat.key + '" title="' + cat.label + '">' + cat.icon + '</button>';
+    }).join('');
+    emojiRail.querySelectorAll('.story-emoji-rail-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        emojiActiveCat = btn.getAttribute('data-cat');
+        emojiSearch.value = '';
+        renderEmojiRail();
+        renderEmojiGrid('');
+      });
+    });
+  }
+
+  function insertEmoji(emoji) {
+    if (!composeCaption) return;
+    var val = composeCaption.value;
+    var pos = lastCaretPos || { start: val.length, end: val.length };
+    var start = Math.min(pos.start, val.length);
+    var end = Math.min(pos.end, val.length);
+    var newVal = val.slice(0, start) + emoji + val.slice(end);
+    var maxLen = Number(composeCaption.getAttribute('maxlength')) || 200;
+    if (newVal.length > maxLen) return;
+    composeCaption.value = newVal;
+    var newPos = start + emoji.length;
+    composeCaption.focus();
+    composeCaption.setSelectionRange(newPos, newPos);
+    lastCaretPos = { start: newPos, end: newPos };
+    composeCaption.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  function renderEmojiGrid(query) {
+    var q = (query || '').toLowerCase().trim();
+    var items;
+    if (q) {
+      items = [];
+      EMOJI_CATS.forEach(function (cat) {
+        cat.items.forEach(function (pair) {
+          if (pair[1].indexOf(q) !== -1) items.push(pair);
+        });
+      });
+    } else {
+      var activeCat = EMOJI_CATS.find(function (c) { return c.key === emojiActiveCat; }) || EMOJI_CATS[0];
+      items = activeCat.items;
+    }
+    if (!items.length) {
+      emojiGridWrap.innerHTML = '<div class="story-emoji-empty">' + t('stories.text.emoji_not_found', 'Нічого не знайдено') + '</div>';
+      return;
+    }
+    emojiGridWrap.innerHTML = '<div class="story-emoji-grid">' + items.map(function (pair) {
+      return '<button type="button" title="' + pair[1] + '" data-emoji="' + pair[0] + '">' + pair[0] + '</button>';
+    }).join('') + '</div>';
+    emojiGridWrap.querySelectorAll('button[data-emoji]').forEach(function (btn) {
+      btn.addEventListener('click', function () { insertEmoji(btn.getAttribute('data-emoji')); });
+    });
+  }
+
+  function ensureEmojiPicker() {
+    if (emojiPickerBuilt) return;
+    renderEmojiRail();
+    renderEmojiGrid('');
+    if (emojiSearch) {
+      emojiSearch.addEventListener('input', function () { renderEmojiGrid(emojiSearch.value); });
+    }
+    emojiPickerBuilt = true;
+  }
+
+  function positionEmojiPicker() {
+    if (!emojiBtn) return;
+    var rect = emojiBtn.getBoundingClientRect();
+    var pickerWidth = 300;
+    var left = Math.min(Math.max(8, rect.right - pickerWidth), window.innerWidth - pickerWidth - 8);
+    var bottom = window.innerHeight - rect.top + 10;
+    emojiPicker.style.left = left + 'px';
+    emojiPicker.style.bottom = bottom + 'px';
+    emojiPicker.style.top = 'auto';
+  }
+
+  function openEmojiPicker() {
+    ensureEmojiPicker();
+    positionEmojiPicker();
+    emojiPicker.classList.add('open');
+    emojiBtn.classList.add('active');
+  }
+
+  function closeEmojiPicker() {
+    emojiPicker.classList.remove('open');
+    if (emojiBtn) emojiBtn.classList.remove('active');
+  }
+
+  function toggleEmojiPicker(e) {
+    if (e) e.stopPropagation();
+    if (emojiPicker.classList.contains('open')) closeEmojiPicker();
+    else openEmojiPicker();
+  }
+
+  if (composeCaption) {
+    composeCaption.addEventListener('keyup', updateCaret);
+    composeCaption.addEventListener('click', updateCaret);
+    composeCaption.addEventListener('focus', updateCaret);
+  }
+  if (emojiBtn) emojiBtn.addEventListener('click', toggleEmojiPicker);
+  if (emojiPicker) emojiPicker.addEventListener('click', function (e) { e.stopPropagation(); });
+  document.addEventListener('click', function (e) {
+    if (!emojiPicker.classList.contains('open')) return;
+    if (emojiBtn && emojiBtn.contains(e.target)) return;
+    if (emojiPicker.contains(e.target)) return;
+    closeEmojiPicker();
+  });
+  window.addEventListener('resize', function () { if (emojiPicker.classList.contains('open')) positionEmojiPicker(); });
 
   if (composeBack) composeBack.addEventListener('click', closeCompose);
   if (composeOverlay) {
@@ -11373,7 +11687,10 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     });
   }
   document.addEventListener('keydown', function (e) {
-    if (composeOverlay && composeOverlay.classList.contains('show') && e.key === 'Escape') closeCompose();
+    if (composeOverlay && composeOverlay.classList.contains('show') && e.key === 'Escape') {
+      if (emojiPicker && emojiPicker.classList.contains('open')) { closeEmojiPicker(); return; }
+      closeCompose();
+    }
   });
 
   if (composeSend) {
