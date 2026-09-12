@@ -480,9 +480,9 @@
       position: fixed;
       width: 350px;
       max-height: 460px;
-      background: #232428;
-      border: 1px solid #3a3d45;
-      border-radius: 12px;
+      background: #1e1f22;
+      border: 1px solid #2b2d31;
+      border-radius: 8px;
       box-shadow: 0 22px 70px rgba(0,0,0,.55);
       z-index: 970;
       display: none;
@@ -495,68 +495,105 @@
     .story-emoji-tabs {
       display: flex;
       flex: 0 0 auto;
-      padding: 10px 12px 0;
+      padding: 10px 10px 8px;
       gap: 4px;
-      border-bottom: 1px solid rgba(255,255,255,.06);
     }
     .story-emoji-tab {
       border: 0;
       background: transparent;
-      color: #9aa0aa;
+      color: #949ba4;
       font-size: 13px;
-      font-weight: 800;
-      padding: 0 4px 10px;
+      font-weight: 700;
+      padding: 6px 10px;
+      border-radius: 4px;
       cursor: pointer;
       position: relative;
+      transition: background .12s ease, color .12s ease;
     }
-    .story-emoji-tab.active { color: #fff; }
-    .story-emoji-tab.active:after {
-      content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
-      background: var(--accent); border-radius: 2px 2px 0 0;
-    }
-    .story-emoji-tab:hover:not(.active) { color: #d3d5da; }
+    .story-emoji-tab.active { color: #fff; background: #2b2d31; }
+    .story-emoji-tab:hover:not(.active) { color: #dbdee1; background: rgba(255,255,255,.04); }
 
-    .story-emoji-search-row { padding: 10px 10px 8px; flex: 0 0 auto; position: relative; }
-    .story-emoji-search-row .story-emoji-search-icon {
-      position: absolute; left: 20px; top: 50%; transform: translateY(-50%);
-      width: 15px; height: 15px; color: #9aa0aa; pointer-events: none;
+    .story-emoji-search-row {
+      padding: 0 10px 8px;
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .story-emoji-search-box { position: relative; flex: 1 1 auto; min-width: 0; }
+    .story-emoji-search-box .story-emoji-search-icon {
+      position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+      width: 15px; height: 15px; color: #949ba4; pointer-events: none;
     }
     .story-emoji-search {
       width: 100%;
-      height: 34px;
-      border: 1.5px solid #3a3d45;
-      border-radius: 8px;
-      background: #1a1b1e;
+      height: 32px;
+      border: 0;
+      border-radius: 4px;
+      background: #111214;
       color: #fff;
       padding: 0 10px 0 32px;
       outline: 0;
-      font-weight: 600;
+      font-weight: 500;
       font-size: 13px;
       box-sizing: border-box;
-      transition: border-color .12s ease;
+      transition: box-shadow .12s ease;
     }
-    .story-emoji-search:focus { border-color: var(--accent); }
-    .story-emoji-search::placeholder { color: #9aa0aa; }
+    .story-emoji-search:focus { box-shadow: inset 0 0 0 1.5px var(--accent); }
+    .story-emoji-search::placeholder { color: #6d7176; }
+    .story-emoji-tone-btn {
+      flex: 0 0 auto;
+      width: 32px; height: 32px;
+      border: 0;
+      border-radius: 50%;
+      background: #2b2d31;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background .12s ease;
+    }
+    .story-emoji-tone-btn:hover { background: #35373c; }
+    .story-emoji-add-btn {
+      flex: 0 0 auto;
+      height: 32px;
+      border: 0;
+      border-radius: 6px;
+      padding: 0 12px;
+      background: #313338;
+      color: #dbdee1;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .12s ease, color .12s ease;
+    }
+    .story-emoji-add-btn:hover { background: #3b3d43; color: #fff; }
 
     .story-emoji-body { display: flex; flex: 1 1 auto; min-height: 0; }
     .story-emoji-rail {
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      padding: 4px 7px 8px;
+      align-items: center;
+      gap: 8px;
+      padding: 2px 7px 8px;
       overflow-y: auto;
       overflow-x: hidden;
-      flex: 0 0 46px;
-      width: 46px;
-      border-right: 1px solid rgba(255,255,255,.06);
+      flex: 0 0 54px;
+      width: 54px;
       scrollbar-width: none;
     }
     .story-emoji-rail::-webkit-scrollbar { display: none; }
+    .story-emoji-rail-sep { width: 28px; height: 2px; background: #35373c; border-radius: 2px; flex: 0 0 auto; margin: 2px 0; }
     .story-emoji-rail-btn {
-      width: 32px; height: 32px;
+      width: 40px; height: 40px;
       border: 0;
       border-radius: 50%;
-      background: rgba(255,255,255,.05);
+      background: #2b2d31;
+      background-size: cover;
+      background-position: center;
+      color: #dbdee1;
       font-size: 16px;
       display: flex;
       align-items: center;
@@ -564,14 +601,23 @@
       cursor: pointer;
       flex: 0 0 auto;
       position: relative;
-      transition: background .12s ease, border-radius .12s ease;
+      overflow: visible;
+      transition: background-color .14s ease, border-radius .14s ease, color .14s ease;
     }
-    .story-emoji-rail-btn:hover { background: #3a3c43; border-radius: 16px; }
-    .story-emoji-rail-btn.active { background: var(--accent); border-radius: 16px; color: #04211e; }
+    .story-emoji-rail-btn.small { width: 32px; height: 32px; font-size: 15px; background-color: transparent; }
+    .story-emoji-rail-btn:hover { border-radius: 30%; background-color: var(--accent); color: #04211e; }
+    .story-emoji-rail-btn.active { border-radius: 30%; background-color: var(--accent); color: #04211e; }
     .story-emoji-rail-btn.active:before {
-      content: ''; position: absolute; left: -7px; top: 50%; transform: translateY(-50%);
-      width: 3px; height: 20px; border-radius: 0 3px 3px 0; background: #fff;
+      content: ''; position: absolute; left: -14px; top: 50%; transform: translateY(-50%);
+      width: 4px; height: 22px; border-radius: 0 4px 4px 0; background: #fff;
     }
+    .story-emoji-rail-btn .rail-lock {
+      position: absolute; right: -3px; bottom: -3px; width: 16px; height: 16px;
+      border-radius: 50%; background: #1e1f22; border: 2px solid #1e1f22;
+      display: flex; align-items: center; justify-content: center; color: #dbdee1;
+    }
+    .story-emoji-rail-btn .rail-lock svg { width: 9px; height: 9px; }
+
     .story-emoji-grid-wrap { flex: 1 1 auto; overflow-y: auto; padding: 6px 10px 10px; min-width: 0; }
     .story-emoji-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px; }
     .story-emoji-grid button {
@@ -580,7 +626,7 @@
       border-radius: 8px;
       font-size: 20px;
       line-height: 1;
-      height: 36px;
+      height: 40px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -591,9 +637,10 @@
     .story-emoji-custom-group { padding: 4px 0 14px; position: relative; }
     .story-emoji-custom-group.locked { background: linear-gradient(135deg, rgba(89,55,173,.88), rgba(64,45,140,.92)); border-radius: 8px; margin-bottom: 8px; padding: 8px 8px 10px; }
     .story-emoji-custom-head {
-      display: flex; align-items: center; gap: 6px; color: #fff; font-size: 12px; font-weight: 800;
-      margin: 0 0 6px; cursor: default;
+      display: flex; align-items: center; gap: 6px; color: #dbdee1; font-size: 12px; font-weight: 700;
+      margin: 0 0 6px; cursor: pointer;
     }
+    .story-emoji-custom-head:hover { color: #fff; }
     .story-emoji-custom-head .server-mini {
       width: 20px; height: 20px; border-radius: 50%; background: #00C4B4 center/cover no-repeat;
       display: inline-flex; align-items: center; justify-content: center; font-size: 9px; flex: 0 0 auto;
@@ -602,8 +649,11 @@
     .story-emoji-custom-head .server-mini-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .story-emoji-custom-head .server-mini-chevron { width: 12px; height: 12px; flex: 0 0 auto; opacity: .75; }
     .story-emoji-custom-note { margin: -2px 0 6px; color: #d7d3ff; font-size: 10px; font-weight: 700; }
+    .story-emoji-custom-head.collapsed .server-mini-chevron { transform: rotate(-90deg); }
+    .story-emoji-custom-group.collapsed .story-emoji-grid.custom,
+    .story-emoji-custom-group.collapsed .story-emoji-custom-note { display: none; }
     .story-emoji-grid.custom button { position: relative; }
-    .story-emoji-grid.custom button img { max-width: 28px; max-height: 28px; object-fit: contain; border-radius: 4px; }
+    .story-emoji-grid.custom button img { max-width: 30px; max-height: 30px; object-fit: contain; border-radius: 4px; }
     .story-emoji-grid.custom button.locked { opacity: .45; filter: grayscale(.5); }
     .story-emoji-grid.custom button.locked:after {
       content: ''; position: absolute; right: 2px; bottom: 1px; width: 12px; height: 12px;
@@ -620,26 +670,28 @@
       gap: 10px;
       flex: 0 0 auto;
       padding: 10px 12px;
-      background: #1a1b1e;
-      border-top: 1px solid rgba(255,255,255,.08);
+      background: #2b2d31;
+      border-top: 1px solid rgba(255,255,255,.06);
     }
     .story-emoji-nitro-banner.show { display: flex; }
-    .story-emoji-nitro-banner-text { flex: 1 1 auto; min-width: 0; font-size: 11.5px; font-weight: 700; color: #d9dbe0; line-height: 1.3; }
+    .story-emoji-nitro-banner-text { flex: 1 1 auto; min-width: 0; font-size: 11.5px; font-weight: 600; color: #dbdee1; line-height: 1.3; }
     .story-emoji-nitro-banner-heart {
-      width: 26px; height: 26px; border-radius: 50%; flex: 0 0 auto;
+      width: 28px; height: 28px; border-radius: 50%; flex: 0 0 auto;
       display: flex; align-items: center; justify-content: center;
-      background: rgba(255,255,255,.08); color: #ff6bd6;
+      background: transparent; border: 1.5px solid #6d7176; color: #dbdee1;
+      cursor: pointer; transition: border-color .12s ease, color .12s ease;
     }
-    .story-emoji-nitro-banner-heart .icon { width: 14px; height: 14px; }
+    .story-emoji-nitro-banner-heart:hover { border-color: #ed4245; color: #ed4245; }
+    .story-emoji-nitro-banner-heart .icon { width: 13px; height: 13px; fill: none !important; stroke: currentColor; stroke-width: 2; }
     .story-emoji-nitro-banner-btn {
       flex: 0 0 auto;
       border: 0;
-      border-radius: 8px;
-      padding: 7px 12px;
+      border-radius: 6px;
+      padding: 8px 14px;
       background: #fff;
       color: #1a1b1e;
-      font-size: 11.5px;
-      font-weight: 800;
+      font-size: 12px;
+      font-weight: 700;
       display: flex;
       align-items: center;
       gap: 5px;
@@ -11266,15 +11318,19 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     <button type="button" class="story-emoji-tab active" data-picker-tab="emoji">{{ i18n_t('stories.tab.emoji') }}</button>
   </div>
   <div class="story-emoji-search-row">
-    <svg class="story-emoji-search-icon icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-    <input type="text" class="story-emoji-search" id="story-emoji-search" autocomplete="off" placeholder="{{ i18n_t('stories.placeholder.find_emoji') }}">
+    <div class="story-emoji-search-box">
+      <svg class="story-emoji-search-icon icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" class="story-emoji-search" id="story-emoji-search" autocomplete="off" placeholder="{{ i18n_t('stories.placeholder.find_emoji') }}">
+    </div>
+    <button type="button" class="story-emoji-tone-btn" id="story-emoji-tone-btn" title="{{ i18n_t('stories.action.skin_tone', 'Тон шкіри') }}">👋</button>
+    <button type="button" class="story-emoji-add-btn" id="story-emoji-add-btn">{{ i18n_t('stories.action.add_emoji', 'Додати емодзі') }}</button>
   </div>
   <div class="story-emoji-body">
     <div class="story-emoji-rail" id="story-emoji-rail"></div>
     <div class="story-emoji-grid-wrap" id="story-emoji-grid-wrap"></div>
   </div>
   <div class="story-emoji-nitro-banner" id="story-emoji-nitro-banner">
-    <span class="story-emoji-nitro-banner-heart"><svg class="icon" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10Z"/></svg></span>
+    <button type="button" class="story-emoji-nitro-banner-heart" id="story-emoji-nitro-banner-heart" title="{{ i18n_t('stories.action.like', 'Подобається') }}"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10Z"/></svg></button>
     <span class="story-emoji-nitro-banner-text">{{ i18n_t('stories.text.get_all_emoji_with_nitro') }}</span>
     <button type="button" class="story-emoji-nitro-banner-btn" id="story-emoji-nitro-banner-btn">
       <svg class="icon" viewBox="0 0 24 28" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="12,1 21,8 18,21 12,27 6,21 3,8"/></svg>
@@ -11439,7 +11495,22 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   var emojiGridWrap = document.getElementById('story-emoji-grid-wrap');
   var emojiNitroBanner = document.getElementById('story-emoji-nitro-banner');
   var emojiNitroBannerBtn = document.getElementById('story-emoji-nitro-banner-btn');
+  var emojiNitroBannerHeart = document.getElementById('story-emoji-nitro-banner-heart');
+  var emojiToneBtn = document.getElementById('story-emoji-tone-btn');
+  var emojiAddBtn = document.getElementById('story-emoji-add-btn');
   if (emojiNitroBannerBtn) emojiNitroBannerBtn.addEventListener('click', function () { window.showSettingsTab && window.showSettingsTab('subscriptions'); });
+  if (emojiNitroBannerHeart) emojiNitroBannerHeart.addEventListener('click', function () { emojiNitroBannerHeart.classList.toggle('liked'); });
+  var SKIN_TONES = ['👋', '👋🏻', '👋🏼', '👋🏽', '👋🏾', '👋🏿'];
+  var toneIdx = 0;
+  if (emojiToneBtn) emojiToneBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    toneIdx = (toneIdx + 1) % SKIN_TONES.length;
+    emojiToneBtn.textContent = SKIN_TONES[toneIdx];
+  });
+  if (emojiAddBtn) emojiAddBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    notify(t('stories.text.add_emoji_no_permission', 'У вас немає прав для додавання емодзі на цьому сервері'));
+  });
 
   var curList = [], curUserIdx = -1, curItemIdx = 0, timer = null;
   var STORY_MS = 5000;
@@ -11791,21 +11862,71 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     lastCaretPos = { start: composeCaption.selectionStart, end: composeCaption.selectionEnd };
   }
 
+  var lockIconSvg = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>';
+
   function renderEmojiRail() {
-    var customBtn = '<button type="button" class="story-emoji-rail-btn' + (emojiActiveCat === 'custom' ? ' active' : '') +
-      '" data-cat="custom" title="' + t('stories.emoji_cat.custom', 'Свої емодзі') + '">🧩</button>';
-    emojiRail.innerHTML = customBtn + EMOJI_CATS.map(function (cat) {
-      return '<button type="button" class="story-emoji-rail-btn' + (cat.key === emojiActiveCat ? ' active' : '') +
+    var recentBtn = '<button type="button" class="story-emoji-rail-btn' + (emojiActiveCat === 'recent' ? ' active' : '') +
+      '" data-cat="recent" title="' + t('stories.emoji_cat.recent', 'Нещодавні') +
+      '"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></button>';
+
+    var servers = (customLibLoaded ? groupCustomEmojis(customLib.emojis || []) : []);
+    var serverBtns = servers.map(function (g) {
+      var locked = g.items.some(function (x) { return !x.allowed; });
+      var style = g.server_icon_url ? (' style="background-image:url(\'' + g.server_icon_url.replace(/'/g, '%27') + '\')"') : '';
+      var label = g.server_icon_url ? '' : escHtml((g.server_name || 'S').slice(0, 2).toUpperCase());
+      return '<button type="button" class="story-emoji-rail-btn' + (emojiActiveCat === 'custom' ? ' active' : '') +
+        '" data-cat="custom" data-server-id="' + escHtml(g.server_id) + '" title="' + escHtml(g.server_name) + '"' + style + '>' +
+        label + (locked ? ('<span class="rail-lock">' + lockIconSvg + '</span>') : '') + '</button>';
+    }).join('');
+
+    var stdBtns = EMOJI_CATS.map(function (cat) {
+      return '<button type="button" class="story-emoji-rail-btn small' + (cat.key === emojiActiveCat ? ' active' : '') +
         '" data-cat="' + cat.key + '" title="' + cat.label + '">' + cat.icon + '</button>';
     }).join('');
-    emojiRail.querySelectorAll('.story-emoji-rail-btn').forEach(function (btn) {
+
+    emojiRail.innerHTML = recentBtn + serverBtns + '<div class="story-emoji-rail-sep"></div>' + stdBtns;
+
+    emojiRail.querySelectorAll('.story-emoji-rail-btn[data-server-id]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        emojiActiveCat = 'custom';
+        emojiSearch.value = '';
+        renderEmojiRail();
+        renderCustomEmojiGrid('');
+        var target = emojiGridWrap.querySelector('.story-emoji-custom-group[data-server-id="' + btn.getAttribute('data-server-id') + '"]');
+        if (target) target.scrollIntoView({ block: 'start' });
+      });
+    });
+    emojiRail.querySelectorAll('.story-emoji-rail-btn:not([data-server-id])').forEach(function (btn) {
       btn.addEventListener('click', function () {
         emojiActiveCat = btn.getAttribute('data-cat');
         emojiSearch.value = '';
         renderEmojiRail();
         if (emojiActiveCat === 'custom') { renderCustomEmojiGrid(''); }
+        else if (emojiActiveCat === 'recent') { updateNitroBanner(false); renderRecentGrid(); }
         else { updateNitroBanner(false); renderEmojiGrid(''); }
       });
+    });
+  }
+
+  var recentEmojis = (function () {
+    try { return JSON.parse(localStorage.getItem('ah_story_recent_emoji') || '[]'); } catch (e) { return []; }
+  })();
+
+  function pushRecentEmoji(emoji) {
+    recentEmojis = [emoji].concat(recentEmojis.filter(function (e) { return e !== emoji; })).slice(0, 24);
+    try { localStorage.setItem('ah_story_recent_emoji', JSON.stringify(recentEmojis)); } catch (e) {}
+  }
+
+  function renderRecentGrid() {
+    if (!recentEmojis.length) {
+      emojiGridWrap.innerHTML = '<div class="story-emoji-empty">' + t('stories.text.no_recent_emoji', 'Ви ще не використовували емодзі') + '</div>';
+      return;
+    }
+    emojiGridWrap.innerHTML = '<div class="story-emoji-grid">' + recentEmojis.map(function (e) {
+      return '<button type="button" data-emoji="' + escHtml(e) + '">' + e + '</button>';
+    }).join('') + '</div>';
+    emojiGridWrap.querySelectorAll('button[data-emoji]').forEach(function (btn) {
+      btn.addEventListener('click', function () { insertEmoji(btn.getAttribute('data-emoji')); });
     });
   }
 
@@ -11824,6 +11945,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     composeCaption.setSelectionRange(newPos, newPos);
     lastCaretPos = { start: newPos, end: newPos };
     composeCaption.dispatchEvent(new Event('input', { bubbles: true }));
+    if (emoji.indexOf('[[ah:emoji:') !== 0) pushRecentEmoji(emoji);
   }
 
   function renderEmojiGrid(query) {
@@ -11877,7 +11999,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     emojiGridWrap.innerHTML = groups.map(function (g) {
       var locked = g.items.some(function (x) { return !x.allowed; });
       if (locked) anyLocked = true;
-      return '<div class="story-emoji-custom-group' + (locked ? ' locked' : '') + '">' +
+      return '<div class="story-emoji-custom-group' + (locked ? ' locked' : '') + '" data-server-id="' + escHtml(g.server_id) + '">' +
         '<div class="story-emoji-custom-head">' +
           '<span class="server-mini"' + (g.server_icon_url ? (' style="background-image:url(\'' + g.server_icon_url.replace(/'/g, '%27') + '\')"') : '') + '>' +
             (g.server_icon_url ? '' : escHtml((g.server_name || 'S').slice(0, 2).toUpperCase())) +
@@ -11892,6 +12014,12 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
       '</div>';
     }).join('');
     updateNitroBanner(anyLocked);
+    emojiGridWrap.querySelectorAll('.story-emoji-custom-head').forEach(function (head) {
+      head.addEventListener('click', function () {
+        head.classList.toggle('collapsed');
+        head.closest('.story-emoji-custom-group').classList.toggle('collapsed');
+      });
+    });
     emojiGridWrap.querySelectorAll('.story-emoji-grid.custom button').forEach(function (btn) {
       btn.addEventListener('click', function () {
         var allowed = btn.getAttribute('data-allowed') === '1';
@@ -11912,6 +12040,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     if (emojiSearch) {
       emojiSearch.addEventListener('input', function () {
         if (emojiActiveCat === 'custom') renderCustomEmojiGrid(emojiSearch.value);
+        else if (emojiActiveCat === 'recent') renderRecentGrid();
         else renderEmojiGrid(emojiSearch.value);
       });
     }
