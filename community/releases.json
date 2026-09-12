@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.147.2",
+      "date": "2026-09-13",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Adjust emoji picker dimensions and styles."
+      ],
+      "source_sha": "9ff2e1bc60a30eeeebcf99383f791497912bd32d"
+    },
+    {
       "version": "1.147.1",
       "date": "2026-09-13",
       "title": "Виправлення та стабільність",
