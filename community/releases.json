@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.147.1",
+      "date": "2026-09-13",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance emoji picker styles and functionality."
+      ],
+      "source_sha": "8e87ffefd69d9e2b7cd61cfa2415cd51e18d6705"
+    },
+    {
       "version": "1.147.0",
       "date": "2026-09-13",
       "title": "Нові можливості AlexiHub",
