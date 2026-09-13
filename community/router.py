@@ -4864,9 +4864,11 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
             if event_type == "typing":
                 typing_profile = profile
                 if "typing_text" in data:
+                    clean_typing_text = crud.normalize_typing_text(data.get("typing_text")) or ""
+                    clean_typing_text = await crud.sanitize_typing_text_emojis(db, account_id, clean_typing_text)
                     typing_profile = {
                         **profile,
-                        "typing_text": crud.normalize_typing_text(data.get("typing_text")) or "",
+                        "typing_text": clean_typing_text,
                     }
                 await realtime_channels.set_typing(key, account_id, typing_profile)
                 continue
@@ -5277,9 +5279,11 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
                     continue
                 typing_profile = profile
                 if "typing_text" in data:
+                    clean_typing_text = crud.normalize_typing_text(data.get("typing_text")) or ""
+                    clean_typing_text = await crud.sanitize_typing_text_emojis(db, account_id, clean_typing_text)
                     typing_profile = {
                         **profile,
-                        "typing_text": crud.normalize_typing_text(data.get("typing_text")) or "",
+                        "typing_text": clean_typing_text,
                     }
                 await realtime_channels.set_typing(key, account_id, typing_profile)
                 continue
