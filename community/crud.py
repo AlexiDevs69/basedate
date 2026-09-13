@@ -102,6 +102,7 @@ async def ensure_account_visual_columns(db: AsyncSession) -> None:
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS language VARCHAR(8) DEFAULT 'ru' NOT NULL"))
     await db.execute(text("UPDATE community_accounts SET language = 'ru' WHERE language IS NULL OR language = ''"))
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS typing_text VARCHAR(40)"))
+    await db.execute(text("ALTER TABLE community_accounts ALTER COLUMN typing_text TYPE VARCHAR(150)"))
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS allow_dm_from_server_members BOOLEAN DEFAULT TRUE NOT NULL"))
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS allow_friend_requests_everyone BOOLEAN DEFAULT TRUE NOT NULL"))
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS allow_friend_requests_mutual_friends BOOLEAN DEFAULT TRUE NOT NULL"))
@@ -594,7 +595,8 @@ async def update_account_language(db: AsyncSession, account_id: int, language: s
     return normalize_language(persisted) if persisted is not None else None
 
 
-TYPING_TEXT_MAX_LEN = 40
+TYPING_TEXT_MAX_LEN = 150
+TYPING_TEXT_EMOJI_MAX = 3
 
 
 def normalize_typing_text(value: str | None) -> str | None:
@@ -608,6 +610,42 @@ def normalize_typing_text(value: str | None) -> str | None:
     return clean[:TYPING_TEXT_MAX_LEN] or None
 
 
+async def sanitize_typing_text_emojis(db: AsyncSession, account_id: int, value: str) -> str:
+    """Strip custom-emoji markers ([[ah:emoji:ID]]) from a typing-text suffix
+    that this account isn't allowed to use, and cap how many can appear.
+
+    Only server emoji are offered for this feature, so the same Discord-like
+    Nitro/membership rule as sending them in a message applies here too
+    (see get_media_item_for_send): the frontend picker already filters by
+    this rule, this is just the server-side backstop against a hand-crafted
+    request. Up to TYPING_TEXT_EMOJI_MAX markers are kept; the rest (and any
+    marker the account has no right to use) are dropped silently.
+    """
+    if not value or "[[ah:emoji:" not in value:
+        return value or ""
+    cache: dict[int, bool] = {}
+    kept = 0
+    out: list[str] = []
+    last = 0
+    for match in _CUSTOM_EMOJI_MARKER_RE.finditer(value):
+        out.append(value[last:match.start()])
+        last = match.end()
+        if kept >= TYPING_TEXT_EMOJI_MAX:
+            continue
+        emoji_id = int(match.group(1))
+        if emoji_id not in cache:
+            item = await get_media_item_for_send(
+                db, account_id, kind="emoji", item_id=emoji_id,
+                current_server_id=None, context="dm",
+            )
+            cache[emoji_id] = bool(item and item.get("allowed"))
+        if cache[emoji_id]:
+            out.append(match.group(0))
+            kept += 1
+    out.append(value[last:])
+    return "".join(out)
+
+
 async def update_account_typing_text(db: AsyncSession, account_id: int, typing_text: str | None) -> str | None:
     """Persist the custom word/phrase shown while this account is typing.
 
@@ -616,6 +654,9 @@ async def update_account_typing_text(db: AsyncSession, account_id: int, typing_t
     """
     await ensure_account_visual_columns(db)
     normalized = normalize_typing_text(typing_text)
+    if normalized:
+        normalized = await sanitize_typing_text_emojis(db, account_id, normalized)
+        normalized = normalize_typing_text(normalized)
     await db.execute(
         text("UPDATE community_accounts SET typing_text = :typing_text WHERE id = :account_id"),
         {"typing_text": normalized, "account_id": account_id},
