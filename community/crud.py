@@ -101,6 +101,7 @@ async def ensure_account_visual_columns(db: AsyncSession) -> None:
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS custom_status_expires_at TIMESTAMP WITH TIME ZONE"))
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS language VARCHAR(8) DEFAULT 'ru' NOT NULL"))
     await db.execute(text("UPDATE community_accounts SET language = 'ru' WHERE language IS NULL OR language = ''"))
+    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS typing_text VARCHAR(40)"))
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS allow_dm_from_server_members BOOLEAN DEFAULT TRUE NOT NULL"))
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS allow_friend_requests_everyone BOOLEAN DEFAULT TRUE NOT NULL"))
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS allow_friend_requests_mutual_friends BOOLEAN DEFAULT TRUE NOT NULL"))
@@ -591,6 +592,36 @@ async def update_account_language(db: AsyncSession, account_id: int, language: s
         {"account_id": account_id},
     )
     return normalize_language(persisted) if persisted is not None else None
+
+
+TYPING_TEXT_MAX_LEN = 40
+
+
+def normalize_typing_text(value: str | None) -> str | None:
+    """Clean up a custom typing-indicator suffix (e.g. "врайтает").
+
+    Strips control characters and collapses whitespace. Returns None (which
+    means "use the default localized suffix") for empty input.
+    """
+    clean = re.sub(r"[\x00-\x1f\x7f]", "", str(value or ""))
+    clean = re.sub(r"\s+", " ", clean).strip()
+    return clean[:TYPING_TEXT_MAX_LEN] or None
+
+
+async def update_account_typing_text(db: AsyncSession, account_id: int, typing_text: str | None) -> str | None:
+    """Persist the custom word/phrase shown while this account is typing.
+
+    Same direct-SQL pattern as update_account_language, for the same reason:
+    avoids stale-ORM-instance edge cases on Render/asyncpg.
+    """
+    await ensure_account_visual_columns(db)
+    normalized = normalize_typing_text(typing_text)
+    await db.execute(
+        text("UPDATE community_accounts SET typing_text = :typing_text WHERE id = :account_id"),
+        {"typing_text": normalized, "account_id": account_id},
+    )
+    await db.commit()
+    return normalized
 
 
 PRIVACY_SETTING_FIELDS = (
