@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.150.0",
+      "date": "2026-09-13",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: typing_text column and update related functions."
+      ],
+      "source_sha": "5ceabfa448078fd3bb1c8ece2967feb83d369ef0"
+    },
+    {
       "version": "1.149.0",
       "date": "2026-09-13",
       "title": "Нові можливості AlexiHub",
