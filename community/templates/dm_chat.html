@@ -1850,6 +1850,40 @@ const form=document.getElementById('dm-form');
 const input=document.getElementById('content');
 const imageInput=document.getElementById('image_url');
 const typingEl=document.getElementById('typing');
+
+(function(){
+  const ttInput=document.getElementById('ah-typing-text-input');
+  const ttPreview=document.getElementById('ah-typing-text-preview');
+  if(!ttInput||!ttPreview)return;
+  function renderTypingPreview(){
+    const val=ttInput.value.trim();
+    ttPreview.textContent=currentUser.username+' '+(val||'печатает');
+  }
+  ttInput.addEventListener('input',renderTypingPreview);
+  renderTypingPreview();
+})();
+
+window.saveTypingText=async function(){
+  const ttInput=document.getElementById('ah-typing-text-input');
+  if(!ttInput)return;
+  const value=ttInput.value.trim();
+  try{
+    const res=await fetch('/community/api/settings/typing-text',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({typing_text:value})
+    });
+    const data=await res.json().catch(()=>null);
+    if(data&&data.ok){
+      ttInput.value=data.typing_text||'';
+      if(typeof settingsToast==='function')settingsToast('Збережено');
+    }else if(typeof settingsToast==='function'){
+      settingsToast('Не вдалося зберегти');
+    }
+  }catch(e){
+    if(typeof settingsToast==='function')settingsToast('Не вдалося зберегти');
+  }
+};
 const live=document.getElementById('live-status');
 const dmReplyCache=new Map();
 let pendingDmReplyFallback=null;
@@ -2095,7 +2129,15 @@ function handleDmRealtimeData(data){
   }
   if(data.type==='typing'){
     const users=(data.users||[]).filter(u=>u.id!==currentUser.id);
-    typingEl.textContent=users.length?users.map(u=>u.username).join(', ')+window.AlexiHubI18n.t("dm.text.preferring"):'';
+    if(!users.length){
+      typingEl.textContent='';
+    }else{
+      // DMs are 1:1, so there's at most one other typer -- use their own
+      // custom typing text (Settings -> Appearance) if they've set one.
+      const u=users[0];
+      const custom=(u.typing_text||'').trim();
+      typingEl.textContent=custom?(u.username+' '+custom):(u.username+window.AlexiHubI18n.t("dm.text.preferring"));
+    }
   }
   if(data.type==='pin_add'&&data.pin&&window.__dmPinsApi)window.__dmPinsApi.upsertDmPin(data.pin);
   if(data.type==='pin_remove'&&window.__dmPinsApi)window.__dmPinsApi.removeDmPin(data.message_id);
@@ -3030,7 +3072,20 @@ document.addEventListener('DOMContentLoaded',()=>{
       <section class="ah-settings-page" data-settings-page="security"><h1><!--i18n:settings.security-->{{ i18n_t('settings.security') }}</h1><div class="ah-settings-placeholder"><!--i18n:common.text.so_far_the_plug_here_then_you_can_make_a-->{{ i18n_t('common.text.so_far_the_plug_here_then_you_can_make_a') }}</div></section>
       <section class="ah-settings-page" data-settings-page="privacy"><h1><!--i18n:settings.privacy-->{{ i18n_t('settings.privacy') }}</h1><div class="ah-settings-placeholder"><!--i18n:common.text.so_far_the_plug_here_will_be_privacy_users_who-->{{ i18n_t('common.text.so_far_the_plug_here_will_be_privacy_users_who') }}</div></section>
       <section class="ah-settings-page" data-settings-page="voice"><h1><!--i18n:settings.voice-->{{ i18n_t('settings.voice') }}</h1><div class="ah-settings-placeholder"><!--i18n:common.text.while_the_plug_is_under_the_future_voice_chichi_microphone-->{{ i18n_t('common.text.while_the_plug_is_under_the_future_voice_chichi_microphone') }}</div></section>
-      <section class="ah-settings-page" data-settings-page="appearance"><h1><!--i18n:settings.appearance-->{{ i18n_t('settings.appearance') }}</h1><div class="ah-settings-placeholder"><!--i18n:common.text.so_far_the_plug_here_you_can_choose_the_theme-->{{ i18n_t('common.text.so_far_the_plug_here_you_can_choose_the_theme') }}</div></section>
+      <section class="ah-settings-page" data-settings-page="appearance">
+        <h1><!--i18n:settings.appearance-->{{ i18n_t('settings.appearance') }}</h1>
+        <div class="ah-settings-section">
+          <div class="ah-settings-row" style="flex-direction:column;align-items:stretch;gap:10px;padding:16px 2px">
+            <div>
+              <div class="label" style="font-weight:800;color:#fff;margin-bottom:4px">Свій текст «набирає повідомлення»</div>
+              <div class="ah-settings-muted" style="color:#b5bac1;font-size:13px;line-height:1.4">Заміни слово, яке з'являється після твого ніку, коли ти щось пишеш співрозмовнику. Наприклад, замість «{{ account.username }} печатает» можна зробити «{{ account.username }} врайтает». Залиш поле порожнім, щоб повернути стандартний варіант.</div>
+            </div>
+            <input id="ah-typing-text-input" type="text" maxlength="40" placeholder="печатает" value="{{ account.typing_text or '' }}" style="height:40px;border-radius:7px;background:#1e1f22;border:1px solid #3f4149;color:#fff;padding:0 12px;max-width:360px;outline:none;font:inherit">
+            <div style="color:#72767d;font-size:12px">Прев'ю: <b id="ah-typing-text-preview" style="color:#dbdee1;font-weight:800"></b></div>
+            <div><button class="ah-settings-btn" type="button" onclick="saveTypingText()">Зберегти</button></div>
+          </div>
+        </div>
+      </section>
       <section class="ah-settings-page" data-settings-page="notifications"><h1><!--i18n:settings.notifications-->{{ i18n_t('settings.notifications') }}</h1><div class="ah-settings-placeholder"><!--i18n:common.text.section_of_the_stub_speakutions_desktop_notifications_mute_servers-->{{ i18n_t('common.text.section_of_the_stub_speakutions_desktop_notifications_mute_servers') }}</div></section>
       <section class="ah-settings-page" data-settings-page="language">
         <h1 data-i18n="language.title"><!--i18n:language.title-->{{ i18n_t('language.title') }}</h1>
