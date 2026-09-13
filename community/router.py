@@ -1051,6 +1051,7 @@ def _account_payload(account) -> dict:
         "bio": account.bio or "",
         "is_verified": bool(getattr(account, "is_verified", False)),
         "language": getattr(account, "language", DEFAULT_LANGUAGE) or DEFAULT_LANGUAGE,
+        "typing_text": getattr(account, "typing_text", None) or "",
     }
 
 
@@ -1529,6 +1530,28 @@ async def api_settings_language(request: Request, db: AsyncSession = Depends(get
     response.headers["Cache-Control"] = "no-store"
     # Mirror the persisted value in a lightweight client-side cache.
     response.set_cookie("alexihub_language", final_language, max_age=60 * 60 * 24 * 365, path="/", samesite="lax")
+    return response
+
+
+@router.post("/api/settings/typing-text")
+async def api_settings_typing_text(request: Request, db: AsyncSession = Depends(get_db)):
+    """Save the custom word/phrase shown after this account's name while
+    it's typing (Settings -> Appearance). Empty value resets to default."""
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_authenticated"}, status_code=401)
+
+    typing_text = ""
+    try:
+        data = await request.json()
+        typing_text = data.get("typing_text") or data.get("text") or ""
+    except Exception:
+        form = await request.form()
+        typing_text = form.get("typing_text") or form.get("text") or ""
+
+    saved = await crud.update_account_typing_text(db, account.id, str(typing_text))
+    response = JSONResponse({"ok": True, "typing_text": saved or ""})
+    response.headers["Cache-Control"] = "no-store"
     return response
 
 
