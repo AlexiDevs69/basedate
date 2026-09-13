@@ -3650,7 +3650,7 @@ body.ah-store-product-open{overflow:hidden}
         <section class="friend-page active" data-friend-page="online">
           <div class="friend-banner">
             <svg class="icon icon-sm"><use href="#i-help"></use></svg>
-            <span><!--i18n:home.text.users_you_are_looking_for_users_you_have_blocked_or-->{{ i18n_t('home.text.users_you_are_looking_for_users_you_have_blocked_or') }} <a href="#" onclick="showActionToast(window.AlexiHubI18n.t('home.stub.blocking_settings'));return false;"><!--i18n:home.action.go_to_the_settings-->{{ i18n_t('home.action.go_to_the_settings') }}</a></span>
+            <span><!--i18n:home.text.users_you_are_looking_for_users_you_have_blocked_or-->{{ i18n_t('home.text.users_you_are_looking_for_users_you_have_blocked_or') }} <a href="#" onclick="event.preventDefault();window.openUserSettings&amp;&amp;window.openUserSettings('privacy');setTimeout(function(){var b=document.querySelector('[data-privacy-section-target=&quot;privacy-blocked-accounts&quot;]');if(b)b.click();},60);"><!--i18n:home.action.go_to_the_settings-->{{ i18n_t('home.action.go_to_the_settings') }}</a></span>
             <button class="friend-icon-btn" style="margin-left:auto;width:28px;height:28px;" onclick="this.closest('.friend-banner').remove()"><svg class="icon icon-sm"><use href="#i-close"></use></svg></button>
           </div>
           <label class="friend-searchline">
