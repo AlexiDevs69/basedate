@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.148.1",
+      "date": "2026-09-13",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Change 'Hello World' to 'Goodbye World'."
+      ],
+      "source_sha": "4fa3a3e223d4dc1ae585c11c684d92d4e9ce5680"
+    },
+    {
       "version": "1.148.0",
       "date": "2026-09-13",
       "title": "Нові можливості AlexiHub",
