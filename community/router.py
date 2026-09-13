@@ -4858,7 +4858,13 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
                 continue
 
             if event_type == "typing":
-                await realtime_channels.set_typing(key, account_id, profile)
+                typing_profile = profile
+                if "typing_text" in data:
+                    typing_profile = {
+                        **profile,
+                        "typing_text": crud.normalize_typing_text(data.get("typing_text")) or "",
+                    }
+                await realtime_channels.set_typing(key, account_id, typing_profile)
                 continue
 
             if event_type == "typing_stop":
@@ -5265,7 +5271,13 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
                 if not can_send_messages:
                     await realtime_channels.clear_typing(key, account_id)
                     continue
-                await realtime_channels.set_typing(key, account_id, profile)
+                typing_profile = profile
+                if "typing_text" in data:
+                    typing_profile = {
+                        **profile,
+                        "typing_text": crud.normalize_typing_text(data.get("typing_text")) or "",
+                    }
+                await realtime_channels.set_typing(key, account_id, typing_profile)
                 continue
 
             if event_type == "typing_stop":
