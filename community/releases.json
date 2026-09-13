@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.148.0",
+      "date": "2026-09-13",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: Halloween styles and countdown timer."
+      ],
+      "source_sha": "f85e911fe7e92e5b86c4cd635cef53e9b79085ee"
+    },
+    {
       "version": "1.147.7",
       "date": "2026-09-13",
       "title": "Виправлення та стабільність",
