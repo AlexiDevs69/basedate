@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.152.0",
+      "date": "2026-09-13",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: custom typing text feature in DM chat."
+      ],
+      "source_sha": "990637a7d13d5a3cd43748d01a04803cfe33ea81"
+    },
+    {
       "version": "1.151.0",
       "date": "2026-09-13",
       "title": "Нові можливості AlexiHub",
