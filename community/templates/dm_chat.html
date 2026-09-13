@@ -1852,6 +1852,11 @@ const input=document.getElementById('content');
 const imageInput=document.getElementById('image_url');
 const typingEl=document.getElementById('typing');
 
+const AH_TYPING_EMOJI_LIST=['😀','😁','😂','🤣','😊','😉','😍','😘','😜','🤪','😎','🤓','🥳','😴','🤔','🙄','😏','😬','😱','🥺','😭','😡','🤬','🤯','😇','🤗','🤫','🤐','😷','🤒','🥶','🥵','😈','👻','💀','👽','🤖','💩','🔥','✨','⭐','💯','💥','💫','❤️','🧡','💛','💚','💙','💜','🖤','🤍','💔','💕','💖','👍','👎','👏','🙌','🤝','✌️','🤙','🫡','🐱','🐶','🦆','🐸','🐼','🦊','🐧','🦉','🐢','🐍','🌸','🌟','🎉','🎮','🎧','☕','🍕','🍔','⚡'];
+const AH_TYPING_EMOJI_MAX=3;
+function countTypingTextEmoji(str){
+  try{return (String(str||'').match(/\p{Extended_Pictographic}/gu)||[]).length;}catch(e){return 0;}
+}
 function initTypingTextSettings(){
   const ttInput=document.getElementById('ah-typing-text-input');
   const ttPreview=document.getElementById('ah-typing-text-preview');
@@ -1864,6 +1869,67 @@ function initTypingTextSettings(){
   }
   ttInput.addEventListener('input',renderTypingPreview);
   renderTypingPreview();
+
+  // --- optional emoji picker: lets the user drop up to AH_TYPING_EMOJI_MAX
+  // emoji anywhere in the custom typing text (e.g. "🦆 врайтает 🦆").
+  const emojiBtn=document.getElementById('ah-typing-emoji-btn');
+  const emojiPanel=document.getElementById('ah-typing-emoji-panel');
+  const emojiGrid=document.getElementById('ah-typing-emoji-grid');
+  const emojiCountEl=document.getElementById('ah-typing-emoji-count');
+  if(!emojiBtn||!emojiPanel||!emojiGrid)return;
+
+  function refreshEmojiState(){
+    const n=countTypingTextEmoji(ttInput.value);
+    if(emojiCountEl)emojiCountEl.textContent=n+'/'+AH_TYPING_EMOJI_MAX;
+    const atLimit=n>=AH_TYPING_EMOJI_MAX;
+    emojiGrid.querySelectorAll('button').forEach(b=>{
+      b.disabled=atLimit;
+      b.style.opacity=atLimit?'.35':'1';
+      b.style.cursor=atLimit?'default':'pointer';
+    });
+  }
+
+  if(!emojiGrid.dataset.built){
+    emojiGrid.dataset.built='1';
+    AH_TYPING_EMOJI_LIST.forEach(ch=>{
+      const b=document.createElement('button');
+      b.type='button';
+      b.textContent=ch;
+      b.setAttribute('aria-label',ch);
+      b.style.cssText='height:30px;border:0;border-radius:6px;background:transparent;font-size:17px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center';
+      b.addEventListener('mouseenter',()=>{if(!b.disabled)b.style.background='rgba(255,255,255,.09)';});
+      b.addEventListener('mouseleave',()=>{b.style.background='transparent';});
+      b.addEventListener('click',()=>{
+        if(countTypingTextEmoji(ttInput.value)>=AH_TYPING_EMOJI_MAX){
+          if(typeof settingsToast==='function')settingsToast('Максимум '+AH_TYPING_EMOJI_MAX+' емодзі');
+          return;
+        }
+        const start=ttInput.selectionStart!=null?ttInput.selectionStart:ttInput.value.length;
+        const end=ttInput.selectionEnd!=null?ttInput.selectionEnd:ttInput.value.length;
+        ttInput.value=ttInput.value.slice(0,start)+ch+ttInput.value.slice(end);
+        const pos=start+ch.length;
+        ttInput.focus();
+        ttInput.setSelectionRange(pos,pos);
+        ttInput.dispatchEvent(new Event('input',{bubbles:true})); // updates preview + emoji count
+      });
+      emojiGrid.appendChild(b);
+    });
+  }
+
+  ttInput.addEventListener('input',refreshEmojiState);
+  refreshEmojiState();
+
+  emojiBtn.addEventListener('click',(e)=>{
+    e.stopPropagation();
+    const willOpen=emojiPanel.style.display!=='block';
+    emojiPanel.style.display=willOpen?'block':'none';
+    if(willOpen)refreshEmojiState();
+  });
+  document.addEventListener('click',(e)=>{
+    if(emojiPanel.style.display==='block'&&!emojiPanel.contains(e.target)&&e.target!==emojiBtn){
+      emojiPanel.style.display='none';
+    }
+  });
 }
 // The settings modal markup can sit further down the page than this
 // <script>, so document.getElementById() above may find nothing if we only
@@ -3130,10 +3196,21 @@ document.addEventListener('DOMContentLoaded',()=>{
         <div class="ah-settings-section">
           <div class="ah-settings-row" style="flex-direction:column;align-items:stretch;gap:10px;padding:16px 2px">
             <div>
-              <div class="label" style="font-weight:800;color:#fff;margin-bottom:4px">Свій текст «набирає повідомлення»</div>
-              <div class="ah-settings-muted" style="color:#b5bac1;font-size:13px;line-height:1.4">Заміни слово, яке з'являється після твого ніку, коли ти щось пишеш співрозмовнику. Наприклад, замість «{{ account.username }} печатает» можна зробити «{{ account.username }} врайтает». Залиш поле порожнім, щоб повернути стандартний варіант.</div>
+              <div class="label" style="font-weight:800;color:#fff;margin-bottom:4px">Персоналізуй індикатор набору тексту</div>
+              <div class="ah-settings-muted" style="color:#b5bac1;font-size:13px;line-height:1.4">Заміни слово, яке з'являється після твого ніку, коли ти щось пишеш співрозмовнику. Додай до 3 емодзі та свій текст — наприклад, замість «{{ account.username }} печатает» можна зробити «{{ account.username }} 🦆 врайтает 🦆». Залиш поле порожнім, щоб повернути стандартний варіант.</div>
             </div>
-            <input id="ah-typing-text-input" type="text" maxlength="40" placeholder="печатает" value="{{ account.typing_text or '' }}" style="height:40px;border-radius:7px;background:#1e1f22;border:1px solid #3f4149;color:#fff;padding:0 12px;max-width:360px;outline:none;font:inherit">
+            <div style="position:relative;max-width:360px">
+              <div style="display:flex;gap:8px;align-items:center">
+                <input id="ah-typing-text-input" type="text" maxlength="40" placeholder="печатает" value="{{ account.typing_text or '' }}" style="height:40px;flex:1;min-width:0;border-radius:7px;background:#1e1f22;border:1px solid #3f4149;color:#fff;padding:0 12px;outline:none;font:inherit">
+                <button id="ah-typing-emoji-btn" type="button" title="Додати емодзі" aria-label="Додати емодзі" style="width:40px;height:40px;flex:0 0 auto;border-radius:7px;background:#1e1f22;border:1px solid #3f4149;color:#fff;font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center">😊</button>
+              </div>
+              <div id="ah-typing-emoji-panel" style="display:none;position:absolute;top:46px;left:0;z-index:40;width:266px;max-height:220px;overflow-y:auto;background:#2b2d31;border:1px solid #3a3d45;border-radius:10px;box-shadow:0 18px 40px rgba(0,0,0,.42);padding:10px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;color:#b5bac1;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.03em">
+                  <span>Емодзі</span><span id="ah-typing-emoji-count">0/3</span>
+                </div>
+                <div id="ah-typing-emoji-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px"></div>
+              </div>
+            </div>
             <div style="color:#72767d;font-size:12px">Прев'ю: <b id="ah-typing-text-preview" style="color:#dbdee1;font-weight:800"></b></div>
             <div><button class="ah-settings-btn" type="button" onclick="saveTypingText()">Зберегти</button></div>
           </div>
