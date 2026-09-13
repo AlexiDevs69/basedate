@@ -1851,21 +1851,41 @@ const input=document.getElementById('content');
 const imageInput=document.getElementById('image_url');
 const typingEl=document.getElementById('typing');
 
-(function(){
+function initTypingTextSettings(){
   const ttInput=document.getElementById('ah-typing-text-input');
   const ttPreview=document.getElementById('ah-typing-text-preview');
-  if(!ttInput||!ttPreview)return;
+  if(!ttInput||!ttPreview)return; // settings modal not in the DOM yet
+  if(ttInput.dataset.ahBound)return; // avoid double-binding
+  ttInput.dataset.ahBound='1';
   function renderTypingPreview(){
     const val=ttInput.value.trim();
     ttPreview.textContent=currentUser.username+' '+(val||'печатает');
   }
   ttInput.addEventListener('input',renderTypingPreview);
   renderTypingPreview();
-})();
+}
+// The settings modal markup can sit further down the page than this
+// <script>, so document.getElementById() above may find nothing if we only
+// run once at parse time. Cover every case: run now (in case it's already
+// there), again once the whole document has loaded, and again right when
+// the settings modal is opened.
+initTypingTextSettings();
+document.addEventListener('DOMContentLoaded',initTypingTextSettings);
+window.addEventListener('load',initTypingTextSettings);
+{
+  const _origOpenUserSettings=window.openUserSettings;
+  window.openUserSettings=function(tab){
+    if(typeof _origOpenUserSettings==='function')_origOpenUserSettings(tab);
+    initTypingTextSettings();
+  };
+}
 
 window.saveTypingText=async function(){
   const ttInput=document.getElementById('ah-typing-text-input');
-  if(!ttInput)return;
+  if(!ttInput){
+    console.error('[AlexiHub] ah-typing-text-input not found in DOM');
+    return;
+  }
   const value=ttInput.value.trim();
   try{
     const res=await fetch('/community/api/settings/typing-text',{
@@ -1873,15 +1893,25 @@ window.saveTypingText=async function(){
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({typing_text:value})
     });
-    const data=await res.json().catch(()=>null);
-    if(data&&data.ok){
+    let data=null;
+    try{data=await res.json();}catch(e){/* non-JSON response, e.g. 404 HTML page */}
+    if(res.ok&&data&&data.ok){
       ttInput.value=data.typing_text||'';
+      const preview=document.getElementById('ah-typing-text-preview');
+      if(preview)preview.textContent=currentUser.username+' '+(ttInput.value||'печатает');
       if(typeof settingsToast==='function')settingsToast('Збережено');
-    }else if(typeof settingsToast==='function'){
-      settingsToast('Не вдалося зберегти');
+    }else{
+      // Surface the real problem instead of failing silently -- this is
+      // almost always because /community/api/settings/typing-text isn't
+      // deployed yet (old router.py still running) or the account isn't
+      // authenticated.
+      const reason=(data&&(data.error||data.detail))||('HTTP '+res.status);
+      console.error('[AlexiHub] saveTypingText failed:',reason);
+      if(typeof settingsToast==='function')settingsToast('Не вдалося зберегти ('+reason+')');
     }
   }catch(e){
-    if(typeof settingsToast==='function')settingsToast('Не вдалося зберегти');
+    console.error('[AlexiHub] saveTypingText network error:',e);
+    if(typeof settingsToast==='function')settingsToast('Не вдалося зберегти: немає з’єднання');
   }
 };
 const live=document.getElementById('live-status');
@@ -2136,7 +2166,14 @@ function handleDmRealtimeData(data){
       // custom typing text (Settings -> Appearance) if they've set one.
       const u=users[0];
       const custom=(u.typing_text||'').trim();
-      typingEl.textContent=custom?(u.username+' '+custom):(u.username+window.AlexiHubI18n.t("dm.text.preferring"));
+      let defaultSuffix=(window.AlexiHubI18n&&window.AlexiHubI18n.t)?window.AlexiHubI18n.t("dm.text.preferring"):'';
+      // Missing translation keys often just echo back the key (or part of
+      // it) with no leading space, which glues onto the username -- e.g.
+      // "Alexiprefering". Fall back to a sane default in that case.
+      if(!defaultSuffix||!/^\s/.test(defaultSuffix)||/preferring|typing/i.test(defaultSuffix)){
+        defaultSuffix=' печатает...';
+      }
+      typingEl.textContent=custom?(u.username+' '+custom):(u.username+defaultSuffix);
     }
   }
   if(data.type==='pin_add'&&data.pin&&window.__dmPinsApi)window.__dmPinsApi.upsertDmPin(data.pin);
