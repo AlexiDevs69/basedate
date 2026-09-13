@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.148.3",
+      "date": "2026-09-13",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: comments in store.html for clarity."
+      ],
+      "source_sha": "b59ee07bd512a9816d8652b652a3ebb35f91ac43"
+    },
+    {
       "version": "1.148.2",
       "date": "2026-09-13",
       "title": "Виправлення та стабільність",
