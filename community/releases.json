@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.153.0",
+      "date": "2026-09-13",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: typing text to DM socket messages."
+      ],
+      "source_sha": "ea524a0fe413c757c6d1f94405eeaeec91de8292"
+    },
+    {
       "version": "1.152.2",
       "date": "2026-09-13",
       "title": "Виправлення та стабільність",
