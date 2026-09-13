@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.147.6",
+      "date": "2026-09-13",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Remove emoji tone and add buttons from home template."
+      ],
+      "source_sha": "5586c625aad350314228f6cc8dd90a0f723ce2cc"
+    },
+    {
       "version": "1.147.5",
       "date": "2026-09-13",
       "title": "Виправлення та стабільність",
