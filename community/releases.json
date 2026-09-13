@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.153.2",
+      "date": "2026-09-13",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Виправлено: formatting and add typing_text to users list."
+      ],
+      "source_sha": "4c45214194123b4d50a2af7c9d27057024e0ecea"
+    },
+    {
       "version": "1.153.1",
       "date": "2026-09-13",
       "title": "Виправлення та стабільність",
