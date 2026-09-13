@@ -86,6 +86,12 @@ class Account(Base):
     # Values: ru, uk, en.
     language: Mapped[str] = mapped_column(String(8), default="ru", nullable=False)
 
+    # Custom word/phrase shown after this account's name in the typing
+    # indicator (e.g. "печатает" -> "врайтает"). NULL/empty falls back to
+    # the default localized "is typing" suffix. Set from Settings ->
+    # Appearance.
+    typing_text: Mapped[str | None] = mapped_column(String(40), nullable=True)
+
     # --- Privacy and message permissions. ---
     # Friends can always exchange direct messages.  The DM flag controls
     # non-friends who share at least one server with this account.
