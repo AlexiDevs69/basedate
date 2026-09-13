@@ -603,7 +603,11 @@ class RealtimeChannelManager:
             if not typers_map and key in self.typing:
                 self.typing.pop(key, None)
             users = [
-                {"id": uid, "username": item.get("username", "user")}
+                {
+                    "id": uid,
+                    "username": item.get("username", "user"),
+                    "typing_text": item.get("typing_text", ""),
+                }
                 for uid, item in typers_map.items()
             ]
         await self.broadcast(key, {"type": "typing", "users": users})
