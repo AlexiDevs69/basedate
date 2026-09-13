@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.152.2",
+      "date": "2026-09-13",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance typing event handling with typing_text."
+      ],
+      "source_sha": "dec7c10a48ca84198c3859892d1bb3b96d0b5311"
+    },
+    {
       "version": "1.152.1",
       "date": "2026-09-13",
       "title": "Оновлення AlexiHub",
