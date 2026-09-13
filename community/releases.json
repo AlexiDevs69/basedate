@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.147.7",
+      "date": "2026-09-13",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update user settings link in home templat."
+      ],
+      "source_sha": "9f9e08e00530073ab7e22be451c75733a6e51633"
+    },
+    {
       "version": "1.147.6",
       "date": "2026-09-13",
       "title": "Виправлення та стабільність",
