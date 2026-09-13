@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.154.0",
+      "date": "2026-09-14",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: emoji picker for typing text customization."
+      ],
+      "source_sha": "dd102dd5c7c9e66205d2063252c1f03b90b0b824"
+    },
+    {
       "version": "1.153.2",
       "date": "2026-09-13",
       "title": "Виправлення та стабільність",
