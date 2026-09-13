@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.151.0",
+      "date": "2026-09-13",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: typing text settings API endpoint."
+      ],
+      "source_sha": "4dadaf022f0fc04de4d9a8eb4abc1d66594e52ab"
+    },
+    {
       "version": "1.150.0",
       "date": "2026-09-13",
       "title": "Нові можливості AlexiHub",
