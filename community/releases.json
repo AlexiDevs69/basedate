@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.147.5",
+      "date": "2026-09-13",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance emoji picker styles and functionali."
+      ],
+      "source_sha": "8692ed37283e83675cd088c9ed08e48c673c3798"
+    },
+    {
       "version": "1.147.4",
       "date": "2026-09-13",
       "title": "Виправлення та стабільність",
