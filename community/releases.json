@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.149.0",
+      "date": "2026-09-13",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: typing_text to user model."
+      ],
+      "source_sha": "2c9432fbca9387be43402c81621710d1447983ca"
+    },
+    {
       "version": "1.148.7",
       "date": "2026-09-13",
       "title": "Виправлення та стабільність",
