@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.153.1",
+      "date": "2026-09-13",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance DM chat image upload and edit functionality."
+      ],
+      "source_sha": "c396ec8f11dc7dc830f37dbbe1945cc995143add"
+    },
+    {
       "version": "1.153.0",
       "date": "2026-09-13",
       "title": "Нові можливості AlexiHub",
