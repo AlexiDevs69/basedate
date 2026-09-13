@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.154.1",
+      "date": "2026-09-14",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: typing text normalization and sanitization."
+      ],
+      "source_sha": "ce304e1a520a2d3e03af0e6f4d07b2d361cd5d72"
+    },
+    {
       "version": "1.154.0",
       "date": "2026-09-14",
       "title": "Нові можливості AlexiHub",
