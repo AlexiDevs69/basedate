@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.148.6",
+      "date": "2026-09-13",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: CSS for store layout and responsiveness."
+      ],
+      "source_sha": "0622198c4e6a61c234085a7f4c51de6c63c3c5ac"
+    },
+    {
       "version": "1.148.5",
       "date": "2026-09-13",
       "title": "Виправлення та стабільність",
