@@ -1852,10 +1852,39 @@ const input=document.getElementById('content');
 const imageInput=document.getElementById('image_url');
 const typingEl=document.getElementById('typing');
 
-const AH_TYPING_EMOJI_LIST=['😀','😁','😂','🤣','😊','😉','😍','😘','😜','🤪','😎','🤓','🥳','😴','🤔','🙄','😏','😬','😱','🥺','😭','😡','🤬','🤯','😇','🤗','🤫','🤐','😷','🤒','🥶','🥵','😈','👻','💀','👽','🤖','💩','🔥','✨','⭐','💯','💥','💫','❤️','🧡','💛','💚','💙','💜','🖤','🤍','💔','💕','💖','👍','👎','👏','🙌','🤝','✌️','🤙','🫡','🐱','🐶','🦆','🐸','🐼','🦊','🐧','🦉','🐢','🐍','🌸','🌟','🎉','🎮','🎧','☕','🍕','🍔','⚡'];
 const AH_TYPING_EMOJI_MAX=3;
+let ahTypingEmojiLib=null; // {ok,nitro,emojis:[{id,name,image_url,allowed,local,server_name,...}]}
+let ahTypingEmojiLibPromise=null;
+function loadTypingEmojiLibrary(){
+  if(ahTypingEmojiLib)return Promise.resolve(ahTypingEmojiLib);
+  if(!ahTypingEmojiLibPromise){
+    // context=dm with no thread_id -> every server emoji this account can
+    // see, same "own server free / other server needs Nitro" rule as
+    // sending them in a message (see get_media_item_for_send).
+    ahTypingEmojiLibPromise=fetch('/community/api/media/library?context=dm',{credentials:'same-origin'})
+      .then(r=>r.json())
+      .then(data=>{ahTypingEmojiLib=(data&&data.ok!==false)?data:{ok:false,emojis:[]};return ahTypingEmojiLib;})
+      .catch(()=>{ahTypingEmojiLib={ok:false,emojis:[]};return ahTypingEmojiLib;});
+  }
+  return ahTypingEmojiLibPromise;
+}
+function typingEmojiById(id){
+  const list=(ahTypingEmojiLib&&ahTypingEmojiLib.emojis)||[];
+  return list.find(x=>String(x.id)===String(id))||null;
+}
 function countTypingTextEmoji(str){
-  try{return (String(str||'').match(/\p{Extended_Pictographic}/gu)||[]).length;}catch(e){return 0;}
+  return (String(str||'').match(/\[\[ah:emoji:\d+\]\]/g)||[]).length;
+}
+function escapeHtmlForTyping(s){
+  return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+}
+function renderTypingTextPreviewHtml(text){
+  return escapeHtmlForTyping(text).replace(/\[\[ah:emoji:(\d+)\]\]/g,(marker,id)=>{
+    const item=typingEmojiById(id);
+    if(!item||!item.image_url)return '';
+    const name=escapeHtmlForTyping(item.name||'emoji');
+    return '<img class="ah-custom-emoji" src="'+escapeHtmlForTyping(item.image_url)+'" alt=":'+name+':" title=":'+name+':">';
+  });
 }
 function initTypingTextSettings(){
   const ttInput=document.getElementById('ah-typing-text-input');
@@ -1865,13 +1894,16 @@ function initTypingTextSettings(){
   ttInput.dataset.ahBound='1';
   function renderTypingPreview(){
     const val=ttInput.value.trim();
-    ttPreview.textContent=currentUser.username+' '+(val||'печатает');
+    ttPreview.innerHTML=renderTypingTextPreviewHtml(currentUser.username+' '+(val||'печатает'));
   }
   ttInput.addEventListener('input',renderTypingPreview);
   renderTypingPreview();
+  loadTypingEmojiLibrary().then(renderTypingPreview); // re-render once we know the saved marker's image
 
-  // --- optional emoji picker: lets the user drop up to AH_TYPING_EMOJI_MAX
-  // emoji anywhere in the custom typing text (e.g. "🦆 врайтает 🦆").
+  // --- emoji picker: only custom emoji from the account's own servers,
+  // up to AH_TYPING_EMOJI_MAX per typing text. Emoji from a server you're
+  // not "home" in are shown locked unless you have Nitro, same as the
+  // message composer's emoji picker.
   const emojiBtn=document.getElementById('ah-typing-emoji-btn');
   const emojiPanel=document.getElementById('ah-typing-emoji-panel');
   const emojiGrid=document.getElementById('ah-typing-emoji-grid');
@@ -1882,39 +1914,64 @@ function initTypingTextSettings(){
     const n=countTypingTextEmoji(ttInput.value);
     if(emojiCountEl)emojiCountEl.textContent=n+'/'+AH_TYPING_EMOJI_MAX;
     const atLimit=n>=AH_TYPING_EMOJI_MAX;
-    emojiGrid.querySelectorAll('button').forEach(b=>{
-      b.disabled=atLimit;
-      b.style.opacity=atLimit?'.35':'1';
-      b.style.cursor=atLimit?'default':'pointer';
+    emojiGrid.querySelectorAll('button[data-emoji-id]').forEach(b=>{
+      b.style.cursor=(atLimit&&b.dataset.locked!=='1')?'default':'pointer';
     });
   }
 
-  if(!emojiGrid.dataset.built){
-    emojiGrid.dataset.built='1';
-    AH_TYPING_EMOJI_LIST.forEach(ch=>{
+  function insertEmojiMarker(item){
+    if(countTypingTextEmoji(ttInput.value)>=AH_TYPING_EMOJI_MAX){
+      if(typeof settingsToast==='function')settingsToast('Максимум '+AH_TYPING_EMOJI_MAX+' емодзі');
+      return;
+    }
+    const marker='[[ah:emoji:'+item.id+']]';
+    const start=ttInput.selectionStart!=null?ttInput.selectionStart:ttInput.value.length;
+    const end=ttInput.selectionEnd!=null?ttInput.selectionEnd:ttInput.value.length;
+    ttInput.value=ttInput.value.slice(0,start)+marker+ttInput.value.slice(end);
+    const pos=start+marker.length;
+    ttInput.focus();
+    ttInput.setSelectionRange(pos,pos);
+    ttInput.dispatchEvent(new Event('input',{bubbles:true})); // updates preview + emoji count
+  }
+
+  function buildEmojiGrid(){
+    const items=(ahTypingEmojiLib&&ahTypingEmojiLib.emojis)||[];
+    emojiGrid.innerHTML='';
+    if(!items.length){
+      emojiGrid.style.display='block';
+      emojiGrid.innerHTML='<div style="color:#949ba4;font-size:12px;padding:6px 2px;line-height:1.4">У серверах, де ти учасник, поки немає власних емодзі.</div>';
+      return;
+    }
+    emojiGrid.style.display='grid';
+    items.forEach(item=>{
+      const locked=!item.allowed;
       const b=document.createElement('button');
       b.type='button';
-      b.textContent=ch;
-      b.setAttribute('aria-label',ch);
-      b.style.cssText='height:30px;border:0;border-radius:6px;background:transparent;font-size:17px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center';
-      b.addEventListener('mouseenter',()=>{if(!b.disabled)b.style.background='rgba(255,255,255,.09)';});
+      b.dataset.emojiId=item.id;
+      if(locked)b.dataset.locked='1';
+      b.title=(item.name||'emoji')+(item.server_name?(' · '+item.server_name):'')+(locked?' (потрібен Nitro)':'');
+      b.style.cssText='height:34px;border:0;border-radius:6px;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center'+(locked?';filter:grayscale(.6);opacity:.5':'');
+      const img=document.createElement('img');
+      img.src=item.image_url;
+      img.alt=item.name||'emoji';
+      img.loading='lazy';
+      img.style.cssText='max-width:24px;max-height:24px;object-fit:contain;pointer-events:none';
+      b.appendChild(img);
+      b.addEventListener('mouseenter',()=>{b.style.background='rgba(255,255,255,.09)';});
       b.addEventListener('mouseleave',()=>{b.style.background='transparent';});
       b.addEventListener('click',()=>{
-        if(countTypingTextEmoji(ttInput.value)>=AH_TYPING_EMOJI_MAX){
-          if(typeof settingsToast==='function')settingsToast('Максимум '+AH_TYPING_EMOJI_MAX+' емодзі');
+        if(locked){
+          if(typeof settingsToast==='function'&&window.AlexiHubI18n)settingsToast(window.AlexiHubI18n.t('common.text.for_a_ls_or_another_server_you_need_nitro'));
           return;
         }
-        const start=ttInput.selectionStart!=null?ttInput.selectionStart:ttInput.value.length;
-        const end=ttInput.selectionEnd!=null?ttInput.selectionEnd:ttInput.value.length;
-        ttInput.value=ttInput.value.slice(0,start)+ch+ttInput.value.slice(end);
-        const pos=start+ch.length;
-        ttInput.focus();
-        ttInput.setSelectionRange(pos,pos);
-        ttInput.dispatchEvent(new Event('input',{bubbles:true})); // updates preview + emoji count
+        insertEmojiMarker(item);
       });
       emojiGrid.appendChild(b);
     });
   }
+
+  emojiGrid.innerHTML='<div style="color:#949ba4;font-size:12px;padding:6px 2px">Завантаження…</div>';
+  loadTypingEmojiLibrary().then(()=>{buildEmojiGrid();refreshEmojiState();});
 
   ttInput.addEventListener('input',refreshEmojiState);
   refreshEmojiState();
@@ -1966,7 +2023,7 @@ window.saveTypingText=async function(){
       ttInput.value=data.typing_text||'';
       currentTypingText=ttInput.value;
       const preview=document.getElementById('ah-typing-text-preview');
-      if(preview)preview.textContent=currentUser.username+' '+(ttInput.value||'печатает');
+      if(preview)preview.innerHTML=renderTypingTextPreviewHtml(currentUser.username+' '+(ttInput.value||'печатает'));
       if(typeof settingsToast==='function')settingsToast('Збережено');
     }else{
       // Surface the real problem instead of failing silently -- this is
@@ -2225,6 +2282,16 @@ function handleDmRealtimeData(data){
     dmReplyCache.delete(String(id));
     if(window.__dmPinsApi)window.__dmPinsApi.removeDmPin(id);
   }
+  function ahRenderTypingTextHtml(text){
+    const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+    const resolve=(window.AlexiHubRichText&&window.AlexiHubRichText.resolveEmoji)?window.AlexiHubRichText.resolveEmoji:null;
+    return esc(text).replace(/\[\[ah:emoji:(\d+)\]\]/g,(marker,id)=>{
+      const item=resolve?resolve(id):null;
+      if(!item||!item.image_url)return '';
+      const name=String(item.name||'emoji');
+      return '<img class="ah-custom-emoji" src="'+esc(item.image_url)+'" alt=":'+esc(name)+':" title=":'+esc(name)+':" loading="lazy" referrerpolicy="no-referrer">';
+    });
+  }
   if(data.type==='typing'){
     const users=(data.users||[]).filter(u=>u.id!==currentUser.id);
     if(!users.length){
@@ -2241,7 +2308,7 @@ function handleDmRealtimeData(data){
       if(!defaultSuffix||!/^\s/.test(defaultSuffix)||/preferring|typing/i.test(defaultSuffix)){
         defaultSuffix=' печатает...';
       }
-      typingEl.textContent=custom?(u.username+' '+custom):(u.username+defaultSuffix);
+      typingEl.innerHTML=ahRenderTypingTextHtml(custom?(u.username+' '+custom):(u.username+defaultSuffix));
     }
   }
   if(data.type==='pin_add'&&data.pin&&window.__dmPinsApi)window.__dmPinsApi.upsertDmPin(data.pin);
@@ -3197,21 +3264,21 @@ document.addEventListener('DOMContentLoaded',()=>{
           <div class="ah-settings-row" style="flex-direction:column;align-items:stretch;gap:10px;padding:16px 2px">
             <div>
               <div class="label" style="font-weight:800;color:#fff;margin-bottom:4px">Персоналізуй індикатор набору тексту</div>
-              <div class="ah-settings-muted" style="color:#b5bac1;font-size:13px;line-height:1.4">Заміни слово, яке з'являється після твого ніку, коли ти щось пишеш співрозмовнику. Додай до 3 емодзі та свій текст — наприклад, замість «{{ account.username }} печатает» можна зробити «{{ account.username }} 🦆 врайтает 🦆». Залиш поле порожнім, щоб повернути стандартний варіант.</div>
+              <div class="ah-settings-muted" style="color:#b5bac1;font-size:13px;line-height:1.4">Заміни слово, яке з'являється після твого ніку, коли ти щось пишеш співрозмовнику. Додай до 3 емодзі зі своїх серверів та свій текст — наприклад, замість «{{ account.username }} печатает» можна зробити «{{ account.username }} врайтает». Залиш поле порожнім, щоб повернути стандартний варіант.</div>
             </div>
             <div style="position:relative;max-width:360px">
               <div style="display:flex;gap:8px;align-items:center">
-                <input id="ah-typing-text-input" type="text" maxlength="40" placeholder="печатает" value="{{ account.typing_text or '' }}" style="height:40px;flex:1;min-width:0;border-radius:7px;background:#1e1f22;border:1px solid #3f4149;color:#fff;padding:0 12px;outline:none;font:inherit">
-                <button id="ah-typing-emoji-btn" type="button" title="Додати емодзі" aria-label="Додати емодзі" style="width:40px;height:40px;flex:0 0 auto;border-radius:7px;background:#1e1f22;border:1px solid #3f4149;color:#fff;font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center">😊</button>
+                <input id="ah-typing-text-input" type="text" maxlength="150" placeholder="печатает" value="{{ account.typing_text or '' }}" style="height:40px;flex:1;min-width:0;border-radius:7px;background:#1e1f22;border:1px solid #3f4149;color:#fff;padding:0 12px;outline:none;font:inherit">
+                <button id="ah-typing-emoji-btn" type="button" title="Додати емодзі з сервера" aria-label="Додати емодзі з сервера" style="width:40px;height:40px;flex:0 0 auto;border-radius:7px;background:#1e1f22;border:1px solid #3f4149;color:#fff;font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center">😊</button>
               </div>
               <div id="ah-typing-emoji-panel" style="display:none;position:absolute;top:46px;left:0;z-index:40;width:266px;max-height:220px;overflow-y:auto;background:#2b2d31;border:1px solid #3a3d45;border-radius:10px;box-shadow:0 18px 40px rgba(0,0,0,.42);padding:10px">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;color:#b5bac1;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.03em">
-                  <span>Емодзі</span><span id="ah-typing-emoji-count">0/3</span>
+                  <span>Емодзі з твоїх серверів</span><span id="ah-typing-emoji-count">0/3</span>
                 </div>
-                <div id="ah-typing-emoji-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px"></div>
+                <div id="ah-typing-emoji-grid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:5px"></div>
               </div>
             </div>
-            <div style="color:#72767d;font-size:12px">Прев'ю: <b id="ah-typing-text-preview" style="color:#dbdee1;font-weight:800"></b></div>
+            <div style="color:#72767d;font-size:12px">Прев'ю: <b id="ah-typing-text-preview" style="color:#dbdee1;font-weight:800;display:inline-flex;align-items:center;gap:2px"></b></div>
             <div><button class="ah-settings-btn" type="button" onclick="saveTypingText()">Зберегти</button></div>
           </div>
         </div>
@@ -8892,7 +8959,7 @@ document.addEventListener('DOMContentLoaded', async function(){
   document.addEventListener('keydown',event=>{if((event.key==='Enter'||event.key===' ')&&event.target.closest('.ah-rich-spoiler')){event.preventDefault();event.target.closest('.ah-rich-spoiler').classList.toggle('revealed');}});
   const root=document.getElementById('messages')||document.querySelector('.messages');if(root)new MutationObserver(()=>schedule(root)).observe(root,{childList:true,subtree:true,characterData:true});
   [0,80,350,900].forEach(delay=>setTimeout(()=>renderAll(document),delay));loadEmojiMap();
-  window.AlexiHubRichText={render:renderAll};
+  window.AlexiHubRichText={render:renderAll,resolveEmoji:id=>emojiById.get(String(id))};
 })();
 </script>
 
