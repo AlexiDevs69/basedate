@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.154.3",
+      "date": "2026-09-14",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance typing text feature with emoji support."
+      ],
+      "source_sha": "20fbc521b01114dfadcdb6a82ab7b18ada2a8a3e"
+    },
+    {
       "version": "1.154.2",
       "date": "2026-09-14",
       "title": "Виправлення та стабільність",
