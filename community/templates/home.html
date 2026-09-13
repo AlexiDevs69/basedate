@@ -3226,6 +3226,33 @@ body.ah-store-product-open{overflow:hidden}
         </div>
       </section>
 
+      <style id="ah-store-depth-refactor-css">
+        /* ===== Halloween depth refactor: hero grid + product-stack + card depth + auto-fit grids ===== */
+        .ah-store-hero{display:grid;grid-template-columns:1.4fr 1fr;align-items:center;gap:24px;padding:0 24px}
+        .ah-store-hero-copy{position:relative;z-index:2;width:auto;min-height:390px;padding:54px 0 48px 0}
+        .ah-store-countdown{position:relative;right:auto;top:auto;z-index:2;margin-top:20px;width:min(320px,100%)}
+        .ah-store-hero-stack{position:relative;z-index:2;grid-column:2;display:grid;place-items:center;min-height:340px}
+        .ah-store-hero-stack::before{content:"";position:absolute;inset:-40px;background:radial-gradient(circle,rgba(255,180,84,.35),rgba(147,51,234,.14) 55%,transparent 75%);filter:blur(6px);z-index:-1}
+        .ah-hero-card-cluster{position:relative;width:280px;height:300px}
+        .ah-hero-card{position:absolute;width:172px;height:230px;overflow:hidden;border-radius:16px;border:1px solid rgba(255,255,255,.14);background:#1e1024 center/cover no-repeat;box-shadow:0 20px 45px rgba(0,0,0,.4);transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+        .ah-hero-card-art{position:absolute;inset:0;display:grid;place-items:center;font-size:56px}
+        .ah-hero-card-cap{position:absolute;left:0;right:0;bottom:0;padding:10px 12px;background:linear-gradient(180deg,transparent,rgba(8,4,14,.88));color:#fff;font-size:10px;font-weight:850}
+        .ah-hero-card.c1{left:0;top:44px;transform:rotate(-9deg);z-index:1}
+        .ah-hero-card.c2{left:56px;top:0;transform:rotate(0deg);z-index:3}
+        .ah-hero-card.c3{left:112px;top:40px;transform:rotate(10deg);z-index:2}
+        .ah-hero-card-cluster:hover .c1{transform:rotate(-14deg) translateY(-4px)}
+        .ah-hero-card-cluster:hover .c3{transform:rotate(15deg) translateY(-4px)}
+        @media(max-width:900px){.ah-store-hero{grid-template-columns:1fr}.ah-store-hero-stack{grid-column:1;min-height:260px}.ah-store-hero-copy{width:auto!important}}
+        @media(max-width:680px){.ah-store-hero-copy{width:auto!important;padding:32px 24px 24px!important;justify-content:flex-start!important}.ah-store-hero-stack{display:none}}
+
+        .ah-store-pass-emblem::before{background:radial-gradient(circle at 34% 30%,#c9b8ff,#6b21a8 55%,#3a1206 130%);box-shadow:inset 0 0 0 2px rgba(255,255,255,.42),inset 0 -16px 28px rgba(40,10,50,.3),0 0 0 8px rgba(147,51,234,.09),0 0 34px rgba(147,51,234,.35)}
+        .ah-store-pass-cat{position:relative;z-index:1;width:112px;height:112px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.4));animation:ahPumpkinBob 3.2s ease-in-out infinite}
+
+        .ah-store-theme-gallery,.ah-store-collection-rail{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))!important}
+        .ah-store-catalog-card,.ah-store-theme-card{border:1px solid rgba(255,255,255,.08)!important;background:rgba(30,31,34,.6)!important;backdrop-filter:blur(10px);box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 8px 24px rgba(0,0,0,.25)}
+        .ah-store-catalog-card:hover,.ah-store-theme-card:hover{border-color:rgba(255,255,255,.16)!important;background:rgba(38,40,44,.72)!important}
+      </style>
+
       <section id="home-store-view" class="ah-season-store" aria-label="{{ i18n_t('home.aria.yceurseman_summer_clover') }}" data-i18n-aria-label="home.aria.yceurseman_summer_clover" data-profile-banner="{{ account.banner_url or '' }}" data-profile-avatar="{{ account.avatar_url or '' }}" data-profile-name="{{ account.display_name or account.username }}" data-profile-username="{{ account.username }}">
         <header class="ah-store-topbar">
           <div class="ah-store-brand"><svg class="icon"><use href="#i-shop"></use></svg><span><!--i18n:common.text.shop-->{{ i18n_t('common.text.shop') }}</span></div>
@@ -3393,20 +3420,28 @@ body.ah-store-product-open{overflow:hidden}
                   </g>
                 </svg>
               </div>
-              <div class="ah-store-countdown">
-                <div class="ah-store-countdown-label"><span><!--i18n:home.text.natebianth_of_the_end_of_summer-->{{ i18n_t('home.text.natebianth_of_the_end_of_summer') }}</span><span><!--i18n:home.text.august_31-->{{ i18n_t('home.text.august_31') }}</span></div>
-                <div id="ah-store-countdown" class="ah-store-time" role="timer" aria-label="{{ i18n_t('home.aria.the_time_until_the_end_of_the_season') }}" data-i18n-aria-label="home.aria.the_time_until_the_end_of_the_season">
-                  <span class="ah-store-time-part"><b data-store-time="days">00</b><small><!--i18n:common.text.nunder_days-->{{ i18n_t('common.text.nunder_days') }}</small></span>
-                  <span class="ah-store-time-part"><b data-store-time="hours">00</b><small><!--i18n:home.text.hours-->{{ i18n_t('home.text.hours') }}</small></span>
-                  <span class="ah-store-time-part"><b data-store-time="minutes">00</b><small><!--i18n:home.text.minutes-->{{ i18n_t('home.text.minutes') }}</small></span>
-                  <span class="ah-store-time-part"><b data-store-time="seconds">00</b><small><!--i18n:home.text.seconds_of-->{{ i18n_t('home.text.seconds_of') }}</small></span>
-                </div>
-              </div>
               <div class="ah-store-hero-copy">
                 <span class="ah-store-eyebrow"><i class="ah-store-clover-dot" aria-hidden="true"></i><!--i18n:home.text.sense_career_collection-->{{ i18n_t('home.text.sense_career_collection') }}</span>
                 <h1 id="ah-store-season-title" class="ah-store-title">Spooky <span>Season</span></h1>
                 <p class="ah-store-subtitle"><!--i18n:home.text.summer_season_alexihub_light_greenery_solar_rewards_and_a_new-->{{ i18n_t('home.text.summer_season_alexihub_light_greenery_solar_rewards_and_a_new') }}</p>
                 <button class="ah-store-hero-button" type="button" onclick="scrollToSummerPass(this)"><!--i18n:home.action.view_the_pass-->{{ i18n_t('home.action.view_the_pass') }} <svg class="icon"><use href="#i-arrow-right"></use></svg></button>
+                <div class="ah-store-countdown">
+                  <div class="ah-store-countdown-label"><span><!--i18n:home.text.natebianth_of_the_end_of_summer-->{{ i18n_t('home.text.natebianth_of_the_end_of_summer') }}</span><span><!--i18n:home.text.august_31-->{{ i18n_t('home.text.august_31') }}</span></div>
+                  <div id="ah-store-countdown" class="ah-store-time" role="timer" aria-label="{{ i18n_t('home.aria.the_time_until_the_end_of_the_season') }}" data-i18n-aria-label="home.aria.the_time_until_the_end_of_the_season">
+                    <span class="ah-store-time-part"><b data-store-time="days">00</b><small><!--i18n:common.text.nunder_days-->{{ i18n_t('common.text.nunder_days') }}</small></span>
+                    <span class="ah-store-time-part"><b data-store-time="hours">00</b><small><!--i18n:home.text.hours-->{{ i18n_t('home.text.hours') }}</small></span>
+                    <span class="ah-store-time-part"><b data-store-time="minutes">00</b><small><!--i18n:home.text.minutes-->{{ i18n_t('home.text.minutes') }}</small></span>
+                    <span class="ah-store-time-part"><b data-store-time="seconds">00</b><small><!--i18n:home.text.seconds_of-->{{ i18n_t('home.text.seconds_of') }}</small></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="ah-store-hero-stack" aria-hidden="true">
+                <div class="ah-hero-card-cluster">
+                  <div class="ah-hero-card c1"><span class="ah-hero-card-art">🕸️</span><span class="ah-hero-card-cap">Cobweb Cloak</span></div>
+                  <div class="ah-hero-card c2"><span class="ah-hero-card-art">🎃</span><span class="ah-hero-card-cap">Featured: Trick-or-Treat Pass</span></div>
+                  <div class="ah-hero-card c3"><span class="ah-hero-card-art">👻</span><span class="ah-hero-card-cap">Ghost Nameplate</span></div>
+                </div>
               </div>
             </section>
 
@@ -3429,28 +3464,32 @@ body.ah-store-product-open{overflow:hidden}
                 </div>
                 <div class="ah-store-pass-art" aria-hidden="true">
                   <span class="ah-store-pass-ring"></span>
-                  <span class="ah-store-pass-emblem">                  <svg class="ah-store-pass-pumpkin" viewBox="0 0 160 160" role="img" aria-label="Halloween pumpkin">
+                  <span class="ah-store-pass-emblem"><svg class="ah-store-pass-cat" viewBox="0 0 160 160" role="img" aria-label="Spooky cat">
                     <defs>
                       <filter id="ahPassGlow" x="-80%" y="-80%" width="260%" height="260%">
                         <feGaussianBlur stdDeviation="4" result="b"/>
                         <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
                       </filter>
                     </defs>
-                    <ellipse cx="80" cy="128" rx="60" ry="24" fill="#ff8c1a" opacity=".22"/>
-                    <path d="M92 26c-8-14 4-26 18-22 10 3 12 15 2 20" stroke="#4a7c3a" stroke-width="6" stroke-linecap="round" fill="none"/>
-                    <path d="M86 30c14-6 30 0 32 14" stroke="#4a7c3a" stroke-width="7" stroke-linecap="round" fill="none"/>
-                    <path d="M74 32c-7-13 3-25 12-19 6 4 3 13-4 10Z" fill="#7a5230"/>
-                    <ellipse cx="35" cy="94" rx="28" ry="56" fill="#b8500d"/>
-                    <ellipse cx="60" cy="90" rx="30" ry="60" fill="#d9670f"/>
-                    <ellipse cx="80" cy="88" rx="32" ry="62" fill="#ffa147"/>
-                    <ellipse cx="100" cy="90" rx="30" ry="60" fill="#d9670f"/>
-                    <ellipse cx="125" cy="94" rx="28" ry="56" fill="#b8500d"/>
-                    <ellipse cx="55" cy="46" rx="18" ry="10" fill="#fff3c4" opacity=".2"/>
-                    <g fill="#fff3c4" filter="url(#ahPassGlow)">
-                      <path d="M47 78 Q54 54 68 74 Q56 84 47 78 Z"/>
-                      <path d="M113 78 Q106 54 92 74 Q104 84 113 78 Z"/>
-                      <path d="M52 100 Q80 128 108 100 Q92 116 80 116 Q68 116 52 100 Z"/>
+                    <ellipse cx="80" cy="132" rx="52" ry="16" fill="#160a24" opacity=".35"/>
+                    <polygon points="34,58 54,20 62,64" fill="#6b6f78"/>
+                    <polygon points="126,58 106,20 98,64" fill="#6b6f78"/>
+                    <polygon points="40,56 52,32 58,60" fill="#ff8c1a" opacity=".85"/>
+                    <polygon points="120,56 108,32 102,60" fill="#ff8c1a" opacity=".85"/>
+                    <rect x="34" y="52" width="92" height="70" rx="18" fill="#8a8f99"/>
+                    <rect x="42" y="104" width="76" height="34" rx="14" fill="#7d828c"/>
+                    <ellipse cx="60" cy="86" rx="14" ry="16" fill="#0c0616"/>
+                    <ellipse cx="100" cy="86" rx="14" ry="16" fill="#0c0616"/>
+                    <g fill="#fff3d6" filter="url(#ahPassGlow)">
+                      <circle cx="56" cy="80" r="3"/>
+                      <circle cx="63" cy="90" r="1.6"/>
+                      <circle cx="96" cy="80" r="3"/>
+                      <circle cx="103" cy="90" r="1.6"/>
                     </g>
+                    <polygon points="80,98 75,104 85,104" fill="#ffb454"/>
+                    <path d="M80 104 Q80 110 74 112 M80 104 Q80 110 86 112" stroke="#3a1206" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    <rect x="48" y="128" width="20" height="18" rx="6" fill="#6b6f78"/>
+                    <rect x="92" y="128" width="20" height="18" rx="6" fill="#6b6f78"/>
                   </svg></span>
                 </div>
               </div>
