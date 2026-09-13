@@ -1845,6 +1845,7 @@ function acceptDmServerInvite(btn){
 }
 
 const currentUser={id:{{ account.id }},username:"{{ account.username }}"};
+let currentTypingText={{ (account.typing_text or '')|tojson }};
 const messagesEl=document.getElementById('messages');
 const form=document.getElementById('dm-form');
 const input=document.getElementById('content');
@@ -1897,6 +1898,7 @@ window.saveTypingText=async function(){
     try{data=await res.json();}catch(e){/* non-JSON response, e.g. 404 HTML page */}
     if(res.ok&&data&&data.ok){
       ttInput.value=data.typing_text||'';
+      currentTypingText=ttInput.value;
       const preview=document.getElementById('ah-typing-text-preview');
       if(preview)preview.textContent=currentUser.username+' '+(ttInput.value||'печатает');
       if(typeof settingsToast==='function')settingsToast('Збережено');
@@ -2227,7 +2229,7 @@ input.addEventListener('input',()=>{
   input.style.height=Math.min(input.scrollHeight,160)+'px';
   if(ws&&ws.readyState===1){
     clearTimeout(typingTimer);clearTimeout(stopTimer);
-    sendDmSocket({type:'typing'});
+    sendDmSocket({type:'typing',typing_text:currentTypingText});
     stopTimer=setTimeout(()=>sendDmSocket({type:'typing_stop'}),1400);
   }
 });
