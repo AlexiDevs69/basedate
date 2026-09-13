@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.148.4",
+      "date": "2026-09-13",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Delete community/templates/store.html."
+      ],
+      "source_sha": "984df16ded8bc7ca6c58dade5b0d103b1cf884ab"
+    },
+    {
       "version": "1.148.3",
       "date": "2026-09-13",
       "title": "Оновлення AlexiHub",
