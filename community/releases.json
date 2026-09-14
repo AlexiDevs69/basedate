@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.160.1",
+      "date": "2026-09-14",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update router.py."
+      ],
+      "source_sha": "44b5f0510a0f1c1c38decd0c820baa86340df984"
+    },
+    {
       "version": "1.160.0",
       "date": "2026-09-14",
       "title": "Нові можливості AlexiHub",
