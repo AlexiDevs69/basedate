@@ -2081,11 +2081,33 @@ function initTypingTextSettings(){
 initTypingTextSettings();
 document.addEventListener('DOMContentLoaded',initTypingTextSettings);
 window.addEventListener('load',initTypingTextSettings);
+
+// Custom typing text is a Nitro perk: the block starts out locked
+// (greyed background + lock icon, see .ah-typing-gate.locked in the
+// appearance settings CSS) and we only lift the lock once we've
+// confirmed the account has an active subscription. Fails closed on
+// error/logged-out so the feature never opens up by accident.
+async function initTypingTextNitroGate(){
+  const gate=document.getElementById('ah-typing-gate');
+  if(!gate)return;
+  try{
+    const res=await fetch('/community/api/nitro/me',{credentials:'same-origin'});
+    const data=await res.json();
+    const active=!!(data&&data.ok&&data.subscription&&data.subscription.active);
+    gate.classList.toggle('locked',!active);
+  }catch(e){
+    gate.classList.add('locked');
+  }
+}
+initTypingTextNitroGate();
+document.addEventListener('DOMContentLoaded',initTypingTextNitroGate);
+window.addEventListener('load',initTypingTextNitroGate);
 {
   const _origOpenUserSettings=window.openUserSettings;
   window.openUserSettings=function(tab){
     if(typeof _origOpenUserSettings==='function')_origOpenUserSettings(tab);
     initTypingTextSettings();
+    initTypingTextNitroGate();
   };
 }
 
@@ -3360,32 +3382,56 @@ document.addEventListener('DOMContentLoaded',()=>{
 #ah-typing-emoji-panel .ah-typing-footer-source{color:#949ba4;font-size:11.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 #ah-typing-emoji-panel .ah-typing-footer-avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;flex:0 0 auto;background:#00C4B4 center/cover no-repeat;}
 #ah-typing-emoji-panel .ah-typing-footer-avatar-fallback{display:grid;place-items:center;color:#fff;font-size:11px;font-weight:800;}
+.ah-typing-input-row{position:relative}
+.ah-typing-input{height:46px;width:100%;border-radius:10px;background:#1e1f22;border:1px solid #3f4149;color:#fff;padding:0 46px 0 14px;outline:none;font:inherit;font-size:14px;transition:border-color .15s ease,box-shadow .15s ease}
+.ah-typing-input::placeholder{color:#6b7280}
+.ah-typing-input:focus{border-color:#00C4B4;box-shadow:0 0 0 3px rgba(0,196,180,.16)}
+.ah-typing-emoji-inline-btn{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:34px;height:34px;border:0;border-radius:8px;background:transparent;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s ease}
+.ah-typing-emoji-inline-btn:hover{background:rgba(255,255,255,.1)}
+.ah-typing-emoji-inline-btn svg{width:20px;height:20px;display:block;pointer-events:none}
+.ah-typing-gate{position:relative;border-radius:12px}
+.ah-typing-gate-content{transition:filter .15s ease,opacity .15s ease}
+.ah-typing-gate.locked{background:#1a1b1f}
+.ah-typing-gate.locked .ah-typing-gate-content{filter:grayscale(1) blur(1.5px);opacity:.35;pointer-events:none;user-select:none}
+.ah-typing-gate-lock{display:none;position:absolute;inset:0;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:24px;z-index:2}
+.ah-typing-gate.locked .ah-typing-gate-lock{display:flex}
+.ah-typing-gate-lock-icon{width:32px;height:32px;color:#fff;opacity:.95}
+.ah-typing-gate-lock-icon svg{width:100%;height:100%;display:block}
+.ah-typing-gate-locktext{color:#eef0f3;font-size:13px;font-weight:750;max-width:260px;line-height:1.5}
+.ah-typing-gate-nitrolink{color:#00a8fc;font-weight:900;text-decoration:none;cursor:pointer}
+.ah-typing-gate-nitrolink:hover{text-decoration:underline}
         </style>
         <div class="ah-settings-section">
-          <div class="ah-settings-row" style="flex-direction:column;align-items:stretch;gap:10px;padding:16px 2px">
-            <div>
-              <div class="label" style="font-weight:800;color:#fff;margin-bottom:4px" data-i18n="settings.typing_text.title"><!--i18n:settings.typing_text.title-->{{ i18n_t('settings.typing_text.title') }}</div>
-              <div class="ah-settings-muted" style="color:#b5bac1;font-size:13px;line-height:1.4">{{ i18n_t('settings.typing_text.description', default=i18n_t('dm.text.preferring')) }}</div>
-            </div>
-            <div style="position:relative;max-width:360px">
-              <div style="display:flex;gap:8px;align-items:center">
-                <input id="ah-typing-text-input" type="text" maxlength="150" placeholder="{{ i18n_t('dm.text.preferring') }}" data-i18n-placeholder="dm.text.preferring" value="{{ account.typing_text or '' }}" style="height:40px;flex:1;min-width:0;border-radius:7px;background:#1e1f22;border:1px solid #3f4149;color:#fff;padding:0 12px;outline:none;font:inherit">
-                <button id="ah-typing-emoji-btn" type="button" title="{{ i18n_t('settings.typing_text.add_emoji') }}" aria-label="{{ i18n_t('settings.typing_text.add_emoji') }}" data-i18n-title="settings.typing_text.add_emoji" data-i18n-aria-label="settings.typing_text.add_emoji" style="width:40px;height:40px;flex:0 0 auto;border-radius:7px;background:#1e1f22;border:1px solid #3f4149;color:#fff;font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center">😊</button>
+          <div class="ah-typing-gate locked" id="ah-typing-gate">
+            <div class="ah-typing-gate-content ah-settings-row" style="flex-direction:column;align-items:stretch;gap:10px;padding:16px 2px">
+              <div>
+                <div class="label" style="font-weight:800;color:#fff;margin-bottom:4px" data-i18n="settings.typing_text.title"><!--i18n:settings.typing_text.title-->{{ i18n_t('settings.typing_text.title') }}</div>
+                <div class="ah-settings-muted" style="color:#b5bac1;font-size:13px;line-height:1.4">{{ i18n_t('settings.typing_text.description', default=i18n_t('dm.text.preferring')) }}</div>
               </div>
-              <div id="ah-typing-emoji-panel" class="ah-media-picker">
-                <div class="ah-media-tabs">
-                  <button type="button" class="active" disabled data-i18n="common.text.emoji"><!--i18n:common.text.emoji-->{{ i18n_t('common.text.emoji') }}</button>
-                  <span id="ah-typing-emoji-count" style="margin-left:auto;color:#949ba4;font-size:12px;font-weight:800">0/3</span>
+              <div style="position:relative;max-width:460px">
+                <div id="ah-typing-text-input-row" class="ah-typing-input-row">
+                  <input id="ah-typing-text-input" class="ah-typing-input" type="text" maxlength="150" placeholder="{{ i18n_t('dm.text.preferring') }}" data-i18n-placeholder="dm.text.preferring" value="{{ account.typing_text or '' }}">
+                  <button id="ah-typing-emoji-btn" type="button" class="ah-typing-emoji-inline-btn" title="{{ i18n_t('settings.typing_text.add_emoji') }}" aria-label="{{ i18n_t('settings.typing_text.add_emoji') }}" data-i18n-title="settings.typing_text.add_emoji" data-i18n-aria-label="settings.typing_text.add_emoji"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M8.3 14.2c1 1.3 2.2 1.9 3.7 1.9s2.7-.6 3.7-1.9"></path><path d="M9 9.7h.01"></path><path d="M15 9.7h.01"></path></svg></button>
                 </div>
-                <div class="ah-media-search-row">
-                  <input id="ah-typing-emoji-search" class="ah-media-search" placeholder="{{ i18n_t('common.text.find_the_perfect_emoji') }}" data-i18n-placeholder="common.text.find_the_perfect_emoji">
+                <div id="ah-typing-emoji-panel" class="ah-media-picker">
+                  <div class="ah-media-tabs">
+                    <button type="button" class="active" disabled data-i18n="common.text.emoji"><!--i18n:common.text.emoji-->{{ i18n_t('common.text.emoji') }}</button>
+                    <span id="ah-typing-emoji-count" style="margin-left:auto;color:#949ba4;font-size:12px;font-weight:800">0/3</span>
+                  </div>
+                  <div class="ah-media-search-row">
+                    <input id="ah-typing-emoji-search" class="ah-media-search" placeholder="{{ i18n_t('common.text.find_the_perfect_emoji') }}" data-i18n-placeholder="common.text.find_the_perfect_emoji">
+                  </div>
+                  <div id="ah-typing-emoji-body" class="ah-media-body"></div>
+                  <div id="ah-typing-emoji-footer" class="ah-media-footer"><span data-i18n="settings.typing_text.footer_hint" style="color:#949ba4"><!--i18n:settings.typing_text.footer_hint-->{{ i18n_t('settings.typing_text.footer_hint') }}</span></div>
                 </div>
-                <div id="ah-typing-emoji-body" class="ah-media-body"></div>
-                <div id="ah-typing-emoji-footer" class="ah-media-footer"><span data-i18n="settings.typing_text.footer_hint" style="color:#949ba4"><!--i18n:settings.typing_text.footer_hint-->{{ i18n_t('settings.typing_text.footer_hint') }}</span></div>
               </div>
+              <div style="color:#72767d;font-size:12px"><span data-i18n="settings.typing_text.preview_label"><!--i18n:settings.typing_text.preview_label-->{{ i18n_t('settings.typing_text.preview_label') }}</span> <b id="ah-typing-text-preview" style="color:#dbdee1;font-weight:800;display:inline-flex;align-items:center;gap:2px"></b></div>
+              <div><button class="ah-settings-btn" type="button" onclick="saveTypingText()" data-i18n="common.action.save"><!--i18n:common.action.save-->{{ i18n_t('common.action.save') }}</button></div>
             </div>
-            <div style="color:#72767d;font-size:12px"><span data-i18n="settings.typing_text.preview_label"><!--i18n:settings.typing_text.preview_label-->{{ i18n_t('settings.typing_text.preview_label') }}</span> <b id="ah-typing-text-preview" style="color:#dbdee1;font-weight:800;display:inline-flex;align-items:center;gap:2px"></b></div>
-            <div><button class="ah-settings-btn" type="button" onclick="saveTypingText()" data-i18n="common.action.save"><!--i18n:common.action.save-->{{ i18n_t('common.action.save') }}</button></div>
+            <div class="ah-typing-gate-lock" id="ah-typing-gate-lock">
+              <span class="ah-typing-gate-lock-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></span>
+              <div class="ah-typing-gate-locktext">Активуйте <a href="#" class="ah-typing-gate-nitrolink" onclick="if(window.showSettingsTab){window.showSettingsTab('gifts');}return false;">Nitro</a> і відкрийте цю функцію</div>
+            </div>
           </div>
         </div>
       </section>
