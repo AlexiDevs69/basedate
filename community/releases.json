@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.160.0",
+      "date": "2026-09-14",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: Nitro gate for custom typing text."
+      ],
+      "source_sha": "c62cf2e9078ffd5b32368fdf2f62baa4fe89ec27"
+    },
+    {
       "version": "1.159.0",
       "date": "2026-09-14",
       "title": "Нові можливості AlexiHub",
