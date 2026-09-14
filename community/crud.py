@@ -4895,6 +4895,15 @@ async def get_nitro_gifter_badge(db: AsyncSession, account_id: int) -> dict:
     return nitro_gifter_badge_from_count(row["claimed_count"] if row else 0)
 
 
+async def has_active_nitro(db: AsyncSession, account_id: int) -> bool:
+    """Server-side backstop for Nitro-gated features (custom typing text,
+    its live WS broadcast, etc). The Settings UI already locks these behind
+    a Nitro paywall client-side, but that's cosmetic -- never trust it alone,
+    a hand-crafted request can hit these endpoints directly."""
+    sub = await get_nitro_subscription(db, account_id)
+    return bool(sub.get("active"))
+
+
 async def nitro_profile_payload(db: AsyncSession, account_id: int) -> dict:
     sub = await get_nitro_subscription(db, account_id)
     gifting = await get_nitro_gifter_badge(db, account_id)
