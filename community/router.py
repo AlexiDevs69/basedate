@@ -1540,7 +1540,16 @@ async def api_settings_language(request: Request, db: AsyncSession = Depends(get
 @router.post("/api/settings/typing-text")
 async def api_settings_typing_text(request: Request, db: AsyncSession = Depends(get_db)):
     """Save the custom word/phrase shown after this account's name while
-    it's typing (Settings -> Appearance). Empty value resets to default."""
+    it's typing (Settings -> Appearance). Empty value resets to default.
+
+    Nitro-gated: the Settings UI already locks this behind a Nitro paywall
+    (greyed out + lock icon unless the account has an active subscription),
+    but that's a client-side/cosmetic lock only -- a hand-crafted request
+    could hit this endpoint directly and bypass it. Setting a non-empty
+    value requires an active subscription; clearing it back to the default
+    (empty value) is always allowed, even for an account whose Nitro has
+    since expired.
+    """
     account = await current_account(request, db)
     if not account:
         return JSONResponse({"ok": False, "error": "not_authenticated"}, status_code=401)
@@ -1552,6 +1561,13 @@ async def api_settings_typing_text(request: Request, db: AsyncSession = Depends(
     except Exception:
         form = await request.form()
         typing_text = form.get("typing_text") or form.get("text") or ""
+
+    wants_custom_text = bool(crud.normalize_typing_text(str(typing_text)))
+    if wants_custom_text and not await crud.has_active_nitro(db, account.id):
+        return JSONResponse(
+            {"ok": False, "error": "nitro_required", "message": "Ця функція доступна тільки з активною підпискою Nitro."},
+            status_code=403,
+        )
 
     saved = await crud.update_account_typing_text(db, account.id, str(typing_text))
     response = JSONResponse({"ok": True, "typing_text": saved or ""})
@@ -4865,7 +4881,15 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
                 typing_profile = profile
                 if "typing_text" in data:
                     clean_typing_text = crud.normalize_typing_text(data.get("typing_text")) or ""
-                    clean_typing_text = await crud.sanitize_typing_text_emojis(db, account_id, clean_typing_text)
+                    # Nitro-gated, same rule as /api/settings/typing-text --
+                    # this WS event is a separate path a client could use to
+                    # inject a custom suffix live without ever saving it, so
+                    # it needs the same server-side backstop, not just the
+                    # Settings UI's client-side lock.
+                    if clean_typing_text and not await crud.has_active_nitro(db, account_id):
+                        clean_typing_text = ""
+                    elif clean_typing_text:
+                        clean_typing_text = await crud.sanitize_typing_text_emojis(db, account_id, clean_typing_text)
                     typing_profile = {
                         **profile,
                         "typing_text": clean_typing_text,
@@ -5280,7 +5304,15 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
                 typing_profile = profile
                 if "typing_text" in data:
                     clean_typing_text = crud.normalize_typing_text(data.get("typing_text")) or ""
-                    clean_typing_text = await crud.sanitize_typing_text_emojis(db, account_id, clean_typing_text)
+                    # Nitro-gated, same rule as /api/settings/typing-text --
+                    # this WS event is a separate path a client could use to
+                    # inject a custom suffix live without ever saving it, so
+                    # it needs the same server-side backstop, not just the
+                    # Settings UI's client-side lock.
+                    if clean_typing_text and not await crud.has_active_nitro(db, account_id):
+                        clean_typing_text = ""
+                    elif clean_typing_text:
+                        clean_typing_text = await crud.sanitize_typing_text_emojis(db, account_id, clean_typing_text)
                     typing_profile = {
                         **profile,
                         "typing_text": clean_typing_text,
