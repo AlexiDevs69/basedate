@@ -1855,17 +1855,33 @@ const typingEl=document.getElementById('typing');
 const AH_TYPING_EMOJI_MAX=3;
 let ahTypingEmojiLib=null; // {ok,nitro,emojis:[{id,name,image_url,allowed,local,server_name,...}]}
 let ahTypingEmojiLibPromise=null;
-function loadTypingEmojiLibrary(){
-  if(ahTypingEmojiLib)return Promise.resolve(ahTypingEmojiLib);
-  if(!ahTypingEmojiLibPromise){
-    // context=dm with no thread_id -> every server emoji this account can
-    // see, same "own server free / other server needs Nitro" rule as
-    // sending them in a message (see get_media_item_for_send).
-    ahTypingEmojiLibPromise=fetch('/community/api/media/library?context=dm',{credentials:'same-origin'})
-      .then(r=>r.json())
-      .then(data=>{ahTypingEmojiLib=(data&&data.ok!==false)?data:{ok:false,emojis:[]};return ahTypingEmojiLib;})
-      .catch(()=>{ahTypingEmojiLib={ok:false,emojis:[]};return ahTypingEmojiLib;});
-  }
+let ahTypingEmojiLibFailed=false;
+function loadTypingEmojiLibrary(force){
+  if(ahTypingEmojiLib&&!force)return Promise.resolve(ahTypingEmojiLib);
+  if(ahTypingEmojiLibPromise&&!force)return ahTypingEmojiLibPromise;
+  // context=dm with no thread_id -> every server emoji this account can
+  // see, same "own server free / other server needs Nitro" rule as
+  // sending them in a message (see get_media_item_for_send).
+  ahTypingEmojiLibFailed=false;
+  ahTypingEmojiLibPromise=fetch('/community/api/media/library?context=dm',{credentials:'same-origin'})
+    .then(async r=>{
+      let data=null;
+      try{data=await r.json();}catch(e){/* non-JSON, e.g. an HTML error page */}
+      if(!r.ok||!data||data.ok===false){
+        console.error('[AlexiHub] typing-text emoji library failed:',r.status,data&&(data.error||data.detail));
+        ahTypingEmojiLibFailed=true;
+        ahTypingEmojiLib={ok:false,emojis:[]};
+        return ahTypingEmojiLib;
+      }
+      ahTypingEmojiLib=data;
+      return ahTypingEmojiLib;
+    })
+    .catch(e=>{
+      console.error('[AlexiHub] typing-text emoji library network error:',e);
+      ahTypingEmojiLibFailed=true;
+      ahTypingEmojiLib={ok:false,emojis:[]};
+      return ahTypingEmojiLib;
+    });
   return ahTypingEmojiLibPromise;
 }
 function typingEmojiById(id){
@@ -1886,6 +1902,26 @@ function renderTypingTextPreviewHtml(text){
     return '<img class="ah-custom-emoji" src="'+escapeHtmlForTyping(item.image_url)+'" alt=":'+name+':" title=":'+name+':">';
   });
 }
+function ahTypingPickerGroupItems(items){
+  const out=[],map=new Map();
+  items.forEach(i=>{
+    const key=String(i.server_id||'0');
+    if(!map.has(key)){
+      map.set(key,{server_id:key,server_name:i.server_name||(window.AlexiHubI18n?window.AlexiHubI18n.t("common.text.the_server"):'Сервер'),server_icon_url:i.server_icon_url||'',items:[]});
+      out.push(map.get(key));
+    }
+    map.get(key).items.push(i);
+  });
+  return out;
+}
+function ahTypingPickerRailHtml(groups){
+  return '<div class="ah-media-rail">'+groups.map(g=>{
+    const locked=g.items.some(x=>!x.allowed);
+    const style=g.server_icon_url?` style="background-image:url('${escapeHtmlForTyping(g.server_icon_url)}')"`:'';
+    const initials=!g.server_icon_url?escapeHtmlForTyping((g.server_name||'S').slice(0,2).toUpperCase()):'';
+    return `<button type="button" class="ah-media-rail-btn ${locked?'locked':''}"${style} title="${escapeHtmlForTyping(g.server_name)}">${initials}</button>`;
+  }).join('')+'</div>';
+}
 function initTypingTextSettings(){
   const ttInput=document.getElementById('ah-typing-text-input');
   const ttPreview=document.getElementById('ah-typing-text-preview');
@@ -1894,7 +1930,7 @@ function initTypingTextSettings(){
   ttInput.dataset.ahBound='1';
   function renderTypingPreview(){
     const val=ttInput.value.trim();
-    ttPreview.innerHTML=renderTypingTextPreviewHtml(currentUser.username+' '+(val||'печатает'));
+    ttPreview.innerHTML=renderTypingTextPreviewHtml(currentUser.username+' '+(val||(window.AlexiHubI18n?window.AlexiHubI18n.t('dm.text.preferring'):'')));
   }
   ttInput.addEventListener('input',renderTypingPreview);
   renderTypingPreview();
@@ -1902,26 +1938,26 @@ function initTypingTextSettings(){
 
   // --- emoji picker: only custom emoji from the account's own servers,
   // up to AH_TYPING_EMOJI_MAX per typing text. Emoji from a server you're
-  // not "home" in are shown locked unless you have Nitro, same as the
-  // message composer's emoji picker.
+  // not "home" in are shown locked unless you have Nitro, same rule and
+  // same look (search + server rail + lock pills) as the message
+  // composer's emoji picker (#ah-media-picker), just pointed at this
+  // input instead of the message textarea.
   const emojiBtn=document.getElementById('ah-typing-emoji-btn');
   const emojiPanel=document.getElementById('ah-typing-emoji-panel');
-  const emojiGrid=document.getElementById('ah-typing-emoji-grid');
+  const emojiBody=document.getElementById('ah-typing-emoji-body');
+  const emojiFooter=document.getElementById('ah-typing-emoji-footer');
+  const emojiSearch=document.getElementById('ah-typing-emoji-search');
   const emojiCountEl=document.getElementById('ah-typing-emoji-count');
-  if(!emojiBtn||!emojiPanel||!emojiGrid)return;
+  if(!emojiBtn||!emojiPanel||!emojiBody)return;
 
-  function refreshEmojiState(){
+  function refreshEmojiCount(){
     const n=countTypingTextEmoji(ttInput.value);
     if(emojiCountEl)emojiCountEl.textContent=n+'/'+AH_TYPING_EMOJI_MAX;
-    const atLimit=n>=AH_TYPING_EMOJI_MAX;
-    emojiGrid.querySelectorAll('button[data-emoji-id]').forEach(b=>{
-      b.style.cursor=(atLimit&&b.dataset.locked!=='1')?'default':'pointer';
-    });
   }
 
   function insertEmojiMarker(item){
     if(countTypingTextEmoji(ttInput.value)>=AH_TYPING_EMOJI_MAX){
-      if(typeof settingsToast==='function')settingsToast('Максимум '+AH_TYPING_EMOJI_MAX+' емодзі');
+      if(typeof settingsToast==='function')settingsToast(window.AlexiHubI18n?window.AlexiHubI18n.t('settings.typing_text.emoji_limit',{max:AH_TYPING_EMOJI_MAX}):('Максимум '+AH_TYPING_EMOJI_MAX));
       return;
     }
     const marker='[[ah:emoji:'+item.id+']]';
@@ -1934,57 +1970,68 @@ function initTypingTextSettings(){
     ttInput.dispatchEvent(new Event('input',{bubbles:true})); // updates preview + emoji count
   }
 
-  function buildEmojiGrid(){
-    const items=(ahTypingEmojiLib&&ahTypingEmojiLib.emojis)||[];
-    emojiGrid.innerHTML='';
-    if(!items.length){
-      emojiGrid.style.display='block';
-      emojiGrid.innerHTML='<div style="color:#949ba4;font-size:12px;padding:6px 2px;line-height:1.4">У серверах, де ти учасник, поки немає власних емодзі.</div>';
+  function renderEmojiBody(){
+    const q=((emojiSearch&&emojiSearch.value)||'').toLowerCase().trim();
+    const all=((ahTypingEmojiLib&&ahTypingEmojiLib.emojis)||[]).filter(i=>(i.name||'').toLowerCase().includes(q));
+    if(ahTypingEmojiLibFailed){
+      emojiBody.innerHTML='<div class="ah-media-empty">'+(window.AlexiHubI18n?window.AlexiHubI18n.t('server_settings.message.ner_emojis_could_not_be_loaded'):'')+'</div>';
       return;
     }
-    emojiGrid.style.display='grid';
-    items.forEach(item=>{
-      const locked=!item.allowed;
-      const b=document.createElement('button');
-      b.type='button';
-      b.dataset.emojiId=item.id;
-      if(locked)b.dataset.locked='1';
-      b.title=(item.name||'emoji')+(item.server_name?(' · '+item.server_name):'')+(locked?' (потрібен Nitro)':'');
-      b.style.cssText='height:34px;border:0;border-radius:6px;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center'+(locked?';filter:grayscale(.6);opacity:.5':'');
-      const img=document.createElement('img');
-      img.src=item.image_url;
-      img.alt=item.name||'emoji';
-      img.loading='lazy';
-      img.style.cssText='max-width:24px;max-height:24px;object-fit:contain;pointer-events:none';
-      b.appendChild(img);
-      b.addEventListener('mouseenter',()=>{b.style.background='rgba(255,255,255,.09)';});
-      b.addEventListener('mouseleave',()=>{b.style.background='transparent';});
-      b.addEventListener('click',()=>{
-        if(locked){
-          if(typeof settingsToast==='function'&&window.AlexiHubI18n)settingsToast(window.AlexiHubI18n.t('common.text.for_a_ls_or_another_server_you_need_nitro'));
+    if(!all.length){
+      const emptyKey=q?'settings.typing_text.emoji_not_found':'settings.typing_text.emoji_empty';
+      emojiBody.innerHTML='<div class="ah-media-empty">'+(window.AlexiHubI18n?window.AlexiHubI18n.t(emptyKey):'')+'</div>';
+      return;
+    }
+    const groups=ahTypingPickerGroupItems(all);
+    emojiBody.innerHTML=`<div class="ah-media-layout">${ahTypingPickerRailHtml(groups)}<div class="ah-media-scroll">${groups.map(g=>{
+      const locked=g.items.some(x=>!x.allowed);
+      return `<section class="ah-media-group ${locked?'locked':''}">`
+        +(locked?'<div class="ah-media-lock-pill"><svg class="ah-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>':'')
+        +`<div class="ah-media-group-head"><span class="server-mini" ${g.server_icon_url?`style="background-image:url('${escapeHtmlForTyping(g.server_icon_url)}')"`:''}>${g.server_icon_url?'':escapeHtmlForTyping((g.server_name||'S').slice(0,2).toUpperCase())}</span><span>${escapeHtmlForTyping(g.server_name)}</span></div>`
+        +(locked&&window.AlexiHubI18n?`<div class="ah-media-group-note">${window.AlexiHubI18n.t('common.text.ined_nitro_to_get_it_in_the_ls_or_on')}</div>`:'')
+        +`<div class="ah-media-grid emojis">${g.items.map(i=>`<button type="button" class="ah-media-item ${i.allowed?'':'locked'}" data-id="${escapeHtmlForTyping(i.id)}" title="${escapeHtmlForTyping(i.name)}"><img src="${escapeHtmlForTyping(i.image_url)}" alt="${escapeHtmlForTyping(i.name)}" loading="lazy"></button>`).join('')}</div>`
+        +`</section>`;
+    }).join('')}</div></div>`;
+    emojiBody.querySelectorAll('.ah-media-item').forEach(btn=>{
+      btn.addEventListener('mouseenter',()=>{
+        const item=all.find(i=>String(i.id)===btn.dataset.id);
+        if(!item||!emojiFooter)return;
+        const rawFooterText=(item.server_name&&window.AlexiHubI18n)?window.AlexiHubI18n.t('settings.typing_text.footer_emoji',{name:item.name||'',server:item.server_name}):(':'+(item.name||'')+':');
+        emojiFooter.innerHTML=`<img src="${escapeHtmlForTyping(item.image_url)}" alt=""><span>${escapeHtmlForTyping(rawFooterText)}</span>`;
+      });
+      btn.addEventListener('click',()=>{
+        const item=all.find(i=>String(i.id)===btn.dataset.id);
+        if(!item)return;
+        if(!item.allowed){
+          if(emojiFooter&&window.AlexiHubI18n)emojiFooter.innerHTML=`<svg class="ah-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg> <span>${window.AlexiHubI18n.t('common.text.for_a_ls_or_another_server_you_need_nitro')}</span>`;
           return;
         }
         insertEmojiMarker(item);
       });
-      emojiGrid.appendChild(b);
     });
   }
 
-  emojiGrid.innerHTML='<div style="color:#949ba4;font-size:12px;padding:6px 2px">Завантаження…</div>';
-  loadTypingEmojiLibrary().then(()=>{buildEmojiGrid();refreshEmojiState();});
+  emojiBody.innerHTML='<div class="ah-media-empty">'+(window.AlexiHubI18n?window.AlexiHubI18n.t('privacy.blocking.loading'):'')+'</div>';
+  loadTypingEmojiLibrary().then(()=>{renderEmojiBody();refreshEmojiCount();});
+  if(emojiSearch)emojiSearch.addEventListener('input',renderEmojiBody);
 
-  ttInput.addEventListener('input',refreshEmojiState);
-  refreshEmojiState();
+  ttInput.addEventListener('input',refreshEmojiCount);
+  refreshEmojiCount();
 
   emojiBtn.addEventListener('click',(e)=>{
     e.stopPropagation();
-    const willOpen=emojiPanel.style.display!=='block';
-    emojiPanel.style.display=willOpen?'block':'none';
-    if(willOpen)refreshEmojiState();
+    const willOpen=!emojiPanel.classList.contains('open');
+    emojiPanel.classList.toggle('open',willOpen);
+    if(willOpen){
+      refreshEmojiCount();
+      // Retry once if the first load failed (e.g. the user opened this
+      // right after logging in and the request briefly 401'd).
+      if(ahTypingEmojiLibFailed)loadTypingEmojiLibrary(true).then(renderEmojiBody);
+    }
   });
   document.addEventListener('click',(e)=>{
-    if(emojiPanel.style.display==='block'&&!emojiPanel.contains(e.target)&&e.target!==emojiBtn){
-      emojiPanel.style.display='none';
+    if(emojiPanel.classList.contains('open')&&!emojiPanel.contains(e.target)&&e.target!==emojiBtn){
+      emojiPanel.classList.remove('open');
     }
   });
 }
@@ -2023,7 +2070,7 @@ window.saveTypingText=async function(){
       ttInput.value=data.typing_text||'';
       currentTypingText=ttInput.value;
       const preview=document.getElementById('ah-typing-text-preview');
-      if(preview)preview.innerHTML=renderTypingTextPreviewHtml(currentUser.username+' '+(ttInput.value||'печатает'));
+      if(preview)preview.innerHTML=renderTypingTextPreviewHtml(currentUser.username+' '+(ttInput.value||(window.AlexiHubI18n?window.AlexiHubI18n.t('dm.text.preferring'):'')));
       if(typeof settingsToast==='function')settingsToast('Збережено');
     }else{
       // Surface the real problem instead of failing silently -- this is
@@ -3260,26 +3307,40 @@ document.addEventListener('DOMContentLoaded',()=>{
       <section class="ah-settings-page" data-settings-page="voice"><h1><!--i18n:settings.voice-->{{ i18n_t('settings.voice') }}</h1><div class="ah-settings-placeholder"><!--i18n:common.text.while_the_plug_is_under_the_future_voice_chichi_microphone-->{{ i18n_t('common.text.while_the_plug_is_under_the_future_voice_chichi_microphone') }}</div></section>
       <section class="ah-settings-page" data-settings-page="appearance">
         <h1><!--i18n:settings.appearance-->{{ i18n_t('settings.appearance') }}</h1>
+        <style id="ah-typing-emoji-picker-css">
+#ah-typing-emoji-panel.ah-media-picker{position:absolute;right:auto;bottom:auto;top:46px;left:0;width:320px;max-height:360px;display:none;z-index:40;}
+#ah-typing-emoji-panel.ah-media-picker.open{display:block;}
+#ah-typing-emoji-panel .ah-media-tabs{padding:10px 12px 6px;}
+#ah-typing-emoji-panel .ah-media-tabs button.active{background:transparent;cursor:default;color:#fff;}
+#ah-typing-emoji-panel .ah-media-search-row{padding:0 12px 8px;}
+#ah-typing-emoji-panel .ah-media-body{height:250px;}
+#ah-typing-emoji-panel .ah-media-empty{padding:26px 16px;font-size:13px;}
+        </style>
         <div class="ah-settings-section">
           <div class="ah-settings-row" style="flex-direction:column;align-items:stretch;gap:10px;padding:16px 2px">
             <div>
-              <div class="label" style="font-weight:800;color:#fff;margin-bottom:4px">Персоналізуй індикатор набору тексту</div>
-              <div class="ah-settings-muted" style="color:#b5bac1;font-size:13px;line-height:1.4">Заміни слово, яке з'являється після твого ніку, коли ти щось пишеш співрозмовнику. Додай до 3 емодзі зі своїх серверів та свій текст — наприклад, замість «{{ account.username }} печатает» можна зробити «{{ account.username }} врайтает». Залиш поле порожнім, щоб повернути стандартний варіант.</div>
+              <div class="label" style="font-weight:800;color:#fff;margin-bottom:4px" data-i18n="settings.typing_text.title"><!--i18n:settings.typing_text.title-->{{ i18n_t('settings.typing_text.title') }}</div>
+              <div class="ah-settings-muted" style="color:#b5bac1;font-size:13px;line-height:1.4">{{ i18n_t('settings.typing_text.description', default=i18n_t('dm.text.preferring')) }}</div>
             </div>
             <div style="position:relative;max-width:360px">
               <div style="display:flex;gap:8px;align-items:center">
-                <input id="ah-typing-text-input" type="text" maxlength="150" placeholder="печатает" value="{{ account.typing_text or '' }}" style="height:40px;flex:1;min-width:0;border-radius:7px;background:#1e1f22;border:1px solid #3f4149;color:#fff;padding:0 12px;outline:none;font:inherit">
-                <button id="ah-typing-emoji-btn" type="button" title="Додати емодзі з сервера" aria-label="Додати емодзі з сервера" style="width:40px;height:40px;flex:0 0 auto;border-radius:7px;background:#1e1f22;border:1px solid #3f4149;color:#fff;font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center">😊</button>
+                <input id="ah-typing-text-input" type="text" maxlength="150" placeholder="{{ i18n_t('dm.text.preferring') }}" data-i18n-placeholder="dm.text.preferring" value="{{ account.typing_text or '' }}" style="height:40px;flex:1;min-width:0;border-radius:7px;background:#1e1f22;border:1px solid #3f4149;color:#fff;padding:0 12px;outline:none;font:inherit">
+                <button id="ah-typing-emoji-btn" type="button" title="{{ i18n_t('settings.typing_text.add_emoji') }}" aria-label="{{ i18n_t('settings.typing_text.add_emoji') }}" data-i18n-title="settings.typing_text.add_emoji" data-i18n-aria-label="settings.typing_text.add_emoji" style="width:40px;height:40px;flex:0 0 auto;border-radius:7px;background:#1e1f22;border:1px solid #3f4149;color:#fff;font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center">😊</button>
               </div>
-              <div id="ah-typing-emoji-panel" style="display:none;position:absolute;top:46px;left:0;z-index:40;width:266px;max-height:220px;overflow-y:auto;background:#2b2d31;border:1px solid #3a3d45;border-radius:10px;box-shadow:0 18px 40px rgba(0,0,0,.42);padding:10px">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;color:#b5bac1;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.03em">
-                  <span>Емодзі з твоїх серверів</span><span id="ah-typing-emoji-count">0/3</span>
+              <div id="ah-typing-emoji-panel" class="ah-media-picker">
+                <div class="ah-media-tabs">
+                  <button type="button" class="active" disabled data-i18n="common.text.emoji"><!--i18n:common.text.emoji-->{{ i18n_t('common.text.emoji') }}</button>
+                  <span id="ah-typing-emoji-count" style="margin-left:auto;color:#949ba4;font-size:12px;font-weight:800">0/3</span>
                 </div>
-                <div id="ah-typing-emoji-grid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:5px"></div>
+                <div class="ah-media-search-row">
+                  <input id="ah-typing-emoji-search" class="ah-media-search" placeholder="{{ i18n_t('common.text.find_the_perfect_emoji') }}" data-i18n-placeholder="common.text.find_the_perfect_emoji">
+                </div>
+                <div id="ah-typing-emoji-body" class="ah-media-body"></div>
+                <div id="ah-typing-emoji-footer" class="ah-media-footer"><span data-i18n="settings.typing_text.footer_hint" style="color:#949ba4"><!--i18n:settings.typing_text.footer_hint-->{{ i18n_t('settings.typing_text.footer_hint') }}</span></div>
               </div>
             </div>
-            <div style="color:#72767d;font-size:12px">Прев'ю: <b id="ah-typing-text-preview" style="color:#dbdee1;font-weight:800;display:inline-flex;align-items:center;gap:2px"></b></div>
-            <div><button class="ah-settings-btn" type="button" onclick="saveTypingText()">Зберегти</button></div>
+            <div style="color:#72767d;font-size:12px"><span data-i18n="settings.typing_text.preview_label"><!--i18n:settings.typing_text.preview_label-->{{ i18n_t('settings.typing_text.preview_label') }}</span> <b id="ah-typing-text-preview" style="color:#dbdee1;font-weight:800;display:inline-flex;align-items:center;gap:2px"></b></div>
+            <div><button class="ah-settings-btn" type="button" onclick="saveTypingText()" data-i18n="common.action.save"><!--i18n:common.action.save-->{{ i18n_t('common.action.save') }}</button></div>
           </div>
         </div>
       </section>
