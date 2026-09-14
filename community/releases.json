@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.154.4",
+      "date": "2026-09-14",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: typing emoji library and picker UI."
+      ],
+      "source_sha": "8221cadac8eb8415890ebba2e32ded66dc5f132d"
+    },
+    {
       "version": "1.154.3",
       "date": "2026-09-14",
       "title": "Виправлення та стабільність",
