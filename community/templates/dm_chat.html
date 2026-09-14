@@ -1851,6 +1851,7 @@ const form=document.getElementById('dm-form');
 const input=document.getElementById('content');
 const imageInput=document.getElementById('image_url');
 const typingEl=document.getElementById('typing');
+let lastTypingRaw=null; // raw "username + typing text" behind the current typingEl.innerHTML, so we can re-render it once the emoji map (loaded async) is ready
 
 const AH_TYPING_EMOJI_MAX=3;
 let ahTypingEmojiLib=null; // {ok,nitro,emojis:[{id,name,image_url,allowed,local,server_name,...}]}
@@ -2402,6 +2403,7 @@ function handleDmRealtimeData(data){
   if(data.type==='typing'){
     const users=(data.users||[]).filter(u=>u.id!==currentUser.id);
     if(!users.length){
+      lastTypingRaw=null;
       typingEl.textContent='';
     }else{
       // DMs are 1:1, so there's at most one other typer -- use their own
@@ -2415,7 +2417,24 @@ function handleDmRealtimeData(data){
       if(!defaultSuffix||!/^\s/.test(defaultSuffix)||/preferring|typing/i.test(defaultSuffix)){
         defaultSuffix=' печатает...';
       }
-      typingEl.innerHTML=ahRenderTypingTextHtml(custom?(u.username+' '+custom):(u.username+defaultSuffix));
+      const raw=custom?(u.username+' '+custom):(u.username+defaultSuffix);
+      lastTypingRaw=raw;
+      typingEl.innerHTML=ahRenderTypingTextHtml(raw);
+      // ahRenderTypingTextHtml resolves [[ah:emoji:id]] via
+      // AlexiHubRichText.resolveEmoji, whose lookup map loads over the
+      // network (loadEmojiMap) and often isn't ready yet the moment the
+      // first "typing" event of a session arrives -- unlike the Settings
+      // preview (renderTypingPreview), which already waits on
+      // loadTypingEmojiLibrary(). Without this, the marker just resolves
+      // to '' and the emoji never appears until the sender happens to
+      // send another "typing" event after the map finally loads. Re-render
+      // this same text once the map is ready, but only if it's still the
+      // text currently on screen.
+      if(/\[\[ah:emoji:\d+\]\]/.test(raw)&&window.AlexiHubRichText&&typeof window.AlexiHubRichText.ready==='function'){
+        window.AlexiHubRichText.ready().then(()=>{
+          if(lastTypingRaw===raw)typingEl.innerHTML=ahRenderTypingTextHtml(raw);
+        });
+      }
     }
   }
   if(data.type==='pin_add'&&data.pin&&window.__dmPinsApi)window.__dmPinsApi.upsertDmPin(data.pin);
@@ -9110,8 +9129,9 @@ document.addEventListener('DOMContentLoaded', async function(){
   document.addEventListener('click',event=>{const spoiler=event.target.closest('.ah-rich-spoiler');if(spoiler){spoiler.classList.toggle('revealed');return;}const button=event.target.closest('.ah-rich-code-copy');if(button){const code=button.closest('.ah-rich-code')?.querySelector('code')?.textContent||'';navigator.clipboard?.writeText(code).then(()=>{const old=button.textContent;button.textContent=window.AlexiHubI18n.t("common.label.copied");setTimeout(()=>button.textContent=old,1100);}).catch(()=>{});}});
   document.addEventListener('keydown',event=>{if((event.key==='Enter'||event.key===' ')&&event.target.closest('.ah-rich-spoiler')){event.preventDefault();event.target.closest('.ah-rich-spoiler').classList.toggle('revealed');}});
   const root=document.getElementById('messages')||document.querySelector('.messages');if(root)new MutationObserver(()=>schedule(root)).observe(root,{childList:true,subtree:true,characterData:true});
-  [0,80,350,900].forEach(delay=>setTimeout(()=>renderAll(document),delay));loadEmojiMap();
-  window.AlexiHubRichText={render:renderAll,resolveEmoji:id=>emojiById.get(String(id))};
+  [0,80,350,900].forEach(delay=>setTimeout(()=>renderAll(document),delay));
+  const emojiMapReady=loadEmojiMap();
+  window.AlexiHubRichText={render:renderAll,resolveEmoji:id=>emojiById.get(String(id)),ready:()=>emojiMapReady};
 })();
 </script>
 
