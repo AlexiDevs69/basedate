@@ -2023,17 +2023,50 @@ function initTypingTextSettings(){
   ttInput.addEventListener('input',refreshEmojiCount);
   refreshEmojiCount();
 
+  function positionTypingEmojiPanel(){
+    const margin=10;
+    const btnRect=emojiBtn.getBoundingClientRect();
+    const vw=window.innerWidth,vh=window.innerHeight;
+    const desiredW=360,desiredH=430;
+    const w=Math.min(desiredW,vw-margin*2);
+    const spaceBelow=vh-btnRect.bottom-margin;
+    const spaceAbove=btnRect.top-margin;
+    let top,maxH;
+    if(spaceBelow>=260||spaceBelow>=spaceAbove){
+      top=btnRect.bottom+8;
+      maxH=Math.max(200,Math.min(desiredH,vh-top-margin));
+    }else{
+      maxH=Math.max(200,Math.min(desiredH,spaceAbove));
+      top=Math.max(margin,btnRect.top-8-maxH);
+    }
+    let left=btnRect.left;
+    if(left+w>vw-margin)left=vw-w-margin;
+    if(left<margin)left=margin;
+    emojiPanel.style.width=w+'px';
+    emojiPanel.style.maxHeight=maxH+'px';
+    emojiPanel.style.left=left+'px';
+    emojiPanel.style.top=top+'px';
+  }
+
   emojiBtn.addEventListener('click',(e)=>{
     e.stopPropagation();
     const willOpen=!emojiPanel.classList.contains('open');
     emojiPanel.classList.toggle('open',willOpen);
     if(willOpen){
       refreshEmojiCount();
+      positionTypingEmojiPanel();
       // Retry once if the first load failed (e.g. the user opened this
       // right after logging in and the request briefly 401'd).
       if(ahTypingEmojiLibFailed)loadTypingEmojiLibrary(true).then(renderEmojiBody);
     }
   });
+  window.addEventListener('resize',()=>{if(emojiPanel.classList.contains('open'))positionTypingEmojiPanel();});
+  const ahSettingsScrollEl=ttInput.closest('.ah-settings-main');
+  if(ahSettingsScrollEl){
+    ahSettingsScrollEl.addEventListener('scroll',()=>{
+      if(emojiPanel.classList.contains('open'))emojiPanel.classList.remove('open');
+    });
+  }
   document.addEventListener('click',(e)=>{
     if(emojiPanel.classList.contains('open')&&!emojiPanel.contains(e.target)&&e.target!==emojiBtn){
       emojiPanel.classList.remove('open');
@@ -3313,14 +3346,14 @@ document.addEventListener('DOMContentLoaded',()=>{
       <section class="ah-settings-page" data-settings-page="appearance">
         <h1><!--i18n:settings.appearance-->{{ i18n_t('settings.appearance') }}</h1>
         <style id="ah-typing-emoji-picker-css">
-#ah-typing-emoji-panel.ah-media-picker{position:absolute;right:auto;bottom:auto;top:46px;left:0;width:360px;max-height:430px;display:none;z-index:40;}
-#ah-typing-emoji-panel.ah-media-picker.open{display:block;}
-#ah-typing-emoji-panel .ah-media-tabs{padding:10px 12px 6px;}
+#ah-typing-emoji-panel.ah-media-picker{position:fixed;right:auto;bottom:auto;top:0;left:0;width:360px;max-height:430px;display:none;z-index:5000;}
+#ah-typing-emoji-panel.ah-media-picker.open{display:flex;flex-direction:column;}
+#ah-typing-emoji-panel .ah-media-tabs{padding:10px 12px 6px;flex:0 0 auto;}
 #ah-typing-emoji-panel .ah-media-tabs button.active{background:transparent;cursor:default;color:#fff;}
-#ah-typing-emoji-panel .ah-media-search-row{padding:0 12px 8px;}
-#ah-typing-emoji-panel .ah-media-body{height:310px;}
+#ah-typing-emoji-panel .ah-media-search-row{padding:0 12px 8px;flex:0 0 auto;}
+#ah-typing-emoji-panel .ah-media-body{flex:1 1 auto;min-height:0;height:auto;overflow-y:auto;}
 #ah-typing-emoji-panel .ah-media-empty{padding:26px 16px;font-size:13px;}
-#ah-typing-emoji-panel .ah-media-footer{height:auto;min-height:56px;padding:9px 12px;gap:10px;}
+#ah-typing-emoji-panel .ah-media-footer{flex:0 0 auto;height:auto;min-height:56px;padding:9px 12px;gap:10px;}
 #ah-typing-emoji-panel .ah-typing-footer-emoji{width:30px;height:30px;object-fit:contain;flex:0 0 auto;}
 #ah-typing-emoji-panel .ah-typing-footer-text{min-width:0;flex:1;display:flex;flex-direction:column;gap:2px;}
 #ah-typing-emoji-panel .ah-typing-footer-name{color:#fff;font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
