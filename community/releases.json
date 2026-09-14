@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.161.1",
+      "date": "2026-09-14",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance typing indicator with emoji support."
+      ],
+      "source_sha": "0411298d168c2f8bb2fdadb4a62c60bfbec06626"
+    },
+    {
       "version": "1.161.0",
       "date": "2026-09-14",
       "title": "Нові можливості AlexiHub",
