@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.155.1",
+      "date": "2026-09-14",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update Russian localization strings."
+      ],
+      "source_sha": "6323f9a2d435978082d1e3458c6887d37036a5ad"
+    },
+    {
       "version": "1.155.0",
       "date": "2026-09-14",
       "title": "Нові можливості AlexiHub",
