@@ -1921,6 +1921,7 @@
   "settings.typing_text.emoji_limit": "Максимум {max} емодзі",
   "settings.typing_text.emoji_not_found": "Нічого не знайдено",
   "settings.typing_text.footer_emoji": ":{name}: · від {server}",
+  "settings.typing_text.footer_from": "від {server}",
   "settings.typing_text.footer_hint": "Обери емодзі зі свого сервера",
   "settings.typing_text.preview_label": "Прев'ю:",
   "settings.typing_text.title": "Персоналізуй індикатор набору тексту",
