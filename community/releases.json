@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.158.0",
+      "date": "2026-09-14",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: footer_from setting to typing text."
+      ],
+      "source_sha": "af35220eb9e4cbe01e9e0d3a5570632dab844495"
+    },
+    {
       "version": "1.157.0",
       "date": "2026-09-14",
       "title": "Нові можливості AlexiHub",
