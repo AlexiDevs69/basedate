@@ -1996,8 +1996,13 @@ function initTypingTextSettings(){
       btn.addEventListener('mouseenter',()=>{
         const item=all.find(i=>String(i.id)===btn.dataset.id);
         if(!item||!emojiFooter)return;
-        const rawFooterText=(item.server_name&&window.AlexiHubI18n)?window.AlexiHubI18n.t('settings.typing_text.footer_emoji',{name:item.name||'',server:item.server_name}):(':'+(item.name||'')+':');
-        emojiFooter.innerHTML=`<img src="${escapeHtmlForTyping(item.image_url)}" alt=""><span>${escapeHtmlForTyping(rawFooterText)}</span>`;
+        const serverName=item.server_name||(window.AlexiHubI18n?window.AlexiHubI18n.t('common.text.the_server'):'');
+        const nameText=':'+(item.name||'')+':';
+        const fromText=window.AlexiHubI18n?window.AlexiHubI18n.t('settings.typing_text.footer_from',{server:serverName}):serverName;
+        const avatarHtml=item.server_icon_url
+          ? `<img class="ah-typing-footer-avatar" src="${escapeHtmlForTyping(item.server_icon_url)}" alt="">`
+          : `<span class="ah-typing-footer-avatar ah-typing-footer-avatar-fallback">${escapeHtmlForTyping((serverName||'S').slice(0,2).toUpperCase())}</span>`;
+        emojiFooter.innerHTML=`<img class="ah-typing-footer-emoji" src="${escapeHtmlForTyping(item.image_url)}" alt=""><div class="ah-typing-footer-text"><div class="ah-typing-footer-name">${escapeHtmlForTyping(nameText)}</div><div class="ah-typing-footer-source">${escapeHtmlForTyping(fromText)}</div></div>${avatarHtml}`;
       });
       btn.addEventListener('click',()=>{
         const item=all.find(i=>String(i.id)===btn.dataset.id);
@@ -3308,13 +3313,20 @@ document.addEventListener('DOMContentLoaded',()=>{
       <section class="ah-settings-page" data-settings-page="appearance">
         <h1><!--i18n:settings.appearance-->{{ i18n_t('settings.appearance') }}</h1>
         <style id="ah-typing-emoji-picker-css">
-#ah-typing-emoji-panel.ah-media-picker{position:absolute;right:auto;bottom:auto;top:46px;left:0;width:320px;max-height:360px;display:none;z-index:40;}
+#ah-typing-emoji-panel.ah-media-picker{position:absolute;right:auto;bottom:auto;top:46px;left:0;width:360px;max-height:430px;display:none;z-index:40;}
 #ah-typing-emoji-panel.ah-media-picker.open{display:block;}
 #ah-typing-emoji-panel .ah-media-tabs{padding:10px 12px 6px;}
 #ah-typing-emoji-panel .ah-media-tabs button.active{background:transparent;cursor:default;color:#fff;}
 #ah-typing-emoji-panel .ah-media-search-row{padding:0 12px 8px;}
-#ah-typing-emoji-panel .ah-media-body{height:250px;}
+#ah-typing-emoji-panel .ah-media-body{height:310px;}
 #ah-typing-emoji-panel .ah-media-empty{padding:26px 16px;font-size:13px;}
+#ah-typing-emoji-panel .ah-media-footer{height:auto;min-height:56px;padding:9px 12px;gap:10px;}
+#ah-typing-emoji-panel .ah-typing-footer-emoji{width:30px;height:30px;object-fit:contain;flex:0 0 auto;}
+#ah-typing-emoji-panel .ah-typing-footer-text{min-width:0;flex:1;display:flex;flex-direction:column;gap:2px;}
+#ah-typing-emoji-panel .ah-typing-footer-name{color:#fff;font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#ah-typing-emoji-panel .ah-typing-footer-source{color:#949ba4;font-size:11.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#ah-typing-emoji-panel .ah-typing-footer-avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;flex:0 0 auto;background:#00C4B4 center/cover no-repeat;}
+#ah-typing-emoji-panel .ah-typing-footer-avatar-fallback{display:grid;place-items:center;color:#fff;font-size:11px;font-weight:800;}
         </style>
         <div class="ah-settings-section">
           <div class="ah-settings-row" style="flex-direction:column;align-items:stretch;gap:10px;padding:16px 2px">
