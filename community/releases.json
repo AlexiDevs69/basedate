@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.161.0",
+      "date": "2026-09-14",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: has_active_nitro function for Nitro features."
+      ],
+      "source_sha": "21af497f296dea9de17d9867e92b68af982e6060"
+    },
+    {
       "version": "1.160.1",
       "date": "2026-09-14",
       "title": "Виправлення та стабільність",
