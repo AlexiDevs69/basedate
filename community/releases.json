@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.155.0",
+      "date": "2026-09-14",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: Ukrainian localization for typing text settings."
+      ],
+      "source_sha": "96f97502f8cf3b986706c4ff1a6b8f3be900f894"
+    },
+    {
       "version": "1.154.4",
       "date": "2026-09-14",
       "title": "Оновлення AlexiHub",
