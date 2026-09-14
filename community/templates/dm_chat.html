@@ -2390,11 +2390,44 @@ function handleDmRealtimeData(data){
     dmReplyCache.delete(String(id));
     if(window.__dmPinsApi)window.__dmPinsApi.removeDmPin(id);
   }
+  // window.AlexiHubRichText is defined by a <script> block that sits much
+  // further down this same page (thousands of lines below the DM socket
+  // handler here). If the very first "typing" websocket event arrives
+  // before the browser has parsed/executed that later script -- which on
+  // a page this size is common, not an edge case -- window.AlexiHubRichText
+  // is simply undefined at that moment. The old code only checked
+  // `typeof window.AlexiHubRichText.ready==='function'` once, right then;
+  // if that check failed because the global didn't exist YET, it never
+  // retried, so the emoji marker stayed unresolved (stripped to '') for
+  // the rest of that typing text's lifetime. This polls for the global to
+  // actually show up instead of giving up after a single missed check.
+  function ahWaitForRichText(){
+    return new Promise(resolve=>{
+      let tries=0;
+      (function check(){
+        if(window.AlexiHubRichText&&typeof window.AlexiHubRichText.ready==='function'){
+          window.AlexiHubRichText.ready().then(resolve,resolve);
+        }else if(tries++<50){ // ~5s of polling at 100ms, generous for a heavy page load
+          setTimeout(check,100);
+        }else{
+          resolve(); // give up quietly; fallback library below still gets a chance
+        }
+      })();
+    });
+  }
+  function ahResolveTypingEmoji(id){
+    // Prefer the thread-scoped map (correct w.r.t. mutual-server permissions),
+    // fall back to this account's own typing-text emoji library (same one the
+    // Settings picker/preview uses) so a valid emoji never renders as blank
+    // just because one of the two sources hasn't loaded it.
+    const rich=(window.AlexiHubRichText&&window.AlexiHubRichText.resolveEmoji)?window.AlexiHubRichText.resolveEmoji(id):null;
+    if(rich&&rich.image_url)return rich;
+    return typingEmojiById(id);
+  }
   function ahRenderTypingTextHtml(text){
     const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
-    const resolve=(window.AlexiHubRichText&&window.AlexiHubRichText.resolveEmoji)?window.AlexiHubRichText.resolveEmoji:null;
     return esc(text).replace(/\[\[ah:emoji:(\d+)\]\]/g,(marker,id)=>{
-      const item=resolve?resolve(id):null;
+      const item=ahResolveTypingEmoji(id);
       if(!item||!item.image_url)return '';
       const name=String(item.name||'emoji');
       return '<img class="ah-custom-emoji" src="'+esc(item.image_url)+'" alt=":'+esc(name)+':" title=":'+esc(name)+':" loading="lazy" referrerpolicy="no-referrer">';
@@ -2420,18 +2453,15 @@ function handleDmRealtimeData(data){
       const raw=custom?(u.username+' '+custom):(u.username+defaultSuffix);
       lastTypingRaw=raw;
       typingEl.innerHTML=ahRenderTypingTextHtml(raw);
-      // ahRenderTypingTextHtml resolves [[ah:emoji:id]] via
-      // AlexiHubRichText.resolveEmoji, whose lookup map loads over the
-      // network (loadEmojiMap) and often isn't ready yet the moment the
-      // first "typing" event of a session arrives -- unlike the Settings
-      // preview (renderTypingPreview), which already waits on
-      // loadTypingEmojiLibrary(). Without this, the marker just resolves
-      // to '' and the emoji never appears until the sender happens to
-      // send another "typing" event after the map finally loads. Re-render
-      // this same text once the map is ready, but only if it's still the
-      // text currently on screen.
-      if(/\[\[ah:emoji:\d+\]\]/.test(raw)&&window.AlexiHubRichText&&typeof window.AlexiHubRichText.ready==='function'){
-        window.AlexiHubRichText.ready().then(()=>{
+      // ahRenderTypingTextHtml resolves [[ah:emoji:id]] via two possible
+      // sources (see ahResolveTypingEmoji), and BOTH load asynchronously:
+      // loadTypingEmojiLibrary() over the network, and window.AlexiHubRichText
+      // itself may not even be defined yet (see ahWaitForRichText above).
+      // Neither is guaranteed ready the moment the first "typing" event of
+      // a session arrives. Wait on both, then re-render this same text --
+      // but only if it's still the text currently on screen.
+      if(/\[\[ah:emoji:\d+\]\]/.test(raw)){
+        Promise.all([loadTypingEmojiLibrary(),ahWaitForRichText()]).then(()=>{
           if(lastTypingRaw===raw)typingEl.innerHTML=ahRenderTypingTextHtml(raw);
         });
       }
