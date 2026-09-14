@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.155.3",
+      "date": "2026-09-14",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance emoji footer with server info and styles."
+      ],
+      "source_sha": "b3e03445edb65962bfa0f4994e0d3d3f31e31e57"
+    },
+    {
       "version": "1.155.2",
       "date": "2026-09-14",
       "title": "Виправлення та стабільність",
