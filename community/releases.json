@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.155.2",
+      "date": "2026-09-14",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update typing indicator text and settings labels."
+      ],
+      "source_sha": "45f98bdb8159c0af7d68e5c6c30e25750ea70b88"
+    },
+    {
       "version": "1.155.1",
       "date": "2026-09-14",
       "title": "Виправлення та стабільність",
