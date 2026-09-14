@@ -1921,6 +1921,7 @@
   "settings.typing_text.emoji_limit": "Up to {max} emoji",
   "settings.typing_text.emoji_not_found": "Nothing found",
   "settings.typing_text.footer_emoji": ":{name}: · from {server}",
+  "settings.typing_text.footer_from": "from {server}",
   "settings.typing_text.footer_hint": "Pick an emoji from your server",
   "settings.typing_text.preview_label": "Preview:",
   "settings.typing_text.title": "Personalize your typing indicator",
