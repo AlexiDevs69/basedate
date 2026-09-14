@@ -1921,6 +1921,7 @@
   "settings.typing_text.emoji_limit": "Максимум {max} эмодзи",
   "settings.typing_text.emoji_not_found": "Ничего не найдено",
   "settings.typing_text.footer_emoji": ":{name}: · от {server}",
+  "settings.typing_text.footer_from": "от {server}",
   "settings.typing_text.footer_hint": "Выбери эмодзи со своего сервера",
   "settings.typing_text.preview_label": "Превью:",
   "settings.typing_text.title": "Персонализируй индикатор набора текста",
