@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.162.0",
+      "date": "2026-09-16",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: typing emojis handling in router."
+      ],
+      "source_sha": "fddf27ed79abf3f68b4b12f1a86dcdd5649dff84"
+    },
+    {
       "version": "1.161.6",
       "date": "2026-09-16",
       "title": "Оновлення AlexiHub",
