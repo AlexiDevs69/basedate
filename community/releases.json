@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.162.1",
+      "date": "2026-09-16",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Change sanitize_typing_text_emojis return type."
+      ],
+      "source_sha": "4123672827ff29ca4478b0dd41064b880c78f7d3"
+    },
+    {
       "version": "1.162.0",
       "date": "2026-09-16",
       "title": "Нові можливості AlexiHub",
