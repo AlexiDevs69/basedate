@@ -61,7 +61,17 @@ app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 @app.on_event("startup")
 async def on_startup() -> None:
     if settings.auto_create_tables:
-        await init_db()
+        # Render's port scanner only waits a limited time for
+        # "Application startup complete." If Aiven is slow/unreachable right
+        # now, an un-timed-out init_db() hangs here forever, the port never
+        # opens, and the deploy fails with "No open ports detected" even
+        # though nothing is actually broken -- it's just still waiting.
+        # Fail fast instead, with a log line that says what happened.
+        try:
+            await asyncio.wait_for(init_db(), timeout=15)
+        except asyncio.TimeoutError:
+            print("[startup] init_db() timed out after 15s -- DB unreachable at startup", flush=True)
+            raise
 
 
 # Register the community router after the base-table startup handler so a new,
