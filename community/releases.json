@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.161.4",
+      "date": "2026-09-15",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance typing emoji handling with thread support."
+      ],
+      "source_sha": "c2d790386db0d2ba92d523b396868b4cfcc8b944"
+    },
+    {
       "version": "1.161.3",
       "date": "2026-09-15",
       "title": "Оновлення AlexiHub",
