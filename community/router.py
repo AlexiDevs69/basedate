@@ -607,6 +607,11 @@ class RealtimeChannelManager:
                     "id": uid,
                     "username": item.get("username", "user"),
                     "typing_text": item.get("typing_text", ""),
+                    # Rendered emoji data for [[ah:emoji:ID]] markers in
+                    # typing_text -- see sanitize_typing_text_emojis. Sent
+                    # as data, not just an id, since the recipient has no
+                    # access to the sender's own custom-emoji library.
+                    "typing_emojis": item.get("typing_emojis", {}),
                 }
                 for uid, item in typers_map.items()
             ]
@@ -4881,6 +4886,7 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
                 typing_profile = profile
                 if "typing_text" in data:
                     clean_typing_text = crud.normalize_typing_text(data.get("typing_text")) or ""
+                    typing_emojis: dict = {}
                     # Nitro-gated, same rule as /api/settings/typing-text --
                     # this WS event is a separate path a client could use to
                     # inject a custom suffix live without ever saving it, so
@@ -4889,10 +4895,15 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
                     if clean_typing_text and not await crud.has_active_nitro(db, account_id):
                         clean_typing_text = ""
                     elif clean_typing_text:
-                        clean_typing_text = await crud.sanitize_typing_text_emojis(db, account_id, clean_typing_text)
+                        clean_typing_text, typing_emojis = await crud.sanitize_typing_text_emojis(db, account_id, clean_typing_text)
                     typing_profile = {
                         **profile,
                         "typing_text": clean_typing_text,
+                        # Resolved emoji data (image_url/name) for every
+                        # [[ah:emoji:ID]] marker left in clean_typing_text,
+                        # so recipients can render it without needing this
+                        # sender's custom emoji in their own local library.
+                        "typing_emojis": typing_emojis,
                     }
                 await realtime_channels.set_typing(key, account_id, typing_profile)
                 continue
@@ -5304,6 +5315,7 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
                 typing_profile = profile
                 if "typing_text" in data:
                     clean_typing_text = crud.normalize_typing_text(data.get("typing_text")) or ""
+                    typing_emojis: dict = {}
                     # Nitro-gated, same rule as /api/settings/typing-text --
                     # this WS event is a separate path a client could use to
                     # inject a custom suffix live without ever saving it, so
@@ -5312,10 +5324,15 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
                     if clean_typing_text and not await crud.has_active_nitro(db, account_id):
                         clean_typing_text = ""
                     elif clean_typing_text:
-                        clean_typing_text = await crud.sanitize_typing_text_emojis(db, account_id, clean_typing_text)
+                        clean_typing_text, typing_emojis = await crud.sanitize_typing_text_emojis(db, account_id, clean_typing_text)
                     typing_profile = {
                         **profile,
                         "typing_text": clean_typing_text,
+                        # Resolved emoji data (image_url/name) for every
+                        # [[ah:emoji:ID]] marker left in clean_typing_text,
+                        # so recipients can render it without needing this
+                        # sender's custom emoji in their own local library.
+                        "typing_emojis": typing_emojis,
                     }
                 await realtime_channels.set_typing(key, account_id, typing_profile)
                 continue
