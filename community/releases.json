@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.161.6",
+      "date": "2026-09-16",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: typing text rendering with emoji mapping."
+      ],
+      "source_sha": "19b6d14769a1f6226fe17e4bb6fafacdb84c38bb"
+    },
+    {
       "version": "1.161.5",
       "date": "2026-09-16",
       "title": "Оновлення AlexiHub",
