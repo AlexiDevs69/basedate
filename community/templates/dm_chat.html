@@ -2421,8 +2421,21 @@ function handleDmRealtimeData(data){
     // Settings picker/preview uses) so a valid emoji never renders as blank
     // just because one of the two sources hasn't loaded it.
     const rich=(window.AlexiHubRichText&&window.AlexiHubRichText.resolveEmoji)?window.AlexiHubRichText.resolveEmoji(id):null;
-    if(rich&&rich.image_url)return rich;
-    return typingEmojiById(id);
+    if(rich&&rich.image_url){
+      console.log('[AH-EMOJI-DEBUG] id='+id+' resolved from thread-scoped map:',rich);
+      return rich;
+    }
+    const own=typingEmojiById(id);
+    if(own&&own.image_url){
+      console.log('[AH-EMOJI-DEBUG] id='+id+' resolved from account-wide typing library (fallback):',own);
+      return own;
+    }
+    console.warn('[AH-EMOJI-DEBUG] id='+id+' NOT FOUND in either source.',
+      '\n  thread-scoped map has window.AlexiHubRichText =',!!window.AlexiHubRichText,
+      window.AlexiHubRichText?('; that item lookup returned: '+JSON.stringify(rich)):'(global not defined yet/at all)',
+      '\n  account-wide typing library loaded =',!!ahTypingEmojiLib,
+      ahTypingEmojiLib?('; ok='+ahTypingEmojiLib.ok+', '+(ahTypingEmojiLib.emojis||[]).length+' emojis, ids='+(ahTypingEmojiLib.emojis||[]).map(x=>x.id).join(',')):'(not loaded yet/failed)');
+    return null;
   }
   function ahRenderTypingTextHtml(text){
     const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
@@ -2452,6 +2465,7 @@ function handleDmRealtimeData(data){
       }
       const raw=custom?(u.username+' '+custom):(u.username+defaultSuffix);
       lastTypingRaw=raw;
+      if(/\[\[ah:emoji:\d+\]\]/.test(raw))console.log('[AH-EMOJI-DEBUG] typing event for',u.username,'raw text:',raw);
       typingEl.innerHTML=ahRenderTypingTextHtml(raw);
       // ahRenderTypingTextHtml resolves [[ah:emoji:id]] via two possible
       // sources (see ahResolveTypingEmoji), and BOTH load asynchronously:
@@ -9155,7 +9169,7 @@ document.addEventListener('DOMContentLoaded', async function(){
   }
   function renderAll(root){(root||document).querySelectorAll(cfg.context==='dm'?'.msg':'.message').forEach(renderRow);}
   function schedule(root){if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;renderAll(root||document);});}
-  async function loadEmojiMap(){try{const response=await fetch(cfg.mediaUrl,{credentials:'same-origin'}),data=await response.json();(data.emojis||[]).forEach(item=>{if((item.allowed||item.local)&&item.name&&safeHttpUrl(item.image_url)){emojiByName.set(String(item.name).toLowerCase(),item);emojiById.set(String(item.id),item);}});emojiVersion++;renderAll(document);}catch(_){}}
+  async function loadEmojiMap(){try{const response=await fetch(cfg.mediaUrl,{credentials:'same-origin'}),data=await response.json();console.log('[AH-EMOJI-DEBUG] thread-scoped media/library response ('+cfg.mediaUrl+'):',response.status,data);let skipped=[];(data.emojis||[]).forEach(item=>{if((item.allowed||item.local)&&item.name&&safeHttpUrl(item.image_url)){emojiByName.set(String(item.name).toLowerCase(),item);emojiById.set(String(item.id),item);}else{skipped.push(item);}});if(skipped.length)console.warn('[AH-EMOJI-DEBUG] thread-scoped map SKIPPED these items (failed allowed/local/name/image_url check):',skipped);console.log('[AH-EMOJI-DEBUG] thread-scoped map loaded, usable ids:',Array.from(emojiById.keys()));emojiVersion++;renderAll(document);}catch(e){console.error('[AH-EMOJI-DEBUG] thread-scoped media/library fetch FAILED:',e);}}
   document.addEventListener('click',event=>{const spoiler=event.target.closest('.ah-rich-spoiler');if(spoiler){spoiler.classList.toggle('revealed');return;}const button=event.target.closest('.ah-rich-code-copy');if(button){const code=button.closest('.ah-rich-code')?.querySelector('code')?.textContent||'';navigator.clipboard?.writeText(code).then(()=>{const old=button.textContent;button.textContent=window.AlexiHubI18n.t("common.label.copied");setTimeout(()=>button.textContent=old,1100);}).catch(()=>{});}});
   document.addEventListener('keydown',event=>{if((event.key==='Enter'||event.key===' ')&&event.target.closest('.ah-rich-spoiler')){event.preventDefault();event.target.closest('.ah-rich-spoiler').classList.toggle('revealed');}});
   const root=document.getElementById('messages')||document.querySelector('.messages');if(root)new MutationObserver(()=>schedule(root)).observe(root,{childList:true,subtree:true,characterData:true});
