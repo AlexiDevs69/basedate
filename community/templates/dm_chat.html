@@ -2437,10 +2437,16 @@ function handleDmRealtimeData(data){
       ahTypingEmojiLib?('; ok='+ahTypingEmojiLib.ok+', '+(ahTypingEmojiLib.emojis||[]).length+' emojis, ids='+(ahTypingEmojiLib.emojis||[]).map(x=>x.id).join(',')):'(not loaded yet/failed)');
     return null;
   }
-  function ahRenderTypingTextHtml(text){
+  function ahRenderTypingTextHtml(text,emojiMap){
+    // The server now resolves every [[ah:emoji:ID]] marker to {image_url,name}
+    // and sends it inline with the "typing" event (see sanitize_typing_text_emojis
+    // / broadcast_typing on the backend) -- a viewer has no way to look up a
+    // stranger's custom emoji from their own local emoji libraries, which is
+    // why that used to silently render as plain text for anyone but the author.
     const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+    const map=emojiMap||{};
     return esc(text).replace(/\[\[ah:emoji:(\d+)\]\]/g,(marker,id)=>{
-      const item=ahResolveTypingEmoji(id);
+      const item=map[id];
       if(!item||!item.image_url)return '';
       const name=String(item.name||'emoji');
       return '<img class="ah-custom-emoji" src="'+esc(item.image_url)+'" alt=":'+esc(name)+':" title=":'+esc(name)+':" loading="lazy" referrerpolicy="no-referrer">';
@@ -2465,20 +2471,10 @@ function handleDmRealtimeData(data){
       }
       const raw=custom?(u.username+' '+custom):(u.username+defaultSuffix);
       lastTypingRaw=raw;
-      if(/\[\[ah:emoji:\d+\]\]/.test(raw))console.log('[AH-EMOJI-DEBUG] typing event for',u.username,'raw text:',raw);
-      typingEl.innerHTML=ahRenderTypingTextHtml(raw);
-      // ahRenderTypingTextHtml resolves [[ah:emoji:id]] via two possible
-      // sources (see ahResolveTypingEmoji), and BOTH load asynchronously:
-      // loadTypingEmojiLibrary() over the network, and window.AlexiHubRichText
-      // itself may not even be defined yet (see ahWaitForRichText above).
-      // Neither is guaranteed ready the moment the first "typing" event of
-      // a session arrives. Wait on both, then re-render this same text --
-      // but only if it's still the text currently on screen.
-      if(/\[\[ah:emoji:\d+\]\]/.test(raw)){
-        Promise.all([loadTypingEmojiLibrary(),ahWaitForRichText()]).then(()=>{
-          if(lastTypingRaw===raw)typingEl.innerHTML=ahRenderTypingTextHtml(raw);
-        });
-      }
+      // u.typing_emojis comes straight from the server (see broadcast_typing
+      // in router.py) already resolved to {image_url,name} per marker, so no
+      // async lookup/retry against local emoji libraries is needed anymore.
+      typingEl.innerHTML=ahRenderTypingTextHtml(raw,u.typing_emojis);
     }
   }
   if(data.type==='pin_add'&&data.pin&&window.__dmPinsApi)window.__dmPinsApi.upsertDmPin(data.pin);
