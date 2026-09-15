@@ -1889,6 +1889,37 @@ function typingEmojiById(id){
   const list=(ahTypingEmojiLib&&ahTypingEmojiLib.emojis)||[];
   return list.find(x=>String(x.id)===String(id))||null;
 }
+// Third source for resolving [[ah:emoji:id]] inside somebody else's typing
+// text: the THREAD-scoped library. `ahTypingEmojiLib` above is context=dm
+// without thread_id, i.e. only emoji from servers *this* account is in -- so
+// the other person's emoji is simply absent from it, and the marker got
+// stripped to ''. This one is fetched independently of window.AlexiHubRichText
+// (which lives in a script block thousands of lines below and may not exist
+// yet, or at all) and is deliberately NOT filtered by allowed/local: we only
+// need the image to render it, not permission to send it.
+let ahTypingThreadLib=null,ahTypingThreadLibPromise=null;
+function loadTypingThreadEmojiLibrary(force){
+  if(ahTypingThreadLib&&!force)return Promise.resolve(ahTypingThreadLib);
+  if(ahTypingThreadLibPromise&&!force)return ahTypingThreadLibPromise;
+  ahTypingThreadLibPromise=fetch('/community/api/media/library?context=dm&thread_id={{ thread.id }}',{credentials:'same-origin'})
+    .then(async r=>{
+      let data=null;
+      try{data=await r.json();}catch(e){/* non-JSON, e.g. an HTML error page */}
+      ahTypingThreadLib=(data&&Array.isArray(data.emojis))?data:{emojis:[]};
+      return ahTypingThreadLib;
+    })
+    .catch(e=>{
+      console.error('[AlexiHub] thread-scoped typing emoji library failed:',e);
+      ahTypingThreadLib={emojis:[]};
+      return ahTypingThreadLib;
+    });
+  return ahTypingThreadLibPromise;
+}
+function typingThreadEmojiById(id){
+  const list=(ahTypingThreadLib&&ahTypingThreadLib.emojis)||[];
+  return list.find(x=>String(x.id)===String(id))||null;
+}
+loadTypingThreadEmojiLibrary(); // warm it up so the first "typing" event already has images
 function countTypingTextEmoji(str){
   return (String(str||'').match(/\[\[ah:emoji:\d+\]\]/g)||[]).length;
 }
@@ -1897,7 +1928,7 @@ function escapeHtmlForTyping(s){
 }
 function renderTypingTextPreviewHtml(text){
   return escapeHtmlForTyping(text).replace(/\[\[ah:emoji:(\d+)\]\]/g,(marker,id)=>{
-    const item=typingEmojiById(id);
+    const item=typingEmojiById(id)||typingThreadEmojiById(id);
     if(!item||!item.image_url)return '';
     const name=escapeHtmlForTyping(item.name||'emoji');
     return '<img class="ah-custom-emoji" src="'+escapeHtmlForTyping(item.image_url)+'" alt=":'+name+':" title=":'+name+':">';
@@ -1935,7 +1966,7 @@ function initTypingTextSettings(){
   }
   ttInput.addEventListener('input',renderTypingPreview);
   renderTypingPreview();
-  loadTypingEmojiLibrary().then(renderTypingPreview); // re-render once we know the saved marker's image
+  Promise.all([loadTypingEmojiLibrary(),loadTypingThreadEmojiLibrary()]).then(renderTypingPreview); // re-render once we know the saved marker's image
 
   // --- emoji picker: only custom emoji from the account's own servers,
   // up to AH_TYPING_EMOJI_MAX per typing text. Emoji from a server you're
@@ -2425,23 +2456,33 @@ function handleDmRealtimeData(data){
       console.log('[AH-EMOJI-DEBUG] id='+id+' resolved from thread-scoped map:',rich);
       return rich;
     }
+    const thread=typingThreadEmojiById(id);
+    if(thread&&thread.image_url){
+      console.log('[AH-EMOJI-DEBUG] id='+id+' resolved from thread-scoped library (direct fetch):',thread);
+      return thread;
+    }
     const own=typingEmojiById(id);
     if(own&&own.image_url){
       console.log('[AH-EMOJI-DEBUG] id='+id+' resolved from account-wide typing library (fallback):',own);
       return own;
     }
-    console.warn('[AH-EMOJI-DEBUG] id='+id+' NOT FOUND in either source.',
+    console.warn('[AH-EMOJI-DEBUG] id='+id+' NOT FOUND in any source.',
       '\n  thread-scoped map has window.AlexiHubRichText =',!!window.AlexiHubRichText,
       window.AlexiHubRichText?('; that item lookup returned: '+JSON.stringify(rich)):'(global not defined yet/at all)',
       '\n  account-wide typing library loaded =',!!ahTypingEmojiLib,
       ahTypingEmojiLib?('; ok='+ahTypingEmojiLib.ok+', '+(ahTypingEmojiLib.emojis||[]).length+' emojis, ids='+(ahTypingEmojiLib.emojis||[]).map(x=>x.id).join(',')):'(not loaded yet/failed)');
     return null;
   }
+  // set by ahRenderTypingTextHtml when at least one [[ah:emoji:id]] could not
+  // be resolved, so the caller knows a forced library refresh is worth trying
+  let ahTypingUnresolved=false;
+  let ahTypingForcedRetry=false; // only ever refetch once per page, not per keystroke
   function ahRenderTypingTextHtml(text){
     const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+    ahTypingUnresolved=false;
     return esc(text).replace(/\[\[ah:emoji:(\d+)\]\]/g,(marker,id)=>{
       const item=ahResolveTypingEmoji(id);
-      if(!item||!item.image_url)return '';
+      if(!item||!item.image_url){ahTypingUnresolved=true;return '';}
       const name=String(item.name||'emoji');
       return '<img class="ah-custom-emoji" src="'+esc(item.image_url)+'" alt=":'+esc(name)+':" title=":'+esc(name)+':" loading="lazy" referrerpolicy="no-referrer">';
     });
@@ -2475,8 +2516,18 @@ function handleDmRealtimeData(data){
       // a session arrives. Wait on both, then re-render this same text --
       // but only if it's still the text currently on screen.
       if(/\[\[ah:emoji:\d+\]\]/.test(raw)){
-        Promise.all([loadTypingEmojiLibrary(),ahWaitForRichText()]).then(()=>{
-          if(lastTypingRaw===raw)typingEl.innerHTML=ahRenderTypingTextHtml(raw);
+        Promise.all([loadTypingEmojiLibrary(),loadTypingThreadEmojiLibrary(),ahWaitForRichText()]).then(()=>{
+          if(lastTypingRaw!==raw)return;
+          typingEl.innerHTML=ahRenderTypingTextHtml(raw);
+          // Still nothing? The emoji may have been created/added to a server
+          // after these libraries were cached earlier in this session. Refetch
+          // both once (force) and render a last time.
+          if(ahTypingUnresolved&&!ahTypingForcedRetry){
+            ahTypingForcedRetry=true;
+            Promise.all([loadTypingEmojiLibrary(true),loadTypingThreadEmojiLibrary(true)]).then(()=>{
+              if(lastTypingRaw===raw)typingEl.innerHTML=ahRenderTypingTextHtml(raw);
+            });
+          }
         });
       }
     }
@@ -9169,7 +9220,18 @@ document.addEventListener('DOMContentLoaded', async function(){
   }
   function renderAll(root){(root||document).querySelectorAll(cfg.context==='dm'?'.msg':'.message').forEach(renderRow);}
   function schedule(root){if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;renderAll(root||document);});}
-  async function loadEmojiMap(){try{const response=await fetch(cfg.mediaUrl,{credentials:'same-origin'}),data=await response.json();console.log('[AH-EMOJI-DEBUG] thread-scoped media/library response ('+cfg.mediaUrl+'):',response.status,data);let skipped=[];(data.emojis||[]).forEach(item=>{if((item.allowed||item.local)&&item.name&&safeHttpUrl(item.image_url)){emojiByName.set(String(item.name).toLowerCase(),item);emojiById.set(String(item.id),item);}else{skipped.push(item);}});if(skipped.length)console.warn('[AH-EMOJI-DEBUG] thread-scoped map SKIPPED these items (failed allowed/local/name/image_url check):',skipped);console.log('[AH-EMOJI-DEBUG] thread-scoped map loaded, usable ids:',Array.from(emojiById.keys()));emojiVersion++;renderAll(document);}catch(e){console.error('[AH-EMOJI-DEBUG] thread-scoped media/library fetch FAILED:',e);}}
+  async function loadEmojiMap(){try{const response=await fetch(cfg.mediaUrl,{credentials:'same-origin'}),data=await response.json();console.log('[AH-EMOJI-DEBUG] thread-scoped media/library response ('+cfg.mediaUrl+'):',response.status,data);let skipped=[];(data.emojis||[]).forEach(item=>{
+      // NOTE: `allowed`/`local` answer "may THIS account SEND this emoji",
+      // which has nothing to do with whether we may DISPLAY one that somebody
+      // else already used (in a message, or in their custom typing text).
+      // Gating emojiById on it was exactly why [[ah:emoji:id]] coming from the
+      // other person silently resolved to nothing. Index every item that has a
+      // usable image by id; keep the permission gate only for the :name:
+      // shortcode map, where it really does mean "you can type this".
+      if(!safeHttpUrl(item.image_url)){skipped.push(item);return;}
+      emojiById.set(String(item.id),item);
+      if((item.allowed||item.local)&&item.name)emojiByName.set(String(item.name).toLowerCase(),item);
+    });if(skipped.length)console.warn('[AH-EMOJI-DEBUG] thread-scoped map SKIPPED these items (no usable image_url):',skipped);console.log('[AH-EMOJI-DEBUG] thread-scoped map loaded, usable ids:',Array.from(emojiById.keys()));emojiVersion++;renderAll(document);}catch(e){console.error('[AH-EMOJI-DEBUG] thread-scoped media/library fetch FAILED:',e);}}
   document.addEventListener('click',event=>{const spoiler=event.target.closest('.ah-rich-spoiler');if(spoiler){spoiler.classList.toggle('revealed');return;}const button=event.target.closest('.ah-rich-code-copy');if(button){const code=button.closest('.ah-rich-code')?.querySelector('code')?.textContent||'';navigator.clipboard?.writeText(code).then(()=>{const old=button.textContent;button.textContent=window.AlexiHubI18n.t("common.label.copied");setTimeout(()=>button.textContent=old,1100);}).catch(()=>{});}});
   document.addEventListener('keydown',event=>{if((event.key==='Enter'||event.key===' ')&&event.target.closest('.ah-rich-spoiler')){event.preventDefault();event.target.closest('.ah-rich-spoiler').classList.toggle('revealed');}});
   const root=document.getElementById('messages')||document.querySelector('.messages');if(root)new MutationObserver(()=>schedule(root)).observe(root,{childList:true,subtree:true,characterData:true});
