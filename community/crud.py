@@ -610,7 +610,9 @@ def normalize_typing_text(value: str | None) -> str | None:
     return clean[:TYPING_TEXT_MAX_LEN] or None
 
 
-async def sanitize_typing_text_emojis(db: AsyncSession, account_id: int, value: str) -> str:
+async def sanitize_typing_text_emojis(
+    db: AsyncSession, account_id: int, value: str
+) -> tuple[str, dict[str, dict]]:
     """Strip custom-emoji markers ([[ah:emoji:ID]]) from a typing-text suffix
     that this account isn't allowed to use, and cap how many can appear.
 
@@ -620,12 +622,20 @@ async def sanitize_typing_text_emojis(db: AsyncSession, account_id: int, value: 
     this rule, this is just the server-side backstop against a hand-crafted
     request. Up to TYPING_TEXT_EMOJI_MAX markers are kept; the rest (and any
     marker the account has no right to use) are dropped silently.
+
+    Also returns a {str(emoji_id): {"image_url": ..., "name": ...}} map for
+    every marker that survived. The viewer of someone else's typing text has
+    no way to resolve a stranger's custom emoji from their own local emoji
+    libraries (that was the original bug -- the marker silently rendered as
+    plain text for anyone but the author), so the server hands over the
+    rendered emoji data directly instead of just a bare numeric id.
     """
     if not value or "[[ah:emoji:" not in value:
-        return value or ""
-    cache: dict[int, bool] = {}
+        return value or "", {}
+    cache: dict[int, dict | None] = {}
     kept = 0
     out: list[str] = []
+    emoji_map: dict[str, dict] = {}
     last = 0
     for match in _CUSTOM_EMOJI_MARKER_RE.finditer(value):
         out.append(value[last:match.start()])
@@ -638,12 +648,17 @@ async def sanitize_typing_text_emojis(db: AsyncSession, account_id: int, value: 
                 db, account_id, kind="emoji", item_id=emoji_id,
                 current_server_id=None, context="dm",
             )
-            cache[emoji_id] = bool(item and item.get("allowed"))
-        if cache[emoji_id]:
+            cache[emoji_id] = item if (item and item.get("allowed")) else None
+        item = cache[emoji_id]
+        if item:
             out.append(match.group(0))
+            emoji_map[str(emoji_id)] = {
+                "image_url": item.get("image_url"),
+                "name": item.get("name"),
+            }
             kept += 1
     out.append(value[last:])
-    return "".join(out)
+    return "".join(out), emoji_map
 
 
 async def update_account_typing_text(db: AsyncSession, account_id: int, typing_text: str | None) -> str | None:
@@ -655,7 +670,8 @@ async def update_account_typing_text(db: AsyncSession, account_id: int, typing_t
     await ensure_account_visual_columns(db)
     normalized = normalize_typing_text(typing_text)
     if normalized:
-        normalized = await sanitize_typing_text_emojis(db, account_id, normalized)
+        # Emoji map isn't needed for the DB-persisted value, just the text.
+        normalized, _typing_emojis = await sanitize_typing_text_emojis(db, account_id, normalized)
         normalized = normalize_typing_text(normalized)
     await db.execute(
         text("UPDATE community_accounts SET typing_text = :typing_text WHERE id = :account_id"),
