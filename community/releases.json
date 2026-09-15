@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.163.0",
+      "date": "2026-09-16",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: timeout for database initialization on startup."
+      ],
+      "source_sha": "298af9ea85d9b3ee4baf58e863751d1bcc4cd8f5"
+    },
+    {
       "version": "1.162.1",
       "date": "2026-09-16",
       "title": "Виправлення та стабільність",
