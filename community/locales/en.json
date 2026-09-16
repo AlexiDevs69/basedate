@@ -1947,5 +1947,11 @@
   "ui.friends": "Friends",
   "ui.friends_dm": "Friends / DMs",
   "ui.online": "Online",
-  "ui.pending": "Pending"
+  "ui.pending": "Pending",
+  "settings": {
+    "typing_text": {
+      "nitro_lock_before": "Activate",
+      "nitro_lock_after": "to unlock this feature"
+    }
+  }
 }
