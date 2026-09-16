@@ -3158,6 +3158,26 @@ function openChannelInviteModal(event, btn) {
       if (shouldStick) messagesEl.scrollTop = messagesEl.scrollHeight;
     }
 
+    function escapeHtmlForTyping(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[c];
+      });
+    }
+
+    function renderTypingTextHtml(text, emojiMap) {
+      // Mirrors DMs' ahRenderTypingTextHtml: the server resolves every
+      // [[ah:emoji:ID]] marker inline with the "typing" event (see
+      // broadcast_typing on the backend), so we just swap markers for <img>.
+      var esc = escapeHtmlForTyping;
+      var map = emojiMap || {};
+      return esc(text).replace(/\[\[ah:emoji:(\d+)\]\]/g, function (marker, id) {
+        var item = map[id];
+        if (!item || !item.image_url) return '';
+        var name = String(item.name || 'emoji');
+        return '<img class="ah-custom-emoji" src="' + esc(item.image_url) + '" alt=":' + esc(name) + ':" title=":' + esc(name) + ':" loading="lazy" referrerpolicy="no-referrer">';
+      });
+    }
+
     function renderTyping(users) {
       if (!typingEl) return;
       users = (users || []).filter(function (u) { return u.id !== myAccountId; });
@@ -3166,10 +3186,33 @@ function openChannelInviteModal(event, btn) {
         typingEl.innerHTML = '';
         return;
       }
-      var names = users.slice(0, 3).map(function (u) { return '<b>' + escapeAttr(u.username || 'user') + '</b>'; }).join(', ');
-      var suffix = users.length === 1 ? window.AlexiHubI18n.t("server_channel.text.prefers") : window.AlexiHubI18n.t("server_channel.text.scrowing");
-      if (users.length > 3) names += window.AlexiHubI18n.t("server_channel.text.and_others");
-      typingEl.innerHTML = names + suffix + '<span class="typing-dots"><i></i><i></i><i></i></span>';
+      var html;
+      if (users.length === 1) {
+        // Exactly one person typing -- show their own custom typing text
+        // (Settings -> Appearance), same behaviour as DMs. As soon as a
+        // second person starts typing we fall back to the generic list
+        // below so two custom texts never get glued together.
+        var u = users[0];
+        var boldName = '<b>' + escapeAttr(u.username || 'user') + '</b>';
+        var custom = (u.typing_text || '').trim();
+        if (custom) {
+          html = boldName + ' ' + renderTypingTextHtml(custom, u.typing_emojis);
+        } else {
+          var defaultSuffix = window.AlexiHubI18n.t("server_channel.text.prefers");
+          if (!defaultSuffix || !/^\s/.test(defaultSuffix) || /preferring|typing/i.test(defaultSuffix)) {
+            defaultSuffix = ' друкує...';
+          }
+          html = boldName + defaultSuffix;
+        }
+      } else {
+        // Several people typing at once -- always the default phrasing,
+        // never a mix of custom texts.
+        var names = users.slice(0, 3).map(function (u) { return '<b>' + escapeAttr(u.username || 'user') + '</b>'; }).join(', ');
+        var suffix = window.AlexiHubI18n.t("server_channel.text.scrowing");
+        if (users.length > 3) names += window.AlexiHubI18n.t("server_channel.text.and_others");
+        html = names + suffix;
+      }
+      typingEl.innerHTML = html + '<span class="typing-dots"><i></i><i></i><i></i></span>';
       typingEl.classList.add('active');
       clearTimeout(typingHideTimer);
       typingHideTimer = setTimeout(function () { typingEl.classList.remove('active'); typingEl.innerHTML = ''; }, 3600);
