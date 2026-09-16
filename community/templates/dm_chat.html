@@ -3489,7 +3489,7 @@ document.addEventListener('DOMContentLoaded',()=>{
             </div>
             <div class="ah-typing-gate-lock" id="ah-typing-gate-lock">
               <span class="ah-typing-gate-lock-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></span>
-              <div class="ah-typing-gate-locktext">Активуйте <a href="#" class="ah-typing-gate-nitrolink" onclick="if(window.showSettingsTab){window.showSettingsTab('gifts');}return false;">Nitro</a> і відкрийте цю функцію</div>
+              <div class="ah-typing-gate-locktext"><span data-i18n="settings.typing_text.nitro_lock_before"><!--i18n:settings.typing_text.nitro_lock_before-->{{ i18n_t('settings.typing_text.nitro_lock_before') }}</span> <a href="#" class="ah-typing-gate-nitrolink" onclick="if(window.showSettingsTab){window.showSettingsTab('gifts');}return false;">Nitro</a> <span data-i18n="settings.typing_text.nitro_lock_after"><!--i18n:settings.typing_text.nitro_lock_after-->{{ i18n_t('settings.typing_text.nitro_lock_after') }}</span></div>
             </div>
           </div>
         </div>
