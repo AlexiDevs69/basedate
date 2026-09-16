@@ -1947,5 +1947,11 @@
   "ui.friends": "Друзья",
   "ui.friends_dm": "Друзья / ЛС",
   "ui.online": "В сети",
-  "ui.pending": "Ожидание"
+  "ui.pending": "Ожидание",
+  "settings": {
+    "typing_text": {
+      "nitro_lock_before": "Активируйте",
+      "nitro_lock_after": "и откройте эту функцию"
+    }
+  }
 }
