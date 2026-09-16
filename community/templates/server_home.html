@@ -2973,6 +2973,10 @@ document.addEventListener('DOMContentLoaded',()=>{
 <div id="ah-v3-overlay" class="ah-v3-overlay" aria-hidden="true">
   <div class="ah-v3-full">
     <button class="ah-v3-close" type="button" id="ah-v3-close">×</button>
+    <div id="ah-v3-full-topbar" class="ah-v3-full-topbar" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10V8a6 6 0 0 1 12 0v2"></path><rect x="4" y="10" width="16" height="11" rx="2.5"></rect></svg>
+      <span id="ah-v3-full-topbar-text">Приватний профіль</span>
+    </div>
     <div class="ah-v3-full-left">
       <div id="ah-v3-full-banner" class="ah-v3-full-banner"></div>
       <div class="ah-v3-full-left-inner">
@@ -3077,6 +3081,9 @@ document.addEventListener('DOMContentLoaded',()=>{
 .ah-v3-full-about-block{margin-top:22px;padding-top:18px;border-top:1px solid rgba(255,255,255,.12)}
 .ah-v3-full-private-bar{display:block;margin:0 0 16px;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.06);color:#c9cdd3;font-size:13px;font-weight:500;line-height:1.5}
 .ah-v3-full-private-bar[hidden]{display:none}
+.ah-v3-full-topbar{grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:8px;padding:15px 54px;background:#1a1b20;border-bottom:1px solid rgba(255,255,255,.1);color:#dbdee1;font-size:13px;font-weight:800;letter-spacing:.02em;text-align:center}
+.ah-v3-full-topbar svg{width:15px;height:15px;flex:0 0 auto;color:#949ba4;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ah-v3-full-topbar[hidden]{display:none}
 .ah-v3-full-section-title{margin-bottom:7px;color:#fff;font-size:12px;font-weight:950;text-transform:uppercase;letter-spacing:.035em}
 #ah-v3-full-about{color:#e1e3e7;font-size:13px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
 .ah-v3-full-meta{margin-top:22px!important;padding-top:18px;border-top:1px solid rgba(255,255,255,.12);color:#c2c5cc!important}
@@ -6911,6 +6918,8 @@ if (typeof window.openSelfProfileSettings !== 'function') {
     const bar=$('#ah-v3-full-private-bar');if(!bar)return;
     const show=!!(active&&!active.isSelf&&active.isPrivateRestricted);
     bar.hidden=!show;
+    const topbar=$('#ah-v3-full-topbar');
+    if(topbar)topbar.hidden=!show;
     if(show){
       const textNode=$('#ah-v3-full-private-bar-text');
       if(textNode){
