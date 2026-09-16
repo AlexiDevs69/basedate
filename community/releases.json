@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.173.4",
+      "date": "2026-09-16",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Виправлено: HTML structure and update script tags."
+      ],
+      "source_sha": "308f8fccc8ffd0223fb6fa40149319d876ada378"
+    },
+    {
       "version": "1.173.3",
       "date": "2026-09-16",
       "title": "Виправлення та стабільність",
