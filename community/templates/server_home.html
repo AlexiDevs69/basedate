@@ -2952,6 +2952,10 @@ document.addEventListener('DOMContentLoaded',()=>{
 </script>
 
 <div id="ah-v3-mini" class="ah-v3-mini" aria-hidden="true">
+  <div id="ah-v3-mini-topbar" class="ah-v3-full-topbar ah-v3-mini-topbar" hidden>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10V8a6 6 0 0 1 12 0v2"></path><rect x="4" y="10" width="16" height="11" rx="2.5"></rect></svg>
+    <span id="ah-v3-mini-topbar-text" data-i18n="common.text.private_profile"><!--i18n:common.text.private_profile-->{{ i18n_t('common.text.private_profile') }}</span>
+  </div>
   <div id="ah-v3-banner" class="ah-v3-banner"></div>
   <div class="ah-v3-body">
     <button id="ah-v3-avatar" class="ah-v3-avatar" type="button"><span id="ah-v3-avatar-text"></span><span id="ah-v3-status" class="ah-v3-status offline"></span></button>
@@ -2961,6 +2965,9 @@ document.addEventListener('DOMContentLoaded',()=>{
     </div>
     <div id="ah-v3-handle" class="ah-v3-handle">@user</div>
     <div id="ah-v3-role" class="ah-v3-role"><!--i18n:common.text.member-->{{ i18n_t("common.text.member") }}</div>
+    <div id="ah-v3-mini-private-bar" class="ah-v3-full-private-bar ah-v3-mini-private-bar" hidden>
+      <span id="ah-v3-mini-private-bar-text"></span>
+    </div>
     <div class="ah-v3-actions"><a id="ah-v3-message" href="#"><!--i18n:privacy.blocking.message-->{{ i18n_t("privacy.blocking.message") }}</a><button id="ah-v3-open-full" type="button"><!--i18n:privacy.blocking.full-->{{ i18n_t('privacy.blocking.full') }}</button></div>
     <div class="ah-v3-status-menu">
       <button class="ah-v3-status-btn" type="button" data-presence="online"><span class="ah-v3-dot"></span><span><!--i18n:common.text.online-->{{ i18n_t('common.text.online') }}<small><!--i18n:common.text.showkensike_yak_online-->{{ i18n_t('common.text.showkensike_yak_online') }}</small></span></button>
@@ -2975,7 +2982,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     <button class="ah-v3-close" type="button" id="ah-v3-close">×</button>
     <div id="ah-v3-full-topbar" class="ah-v3-full-topbar" hidden>
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10V8a6 6 0 0 1 12 0v2"></path><rect x="4" y="10" width="16" height="11" rx="2.5"></rect></svg>
-      <span id="ah-v3-full-topbar-text">Приватний профіль</span>
+      <span id="ah-v3-full-topbar-text" data-i18n="common.text.private_profile"><!--i18n:common.text.private_profile-->{{ i18n_t('common.text.private_profile') }}</span>
     </div>
     <div class="ah-v3-full-left">
       <div id="ah-v3-full-banner" class="ah-v3-full-banner"></div>
@@ -3084,6 +3091,8 @@ document.addEventListener('DOMContentLoaded',()=>{
 .ah-v3-full-topbar{grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:8px;padding:15px 54px;background:#1a1b20;border-bottom:1px solid rgba(255,255,255,.1);color:#dbdee1;font-size:13px;font-weight:800;letter-spacing:.02em;text-align:center}
 .ah-v3-full-topbar svg{width:15px;height:15px;flex:0 0 auto;color:#949ba4;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .ah-v3-full-topbar[hidden]{display:none}
+.ah-v3-mini-topbar{padding:12px 40px;font-size:12px;border-radius:0}
+.ah-v3-mini-private-bar{margin:8px 0 0}
 .ah-v3-full-section-title{margin-bottom:7px;color:#fff;font-size:12px;font-weight:950;text-transform:uppercase;letter-spacing:.035em}
 #ah-v3-full-about{color:#e1e3e7;font-size:13px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
 .ah-v3-full-meta{margin-top:22px!important;padding-top:18px;border-top:1px solid rgba(255,255,255,.12);color:#c2c5cc!important}
@@ -3216,7 +3225,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   function openMini(el,e){
     active=dataFrom(el); let pop=$('#ah-v3-mini'); if(!pop)return;
     pop.classList.toggle('self',!!active.isSelf); pop.style.setProperty('--ah-c1',active.c1); pop.style.setProperty('--ah-c2',active.c2); setBanner($('#ah-v3-banner'), active.banner, active.c1, active.c2);
-    setAvatar($('#ah-v3-avatar'),$('#ah-v3-avatar-text'),active.avatar,active.display); const miniNameNode=$('#ah-v3-name'); if(miniNameNode){miniNameNode.dataset.profileUsername=active.name; miniNameNode.textContent=active.display;} $('#ah-v3-handle').textContent='@'+active.name; $('#ah-v3-role').textContent=active.role||'member'; (function(){var t=$('#ah-v3-tag'); if(!t)return; if(active.tag&&active.tag.text){t.hidden=false;t.title=active.tag.serverName||'';t.dataset.tagServerId=active.tag.serverId||'';t.dataset.tagServerName=active.tag.serverName||'';t.dataset.tagIconGlyph=active.tag.glyph||'';t.dataset.tagIconUrl=active.tag.iconUrl||'';t.dataset.tagText=active.tag.text||'';t.dataset.tagMemberCount=active.tag.memberCount||'';t.dataset.tagOnlineCount=active.tag.onlineCount||'';t.dataset.tagDescription=active.tag.description||'';t.dataset.tagInvite=active.tag.invite||'';var bb=t.querySelector('b');if(bb)bb.textContent=active.tag.glyph||'◆';var ss=t.querySelector('span');if(ss)ss.textContent=active.tag.text;}else{t.hidden=true;} })(); let st=$('#ah-v3-status'); if(st) st.className='ah-v3-status '+(active.status||'offline'); let msg=$('#ah-v3-message'); if(msg){msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; msg.textContent=active.isSelf?window.AlexiHubI18n.t("settings.edit_profile"):'Message'} place(pop,e);
+    setAvatar($('#ah-v3-avatar'),$('#ah-v3-avatar-text'),active.avatar,active.display); const miniNameNode=$('#ah-v3-name'); if(miniNameNode){miniNameNode.dataset.profileUsername=active.name; miniNameNode.textContent=active.display;} $('#ah-v3-handle').textContent='@'+active.name; $('#ah-v3-role').textContent=active.role||'member'; (function(){var t=$('#ah-v3-tag'); if(!t)return; if(active.tag&&active.tag.text){t.hidden=false;t.title=active.tag.serverName||'';t.dataset.tagServerId=active.tag.serverId||'';t.dataset.tagServerName=active.tag.serverName||'';t.dataset.tagIconGlyph=active.tag.glyph||'';t.dataset.tagIconUrl=active.tag.iconUrl||'';t.dataset.tagText=active.tag.text||'';t.dataset.tagMemberCount=active.tag.memberCount||'';t.dataset.tagOnlineCount=active.tag.onlineCount||'';t.dataset.tagDescription=active.tag.description||'';t.dataset.tagInvite=active.tag.invite||'';var bb=t.querySelector('b');if(bb)bb.textContent=active.tag.glyph||'◆';var ss=t.querySelector('span');if(ss)ss.textContent=active.tag.text;}else{t.hidden=true;} })(); let st=$('#ah-v3-status'); if(st) st.className='ah-v3-status '+(active.status||'offline'); let msg=$('#ah-v3-message'); if(msg){msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; msg.textContent=active.isSelf?window.AlexiHubI18n.t("settings.edit_profile"):'Message'} place(pop,e); document.dispatchEvent(new CustomEvent('alexihub:mini-profile-open',{detail:active}));
   }
   function closeMini(){let p=$('#ah-v3-mini'); if(p)p.classList.remove('open')}
   function openFull(){ if(!active)return; let ov=$('#ah-v3-overlay'); if(!ov)return; ov.style.setProperty('--ah-c1',active.c1); ov.style.setProperty('--ah-c2',active.c2); setBanner($('#ah-v3-full-banner'), active.banner, active.c1, active.c2); setAvatar($('#ah-v3-full-avatar'),$('#ah-v3-full-avatar-text'),active.avatar,active.display); const fullNameNode=$('#ah-v3-full-name'); if(fullNameNode){fullNameNode.dataset.profileUsername=active.name; fullNameNode.textContent=active.display;} $('#ah-v3-full-handle').textContent='@'+active.name; (function(){var t=$('#ah-v3-full-tag'); if(!t)return; if(active.tag&&active.tag.text){t.hidden=false;t.title=active.tag.serverName||'';t.dataset.tagServerId=active.tag.serverId||'';t.dataset.tagServerName=active.tag.serverName||'';t.dataset.tagIconGlyph=active.tag.glyph||'';t.dataset.tagIconUrl=active.tag.iconUrl||'';t.dataset.tagText=active.tag.text||'';t.dataset.tagMemberCount=active.tag.memberCount||'';t.dataset.tagOnlineCount=active.tag.onlineCount||'';t.dataset.tagDescription=active.tag.description||'';t.dataset.tagInvite=active.tag.invite||'';var bb=t.querySelector('b');if(bb)bb.textContent=active.tag.glyph||'◆';var ss=t.querySelector('span');if(ss)ss.textContent=active.tag.text;}else{t.hidden=true;} })(); $('#ah-v3-full-meta').textContent=(function(){var val=(active.created||'').trim();if(val)return window.AlexiHubI18n.t("common.text.registered")+': '+val;return active.isSelf?window.AlexiHubI18n.t("common.text.your_alexihub_card"):window.AlexiHubI18n.t("common.text.ussing_alexihub_user_card");})(); $('#ah-v3-full-about').textContent=active.isSelf ? ((active.bio||'').trim() || window.AlexiHubI18n.t("common.text.there_will_be_a_full_profile_activity_games_integration_and")) : window.AlexiHubI18n.t("common.text.look_to_view_the_profile_on_top_of_the_current"); let msg=$('#ah-v3-full-message'); if(msg){ msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; } closeMini(); ov.classList.add('open'); document.dispatchEvent(new CustomEvent('alexihub:full-profile-open',{detail:active})); }
@@ -6915,17 +6924,19 @@ if (typeof window.openSelfProfileSettings !== 'function') {
   }
   function renderMutualServers(){const list=$('#ah-v3-mutual-list'),tab=$('#ah-v3-mutual-tab');if(!list||!active)return;const servers=Array.isArray(active.mutualServers)?active.mutualServers:[],count=servers.length,ending=count%10===1&&count%100!==11?window.AlexiHubI18n.t("common.text.shared_server"):([2,3,4].includes(count%10)&&![12,13,14].includes(count%100)?window.AlexiHubI18n.t("common.text.ally_servers"):window.AlexiHubI18n.t("common.text.joint_servers"));if(tab)tab.textContent=count+' '+ending;if(!servers.length){list.innerHTML=('' + "<div class=\"ah-v3-mutual-empty\"><span>⌁</span><b>" + window.AlexiHubI18n.t("common.text.no_shared_servers") + "</b><small>" + window.AlexiHubI18n.t("common.text.until_you_are_on_any_server_together") + "</small></div>");return}list.innerHTML=servers.map(server=>{const name=String(server.name||window.AlexiHubI18n.t("common.text.the_server")),image=server.icon_url?`style="background-image:url('${safeUrl(server.icon_url)}')"`:'',url=server.url||('/community/servers/'+Number(server.id));return ('' + "<a class=\"ah-v3-mutual-row\" href=\"" + String((escapeHtml(url))) + "\"><span class=\"ah-v3-mutual-server-icon\" " + String((image)) + ">" + String((server.icon_url?'':escapeHtml(name.slice(0,1).toUpperCase()))) + "</span><span class=\"ah-v3-mutual-server-copy\"><b>" + String((escapeHtml(name))) + "</b><small>" + window.AlexiHubI18n.t("common.text.jo_cirbroid") + "</small></span><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"m9 5 7 7-7 7\"/></svg></a>")}).join('')}
   function renderPrivateBar(){
-    const bar=$('#ah-v3-full-private-bar');if(!bar)return;
     const show=!!(active&&!active.isSelf&&active.isPrivateRestricted);
-    bar.hidden=!show;
-    const topbar=$('#ah-v3-full-topbar');
-    if(topbar)topbar.hidden=!show;
+    const bar=$('#ah-v3-full-private-bar'); if(bar)bar.hidden=!show;
+    const topbar=$('#ah-v3-full-topbar'); if(topbar)topbar.hidden=!show;
+    const miniBar=$('#ah-v3-mini-private-bar'); if(miniBar)miniBar.hidden=!show;
+    const miniTopbar=$('#ah-v3-mini-topbar'); if(miniTopbar)miniTopbar.hidden=!show;
     if(show){
-      const textNode=$('#ah-v3-full-private-bar-text');
-      if(textNode){
-        const name=active.display||active.name||window.AlexiHubI18n.t("common.text.user");
-        textNode.textContent='Профіль '+name+' приватний, тому частина інформації прихована. Додайте '+name+' у друзі, щоб побачити більше.';
-      }
+      const name=active.display||active.name||window.AlexiHubI18n.t("common.text.user");
+      const notice=window.AlexiHubI18n.t('common.text.private_profile_notice',{name:name});
+      const label=window.AlexiHubI18n.t('common.text.private_profile');
+      const textNode=$('#ah-v3-full-private-bar-text'); if(textNode)textNode.textContent=notice;
+      const topbarText=$('#ah-v3-full-topbar-text'); if(topbarText)topbarText.textContent=label;
+      const miniText=$('#ah-v3-mini-private-bar-text'); if(miniText)miniText.textContent=notice;
+      const miniTopbarText=$('#ah-v3-mini-topbar-text'); if(miniTopbarText)miniTopbarText.textContent=label;
     }
   }
   async function refresh(){
@@ -6945,7 +6956,9 @@ if (typeof window.openSelfProfileSettings !== 'function') {
     }catch(error){notify(error.message||window.AlexiHubI18n.t("privacy.blocking.actionError"));await refresh()}
   }
   async function invite(serverId,button){if(!active||!serverId)return;button.disabled=true;try{const body=new FormData();body.append('username',active.name);body.append('redirect_to',location.pathname);const response=await fetch('/community/servers/'+serverId+'/invite',{method:'POST',credentials:'same-origin',headers:{Accept:'application/json'},body}),data=await response.json().catch(()=>({}));if(!response.ok||!data.ok)throw new Error(data.message||window.AlexiHubI18n.t("common.text.could_not_send_an_invitation"));button.classList.add('sent');const icon=button.querySelector('svg');if(icon)icon.innerHTML='<path d="m5 12 4 4L19 6"/>';notify(window.AlexiHubI18n.t("common.message.invitation_to_the_server_sent"))}catch(error){notify(error.message||window.AlexiHubI18n.t("common.text.could_not_send_an_invitation"))}finally{button.disabled=false}}
-  document.addEventListener('alexihub:full-profile-open',event=>{const profile=event.detail||{};active={...profile,name:String(profile.name||profile.username||'').replace(/^@/,''),display:profile.display||profile.name||profile.username||'',profile:profile.profile||'',isSelf:!!profile.isSelf||String(profile.name||profile.username||'').toLowerCase()===String(CURRENT_USER).toLowerCase(),friendStatus:profile.isSelf?'self':'loading',friendshipId:null,inviteServers:[],mutualServers:[],isPrivateRestricted:false};closeMenu();hideTooltip();renderFriend();renderInvites();renderMutualServers();renderPrivateBar();if(!active.isSelf)refresh()});
+  function onProfilePopoverOpen(event){const profile=event.detail||{};active={...profile,name:String(profile.name||profile.username||'').replace(/^@/,''),display:profile.display||profile.name||profile.username||'',profile:profile.profile||'',isSelf:!!profile.isSelf||String(profile.name||profile.username||'').toLowerCase()===String(CURRENT_USER).toLowerCase(),friendStatus:profile.isSelf?'self':'loading',friendshipId:null,inviteServers:[],mutualServers:[],isPrivateRestricted:false};closeMenu();hideTooltip();if(event.type==='alexihub:full-profile-open'&&typeof closeMini==='function')closeMini();renderFriend();renderInvites();renderMutualServers();renderPrivateBar();if(!active.isSelf)refresh()}
+  document.addEventListener('alexihub:full-profile-open',onProfilePopoverOpen);
+  document.addEventListener('alexihub:mini-profile-open',onProfilePopoverOpen);
   document.addEventListener('click',async event=>{
     const friend=event.target.closest('#ah-v3-friend-action');if(friend){event.preventDefault();event.stopPropagation();return friendAction()}
     const more=event.target.closest('#ah-v3-full-more');if(more){event.preventDefault();event.stopPropagation();return openMenu()}
