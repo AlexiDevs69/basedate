@@ -6040,6 +6040,23 @@ async def api_inbox_mark_read(request: Request, db: AsyncSession = Depends(get_d
 
 # --- Public profiles ---------------------------------------------------------
 
+async def _can_view_private_profile(db: AsyncSession, viewer, target) -> bool:
+    """Public profiles are visible to everyone. A private profile is visible
+    only to its owner, friends, and accounts that share at least one server
+    with the target -- everyone else gets a restricted view (no bio/friends/
+    servers)."""
+    if not bool(getattr(target, "is_private", False)):
+        return True
+    if not viewer:
+        return False
+    if viewer.id == target.id:
+        return True
+    if await crud.friendship_status(db, viewer.id, target.id) == "friends":
+        return True
+    mutual_servers = await crud.list_mutual_servers(db, viewer.id, target.id)
+    return bool(mutual_servers)
+
+
 @router.get("/profile/{username}")
 async def public_profile(username: str, request: Request, db: AsyncSession = Depends(get_db)):
     viewer = await current_account(request, db)
@@ -6050,8 +6067,15 @@ async def public_profile(username: str, request: Request, db: AsyncSession = Dep
             "profile_not_found.html", {"request": request}, status_code=404
         )
 
-    friends = await crud.list_friends(db, profile_account.id)
-    gifts = await crud.list_gifts_for_account(db, profile_account.id)
+    can_view_full_profile = await _can_view_private_profile(db, viewer, profile_account)
+    is_private_restricted = not can_view_full_profile
+
+    if can_view_full_profile:
+        friends = await crud.list_friends(db, profile_account.id)
+        gifts = await crud.list_gifts_for_account(db, profile_account.id)
+    else:
+        friends = []
+        gifts = []
     profile_nitro = await crud.nitro_profile_payload(db, profile_account.id)
     friendship = None
     friend_status = "none"
@@ -6071,6 +6095,8 @@ async def public_profile(username: str, request: Request, db: AsyncSession = Dep
             "nitro": profile_nitro,
             "friend_status": friend_status,
             "friendship_id": int(friendship.id) if friendship else None,
+            "can_view_full_profile": can_view_full_profile,
+            "is_private_restricted": is_private_restricted,
         },
     )
 
@@ -6091,6 +6117,7 @@ async def settings_submit(
     avatar_url: str = Form(""),
     banner_url: str = Form(""),
     bio: str = Form(""),
+    is_private: bool = Form(False),
     next_url: str = Form(""),
     avatar_file: UploadFile | None = File(None),
     banner_file: UploadFile | None = File(None),
@@ -6110,6 +6137,7 @@ async def settings_submit(
         avatar_url=avatar_final,
         banner_url=banner_final,
         bio=bio.strip(),
+        is_private=is_private,
     )
     await account_realtime.set_profile_and_broadcast(_account_payload(updated))
     target = _safe_next_url(next_url, "/community")
@@ -6213,6 +6241,9 @@ async def api_friend_status(username: str, request: Request, db: AsyncSession = 
     ).get(int(target.id))
     target_nitro = await crud.nitro_profile_payload(db, int(target.id))
     target_mini_theme = await crud.get_equipped_profile_theme(db, int(target.id))
+    is_private_restricted = not await _can_view_private_profile(db, viewer, target)
+    if is_private_restricted:
+        target_profile["bio"] = ""
     return JSONResponse({
         "ok": True,
         "profile_id": int(target.id),
@@ -6227,6 +6258,7 @@ async def api_friend_status(username: str, request: Request, db: AsyncSession = 
             "nitro": target_nitro,
         },
         "mini_profile_theme": target_mini_theme,
+        "is_private_restricted": is_private_restricted,
         **block,
     })
 
