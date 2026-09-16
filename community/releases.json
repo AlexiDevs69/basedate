@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.164.2",
+      "date": "2026-09-16",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update typing gate lock text with i18n support."
+      ],
+      "source_sha": "fef86636f8a24177bc2dca8a00c7c9ee3eee7ff9"
+    },
+    {
       "version": "1.164.1",
       "date": "2026-09-16",
       "title": "Оновлення AlexiHub",
