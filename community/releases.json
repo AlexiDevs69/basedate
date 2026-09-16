@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.174.0",
+      "date": "2026-09-17",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: topbar to private profile overlay."
+      ],
+      "source_sha": "3cca8571639368bd1125f263a7875c4aabbef8e7"
+    },
+    {
       "version": "1.173.5",
       "date": "2026-09-16",
       "title": "Оновлення AlexiHub",
