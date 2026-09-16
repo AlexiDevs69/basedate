@@ -6042,19 +6042,16 @@ async def api_inbox_mark_read(request: Request, db: AsyncSession = Depends(get_d
 
 async def _can_view_private_profile(db: AsyncSession, viewer, target) -> bool:
     """Public profiles are visible to everyone. A private profile is visible
-    only to its owner, friends, and accounts that share at least one server
-    with the target -- everyone else gets a restricted view (no bio/friends/
-    servers)."""
+    only to its owner and confirmed friends -- everyone else (including
+    fellow server members who aren't friends) gets a restricted view (no
+    bio/friends/servers)."""
     if not bool(getattr(target, "is_private", False)):
         return True
     if not viewer:
         return False
     if viewer.id == target.id:
         return True
-    if await crud.friendship_status(db, viewer.id, target.id) == "friends":
-        return True
-    mutual_servers = await crud.list_mutual_servers(db, viewer.id, target.id)
-    return bool(mutual_servers)
+    return await crud.friendship_status(db, viewer.id, target.id) == "friends"
 
 
 @router.get("/profile/{username}")
