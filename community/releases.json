@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.167.0",
+      "date": "2026-09-16",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: typing text rendering and HTML escaping."
+      ],
+      "source_sha": "660bfed0e202bfe8fa16382779c73fb66d6ffcb3"
+    },
+    {
       "version": "1.166.3",
       "date": "2026-09-16",
       "title": "Оновлення AlexiHub",
