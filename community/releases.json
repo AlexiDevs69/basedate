@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.169.0",
+      "date": "2026-09-16",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: is_private column to community_accounts table."
+      ],
+      "source_sha": "6680014d463f40caed9cde2151768c7dccafd32d"
+    },
+    {
       "version": "1.168.0",
       "date": "2026-09-16",
       "title": "Нові можливості AlexiHub",
