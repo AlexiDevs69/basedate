@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.167.2",
+      "date": "2026-09-16",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update default suffix in server_channel.html."
+      ],
+      "source_sha": "57d45aa3f6cd482875f1f5f3d2aa35adcabd5713"
+    },
+    {
       "version": "1.167.1",
       "date": "2026-09-16",
       "title": "Виправлення та стабільність",
