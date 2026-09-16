@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.176.0",
+      "date": "2026-09-17",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: private profile text to Russian locale."
+      ],
+      "source_sha": "df6feac2c0f54354988c748a599445f40872c043"
+    },
+    {
       "version": "1.175.0",
       "date": "2026-09-17",
       "title": "Нові можливості AlexiHub",
