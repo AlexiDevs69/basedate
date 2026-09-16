@@ -260,16 +260,34 @@ async def _ensure_server_visual_columns(db: AsyncSession) -> None:
     # Safe Render migration: create_all does not add columns to old tables.
     # Run each ALTER in its own transaction so locks on one table are released
     # before the next table is touched. Retry only PostgreSQL deadlocks (40P01).
+    #
+    # Rolling deploys mean the OLD instance can still be serving traffic --
+    # and holding locks on these same tables -- while the NEW instance runs
+    # this at startup. ADD COLUMN IF NOT EXISTS still takes an ACCESS
+    # EXCLUSIVE lock even when it's a no-op, so it can queue behind the old
+    # instance's activity and hang. Two mitigations below: skip columns that
+    # are already there (the common case, after the first successful
+    # deploy) so most of the time we never even ask for the lock, and cap
+    # how long we'll wait for it with lock_timeout so contention fails fast
+    # and predictably instead of riding on the connection's overall timeout.
     statements = (
-        "ALTER TABLE community_servers ADD COLUMN IF NOT EXISTS banner_color VARCHAR(255)",
-        "ALTER TABLE community_servers ADD COLUMN IF NOT EXISTS banner_url VARCHAR(512)",
-        "ALTER TABLE community_server_messages ADD COLUMN IF NOT EXISTS edited_at TIMESTAMP WITH TIME ZONE",
-        "ALTER TABLE community_direct_messages ADD COLUMN IF NOT EXISTS edited_at TIMESTAMP WITH TIME ZONE",
-        "ALTER TABLE community_server_messages ADD COLUMN IF NOT EXISTS reply_to_id INTEGER",
-        "ALTER TABLE community_direct_messages ADD COLUMN IF NOT EXISTS reply_to_id INTEGER",
-        "ALTER TABLE community_server_messages ADD COLUMN IF NOT EXISTS is_forwarded BOOLEAN NOT NULL DEFAULT FALSE",
-        "ALTER TABLE community_direct_messages ADD COLUMN IF NOT EXISTS is_forwarded BOOLEAN NOT NULL DEFAULT FALSE",
+        ("community_servers", "banner_color", "ALTER TABLE community_servers ADD COLUMN IF NOT EXISTS banner_color VARCHAR(255)"),
+        ("community_servers", "banner_url", "ALTER TABLE community_servers ADD COLUMN IF NOT EXISTS banner_url VARCHAR(512)"),
+        ("community_server_messages", "edited_at", "ALTER TABLE community_server_messages ADD COLUMN IF NOT EXISTS edited_at TIMESTAMP WITH TIME ZONE"),
+        ("community_direct_messages", "edited_at", "ALTER TABLE community_direct_messages ADD COLUMN IF NOT EXISTS edited_at TIMESTAMP WITH TIME ZONE"),
+        ("community_server_messages", "reply_to_id", "ALTER TABLE community_server_messages ADD COLUMN IF NOT EXISTS reply_to_id INTEGER"),
+        ("community_direct_messages", "reply_to_id", "ALTER TABLE community_direct_messages ADD COLUMN IF NOT EXISTS reply_to_id INTEGER"),
+        ("community_server_messages", "is_forwarded", "ALTER TABLE community_server_messages ADD COLUMN IF NOT EXISTS is_forwarded BOOLEAN NOT NULL DEFAULT FALSE"),
+        ("community_direct_messages", "is_forwarded", "ALTER TABLE community_direct_messages ADD COLUMN IF NOT EXISTS is_forwarded BOOLEAN NOT NULL DEFAULT FALSE"),
     )
+
+    existing = await db.execute(text(
+        "SELECT table_name, column_name FROM information_schema.columns "
+        "WHERE table_schema = 'public' AND (table_name, column_name) IN ("
+        + ", ".join(f"('{t}', '{c}')" for t, c, _ in statements)
+        + ")"
+    ))
+    already_present = {(row[0], row[1]) for row in existing.fetchall()}
 
     def is_deadlock(error: BaseException) -> bool:
         seen: set[int] = set()
@@ -292,15 +310,51 @@ async def _ensure_server_visual_columns(db: AsyncSession) -> None:
             current = context if isinstance(context, BaseException) and id(context) not in seen else None
         return "deadlock detected" in str(error).lower()
 
+    def is_lock_timeout(error: BaseException) -> bool:
+        seen: set[int] = set()
+        current: BaseException | None = error
+        while current is not None and id(current) not in seen:
+            seen.add(id(current))
+            for attr in ("sqlstate", "pgcode"):
+                value = getattr(current, attr, None)
+                if value and str(value) == "55P03":  # lock_not_available
+                    return True
+            original = getattr(current, "orig", None)
+            if isinstance(original, BaseException) and id(original) not in seen:
+                current = original
+                continue
+            cause = getattr(current, "__cause__", None)
+            if isinstance(cause, BaseException) and id(cause) not in seen:
+                current = cause
+                continue
+            context = getattr(current, "__context__", None)
+            current = context if isinstance(context, BaseException) and id(context) not in seen else None
+        return "lock timeout" in str(error).lower()
+
     max_attempts = 4
-    for statement in statements:
+    for table, column, statement in statements:
+        if (table, column) in already_present:
+            continue
         for attempt in range(max_attempts):
             try:
+                # Cap how long we'll queue for the table lock -- if the old
+                # instance from a rolling deploy is holding it, fail fast
+                # instead of hanging until the connection's own timeout.
+                await db.execute(text("SET LOCAL lock_timeout = '5s'"))
                 await db.execute(text(statement))
                 await db.commit()
                 break
             except DBAPIError as error:
                 await db.rollback()
+                if is_lock_timeout(error):
+                    # Column is (almost certainly) already there from a
+                    # previous deploy -- we just couldn't confirm it via
+                    # ALTER right now because something else holds the
+                    # lock. Don't take the whole app down over this; the
+                    # information_schema check above will skip it cleanly
+                    # once that contention clears on a later deploy.
+                    print(f"[startup] skipping {table}.{column}: table locked, will retry next deploy", flush=True)
+                    break
                 if not is_deadlock(error) or attempt + 1 >= max_attempts:
                     raise
                 await asyncio.sleep(0.25 * (2 ** attempt))
