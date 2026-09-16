@@ -113,6 +113,8 @@ async def ensure_account_visual_columns(db: AsyncSession) -> None:
     await db.execute(text("UPDATE community_accounts SET allow_friend_requests_server_members = TRUE WHERE allow_friend_requests_server_members IS NULL"))
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS session_version INTEGER DEFAULT 1 NOT NULL"))
     await db.execute(text("UPDATE community_accounts SET session_version = 1 WHERE session_version IS NULL OR session_version < 1"))
+    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS is_private BOOLEAN DEFAULT FALSE NOT NULL"))
+    await db.execute(text("UPDATE community_accounts SET is_private = FALSE WHERE is_private IS NULL"))
     await db.commit()
 
 
@@ -745,6 +747,7 @@ async def update_own_profile(
     avatar_url: str | None,
     banner_url: str | None,
     bio: str | None,
+    is_private: bool = False,
 ) -> Account:
     """
     Self-service edit -- deliberately does NOT touch is_verified/role_label/
@@ -768,6 +771,7 @@ async def update_own_profile(
     account.avatar_url = avatar_url or None
     account.banner_url = banner_url or None
     account.bio = bio or None
+    account.is_private = bool(is_private)
     await db.commit()
     await db.refresh(account)
     return account
