@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.166.3",
+      "date": "2026-09-16",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: settings structure in en.json."
+      ],
+      "source_sha": "f5085a890dd42afe1de7b3b617dd8bcf24d95be8"
+    },
+    {
       "version": "1.166.2",
       "date": "2026-09-16",
       "title": "Оновлення AlexiHub",
