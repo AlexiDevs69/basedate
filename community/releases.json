@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.172.0",
+      "date": "2026-09-16",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: private profile bar in server home."
+      ],
+      "source_sha": "50ce284a6e0a80467ccaddaf321ead1dcb91078e"
+    },
+    {
       "version": "1.171.0",
       "date": "2026-09-16",
       "title": "Нові можливості AlexiHub",
