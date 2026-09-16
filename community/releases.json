@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.173.2",
+      "date": "2026-09-16",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update private profile visibility logic."
+      ],
+      "source_sha": "bd815b4ed5cb376dcec2a71172af064883059b7f"
+    },
+    {
       "version": "1.173.1",
       "date": "2026-09-16",
       "title": "Виправлення та стабільність",
