@@ -50,6 +50,9 @@ class Account(Base):
     avatar_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
     banner_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
     bio: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # If True, bio/friends list/servers list are hidden from viewers who are
+    # not the owner, a friend, or a mutual-server member (community_crud._can_view_private_profile()).
+    is_private: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     role_label: Mapped[str | None] = mapped_column(String(64), nullable=True)
     role_color_start: Mapped[str | None] = mapped_column(String(16), nullable=True)
