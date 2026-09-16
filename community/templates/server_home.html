@@ -3531,6 +3531,16 @@ document.addEventListener('DOMContentLoaded',()=>{
 
             <div class="ah-custom-profile-actions"><button class="primary" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 5.75A3.75 3.75 0 0 1 8.25 2h7.5a3.75 3.75 0 0 1 3.75 3.75v6.5A3.75 3.75 0 0 1 15.75 16H10l-4.2 3.15c-.66.5-1.6.02-1.55-.8L4.5 16.1V5.75Z"></path></svg><span><!--i18n:common.text.a_message-->{{ i18n_t('common.text.a_message') }}</span></button><button class="icon" type="button" aria-label="{{ i18n_t('ui.friends') }}" data-i18n-aria-label="ui.friends" data-title="{{ i18n_t('ui.friends') }}" data-i18n-title="ui.friends"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm7.25-1.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM2.5 20a7 7 0 0 1 14 0m.5-6.25 1.75 1.75L22 12.25"></path></svg></button><button class="icon" type="button" aria-label="{{ i18n_t('common.aria.other') }}" data-i18n-aria-label="common.aria.other" data-title="{{ i18n_t('common.aria.more') }}" data-i18n-title="common.aria.more"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.75"></circle><circle cx="12" cy="12" r="1.75"></circle><circle cx="19" cy="12" r="1.75"></circle></svg></button></div>
             <div class="ah-custom-bio-wrap"><textarea id="ah-profile-bio-input" class="ah-custom-bio-input" name="bio" maxlength="280" placeholder="{{ i18n_t('common.profile.bio_placeholder') }}" data-i18n-placeholder="common.profile.bio_placeholder">{{ account.bio or '' }}</textarea><div id="ah-profile-bio-preview" hidden>{{ account.bio or '' }}</div></div>
+            <div class="ah-profile-private-row" id="ah-profile-private-row">
+              <div class="ah-profile-private-copy">
+                <b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10V8a6 6 0 0 1 12 0v2"></path><rect x="4" y="10" width="16" height="11" rx="2.5"></rect></svg>Приватний профіль</b>
+                <p>Профіль буде видно лише вашим друзям і учасникам спільних серверів. Інші користувачі не побачать біографію, список друзів і серверів.</p>
+              </div>
+              <label class="ah-privacy-switch">
+                <input type="checkbox" id="ah-profile-private-input" name="is_private" value="true"{% if account.is_private %} checked{% endif %}>
+                <span class="ah-privacy-switch-track"></span>
+              </label>
+            </div>
             <div class="ah-custom-profile-info"><b><!--i18n:common.text.registered-->{{ i18n_t('common.text.registered') }}</b><strong id="ah-profile-created-at" data-created-at="{{ account.created_at.isoformat() if account.created_at else '' }}">{{ account.created_at.strftime('%d.%m.%Y') if account.created_at else '—' }}</strong></div>
           </div>
         </article>
@@ -4293,6 +4303,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   const preview = document.getElementById('ah-display-name-preview');
   const input = document.getElementById('ah-display-name-input');
   const bioInput = document.getElementById('ah-profile-bio-input');
+  const privateInput = document.getElementById('ah-profile-private-input');
   const bar = document.getElementById('ah-profile-unsaved-bar');
   const resetButton = document.getElementById('ah-profile-reset');
   if(!form || !editor || !view || !preview || !input || !bar) return;
@@ -4302,7 +4313,8 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     display: {{ (account.display_name or account.username)|tojson }},
     bio: {{ (account.bio or '')|tojson }},
     avatar: {{ (account.avatar_url or '')|tojson }},
-    banner: {{ (account.banner_url or '')|tojson }}
+    banner: {{ (account.banner_url or '')|tojson }},
+    isPrivate: {{ (account.is_private or false)|tojson }}
   };
   let dirty = false;
 
@@ -4327,7 +4339,8 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
       || String(avatarUrl ? avatarUrl.value : '').trim() !== INITIAL.avatar
       || String(bannerUrl ? bannerUrl.value : '').trim() !== INITIAL.banner
       || Boolean(avatarFile && avatarFile.files && avatarFile.files.length)
-      || Boolean(bannerFile && bannerFile.files && bannerFile.files.length);
+      || Boolean(bannerFile && bannerFile.files && bannerFile.files.length)
+      || Boolean(privateInput && privateInput.checked) !== Boolean(INITIAL.isPrivate);
   }
 
   function setDirty(next){
@@ -4379,6 +4392,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     const bannerInput = document.getElementById('ah-banner-file');
     if(avatarInput) avatarInput.value = '';
     if(bannerInput) bannerInput.value = '';
+    if(privateInput) privateInput.checked = Boolean(INITIAL.isPrivate);
     document.querySelectorAll('#ah-profile-preview-avatar,#ah-customizer-avatar-tile').forEach(function(avatarPreview){
       setBackground(avatarPreview,INITIAL.avatar);
       const fallback = avatarPreview.querySelector('span:not(.edit),b');
@@ -7211,6 +7225,12 @@ if (typeof window.openSelfProfileSettings !== 'function') {
 .ah-privacy-setting+.ah-privacy-setting{border-top:1px solid rgba(78,80,88,.45)}
 .ah-privacy-setting b{display:block;color:#f2f3f5;font-size:14px;font-weight:800;line-height:1.35}
 .ah-privacy-setting p{margin:4px 0 0;color:#aeb3bd;font-size:13px;line-height:1.42;max-width:590px}
+.ah-profile-private-row{margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.09);display:flex;align-items:center;justify-content:space-between;gap:16px}
+.ah-profile-private-copy{min-width:0}
+.ah-profile-private-copy b{display:flex;align-items:center;gap:7px;color:#f2f3f5;font-size:13px;font-weight:800}
+.ah-profile-private-copy b svg{width:15px;height:15px;flex:0 0 auto;color:#b5bac1;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ah-profile-private-copy p{margin:3px 0 0;color:#9199a3;font-size:12px;line-height:1.4}
+.ah-profile-private-row .ah-privacy-switch{flex:0 0 auto}
 .ah-privacy-switch{position:relative;width:44px;height:24px;display:inline-block;flex:0 0 auto}
 .ah-privacy-switch input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
 .ah-privacy-switch-track{position:absolute;inset:0;border:1px solid #4b4e57;border-radius:999px;background:#2b2d31;transition:background .16s ease,border-color .16s ease,opacity .16s ease;pointer-events:none}
