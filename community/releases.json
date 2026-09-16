@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.175.0",
+      "date": "2026-09-17",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: private profile texts to uk.json."
+      ],
+      "source_sha": "80ef330cf4b1fa62320e12ab4f2a010423fd6f07"
+    },
+    {
       "version": "1.174.0",
       "date": "2026-09-17",
       "title": "Нові можливості AlexiHub",
