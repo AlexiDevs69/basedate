@@ -19,10 +19,28 @@ from config import get_settings
 
 settings = get_settings()
 
+def _driver_connect_args(url: str) -> dict:
+    """
+    Pick the right timeout kwargs for whichever async driver is in the URL.
+    Without these, a slow/unreachable DB (e.g. Aiven under load, or a blip
+    in the network to it) makes connect() -- and pool_pre_ping's own ping --
+    hang with no upper bound. That's what turned identical deploys into
+    anywhere from 1 second to 15+ minutes to start, and sometimes into a
+    full "No open ports detected" failure when it didn't finish in time.
+    """
+    if "+asyncpg" in url:
+        return {"timeout": 10, "command_timeout": 10}
+    if "+psycopg" in url:
+        return {"connect_timeout": 10}
+    return {}
+
+
 engine = create_async_engine(
     settings.async_database_url,
     echo=False,
     pool_pre_ping=True,  # avoids stale-connection errors on free-tier DBs that idle
+    pool_timeout=10,  # max seconds to wait for a free connection from the pool
+    connect_args=_driver_connect_args(settings.async_database_url),
 )
 
 AsyncSessionLocal = async_sessionmaker(
