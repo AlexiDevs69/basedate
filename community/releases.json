@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.167.1",
+      "date": "2026-09-16",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance typing indicator with current typing text."
+      ],
+      "source_sha": "7bbc1e19404af0db9946cdb53f95aeba06bb06fe"
+    },
+    {
       "version": "1.167.0",
       "date": "2026-09-16",
       "title": "Нові можливості AlexiHub",
