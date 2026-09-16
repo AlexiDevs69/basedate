@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.164.0",
+      "date": "2026-09-16",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: timeout args for async DB connections."
+      ],
+      "source_sha": "c6f9f3e3d9779f52e3888d6ea659943b7b89cc7a"
+    },
+    {
       "version": "1.163.0",
       "date": "2026-09-16",
       "title": "Нові можливості AlexiHub",
