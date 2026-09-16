@@ -2852,6 +2852,7 @@ function openChannelInviteModal(event, btn) {
     var wsStatus = document.getElementById('ws-status');
     var wsStatusText = document.getElementById('ws-status-text');
     var myAccountId = {{ account.id }};
+    var currentTypingText = {{ (account.typing_text or '')|tojson }};
     var socket = null;
     var reconnectTimer = null;
     var reconnectDelay = 900;
@@ -3374,7 +3375,7 @@ function openChannelInviteModal(event, btn) {
     function sendTypingPing() {
       var now = Date.now();
       if (now - lastTypingAt > 850) {
-        sendSocket({ type: 'typing' });
+        sendSocket({ type: 'typing', typing_text: currentTypingText });
         lastTypingAt = now;
       }
       clearTimeout(typingStopTimer);
