@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.166.0",
+      "date": "2026-09-16",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: settings and typing text to English locale."
+      ],
+      "source_sha": "f830d1ebec516936dff0943a8e53dccc80c00dcd"
+    },
+    {
       "version": "1.165.1",
       "date": "2026-09-16",
       "title": "Виправлення та стабільність",
