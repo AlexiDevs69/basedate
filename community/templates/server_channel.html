@@ -3199,7 +3199,7 @@ function openChannelInviteModal(event, btn) {
         if (custom) {
           html = boldName + ' ' + renderTypingTextHtml(custom, u.typing_emojis);
         } else {
-          var defaultSuffix = window.AlexiHubI18n.t("server_channel.text.prefers");
+          var defaultSuffix = window.AlexiHubI18n.t("dm.text.preferring");
           if (!defaultSuffix || !/^\s/.test(defaultSuffix) || /preferring|typing/i.test(defaultSuffix)) {
             defaultSuffix = ' друкує...';
           }
