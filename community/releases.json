@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.166.2",
+      "date": "2026-09-16",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: settings structure in Russian locale."
+      ],
+      "source_sha": "d64d4d77dbe35ebd06cf60e701b1808dcee91932"
+    },
+    {
       "version": "1.166.1",
       "date": "2026-09-16",
       "title": "Оновлення AlexiHub",
