@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.165.0",
+      "date": "2026-09-16",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: settings and typing text to uk.json."
+      ],
+      "source_sha": "67f2db0753588a9e5e4956589118135d194ccfa5"
+    },
+    {
       "version": "1.164.2",
       "date": "2026-09-16",
       "title": "Виправлення та стабільність",
