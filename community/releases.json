@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.173.3",
+      "date": "2026-09-16",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Clarify profile visibility conditions in models.py."
+      ],
+      "source_sha": "8ff7c54a482267c2f75826a332d4495f9fd29aaf"
+    },
+    {
       "version": "1.173.2",
       "date": "2026-09-16",
       "title": "Виправлення та стабільність",
