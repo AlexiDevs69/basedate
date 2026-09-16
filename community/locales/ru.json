@@ -1949,5 +1949,7 @@
   "ui.online": "В сети",
   "ui.pending": "Ожидание",
   "settings.typing_text.nitro_lock_before": "Активируйте",
-  "settings.typing_text.nitro_lock_after": "и откройте эту функцию"
+  "settings.typing_text.nitro_lock_after": "и откройте эту функцию",
+  "common.text.private_profile": "Приватный профиль",
+  "common.text.private_profile_notice": "Профиль {name} приватный, поэтому часть информации скрыта. Добавьте {name} в друзья, чтобы увидеть больше."
 }
