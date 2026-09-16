@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.173.0",
+      "date": "2026-09-16",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: private profile visibility logic."
+      ],
+      "source_sha": "e7f931446e5703fda0388075d019b993f3b0d7f1"
+    },
+    {
       "version": "1.172.0",
       "date": "2026-09-16",
       "title": "Нові можливості AlexiHub",
