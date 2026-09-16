@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.164.1",
+      "date": "2026-09-16",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: column addition logic for community tables."
+      ],
+      "source_sha": "e21636b5c3188f8f8ee4f670f2d799d9e61f1443"
+    },
+    {
       "version": "1.164.0",
       "date": "2026-09-16",
       "title": "Нові можливості AlexiHub",
