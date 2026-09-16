@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.168.0",
+      "date": "2026-09-16",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: profile privacy toggle feature."
+      ],
+      "source_sha": "d4f9a32306c9efa53bd58c3a114938ac9f88b9d6"
+    },
+    {
       "version": "1.167.2",
       "date": "2026-09-16",
       "title": "Виправлення та стабільність",
