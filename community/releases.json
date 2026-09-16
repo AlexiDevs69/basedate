@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.177.0",
+      "date": "2026-09-17",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: private profile text to en.json."
+      ],
+      "source_sha": "3a31aadb9de1c05d74f95d9dfa159e1383b8492a"
+    },
+    {
       "version": "1.176.0",
       "date": "2026-09-17",
       "title": "Нові можливості AlexiHub",
