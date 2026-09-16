@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.170.0",
+      "date": "2026-09-16",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: is_private field to user model."
+      ],
+      "source_sha": "2ede360105c2cd68b4d30c41a2723d0fe4c73e3e"
+    },
+    {
       "version": "1.169.0",
       "date": "2026-09-16",
       "title": "Нові можливості AlexiHub",
