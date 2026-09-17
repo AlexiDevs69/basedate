@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.186.1",
+      "date": "2026-09-18",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: streak tracking to use server state."
+      ],
+      "source_sha": "58be03b8a6314fa533f2a130735c5d4b981cf4f7"
+    },
+    {
       "version": "1.186.0",
       "date": "2026-09-18",
       "title": "Нові можливості AlexiHub",
