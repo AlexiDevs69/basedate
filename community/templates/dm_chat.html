@@ -2988,6 +2988,8 @@ document.addEventListener('DOMContentLoaded',()=>{
     const topbar=$('#ah-v3-full-topbar'); if(topbar)topbar.hidden=!show;
     const miniBar=$('#ah-v3-mini-private-bar'); if(miniBar)miniBar.hidden=!show;
     const miniTopbar=$('#ah-v3-mini-topbar'); if(miniTopbar)miniTopbar.hidden=!show;
+    const aboutTitle=document.querySelector('.ah-v3-full-about-block .ah-v3-full-section-title'); if(aboutTitle)aboutTitle.hidden=show;
+    const about=$('#ah-v3-full-about'); if(about)about.hidden=show;
     if(show){
       const name=profile.display||profile.name||window.AlexiHubI18n.t("common.text.user");
       const notice=window.AlexiHubI18n.t('common.text.private_profile_notice',{name:name});
