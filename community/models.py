@@ -337,6 +337,25 @@ class ServerInvite(Base):
     responded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
+class ServerChannelStreak(Base):
+    """Snapchat/TikTok-style daily streak for a server channel: the flame
+    survives a day only if at least two different accounts sent a message
+    in the channel that day. One row per channel; updated incrementally by
+    community_crud.bump_channel_streak() each time a message is sent, so
+    reading it (to render the page) never has to rescan message history.
+    """
+    __tablename__ = "community_server_channel_streaks"
+
+    channel_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("community_server_channels.id", ondelete="CASCADE"), primary_key=True
+    )
+    streak_days: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    # 'YYYY-MM-DD' (Europe/Kyiv) of the most recent day that qualified --
+    # i.e. had messages from 2+ distinct accounts. NULL if never qualified.
+    last_qualified_date: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+
+
 class ServerMessage(Base):
     __tablename__ = "community_server_messages"
 
