@@ -1951,5 +1951,6 @@
   "settings.typing_text.nitro_lock_before": "Активуйте",
   "settings.typing_text.nitro_lock_after": "і відкрийте цю функцію",
   "common.text.private_profile": "Приватний профіль",
-  "common.text.private_profile_notice": "Профіль {name} приватний, тому частина інформації прихована. Додайте {name} у друзі, щоб побачити більше."
+  "common.text.private_profile_notice": "Профіль {name} приватний, тому частина інформації прихована. Додайте {name} у друзі, щоб побачити більше.",
+  "common.text.private_profile_description": "Приховує частину інформації профілю від людей, які не у ваших друзях."
 }
