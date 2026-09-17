@@ -27,6 +27,7 @@ from community.models import (
     Post,
     PostLike,
     ServerChannel,
+    ServerChannelStreak,
     ServerBan,
     ServerCategory,
     ServerEvent,
@@ -2829,6 +2830,101 @@ async def get_server_feed(db: AsyncSession, server_id: int, channel_id: int, lim
                 reply = {"message": reply_msg, "author": reply_author}
         feed.append({"message": msg, "author": author, "reply": reply})
     return feed
+
+
+# ----------------------------------------------------------------------------
+# Channel streak: Snapchat/TikTok-style daily flame. Survives a day only if
+# at least 2 different accounts sent a message in the channel that day.
+# ----------------------------------------------------------------------------
+
+def _channel_streak_day_bounds(now: datetime | None = None) -> tuple[datetime, datetime, str]:
+    """Current channel-streak day in Europe/Kyiv (UTC+3), as UTC bounds plus
+    a 'YYYY-MM-DD' key. Mirrors _store_day_bounds()'s tz convention so all
+    "day" boundaries in this file agree with each other."""
+    now = now or datetime.now(timezone.utc)
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=timezone.utc)
+    kyiv_tz = timezone(timedelta(hours=3))
+    local_now = now.astimezone(kyiv_tz)
+    start_local = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
+    end_local = start_local + timedelta(days=1)
+    return start_local.astimezone(timezone.utc), end_local.astimezone(timezone.utc), start_local.date().isoformat()
+
+
+def _channel_streak_prev_day_key(day_key: str) -> str:
+    year, month, day = (int(part) for part in day_key.split("-"))
+    return (datetime(year, month, day) - timedelta(days=1)).date().isoformat()
+
+
+async def _channel_distinct_authors_on_day(
+    db: AsyncSession, channel_id: int, day_start: datetime, day_end: datetime
+) -> int:
+    result = await db.execute(
+        select(func.count(func.distinct(ServerMessage.author_id))).where(
+            ServerMessage.channel_id == int(channel_id),
+            ServerMessage.created_at >= day_start,
+            ServerMessage.created_at < day_end,
+        )
+    )
+    return int(result.scalar() or 0)
+
+
+async def get_channel_streak(db: AsyncSession, channel_id: int) -> dict:
+    """Read-only streak state for rendering the channel page / API. Never
+    mutates anything, so simply opening a channel can't break or extend a
+    streak by itself -- only bump_channel_streak() (called when a message
+    is sent) does that."""
+    row = (
+        await db.execute(
+            select(ServerChannelStreak).where(ServerChannelStreak.channel_id == int(channel_id))
+        )
+    ).scalar_one_or_none()
+    _, _, today_key = _channel_streak_day_bounds()
+    streak_days = int(row.streak_days) if row else 0
+    last_qualified_date = row.last_qualified_date if row else None
+    return {
+        "streak_days": streak_days,
+        "last_qualified_date": last_qualified_date,
+        "today_qualified": last_qualified_date == today_key,
+    }
+
+
+async def bump_channel_streak(db: AsyncSession, channel_id: int, now: datetime | None = None) -> dict:
+    """Recompute + persist the streak after a new message was sent in this
+    channel. Cheap: only counts today's distinct authors plus the single
+    stored row for this channel -- never rescans full message history.
+    A no-op once today has already qualified."""
+    day_start, day_end, today_key = _channel_streak_day_bounds(now)
+    yesterday_key = _channel_streak_prev_day_key(today_key)
+
+    row = (
+        await db.execute(
+            select(ServerChannelStreak).where(ServerChannelStreak.channel_id == int(channel_id))
+        )
+    ).scalar_one_or_none()
+    if row is None:
+        row = ServerChannelStreak(channel_id=int(channel_id), streak_days=0, last_qualified_date=None)
+        db.add(row)
+
+    # A gap of more than one day since the last qualifying day means the
+    # flame already went out before today -- reset before checking today.
+    if row.last_qualified_date and row.last_qualified_date not in (today_key, yesterday_key):
+        row.streak_days = 0
+
+    if row.last_qualified_date != today_key:
+        distinct_authors = await _channel_distinct_authors_on_day(db, channel_id, day_start, day_end)
+        if distinct_authors >= 2:
+            row.streak_days = row.streak_days + 1 if row.last_qualified_date == yesterday_key else 1
+            row.last_qualified_date = today_key
+
+    row.updated_at = datetime.now(timezone.utc)
+    await db.commit()
+    await db.refresh(row)
+    return {
+        "streak_days": int(row.streak_days),
+        "last_qualified_date": row.last_qualified_date,
+        "today_qualified": row.last_qualified_date == today_key,
+    }
 
 
 async def list_server_members(db: AsyncSession, server_id: int) -> list[dict]:
