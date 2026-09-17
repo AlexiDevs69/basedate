@@ -1920,56 +1920,20 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
 
   <script id="ah-streak-js">
   (function(){
-    function pad(n){ return String(n).padStart(2,'0'); }
-    function dayKey(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
-    function addDays(key,n){ var p=key.split('-').map(Number),dt=new Date(p[0],p[1]-1,p[2]); dt.setDate(dt.getDate()+n); return dayKey(dt); }
-
     function ahInitStreak(){
       var badge = document.getElementById('ah-streak-badge');
       var countEl = document.getElementById('ah-streak-count');
       if (!badge || !countEl) return;
       var flameEl = badge.querySelector('.ah-streak-flame');
-      var CH_ID = '{{ channel.id }}';
-      var STORAGE_KEY = 'ah_streak_v1_' + CH_ID;
 
-      var today = dayKey(new Date());
-      var yesterday = addDays(today, -1);
-
-      function loadState(){
-        try {
-          var s = JSON.parse(localStorage.getItem(STORAGE_KEY));
-          return (s && typeof s.streak === 'number') ? s : { streak: 0, lastDate: null };
-        } catch (e) { return { streak: 0, lastDate: null }; }
-      }
-      function saveState(){ try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {} }
-
-      var state = loadState();
-      if (state.lastDate && state.lastDate !== today && state.lastDate !== yesterday) {
-        state.streak = 0;
-        saveState();
-      }
-
-      var authorsByDay = Object.create(null);
-
-      function messageDay(el){
-        var raw = el.dataset.messageTimestamp;
-        if (!raw) {
-          var t = el.querySelector('.message-time');
-          raw = t && (t.dataset.messageTimestamp || t.textContent);
-        }
-        if (!raw || !window.AlexiHubMessageTime) return null;
-        var parsed = window.AlexiHubMessageTime.parse(raw);
-        return parsed ? dayKey(parsed) : null;
-      }
-
-      function trackMessage(el){
-        var day = messageDay(el);
-        var author = (el.dataset.messageAuthor || '').trim();
-        if (!day || !author) return;
-        if (!authorsByDay[day]) authorsByDay[day] = new Set();
-        authorsByDay[day].add(author);
-        if (day === today) evaluate();
-      }
+      // Authoritative state comes from the server (community_crud.get_channel_streak /
+      // bump_channel_streak) -- rendered here on load, then kept live over the
+      // channel's existing WebSocket via a "channel_streak" event (see
+      // handleServerRealtimeData). No client-side day/author bookkeeping needed.
+      var state = {
+        streak: {{ (channel_streak.streak_days if channel_streak else 0) | int }},
+        todayQualified: {{ 'true' if channel_streak and channel_streak.today_qualified else 'false' }}
+      };
 
       function renderDigits(animate){
         var str = String(Math.max(0, state.streak | 0));
@@ -1993,50 +1957,29 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
         var lit = state.streak > 0;
         badge.classList.toggle('is-cold', !lit);
         if (flameEl) flameEl.classList.toggle('ah-flame-pulse', lit);
-        var qualifiedToday = authorsByDay[today] && authorsByDay[today].size >= 2;
         badge.title = lit
-          ? (qualifiedToday
+          ? (state.todayQualified
               ? 'Вогник горить ' + state.streak + ' д. — сьогодні вже підтримано двома різними акаунтами.'
               : 'Вогник горить ' + state.streak + ' д. Щоб не згас, потрібні повідомлення від 2 різних акаунтів сьогодні.')
           : 'Напишіть у каналі повідомлення від 2 різних акаунтів сьогодні, щоб запалити вогник.';
       }
 
-      function evaluate(){
-        var qualifiedToday = authorsByDay[today] && authorsByDay[today].size >= 2;
-        if (qualifiedToday && state.lastDate !== today) {
-          state.streak = (state.lastDate === yesterday) ? state.streak + 1 : 1;
-          state.lastDate = today;
-          saveState();
-          renderDigits(true);
-        }
+      // Called from handleServerRealtimeData() whenever the server pushes a
+      // fresh { streak_days, last_qualified_date, today_qualified } after
+      // any member sends a message in this channel.
+      function applyServer(streakPayload){
+        if (!streakPayload) return;
+        var next = Number(streakPayload.streak_days);
+        var animate = Number.isFinite(next) && next !== state.streak;
+        if (Number.isFinite(next)) state.streak = next;
+        state.todayQualified = !!streakPayload.today_qualified;
+        renderDigits(animate);
         setVisualState();
       }
 
-      document.querySelectorAll('#messages .message[data-message-id]').forEach(trackMessage);
       renderDigits(false);
       setVisualState();
-
-      var messagesEl = document.getElementById('messages');
-      if (messagesEl && window.MutationObserver) {
-        new MutationObserver(function (muts) {
-          muts.forEach(function (m) {
-            m.addedNodes.forEach(function (node) {
-              if (node.nodeType === 1 && node.matches && node.matches('.message[data-message-id]')) trackMessage(node);
-            });
-          });
-        }).observe(messagesEl, { childList: true });
-      }
-
-      setInterval(function () {
-        var t = dayKey(new Date());
-        if (t !== today) {
-          var newYesterday = addDays(t, -1);
-          if (state.lastDate && state.lastDate !== t && state.lastDate !== newYesterday) state.streak = 0;
-          today = t; yesterday = newYesterday;
-          saveState();
-          setVisualState();
-        }
-      }, 30000);
+      window.__ahStreakApi = { applyServer: applyServer };
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ahInitStreak);
@@ -3498,6 +3441,7 @@ function openChannelInviteModal(event, btn) {
       if (data.type === 'pin_add' && data.pin && window.__serverPinsApi) window.__serverPinsApi.upsertServerPin(data.pin);
       if (data.type === 'pin_remove' && window.__serverPinsApi) window.__serverPinsApi.removeServerPin(data.message_id);
       if (data.type === 'reaction_update' && window.AlexiHubReactions) window.AlexiHubReactions.handleRealtime(data.message_id);
+      if (data.type === 'channel_streak' && data.streak && window.__ahStreakApi) window.__ahStreakApi.applyServer(data.streak);
     }
 
     function scheduleRealtimeReconnect() {
