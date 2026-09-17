@@ -1794,6 +1794,40 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
     #ah-message-time-tooltip:after{content:'';position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);border:6px solid transparent;border-top-color:#2b2d31;border-bottom:0}
     #ah-message-time-tooltip.ah-below:after{top:-6px;bottom:auto;border-top:0;border-bottom:6px solid #2b2d31}
   </style>
+
+  <style id="ah-streak-style">
+    .ah-streak-badge{
+      display:flex; align-items:center; gap:.36rem; flex:0 0 auto; cursor:default; user-select:none;
+      padding:.2rem .55rem .2rem .42rem; border-radius:999px; margin-right:.15rem;
+      background:linear-gradient(180deg, rgba(255,120,30,.16), rgba(255,120,30,.05));
+      border:1px solid rgba(255,140,40,.32);
+      transition: background .25s ease, border-color .25s ease, opacity .25s ease, filter .25s ease;
+    }
+    .ah-streak-badge.is-cold{
+      background:rgba(255,255,255,.045); border-color:var(--border); filter:grayscale(1); opacity:.55;
+    }
+    .ah-streak-flame{ width:14px; height:14px; flex-shrink:0; display:flex; filter:drop-shadow(0 0 3px rgba(255,140,40,.6)); }
+    .ah-streak-badge.is-cold .ah-streak-flame{ filter:none; }
+    .ah-streak-flame svg{ width:100%; height:100%; display:block; transform-origin:50% 85%; }
+    .ah-streak-flame.ah-flame-pulse svg{ animation: ahFlamePulse 1.7s ease-in-out infinite; }
+    @keyframes ahFlamePulse{
+      0%,100%{ transform:scale(1) rotate(0deg); }
+      35%{ transform:scale(1.07) rotate(-1.5deg); }
+      65%{ transform:scale(1.04) rotate(1.5deg); }
+    }
+    .ah-streak-count{
+      display:flex; align-items:center; font-family:var(--font-mono); font-weight:800;
+      font-size:.76rem; line-height:1.15; color:#ffb35c; letter-spacing:.01em;
+    }
+    .ah-streak-badge.is-cold .ah-streak-count{ color:var(--text-secondary); }
+    .ah-streak-digit{ position:relative; width:.64em; height:1.15em; overflow:hidden; display:inline-block; }
+    .ah-streak-digit-strip{
+      position:absolute; left:0; top:0; width:100%; display:flex; flex-direction:column;
+      transition: transform .55s cubic-bezier(.22,.9,.24,1); will-change:transform;
+    }
+    .ah-streak-digit-strip span{ height:1.15em; display:flex; align-items:center; justify-content:center; }
+    .ah-streak-count.ah-no-anim .ah-streak-digit-strip{ transition:none !important; }
+  </style>
   <script id="ah-message-time-js">
   (function(){
     if(window.AlexiHubMessageTime)return;
@@ -1883,6 +1917,132 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
     document.addEventListener('scroll',hide,true);
   })();
   </script>
+
+  <script id="ah-streak-js">
+  (function(){
+    function pad(n){ return String(n).padStart(2,'0'); }
+    function dayKey(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+    function addDays(key,n){ var p=key.split('-').map(Number),dt=new Date(p[0],p[1]-1,p[2]); dt.setDate(dt.getDate()+n); return dayKey(dt); }
+
+    function ahInitStreak(){
+      var badge = document.getElementById('ah-streak-badge');
+      var countEl = document.getElementById('ah-streak-count');
+      if (!badge || !countEl) return;
+      var flameEl = badge.querySelector('.ah-streak-flame');
+      var CH_ID = '{{ channel.id }}';
+      var STORAGE_KEY = 'ah_streak_v1_' + CH_ID;
+
+      var today = dayKey(new Date());
+      var yesterday = addDays(today, -1);
+
+      function loadState(){
+        try {
+          var s = JSON.parse(localStorage.getItem(STORAGE_KEY));
+          return (s && typeof s.streak === 'number') ? s : { streak: 0, lastDate: null };
+        } catch (e) { return { streak: 0, lastDate: null }; }
+      }
+      function saveState(){ try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {} }
+
+      var state = loadState();
+      if (state.lastDate && state.lastDate !== today && state.lastDate !== yesterday) {
+        state.streak = 0;
+        saveState();
+      }
+
+      var authorsByDay = Object.create(null);
+
+      function messageDay(el){
+        var raw = el.dataset.messageTimestamp;
+        if (!raw) {
+          var t = el.querySelector('.message-time');
+          raw = t && (t.dataset.messageTimestamp || t.textContent);
+        }
+        if (!raw || !window.AlexiHubMessageTime) return null;
+        var parsed = window.AlexiHubMessageTime.parse(raw);
+        return parsed ? dayKey(parsed) : null;
+      }
+
+      function trackMessage(el){
+        var day = messageDay(el);
+        var author = (el.dataset.messageAuthor || '').trim();
+        if (!day || !author) return;
+        if (!authorsByDay[day]) authorsByDay[day] = new Set();
+        authorsByDay[day].add(author);
+        if (day === today) evaluate();
+      }
+
+      function renderDigits(animate){
+        var str = String(Math.max(0, state.streak | 0));
+        var digits = str.split('');
+        if (!animate) countEl.classList.add('ah-no-anim');
+        while (countEl.children.length < digits.length) {
+          var col = document.createElement('span'); col.className = 'ah-streak-digit';
+          var strip = document.createElement('span'); strip.className = 'ah-streak-digit-strip';
+          for (var i = 0; i <= 9; i++) { var s = document.createElement('span'); s.textContent = String(i); strip.appendChild(s); }
+          col.appendChild(strip);
+          countEl.insertBefore(col, countEl.firstChild);
+        }
+        while (countEl.children.length > digits.length) countEl.removeChild(countEl.firstChild);
+        Array.prototype.forEach.call(countEl.children, function (col, idx) {
+          col.firstChild.style.transform = 'translateY(-' + (Number(digits[idx]) * 1.15) + 'em)';
+        });
+        if (!animate) { void countEl.offsetWidth; countEl.classList.remove('ah-no-anim'); }
+      }
+
+      function setVisualState(){
+        var lit = state.streak > 0;
+        badge.classList.toggle('is-cold', !lit);
+        if (flameEl) flameEl.classList.toggle('ah-flame-pulse', lit);
+        var qualifiedToday = authorsByDay[today] && authorsByDay[today].size >= 2;
+        badge.title = lit
+          ? (qualifiedToday
+              ? 'Вогник горить ' + state.streak + ' д. — сьогодні вже підтримано двома різними акаунтами.'
+              : 'Вогник горить ' + state.streak + ' д. Щоб не згас, потрібні повідомлення від 2 різних акаунтів сьогодні.')
+          : 'Напишіть у каналі повідомлення від 2 різних акаунтів сьогодні, щоб запалити вогник.';
+      }
+
+      function evaluate(){
+        var qualifiedToday = authorsByDay[today] && authorsByDay[today].size >= 2;
+        if (qualifiedToday && state.lastDate !== today) {
+          state.streak = (state.lastDate === yesterday) ? state.streak + 1 : 1;
+          state.lastDate = today;
+          saveState();
+          renderDigits(true);
+        }
+        setVisualState();
+      }
+
+      document.querySelectorAll('#messages .message[data-message-id]').forEach(trackMessage);
+      renderDigits(false);
+      setVisualState();
+
+      var messagesEl = document.getElementById('messages');
+      if (messagesEl && window.MutationObserver) {
+        new MutationObserver(function (muts) {
+          muts.forEach(function (m) {
+            m.addedNodes.forEach(function (node) {
+              if (node.nodeType === 1 && node.matches && node.matches('.message[data-message-id]')) trackMessage(node);
+            });
+          });
+        }).observe(messagesEl, { childList: true });
+      }
+
+      setInterval(function () {
+        var t = dayKey(new Date());
+        if (t !== today) {
+          var newYesterday = addDays(t, -1);
+          if (state.lastDate && state.lastDate !== t && state.lastDate !== newYesterday) state.streak = 0;
+          today = t; yesterday = newYesterday;
+          saveState();
+          setVisualState();
+        }
+      }, 30000);
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ahInitStreak);
+    else ahInitStreak();
+  })();
+  </script>
   <aside class="server-rail">
     <a href="/community" class="server-dot home-dot {{ 'active' if not active_server_id else '' }}" title="{{ i18n_t('ui.direct_messages') }}" data-i18n-title="ui.direct_messages" data-mention-home="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="21" height="21"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg></a>
     <div class="rail-sep"></div>
@@ -1898,6 +2058,22 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
 
   <div class="topbar discord-channel-topbar">
     <div class="discord-title-left">
+      <div class="ah-streak-badge is-cold" id="ah-streak-badge" title="">
+        <span class="ah-streak-flame" aria-hidden="true">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="ahFlameGrad" x1="4" y1="21" x2="19" y2="3" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#ff4d1c"/>
+                <stop offset=".55" stop-color="#ff9a1f"/>
+                <stop offset="1" stop-color="#ffd23f"/>
+              </linearGradient>
+            </defs>
+            <path fill="url(#ahFlameGrad)" d="M12.6 1.8c.5 2.9-.6 4.6-2.3 6.3C8.4 10 6.4 12.2 6.4 15.6a5.9 5.9 0 0 0 11.8 0c0-2.4-.9-4.1-2-5.5-.4-.5-1.1-.1-1 .5.4 2-.6 3.5-2 3.5-1.5 0-2.3-1.5-1.9-3.2.4-1.9 2.1-3 2.1-5.3 0-1.5-.7-2.8-1.6-3.8-.3-.4-1-.1-.9.5.2 1.3-.3 2.3-1.2 3.2C7.6 7.5 5.6 9.7 5.6 12.9a7.3 7.3 0 0 0 14.6 0"/>
+            <path fill="#fff4d6" opacity=".9" d="M12.1 10.2c-1.1 1.5-2.3 2.8-2.3 4.6a2.4 2.4 0 0 0 4.8 0c0-.8-.3-1.4-.6-1.9 0 .7-.4 1.1-.9 1.1-.6 0-.9-.5-.8-1.1.2-.7.8-1.1.8-1.9 0-.3 0-.5-.1-.8Z"/>
+          </svg>
+        </span>
+        <span class="ah-streak-count" id="ah-streak-count" aria-live="polite"></span>
+      </div>
       <span class="discord-hash">#</span>
       <span class="discord-channel-name">{{ channel.name }}</span>
       <span class="discord-channel-topic">{{ channel.description or i18n_t('server.channel.default_description') }}</span>
