@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.182.1",
+      "date": "2026-09-17",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Show and hide about section in chat template."
+      ],
+      "source_sha": "f0eef90d5122cab46d6414d57204e4158888911f"
+    },
+    {
       "version": "1.182.0",
       "date": "2026-09-17",
       "title": "Нові можливості AlexiHub",
