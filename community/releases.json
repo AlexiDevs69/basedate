@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.181.0",
+      "date": "2026-09-17",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: private profile UI and logic."
+      ],
+      "source_sha": "f21f45f3fb58351c1668057dcfba20b6ccab776b"
+    },
+    {
       "version": "1.180.0",
       "date": "2026-09-17",
       "title": "Нові можливості AlexiHub",
