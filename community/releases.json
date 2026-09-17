@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.181.3",
+      "date": "2026-09-17",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update privacy settings sections in dm_chat.html."
+      ],
+      "source_sha": "6e7eb006ec928dcd2e4ec2ba1c16cea46be61c99"
+    },
+    {
       "version": "1.181.2",
       "date": "2026-09-17",
       "title": "Виправлення та стабільність",
