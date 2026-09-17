@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.182.0",
+      "date": "2026-09-17",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: private profile feature in dm_chat.html."
+      ],
+      "source_sha": "365e953bfbe5c892b15800771a1747e9739de375"
+    },
+    {
       "version": "1.181.3",
       "date": "2026-09-17",
       "title": "Виправлення та стабільність",
