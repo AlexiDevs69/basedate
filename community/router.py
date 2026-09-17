@@ -2507,6 +2507,7 @@ async def server_channel_view(server_id: int, channel_id: int, request: Request,
     await _decorate_server_tags(db, members, feed)
     boost_status = await crud.get_server_boost_status(db, server.id, account.id)
     server_banner_url = await _get_server_banner_url(db, server.id)
+    channel_streak = await crud.get_channel_streak(db, channel_id)
     mentions_were_read = await crud.mark_server_channel_mentions_read(
         db, account.id, server_id, channel_id
     )
@@ -2529,6 +2530,7 @@ async def server_channel_view(server_id: int, channel_id: int, request: Request,
             "feed": feed,
             "boost_status": boost_status,
             "server_banner_url": server_banner_url,
+            "channel_streak": channel_streak,
             **_template_i18n_context(account, request),
             **rail,
         },
@@ -2655,11 +2657,13 @@ async def server_message_submit(
         msg = await crud.create_server_message(db, server_id, channel_id, account.id, content.strip(), image_url.strip(), reply_to_id=reply_id)
         mention_affected = await _sync_server_message_mentions(db, msg)
         realtime_payload = await _server_message_realtime_event(db, msg)
+        streak_state = await crud.bump_channel_streak(db, channel_id)
         await _broadcast_mention_counts(mention_affected)
     if realtime_payload:
         # The HTML form is the WebSocket fallback. Other connected members must
         # still receive the message even though the sender is about to redirect.
         await realtime_channels.broadcast((server_id, channel_id), realtime_payload)
+        await realtime_channels.broadcast((server_id, channel_id), {"type": "channel_streak", "streak": streak_state})
     return RedirectResponse(url=f"/community/servers/{server_id}/channel/{channel_id}", status_code=303)
 
 
@@ -3771,6 +3775,7 @@ async def api_forward_message(request: Request, db: AsyncSession = Depends(get_d
                 return _message_rate_limit_json_response(retry_after_ms, sent=sent)
             msg = await crud.create_server_message(db, server_id, channel_id, account_id, source_content, source_image_url, is_forwarded=True)
             mention_affected = await _sync_server_message_mentions(db, msg)
+            streak_state = await crud.bump_channel_streak(db, channel_id)
             await _broadcast_mention_counts(mention_affected)
             message_payload = {
                 "id": int(msg.id),
@@ -3785,6 +3790,7 @@ async def api_forward_message(request: Request, db: AsyncSession = Depends(get_d
                 "is_forwarded": True,
             }
             await realtime_channels.broadcast((server_id, channel_id), {"type": "message", "message": message_payload, "author": author_payload})
+            await realtime_channels.broadcast((server_id, channel_id), {"type": "channel_streak", "streak": streak_state})
             sent.append({"type": "channel", "server_id": server_id, "channel_id": channel_id})
 
     return JSONResponse({"ok": True, "sent": sent, "count": len(sent)})
@@ -4469,6 +4475,22 @@ async def api_unpin_dm_message(username: str, message_id: int, request: Request,
     return JSONResponse({"ok": True, "removed": bool(removed), "message_id": int(message_id)})
 
 
+@router.get("/api/servers/{server_id}/channels/{channel_id}/streak")
+async def api_get_channel_streak(server_id: int, channel_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    if not await crud.is_server_member(db, server_id, account.id):
+        return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
+    channel = await crud.get_server_channel(db, server_id, channel_id)
+    if not channel:
+        return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
+    if not await crud.can_access_server_channel(db, server_id, channel, account.id):
+        return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
+    streak = await crud.get_channel_streak(db, channel_id)
+    return JSONResponse({"ok": True, "streak": streak})
+
+
 @router.get("/api/servers/{server_id}/channels/{channel_id}/pins")
 async def api_list_server_pins(server_id: int, channel_id: int, request: Request, db: AsyncSession = Depends(get_db)):
     account = await current_account(request, db)
@@ -5053,9 +5075,11 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
                 realtime_event = await _server_message_realtime_event(
                     db, msg, client_nonce=client_nonce
                 )
+                streak_state = await crud.bump_channel_streak(db, channel_id)
 
             await realtime_channels.clear_typing(key, account_id)
             await realtime_channels.broadcast(key, realtime_event)
+            await realtime_channels.broadcast(key, {"type": "channel_streak", "streak": streak_state})
             await _broadcast_mention_counts(mention_affected)
 
     except WebSocketDisconnect:
