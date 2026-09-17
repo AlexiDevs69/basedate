@@ -2633,6 +2633,10 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 
 <div id="ah-v3-mini" class="ah-v3-mini" aria-hidden="true">
+  <div id="ah-v3-mini-topbar" class="ah-v3-full-topbar ah-v3-mini-topbar" hidden>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10V8a6 6 0 0 1 12 0v2"></path><rect x="4" y="10" width="16" height="11" rx="2.5"></rect></svg>
+    <span id="ah-v3-mini-topbar-text" data-i18n="common.text.private_profile"><!--i18n:common.text.private_profile-->{{ i18n_t('common.text.private_profile') }}</span>
+  </div>
   <div id="ah-v3-banner" class="ah-v3-banner"></div>
   <div class="ah-v3-body">
     <button id="ah-v3-avatar" class="ah-v3-avatar" type="button"><span id="ah-v3-avatar-text"></span><span id="ah-v3-status" class="ah-v3-status offline"></span></button>
@@ -2642,6 +2646,9 @@ document.addEventListener('DOMContentLoaded',()=>{
     </div>
     <div id="ah-v3-handle" class="ah-v3-handle">@user</div>
     <div id="ah-v3-role" class="ah-v3-role"><!--i18n:common.text.member-->{{ i18n_t("common.text.member") }}</div>
+    <div id="ah-v3-mini-private-bar" class="ah-v3-full-private-bar ah-v3-mini-private-bar" hidden>
+      <span id="ah-v3-mini-private-bar-text"></span>
+    </div>
     <div class="ah-v3-actions"><a id="ah-v3-message" href="#"><!--i18n:privacy.blocking.message-->{{ i18n_t("privacy.blocking.message") }}</a><button id="ah-v3-open-full" type="button"><!--i18n:privacy.blocking.full-->{{ i18n_t('privacy.blocking.full') }}</button></div>
     <div class="ah-v3-status-menu">
       <button class="ah-v3-status-btn" type="button" data-presence="online"><span class="ah-v3-dot"></span><span><!--i18n:common.text.online-->{{ i18n_t('common.text.online') }}<small><!--i18n:common.text.showkensike_yak_online-->{{ i18n_t('common.text.showkensike_yak_online') }}</small></span></button>
@@ -2654,6 +2661,10 @@ document.addEventListener('DOMContentLoaded',()=>{
 <div id="ah-v3-overlay" class="ah-v3-overlay" aria-hidden="true">
   <div class="ah-v3-full">
     <button class="ah-v3-close" type="button" id="ah-v3-close">×</button>
+    <div id="ah-v3-full-topbar" class="ah-v3-full-topbar" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10V8a6 6 0 0 1 12 0v2"></path><rect x="4" y="10" width="16" height="11" rx="2.5"></rect></svg>
+      <span id="ah-v3-full-topbar-text" data-i18n="common.text.private_profile"><!--i18n:common.text.private_profile-->{{ i18n_t('common.text.private_profile') }}</span>
+    </div>
     <div class="ah-v3-full-left">
       <div id="ah-v3-full-banner" class="ah-v3-full-banner"></div>
       <div class="ah-v3-full-left-inner">
@@ -2674,6 +2685,9 @@ document.addEventListener('DOMContentLoaded',()=>{
           </button>
         </div>
         <div class="ah-v3-full-about-block">
+          <div id="ah-v3-full-private-bar" class="ah-v3-full-private-bar" hidden>
+            <span id="ah-v3-full-private-bar-text"></span>
+          </div>
           <div class="ah-v3-full-section-title"><!--i18n:common.text.act_the_mean-->{{ i18n_t('common.text.act_the_mean') }}</div>
           <div id="ah-v3-full-about"><!--i18n:common.text.quick_profile_view_on_top_of_the_current_page-->{{ i18n_t('common.text.quick_profile_view_on_top_of_the_current_page') }}</div>
         </div>
@@ -2858,7 +2872,8 @@ document.addEventListener('DOMContentLoaded',()=>{
     let friendshipId=(known&&known.friendshipId)||null;
     let friendStatusKnown=!!(known&&known.friendStatusKnown);
     let id=(known&&known.id)||null;
-    return {id,name:clean(name)||'user',display:clean(display)||clean(name)||'user',avatar,banner,role,c1,c2,profile,isSelf,status,bio,mutualServers,inviteServers,friendStatus,friendshipId,friendStatusKnown,tag,created};
+    let isPrivateRestricted=!!(known&&known.isPrivateRestricted);
+    return {id,name:clean(name)||'user',display:clean(display)||clean(name)||'user',avatar,banner,role,c1,c2,profile,isSelf,status,bio,mutualServers,inviteServers,friendStatus,friendshipId,friendStatusKnown,tag,created,isPrivateRestricted};
   }
   function setAvatar(el,textEl,url,name){ if(!el)return; el.style.backgroundImage=url?`url('${safeUrl(url)}')`:''; if(textEl) textEl.textContent=url?'':(name||'?').slice(0,1).toUpperCase(); }
   function tintFromBanner(url,target){
@@ -2889,7 +2904,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   function openMini(el,e){
     active=dataFrom(el); let pop=$('#ah-v3-mini'); if(!pop)return;
     pop.classList.toggle('self',!!active.isSelf); pop.style.setProperty('--ah-c1',active.c1); pop.style.setProperty('--ah-c2',active.c2); setBanner($('#ah-v3-banner'), active.banner, active.c1, active.c2);
-    setAvatar($('#ah-v3-avatar'),$('#ah-v3-avatar-text'),active.avatar,active.display); const miniNameNode=$('#ah-v3-name'); if(miniNameNode){miniNameNode.dataset.profileUsername=active.name; miniNameNode.textContent=active.display;} $('#ah-v3-handle').textContent='@'+active.name; $('#ah-v3-role').textContent=active.role||'member'; (function(){var t=$('#ah-v3-tag'); if(!t)return; if(active.tag&&active.tag.text){t.hidden=false;t.title=active.tag.serverName||'';t.dataset.tagServerId=active.tag.serverId||'';t.dataset.tagServerName=active.tag.serverName||'';t.dataset.tagIconGlyph=active.tag.glyph||'';t.dataset.tagIconUrl=active.tag.iconUrl||'';t.dataset.tagText=active.tag.text||'';t.dataset.tagMemberCount=active.tag.memberCount||'';t.dataset.tagOnlineCount=active.tag.onlineCount||'';t.dataset.tagDescription=active.tag.description||'';t.dataset.tagInvite=active.tag.invite||'';var bb=t.querySelector('b');if(bb)bb.textContent=active.tag.glyph||'◆';var ss=t.querySelector('span');if(ss)ss.textContent=active.tag.text;}else{t.hidden=true;} })(); let st=$('#ah-v3-status'); if(st) st.className='ah-v3-status '+(active.status||'offline'); let msg=$('#ah-v3-message'); if(msg){msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; msg.textContent=active.isSelf?window.AlexiHubI18n.t("settings.edit_profile"):'Message'} place(pop,e);
+    setAvatar($('#ah-v3-avatar'),$('#ah-v3-avatar-text'),active.avatar,active.display); const miniNameNode=$('#ah-v3-name'); if(miniNameNode){miniNameNode.dataset.profileUsername=active.name; miniNameNode.textContent=active.display;} $('#ah-v3-handle').textContent='@'+active.name; $('#ah-v3-role').textContent=active.role||'member'; (function(){var t=$('#ah-v3-tag'); if(!t)return; if(active.tag&&active.tag.text){t.hidden=false;t.title=active.tag.serverName||'';t.dataset.tagServerId=active.tag.serverId||'';t.dataset.tagServerName=active.tag.serverName||'';t.dataset.tagIconGlyph=active.tag.glyph||'';t.dataset.tagIconUrl=active.tag.iconUrl||'';t.dataset.tagText=active.tag.text||'';t.dataset.tagMemberCount=active.tag.memberCount||'';t.dataset.tagOnlineCount=active.tag.onlineCount||'';t.dataset.tagDescription=active.tag.description||'';t.dataset.tagInvite=active.tag.invite||'';var bb=t.querySelector('b');if(bb)bb.textContent=active.tag.glyph||'◆';var ss=t.querySelector('span');if(ss)ss.textContent=active.tag.text;}else{t.hidden=true;} })(); let st=$('#ah-v3-status'); if(st) st.className='ah-v3-status '+(active.status||'offline'); let msg=$('#ah-v3-message'); if(msg){msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; msg.textContent=active.isSelf?window.AlexiHubI18n.t("settings.edit_profile"):'Message'} renderPrivateBar(active); place(pop,e);
   }
   function closeMini(){let p=$('#ah-v3-mini'); if(p)p.classList.remove('open')}
   function mutualServerLabel(count){
@@ -2967,6 +2982,22 @@ document.addEventListener('DOMContentLoaded',()=>{
     }
     if(status!=='loading')button.removeAttribute('aria-busy');
   }
+  function renderPrivateBar(profile){
+    const show=!!(profile&&!profile.isSelf&&profile.isPrivateRestricted);
+    const bar=$('#ah-v3-full-private-bar'); if(bar)bar.hidden=!show;
+    const topbar=$('#ah-v3-full-topbar'); if(topbar)topbar.hidden=!show;
+    const miniBar=$('#ah-v3-mini-private-bar'); if(miniBar)miniBar.hidden=!show;
+    const miniTopbar=$('#ah-v3-mini-topbar'); if(miniTopbar)miniTopbar.hidden=!show;
+    if(show){
+      const name=profile.display||profile.name||window.AlexiHubI18n.t("common.text.user");
+      const notice=window.AlexiHubI18n.t('common.text.private_profile_notice',{name:name});
+      const label=window.AlexiHubI18n.t('common.text.private_profile');
+      const textNode=$('#ah-v3-full-private-bar-text'); if(textNode)textNode.textContent=notice;
+      const topbarText=$('#ah-v3-full-topbar-text'); if(topbarText)topbarText.textContent=label;
+      const miniText=$('#ah-v3-mini-private-bar-text'); if(miniText)miniText.textContent=notice;
+      const miniTopbarText=$('#ah-v3-mini-topbar-text'); if(miniTopbarText)miniTopbarText.textContent=label;
+    }
+  }
   function renderInviteServers(profile){
     const submenu=$('#ah-v3-invite-submenu');
     if(!submenu)return;
@@ -2997,8 +3028,12 @@ document.addEventListener('DOMContentLoaded',()=>{
       if(!response.ok||!data.ok)return false;
       rememberFriendState(profile,data.status,data.friendship_id);
       profile.blockedByMe=!!data.blocked_by_me;
+      profile.isPrivateRestricted=!!data.is_private_restricted;
+      const known=getKnownProfile(profile.name);
+      if(known)known.isPrivateRestricted=profile.isPrivateRestricted;
       renderFriendAction(profile);
       renderInviteServers(profile);
+      renderPrivateBar(profile);
       const block=$('[data-full-profile-action="block"]');
       if(block)block.textContent=profile.blockedByMe?window.AlexiHubI18n.t("privacy.blocking.unblock"):window.AlexiHubI18n.t("privacy.blocking.block");
       return true;
@@ -3108,6 +3143,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     renderMutualServers(active);
     renderFriendAction(active);
     renderInviteServers(active);
+    renderPrivateBar(active);
     const msg=$('#ah-v3-full-message');
     if(msg){msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name);msg.dataset.self=active.isSelf?'1':'0';}
     closeMini();
@@ -8639,6 +8675,13 @@ document.addEventListener('DOMContentLoaded', async function(){
 .ah-v3-full-tooltip:after{content:"";position:absolute;left:50%;bottom:-5px;width:10px;height:10px;background:#111214;transform:translateX(-50%) rotate(45deg)}
 @keyframes ahTooltipIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
 .ah-v3-full-about-block{margin-top:22px;padding-top:18px;border-top:1px solid rgba(255,255,255,.12)}
+.ah-v3-full-private-bar{display:block;margin:0 0 16px;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.06);color:#c9cdd3;font-size:13px;font-weight:500;line-height:1.5}
+.ah-v3-full-private-bar[hidden]{display:none}
+.ah-v3-full-topbar{grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:8px;padding:15px 54px;background:#1a1b20;border-bottom:1px solid rgba(255,255,255,.1);color:#dbdee1;font-size:13px;font-weight:800;letter-spacing:.02em;text-align:center}
+.ah-v3-full-topbar svg{width:15px;height:15px;flex:0 0 auto;color:#949ba4;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ah-v3-full-topbar[hidden]{display:none}
+.ah-v3-mini-topbar{padding:12px 40px;font-size:12px;border-radius:0}
+.ah-v3-mini-private-bar{margin:8px 0 0}
 .ah-v3-full-section-title{margin-bottom:7px;color:#fff;font-size:12px;font-weight:950;text-transform:uppercase;letter-spacing:.035em}
 #ah-v3-full-about{color:#e1e3e7;font-size:13px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
 .ah-v3-full-meta{margin-top:22px!important;padding-top:18px;border-top:1px solid rgba(255,255,255,.12);color:#c2c5cc!important}
