@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.181.1",
+      "date": "2026-09-17",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance private profile visibility in chat UI."
+      ],
+      "source_sha": "7d7e3f6835c0059435e494ae60906d19c44cbfc8"
+    },
+    {
       "version": "1.181.0",
       "date": "2026-09-17",
       "title": "Нові можливості AlexiHub",
