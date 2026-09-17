@@ -3554,8 +3554,8 @@ document.addEventListener('DOMContentLoaded',()=>{
             <div class="ah-custom-bio-wrap"><textarea id="ah-profile-bio-input" class="ah-custom-bio-input" name="bio" maxlength="280" placeholder="{{ i18n_t('common.profile.bio_placeholder') }}" data-i18n-placeholder="common.profile.bio_placeholder">{{ account.bio or '' }}</textarea><div id="ah-profile-bio-preview" hidden>{{ account.bio or '' }}</div></div>
             <div class="ah-profile-private-row" id="ah-profile-private-row">
               <div class="ah-profile-private-copy">
-                <b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10V8a6 6 0 0 1 12 0v2"></path><rect x="4" y="10" width="16" height="11" rx="2.5"></rect></svg>Приватний профіль</b>
-                <p>Профіль буде видно лише вашим друзям і учасникам спільних серверів. Інші користувачі не побачать біографію, список друзів і серверів.</p>
+                <b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10V8a6 6 0 0 1 12 0v2"></path><rect x="4" y="10" width="16" height="11" rx="2.5"></rect></svg><span data-i18n="common.text.private_profile"><!--i18n:common.text.private_profile-->{{ i18n_t('common.text.private_profile') }}</span></b>
+                <p data-i18n="common.text.private_profile_description"><!--i18n:common.text.private_profile_description-->{{ i18n_t('common.text.private_profile_description') }}</p>
               </div>
               <label class="ah-privacy-switch">
                 <input type="checkbox" id="ah-profile-private-input" name="is_private" value="true"{% if account.is_private %} checked{% endif %}>
