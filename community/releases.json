@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.181.2",
+      "date": "2026-09-17",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Виправлено: duplicate code in openMini function."
+      ],
+      "source_sha": "b17b435ecf14903b6c9b7ee1c4190b740011a21d"
+    },
+    {
       "version": "1.181.1",
       "date": "2026-09-17",
       "title": "Виправлення та стабільність",
