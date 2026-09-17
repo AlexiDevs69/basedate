@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.179.2",
+      "date": "2026-09-17",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update uk.json with private profile description."
+      ],
+      "source_sha": "654744dcb4cbda719557f8e249b3513cebe4b9a7"
+    },
+    {
       "version": "1.179.1",
       "date": "2026-09-17",
       "title": "Виправлення та стабільність",
