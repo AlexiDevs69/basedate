@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.184.0",
+      "date": "2026-09-18",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: ServerChannelStreak model for daily message streaks."
+      ],
+      "source_sha": "7fd482522acadf527b548102e6ff82e56f2cb874"
+    },
+    {
       "version": "1.183.0",
       "date": "2026-09-18",
       "title": "Нові можливості AlexiHub",
