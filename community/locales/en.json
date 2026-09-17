@@ -1951,5 +1951,6 @@
   "settings.typing_text.nitro_lock_before": "Activate",
   "settings.typing_text.nitro_lock_after": "to unlock this feature",
   "common.text.private_profile": "Private Profile",
-  "common.text.private_profile_notice": "{name}'s profile is private, so some info is hidden. Add them as a friend to see more."
+  "common.text.private_profile_notice": "{name}'s profile is private, so some info is hidden. Add them as a friend to see more.",
+  "common.text.private_profile_description": "Hides some profile info from people who aren't your friends."
 }
