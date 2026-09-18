@@ -3339,6 +3339,10 @@ async def ensure_message_meta_columns(db: AsyncSession) -> None:
     await db.execute(text("ALTER TABLE community_direct_messages ADD COLUMN IF NOT EXISTS reply_to_id INTEGER"))
     await db.execute(text("ALTER TABLE community_server_messages ADD COLUMN IF NOT EXISTS is_forwarded BOOLEAN NOT NULL DEFAULT FALSE"))
     await db.execute(text("ALTER TABLE community_direct_messages ADD COLUMN IF NOT EXISTS is_forwarded BOOLEAN NOT NULL DEFAULT FALSE"))
+    # image_url used to be VARCHAR(512); multi-image messages join several URLs
+    # with '\n' into this same field, so it needs to hold much more than that.
+    await db.execute(text("ALTER TABLE community_server_messages ALTER COLUMN image_url TYPE TEXT"))
+    await db.execute(text("ALTER TABLE community_direct_messages ALTER COLUMN image_url TYPE TEXT"))
     await db.commit()
     _MESSAGE_META_COLUMNS_READY = True
 
