@@ -4999,8 +4999,6 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
                     continue
                 if len(content) > 4000:
                     content = content[:4000]
-                if len(image_url) > 512:
-                    image_url = image_url[:512]
 
                 async with AsyncSessionLocal() as db:
                     if not await crud.is_server_member(db, server_id, account_id):
@@ -5034,8 +5032,6 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
                 continue
             if len(content) > 4000:
                 content = content[:4000]
-            if len(image_url) > 512:
-                image_url = image_url[:512]
             if _is_global_console_command(content):
                 await realtime_channels.clear_typing(key, account_id)
                 await websocket.send_json({"type": "message_error", "error": "console_command_ui_only"})
@@ -5430,8 +5426,6 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
                     continue
                 if len(content) > 4000:
                     content = content[:4000]
-                if len(image_url) > 512:
-                    image_url = image_url[:512]
 
                 async with AsyncSessionLocal() as db:
                     if not await crud.is_dm_participant(db, thread_id, account_id):
@@ -5470,8 +5464,6 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
                 continue
             if len(content) > 4000:
                 content = content[:4000]
-            if len(image_url) > 512:
-                image_url = image_url[:512]
             if _is_global_console_command(content):
                 await realtime_channels.clear_typing(key, account_id)
                 await websocket.send_json({"type": "message_error", "error": "console_command_ui_only"})
