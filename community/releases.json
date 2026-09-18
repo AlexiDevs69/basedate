@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.187.2",
+      "date": "2026-09-18",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Support multiple image uploads in composer."
+      ],
+      "source_sha": "711a8216bd060698dc994ec6760013ac3f16260d"
+    },
+    {
       "version": "1.187.1",
       "date": "2026-09-18",
       "title": "Виправлення та стабільність",
