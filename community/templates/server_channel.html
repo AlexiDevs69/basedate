@@ -1796,37 +1796,129 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
   </style>
 
   <style id="ah-streak-style">
+    /* Живе в топбарі поруч з іконками інструментів, тому й поводиться так само:
+       без рамок і заливки у спокої, м'яка підсвітка на hover, шрифт інтерфейсу. */
     .ah-streak-badge{
-      display:flex; align-items:center; gap:.36rem; flex:0 0 auto; cursor:default; user-select:none;
-      padding:.2rem .55rem .2rem .42rem; border-radius:999px; margin-right:.15rem;
-      background:linear-gradient(180deg, rgba(255,120,30,.16), rgba(255,120,30,.05));
-      border:1px solid rgba(255,140,40,.32);
-      transition: background .25s ease, border-color .25s ease, opacity .25s ease, filter .25s ease;
+      display:inline-flex; align-items:center; gap:5px; flex:0 0 auto;
+      height:26px; padding:0 5px; margin-right:1px;
+      border:0; border-radius:6px; background:transparent;
+      font:inherit; cursor:pointer; user-select:none;
+      color:var(--ah-streak-accent);
+      transition: background .13s ease, color .35s ease;
     }
-    .ah-streak-badge.is-cold{
-      background:rgba(255,255,255,.045); border-color:var(--border); filter:grayscale(1); opacity:.55;
+    .ah-streak-badge:hover{ background:#2b2d34; }
+    .ah-streak-badge[aria-expanded="true"]{ background:#2b2d34; }
+    .ah-streak-badge:focus-visible{ outline:2px solid var(--ah-streak-accent); outline-offset:1px; }
+
+    /* Рівні серії. Силует у топбарі один: на 15px різні форми перетворюються
+       на кашу, тому крок рівня читається кольором і щільністю заливки.
+       Деталі форми показані у великому вогнику в меню. */
+    .ah-streak-badge, .ah-streak-menu{ --ah-streak-accent:#e0863a; --ah-streak-fill:0; }
+    .ah-streak-badge.ah-tier-1, .ah-streak-menu.ah-tier-1{ --ah-streak-accent:#cf4436; --ah-streak-fill:.12; }  /* 10+  жар */
+    .ah-streak-badge.ah-tier-2, .ah-streak-menu.ah-tier-2{ --ah-streak-accent:#3ec7c9; --ah-streak-fill:.16; }  /* 20+  блакитне */
+    .ah-streak-badge.ah-tier-3, .ah-streak-menu.ah-tier-3{ --ah-streak-accent:#eef3f8; --ah-streak-fill:.22; }  /* 30+  біле */
+    .ah-streak-badge.ah-tier-4, .ah-streak-menu.ah-tier-4{ --ah-streak-accent:#a982f5; --ah-streak-fill:.26; }  /* 50+  аметист */
+    .ah-streak-badge.ah-tier-5, .ah-streak-menu.ah-tier-5{ --ah-streak-accent:#f0c65c; --ah-streak-fill:.30; }  /* 100+ золото */
+    .ah-streak-badge.ah-tier-3 .ah-streak-flame,
+    .ah-streak-badge.ah-tier-5 .ah-streak-flame{ filter:drop-shadow(0 0 4px color-mix(in srgb, var(--ah-streak-accent) 45%, transparent)); }
+    .ah-streak-badge.is-cold{ --ah-streak-accent:#80858f; --ah-streak-fill:0; background:transparent; filter:none; opacity:1; }
+
+    .ah-streak-flame{ width:15px; height:15px; flex-shrink:0; display:flex; }
+    .ah-streak-flame svg{ width:100%; height:100%; display:block; }
+    .ah-streak-flame svg path{ fill:currentColor; fill-opacity:var(--ah-streak-fill); transition:fill-opacity .35s ease; }
+    .ah-streak-flame .ah-flame-core{ display:none; fill-opacity:.6; }
+    /* ледь помітне дихання замість стрибків і світіння */
+    .ah-streak-flame.ah-flame-pulse svg{ animation: ahFlameBreathe 3.4s ease-in-out infinite; }
+    @keyframes ahFlameBreathe{ 0%,100%{ opacity:1; } 50%{ opacity:.74; } }
+    /* одноразовий доторк при переході на новий рівень -- після дихання, щоб перекривати його */
+    .ah-streak-flame.ah-tier-up svg{ animation: ahTierUp .62s cubic-bezier(.2,.8,.3,1); }
+    @keyframes ahTierUp{ 0%{ transform:scale(1); } 34%{ transform:scale(1.22); } 100%{ transform:scale(1); } }
+    @media (prefers-reduced-motion: reduce){
+      .ah-streak-flame.ah-flame-pulse svg,
+      .ah-streak-flame.ah-tier-up svg{ animation:none; }
     }
-    .ah-streak-flame{ width:14px; height:14px; flex-shrink:0; display:flex; filter:drop-shadow(0 0 3px rgba(255,140,40,.6)); }
-    .ah-streak-badge.is-cold .ah-streak-flame{ filter:none; }
-    .ah-streak-flame svg{ width:100%; height:100%; display:block; transform-origin:50% 85%; }
-    .ah-streak-flame.ah-flame-pulse svg{ animation: ahFlamePulse 1.7s ease-in-out infinite; }
-    @keyframes ahFlamePulse{
-      0%,100%{ transform:scale(1) rotate(0deg); }
-      35%{ transform:scale(1.07) rotate(-1.5deg); }
-      65%{ transform:scale(1.04) rotate(1.5deg); }
-    }
+
     .ah-streak-count{
-      display:flex; align-items:center; font-family:var(--font-mono); font-weight:800;
-      font-size:.76rem; line-height:1.15; color:#ffb35c; letter-spacing:.01em;
+      display:flex; align-items:center; color:inherit;
+      font-family:inherit; font-weight:800; font-size:13px; line-height:1.15; letter-spacing:0;
+      font-variant-numeric:tabular-nums;
     }
-    .ah-streak-badge.is-cold .ah-streak-count{ color:var(--text-secondary); }
-    .ah-streak-digit{ position:relative; width:.64em; height:1.15em; overflow:hidden; display:inline-block; }
+    /* 1.15em лишається: на цей крок спирається прокрутка цифр в ah-streak-js */
+    .ah-streak-digit{ position:relative; width:.6em; height:1.15em; overflow:hidden; display:inline-block; }
     .ah-streak-digit-strip{
       position:absolute; left:0; top:0; width:100%; display:flex; flex-direction:column;
-      transition: transform .55s cubic-bezier(.22,.9,.24,1); will-change:transform;
+      transition: transform .5s cubic-bezier(.22,.9,.24,1); will-change:transform;
     }
     .ah-streak-digit-strip span{ height:1.15em; display:flex; align-items:center; justify-content:center; }
     .ah-streak-count.ah-no-anim .ah-streak-digit-strip{ transition:none !important; }
+
+    @media(max-width:820px){ .ah-streak-badge{ height:24px; padding:0 4px; } }
+  </style>
+
+  <style id="ah-streak-menu-style">
+    /* Фон, рамка, радіус, тіні й рядки -- один в один з .discord-server-menu
+       (меню сервера / закріпу), щоб не заводити ще один вид спливайок. */
+    .ah-streak-menu{
+      position:fixed; z-index:2147481500; display:none;
+      width:330px; max-width:calc(100vw - 20px); padding:8px;
+      background:#2b2d31; border:1px solid rgba(255,255,255,.12); border-radius:10px;
+      box-shadow:0 18px 55px rgba(0,0,0,.56);
+      color:#f2f3f5; font-family:inherit; transform-origin:top left;
+    }
+    .ah-streak-menu.ah-open{ display:block; animation: ahStreakMenuIn .12s ease-out; }
+    @keyframes ahStreakMenuIn{ from{ opacity:0; transform:translateY(-6px) scale(.98); } to{ opacity:1; transform:none; } }
+    @media (prefers-reduced-motion: reduce){ .ah-streak-menu.ah-open{ animation:none; } }
+
+    .ah-streak-menu-head{ display:flex; align-items:center; gap:10px; padding:4px 8px 8px; }
+    .ah-streak-menu-head .ah-streak-flame{ width:30px; height:30px; color:var(--ah-streak-accent); }
+    .ah-streak-menu.ah-tier-2 .ah-flame-core,
+    .ah-streak-menu.ah-tier-3 .ah-flame-core,
+    .ah-streak-menu.ah-tier-4 .ah-flame-core,
+    .ah-streak-menu.ah-tier-5 .ah-flame-core{ display:block; }
+    .ah-streak-menu-days{ font-size:15px; font-weight:900; line-height:1.2; color:#f2f3f5; }
+    .ah-streak-menu-level{ display:block; font-size:12px; font-weight:700; color:#b5bac1; margin-top:2px; }
+    .ah-streak-menu-level b{ color:var(--ah-streak-accent); font-weight:800; }
+
+    .ah-streak-divider{ height:1px; background:rgba(255,255,255,.08); margin:7px 6px; }
+    .ah-streak-section{ padding:2px 8px 6px; font-size:11px; font-weight:850; letter-spacing:.04em;
+                        text-transform:uppercase; color:#8e949f; display:flex; justify-content:space-between; gap:8px; }
+
+    .ah-streak-chart{ display:flex; align-items:flex-end; gap:4px; height:66px; padding:0 8px; }
+    .ah-streak-col{ flex:1 1 0; height:100%; display:flex; align-items:flex-end; cursor:default; }
+    .ah-streak-bar{
+      width:100%; min-height:3px; border-radius:3px; background:#3f424a;
+      transition: height .3s cubic-bezier(.22,.9,.24,1), background .15s ease;
+    }
+    .ah-streak-col.is-lit .ah-streak-bar{ background:var(--ah-streak-accent); opacity:.82; }
+    .ah-streak-col:hover .ah-streak-bar{ opacity:1; background:#5a5e68; }
+    .ah-streak-col.is-lit:hover .ah-streak-bar{ background:var(--ah-streak-accent); }
+    .ah-streak-col.is-today .ah-streak-bar{ box-shadow:inset 0 0 0 1px rgba(255,255,255,.35); }
+
+    .ah-streak-axis{ display:flex; gap:4px; padding:6px 8px 2px; }
+    .ah-streak-axis span{ flex:1 1 0; text-align:center; font-size:9px; font-weight:800; color:#72767d;
+                          font-variant-numeric:tabular-nums; }
+    .ah-streak-axis span.is-today{ color:#f2f3f5; }
+
+    .ah-streak-row{
+      height:34px; display:flex; align-items:center; justify-content:space-between; gap:12px;
+      padding:0 8px; border-radius:5px; font-size:13px; font-weight:800; color:#dbdee1;
+    }
+    .ah-streak-row b{ color:#f2f3f5; font-weight:900; font-variant-numeric:tabular-nums; }
+    .ah-streak-row.is-ok b{ color:#3ba55d; }
+    .ah-streak-row.is-wait b{ color:#e0863a; }
+
+    .ah-streak-menu .menu-like{
+      width:100%; height:36px; border:0; border-radius:5px; background:transparent; color:#f2f3f5;
+      display:flex; align-items:center; justify-content:space-between; gap:10px; padding:0 8px;
+      font:inherit; font-size:13px; font-weight:800; cursor:pointer; text-align:left;
+    }
+    .ah-streak-menu .menu-like:hover{ background:#35373d; color:#fff; }
+    .ah-streak-menu .menu-like svg{ width:18px; height:18px; fill:none; stroke:currentColor;
+                                    stroke-width:2; stroke-linecap:round; stroke-linejoin:round; color:#b5bac1; }
+    .ah-streak-menu .menu-like:hover svg{ color:#fff; }
+    .ah-streak-foot{ padding:2px 8px 4px; font-size:11px; font-weight:700; color:#72767d; line-height:1.45; }
+
+    @media(max-width:520px){ .ah-streak-menu{ width:calc(100vw - 20px); } }
   </style>
   <script id="ah-message-time-js">
   (function(){
@@ -1953,14 +2045,54 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
         if (!animate) { void countEl.offsetWidth; countEl.classList.remove('ah-no-anim'); }
       }
 
+      // Пороги рівнів вогника -- від більшого до меншого, редагується тут одним місцем.
+      // Кольори живуть у CSS (.ah-tier-1 / .ah-tier-2 / .ah-tier-3).
+      var TIERS = [
+        { min: 100, cls: 'ah-tier-5', label: 'золоте полум\'я' },
+        { min: 50,  cls: 'ah-tier-4', label: 'аметист' },
+        { min: 30,  cls: 'ah-tier-3', label: 'біле полум\'я' },
+        { min: 20,  cls: 'ah-tier-2', label: 'блакитне полум\'я' },
+        { min: 10,  cls: 'ah-tier-1', label: 'жар' },
+        { min: 1,   cls: '',          label: 'вогник' }
+      ];
+      var lastTierCls = null, tierPopReady = false, tierPopTimer = null;
+
+      function tierFor(days){
+        for (var i = 0; i < TIERS.length; i++) if (days >= TIERS[i].min) return TIERS[i];
+        return null;
+      }
+
       function setVisualState(){
         var lit = state.streak > 0;
+        var tier = lit ? tierFor(state.streak) : null;
+        var cls = tier && tier.cls ? tier.cls : '';
+
         badge.classList.toggle('is-cold', !lit);
+        for (var i = 0; i < TIERS.length; i++) if (TIERS[i].cls) badge.classList.remove(TIERS[i].cls);
+        if (cls) badge.classList.add(cls);
         if (flameEl) flameEl.classList.toggle('ah-flame-pulse', lit);
+
+        // пульс рівня -- тільки на живому переході, не на першому рендері
+        if (flameEl && tierPopReady && cls && cls !== lastTierCls) {
+          flameEl.classList.remove('ah-tier-up');
+          void flameEl.offsetWidth;
+          flameEl.classList.add('ah-tier-up');
+          clearTimeout(tierPopTimer);
+          tierPopTimer = setTimeout(function(){ flameEl.classList.remove('ah-tier-up'); }, 640);
+        }
+        lastTierCls = cls;
+        tierPopReady = true;
+
+        // меню вогника слухає цю подію, щоб оновлюватись відкритим
+        document.dispatchEvent(new CustomEvent('ah-streak-change', { detail: {
+          streak: state.streak, todayQualified: state.todayQualified, tier: tier, tiers: TIERS
+        }}));
+
+        var level = tier && tier.label ? ' Рівень: ' + tier.label + '.' : '';
         badge.title = lit
           ? (state.todayQualified
-              ? 'Вогник горить ' + state.streak + ' д. — сьогодні вже підтримано двома різними акаунтами.'
-              : 'Вогник горить ' + state.streak + ' д. Щоб не згас, потрібні повідомлення від 2 різних акаунтів сьогодні.')
+              ? 'Вогник горить ' + state.streak + ' д. — сьогодні вже підтримано двома різними акаунтами.' + level
+              : 'Вогник горить ' + state.streak + ' д. Щоб не згас, потрібні повідомлення від 2 різних акаунтів сьогодні.' + level)
           : 'Напишіть у каналі повідомлення від 2 різних акаунтів сьогодні, щоб запалити вогник.';
       }
 
@@ -1979,11 +2111,226 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
 
       renderDigits(false);
       setVisualState();
-      window.__ahStreakApi = { applyServer: applyServer };
+      window.__ahStreakApi = {
+        applyServer: applyServer,
+        tiers: TIERS,
+        getState: function(){
+          return { streak: state.streak, todayQualified: state.todayQualified, tier: tierFor(state.streak), tiers: TIERS };
+        }
+      };
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ahInitStreak);
     else ahInitStreak();
+  })();
+  </script>
+
+  <script id="ah-streak-menu-js">
+  (function(){
+    if (window.__ahStreakMenu) return;
+
+    var WINDOW_DAYS = 14;                 // скільки днів показує графік
+    var FLAME_SVG =
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+      '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5Z"/>' +
+      '<path class="ah-flame-core" stroke="none" d="M12.2 12.4c1.4 1.3 2.2 2.4 2.2 3.6a2.4 2.4 0 0 1-4.8 0c0-.8.3-1.5.9-2.1.1.7.4 1.1 1 1.2-.2-1 0-1.9.7-2.7Z"/>' +
+      '</svg>';
+
+    var badge, menu, open = false;
+
+    function locale(){
+      try { return window.AlexiHubI18n.locale(); } catch(e){ return 'uk'; }
+    }
+    function plural(n, one, few, many){
+      var a = Math.abs(n) % 100, b = a % 10;
+      if (a > 10 && a < 20) return many;
+      if (b > 1 && b < 5) return few;
+      if (b === 1) return one;
+      return many;
+    }
+    function dayKey(d){ return d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate(); }
+    function parseTime(raw){
+      if (window.AlexiHubMessageTime) return window.AlexiHubMessageTime.parse(raw);
+      var d = new Date(raw); return isNaN(d.getTime()) ? null : d;
+    }
+
+    // Рахуємо з повідомлень, які вже є в DOM цього каналу: окремого ендпоінта
+    // під статистику немає, а завантажена історія дає чесну картину останніх днів.
+    function collect(){
+      var days = [], index = {}, today = new Date();
+      for (var i = WINDOW_DAYS - 1; i >= 0; i--) {
+        var d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
+        var cell = { date: d, count: 0, authors: {}, unique: 0, isToday: i === 0 };
+        days.push(cell); index[dayKey(d)] = cell;
+      }
+      var overall = {}, total = 0;
+      var rows = document.querySelectorAll('#messages article.message');
+      for (var k = 0; k < rows.length; k++) {
+        var row = rows[k];
+        var node = row.querySelector('.message-time, .msg-time');
+        var raw = node ? (node.dataset.messageTimestamp || node.textContent) : '';
+        var when = parseTime(raw);
+        if (!when) continue;
+        var cellRef = index[dayKey(when)];
+        if (!cellRef) continue;
+        var author = row.getAttribute('data-message-author') || '?';
+        cellRef.count++; total++;
+        if (!cellRef.authors[author]) { cellRef.authors[author] = 1; cellRef.unique++; }
+        overall[author] = (overall[author] || 0) + 1;
+      }
+      return { days: days, total: total, people: Object.keys(overall).length };
+    }
+
+    function build(){
+      menu = document.createElement('div');
+      menu.className = 'ah-streak-menu';
+      menu.id = 'ah-streak-menu';
+      menu.setAttribute('role', 'dialog');
+      menu.setAttribute('aria-label', 'Статистика вогника');
+      menu.innerHTML =
+        '<div class="ah-streak-menu-head">' +
+          '<span class="ah-streak-flame" aria-hidden="true">' + FLAME_SVG + '</span>' +
+          '<span><span class="ah-streak-menu-days" id="ah-streak-menu-days"></span>' +
+          '<span class="ah-streak-menu-level" id="ah-streak-menu-level"></span></span>' +
+        '</div>' +
+        '<div class="ah-streak-divider"></div>' +
+        '<div class="ah-streak-section"><span>Активність каналу</span><span id="ah-streak-range"></span></div>' +
+        '<div class="ah-streak-chart" id="ah-streak-chart"></div>' +
+        '<div class="ah-streak-axis" id="ah-streak-axis"></div>' +
+        '<div class="ah-streak-divider"></div>' +
+        '<div id="ah-streak-stats"></div>' +
+        '<div class="ah-streak-divider"></div>' +
+        '<button type="button" class="menu-like" id="ah-streak-help"><span>Як працює вогник</span>' +
+          '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 1 1 5.83 1c0 2-3 2-3 4"/><path d="M12 17h.01"/></svg>' +
+        '</button>' +
+        '<div class="ah-streak-foot">Підсвічені стовпчики — дні, коли писали щонайменше два різні акаунти. Рахується з завантаженої історії каналу.</div>';
+      document.body.appendChild(menu);
+
+      menu.addEventListener('click', function(event){ event.stopPropagation(); });
+      menu.querySelector('#ah-streak-help').addEventListener('click', function(){
+        var text = 'Вогник росте на +1 за кожен день, коли в каналі пишуть щонайменше два різні акаунти. Пропущений день — вогник гасне.';
+        if (typeof showActionToast === 'function') showActionToast(text);
+        close();
+      });
+      return menu;
+    }
+
+    function render(){
+      if (!menu) return;
+      var api = window.__ahStreakApi;
+      var state = api && api.getState ? api.getState() : { streak: 0, todayQualified: false, tier: null, tiers: [] };
+      var tiers = state.tiers || [];
+      var days = state.streak | 0;
+
+      // клас рівня -- щоб великий вогник і стовпчики взяли колір поточного рівня
+      for (var t = 0; t < tiers.length; t++) if (tiers[t].cls) menu.classList.remove(tiers[t].cls);
+      if (state.tier && state.tier.cls) menu.classList.add(state.tier.cls);
+
+      menu.querySelector('#ah-streak-menu-days').textContent = days > 0
+        ? days + ' ' + plural(days, 'день', 'дні', 'днів') + ' поспіль'
+        : 'Вогник згас';
+
+      var next = null;
+      for (var i = 0; i < tiers.length; i++) if (tiers[i].min > days && (!next || tiers[i].min < next.min)) next = tiers[i];
+      var levelEl = menu.querySelector('#ah-streak-menu-level');
+      if (days > 0) {
+        var left = next ? (next.min - days) : 0;
+        levelEl.innerHTML = 'рівень: <b>' + (state.tier ? state.tier.label : 'вогник') + '</b>' +
+          (next ? ' · до «' + next.label + '» ще ' + left + ' ' + plural(left, 'день', 'дні', 'днів') : ' · максимум');
+      } else {
+        levelEl.textContent = 'потрібні повідомлення від двох різних акаунтів';
+      }
+
+      var data = collect();
+      var chart = menu.querySelector('#ah-streak-chart');
+      var axis = menu.querySelector('#ah-streak-axis');
+      var max = 1, best = null;
+      for (var j = 0; j < data.days.length; j++) {
+        if (data.days[j].count > max) max = data.days[j].count;
+        if (!best || data.days[j].count > best.count) best = data.days[j];
+      }
+
+      chart.innerHTML = '';
+      axis.innerHTML = '';
+      data.days.forEach(function(cell){
+        var col = document.createElement('div');
+        col.className = 'ah-streak-col' + (cell.unique >= 2 ? ' is-lit' : '') + (cell.isToday ? ' is-today' : '');
+        var bar = document.createElement('div');
+        bar.className = 'ah-streak-bar';
+        bar.style.height = Math.max(3, Math.round(cell.count / max * 62)) + 'px';
+        col.appendChild(bar);
+        col.title = cell.date.toLocaleDateString(locale(), { day: 'numeric', month: 'long' }) + ' — ' +
+          cell.count + ' ' + plural(cell.count, 'повідомлення', 'повідомлення', 'повідомлень') +
+          ', ' + cell.unique + ' ' + plural(cell.unique, 'учасник', 'учасники', 'учасників');
+        chart.appendChild(col);
+
+        var tick = document.createElement('span');
+        tick.textContent = cell.date.getDate();
+        if (cell.isToday) tick.className = 'is-today';
+        axis.appendChild(tick);
+      });
+
+      menu.querySelector('#ah-streak-range').textContent = WINDOW_DAYS + ' днів';
+
+      var todayCell = data.days[data.days.length - 1];
+      var rows = [
+        ['Повідомлень за ' + WINDOW_DAYS + ' днів', String(data.total), ''],
+        ['Активних учасників', String(data.people), ''],
+        ['Найактивніший день', best && best.count
+          ? best.date.toLocaleDateString(locale(), { day: 'numeric', month: 'short' }) + ' · ' + best.count
+          : '—', '']
+      ];
+      rows.push(state.todayQualified
+        ? ['Сьогодні', 'вогник підтримано', 'is-ok']
+        : ['Сьогодні', todayCell.unique + ' з 2 акаунтів', 'is-wait']);
+
+      menu.querySelector('#ah-streak-stats').innerHTML = rows.map(function(r){
+        return '<div class="ah-streak-row ' + r[2] + '"><span>' + r[0] + '</span><b>' + r[1] + '</b></div>';
+      }).join('');
+    }
+
+    function place(){
+      var r = badge.getBoundingClientRect();
+      menu.style.visibility = 'hidden';
+      menu.classList.add('ah-open');
+      var box = menu.getBoundingClientRect();
+      var left = Math.min(Math.max(8, r.left), window.innerWidth - box.width - 8);
+      var top = r.bottom + 6;
+      if (top + box.height > window.innerHeight - 8) top = Math.max(8, r.top - box.height - 6);
+      menu.style.left = Math.round(left) + 'px';
+      menu.style.top = Math.round(top) + 'px';
+      menu.style.visibility = 'visible';
+    }
+
+    function show(){
+      if (!menu) build();
+      open = true;
+      menu.style.visibility = 'hidden';   // рендеримо й міряємо до появи, щоб не було стрибка
+      render();
+      place();
+      badge.setAttribute('aria-expanded', 'true');
+    }
+    function close(){
+      if (!open) return;
+      open = false;
+      if (menu) menu.classList.remove('ah-open');
+      badge.setAttribute('aria-expanded', 'false');
+    }
+    function toggle(){ open ? close() : show(); }
+
+    function init(){
+      badge = document.getElementById('ah-streak-badge');
+      if (!badge) return;
+      badge.addEventListener('click', function(event){ event.stopPropagation(); toggle(); });
+      document.addEventListener('click', function(){ close(); });
+      document.addEventListener('keydown', function(event){ if (event.key === 'Escape') close(); });
+      window.addEventListener('resize', close);
+      document.addEventListener('ah-streak-change', function(){ if (open) render(); });
+      window.__ahStreakMenu = { show: show, close: close, toggle: toggle, render: render };
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
   })();
   </script>
   <aside class="server-rail">
@@ -2001,22 +2348,14 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
 
   <div class="topbar discord-channel-topbar">
     <div class="discord-title-left">
-      <div class="ah-streak-badge is-cold" id="ah-streak-badge" title="">
+      <button type="button" class="ah-streak-badge is-cold" id="ah-streak-badge" title="" aria-haspopup="dialog" aria-expanded="false" aria-controls="ah-streak-menu">
         <span class="ah-streak-flame" aria-hidden="true">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <linearGradient id="ahFlameGrad" x1="4" y1="21" x2="19" y2="3" gradientUnits="userSpaceOnUse">
-                <stop offset="0" stop-color="#ff4d1c"/>
-                <stop offset=".55" stop-color="#ff9a1f"/>
-                <stop offset="1" stop-color="#ffd23f"/>
-              </linearGradient>
-            </defs>
-            <path fill="url(#ahFlameGrad)" d="M12.6 1.8c.5 2.9-.6 4.6-2.3 6.3C8.4 10 6.4 12.2 6.4 15.6a5.9 5.9 0 0 0 11.8 0c0-2.4-.9-4.1-2-5.5-.4-.5-1.1-.1-1 .5.4 2-.6 3.5-2 3.5-1.5 0-2.3-1.5-1.9-3.2.4-1.9 2.1-3 2.1-5.3 0-1.5-.7-2.8-1.6-3.8-.3-.4-1-.1-.9.5.2 1.3-.3 2.3-1.2 3.2C7.6 7.5 5.6 9.7 5.6 12.9a7.3 7.3 0 0 0 14.6 0"/>
-            <path fill="#fff4d6" opacity=".9" d="M12.1 10.2c-1.1 1.5-2.3 2.8-2.3 4.6a2.4 2.4 0 0 0 4.8 0c0-.8-.3-1.4-.6-1.9 0 .7-.4 1.1-.9 1.1-.6 0-.9-.5-.8-1.1.2-.7.8-1.1.8-1.9 0-.3 0-.5-.1-.8Z"/>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5Z"/>
           </svg>
         </span>
         <span class="ah-streak-count" id="ah-streak-count" aria-live="polite"></span>
-      </div>
+      </button>
       <span class="discord-hash">#</span>
       <span class="discord-channel-name">{{ channel.name }}</span>
       <span class="discord-channel-topic">{{ channel.description or i18n_t('server.channel.default_description') }}</span>
