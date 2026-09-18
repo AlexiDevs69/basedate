@@ -79,7 +79,18 @@
     .message-image { margin-top:.55rem; max-width:min(520px, 100%); border-radius:8px; display:block; border:1px solid var(--border); }
     .message-image-group { display:flex; flex-wrap:wrap; gap:.4rem; max-width:min(520px, 100%); }
     .message-image-group .message-image { margin-top:.55rem; max-width:100%; }
-    .message-image-group:has(.message-image ~ .message-image) .message-image { max-width:160px; max-height:160px; object-fit:cover; flex:0 0 auto; }
+    /* Several images in one message: one image at a time, dots below, swipe left/right */
+    .message-image-group.ah-carousel { display:block; width:min(520px, 100%); max-width:100%; }
+    .ah-carousel-track { display:flex; overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory; scrollbar-width:none; overscroll-behavior-x:contain; -webkit-overflow-scrolling:touch; user-select:none; -webkit-user-select:none; cursor:grab; outline:none; background:#111214; border:1px solid var(--border); border-radius:10px; height:340px; max-height:60vh; }
+    .ah-carousel-track::-webkit-scrollbar { display:none; }
+    .ah-carousel-track.no-snap { scroll-snap-type:none; }
+    .ah-carousel-track.dragging { cursor:grabbing; }
+    .message-image-group.ah-carousel .ah-carousel-track { margin-top:.55rem; }
+    .message-image-group.ah-carousel .ah-carousel-track .message-image { flex:0 0 100%; width:100%; max-width:none; height:100%; margin:0; border:0; border-radius:0; object-fit:contain; scroll-snap-align:center; scroll-snap-stop:always; -webkit-user-drag:none; }
+    .ah-carousel-dots { display:flex; justify-content:center; align-items:center; gap:6px; margin-top:8px; min-height:8px; }
+    .ah-carousel .ah-carousel-dot { position:relative; flex:0 0 auto; width:7px; height:7px; min-width:0; padding:0; margin:0; border:0; border-radius:50%; background:#4e5058; cursor:pointer; transition:background .15s, transform .15s; }
+    .ah-carousel .ah-carousel-dot::after { content:''; position:absolute; inset:-6px; }
+    .ah-carousel .ah-carousel-dot.active { background:#00C4B4; transform:scale(1.2); }
     .message-actions { position:absolute; right:.55rem; top:-.45rem; display:none; align-items:center; gap:.25rem; padding:.18rem; background:#151515; border:1px solid var(--border); border-radius:8px; box-shadow:0 8px 20px rgba(0,0,0,.32); }
     .message:hover .message-actions { display:flex; }
     .mini-action { width:28px; height:26px; border:none; background:transparent; color:var(--text-secondary); border-radius:6px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:.78rem; padding:0; }
@@ -1012,9 +1023,12 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
 .composer-upload-item.is-uploading .composer-upload-spinner{display:flex!important}
 .composer-upload-item button{position:absolute!important;top:-7px!important;right:-7px!important;width:22px!important;height:22px!important;border-radius:50%!important;background:#3a3c45!important;color:#dbdee1!important;border:2px solid #202127!important;display:grid!important;place-items:center!important;font-weight:900!important;cursor:pointer!important;padding:0!important;font-size:13px!important;line-height:1!important;}
 .composer-upload-item button:hover{background:#da373c!important;color:#fff!important}
-.composer-upload-add{width:76px!important;height:76px!important;border-radius:10px!important;border:1.5px dashed #4a4d55!important;background:transparent!important;color:#949ba4!important;display:grid!important;place-items:center!important;cursor:pointer!important;font-size:26px!important;font-weight:600!important;flex:0 0 auto!important;}
-.composer-upload-add:hover{border-color:#00C4B4!important;color:#00C4B4!important}
-.composer-upload-count{width:100%!important;color:#949ba4!important;font-size:11px!important;font-weight:750!important;padding-top:2px!important;}
+/* Several attached images: one big preview, dots below, swipe left/right */
+.composer-upload-carousel{width:min(320px,100%)!important;flex:0 0 auto!important;}
+.composer-upload-carousel .ah-carousel-track{height:220px!important;margin-top:0!important;}
+.composer-upload-carousel .composer-upload-item{flex:0 0 100%!important;width:100%!important;height:100%!important;scroll-snap-align:center;scroll-snap-stop:always;}
+.composer-upload-carousel .composer-upload-item img{width:100%!important;height:100%!important;border-radius:0!important;border:0!important;object-fit:contain!important;-webkit-user-drag:none;}
+.composer-upload-carousel .composer-upload-item button{top:8px!important;right:8px!important;}
 
 
 
@@ -2541,7 +2555,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
           </div>
           {% endif %}
           <div class="message-content" id="content-{{ item.message.id }}"><span class="message-content-text">{{ item.message.content }}</span><span class="message-edited {{ '' if item.message.edited_at else 'hidden' }}" id="edited-{{ item.message.id }}"><!--i18n:common.label.modified-->{{ i18n_t('common.label.modified') }}</span></div>
-          {% if item.message.image_url %}<div class="message-image-group">{% for img_url in item.message.image_url.split('\n') %}{% if img_url.strip() %}<img src="{{ img_url.strip() }}" class="message-image" alt="">{% endif %}{% endfor %}</div>{% endif %}
+          {% if item.message.image_url %}{% set msg_imgs = item.message.image_url.split('\n')|map('trim')|select|list %}{% if msg_imgs|length > 1 %}<div class="message-image-group ah-carousel"><div class="ah-carousel-track" tabindex="0">{% for img_url in msg_imgs %}<img src="{{ img_url }}" class="message-image" alt="" draggable="false">{% endfor %}</div><div class="ah-carousel-dots">{% for img_url in msg_imgs %}<button type="button" class="ah-carousel-dot{% if loop.first %} active{% endif %}" aria-label="{{ loop.index }}"></button>{% endfor %}</div></div>{% elif msg_imgs %}<div class="message-image-group"><img src="{{ msg_imgs[0] }}" class="message-image" alt=""></div>{% endif %}{% endif %}
 
           {% if is_mine and not is_forwarded %}
           <form id="edit-form-{{ item.message.id }}" class="edit-form" method="post" action="/community/servers/{{ server.id }}/channel/{{ channel.id }}/message/{{ item.message.id }}/edit">
@@ -3361,6 +3375,7 @@ function openChannelInviteModal(event, btn) {
       // image_url field/column can carry more than one URL without a backend change.
       imageInput.value = urls.join('\n');
     }
+    var composerActiveIndex = 0;
     function renderUploadPreview() {
       if (!composerUploadPreview) return;
       if (!composerImages.length) {
@@ -3368,31 +3383,56 @@ function openChannelInviteModal(event, btn) {
         composerUploadPreview.classList.remove('open');
         return;
       }
-      var html = composerImages.map(function (img) {
+      function itemHtml(img) {
         var src = img.uploading ? img.previewUrl : (img.url || img.previewUrl);
         return '<div class="composer-upload-item' + (img.uploading ? ' is-uploading' : '') + '" data-local-id="' + img.localId + '">'
-          + '<img src="' + String(src || '').replace(/"/g, '&quot;') + '" alt="">'
+          + '<img src="' + String(src || '').replace(/"/g, '&quot;') + '" alt="" draggable="false">'
           + '<span class="composer-upload-spinner">' + window.AlexiHubI18n.t("server_channel.text.mending_the_picture") + '</span>'
           + '<button type="button" onclick="removeComposerImage(\'' + img.localId + '\')" aria-label="×">×</button>'
           + '</div>';
-      }).join('');
-      if (composerImages.length < COMPOSER_MAX_IMAGES) {
-        html += '<button type="button" class="composer-upload-add" onclick="triggerComposerUpload(event)" title="' + window.AlexiHubI18n.t("server_channel.text.send_photo_upload") + '">+</button>';
       }
-      html += '<span class="composer-upload-count">' + composerImages.length + ' / ' + COMPOSER_MAX_IMAGES + '</span>';
+      var many = composerImages.length > 1;
+      composerActiveIndex = Math.max(0, Math.min(composerActiveIndex, composerImages.length - 1));
+      var html;
+      if (!many) {
+        html = itemHtml(composerImages[0]);
+      } else {
+        html = '<div class="composer-upload-carousel ah-carousel">'
+          + '<div class="ah-carousel-track" tabindex="0">' + composerImages.map(itemHtml).join('') + '</div>'
+          + '<div class="ah-carousel-dots">' + composerImages.map(function (img, i) {
+              return '<button type="button" class="ah-carousel-dot' + (i === composerActiveIndex ? ' active' : '') + '" aria-label="' + (i + 1) + '"></button>';
+            }).join('') + '</div>'
+          + '</div>';
+      }
       composerUploadPreview.innerHTML = html;
       composerUploadPreview.classList.add('open');
+      if (many) {
+        var track = composerUploadPreview.querySelector('.ah-carousel-track');
+        if (track) track.scrollLeft = composerActiveIndex * track.clientWidth;
+      }
+    }
+    // Remember which slide is showing so re-renders (upload finished, image removed) don't jump back to the first one.
+    if (composerUploadPreview) {
+      composerUploadPreview.addEventListener('scroll', function (e) {
+        var t = e.target;
+        if (!t || !t.classList || !t.classList.contains('ah-carousel-track')) return;
+        composerActiveIndex = Math.max(0, Math.min(composerImages.length - 1, Math.round(t.scrollLeft / (t.clientWidth || 1))));
+      }, true);
     }
     function removeComposerImage(localId) {
-      var target = composerImages.find(function (img) { return img.localId === localId; });
+      var idx = composerImages.findIndex(function (img) { return img.localId === localId; });
+      var target = composerImages[idx];
       if (target && target.previewUrl) { try { URL.revokeObjectURL(target.previewUrl); } catch (e) {} }
       composerImages = composerImages.filter(function (img) { return img.localId !== localId; });
+      if (idx !== -1 && idx < composerActiveIndex) composerActiveIndex--;
+      composerActiveIndex = Math.max(0, Math.min(composerActiveIndex, composerImages.length - 1));
       syncComposerImageInput();
       renderUploadPreview();
     }
     function clearComposerImage() {
       composerImages.forEach(function (img) { if (img.previewUrl) { try { URL.revokeObjectURL(img.previewUrl); } catch (e) {} } });
       composerImages = [];
+      composerActiveIndex = 0;
       if (imageInput) imageInput.value = '';
       if (composerFileInput) composerFileInput.value = '';
       renderUploadPreview();
@@ -3406,6 +3446,7 @@ function openChannelInviteModal(event, btn) {
       var previewUrl = URL.createObjectURL(file);
       var entry = { localId: localId, url: '', previewUrl: previewUrl, uploading: true };
       composerImages.push(entry);
+      composerActiveIndex = composerImages.length - 1;
       renderUploadPreview();
       var fd = new FormData();
       fd.append('file', file);
@@ -3437,6 +3478,64 @@ function openChannelInviteModal(event, btn) {
       });
     }
     document.addEventListener('click', function(e){ if (composerPlusMenu && !e.target.closest('#composer-plus-menu') && !e.target.closest('#composer-plus-btn')) closeComposerPlus(); }, true);
+
+    // Image carousels (composer preview + sent messages): dots follow the scroll position,
+    // dots are clickable, touch/trackpad swipe is native scroll-snap, mouse gets drag-to-swipe.
+    (function initImageCarousels() {
+      function trackIndex(track) { return Math.round(track.scrollLeft / (track.clientWidth || 1)); }
+      function goTo(track, i) {
+        i = Math.max(0, Math.min(track.children.length - 1, i));
+        track.scrollTo({ left: i * track.clientWidth, behavior: 'smooth' });
+      }
+      document.addEventListener('scroll', function (e) {
+        var t = e.target;
+        if (!t || !t.classList || !t.classList.contains('ah-carousel-track')) return;
+        var root = t.closest('.ah-carousel');
+        if (!root) return;
+        var active = trackIndex(t);
+        root.querySelectorAll('.ah-carousel-dot').forEach(function (dot, n) { dot.classList.toggle('active', n === active); });
+      }, true);
+      document.addEventListener('click', function (e) {
+        var dot = e.target.closest ? e.target.closest('.ah-carousel-dot') : null;
+        if (!dot) return;
+        var root = dot.closest('.ah-carousel');
+        var track = root && root.querySelector('.ah-carousel-track');
+        if (!track) return;
+        goTo(track, Array.prototype.indexOf.call(root.querySelectorAll('.ah-carousel-dot'), dot));
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+        var track = e.target.closest ? e.target.closest('.ah-carousel-track') : null;
+        if (!track) return;
+        e.preventDefault();
+        goTo(track, trackIndex(track) + (e.key === 'ArrowRight' ? 1 : -1));
+      });
+      var drag = null;
+      document.addEventListener('pointerdown', function (e) {
+        if (e.pointerType !== 'mouse' || e.button !== 0) return;
+        var track = e.target.closest ? e.target.closest('.ah-carousel-track') : null;
+        if (!track || e.target.closest('button')) return;
+        clearTimeout(track._snapTimer);
+        track.classList.add('dragging', 'no-snap');
+        drag = { track: track, x: e.clientX, start: trackIndex(track), left: track.scrollLeft };
+      });
+      document.addEventListener('pointermove', function (e) {
+        if (drag) drag.track.scrollLeft = drag.left - (e.clientX - drag.x);
+      });
+      document.addEventListener('selectstart', function (e) { if (drag) e.preventDefault(); });
+      function endDrag(e) {
+        if (!drag) return;
+        var t = drag.track, w = t.clientWidth || 1, dx = e.clientX - drag.x, i = drag.start;
+        if (dx < -w * 0.12) i++; else if (dx > w * 0.12) i--;
+        drag = null;
+        t.classList.remove('dragging');
+        goTo(t, i);
+        clearTimeout(t._snapTimer);
+        t._snapTimer = setTimeout(function () { t.classList.remove('no-snap'); }, 450);
+      }
+      document.addEventListener('pointerup', endDrag);
+      document.addEventListener('pointercancel', endDrag);
+    })();
 
     // Drag-and-drop: drop an image file anywhere on the channel pane to attach it.
     var channelMain = document.getElementById('channel-main');
@@ -3561,6 +3660,40 @@ function openChannelInviteModal(event, btn) {
       return line;
     }
 
+    // One image -> plain image. Several -> carousel (one image, dots below, swipe).
+    function buildImageGroup(urlString) {
+      var urls = String(urlString || '').split('\n').map(function (u) { return u.trim(); }).filter(Boolean);
+      if (!urls.length) return null;
+      var group = document.createElement('div');
+      group.className = 'message-image-group';
+      function makeImg(u) {
+        var img = document.createElement('img');
+        img.className = 'message-image';
+        img.alt = '';
+        img.src = u;
+        return img;
+      }
+      if (urls.length === 1) { group.appendChild(makeImg(urls[0])); return group; }
+      group.classList.add('ah-carousel');
+      var track = document.createElement('div');
+      track.className = 'ah-carousel-track';
+      track.tabIndex = 0;
+      var dots = document.createElement('div');
+      dots.className = 'ah-carousel-dots';
+      urls.forEach(function (u, i) {
+        var img = makeImg(u);
+        img.draggable = false;
+        track.appendChild(img);
+        var dot = document.createElement('button');
+        dot.type = 'button';
+        dot.className = 'ah-carousel-dot' + (i === 0 ? ' active' : '');
+        dot.setAttribute('aria-label', String(i + 1));
+        dots.appendChild(dot);
+      });
+      group.appendChild(track);
+      group.appendChild(dots);
+      return group;
+    }
     function appendMessage(msg, author) {
       if (!messagesEl || document.getElementById('message-' + msg.id)) return;
       var shouldStick = scrollIfNearBottom();
@@ -3631,18 +3764,8 @@ function openChannelInviteModal(event, btn) {
       body.appendChild(content);
 
       if (msg.image_url) {
-        var imgGroup = document.createElement('div');
-        imgGroup.className = 'message-image-group';
-        String(msg.image_url).split('\n').forEach(function (oneUrl) {
-          oneUrl = oneUrl.trim();
-          if (!oneUrl) return;
-          var img = document.createElement('img');
-          img.className = 'message-image';
-          img.alt = '';
-          img.src = oneUrl;
-          imgGroup.appendChild(img);
-        });
-        body.appendChild(imgGroup);
+        var imgGroup = buildImageGroup(msg.image_url);
+        if (imgGroup) body.appendChild(imgGroup);
       }
 
       if (author.id === myAccountId && !isForwarded) {
