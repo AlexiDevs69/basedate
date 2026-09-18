@@ -80,13 +80,14 @@
     .message-image-group { display:flex; flex-wrap:wrap; gap:.4rem; max-width:min(520px, 100%); }
     .message-image-group .message-image { margin-top:.55rem; max-width:100%; }
     /* Several images in one message: one image at a time, dots below, swipe left/right */
-    .message-image-group.ah-carousel { display:block; width:min(520px, 100%); max-width:100%; }
-    .ah-carousel-track { display:flex; overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory; scrollbar-width:none; overscroll-behavior-x:contain; -webkit-overflow-scrolling:touch; user-select:none; -webkit-user-select:none; cursor:grab; outline:none; background:#111214; border:1px solid var(--border); border-radius:10px; height:340px; max-height:60vh; }
+    .message-image-group.ah-carousel { --ah-carousel-h:min(340px, 60vh); display:block; width:min(520px, 100%); max-width:100%; }
+    .ah-carousel-track { display:flex; overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory; scrollbar-width:none; overscroll-behavior-x:contain; -webkit-overflow-scrolling:touch; user-select:none; -webkit-user-select:none; cursor:grab; outline:none; height:var(--ah-carousel-h, 340px); }
     .ah-carousel-track::-webkit-scrollbar { display:none; }
     .ah-carousel-track.no-snap { scroll-snap-type:none; }
     .ah-carousel-track.dragging { cursor:grabbing; }
     .message-image-group.ah-carousel .ah-carousel-track { margin-top:.55rem; }
-    .message-image-group.ah-carousel .ah-carousel-track .message-image { flex:0 0 100%; width:100%; max-width:none; height:100%; margin:0; border:0; border-radius:0; object-fit:contain; scroll-snap-align:center; scroll-snap-stop:always; -webkit-user-drag:none; }
+    .ah-carousel-slide { flex:0 0 100%; min-width:0; display:flex; align-items:center; justify-content:center; scroll-snap-align:center; scroll-snap-stop:always; }
+    .message-image-group.ah-carousel .ah-carousel-slide .message-image { margin:0; width:auto; height:auto; max-width:100%; max-height:var(--ah-carousel-h); border:0; border-radius:10px; object-fit:contain; -webkit-user-drag:none; }
     .ah-carousel-dots { display:flex; justify-content:center; align-items:center; gap:6px; margin-top:8px; min-height:8px; }
     .ah-carousel .ah-carousel-dot { position:relative; flex:0 0 auto; width:7px; height:7px; min-width:0; padding:0; margin:0; border:0; border-radius:50%; background:#4e5058; cursor:pointer; transition:background .15s, transform .15s; }
     .ah-carousel .ah-carousel-dot::after { content:''; position:absolute; inset:-6px; }
@@ -1023,11 +1024,14 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
 .composer-upload-item.is-uploading .composer-upload-spinner{display:flex!important}
 .composer-upload-item button{position:absolute!important;top:-7px!important;right:-7px!important;width:22px!important;height:22px!important;border-radius:50%!important;background:#3a3c45!important;color:#dbdee1!important;border:2px solid #202127!important;display:grid!important;place-items:center!important;font-weight:900!important;cursor:pointer!important;padding:0!important;font-size:13px!important;line-height:1!important;}
 .composer-upload-item button:hover{background:#da373c!important;color:#fff!important}
-/* Several attached images: one big preview, dots below, swipe left/right */
-.composer-upload-carousel{width:min(320px,100%)!important;flex:0 0 auto!important;}
-.composer-upload-carousel .ah-carousel-track{height:220px!important;margin-top:0!important;}
-.composer-upload-carousel .composer-upload-item{flex:0 0 100%!important;width:100%!important;height:100%!important;scroll-snap-align:center;scroll-snap-stop:always;}
-.composer-upload-carousel .composer-upload-item img{width:100%!important;height:100%!important;border-radius:0!important;border:0!important;object-fit:contain!important;-webkit-user-drag:none;}
+/* Several attached images: just the photo (no card/frame), dots below, swipe left/right */
+.composer-upload-preview.has-carousel{background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;}
+.composer-upload-carousel{--ah-carousel-h:220px;width:min(320px,100%)!important;flex:0 0 auto!important;}
+.composer-upload-carousel .ah-carousel-track{height:var(--ah-carousel-h)!important;margin-top:0!important;border:0!important;background:transparent!important;border-radius:0!important;}
+.composer-upload-carousel .composer-upload-item{flex:0 0 100%!important;width:100%!important;height:100%!important;display:flex!important;align-items:center;justify-content:center;scroll-snap-align:center;scroll-snap-stop:always;}
+.composer-upload-frame{position:relative;display:inline-flex;max-width:100%;}
+.composer-upload-carousel .composer-upload-item img{width:auto!important;height:auto!important;max-width:100%!important;max-height:var(--ah-carousel-h)!important;border-radius:10px!important;border:0!important;object-fit:contain!important;-webkit-user-drag:none;}
+.composer-upload-carousel .composer-upload-item .composer-upload-spinner{border-radius:10px!important;}
 .composer-upload-carousel .composer-upload-item button{top:8px!important;right:8px!important;}
 
 
@@ -2555,7 +2559,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
           </div>
           {% endif %}
           <div class="message-content" id="content-{{ item.message.id }}"><span class="message-content-text">{{ item.message.content }}</span><span class="message-edited {{ '' if item.message.edited_at else 'hidden' }}" id="edited-{{ item.message.id }}"><!--i18n:common.label.modified-->{{ i18n_t('common.label.modified') }}</span></div>
-          {% if item.message.image_url %}{% set msg_imgs = item.message.image_url.split('\n')|map('trim')|select|list %}{% if msg_imgs|length > 1 %}<div class="message-image-group ah-carousel"><div class="ah-carousel-track" tabindex="0">{% for img_url in msg_imgs %}<img src="{{ img_url }}" class="message-image" alt="" draggable="false">{% endfor %}</div><div class="ah-carousel-dots">{% for img_url in msg_imgs %}<button type="button" class="ah-carousel-dot{% if loop.first %} active{% endif %}" aria-label="{{ loop.index }}"></button>{% endfor %}</div></div>{% elif msg_imgs %}<div class="message-image-group"><img src="{{ msg_imgs[0] }}" class="message-image" alt=""></div>{% endif %}{% endif %}
+          {% if item.message.image_url %}{% set msg_imgs = item.message.image_url.split('\n')|map('trim')|select|list %}{% if msg_imgs|length > 1 %}<div class="message-image-group ah-carousel"><div class="ah-carousel-track" tabindex="0">{% for img_url in msg_imgs %}<div class="ah-carousel-slide"><img src="{{ img_url }}" class="message-image" alt="" draggable="false"></div>{% endfor %}</div><div class="ah-carousel-dots">{% for img_url in msg_imgs %}<button type="button" class="ah-carousel-dot{% if loop.first %} active{% endif %}" aria-label="{{ loop.index }}"></button>{% endfor %}</div></div>{% elif msg_imgs %}<div class="message-image-group"><img src="{{ msg_imgs[0] }}" class="message-image" alt=""></div>{% endif %}{% endif %}
 
           {% if is_mine and not is_forwarded %}
           <form id="edit-form-{{ item.message.id }}" class="edit-form" method="post" action="/community/servers/{{ server.id }}/channel/{{ channel.id }}/message/{{ item.message.id }}/edit">
@@ -3380,25 +3384,26 @@ function openChannelInviteModal(event, btn) {
       if (!composerUploadPreview) return;
       if (!composerImages.length) {
         composerUploadPreview.innerHTML = '';
-        composerUploadPreview.classList.remove('open');
+        composerUploadPreview.classList.remove('open', 'has-carousel');
         return;
       }
-      function itemHtml(img) {
+      function itemHtml(img, framed) {
         var src = img.uploading ? img.previewUrl : (img.url || img.previewUrl);
-        return '<div class="composer-upload-item' + (img.uploading ? ' is-uploading' : '') + '" data-local-id="' + img.localId + '">'
-          + '<img src="' + String(src || '').replace(/"/g, '&quot;') + '" alt="" draggable="false">'
+        var inner = '<img src="' + String(src || '').replace(/"/g, '&quot;') + '" alt="" draggable="false">'
           + '<span class="composer-upload-spinner">' + window.AlexiHubI18n.t("server_channel.text.mending_the_picture") + '</span>'
-          + '<button type="button" onclick="removeComposerImage(\'' + img.localId + '\')" aria-label="×">×</button>'
-          + '</div>';
+          + '<button type="button" onclick="removeComposerImage(\'' + img.localId + '\')" aria-label="×">×</button>';
+        // In the carousel the button/spinner hug the photo itself, so wrap it in a shrink-to-fit frame.
+        if (framed) inner = '<div class="composer-upload-frame">' + inner + '</div>';
+        return '<div class="composer-upload-item' + (img.uploading ? ' is-uploading' : '') + '" data-local-id="' + img.localId + '">' + inner + '</div>';
       }
       var many = composerImages.length > 1;
       composerActiveIndex = Math.max(0, Math.min(composerActiveIndex, composerImages.length - 1));
       var html;
       if (!many) {
-        html = itemHtml(composerImages[0]);
+        html = itemHtml(composerImages[0], false);
       } else {
         html = '<div class="composer-upload-carousel ah-carousel">'
-          + '<div class="ah-carousel-track" tabindex="0">' + composerImages.map(itemHtml).join('') + '</div>'
+          + '<div class="ah-carousel-track" tabindex="0">' + composerImages.map(function (img) { return itemHtml(img, true); }).join('') + '</div>'
           + '<div class="ah-carousel-dots">' + composerImages.map(function (img, i) {
               return '<button type="button" class="ah-carousel-dot' + (i === composerActiveIndex ? ' active' : '') + '" aria-label="' + (i + 1) + '"></button>';
             }).join('') + '</div>'
@@ -3406,6 +3411,7 @@ function openChannelInviteModal(event, btn) {
       }
       composerUploadPreview.innerHTML = html;
       composerUploadPreview.classList.add('open');
+      composerUploadPreview.classList.toggle('has-carousel', many);
       if (many) {
         var track = composerUploadPreview.querySelector('.ah-carousel-track');
         if (track) track.scrollLeft = composerActiveIndex * track.clientWidth;
@@ -3683,7 +3689,10 @@ function openChannelInviteModal(event, btn) {
       urls.forEach(function (u, i) {
         var img = makeImg(u);
         img.draggable = false;
-        track.appendChild(img);
+        var slide = document.createElement('div');
+        slide.className = 'ah-carousel-slide';
+        slide.appendChild(img);
+        track.appendChild(slide);
         var dot = document.createElement('button');
         dot.type = 'button';
         dot.className = 'ah-carousel-dot' + (i === 0 ? ' active' : '');
