@@ -443,9 +443,39 @@
 .dm-plus-menu.open{display:block;animation:dmMenuPop .13s ease-out}@keyframes dmMenuPop{from{opacity:0;transform:translateY(6px) scale(.98)}to{opacity:1;transform:none}}
 .dm-plus-menu button{width:100%!important;height:40px!important;border:0!important;border-radius:6px!important;background:transparent!important;color:#dbdee1!important;display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:10px!important;padding:0 10px!important;font-weight:800!important;font-size:13px!important;cursor:pointer!important;text-align:left!important;}
 .dm-plus-menu button:hover{background:#3a3c45!important;color:#fff!important}.dm-plus-menu svg{width:18px;height:18px;color:#b5bac1;flex:0 0 auto}
-.attachment-preview{display:none;margin:0 0 8px 0;background:#202127;border:1px solid #31343c;border-radius:12px;padding:10px;align-items:flex-start;gap:12px;box-shadow:0 8px 26px rgba(0,0,0,.22);max-width:360px;}
-.attachment-preview.open{display:flex}.attachment-preview img{width:84px;height:84px;border-radius:10px;object-fit:cover;background:#111;border:1px solid rgba(255,255,255,.08)}
-.attachment-preview .attach-meta{min-width:0;display:grid;gap:3px;padding-top:3px}.attachment-preview .attach-title{font-weight:900;color:#fff}.attachment-preview .attach-sub{font-size:12px;color:#b5bac1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}.attachment-preview .attach-remove{margin-left:auto!important;width:28px!important;height:28px!important;border-radius:50%!important;background:#3a3c45!important;color:#dbdee1!important;border:0!important;display:grid!important;place-items:center!important;font-weight:900!important;cursor:pointer!important}.attachment-preview .attach-remove:hover{background:#da373c!important;color:#fff!important}
+/* ===== DM attachments: several photos (up to 10), same look as server channels ===== */
+/* Photos inside a sent message: one at a time, dots below, swipe left/right */
+.msg-image-group.ah-carousel{--ah-carousel-h:min(340px,60vh);display:block;width:min(440px,100%);max-width:100%;margin-top:8px}
+.ah-carousel-track { display:flex; overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory; scrollbar-width:none; overscroll-behavior-x:contain; -webkit-overflow-scrolling:touch; user-select:none; -webkit-user-select:none; cursor:grab; outline:none; height:var(--ah-carousel-h, 340px); }
+.ah-carousel-track::-webkit-scrollbar { display:none; }
+.ah-carousel-track.no-snap { scroll-snap-type:none; }
+.ah-carousel-track.dragging { cursor:grabbing; }
+.ah-carousel-slide { flex:0 0 100%; min-width:0; display:flex; align-items:center; justify-content:center; scroll-snap-align:center; scroll-snap-stop:always; }
+.ah-carousel-dots { display:flex; justify-content:center; align-items:center; gap:6px; margin-top:8px; min-height:8px; }
+.ah-carousel .ah-carousel-dot { position:relative; flex:0 0 auto; width:7px; height:7px; min-width:0; padding:0; margin:0; border:0; border-radius:50%; background:#4e5058; cursor:pointer; transition:background .15s, transform .15s; }
+.ah-carousel .ah-carousel-dot::after { content:''; position:absolute; inset:-6px; }
+.ah-carousel .ah-carousel-dot.active { background:#00C4B4; transform:scale(1.2); }
+.msg-image-group.ah-carousel .ah-carousel-track{margin-top:0}
+.msg-image-group.ah-carousel .ah-carousel-slide .msg-img{margin:0!important;width:auto;height:auto;max-width:100%!important;max-height:var(--ah-carousel-h)!important;border:0;border-radius:10px;object-fit:contain!important;-webkit-user-drag:none}
+/* Preview before sending */
+.composer-upload-preview{display:none!important;margin:0 0 8px 0!important;border-top:0!important;background:#202127!important;border:1px solid #31343c!important;border-radius:12px!important;padding:10px!important;align-items:flex-start!important;flex-wrap:wrap!important;gap:10px!important;max-width:100%!important;box-shadow:0 8px 26px rgba(0,0,0,.22)!important;}
+.composer-upload-preview.open{display:flex!important}
+.composer-upload-item{position:relative!important;flex:0 0 auto!important;}
+.composer-upload-item img{display:block!important;width:76px!important;height:76px!important;border-radius:10px!important;object-fit:cover!important;background:#111!important;border:1px solid rgba(255,255,255,.08)!important}
+.composer-upload-item.is-uploading img{opacity:.5!important}
+.composer-upload-item .composer-upload-spinner{position:absolute!important;inset:0!important;display:none!important;align-items:center!important;justify-content:center!important;color:#dbdee1!important;font-size:11px!important;font-weight:800!important;text-align:center!important;}
+.composer-upload-item.is-uploading .composer-upload-spinner{display:flex!important}
+.composer-upload-item button{position:absolute!important;top:-7px!important;right:-7px!important;width:22px!important;height:22px!important;border-radius:50%!important;background:#3a3c45!important;color:#dbdee1!important;border:2px solid #202127!important;display:grid!important;place-items:center!important;font-weight:900!important;cursor:pointer!important;padding:0!important;font-size:13px!important;line-height:1!important;}
+.composer-upload-item button:hover{background:#da373c!important;color:#fff!important}
+/* Several attached images: just the photo (no card/frame), dots below, swipe left/right */
+.composer-upload-preview.has-carousel{background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;}
+.composer-upload-carousel{--ah-carousel-h:220px;width:min(320px,100%)!important;flex:0 0 auto!important;}
+.composer-upload-carousel .ah-carousel-track{height:var(--ah-carousel-h)!important;margin-top:0!important;border:0!important;background:transparent!important;border-radius:0!important;}
+.composer-upload-carousel .composer-upload-item{flex:0 0 100%!important;width:100%!important;height:100%!important;display:flex!important;align-items:center;justify-content:center;scroll-snap-align:center;scroll-snap-stop:always;}
+.composer-upload-frame{position:relative;display:inline-flex;max-width:100%;}
+.composer-upload-carousel .composer-upload-item img{width:auto!important;height:auto!important;max-width:100%!important;max-height:var(--ah-carousel-h)!important;border-radius:10px!important;border:0!important;object-fit:contain!important;-webkit-user-drag:none;}
+.composer-upload-carousel .composer-upload-item .composer-upload-spinner{border-radius:10px!important;}
+.composer-upload-carousel .composer-upload-item button{top:8px!important;right:8px!important;}
 .image-line{display:none!important}
 
 
@@ -1352,9 +1382,9 @@
       </header>
       <section id="messages" class="messages">
         <div class="dm-start"><span class="avatar" {% if other.avatar_url %}style="background-image:url('{{ other.avatar_url }}')"{% endif %}>{% if not other.avatar_url %}{{ other.username[:1]|upper }}{% endif %}{% if other_visible %}<span class="presence status-{{ other_status }}"></span>{% endif %}</span><h1>{{ other.display_name or other.username }}</h1><div class="profile-handle">@{{ other.username }}</div><p><!--i18n:dm.text.this_is_the_beginning_of_your_personal_dialogue-->{{ i18n_t('dm.text.this_is_the_beginning_of_your_personal_dialogue') }}</p></div>
-        {% for item in messages %}{% set msg=item.message %}{% set au=item.author %}{% set is_forwarded = msg.is_forwarded if msg.is_forwarded is defined else false %}<div class="msg" id="dm-message-{{ msg.id }}" data-id="{{ msg.id }}" data-message-id="{{ msg.id }}" data-own="{{ '1' if msg.author_id == account.id else '0' }}" data-message-editable="{{ '1' if msg.author_id == account.id and not is_forwarded else '0' }}" data-message-author="{{ (au.display_name or au.username) if au else '?' }}" data-message-avatar="{{ au.avatar_url if au and au.avatar_url else '' }}" data-message-content="{{ msg.content|e }}" data-message-delete-url="/community/dm/{{ other.username }}/message/{{ msg.id }}/delete" data-message-edited="{{ '1' if msg.edited_at else '0' }}" data-message-forwarded="{{ '1' if is_forwarded else '0' }}" data-message-image="{{ msg.image_url or '' }}"><span class="msg-avatar mini-profile-trigger" data-mini-username="{{ au.username if au else '?' }}" data-mini-display="{{ (au.display_name or au.username) if au else '?' }}" data-mini-avatar="{{ au.avatar_url if au and au.avatar_url else '' }}" data-mini-banner="{{ au.banner_url if au and au.banner_url else '' }}" data-mini-status="{{ account.account_status if au and au.id == account.id else (other_status if au and au.id == other.id and other_visible else 'offline') }}" data-mini-role="{{ au.role_label if au and au.role_label else 'member' }}" data-mini-c1="{{ au.role_color_start if au and au.role_color_start else '#00C4B4' }}" data-mini-c2="{{ au.role_color_end if au and au.role_color_end else '#9b5cf6' }}" data-mini-profile="/community/profile/{{ au.username if au else '' }}" data-mini-bio="{{ au.bio if au and au.bio else '' }}" data-mini-created="{{ au.created_at.strftime('%d.%m.%Y') if au and au.created_at else '' }}" {% if au and au.avatar_url %}style="background-image:url('{{ au.avatar_url }}')"{% endif %}>{% if au and not au.avatar_url %}{{ (au.display_name or au.username)|first|upper }}{% endif %}</span><div class="msg-body"><div class="msg-head"><span class="msg-name mini-profile-trigger" data-mini-username="{{ au.username if au else '?' }}" data-mini-display="{{ (au.display_name or au.username) if au else '?' }}" data-mini-avatar="{{ au.avatar_url if au and au.avatar_url else '' }}" data-mini-banner="{{ au.banner_url if au and au.banner_url else '' }}" data-mini-status="{{ account.account_status if au and au.id == account.id else (other_status if au and au.id == other.id and other_visible else 'offline') }}" data-mini-role="{{ au.role_label if au and au.role_label else 'member' }}" data-mini-c1="{{ au.role_color_start if au and au.role_color_start else '#00C4B4' }}" data-mini-c2="{{ au.role_color_end if au and au.role_color_end else '#9b5cf6' }}" data-mini-profile="/community/profile/{{ au.username if au else '' }}" data-mini-bio="{{ au.bio if au and au.bio else '' }}" data-mini-created="{{ au.created_at.strftime('%d.%m.%Y') if au and au.created_at else '' }}">{{ (au.display_name or au.username) if au else '?' }}</span>{% if item.server_tag %}<span class="message-server-tag ah-tag-clickable" title="{{ item.server_tag.server_name }}" data-tag-server-id="{{ item.server_tag.server_id or '' }}" data-tag-server-name="{{ item.server_tag.server_name or '' }}" data-tag-icon-glyph="{{ item.server_tag.icon_glyph or '' }}" data-tag-icon-url="{{ item.server_tag.icon_url or '' }}" data-tag-text="{{ item.server_tag.text or '' }}" data-tag-member-count="{{ item.server_tag.member_count or '' }}" data-tag-online-count="{{ item.server_tag.online_count or '' }}" data-tag-description="{{ item.server_tag.description or '' }}" data-tag-invite="{{ item.server_tag.invite_url or '' }}"><b>{{ item.server_tag.icon_glyph }}</b>{{ item.server_tag.text }}</span>{% endif %}<span class="msg-time">{{ msg.created_at }}</span></div>{% if is_forwarded %}<div class="dm-forwarded-label"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg><span><!--i18n:common.text.undpentent-->{{ i18n_t('common.text.undpentent') }}</span></div>{% endif %}{% if item.reply and item.reply.message %}<div class="dm-reply" onclick="jumpToDmMessage({{ item.reply.message.id }})"><span class="dm-reply-author">{{ (item.reply.author.display_name or item.reply.author.username) if item.reply.author else i18n_t('common.user.deleted') }}</span><span class="dm-reply-text">{{ item.reply.message.content if item.reply.message.content else i18n_t('common.attachment') }}</span></div>{% endif %}<div class="msg-text"><span class="dm-message-text">{{ msg.content }}</span><span class="dm-message-edited {{ '' if msg.edited_at else 'hidden' }}" id="dm-edited-{{ msg.id }}"><!--i18n:common.label.modified-->{{ i18n_t('common.label.modified') }}</span></div>{% if msg.image_url %}<img class="msg-img" src="{{ msg.image_url }}" alt="">{% endif %}</div><div class="msg-actions"><button type="button" class="dm-message-more-btn" onclick="openDmMessageMenu(event)" title="{{ i18n_t('common.aria.more') }}" data-i18n-title="common.aria.more"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button></div></div>{% endfor %}
+        {% for item in messages %}{% set msg=item.message %}{% set au=item.author %}{% set is_forwarded = msg.is_forwarded if msg.is_forwarded is defined else false %}<div class="msg" id="dm-message-{{ msg.id }}" data-id="{{ msg.id }}" data-message-id="{{ msg.id }}" data-own="{{ '1' if msg.author_id == account.id else '0' }}" data-message-editable="{{ '1' if msg.author_id == account.id and not is_forwarded else '0' }}" data-message-author="{{ (au.display_name or au.username) if au else '?' }}" data-message-avatar="{{ au.avatar_url if au and au.avatar_url else '' }}" data-message-content="{{ msg.content|e }}" data-message-delete-url="/community/dm/{{ other.username }}/message/{{ msg.id }}/delete" data-message-edited="{{ '1' if msg.edited_at else '0' }}" data-message-forwarded="{{ '1' if is_forwarded else '0' }}" data-message-image="{{ msg.image_url or '' }}"><span class="msg-avatar mini-profile-trigger" data-mini-username="{{ au.username if au else '?' }}" data-mini-display="{{ (au.display_name or au.username) if au else '?' }}" data-mini-avatar="{{ au.avatar_url if au and au.avatar_url else '' }}" data-mini-banner="{{ au.banner_url if au and au.banner_url else '' }}" data-mini-status="{{ account.account_status if au and au.id == account.id else (other_status if au and au.id == other.id and other_visible else 'offline') }}" data-mini-role="{{ au.role_label if au and au.role_label else 'member' }}" data-mini-c1="{{ au.role_color_start if au and au.role_color_start else '#00C4B4' }}" data-mini-c2="{{ au.role_color_end if au and au.role_color_end else '#9b5cf6' }}" data-mini-profile="/community/profile/{{ au.username if au else '' }}" data-mini-bio="{{ au.bio if au and au.bio else '' }}" data-mini-created="{{ au.created_at.strftime('%d.%m.%Y') if au and au.created_at else '' }}" {% if au and au.avatar_url %}style="background-image:url('{{ au.avatar_url }}')"{% endif %}>{% if au and not au.avatar_url %}{{ (au.display_name or au.username)|first|upper }}{% endif %}</span><div class="msg-body"><div class="msg-head"><span class="msg-name mini-profile-trigger" data-mini-username="{{ au.username if au else '?' }}" data-mini-display="{{ (au.display_name or au.username) if au else '?' }}" data-mini-avatar="{{ au.avatar_url if au and au.avatar_url else '' }}" data-mini-banner="{{ au.banner_url if au and au.banner_url else '' }}" data-mini-status="{{ account.account_status if au and au.id == account.id else (other_status if au and au.id == other.id and other_visible else 'offline') }}" data-mini-role="{{ au.role_label if au and au.role_label else 'member' }}" data-mini-c1="{{ au.role_color_start if au and au.role_color_start else '#00C4B4' }}" data-mini-c2="{{ au.role_color_end if au and au.role_color_end else '#9b5cf6' }}" data-mini-profile="/community/profile/{{ au.username if au else '' }}" data-mini-bio="{{ au.bio if au and au.bio else '' }}" data-mini-created="{{ au.created_at.strftime('%d.%m.%Y') if au and au.created_at else '' }}">{{ (au.display_name or au.username) if au else '?' }}</span>{% if item.server_tag %}<span class="message-server-tag ah-tag-clickable" title="{{ item.server_tag.server_name }}" data-tag-server-id="{{ item.server_tag.server_id or '' }}" data-tag-server-name="{{ item.server_tag.server_name or '' }}" data-tag-icon-glyph="{{ item.server_tag.icon_glyph or '' }}" data-tag-icon-url="{{ item.server_tag.icon_url or '' }}" data-tag-text="{{ item.server_tag.text or '' }}" data-tag-member-count="{{ item.server_tag.member_count or '' }}" data-tag-online-count="{{ item.server_tag.online_count or '' }}" data-tag-description="{{ item.server_tag.description or '' }}" data-tag-invite="{{ item.server_tag.invite_url or '' }}"><b>{{ item.server_tag.icon_glyph }}</b>{{ item.server_tag.text }}</span>{% endif %}<span class="msg-time">{{ msg.created_at }}</span></div>{% if is_forwarded %}<div class="dm-forwarded-label"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg><span><!--i18n:common.text.undpentent-->{{ i18n_t('common.text.undpentent') }}</span></div>{% endif %}{% if item.reply and item.reply.message %}<div class="dm-reply" onclick="jumpToDmMessage({{ item.reply.message.id }})"><span class="dm-reply-author">{{ (item.reply.author.display_name or item.reply.author.username) if item.reply.author else i18n_t('common.user.deleted') }}</span><span class="dm-reply-text">{{ item.reply.message.content if item.reply.message.content else i18n_t('common.attachment') }}</span></div>{% endif %}<div class="msg-text"><span class="dm-message-text">{{ msg.content }}</span><span class="dm-message-edited {{ '' if msg.edited_at else 'hidden' }}" id="dm-edited-{{ msg.id }}"><!--i18n:common.label.modified-->{{ i18n_t('common.label.modified') }}</span></div>{% if msg.image_url %}{% set msg_imgs = msg.image_url.split('\n')|map('trim')|select|list %}{% if msg_imgs|length > 1 %}<div class="msg-image-group ah-carousel"><div class="ah-carousel-track" tabindex="0">{% for img_url in msg_imgs %}<div class="ah-carousel-slide"><img class="msg-img" src="{{ img_url }}" alt="" draggable="false"></div>{% endfor %}</div><div class="ah-carousel-dots">{% for img_url in msg_imgs %}<button type="button" class="ah-carousel-dot{% if loop.first %} active{% endif %}" aria-label="{{ loop.index }}"></button>{% endfor %}</div></div>{% elif msg_imgs %}<img class="msg-img" src="{{ msg_imgs[0] }}" alt="">{% endif %}{% endif %}</div><div class="msg-actions"><button type="button" class="dm-message-more-btn" onclick="openDmMessageMenu(event)" title="{{ i18n_t('common.aria.more') }}" data-i18n-title="common.aria.more"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button></div></div>{% endfor %}
       </section>
-      <div class="composer-wrap"><div id="typing" class="typing"></div><form id="dm-form" method="post" action="/community/dm/{{ other.username }}/message"><input id="dm-file-input" type="file" accept="image/*" style="display:none"><input id="image_url" name="image_url" type="hidden" value=""><div id="dm-reply-preview" class="dm-reply-preview hidden"><span><!--i18n:common.text.the_answer_to-->{{ i18n_t('common.text.the_answer_to') }} <b id="dm-reply-author"></b></span><span id="dm-reply-text" class="dm-reply-preview-text"></span><button type="button" onclick="clearDmReply()" aria-label="{{ i18n_t('common.aria.cancel_reply') }}" data-i18n-aria-label="common.aria.cancel_reply">×</button><input id="dm-reply-to-id" type="hidden" name="reply_to_id" value=""></div><div class="dm-composer-shell"><div id="dm-plus-menu" class="dm-plus-menu"><button type="button" onclick="chooseDmImage()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="M9 15h6"/></svg><span><!--i18n:common.text.send_a_file-->{{ i18n_t('common.text.send_a_file') }}</span></button><button type="button" onclick="showActionToast && showActionToast(window.AlexiHubI18n.t('dm.stub.polls'))"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M8 17V9"/><path d="M12 19V3"/><path d="M16 15v-4"/><path d="M20 17V7"/></svg><span><!--i18n:dm.text.create_a_survey-->{{ i18n_t('dm.text.create_a_survey') }}</span></button><button type="button" onclick="showActionToast && showActionToast(window.AlexiHubI18n.t('dm.stub.apps'))"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span><!--i18n:dm.text.use_the_applications-->{{ i18n_t('dm.text.use_the_applications') }}</span></button></div><div id="dm-attachment-preview" class="attachment-preview"></div><div class="composer"><button class="dm-plus-btn" id="dm-plus-btn" type="button" onclick="toggleDmPlus(event)" title="{{ i18n_t('dm.aria.add_an_addition') }}" data-i18n-title="dm.aria.add_an_addition">+</button><textarea id="content" name="content" placeholder="{{ i18n_t('dm.composer.placeholder', username=other.username) }}" rows="1"></textarea><button type="submit">→</button></div></div></form></div>
+      <div class="composer-wrap"><div id="typing" class="typing"></div><form id="dm-form" method="post" action="/community/dm/{{ other.username }}/message"><input id="dm-file-input" type="file" accept="image/*" multiple style="display:none"><input id="image_url" name="image_url" type="hidden" value=""><div id="dm-reply-preview" class="dm-reply-preview hidden"><span><!--i18n:common.text.the_answer_to-->{{ i18n_t('common.text.the_answer_to') }} <b id="dm-reply-author"></b></span><span id="dm-reply-text" class="dm-reply-preview-text"></span><button type="button" onclick="clearDmReply()" aria-label="{{ i18n_t('common.aria.cancel_reply') }}" data-i18n-aria-label="common.aria.cancel_reply">×</button><input id="dm-reply-to-id" type="hidden" name="reply_to_id" value=""></div><div class="dm-composer-shell"><div id="dm-plus-menu" class="dm-plus-menu"><button type="button" onclick="chooseDmImage()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="M9 15h6"/></svg><span><!--i18n:common.text.send_a_file-->{{ i18n_t('common.text.send_a_file') }}</span></button><button type="button" onclick="showActionToast && showActionToast(window.AlexiHubI18n.t('dm.stub.polls'))"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M8 17V9"/><path d="M12 19V3"/><path d="M16 15v-4"/><path d="M20 17V7"/></svg><span><!--i18n:dm.text.create_a_survey-->{{ i18n_t('dm.text.create_a_survey') }}</span></button><button type="button" onclick="showActionToast && showActionToast(window.AlexiHubI18n.t('dm.stub.apps'))"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span><!--i18n:dm.text.use_the_applications-->{{ i18n_t('dm.text.use_the_applications') }}</span></button></div><div id="dm-attachment-preview" class="composer-upload-preview"></div><div class="composer"><button class="dm-plus-btn" id="dm-plus-btn" type="button" onclick="toggleDmPlus(event)" title="{{ i18n_t('dm.aria.add_an_addition') }}" data-i18n-title="dm.aria.add_an_addition">+</button><textarea id="content" name="content" placeholder="{{ i18n_t('dm.composer.placeholder', username=other.username) }}" rows="1"></textarea><button type="submit">→</button></div></div></form></div>
     </main>
 
     <aside class="right">
@@ -2196,6 +2226,17 @@ function dmReplyHtml(reply){
   return `<div class="dm-reply" onclick="jumpToDmMessage(${reply.id})"><span class="dm-reply-author">${escapeHtml(a)}</span><span class="dm-reply-text">${escapeHtml(t)}</span></div>`;
 }
 
+function dmImageGroupHtml(urlString){
+  const urls=String(urlString||'').split('\n').map(u=>u.trim()).filter(Boolean);
+  if(!urls.length)return '';
+  if(urls.length===1)return `<img class="msg-img" src="${escapeHtml(urls[0])}" alt="">`;
+  return '<div class="msg-image-group ah-carousel"><div class="ah-carousel-track" tabindex="0">'
+    +urls.map(u=>`<div class="ah-carousel-slide"><img class="msg-img" src="${escapeHtml(u)}" alt="" draggable="false"></div>`).join('')
+    +'</div><div class="ah-carousel-dots">'
+    +urls.map((u,i)=>`<button type="button" class="ah-carousel-dot${i===0?' active':''}" aria-label="${i+1}"></button>`).join('')
+    +'</div></div>';
+}
+
 function messageHtml(msg,author){
   author=author||{};
   msg=msg||{};
@@ -2208,7 +2249,7 @@ function messageHtml(msg,author){
   const displayName=author.display_name||username;
   const av=author.avatar_url?"style=\"background-image:url('"+escapeHtml(author.avatar_url)+"')\"":'';
   const first=author.avatar_url?'':escapeHtml(displayName.slice(0,1).toUpperCase());
-  const img=msg.image_url?`<img class="msg-img" src="${escapeHtml(msg.image_url)}" alt="">`:'';
+  const img=dmImageGroupHtml(msg.image_url);
   const role=author.role_label||'member';
   const c1=author.role_color_start||'#00C4B4';
   const c2=author.role_color_end||'#9b5cf6';
@@ -2534,6 +2575,11 @@ input.addEventListener('input',()=>{
 });
 
 form.addEventListener('submit',(e)=>{
+  if(window.dmHasUploadingImages&&window.dmHasUploadingImages()){
+    e.preventDefault();
+    if(window.dmAttachToast)window.dmAttachToast(window.AlexiHubI18n.t("dm.text.bulming_the_file"));
+    return;
+  }
   if(window.AlexiHubMessageRateLimit&&!window.AlexiHubMessageRateLimit.checkAndRecord()){
     e.preventDefault();
     return;
@@ -2563,8 +2609,6 @@ form.addEventListener('submit',(e)=>{
 input.addEventListener('keydown',(e)=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();form.requestSubmit()}});
 function toggleImage(){document.getElementById('image-line').classList.toggle('open');}
 function chooseDmImage(){const fileInput=document.getElementById('dm-file-input'); if(fileInput) fileInput.click();}
-const dmFileInput=document.getElementById('dm-file-input');
-if(dmFileInput)dmFileInput.addEventListener('change',async()=>{const file=dmFileInput.files&&dmFileInput.files[0]; if(!file)return; const line=document.getElementById('image-line'); if(line)line.classList.add('open'); imageInput.value=window.AlexiHubI18n.t("dm.text.by_downloading_photos"); try{const fd=new FormData(); fd.append('file',file); const r=await fetch('/community/api/upload-image',{method:'POST',body:fd}); const data=await r.json(); if(!r.ok||!data.url) throw new Error(data.error||'upload failed'); imageInput.value=data.url;}catch(e){imageInput.value=''; alert(window.AlexiHubI18n.t("dm.message.could_not_be_able_to_upload_photos"));} finally{dmFileInput.value='';}});
 window.addEventListener('pagehide',()=>{dmPageClosing=true;clearTimeout(reconnectTimer);clearTimeout(stopTimer);try{if(ws&&ws.readyState===1){ws.send(JSON.stringify({type:'leave'}));ws.close(1000,'pagehide');}}catch(e){}});
 window.addEventListener('pageshow',(event)=>{
   // When the browser restores this page from bfcache (e.g. after switching
@@ -4752,36 +4796,192 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   const preview=document.getElementById('dm-attachment-preview');
   const plus=document.getElementById('dm-plus-btn');
   const menu=document.getElementById('dm-plus-menu');
+  const MAX_IMAGES=10;
+  // Each entry: { localId, url, previewUrl, uploading }
+  let images=[];
+  let activeIndex=0;
+
   function esc(v){return String(v||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  function tr(key,fallback){try{const v=window.AlexiHubI18n.t(key);return (v&&v!==key)?v:fallback}catch(err){return fallback}}
+  function toast(text){if(window.showActionToast)window.showActionToast(text);else alert(text)}
+  window.dmAttachToast=toast;
+  window.dmHasUploadingImages=function(){return images.some(function(img){return img.uploading})};
+
   window.toggleDmPlus=function(e){if(e){e.preventDefault();e.stopPropagation()} if(menu){menu.classList.toggle('open')} if(plus){plus.classList.toggle('open', menu&&menu.classList.contains('open'))}};
   window.chooseDmImage=function(){ if(menu) menu.classList.remove('open'); if(plus) plus.classList.remove('open'); if(fileInput) fileInput.click(); };
-  window.clearDmAttachment=function(){ if(input) input.value=''; if(fileInput) fileInput.value=''; if(preview){preview.classList.remove('open'); preview.innerHTML='';}};
-  window.setDmAttachmentPreview=function(url,label,loading){ if(!preview)return; preview.classList.add('open'); preview.innerHTML='<img src="'+esc(url)+'" alt=""><div class="attach-meta"><div class="attach-title">'+(loading?window.AlexiHubI18n.t("dm.text.bulming_the_file"):window.AlexiHubI18n.t("dm.text.attened_file"))+'</div><div class="attach-sub">'+esc(label||window.AlexiHubI18n.t('common.label.image'))+'</div></div><button type="button" class="attach-remove" onclick="clearDmAttachment()">×</button>'; };
-  async function handleDmFile(file){
+
+  // Several photos are joined with a newline so the existing single image_url
+  // field/column can carry more than one URL (same convention as server channels).
+  function syncInput(){
+    if(!input)return;
+    input.value=images.filter(function(img){return img.url}).map(function(img){return img.url}).join('\n');
+  }
+
+  function itemHtml(img,framed){
+    const src=img.uploading?img.previewUrl:(img.url||img.previewUrl);
+    let inner='<img src="'+esc(src)+'" alt="" draggable="false">'
+      +'<span class="composer-upload-spinner">'+esc(tr('dm.text.bulming_the_file','Uploading…'))+'</span>'
+      +'<button type="button" data-remove="'+img.localId+'" aria-label="×">×</button>';
+    // In the carousel the button/spinner hug the photo itself, so wrap it in a shrink-to-fit frame.
+    if(framed)inner='<div class="composer-upload-frame">'+inner+'</div>';
+    return '<div class="composer-upload-item'+(img.uploading?' is-uploading':'')+'" data-local-id="'+img.localId+'">'+inner+'</div>';
+  }
+
+  function renderPreview(){
+    if(!preview)return;
+    if(!images.length){
+      preview.innerHTML='';
+      preview.classList.remove('open','has-carousel');
+      return;
+    }
+    const many=images.length>1;
+    activeIndex=Math.max(0,Math.min(activeIndex,images.length-1));
+    let html;
+    if(!many){
+      html=itemHtml(images[0],false);
+    }else{
+      html='<div class="composer-upload-carousel ah-carousel">'
+        +'<div class="ah-carousel-track" tabindex="0">'+images.map(function(img){return itemHtml(img,true)}).join('')+'</div>'
+        +'<div class="ah-carousel-dots">'+images.map(function(img,i){
+            return '<button type="button" class="ah-carousel-dot'+(i===activeIndex?' active':'')+'" aria-label="'+(i+1)+'"></button>';
+          }).join('')+'</div>'
+        +'</div>';
+    }
+    preview.innerHTML=html;
+    preview.classList.add('open');
+    preview.classList.toggle('has-carousel',many);
+    if(many){
+      const track=preview.querySelector('.ah-carousel-track');
+      if(track)track.scrollLeft=activeIndex*track.clientWidth;
+    }
+  }
+
+  // Remember which slide is showing so re-renders (upload finished, photo removed) don't jump back to the first one.
+  if(preview){
+    preview.addEventListener('scroll',function(e){
+      const t=e.target;
+      if(!t||!t.classList||!t.classList.contains('ah-carousel-track'))return;
+      activeIndex=Math.max(0,Math.min(images.length-1,Math.round(t.scrollLeft/(t.clientWidth||1))));
+    },true);
+    preview.addEventListener('click',function(e){
+      const btn=e.target.closest?e.target.closest('button[data-remove]'):null;
+      if(btn)removeImage(btn.getAttribute('data-remove'));
+    });
+  }
+
+  function revoke(img){if(img&&img.previewUrl){try{URL.revokeObjectURL(img.previewUrl)}catch(err){}}}
+  function removeImage(localId){
+    const idx=images.findIndex(function(img){return img.localId===localId});
+    revoke(images[idx]);
+    images=images.filter(function(img){return img.localId!==localId});
+    if(idx!==-1&&idx<activeIndex)activeIndex--;
+    activeIndex=Math.max(0,Math.min(activeIndex,images.length-1));
+    syncInput();
+    renderPreview();
+  }
+  window.clearDmAttachment=function(){
+    images.forEach(revoke);
+    images=[];
+    activeIndex=0;
+    if(input)input.value='';
+    if(fileInput)fileInput.value='';
+    renderPreview();
+  };
+
+  async function uploadImage(file){
     if(!file)return;
-    if(!file.type||!file.type.startsWith('image/')){alert(window.AlexiHubI18n.t("common.message.one_can_be_loaded_only_pictures")); return;}
-    if(file.size>5*1024*1024){alert(window.AlexiHubI18n.t("common.message.the_picture_glued_maximum_5mb")); return;}
-    const local=URL.createObjectURL(file); setDmAttachmentPreview(local,file.name,true);
+    if(!file.type||!file.type.startsWith('image/')){toast(tr('common.message.one_can_be_loaded_only_pictures','Images only'));return}
+    if(file.size>5*1024*1024){toast(tr('common.message.the_picture_glued_maximum_5mb','Max 5 MB'));return}
+    if(images.length>=MAX_IMAGES){toast(tr('server_channel.text.at_attached_picture','Max '+MAX_IMAGES+' images'));return}
+    const localId='di'+Date.now()+Math.random().toString(16).slice(2);
+    const entry={localId:localId,url:'',previewUrl:URL.createObjectURL(file),uploading:true};
+    images.push(entry);
+    activeIndex=images.length-1;
+    renderPreview();
     try{
       const fd=new FormData(); fd.append('file',file);
       const r=await fetch('/community/api/upload-image',{method:'POST',body:fd});
-      const data=await r.json().catch(()=>({}));
-      if(!r.ok||!data.url) throw new Error(data.error||'upload failed');
-      if(input) input.value=data.url;
-      setDmAttachmentPreview(data.url,file.name,false);
-      const text=document.getElementById('content'); if(text) text.focus();
+      const data=await r.json().catch(function(){return {}});
+      if(!r.ok||!data.url)throw new Error(data.error||'upload failed');
+      entry.url=data.url;
+      entry.uploading=false;
+      syncInput();
+      renderPreview();
+      const text=document.getElementById('content'); if(text)text.focus();
     }catch(err){
-      clearDmAttachment();
-      alert(window.AlexiHubI18n.t("dm.message.could_not_be_able_to_upload_photos"));
-    }finally{
-      setTimeout(()=>{try{URL.revokeObjectURL(local)}catch(e){}},2500);
+      removeImage(localId);
+      toast(tr('dm.message.could_not_be_able_to_upload_photos','Upload failed'));
     }
   }
-  if(fileInput){fileInput.addEventListener('change',function(){handleDmFile(fileInput.files&&fileInput.files[0]);})}
-  const form=document.getElementById('dm-form'); if(form){form.addEventListener('submit',()=>{setTimeout(clearDmAttachment,60)},true)}
+  function handleFiles(fileList){
+    const files=Array.prototype.slice.call(fileList||[]);
+    if(!files.length)return;
+    const room=MAX_IMAGES-images.length;
+    if(room<=0){toast(tr('server_channel.text.at_attached_picture','Max '+MAX_IMAGES+' images'));return}
+    files.slice(0,room).forEach(uploadImage);
+  }
+  if(fileInput){fileInput.addEventListener('change',function(){handleFiles(fileInput.files);fileInput.value='';})}
   document.addEventListener('click',function(e){if(menu&&!e.target.closest('#dm-plus-menu')&&!e.target.closest('#dm-plus-btn')){menu.classList.remove('open'); if(plus)plus.classList.remove('open')}});
 
-  // Drag-and-drop: drop an image file anywhere on the DM pane to attach it.
+  // Photo carousels (composer preview + sent messages): dots follow the scroll position,
+  // dots are clickable, touch/trackpad swipe is native scroll-snap, mouse gets drag-to-swipe.
+  if(!window.__ahDmCarouselsReady){
+    window.__ahDmCarouselsReady=true;
+    const trackIndex=function(track){return Math.round(track.scrollLeft/(track.clientWidth||1))};
+    const goTo=function(track,i){
+      i=Math.max(0,Math.min(track.children.length-1,i));
+      track.scrollTo({left:i*track.clientWidth,behavior:'smooth'});
+    };
+    document.addEventListener('scroll',function(e){
+      const t=e.target;
+      if(!t||!t.classList||!t.classList.contains('ah-carousel-track'))return;
+      const root=t.closest('.ah-carousel');
+      if(!root)return;
+      const active=trackIndex(t);
+      root.querySelectorAll('.ah-carousel-dot').forEach(function(dot,n){dot.classList.toggle('active',n===active)});
+    },true);
+    document.addEventListener('click',function(e){
+      const dot=e.target.closest?e.target.closest('.ah-carousel-dot'):null;
+      if(!dot)return;
+      const root=dot.closest('.ah-carousel');
+      const track=root&&root.querySelector('.ah-carousel-track');
+      if(!track)return;
+      goTo(track,Array.prototype.indexOf.call(root.querySelectorAll('.ah-carousel-dot'),dot));
+    });
+    document.addEventListener('keydown',function(e){
+      if(e.key!=='ArrowLeft'&&e.key!=='ArrowRight')return;
+      const track=e.target.closest?e.target.closest('.ah-carousel-track'):null;
+      if(!track)return;
+      e.preventDefault();
+      goTo(track,trackIndex(track)+(e.key==='ArrowRight'?1:-1));
+    });
+    let drag=null;
+    document.addEventListener('pointerdown',function(e){
+      if(e.pointerType!=='mouse'||e.button!==0)return;
+      const track=e.target.closest?e.target.closest('.ah-carousel-track'):null;
+      if(!track||e.target.closest('button'))return;
+      clearTimeout(track._snapTimer);
+      track.classList.add('dragging','no-snap');
+      drag={track:track,x:e.clientX,start:trackIndex(track),left:track.scrollLeft};
+    });
+    document.addEventListener('pointermove',function(e){if(drag)drag.track.scrollLeft=drag.left-(e.clientX-drag.x)});
+    document.addEventListener('selectstart',function(e){if(drag)e.preventDefault()});
+    const endDrag=function(e){
+      if(!drag)return;
+      const t=drag.track,w=t.clientWidth||1,dx=e.clientX-drag.x;
+      let i=drag.start;
+      if(dx<-w*0.12)i++; else if(dx>w*0.12)i--;
+      drag=null;
+      t.classList.remove('dragging');
+      goTo(t,i);
+      clearTimeout(t._snapTimer);
+      t._snapTimer=setTimeout(function(){t.classList.remove('no-snap')},450);
+    };
+    document.addEventListener('pointerup',endDrag);
+    document.addEventListener('pointercancel',endDrag);
+  }
+
+  // Drag-and-drop: drop one or several image files anywhere on the DM pane to attach them.
   const dmMain=document.getElementById('dm-main');
   const dropOverlay=document.getElementById('dm-dropzone-overlay');
   if(dmMain&&dropOverlay){
@@ -4807,16 +5007,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
       e.preventDefault();
       dragDepth=0;
       dropOverlay.classList.remove('active');
-      const file=e.dataTransfer.files&&e.dataTransfer.files[0];
-      if(!file)return;
-      if(fileInput){
-        try{
-          const dt=new DataTransfer();
-          dt.items.add(file);
-          fileInput.files=dt.files;
-        }catch(err){/* DataTransfer construction unsupported */}
-      }
-      handleDmFile(file);
+      handleFiles(e.dataTransfer.files);
     });
   }
 })();
@@ -5165,6 +5356,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
   let dmPinConfirmTarget = null;
   let dmUnpinTarget = null;
 
+  function dmPinFirstImage(v){return String(v||'').split('\n')[0].trim();}
   function dmPinEscape(v){return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
   function dmPinTime(v){if(!v)return ''; try{return new Date(v).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return v;}}
   function dmPinInitials(v){const s=String(v||'?').trim();return dmPinEscape((s[0]||'?').toUpperCase());}
@@ -5262,7 +5454,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     const author = source.author || {username: source.messageAuthor || '?', avatar_url: source.messageAvatar || ''};
     const avatarStyle = author.avatar_url ? "style=\"background-image:url('"+String(author.avatar_url).replace(/'/g,'%27')+"')\"" : '';
     const initials = author.avatar_url ? '' : dmPinInitials(author.username);
-    const image = source.image_url ? '<img src="'+dmPinEscape(source.image_url)+'" alt="">' : '';
+    const image = source.image_url ? '<img src="'+dmPinEscape(dmPinFirstImage(source.image_url))+'" alt="">' : '';
     const rawContent = String(source.content || source.messageContent || '');
     container.innerHTML = '<div class="avatar" '+avatarStyle+'>'+initials+'</div><div class="meta"><div><strong>'+dmPinEscape(author.username || '?')+'</strong><span class="time">'+dmPinEscape(dmPinTime(source.created_at || source.messageTime || ''))+'</span></div><div class="content" data-dm-pin-raw="'+dmPinEscape(rawContent)+'">'+dmPinEscape(rawContent)+'</div>'+image+'</div>';
     renderDmPinnedMedia(container);
@@ -5277,7 +5469,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     body.innerHTML = dmPins.map(pin => {
       const author = pin.author || {};
       const avatarStyle = author.avatar_url ? "style=\"background-image:url('"+String(author.avatar_url).replace(/'/g,'%27')+"')\"" : '';
-      const image = pin.image_url ? '<img class="dm-pin-image" src="'+dmPinEscape(pin.image_url)+'" alt="">' : '';
+      const image = pin.image_url ? '<img class="dm-pin-image" src="'+dmPinEscape(dmPinFirstImage(pin.image_url))+'" alt="">' : '';
       const rawContent = String(pin.content || '');
       return '<div class="dm-pin-card" data-pin-message-id="'+Number(pin.message_id)+'"><div class="dm-pin-hover"><button type="button" onclick="jumpToDmPinnedMessage('+Number(pin.message_id)+')">'+window.AlexiHubI18n.t("common.action.go_to_message")+'</button><button type="button" class="danger" onclick="openDmUnpinConfirmById('+Number(pin.message_id)+')">×</button></div><div class="dm-pin-head"><div class="dm-pin-avatar" '+avatarStyle+'>'+(author.avatar_url ? '' : dmPinInitials(author.username || '?'))+'</div><div><div class="dm-pin-name">'+dmPinEscape(author.username || '?')+'</div><div class="dm-pin-time">'+dmPinEscape(dmPinTime(pin.created_at || pin.pinned_at || ''))+'</div></div></div><div class="dm-pin-content" data-dm-pin-raw="'+dmPinEscape(rawContent)+'">'+dmPinEscape(rawContent)+'</div>'+image+'</div>';
     }).join('');
