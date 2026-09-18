@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.188.0",
+      "date": "2026-09-18",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: image carousel for message and upload previews."
+      ],
+      "source_sha": "8f7444efe01a5b8971e8694d442d0e98d5fa021f"
+    },
+    {
       "version": "1.187.5",
       "date": "2026-09-18",
       "title": "Виправлення та стабільність",
