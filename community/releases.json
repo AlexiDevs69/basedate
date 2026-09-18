@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.187.3",
+      "date": "2026-09-18",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Change image_url type from String to Text."
+      ],
+      "source_sha": "b14f104181ce3bacbcf6d1a113c54a398a507fdf"
+    },
+    {
       "version": "1.187.2",
       "date": "2026-09-18",
       "title": "Виправлення та стабільність",
