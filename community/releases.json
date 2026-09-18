@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.187.5",
+      "date": "2026-09-18",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Remove image URL length validation."
+      ],
+      "source_sha": "4dc07fb6314f278648e6f55afb64ac59535f7797"
+    },
+    {
       "version": "1.187.4",
       "date": "2026-09-18",
       "title": "Виправлення та стабільність",
