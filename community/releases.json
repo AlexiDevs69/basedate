@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.188.1",
+      "date": "2026-09-18",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance image carousel and upload preview styles."
+      ],
+      "source_sha": "c81bc9c5ead04a479e073b96886effd46c42ce31"
+    },
+    {
       "version": "1.188.0",
       "date": "2026-09-18",
       "title": "Нові можливості AlexiHub",
