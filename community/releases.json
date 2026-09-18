@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.187.4",
+      "date": "2026-09-18",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update database schema for message tables."
+      ],
+      "source_sha": "652bab20f2eaf57048b4456153ba575a5d4a3fed"
+    },
+    {
       "version": "1.187.3",
       "date": "2026-09-18",
       "title": "Виправлення та стабільність",
