@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.187.0",
+      "date": "2026-09-18",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: saved messages feature in DM chat."
+      ],
+      "source_sha": "1655513367f220629d21cac1bbc97fded8bd5bd4"
+    },
+    {
       "version": "1.186.2",
       "date": "2026-09-18",
       "title": "Оновлення AlexiHub",
