@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.186.2",
+      "date": "2026-09-18",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: streak badge styles and JavaScript functionality."
+      ],
+      "source_sha": "b75990ad604b20073b5c1efa1e04dbe5c7ea1088"
+    },
+    {
       "version": "1.186.1",
       "date": "2026-09-18",
       "title": "Оновлення AlexiHub",
