@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.191.1",
+      "date": "2026-09-20",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено продуктивність: server access schema management."
+      ],
+      "source_sha": "dd46646c9c2b3f6fbf5d4206ad4790534e54c01f"
+    },
+    {
       "version": "1.191.0",
       "date": "2026-09-20",
       "title": "Нові можливості AlexiHub",
