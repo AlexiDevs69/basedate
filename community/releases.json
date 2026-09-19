@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.193.2",
+      "date": "2026-09-20",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update crud.py."
+      ],
+      "source_sha": "89617f2c3450b5adcbbb1bee55fe39e7f61fa5e0"
+    },
+    {
       "version": "1.193.1",
       "date": "2026-09-20",
       "title": "Оновлення AlexiHub",
