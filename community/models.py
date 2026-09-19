@@ -398,6 +398,11 @@ class DirectMessage(Base):
     reply_to_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("community_direct_messages.id"), nullable=True, index=True)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     image_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Voice message: URL of the recorded audio clip (mp3/ogg/webm/m4a) and
+    # its duration in whole seconds, used to render the waveform/player and
+    # the "0:07" label without having to probe the file client-side.
+    voice_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    voice_duration: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True, nullable=False)
     edited_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     is_forwarded: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
