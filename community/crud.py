@@ -1446,99 +1446,186 @@ async def ensure_server_event_schema(db: AsyncSession) -> None:
 
 _SERVER_ACCESS_SCHEMA_READY = False
 
+# (column, DDL) pairs. Kept as data so that we can ask Postgres which ones are
+# already there and only run ALTER TABLE for the missing ones.
+_SERVER_ACCESS_COLUMNS: dict[str, list[tuple[str, str]]] = {
+    "community_servers": [
+        ("access_mode", "VARCHAR(16) NOT NULL DEFAULT 'invite'"),
+        ("is_age_restricted", "BOOLEAN NOT NULL DEFAULT FALSE"),
+        ("access_rules_enabled", "BOOLEAN NOT NULL DEFAULT FALSE"),
+        ("access_rules", "TEXT NOT NULL DEFAULT '[]'"),
+        ("join_questions", "TEXT NOT NULL DEFAULT '[]'"),
+        ("profile_apply_enabled", "BOOLEAN NOT NULL DEFAULT FALSE"),
+        ("community_enabled", "BOOLEAN NOT NULL DEFAULT FALSE"),
+        ("onboarding_enabled", "BOOLEAN NOT NULL DEFAULT FALSE"),
+        ("onboarding_welcome_title", "VARCHAR(100)"),
+        ("onboarding_welcome_text", "TEXT"),
+        ("onboarding_questions", "TEXT NOT NULL DEFAULT '[]'"),
+        ("onboarding_steps", "TEXT NOT NULL DEFAULT '[]'"),
+    ],
+    # Existing members are complete by default. A newly joined member is
+    # explicitly switched to FALSE only when onboarding is enabled.
+    "community_server_members": [
+        ("onboarding_completed", "BOOLEAN NOT NULL DEFAULT TRUE"),
+        ("onboarding_roles", "TEXT NOT NULL DEFAULT '[]'"),
+        ("onboarding_steps_done", "TEXT NOT NULL DEFAULT '[]'"),
+    ],
+}
+
+_SERVER_ACCESS_JOIN_APPS_DDL = """
+    CREATE TABLE IF NOT EXISTS community_server_join_applications (
+        id SERIAL PRIMARY KEY,
+        server_id INTEGER NOT NULL REFERENCES community_servers(id) ON DELETE CASCADE,
+        applicant_id INTEGER NOT NULL REFERENCES community_accounts(id) ON DELETE CASCADE,
+        answers TEXT NOT NULL DEFAULT '[]',
+        status VARCHAR(16) NOT NULL DEFAULT 'pending',
+        submitted_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+        reviewed_at TIMESTAMP WITH TIME ZONE,
+        reviewed_by_id INTEGER REFERENCES community_accounts(id) ON DELETE SET NULL
+    )
+"""
+
+_SERVER_ACCESS_INDEXES: list[tuple[str, str]] = [
+    (
+        "uq_community_server_join_application",
+        "CREATE UNIQUE INDEX IF NOT EXISTS uq_community_server_join_application "
+        "ON community_server_join_applications (server_id, applicant_id)",
+    ),
+    (
+        "ix_community_server_join_applications_pending",
+        "CREATE INDEX IF NOT EXISTS ix_community_server_join_applications_pending "
+        "ON community_server_join_applications (server_id, status, submitted_at DESC)",
+    ),
+]
+
+_SERVER_ACCESS_BAD_MODE_WHERE = (
+    "access_mode IS NULL OR access_mode NOT IN ('invite','application','public')"
+)
+_SERVER_ACCESS_ADVISORY_KEY = 7331001
+
+
+async def _server_access_plan(db: AsyncSession) -> dict:
+    """Read-only look at what is still missing (takes no DDL locks)."""
+    columns: dict[str, list[tuple[str, str]]] = {}
+    for table, cols in _SERVER_ACCESS_COLUMNS.items():
+        rows = await db.execute(
+            text(
+                "SELECT column_name FROM information_schema.columns "
+                "WHERE table_schema = current_schema() AND table_name = :t"
+            ),
+            {"t": table},
+        )
+        have = {r[0] for r in rows}
+        missing = [(name, ddl) for name, ddl in cols if name not in have]
+        if missing:
+            columns[table] = missing
+
+    table_missing = (
+        await db.execute(
+            text("SELECT to_regclass('community_server_join_applications') IS NULL")
+        )
+    ).scalar()
+
+    rows = await db.execute(
+        text(
+            "SELECT indexname FROM pg_indexes "
+            "WHERE schemaname = current_schema() "
+            "AND tablename = 'community_server_join_applications'"
+        )
+    )
+    have_idx = {r[0] for r in rows}
+    indexes = [(n, ddl) for n, ddl in _SERVER_ACCESS_INDEXES if n not in have_idx]
+
+    needs_mode_fix = False
+    if "access_mode" not in {n for n, _ in columns.get("community_servers", [])}:
+        needs_mode_fix = bool(
+            (
+                await db.execute(
+                    text(
+                        "SELECT EXISTS (SELECT 1 FROM community_servers "
+                        f"WHERE {_SERVER_ACCESS_BAD_MODE_WHERE})"
+                    )
+                )
+            ).scalar()
+        )
+
+    return {
+        "columns": columns,
+        "table_missing": bool(table_missing),
+        "indexes": indexes,
+        "needs_mode_fix": needs_mode_fix,
+    }
+
+
+def _server_access_plan_has_work(plan: dict) -> bool:
+    return bool(
+        plan["columns"] or plan["table_missing"] or plan["indexes"] or plan["needs_mode_fix"]
+    )
+
 
 async def ensure_server_access_schema(db: AsyncSession) -> None:
-    """Create the Discord-like server access storage on old PostgreSQL databases."""
+    """Create the Discord-like server access storage on old PostgreSQL databases.
+
+    ALTER TABLE ... ADD COLUMN IF NOT EXISTS takes an ACCESS EXCLUSIVE lock even
+    when the column already exists, so running it on every boot could hang
+    behind any open transaction (e.g. the previous instance during a deploy).
+    Now we first check what is missing and only touch the DB if something is.
+    """
     global _SERVER_ACCESS_SCHEMA_READY
     if _SERVER_ACCESS_SCHEMA_READY:
         return
-    await db.execute(text(
-        "ALTER TABLE community_servers "
-        "ADD COLUMN IF NOT EXISTS access_mode VARCHAR(16) NOT NULL DEFAULT 'invite'"
-    ))
-    await db.execute(text(
-        "ALTER TABLE community_servers "
-        "ADD COLUMN IF NOT EXISTS is_age_restricted BOOLEAN NOT NULL DEFAULT FALSE"
-    ))
-    await db.execute(text(
-        "ALTER TABLE community_servers "
-        "ADD COLUMN IF NOT EXISTS access_rules_enabled BOOLEAN NOT NULL DEFAULT FALSE"
-    ))
-    await db.execute(text(
-        "ALTER TABLE community_servers "
-        "ADD COLUMN IF NOT EXISTS access_rules TEXT NOT NULL DEFAULT '[]'"
-    ))
-    await db.execute(text(
-        "ALTER TABLE community_servers "
-        "ADD COLUMN IF NOT EXISTS join_questions TEXT NOT NULL DEFAULT '[]'"
-    ))
-    await db.execute(text(
-        "ALTER TABLE community_servers "
-        "ADD COLUMN IF NOT EXISTS profile_apply_enabled BOOLEAN NOT NULL DEFAULT FALSE"
-    ))
-    await db.execute(text(
-        "ALTER TABLE community_servers "
-        "ADD COLUMN IF NOT EXISTS community_enabled BOOLEAN NOT NULL DEFAULT FALSE"
-    ))
-    await db.execute(text(
-        "ALTER TABLE community_servers "
-        "ADD COLUMN IF NOT EXISTS onboarding_enabled BOOLEAN NOT NULL DEFAULT FALSE"
-    ))
-    await db.execute(text(
-        "ALTER TABLE community_servers "
-        "ADD COLUMN IF NOT EXISTS onboarding_welcome_title VARCHAR(100)"
-    ))
-    await db.execute(text(
-        "ALTER TABLE community_servers "
-        "ADD COLUMN IF NOT EXISTS onboarding_welcome_text TEXT"
-    ))
-    await db.execute(text(
-        "ALTER TABLE community_servers "
-        "ADD COLUMN IF NOT EXISTS onboarding_questions TEXT NOT NULL DEFAULT '[]'"
-    ))
-    await db.execute(text(
-        "ALTER TABLE community_servers "
-        "ADD COLUMN IF NOT EXISTS onboarding_steps TEXT NOT NULL DEFAULT '[]'"
-    ))
-    # Existing members are complete by default. A newly joined member is
-    # explicitly switched to FALSE only when onboarding is enabled.
-    await db.execute(text(
-        "ALTER TABLE community_server_members "
-        "ADD COLUMN IF NOT EXISTS onboarding_completed BOOLEAN NOT NULL DEFAULT TRUE"
-    ))
-    await db.execute(text(
-        "ALTER TABLE community_server_members "
-        "ADD COLUMN IF NOT EXISTS onboarding_roles TEXT NOT NULL DEFAULT '[]'"
-    ))
-    await db.execute(text(
-        "ALTER TABLE community_server_members "
-        "ADD COLUMN IF NOT EXISTS onboarding_steps_done TEXT NOT NULL DEFAULT '[]'"
-    ))
-    await db.execute(text("""
-        CREATE TABLE IF NOT EXISTS community_server_join_applications (
-            id SERIAL PRIMARY KEY,
-            server_id INTEGER NOT NULL REFERENCES community_servers(id) ON DELETE CASCADE,
-            applicant_id INTEGER NOT NULL REFERENCES community_accounts(id) ON DELETE CASCADE,
-            answers TEXT NOT NULL DEFAULT '[]',
-            status VARCHAR(16) NOT NULL DEFAULT 'pending',
-            submitted_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-            reviewed_at TIMESTAMP WITH TIME ZONE,
-            reviewed_by_id INTEGER REFERENCES community_accounts(id) ON DELETE SET NULL
+
+    plan = await _server_access_plan(db)
+    if not _server_access_plan_has_work(plan):
+        await db.commit()  # close the read-only transaction
+        _SERVER_ACCESS_SCHEMA_READY = True
+        return
+
+    try:
+        # Fail fast instead of waiting forever for a lock.
+        await db.execute(text("SET LOCAL lock_timeout = '10s'"))
+        # Only one worker migrates at a time.
+        await db.execute(
+            text("SELECT pg_advisory_xact_lock(:k)"), {"k": _SERVER_ACCESS_ADVISORY_KEY}
         )
-    """))
-    await db.execute(text(
-        "CREATE UNIQUE INDEX IF NOT EXISTS uq_community_server_join_application "
-        "ON community_server_join_applications (server_id, applicant_id)"
-    ))
-    await db.execute(text(
-        "CREATE INDEX IF NOT EXISTS ix_community_server_join_applications_pending "
-        "ON community_server_join_applications (server_id, status, submitted_at DESC)"
-    ))
-    await db.execute(text(
-        "UPDATE community_servers SET access_mode = 'invite' "
-        "WHERE access_mode IS NULL OR access_mode NOT IN ('invite','application','public')"
-    ))
-    await db.commit()
+        # Someone else may have finished while we waited.
+        plan = await _server_access_plan(db)
+
+        for table, missing in plan["columns"].items():
+            # One ALTER (one lock) per table instead of one per column.
+            clauses = ", ".join(
+                f"ADD COLUMN IF NOT EXISTS {name} {ddl}" for name, ddl in missing
+            )
+            await db.execute(text(f"ALTER TABLE {table} {clauses}"))
+
+        if plan["table_missing"]:
+            await db.execute(text(_SERVER_ACCESS_JOIN_APPS_DDL))
+
+        # Re-read indexes: a freshly created table has none.
+        for name, ddl in _SERVER_ACCESS_INDEXES:
+            exists = (
+                await db.execute(
+                    text(
+                        "SELECT EXISTS (SELECT 1 FROM pg_indexes "
+                        "WHERE schemaname = current_schema() AND indexname = :n)"
+                    ),
+                    {"n": name},
+                )
+            ).scalar()
+            if not exists:
+                await db.execute(text(ddl))
+
+        if plan["needs_mode_fix"]:
+            await db.execute(
+                text(
+                    "UPDATE community_servers SET access_mode = 'invite' "
+                    f"WHERE {_SERVER_ACCESS_BAD_MODE_WHERE}"
+                )
+            )
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        raise
     _SERVER_ACCESS_SCHEMA_READY = True
 
 
