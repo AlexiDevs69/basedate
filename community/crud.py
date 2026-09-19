@@ -3425,27 +3425,73 @@ async def build_server_invite_preview(
 # because create_all() never adds columns to old PostgreSQL tables.
 _MESSAGE_META_COLUMNS_READY = False
 
+_MESSAGE_META_TABLES = ("community_server_messages", "community_direct_messages")
+# (column, DDL) - identical for server and direct messages.
+_MESSAGE_META_COLUMNS: list[tuple[str, str]] = [
+    ("edited_at", "TIMESTAMP WITH TIME ZONE"),
+    ("reply_to_id", "INTEGER"),
+    ("is_forwarded", "BOOLEAN NOT NULL DEFAULT FALSE"),
+    # Voice messages: URL of the uploaded audio clip and its duration in whole seconds.
+    ("voice_url", "TEXT"),
+    ("voice_duration", "INTEGER"),
+]
+_MESSAGE_META_ADVISORY_KEY = 7331002
+
+
+async def _message_meta_plan(db: AsyncSession) -> dict[str, list[str]]:
+    """Read-only: which ALTER clauses are still needed per table (no DDL locks taken)."""
+    rows = await db.execute(
+        text(
+            "SELECT table_name, column_name, data_type FROM information_schema.columns "
+            "WHERE table_schema = current_schema() AND table_name = ANY(:tables)"
+        ),
+        {"tables": list(_MESSAGE_META_TABLES)},
+    )
+    have: dict[str, dict[str, str]] = {t: {} for t in _MESSAGE_META_TABLES}
+    for table_name, column_name, data_type in rows:
+        have[table_name][column_name] = data_type
+    plan: dict[str, list[str]] = {}
+    for table in _MESSAGE_META_TABLES:
+        clauses = [
+            f"ADD COLUMN IF NOT EXISTS {name} {ddl}"
+            for name, ddl in _MESSAGE_META_COLUMNS
+            if name not in have[table]
+        ]
+        # image_url used to be VARCHAR(512); multi-image messages join several URLs
+        # with '\n' into this same field, so it needs to hold much more than that.
+        if "image_url" in have[table] and have[table]["image_url"] != "text":
+            clauses.append("ALTER COLUMN image_url TYPE TEXT")
+        if clauses:
+            plan[table] = clauses
+    return plan
+
+
 async def ensure_message_meta_columns(db: AsyncSession) -> None:
+    """Add edited/reply/forward/voice columns to old PostgreSQL tables.
+
+    ALTER TABLE takes an ACCESS EXCLUSIVE lock even when nothing changes, so we
+    first check what is missing and only run DDL (with a lock timeout) if needed.
+    """
     global _MESSAGE_META_COLUMNS_READY
     if _MESSAGE_META_COLUMNS_READY:
         return
-    await db.execute(text("ALTER TABLE community_server_messages ADD COLUMN IF NOT EXISTS edited_at TIMESTAMP WITH TIME ZONE"))
-    await db.execute(text("ALTER TABLE community_direct_messages ADD COLUMN IF NOT EXISTS edited_at TIMESTAMP WITH TIME ZONE"))
-    await db.execute(text("ALTER TABLE community_server_messages ADD COLUMN IF NOT EXISTS reply_to_id INTEGER"))
-    await db.execute(text("ALTER TABLE community_direct_messages ADD COLUMN IF NOT EXISTS reply_to_id INTEGER"))
-    await db.execute(text("ALTER TABLE community_server_messages ADD COLUMN IF NOT EXISTS is_forwarded BOOLEAN NOT NULL DEFAULT FALSE"))
-    await db.execute(text("ALTER TABLE community_direct_messages ADD COLUMN IF NOT EXISTS is_forwarded BOOLEAN NOT NULL DEFAULT FALSE"))
-    # image_url used to be VARCHAR(512); multi-image messages join several URLs
-    # with '\n' into this same field, so it needs to hold much more than that.
-    await db.execute(text("ALTER TABLE community_server_messages ALTER COLUMN image_url TYPE TEXT"))
-    await db.execute(text("ALTER TABLE community_direct_messages ALTER COLUMN image_url TYPE TEXT"))
-    # Voice messages (DM + server channels): URL of the uploaded audio clip and
-    # its duration in whole seconds.
-    await db.execute(text("ALTER TABLE community_direct_messages ADD COLUMN IF NOT EXISTS voice_url TEXT"))
-    await db.execute(text("ALTER TABLE community_direct_messages ADD COLUMN IF NOT EXISTS voice_duration INTEGER"))
-    await db.execute(text("ALTER TABLE community_server_messages ADD COLUMN IF NOT EXISTS voice_url TEXT"))
-    await db.execute(text("ALTER TABLE community_server_messages ADD COLUMN IF NOT EXISTS voice_duration INTEGER"))
-    await db.commit()
+    plan = await _message_meta_plan(db)
+    if not plan:
+        await db.commit()  # close the read-only transaction
+        _MESSAGE_META_COLUMNS_READY = True
+        return
+    try:
+        await db.execute(text("SET LOCAL lock_timeout = '10s'"))
+        await db.execute(
+            text("SELECT pg_advisory_xact_lock(:k)"), {"k": _MESSAGE_META_ADVISORY_KEY}
+        )
+        plan = await _message_meta_plan(db)  # someone else may have finished meanwhile
+        for table, clauses in plan.items():
+            await db.execute(text(f"ALTER TABLE {table} " + ", ".join(clauses)))
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        raise
     _MESSAGE_META_COLUMNS_READY = True
 
 
