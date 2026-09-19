@@ -2862,8 +2862,8 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
     }
     function ahVoiceMessageHtml(voiceUrl,voiceDuration){
       var url=String(voiceUrl||'').trim();
-      // only same-site paths or http(s) URLs
-      if(!url||!(/^https?:\/\//i.test(url)||url.charAt(0)==='/'))return '';
+      // reject script-ish URLs, accept whatever upload-voice returns (absolute or relative)
+      if(!url||/^\s*(javascript|data|vbscript):/i.test(url))return '';
       var secs=Math.max(0,parseInt(voiceDuration||0,10)||0);
       return '<div class="ah-voice-message"><button type="button" class="ah-voice-play" onclick="ahToggleVoicePlay(this)" aria-label="Відтворити голосове повідомлення"><svg class="ah-voice-play-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><svg class="ah-voice-pause-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg></button><div class="ah-voice-track"><div class="ah-voice-progress"></div></div><span class="ah-voice-duration">'+ahVoiceEsc(ahVoiceFmt(secs))+'</span><audio class="ah-voice-audio" preload="none" src="'+ahVoiceEsc(url)+'"></audio></div>';
     }
