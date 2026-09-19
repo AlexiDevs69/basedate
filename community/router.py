@@ -210,6 +210,20 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 PROFILE_UPLOAD_DIR = ROOT_DIR / "static" / "uploads" / "profiles"
 ALLOWED_IMAGE_TYPES = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp", "image/gif": ".gif"}
 MAX_PROFILE_IMAGE_BYTES = 5 * 1024 * 1024
+
+# Voice messages (DM composer mic button). MediaRecorder in Chrome/Firefox
+# produces webm/opus by default, Safari produces mp4/aac -- accept the
+# common set rather than locking to one container.
+ALLOWED_VOICE_TYPES = {
+    "audio/webm": ".webm",
+    "audio/ogg": ".ogg",
+    "audio/mp4": ".m4a",
+    "audio/mpeg": ".mp3",
+    "audio/x-m4a": ".m4a",
+}
+MAX_VOICE_BYTES = 15 * 1024 * 1024  # ~10 minutes of opus at typical bitrate
+MAX_VOICE_SECONDS = 600
+VOICE_UPLOAD_DIR = ROOT_DIR / "static" / "uploads" / "voice"
 SERVER_BANNER_REQUIRED_BOOSTS = 5
 PUBLIC_SERVER_REQUIRED_BOOSTS = crud.PUBLIC_SERVER_REQUIRED_BOOSTS
 
@@ -406,6 +420,67 @@ async def _read_profile_upload(upload: UploadFile | None) -> tuple[bytes, str] |
     if not data or len(data) > MAX_PROFILE_IMAGE_BYTES:
         return None
     return data, content_type
+
+
+async def _read_voice_upload(upload: UploadFile | None) -> tuple[bytes, str] | None:
+    if upload is None or not getattr(upload, "filename", None):
+        return None
+    content_type = (upload.content_type or "").split(";")[0].strip().lower()
+    if content_type not in ALLOWED_VOICE_TYPES:
+        return None
+    data = await upload.read()
+    if not data or len(data) > MAX_VOICE_BYTES:
+        return None
+    return data, content_type
+
+
+async def _upload_voice_to_cloudinary(data: bytes, content_type: str) -> str | None:
+    # Same signed-upload approach as _upload_to_cloudinary(), but audio has
+    # to go through Cloudinary's "video" resource type (Cloudinary has no
+    # separate "audio" type -- it treats audio-only files as video).
+    cloud_name = os.getenv("CLOUDINARY_CLOUD_NAME", "").strip()
+    api_key = os.getenv("CLOUDINARY_API_KEY", "").strip()
+    api_secret = os.getenv("CLOUDINARY_API_SECRET", "").strip()
+    folder = os.getenv("CLOUDINARY_FOLDER", "alexihub/profiles").strip() or "alexihub/profiles"
+    if not (cloud_name and api_key and api_secret):
+        return None
+
+    timestamp = str(int(time.time()))
+    params_to_sign = {"folder": folder, "timestamp": timestamp}
+    signature_base = "&".join(f"{k}={v}" for k, v in sorted(params_to_sign.items())) + api_secret
+    signature = hashlib.sha1(signature_base.encode("utf-8")).hexdigest()
+
+    ext = ALLOWED_VOICE_TYPES.get(content_type, ".webm")
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.post(
+                f"https://api.cloudinary.com/v1_1/{cloud_name}/video/upload",
+                data={
+                    "api_key": api_key,
+                    "timestamp": timestamp,
+                    "folder": folder,
+                    "signature": signature,
+                },
+                files={"file": (f"voice{ext}", data, content_type)},
+            )
+        payload = resp.json() if resp.headers.get("content-type", "").startswith("application/json") else {}
+        if resp.status_code < 300 and payload.get("secure_url"):
+            return payload["secure_url"]
+        if resp.status_code < 300 and payload.get("url"):
+            return payload["url"]
+        print("Cloudinary voice upload failed:", resp.status_code, payload)
+    except Exception as exc:
+        print("Cloudinary voice upload error:", repr(exc))
+    return None
+
+
+def _save_voice_upload_local(data: bytes, content_type: str, account_id: int) -> str:
+    VOICE_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    ext = ALLOWED_VOICE_TYPES.get(content_type, ".webm")
+    filename = f"{account_id}_voice_{uuid.uuid4().hex[:18]}{ext}"
+    path = VOICE_UPLOAD_DIR / filename
+    path.write_bytes(data)
+    return f"/static/uploads/voice/{filename}"
 
 
 async def _upload_to_cloudinary(data: bytes, content_type: str) -> str | None:
@@ -1386,6 +1461,8 @@ async def _dm_message_realtime_event(
             "author_id": int(message.author_id),
             "content": message.content or "",
             "image_url": message.image_url or None,
+            "voice_url": getattr(message, "voice_url", None) or None,
+            "voice_duration": getattr(message, "voice_duration", None),
             "created_at": message.created_at.isoformat(),
             "edited_at": (
                 message.edited_at.isoformat()
@@ -1649,6 +1726,30 @@ async def api_upload_image(request: Request, file: UploadFile = File(...), db: A
     if not url:
         url = _save_profile_upload_local(data, content_type, account.id, "chat")
     return JSONResponse({"ok": True, "url": url})
+
+
+@router.post("/api/upload-voice")
+async def api_upload_voice(
+    request: Request,
+    file: UploadFile = File(...),
+    duration: str = Form("0"),
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_authenticated"}, status_code=401)
+    prepared = await _read_voice_upload(file)
+    if prepared is None:
+        return JSONResponse({"ok": False, "error": "bad_file"}, status_code=400)
+    data, content_type = prepared
+    try:
+        safe_duration = max(0, min(int(float(duration or 0)), MAX_VOICE_SECONDS))
+    except (TypeError, ValueError):
+        safe_duration = 0
+    url = await _upload_voice_to_cloudinary(data, content_type)
+    if not url:
+        url = _save_voice_upload_local(data, content_type, account.id)
+    return JSONResponse({"ok": True, "url": url, "duration": safe_duration})
 
 
 async def server_rail_context(db: AsyncSession, account_id: int, active_server_id: int | None = None) -> dict:
@@ -5177,6 +5278,8 @@ async def dm_message_submit(
     content: str = Form(""),
     image_url: str = Form(""),
     reply_to_id: str = Form(""),
+    voice_url: str = Form(""),
+    voice_duration: str = Form(""),
     db: AsyncSession = Depends(get_db),
 ):
     account = await current_account(request, db)
@@ -5206,8 +5309,10 @@ async def dm_message_submit(
     content, image_url, _media_item = await _prepare_custom_media_message(
         db, account.id, content, image_url, context="dm", server_id=None
     )
+    voice_url = (voice_url or "").strip()
+    safe_voice_duration = _parse_optional_int(voice_duration) or 0
     realtime_payload = None
-    if thread and (content.strip() or image_url.strip()):
+    if thread and (content.strip() or image_url.strip() or voice_url):
         retry_after_ms = await message_rate_limiter.check(account.id)
         if retry_after_ms:
             return _message_rate_limit_redirect(
@@ -5218,7 +5323,10 @@ async def dm_message_submit(
             reply_msg = await crud.get_dm_message(db, thread.id, reply_id)
             if not reply_msg:
                 reply_id = None
-        msg = await crud.create_dm_message(db, thread.id, account.id, content.strip(), image_url.strip(), reply_to_id=reply_id)
+        msg = await crud.create_dm_message(
+            db, thread.id, account.id, content.strip(), image_url.strip(),
+            reply_to_id=reply_id, voice_url=voice_url or None, voice_duration=safe_voice_duration or None,
+        )
         mention_affected = await _sync_dm_message_mentions(db, msg)
         realtime_payload = await _dm_message_realtime_event(db, msg)
         await _broadcast_mention_counts(mention_affected)
@@ -5457,9 +5565,12 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
 
             content = (data.get("content") or "").strip()
             image_url = (data.get("image_url") or "").strip()
+            voice_url = (data.get("voice_url") or "").strip()
+            voice_duration = _parse_optional_int(data.get("voice_duration")) or 0
+            voice_duration = max(0, min(voice_duration, MAX_VOICE_SECONDS)) if voice_url else 0
             client_nonce = str(data.get("client_nonce") or "").strip()[:64] or None
             reply_to_id = _parse_optional_int(data.get("reply_to_id"))
-            if not content and not image_url:
+            if not content and not image_url and not voice_url:
                 await realtime_channels.clear_typing(key, account_id)
                 continue
             if len(content) > 4000:
@@ -5501,7 +5612,7 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
                 content, image_url, _media_item = await _prepare_custom_media_message(
                     db, account_id, content, image_url, context="dm", server_id=None
                 )
-                if not content and not image_url:
+                if not content and not image_url and not voice_url:
                     await realtime_channels.clear_typing(key, account_id)
                     if requested_custom_media:
                         await websocket.send_json(
@@ -5518,7 +5629,10 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
                     reply_msg = await crud.get_dm_message(db, thread_id, reply_to_id)
                     if reply_msg:
                         reply_id = reply_msg.id
-                msg = await crud.create_dm_message(db, thread_id, account_id, content, image_url, reply_to_id=reply_id)
+                msg = await crud.create_dm_message(
+                    db, thread_id, account_id, content, image_url, reply_to_id=reply_id,
+                    voice_url=voice_url or None, voice_duration=voice_duration or None,
+                )
                 mention_affected = await _sync_dm_message_mentions(db, msg)
                 realtime_event = await _dm_message_realtime_event(
                     db, msg, client_nonce=client_nonce
