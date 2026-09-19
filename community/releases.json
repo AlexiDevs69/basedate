@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.191.0",
+      "date": "2026-09-20",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: voice message seek and duration features."
+      ],
+      "source_sha": "77bbf01e83d9633e6f30f0359da74cff80b50c18"
+    },
+    {
       "version": "1.190.2",
       "date": "2026-09-20",
       "title": "Виправлення та стабільність",
