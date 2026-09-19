@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.193.1",
+      "date": "2026-09-20",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено продуктивність: URL validation for voice messages."
+      ],
+      "source_sha": "84e376bb9190b4e8c187e2225a33d7726b8abce4"
+    },
+    {
       "version": "1.193.0",
       "date": "2026-09-20",
       "title": "Нові можливості AlexiHub",
