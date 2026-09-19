@@ -224,6 +224,14 @@ ALLOWED_VOICE_TYPES = {
 MAX_VOICE_BYTES = 15 * 1024 * 1024  # ~10 minutes of opus at typical bitrate
 MAX_VOICE_SECONDS = 600
 VOICE_UPLOAD_DIR = ROOT_DIR / "static" / "uploads" / "voice"
+
+
+def _clean_voice_url(value) -> str:
+    """Accept only what /api/upload-voice can return: our local voice folder or an http(s) URL."""
+    url = str(value or "").strip()
+    if url.startswith("/static/uploads/voice/") or re.match(r"^https?://", url, re.I):
+        return url[:2000]
+    return ""
 SERVER_BANNER_REQUIRED_BOOSTS = 5
 PUBLIC_SERVER_REQUIRED_BOOSTS = crud.PUBLIC_SERVER_REQUIRED_BOOSTS
 
@@ -578,6 +586,11 @@ async def community_schema_startup() -> None:
         await crud.ensure_server_category_schema(db)
         await crud.ensure_server_event_schema(db)
         await crud.ensure_server_access_schema(db)
+        try:
+            await crud.ensure_message_meta_columns(db)  # voice_url / voice_duration etc.
+        except Exception:
+            import logging
+            logging.getLogger(__name__).exception("message meta columns check failed; will retry lazily")
         await crud.ensure_server_boost_tables(db)
         await crud.ensure_store_studio_tables(db)
 
@@ -1419,6 +1432,8 @@ async def _server_message_realtime_event(
             "author_id": int(message.author_id),
             "content": message.content or "",
             "image_url": message.image_url or None,
+            "voice_url": getattr(message, "voice_url", None) or None,
+            "voice_duration": getattr(message, "voice_duration", None),
             "created_at": message.created_at.isoformat(),
             "edited_at": (
                 message.edited_at.isoformat()
@@ -2721,6 +2736,8 @@ async def server_message_submit(
     content: str = Form(""),
     image_url: str = Form(""),
     reply_to_id: str = Form(""),
+    voice_url: str = Form(""),
+    voice_duration: str = Form(""),
     db: AsyncSession = Depends(get_db),
 ):
     account = await current_account(request, db)
@@ -2743,8 +2760,11 @@ async def server_message_submit(
     content, image_url, _media_item = await _prepare_custom_media_message(
         db, account.id, content, image_url, context="server", server_id=server_id
     )
+    voice_url = _clean_voice_url(voice_url)
+    safe_voice_duration = _parse_optional_int(voice_duration) or 0
+    safe_voice_duration = max(0, min(safe_voice_duration, MAX_VOICE_SECONDS)) if voice_url else 0
     realtime_payload = None
-    if content.strip() or image_url.strip():
+    if content.strip() or image_url.strip() or voice_url:
         retry_after_ms = await message_rate_limiter.check(account.id)
         if retry_after_ms:
             return _message_rate_limit_redirect(
@@ -2755,7 +2775,10 @@ async def server_message_submit(
             reply_msg = await crud.get_server_message(db, server_id, channel_id, reply_id)
             if not reply_msg:
                 reply_id = None
-        msg = await crud.create_server_message(db, server_id, channel_id, account.id, content.strip(), image_url.strip(), reply_to_id=reply_id)
+        msg = await crud.create_server_message(
+            db, server_id, channel_id, account.id, content.strip(), image_url.strip(),
+            reply_to_id=reply_id, voice_url=voice_url or None, voice_duration=safe_voice_duration or None,
+        )
         mention_affected = await _sync_server_message_mentions(db, msg)
         realtime_payload = await _server_message_realtime_event(db, msg)
         streak_state = await crud.bump_channel_streak(db, channel_id)
@@ -5126,9 +5149,12 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
 
             content = (data.get("content") or "").strip()
             image_url = (data.get("image_url") or "").strip()
+            voice_url = _clean_voice_url(data.get("voice_url"))
+            voice_duration = _parse_optional_int(data.get("voice_duration")) or 0
+            voice_duration = max(0, min(voice_duration, MAX_VOICE_SECONDS)) if voice_url else 0
             client_nonce = str(data.get("client_nonce") or "").strip()[:64] or None
             reply_to_id = _parse_optional_int(data.get("reply_to_id"))
-            if not content and not image_url:
+            if not content and not image_url and not voice_url:
                 await realtime_channels.clear_typing(key, account_id)
                 continue
             if len(content) > 4000:
@@ -5150,7 +5176,7 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
                 content, image_url, _media_item = await _prepare_custom_media_message(
                     db, account_id, content, image_url, context="server", server_id=server_id
                 )
-                if not content and not image_url:
+                if not content and not image_url and not voice_url:
                     await realtime_channels.clear_typing(key, account_id)
                     if requested_custom_media:
                         await websocket.send_json(
@@ -5167,7 +5193,10 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
                     reply_msg = await crud.get_server_message(db, server_id, channel_id, reply_to_id)
                     if reply_msg:
                         reply_id = reply_msg.id
-                msg = await crud.create_server_message(db, server_id, channel_id, account_id, content, image_url, reply_to_id=reply_id)
+                msg = await crud.create_server_message(
+                    db, server_id, channel_id, account_id, content, image_url, reply_to_id=reply_id,
+                    voice_url=voice_url or None, voice_duration=voice_duration or None,
+                )
                 mention_affected = await _sync_server_message_mentions(db, msg)
                 realtime_event = await _server_message_realtime_event(
                     db, msg, client_nonce=client_nonce
