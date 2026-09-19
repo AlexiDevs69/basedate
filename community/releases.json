@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.189.0",
+      "date": "2026-09-19",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: voice_url and voice_duration to models."
+      ],
+      "source_sha": "78d98c88dcdbd5a38411b13610f9ad75ca368298"
+    },
+    {
       "version": "1.188.2",
       "date": "2026-09-19",
       "title": "Виправлення та стабільність",
