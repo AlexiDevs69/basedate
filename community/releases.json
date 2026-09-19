@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.190.0",
+      "date": "2026-09-19",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: voice message upload functionality."
+      ],
+      "source_sha": "90e706109b63636c0eb6df8e255068d9870ed792"
+    },
+    {
       "version": "1.189.1",
       "date": "2026-09-19",
       "title": "Виправлення та стабільність",
