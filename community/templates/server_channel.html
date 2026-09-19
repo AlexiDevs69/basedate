@@ -2559,7 +2559,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
           </div>
           {% endif %}
           <div class="message-content" id="content-{{ item.message.id }}"><span class="message-content-text">{{ item.message.content }}</span><span class="message-edited {{ '' if item.message.edited_at else 'hidden' }}" id="edited-{{ item.message.id }}"><!--i18n:common.label.modified-->{{ i18n_t('common.label.modified') }}</span></div>
-          {% if item.message.image_url %}{% set msg_imgs = item.message.image_url.split('\n')|map('trim')|select|list %}{% if msg_imgs|length > 1 %}<div class="message-image-group ah-carousel"><div class="ah-carousel-track" tabindex="0">{% for img_url in msg_imgs %}<div class="ah-carousel-slide"><img src="{{ img_url }}" class="message-image" alt="" draggable="false"></div>{% endfor %}</div><div class="ah-carousel-dots">{% for img_url in msg_imgs %}<button type="button" class="ah-carousel-dot{% if loop.first %} active{% endif %}" aria-label="{{ loop.index }}"></button>{% endfor %}</div></div>{% elif msg_imgs %}<div class="message-image-group"><img src="{{ msg_imgs[0] }}" class="message-image" alt=""></div>{% endif %}{% endif %}
+          {% if item.message.image_url %}{% set msg_imgs = item.message.image_url.split('\n')|map('trim')|select|list %}{% if msg_imgs|length > 1 %}<div class="message-image-group ah-carousel"><div class="ah-carousel-track" tabindex="0">{% for img_url in msg_imgs %}<div class="ah-carousel-slide"><img src="{{ img_url }}" class="message-image" alt="" draggable="false"></div>{% endfor %}</div><div class="ah-carousel-dots">{% for img_url in msg_imgs %}<button type="button" class="ah-carousel-dot{% if loop.first %} active{% endif %}" aria-label="{{ loop.index }}"></button>{% endfor %}</div></div>{% elif msg_imgs %}<div class="message-image-group"><img src="{{ msg_imgs[0] }}" class="message-image" alt=""></div>{% endif %}{% endif %}{% if item.message.voice_url %}{% set _vsecs = (item.message.voice_duration or 0)|int %}<div class="ah-voice-message"><button type="button" class="ah-voice-play" onclick="ahToggleVoicePlay(this)" aria-label="Відтворити голосове повідомлення"><svg class="ah-voice-play-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><svg class="ah-voice-pause-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg></button><div class="ah-voice-track"><div class="ah-voice-progress"></div></div><span class="ah-voice-duration">{{ '%d:%02d'|format(_vsecs // 60, _vsecs % 60) }}</span><audio class="ah-voice-audio" preload="none" src="{{ item.message.voice_url }}"></audio></div>{% endif %}
 
           {% if is_mine and not is_forwarded %}
           <form id="edit-form-{{ item.message.id }}" class="edit-form" method="post" action="/community/servers/{{ server.id }}/channel/{{ channel.id }}/message/{{ item.message.id }}/edit">
@@ -2608,8 +2608,12 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
             <button class="composer-icon-btn" type="button" data-media-action="sticker" onclick="showActionToast && showActionToast(window.AlexiHubI18n.t('server.stub.stickers'))" title="{{ i18n_t('common.aria.sticker') }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 14h.01"/><path d="M16 14h.01"/><path d="M9 18c1.5 1 4.5 1 6 0"/></svg></button>
             <button class="composer-icon-btn" type="button" data-media-action="emoji" onclick="showActionToast && showActionToast(window.AlexiHubI18n.t('server.stub.emoji'))" title="{{ i18n_t('common.text.emoji') }}" data-i18n-title="common.text.emoji"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01"/><path d="M15 9h.01"/></svg></button>
           </div>
-          <button class="send-btn" type="submit" title="{{ i18n_t('server_channel.aria.send') }}" data-i18n-title="server_channel.aria.send">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M22 2 11 13"></path><path d="M22 2 15 22 11 13 2 9 22 2z"></path></svg>
+          <input id="composer-voice-url" type="hidden" name="voice_url" value="">
+          <input id="composer-voice-duration" type="hidden" name="voice_duration" value="">
+          <span id="composer-record-timer"></span>
+          <button class="send-btn mode-voice" id="composer-send-btn" type="submit" title="{{ i18n_t('server_channel.aria.send') }}" data-i18n-title="server_channel.aria.send">
+            <svg class="composer-send-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M22 2 11 13"></path><path d="M22 2 15 22 11 13 2 9 22 2z"></path></svg>
+            <svg class="composer-mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
           </button>
         </div>
         <div id="composer-upload-preview" class="composer-upload-preview"></div>
@@ -2816,6 +2820,145 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
     </div>
   </div>
 </div>
+
+  <style id="ah-voice-message-css">
+    .ah-voice-message{display:flex;align-items:center;gap:10px;margin-top:8px;background:var(--bg-elevated,#1c1c1c);border:1px solid var(--border,#2f3634);border-radius:14px;padding:8px 12px;width:min(280px,100%)}
+    .ah-voice-play{width:34px;height:34px;border-radius:50%;border:0;background:#00C4B4;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;padding:0}
+    .ah-voice-play:hover{filter:brightness(1.08)}
+    .ah-voice-play svg{width:18px;height:18px}
+    .ah-voice-message .ah-voice-pause-icon{display:none}
+    .ah-voice-message.playing .ah-voice-play-icon{display:none}
+    .ah-voice-message.playing .ah-voice-pause-icon{display:block}
+    .ah-voice-track{flex:1;height:20px;margin:0 6px;position:relative;cursor:pointer;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+    .ah-voice-track::before{content:'';position:absolute;left:0;right:0;top:50%;height:4px;margin-top:-2px;border-radius:2px;background:#3a3d45}
+    .ah-voice-progress{position:absolute;left:0;top:50%;height:4px;margin-top:-2px;width:0;background:#00C4B4;border-radius:2px;pointer-events:none;transition:width .25s linear}
+    .ah-voice-progress::after{content:'';position:absolute;right:-6px;top:50%;width:12px;height:12px;margin-top:-6px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.55);transform:scale(0);transition:transform .12s ease}
+    .ah-voice-message:hover .ah-voice-progress::after,.ah-voice-message.playing .ah-voice-progress::after{transform:scale(1)}
+    .ah-voice-message.seeking .ah-voice-progress{transition:none}
+    .ah-voice-message.seeking .ah-voice-progress::after{transform:scale(1.3)}
+    .ah-voice-message.seeking .ah-voice-duration{color:#00C4B4}
+    .ah-voice-duration{font-size:11px;color:var(--text-secondary,#9ca3af);font-weight:700;flex:0 0 auto;font-family:var(--font-mono,monospace);min-width:30px;text-align:right}
+
+    /* composer send button: mic when empty, arrow when there is something to send */
+    #composer-send-btn{position:relative;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;transition:background .15s ease,transform .1s ease}
+    #composer-send-btn svg{position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;transition:opacity .16s ease,transform .16s ease}
+    #composer-send-btn .composer-send-icon{opacity:0;transform:scale(.4) rotate(-35deg)}
+    #composer-send-btn .composer-mic-icon{opacity:0;transform:scale(.4)}
+    #composer-send-btn.mode-send .composer-send-icon{opacity:1;transform:scale(1) rotate(0)}
+    #composer-send-btn.mode-voice .composer-mic-icon{opacity:1;transform:scale(1)}
+    #composer-send-btn:active{transform:scale(.94)}
+    #composer-send-btn.holding{background:#ef4444;animation:composerSendHoldPulse 1.1s ease-in-out infinite}
+    #composer-send-btn.holding .composer-mic-icon{transform:scale(1.12)}
+    @keyframes composerSendHoldPulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.55)}50%{box-shadow:0 0 0 10px rgba(239,68,68,0)}}
+    #composer-record-timer{font-family:var(--font-mono,monospace);font-size:12px;color:#ef4444;font-weight:800;flex:0 0 auto;align-self:center;min-width:0;opacity:0;transform:translateX(4px);transition:opacity .15s ease,transform .15s ease}
+    #composer-record-timer.active{opacity:1;transform:translateX(0);margin-right:4px}
+  </style>
+  <script id="ah-voice-message-js">
+    /* Voice message player: play/pause + click/drag to seek. Global on purpose (used by inline onclick). */
+    function ahVoiceEsc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+    function ahVoiceFmt(sec){
+      sec=Math.max(0,Math.floor(sec||0));
+      return Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0');
+    }
+    function ahVoiceMessageHtml(voiceUrl,voiceDuration){
+      var url=String(voiceUrl||'').trim();
+      // only same-site paths or http(s) URLs
+      if(!url||!(/^https?:\/\//i.test(url)||url.charAt(0)==='/'))return '';
+      var secs=Math.max(0,parseInt(voiceDuration||0,10)||0);
+      return '<div class="ah-voice-message"><button type="button" class="ah-voice-play" onclick="ahToggleVoicePlay(this)" aria-label="Відтворити голосове повідомлення"><svg class="ah-voice-play-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><svg class="ah-voice-pause-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg></button><div class="ah-voice-track"><div class="ah-voice-progress"></div></div><span class="ah-voice-duration">'+ahVoiceEsc(ahVoiceFmt(secs))+'</span><audio class="ah-voice-audio" preload="none" src="'+ahVoiceEsc(url)+'"></audio></div>';
+    }
+    function ahToggleVoicePlay(btn){
+      var wrap=btn.closest('.ah-voice-message');
+      if(!wrap)return;
+      var audio=wrap.querySelector('.ah-voice-audio');
+      if(!audio)return;
+      document.querySelectorAll('.ah-voice-audio').forEach(function(a){
+        if(a!==audio&&!a.paused){a.pause();var w=a.closest('.ah-voice-message');if(w)w.classList.remove('playing');}
+      });
+      if(audio.paused)audio.play().catch(function(){});else audio.pause();
+    }
+    function ahVoiceTotal(wrap,audio){
+      // Real duration if the browser knows it; otherwise fall back to the "m:ss" label
+      // (audio is preload="none", and MediaRecorder webm files often report Infinity).
+      if(audio&&isFinite(audio.duration)&&audio.duration>0)return audio.duration;
+      var t=parseFloat(wrap.dataset.total||'');
+      if(!isFinite(t)){
+        var lbl=wrap.querySelector('.ah-voice-duration');
+        var m=lbl?/^(\d+):(\d{2})$/.exec(lbl.textContent.trim()):null;
+        t=m?(+m[1])*60+(+m[2]):0;
+        wrap.dataset.total=String(t);
+      }
+      return t;
+    }
+    function ahIsVoiceAudio(el){return !!(el&&el.classList&&el.classList.contains('ah-voice-audio'));}
+    document.addEventListener('play',function(e){
+      if(ahIsVoiceAudio(e.target)){var wrap=e.target.closest('.ah-voice-message');if(wrap)wrap.classList.add('playing');}
+    },true);
+    document.addEventListener('pause',function(e){
+      if(ahIsVoiceAudio(e.target)){var wrap=e.target.closest('.ah-voice-message');if(wrap)wrap.classList.remove('playing');}
+    },true);
+    document.addEventListener('timeupdate',function(e){
+      if(!ahIsVoiceAudio(e.target))return;
+      var wrap=e.target.closest('.ah-voice-message');if(!wrap)return;
+      if(wrap.classList.contains('seeking'))return; // don't fight the user's finger
+      var bar=wrap.querySelector('.ah-voice-progress');if(!bar)return;
+      var total=ahVoiceTotal(wrap,e.target);
+      var pct=total?Math.min(100,(e.target.currentTime/total)*100):0;
+      bar.style.width=pct+'%';
+    },true);
+    document.addEventListener('ended',function(e){
+      if(ahIsVoiceAudio(e.target)){
+        var wrap=e.target.closest('.ah-voice-message');
+        if(wrap){wrap.classList.remove('playing');var bar=wrap.querySelector('.ah-voice-progress');if(bar)bar.style.width='0%';}
+      }
+    },true);
+    (function(){
+      var drag=null;
+      function pctFrom(e){
+        var r=drag.track.getBoundingClientRect();
+        return r.width?Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)):0;
+      }
+      function update(e){
+        drag.pct=pctFrom(e);
+        var bar=drag.wrap.querySelector('.ah-voice-progress');
+        if(bar)bar.style.width=(drag.pct*100)+'%';
+        var total=ahVoiceTotal(drag.wrap,drag.audio);
+        if(drag.lbl&&total)drag.lbl.textContent=ahVoiceFmt(drag.pct*total);
+      }
+      function finish(commit){
+        if(!drag)return;
+        var d=drag;drag=null;
+        var total=ahVoiceTotal(d.wrap,d.audio);
+        if(commit&&total>0){
+          try{d.audio.currentTime=Math.min(d.pct*total,total);}catch(_){}
+        }else{
+          var bar=d.wrap.querySelector('.ah-voice-progress');
+          if(bar&&total)bar.style.width=Math.min(100,(d.audio.currentTime/total)*100)+'%';
+        }
+        if(d.lbl&&d.label!=null)d.lbl.textContent=d.label;
+        d.wrap.classList.remove('seeking');
+        try{d.track.releasePointerCapture(d.pid);}catch(_){}
+      }
+      document.addEventListener('pointerdown',function(e){
+        if(e.pointerType==='mouse'&&e.button!==0)return;
+        var track=e.target.closest&&e.target.closest('.ah-voice-track');
+        if(!track)return;
+        var wrap=track.closest('.ah-voice-message');if(!wrap)return;
+        var audio=wrap.querySelector('.ah-voice-audio');if(!audio)return;
+        e.preventDefault();
+        var lbl=wrap.querySelector('.ah-voice-duration');
+        ahVoiceTotal(wrap,audio); // cache the label duration before we overwrite the label
+        drag={track:track,wrap:wrap,audio:audio,lbl:lbl,label:lbl?lbl.textContent:null,pct:0,pid:e.pointerId};
+        try{track.setPointerCapture(e.pointerId);}catch(_){}
+        wrap.classList.add('seeking');
+        update(e);
+      });
+      document.addEventListener('pointermove',function(e){if(drag&&e.pointerId===drag.pid)update(e);});
+      document.addEventListener('pointerup',function(e){if(drag&&e.pointerId===drag.pid){update(e);finish(true);}});
+      document.addEventListener('pointercancel',function(e){if(drag&&e.pointerId===drag.pid)finish(false);});
+      document.addEventListener('selectstart',function(e){if(drag)e.preventDefault();});
+    })();
+  </script>
 
   <script>
 
@@ -3381,6 +3524,7 @@ function openChannelInviteModal(event, btn) {
     }
     var composerActiveIndex = 0;
     function renderUploadPreview() {
+      if (typeof updateComposerSendMode === 'function') updateComposerSendMode();
       if (!composerUploadPreview) return;
       if (!composerImages.length) {
         composerUploadPreview.innerHTML = '';
@@ -3777,6 +3921,12 @@ function openChannelInviteModal(event, btn) {
         if (imgGroup) body.appendChild(imgGroup);
       }
 
+      if (msg.voice_url && typeof ahVoiceMessageHtml === 'function') {
+        var voiceHost = document.createElement('div');
+        voiceHost.innerHTML = ahVoiceMessageHtml(msg.voice_url, msg.voice_duration);
+        if (voiceHost.firstElementChild) body.appendChild(voiceHost.firstElementChild);
+      }
+
       if (author.id === myAccountId && !isForwarded) {
         var editForm = document.createElement('form');
         editForm.id = 'edit-form-' + msg.id;
@@ -3919,6 +4069,7 @@ function openChannelInviteModal(event, btn) {
       clearReply();
       delete textarea.dataset.ahWireValue;
       delete textarea.dataset.ahDisplayValue;
+      updateComposerSendMode();
     }
 
     function acknowledgeServerSend(data) {
@@ -4061,6 +4212,148 @@ function openChannelInviteModal(event, btn) {
       sendSocket({ type: 'typing_stop' });
     }
 
+    /* ================= Voice messages (hold the mic button) ================= */
+    var voiceRecorder = null, voiceChunks = [], voiceStartTime = 0, voiceTimerInterval = null, voiceHolding = false;
+    var composerSendBtn = document.getElementById('composer-send-btn');
+    var recordTimerEl = document.getElementById('composer-record-timer');
+
+    function composerSendMode() {
+      var hasText = !!(textarea && textarea.value.trim().length > 0);
+      var hasImages = composerImages.length > 0;
+      return (hasText || hasImages) ? 'send' : 'voice';
+    }
+
+    function updateComposerSendMode() {
+      if (!composerSendBtn || voiceHolding) return; // don't flip modes mid-recording
+      var mode = composerSendMode();
+      composerSendBtn.classList.toggle('mode-send', mode === 'send');
+      composerSendBtn.classList.toggle('mode-voice', mode === 'voice');
+    }
+
+    function setVoiceRecordingUI(active) {
+      if (!recordTimerEl) return;
+      recordTimerEl.classList.toggle('active', !!active);
+      recordTimerEl.textContent = active ? '0:00' : '';
+    }
+
+    function updateRecordTimerLabel() {
+      if (!recordTimerEl) return;
+      var secs = Math.floor((Date.now() - voiceStartTime) / 1000);
+      recordTimerEl.textContent = Math.floor(secs / 60) + ':' + String(secs % 60).padStart(2, '0');
+    }
+
+    async function startVoiceHold() {
+      if (voiceHolding || composerSendMode() !== 'voice' || pendingServerSend) return;
+      if (!navigator.mediaDevices || !window.MediaRecorder) {
+        if (window.showActionToast) showActionToast('Мікрофон не підтримується цим браузером');
+        return;
+      }
+      voiceHolding = true;
+      if (composerSendBtn) composerSendBtn.classList.add('holding');
+      try {
+        var stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        if (!voiceHolding) {
+          // released (or cancelled) before the permission prompt resolved
+          stream.getTracks().forEach(function (t) { t.stop(); });
+          return;
+        }
+        voiceChunks = [];
+        var preferredTypes = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4'];
+        var mimeType = preferredTypes.find(function (t) { return MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t); }) || '';
+        var recorder = mimeType ? new MediaRecorder(stream, { mimeType: mimeType }) : new MediaRecorder(stream);
+        voiceRecorder = recorder;
+        recorder.ondataavailable = function (e) { if (e.data && e.data.size > 0) voiceChunks.push(e.data); };
+        recorder.onstop = async function () {
+          stream.getTracks().forEach(function (t) { t.stop(); });
+          clearInterval(voiceTimerInterval);
+          setVoiceRecordingUI(false);
+          var durationSec = Math.round((Date.now() - voiceStartTime) / 1000);
+          var chunks = voiceChunks;
+          voiceChunks = [];
+          if (durationSec < 1 || !chunks.length) return;
+          var blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
+          await sendVoiceMessage(blob, durationSec);
+        };
+        recorder.start();
+        voiceStartTime = Date.now();
+        setVoiceRecordingUI(true);
+        voiceTimerInterval = setInterval(updateRecordTimerLabel, 250);
+      } catch (e) {
+        voiceHolding = false;
+        if (composerSendBtn) composerSendBtn.classList.remove('holding');
+        if (window.showActionToast) showActionToast('Немає доступу до мікрофона');
+      }
+    }
+
+    function stopVoiceHold() {
+      if (!voiceHolding) return;
+      voiceHolding = false;
+      if (composerSendBtn) composerSendBtn.classList.remove('holding');
+      if (voiceRecorder && voiceRecorder.state === 'recording') {
+        voiceRecorder.stop();
+      } else {
+        clearInterval(voiceTimerInterval);
+        setVoiceRecordingUI(false);
+      }
+      updateComposerSendMode();
+    }
+
+    async function sendVoiceMessage(blob, durationSec) {
+      if (pendingServerSend) return;
+      if (window.AlexiHubMessageRateLimit && !window.AlexiHubMessageRateLimit.checkAndRecord()) return;
+      var fd = new FormData();
+      var ext = blob.type.indexOf('mp4') !== -1 ? 'm4a' : (blob.type.indexOf('ogg') !== -1 ? 'ogg' : 'webm');
+      fd.append('file', blob, 'voice.' + ext);
+      fd.append('duration', String(durationSec));
+      var data = null;
+      try {
+        var res = await fetch('/community/api/upload-voice', { method: 'POST', body: fd, credentials: 'same-origin' });
+        data = await res.json();
+      } catch (e) {}
+      if (!data || !data.ok || !data.url) {
+        if (window.showActionToast) showActionToast('Не вдалося надіслати голосове повідомлення');
+        return;
+      }
+      var duration = data.duration || durationSec;
+      var replyInput = document.getElementById('reply-to-id');
+      var replyToId = replyInput ? replyInput.value.trim() : '';
+      var clientNonce = (window.crypto && window.crypto.randomUUID) ? window.crypto.randomUUID() : String(Date.now()) + '-' + Math.random().toString(16).slice(2);
+      pendingServerSend = { nonce: clientNonce, content: '', image_url: '', timer: null };
+      var ok = sendSocket({ type: 'message', content: '', image_url: '', voice_url: data.url, voice_duration: duration, reply_to_id: replyToId, client_nonce: clientNonce });
+      if (!ok) {
+        // socket is down: fall back to the regular form POST
+        pendingServerSend = null;
+        var vu = document.getElementById('composer-voice-url');
+        var vd = document.getElementById('composer-voice-duration');
+        if (vu) vu.value = data.url;
+        if (vd) vd.value = String(duration);
+        HTMLFormElement.prototype.submit.call(composerForm);
+        return;
+      }
+      setServerComposerBusy(true);
+      pendingServerSend.timer = setTimeout(function () { finishServerSend(false); }, 12000);
+      sendSocket({ type: 'typing_stop' });
+    }
+
+    (function wireComposerSendButton() {
+      var btn = composerSendBtn;
+      if (!btn) return;
+      btn.addEventListener('pointerdown', function (e) {
+        if (composerSendMode() !== 'voice') return;
+        e.preventDefault();
+        if (btn.setPointerCapture) { try { btn.setPointerCapture(e.pointerId); } catch (err) {} }
+        startVoiceHold();
+      });
+      ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (evt) {
+        btn.addEventListener(evt, function () { if (voiceHolding) stopVoiceHold(); });
+      });
+      btn.addEventListener('click', function (e) {
+        if (composerSendMode() === 'voice') { e.preventDefault(); e.stopPropagation(); }
+      });
+      btn.addEventListener('contextmenu', function (e) { if (composerSendMode() === 'voice') e.preventDefault(); });
+    })();
+    updateComposerSendMode();
+
     connectRealtime();
 
     window.addEventListener('pagehide', function () {
@@ -4086,6 +4379,7 @@ function openChannelInviteModal(event, btn) {
       textarea.addEventListener('input', function () {
         textarea.style.height = 'auto';
         textarea.style.height = Math.min(textarea.scrollHeight, 170) + 'px';
+        updateComposerSendMode();
         if (textarea.value.trim()) sendTypingPing();
         else sendSocket({ type: 'typing_stop' });
       });
