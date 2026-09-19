@@ -2729,8 +2729,16 @@ async def create_server_message(
     image_url: str | None = None,
     reply_to_id: int | None = None,
     is_forwarded: bool = False,
+    voice_url: str | None = None,
+    voice_duration: int | None = None,
 ) -> ServerMessage:
     await ensure_message_meta_columns(db)
+    # Only pass the voice fields when there is a voice clip, so regular
+    # messages keep working even before ServerMessage gets the new columns.
+    voice_kwargs: dict = {}
+    if voice_url and voice_url.strip():
+        voice_kwargs["voice_url"] = voice_url.strip()
+        voice_kwargs["voice_duration"] = max(0, int(voice_duration)) if voice_duration else None
     message = ServerMessage(
         server_id=server_id,
         channel_id=channel_id,
@@ -2739,6 +2747,7 @@ async def create_server_message(
         is_forwarded=bool(is_forwarded),
         content=content.strip(),
         image_url=image_url.strip() if image_url else None,
+        **voice_kwargs,
     )
     db.add(message)
     await db.commit()
@@ -3430,10 +3439,12 @@ async def ensure_message_meta_columns(db: AsyncSession) -> None:
     # with '\n' into this same field, so it needs to hold much more than that.
     await db.execute(text("ALTER TABLE community_server_messages ALTER COLUMN image_url TYPE TEXT"))
     await db.execute(text("ALTER TABLE community_direct_messages ALTER COLUMN image_url TYPE TEXT"))
-    # Voice messages (DM only, for now): URL of the uploaded audio clip and
+    # Voice messages (DM + server channels): URL of the uploaded audio clip and
     # its duration in whole seconds.
     await db.execute(text("ALTER TABLE community_direct_messages ADD COLUMN IF NOT EXISTS voice_url TEXT"))
     await db.execute(text("ALTER TABLE community_direct_messages ADD COLUMN IF NOT EXISTS voice_duration INTEGER"))
+    await db.execute(text("ALTER TABLE community_server_messages ADD COLUMN IF NOT EXISTS voice_url TEXT"))
+    await db.execute(text("ALTER TABLE community_server_messages ADD COLUMN IF NOT EXISTS voice_duration INTEGER"))
     await db.commit()
     _MESSAGE_META_COLUMNS_READY = True
 
