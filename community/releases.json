@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.194.0",
+      "date": "2026-09-20",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: voice message fields to DirectMessage model."
+      ],
+      "source_sha": "3c5944556addf18d8c50fe2dc4a358fac18e8e4d"
+    },
+    {
       "version": "1.193.2",
       "date": "2026-09-20",
       "title": "Виправлення та стабільність",
