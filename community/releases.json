@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.189.1",
+      "date": "2026-09-19",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update database schema for voice messages support."
+      ],
+      "source_sha": "6e0f03f00967976009717bf884798527f644b6a9"
+    },
+    {
       "version": "1.189.0",
       "date": "2026-09-19",
       "title": "Нові можливості AlexiHub",
