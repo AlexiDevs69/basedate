@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.193.0",
+      "date": "2026-09-20",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: voice message support to CRUD operations."
+      ],
+      "source_sha": "0c90c42edde9b9114fc2403073fe41812e706ebe"
+    },
+    {
       "version": "1.192.0",
       "date": "2026-09-20",
       "title": "Нові можливості AlexiHub",
