@@ -366,6 +366,10 @@ class ServerMessage(Base):
     reply_to_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("community_server_messages.id"), nullable=True, index=True)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     image_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Voice message (same fields as DirectMessage): URL of the recorded clip and
+    # its duration in whole seconds.
+    voice_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    voice_duration: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True, nullable=False)
     edited_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     is_forwarded: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
