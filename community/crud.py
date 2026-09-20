@@ -429,6 +429,18 @@ async def get_account_by_id(db: AsyncSession, account_id: int) -> Account | None
     return result.scalar_one_or_none()
 
 
+async def get_accounts_by_ids(db: AsyncSession, account_ids) -> dict[int, Account]:
+    """Load many accounts with ONE query instead of one query per id (N+1)."""
+    ids = sorted({int(i) for i in account_ids if i is not None})
+    found: dict[int, Account] = {}
+    for start in range(0, len(ids), 5000):  # stay far below the driver's bind-parameter limit
+        chunk = ids[start:start + 5000]
+        result = await db.execute(select(Account).where(Account.id.in_(chunk)))
+        for account in result.scalars().all():
+            found[int(account.id)] = account
+    return found
+
+
 async def get_account_by_email(db: AsyncSession, email: str) -> Account | None:
     result = await db.execute(select(Account).where(Account.email == email))
     return result.scalar_one_or_none()
@@ -950,10 +962,10 @@ async def list_pending_requests_with_requester(db: AsyncSession, account_id: int
     )
     pending = list(result.scalars().all())
 
+    accounts = await get_accounts_by_ids(db, (fr.requester_id for fr in pending))
     items = []
     for fr in pending:
-        requester = await get_account_by_id(db, fr.requester_id)
-        items.append({"friendship_id": fr.id, "requester": requester, "created_at": fr.created_at})
+        items.append({"friendship_id": fr.id, "requester": accounts.get(int(fr.requester_id)), "created_at": fr.created_at})
     return items
 
 
@@ -967,10 +979,10 @@ async def list_pending_sent_with_addressee(db: AsyncSession, account_id: int) ->
     )
     pending = list(result.scalars().all())
 
+    accounts = await get_accounts_by_ids(db, (fr.addressee_id for fr in pending))
     items = []
     for fr in pending:
-        addressee = await get_account_by_id(db, fr.addressee_id)
-        items.append({"friendship_id": fr.id, "addressee": addressee, "created_at": fr.created_at})
+        items.append({"friendship_id": fr.id, "addressee": accounts.get(int(fr.addressee_id)), "created_at": fr.created_at})
     return items
 
 
@@ -2914,17 +2926,31 @@ async def list_member_messages_by_channel(
 
 async def get_server_feed(db: AsyncSession, server_id: int, channel_id: int, limit: int = 80) -> list[dict]:
     messages = await list_server_messages(db, server_id, channel_id, limit=limit)
+    # Batch everything: 1 query for the replied-to messages + 1 for ALL authors,
+    # instead of 1-3 queries per message.
+    reply_ids = {int(m.reply_to_id) for m in messages if getattr(m, "reply_to_id", None)}
+    replies_by_id: dict[int, ServerMessage] = {}
+    if reply_ids:
+        reply_result = await db.execute(
+            select(ServerMessage).where(
+                ServerMessage.id.in_(reply_ids),
+                ServerMessage.server_id == server_id,
+                ServerMessage.channel_id == channel_id,
+            )
+        )
+        replies_by_id = {int(r.id): r for r in reply_result.scalars().all()}
+    accounts = await get_accounts_by_ids(
+        db,
+        [m.author_id for m in messages] + [r.author_id for r in replies_by_id.values()],
+    )
     feed = []
     for msg in messages:
-        author = await get_account_by_id(db, msg.author_id)
         reply = None
         reply_id = getattr(msg, "reply_to_id", None)
-        if reply_id:
-            reply_msg = await get_server_message(db, server_id, channel_id, int(reply_id))
-            if reply_msg:
-                reply_author = await get_account_by_id(db, reply_msg.author_id)
-                reply = {"message": reply_msg, "author": reply_author}
-        feed.append({"message": msg, "author": author, "reply": reply})
+        reply_msg = replies_by_id.get(int(reply_id)) if reply_id else None
+        if reply_msg:
+            reply = {"message": reply_msg, "author": accounts.get(int(reply_msg.author_id))}
+        feed.append({"message": msg, "author": accounts.get(int(msg.author_id)), "reply": reply})
     return feed
 
 
@@ -3027,10 +3053,9 @@ async def list_server_members(db: AsyncSession, server_id: int) -> list[dict]:
     result = await db.execute(
         select(ServerMember).where(ServerMember.server_id == server_id).order_by(ServerMember.joined_at.asc())
     )
-    members = []
-    for member in result.scalars().all():
-        account = await get_account_by_id(db, member.account_id)
-        members.append({"member": member, "account": account})
+    member_rows = list(result.scalars().all())
+    accounts = await get_accounts_by_ids(db, (m.account_id for m in member_rows))
+    members = [{"member": m, "account": accounts.get(int(m.account_id))} for m in member_rows]
     role_rank = {"owner": 0, "admin": 1, "member": 2}
     members.sort(key=lambda item: (
         role_rank.get(item["member"].role, 9),
@@ -3438,8 +3463,20 @@ _MESSAGE_META_COLUMNS: list[tuple[str, str]] = [
 _MESSAGE_META_ADVISORY_KEY = 7331002
 
 
-async def _message_meta_plan(db: AsyncSession) -> dict[str, list[str]]:
-    """Read-only: which ALTER clauses are still needed per table (no DDL locks taken)."""
+# Composite indexes for the hottest queries:
+#   channel/DM page:  WHERE channel_id = ? ORDER BY created_at DESC LIMIT 80
+#   reconnect sync:   WHERE channel_id = ? AND id > ? ORDER BY id
+# With only single-column indexes Postgres has to sort every message of the chat.
+_MESSAGE_META_INDEXES: list[tuple[str, str]] = [
+    ("ix_srvmsg_channel_created", "CREATE INDEX IF NOT EXISTS ix_srvmsg_channel_created ON community_server_messages (channel_id, created_at DESC)"),
+    ("ix_srvmsg_channel_id", "CREATE INDEX IF NOT EXISTS ix_srvmsg_channel_id ON community_server_messages (channel_id, id)"),
+    ("ix_dm_thread_created", "CREATE INDEX IF NOT EXISTS ix_dm_thread_created ON community_direct_messages (thread_id, created_at DESC)"),
+    ("ix_dm_thread_id", "CREATE INDEX IF NOT EXISTS ix_dm_thread_id ON community_direct_messages (thread_id, id)"),
+]
+
+
+async def _message_meta_plan(db: AsyncSession) -> dict:
+    """Read-only: which ALTER clauses / indexes are still needed (takes no DDL locks)."""
     rows = await db.execute(
         text(
             "SELECT table_name, column_name, data_type FROM information_schema.columns "
@@ -3450,7 +3487,7 @@ async def _message_meta_plan(db: AsyncSession) -> dict[str, list[str]]:
     have: dict[str, dict[str, str]] = {t: {} for t in _MESSAGE_META_TABLES}
     for table_name, column_name, data_type in rows:
         have[table_name][column_name] = data_type
-    plan: dict[str, list[str]] = {}
+    alters: dict[str, list[str]] = {}
     for table in _MESSAGE_META_TABLES:
         clauses = [
             f"ADD COLUMN IF NOT EXISTS {name} {ddl}"
@@ -3458,16 +3495,22 @@ async def _message_meta_plan(db: AsyncSession) -> dict[str, list[str]]:
             if name not in have[table]
         ]
         # image_url used to be VARCHAR(512); multi-image messages join several URLs
-        # with '\n' into this same field, so it needs to hold much more than that.
+        # with a newline into this same field, so it needs to hold much more than that.
         if "image_url" in have[table] and have[table]["image_url"] != "text":
             clauses.append("ALTER COLUMN image_url TYPE TEXT")
         if clauses:
-            plan[table] = clauses
-    return plan
+            alters[table] = clauses
+    idx_rows = await db.execute(
+        text("SELECT indexname FROM pg_indexes WHERE schemaname = current_schema() AND indexname = ANY(:names)"),
+        {"names": [name for name, _ in _MESSAGE_META_INDEXES]},
+    )
+    have_idx = {r[0] for r in idx_rows}
+    indexes = [(n, ddl) for n, ddl in _MESSAGE_META_INDEXES if n not in have_idx]
+    return {"alters": alters, "indexes": indexes}
 
 
 async def ensure_message_meta_columns(db: AsyncSession) -> None:
-    """Add edited/reply/forward/voice columns to old PostgreSQL tables.
+    """Add edited/reply/forward/voice columns + hot-path indexes to old PostgreSQL tables.
 
     ALTER TABLE takes an ACCESS EXCLUSIVE lock even when nothing changes, so we
     first check what is missing and only run DDL (with a lock timeout) if needed.
@@ -3476,7 +3519,7 @@ async def ensure_message_meta_columns(db: AsyncSession) -> None:
     if _MESSAGE_META_COLUMNS_READY:
         return
     plan = await _message_meta_plan(db)
-    if not plan:
+    if not plan["alters"] and not plan["indexes"]:
         await db.commit()  # close the read-only transaction
         _MESSAGE_META_COLUMNS_READY = True
         return
@@ -3486,8 +3529,10 @@ async def ensure_message_meta_columns(db: AsyncSession) -> None:
             text("SELECT pg_advisory_xact_lock(:k)"), {"k": _MESSAGE_META_ADVISORY_KEY}
         )
         plan = await _message_meta_plan(db)  # someone else may have finished meanwhile
-        for table, clauses in plan.items():
+        for table, clauses in plan["alters"].items():
             await db.execute(text(f"ALTER TABLE {table} " + ", ".join(clauses)))
+        for _name, ddl in plan["indexes"]:
+            await db.execute(text(ddl))
         await db.commit()
     except Exception:
         await db.rollback()
@@ -3587,17 +3632,28 @@ async def list_dm_messages(db: AsyncSession, thread_id: int, limit: int = 80) ->
         .limit(limit)
     )
     messages = list(reversed(list(result.scalars().all())))
+    reply_ids = {int(m.reply_to_id) for m in messages if getattr(m, "reply_to_id", None)}
+    replies_by_id: dict[int, DirectMessage] = {}
+    if reply_ids:
+        reply_result = await db.execute(
+            select(DirectMessage).where(
+                DirectMessage.id.in_(reply_ids),
+                DirectMessage.thread_id == thread_id,
+            )
+        )
+        replies_by_id = {int(r.id): r for r in reply_result.scalars().all()}
+    accounts = await get_accounts_by_ids(
+        db,
+        [m.author_id for m in messages] + [r.author_id for r in replies_by_id.values()],
+    )
     feed: list[dict] = []
     for message in messages:
-        author = await get_account_by_id(db, message.author_id)
         reply = None
         reply_id = getattr(message, "reply_to_id", None)
-        if reply_id:
-            reply_msg = await get_dm_message(db, thread_id, int(reply_id))
-            if reply_msg:
-                reply_author = await get_account_by_id(db, reply_msg.author_id)
-                reply = {"message": reply_msg, "author": reply_author}
-        feed.append({"message": message, "author": author, "reply": reply})
+        reply_msg = replies_by_id.get(int(reply_id)) if reply_id else None
+        if reply_msg:
+            reply = {"message": reply_msg, "author": accounts.get(int(reply_msg.author_id))}
+        feed.append({"message": message, "author": accounts.get(int(message.author_id)), "reply": reply})
     return feed
 
 
@@ -3693,15 +3749,28 @@ async def list_dm_threads_for_account(db: AsyncSession, account_id: int, limit: 
         .limit(limit)
     )
     threads = list(result.scalars().all())
+    if not threads:
+        return []
+
+    def _other_id(thread) -> int:
+        return thread.user_high_id if thread.user_low_id == account_id else thread.user_low_id
+
+    accounts = await get_accounts_by_ids(db, (_other_id(t) for t in threads))
+    # Newest message of every thread in ONE query (DISTINCT ON), not one per thread.
+    last_result = await db.execute(
+        select(DirectMessage)
+        .where(DirectMessage.thread_id.in_([t.id for t in threads]))
+        .distinct(DirectMessage.thread_id)
+        .order_by(DirectMessage.thread_id, DirectMessage.created_at.desc(), DirectMessage.id.desc())
+    )
+    last_by_thread = {int(m.thread_id): m for m in last_result.scalars().all()}
 
     items: list[dict] = []
     for thread in threads:
-        other_id = thread.user_high_id if thread.user_low_id == account_id else thread.user_low_id
-        other = await get_account_by_id(db, other_id)
+        other = accounts.get(int(_other_id(thread)))
         if not other:
             continue
-        last_message = await _last_dm_message(db, thread.id)
-        items.append({"thread": thread, "other": other, "last_message": last_message})
+        items.append({"thread": thread, "other": other, "last_message": last_by_thread.get(int(thread.id))})
     return items
 
 
