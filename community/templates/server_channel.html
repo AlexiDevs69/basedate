@@ -1777,6 +1777,323 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
   window.__ahPerf={touchesMessages:touchesMessages,once:once,MSG_SEL:MSG_SEL};
 })();
 </script>
+<style id="ah-voice-dock-css">
+  #ah-voice-dock{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 10px);width:min(680px,calc(100vw - 20px));transform:translate(-50%,-170%);opacity:0;pointer-events:none;z-index:2147482000;transition:transform .34s cubic-bezier(.2,.9,.25,1),opacity .22s ease;font-family:inherit;color:#e8eaee}
+  #ah-voice-dock.open{transform:translate(-50%,0);opacity:1;pointer-events:auto}
+  #ah-voice-dock.instant{transition:none}
+  #ah-voice-dock .ahvd-card{position:relative;overflow:hidden;border-radius:14px;background:rgba(23,25,29,.94);border:1px solid rgba(255,255,255,.09);box-shadow:0 12px 34px rgba(0,0,0,.5);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+  #ah-voice-dock .ahvd-main{display:flex;align-items:center;gap:4px;height:48px;padding:0 8px}
+  #ah-voice-dock button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  #ah-voice-dock .ahvd-btn{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:#00C4B4;transition:background .15s ease,opacity .15s ease,transform .1s ease}
+  #ah-voice-dock .ahvd-btn:hover{background:rgba(0,196,180,.14)}
+  #ah-voice-dock .ahvd-btn:active{transform:scale(.92)}
+  #ah-voice-dock .ahvd-btn:disabled{opacity:.35;cursor:default;background:none;transform:none}
+  #ah-voice-dock .ahvd-btn svg{width:20px;height:20px;fill:currentColor}
+  #ah-voice-dock .ahvd-play svg{width:22px;height:22px}
+  #ah-voice-dock .ahvd-play .ahvd-i-pause,#ah-voice-dock.playing .ahvd-play .ahvd-i-play{display:none}
+  #ah-voice-dock.playing .ahvd-play .ahvd-i-pause{display:block}
+  #ah-voice-dock .ahvd-info{flex:1;min-width:0;display:flex;align-items:baseline;gap:7px;padding:0 6px;white-space:nowrap;overflow:hidden}
+  #ah-voice-dock .ahvd-author{font-weight:800;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;color:#fff}
+  #ah-voice-dock .ahvd-when{font-size:12.5px;color:#8b93a1;overflow:hidden;text-overflow:ellipsis}
+  #ah-voice-dock .ahvd-time{font-family:var(--font-mono,ui-monospace,monospace);font-size:12px;color:#8b93a1;flex:0 0 auto;min-width:38px;text-align:right;margin-right:2px}
+  #ah-voice-dock .ahvd-vol{display:flex;align-items:center;flex:0 0 auto}
+  #ah-voice-dock .ahvd-vol .ahvd-btn{color:#aeb5c2}
+  #ah-voice-dock .ahvd-vol .ahvd-btn:hover{color:#fff;background:rgba(255,255,255,.08)}
+  #ah-voice-dock .ahvd-i-mute{display:none}
+  #ah-voice-dock.muted .ahvd-i-mute{display:block}
+  #ah-voice-dock.muted .ahvd-i-vol{display:none}
+  #ah-voice-dock .ahvd-range{width:0;opacity:0;margin:0;accent-color:#00C4B4;transition:width .2s ease,opacity .2s ease;height:16px;cursor:pointer}
+  #ah-voice-dock .ahvd-vol:hover .ahvd-range,#ah-voice-dock .ahvd-vol:focus-within .ahvd-range{width:72px;opacity:1;margin:0 6px 0 2px}
+  #ah-voice-dock .ahvd-rate{flex:0 0 auto;min-width:38px;height:24px;padding:0 6px;border-radius:7px;font-size:12px;font-weight:800;color:#aeb5c2;border:1px solid rgba(255,255,255,.16);transition:color .15s ease,border-color .15s ease,background .15s ease}
+  #ah-voice-dock .ahvd-rate:hover{color:#fff;background:rgba(255,255,255,.07)}
+  #ah-voice-dock .ahvd-rate.fast{color:#00C4B4;border-color:rgba(0,196,180,.55)}
+  #ah-voice-dock .ahvd-close{color:#aeb5c2}
+  #ah-voice-dock .ahvd-close:hover{color:#fff;background:rgba(255,255,255,.08)}
+  #ah-voice-dock .ahvd-close svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+  #ah-voice-dock .ahvd-bar{position:absolute;left:0;right:0;bottom:0;height:10px;cursor:pointer;touch-action:none}
+  #ah-voice-dock .ahvd-bar::before{content:'';position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,.1);transition:height .12s ease}
+  #ah-voice-dock .ahvd-fill{position:absolute;left:0;bottom:0;height:3px;width:0;background:#00C4B4;pointer-events:none;transition:width .25s linear,height .12s ease}
+  #ah-voice-dock .ahvd-bar:hover::before,#ah-voice-dock .ahvd-bar:hover .ahvd-fill,#ah-voice-dock.seeking .ahvd-bar::before,#ah-voice-dock.seeking .ahvd-fill{height:6px}
+  #ah-voice-dock.seeking .ahvd-fill{transition:none}
+  @media (max-width:520px){ #ah-voice-dock .ahvd-time{display:none}#ah-voice-dock .ahvd-when{display:none}#ah-voice-dock .ahvd-range{display:none}}
+  @media (prefers-reduced-motion:reduce){ #ah-voice-dock{transition:opacity .15s ease}}
+</style>
+<script id="ah-voice-dock-js">
+/* Voice "dock": a small player bar at the top while a voice message plays (prev / play / next,
+   speed, volume, seek). Survives page navigation: the state is kept in sessionStorage and the
+   bar re-appears instantly on the next page, playback continues from the compensated position. */
+(function(){
+  if(window.AhVoiceDock)return;
+  var KEY='ah_voice_dock_v1',PREF='ah_voice_prefs_v1';
+  var AUDIO_SEL='audio.ah-voice-audio,audio.dm-voice-audio';
+  var RATES=[1,1.5,2];
+  var cur=null,orphan=null,ghost=null,warm=null,ui=null,unloading=false,lastSave=0,sessionReady=false;
+  var meta={author:'',when:'',src:'',dur:0};
+  var prefs={rate:1,volume:1,muted:false};
+  try{var p0=JSON.parse(localStorage.getItem(PREF)||'null');if(p0&&typeof p0==='object'){prefs.rate=RATES.indexOf(+p0.rate)>=0?+p0.rate:1;prefs.volume=isFinite(+p0.volume)?Math.max(0,Math.min(1,+p0.volume)):1;prefs.muted=!!p0.muted;}}catch(e){}
+  function savePrefs(){try{localStorage.setItem(PREF,JSON.stringify(prefs));}catch(e){}}
+  function fmt(s){s=Math.max(0,Math.floor(s||0));var m=Math.floor(s/60),r=s%60;return (m<10?'0':'')+m+':'+(r<10?'0':'')+r;}
+  function srcOf(a){return a?(a.getAttribute('src')||''):'';}
+  function audios(){return [].slice.call(document.querySelectorAll(AUDIO_SEL));}
+  function metaFrom(a){
+    var row=a.closest&&a.closest('.message,.msg');
+    var wrap=a.closest&&a.closest('.ah-voice-message,.dm-voice-message');
+    var tEl=row&&row.querySelector('.message-time,.msg-time');
+    var dur=0;
+    if(wrap){
+      dur=parseFloat(wrap.dataset.total||'');
+      if(!isFinite(dur)){
+        var lbl=wrap.querySelector('.ah-voice-duration,.dm-voice-duration');
+        var m=lbl&&/^(\d+):(\d{2})$/.exec((lbl.dataset.label||lbl.textContent).trim());
+        dur=m?(+m[1])*60+(+m[2]):0;
+      }
+    }
+    return {author:row&&row.dataset?(row.dataset.messageAuthor||''):'',when:tEl?tEl.textContent.replace(/\s+/g,' ').trim():'',src:srcOf(a),dur:dur||0};
+  }
+  function mergeMeta(m){
+    // keep what we restored (labels may not be hydrated yet right after a navigation)
+    if(meta.src&&meta.src===m.src){
+      if(meta.author)m.author=meta.author;
+      if(meta.when)m.when=meta.when;
+      if(!m.dur)m.dur=meta.dur;
+    }
+    return m;
+  }
+  function totalDur(){return cur&&isFinite(cur.duration)&&cur.duration>0?cur.duration:(meta.dur||0);}
+  function view(){
+    if(cur)return {t:cur.currentTime||0,dur:totalDur(),playing:!cur.paused&&!cur.ended};
+    if(ghost)return ghost;
+    return {t:0,dur:0,playing:false};
+  }
+  function applyPrefs(a){try{a.playbackRate=prefs.rate;a.volume=prefs.volume;a.muted=!!prefs.muted;}catch(e){}}
+  function siblingAudio(dir){
+    if(!cur||cur===orphan)return null;
+    var list=audios(),i=list.indexOf(cur);
+    return i<0?null:(list[i+dir]||null);
+  }
+
+  /* ---------- persistence ---------- */
+  function save(force){
+    if(unloading||!cur)return;
+    var n=Date.now();
+    if(!force&&n-lastSave<500)return;
+    lastSave=n;
+    try{sessionStorage.setItem(KEY,JSON.stringify({src:meta.src||srcOf(cur),t:cur.currentTime||0,playing:!cur.paused&&!cur.ended,author:meta.author,when:meta.when,dur:totalDur(),savedAt:n}));}catch(e){}
+  }
+  function clearState(){try{sessionStorage.removeItem(KEY);}catch(e){}}
+  window.addEventListener('pagehide',function(){save(true);unloading=true;});
+  window.addEventListener('pageshow',function(e){if(e.persisted)unloading=false;});
+  document.addEventListener('visibilitychange',function(){if(document.hidden)save(true);});
+
+  /* ---------- UI ---------- */
+  var I={
+    prev:'<svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zM20 6v12L9.5 12z"/></svg>',
+    next:'<svg viewBox="0 0 24 24"><path d="M16 6h2v12h-2zM4 6v12l10.5-6z"/></svg>',
+    play:'<svg class="ahvd-i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><svg class="ahvd-i-pause" viewBox="0 0 24 24"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>',
+    vol:'<svg class="ahvd-i-vol" viewBox="0 0 24 24"><path d="M3 10v4h4l5 4V6L7 10z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><svg class="ahvd-i-mute" viewBox="0 0 24 24"><path d="M3 10v4h4l5 4V6L7 10z"/><path d="M16 9.5l5 5M21 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+    close:'<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>'
+  };
+  function ensureUI(){
+    if(ui||!document.body)return;
+    var el=document.createElement('div');
+    el.id='ah-voice-dock';
+    el.setAttribute('role','region');
+    el.setAttribute('aria-label','Голосове повідомлення');
+    el.innerHTML='<div class="ahvd-card"><div class="ahvd-main">'
+      +'<button type="button" class="ahvd-btn ahvd-prev" title="Попереднє" aria-label="Попереднє">'+I.prev+'</button>'
+      +'<button type="button" class="ahvd-btn ahvd-play" title="Відтворити / пауза" aria-label="Відтворити / пауза">'+I.play+'</button>'
+      +'<button type="button" class="ahvd-btn ahvd-next" title="Наступне" aria-label="Наступне">'+I.next+'</button>'
+      +'<div class="ahvd-info"><b class="ahvd-author"></b><span class="ahvd-when"></span></div>'
+      +'<span class="ahvd-time">00:00</span>'
+      +'<div class="ahvd-vol"><button type="button" class="ahvd-btn ahvd-mute" title="Звук" aria-label="Звук">'+I.vol+'</button><input class="ahvd-range" type="range" min="0" max="1" step="0.05" aria-label="Гучність"></div>'
+      +'<button type="button" class="ahvd-rate" title="Швидкість" aria-label="Швидкість">1x</button>'
+      +'<button type="button" class="ahvd-btn ahvd-close" title="Закрити" aria-label="Закрити">'+I.close+'</button>'
+      +'</div><div class="ahvd-bar"><div class="ahvd-fill"></div></div></div>';
+    document.body.appendChild(el);
+    var q=function(s){return el.querySelector(s);};
+    ui={el:el,prev:q('.ahvd-prev'),play:q('.ahvd-play'),next:q('.ahvd-next'),author:q('.ahvd-author'),when:q('.ahvd-when'),time:q('.ahvd-time'),mute:q('.ahvd-mute'),range:q('.ahvd-range'),rate:q('.ahvd-rate'),close:q('.ahvd-close'),bar:q('.ahvd-bar'),fill:q('.ahvd-fill')};
+    ui.play.addEventListener('click',toggle);
+    ui.prev.addEventListener('click',prev);
+    ui.next.addEventListener('click',next);
+    ui.close.addEventListener('click',close);
+    ui.rate.addEventListener('click',cycleRate);
+    ui.mute.addEventListener('click',function(){prefs.muted=!prefs.muted;if(!prefs.muted&&prefs.volume===0)prefs.volume=1;savePrefs();if(cur)applyPrefs(cur);render();});
+    ui.range.addEventListener('input',function(){prefs.volume=+ui.range.value;prefs.muted=prefs.volume===0;savePrefs();if(cur)applyPrefs(cur);renderVolume();});
+    var seeking=false;
+    function seekTo(e){
+      var r=ui.bar.getBoundingClientRect(),d=totalDur()||(ghost&&ghost.dur)||0;
+      if(!r.width||!d)return;
+      var pct=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));
+      ui.fill.style.width=(pct*100)+'%';
+      ui.time.textContent=fmt(pct*d);
+      if(cur){try{cur.currentTime=pct*d;}catch(_){}}
+    }
+    ui.bar.addEventListener('pointerdown',function(e){seeking=true;el.classList.add('seeking');try{ui.bar.setPointerCapture(e.pointerId);}catch(_){}seekTo(e);});
+    ui.bar.addEventListener('pointermove',function(e){if(seeking)seekTo(e);});
+    var endSeek=function(){seeking=false;el.classList.remove('seeking');};
+    ui.bar.addEventListener('pointerup',endSeek);
+    ui.bar.addEventListener('pointercancel',endSeek);
+    ui.seekingRef=function(){return seeking;};
+    render();
+  }
+  function renderVolume(){
+    if(!ui)return;
+    ui.range.value=prefs.muted?0:prefs.volume;
+    ui.el.classList.toggle('muted',!!prefs.muted||prefs.volume===0);
+  }
+  function renderTime(){
+    if(!ui||(ui.seekingRef&&ui.seekingRef()))return;
+    var v=view();
+    ui.time.textContent=fmt(v.t);
+    ui.fill.style.width=(v.dur?Math.min(100,v.t/v.dur*100):0)+'%';
+  }
+  function render(){
+    if(!ui)return;
+    var v=view();
+    ui.el.classList.toggle('playing',v.playing);
+    ui.author.textContent=meta.author||'Голосове повідомлення';
+    ui.when.textContent=meta.when||'';
+    ui.rate.textContent=(prefs.rate===1?'1':String(prefs.rate))+'x';
+    ui.rate.classList.toggle('fast',prefs.rate!==1);
+    ui.next.disabled=!siblingAudio(1);
+    renderVolume();
+    renderTime();
+  }
+  function open(instant){
+    ensureUI();
+    if(!ui)return;
+    if(instant){
+      ui.el.classList.add('instant','open');
+      requestAnimationFrame(function(){requestAnimationFrame(function(){if(ui)ui.el.classList.remove('instant');});});
+    }else{
+      ui.el.classList.remove('instant');
+      ui.el.classList.add('open');
+    }
+  }
+
+  /* ---------- controls ---------- */
+  function playElement(a){
+    // go through the message's own play button so its UI and the "pause others" logic run
+    var wrap=a.closest&&a.closest('.ah-voice-message,.dm-voice-message');
+    var btn=wrap&&wrap.querySelector('button');
+    if(btn)btn.click();else{var pr=a.play();if(pr&&pr.catch)pr.catch(function(){});}
+  }
+  function toggle(){
+    if(!cur)return;
+    if(cur.paused||cur.ended){
+      if(cur.ended)cur.currentTime=0;
+      var pr=cur.play();if(pr&&pr.catch)pr.catch(function(){});
+    }else cur.pause();
+  }
+  function prev(){
+    if(!cur)return;
+    var p=siblingAudio(-1);
+    if(cur.currentTime>3||!p){cur.currentTime=0;return;}
+    cur.pause();p.currentTime=0;playElement(p);
+  }
+  function next(){
+    var n=siblingAudio(1);
+    if(!n)return;
+    if(cur)cur.pause();
+    n.currentTime=0;playElement(n);
+  }
+  function cycleRate(){
+    prefs.rate=RATES[(RATES.indexOf(prefs.rate)+1)%RATES.length];
+    savePrefs();
+    if(cur)try{cur.playbackRate=prefs.rate;}catch(e){}
+    render();
+  }
+  function close(){
+    var a=cur;
+    cur=null;ghost=null;
+    clearState();
+    if(orphan){try{orphan.pause();orphan.removeAttribute('src');}catch(e){}orphan=null;}
+    if(a){try{a.pause();}catch(e){}}
+    if(ui)ui.el.classList.remove('open','playing');
+    try{if('mediaSession' in navigator)navigator.mediaSession.playbackState='none';}catch(e){}
+  }
+
+  /* ---------- media events ---------- */
+  function mediaSession(){
+    if(!('mediaSession' in navigator))return;
+    try{
+      navigator.mediaSession.metadata=new MediaMetadata({title:'Голосове повідомлення',artist:meta.author||'',album:meta.when||''});
+      navigator.mediaSession.setActionHandler('play',toggle);
+      navigator.mediaSession.setActionHandler('pause',toggle);
+      navigator.mediaSession.setActionHandler('previoustrack',prev);
+      navigator.mediaSession.setActionHandler('nexttrack',next);
+    }catch(e){}
+  }
+  function onMedia(evt,a){
+    if(evt==='play'){
+      if(orphan&&a!==orphan){try{orphan.pause();orphan.removeAttribute('src');}catch(e){}orphan=null;}
+      cur=a;ghost=null;
+      meta=mergeMeta(metaFrom(a));
+      applyPrefs(a);
+      open(false);
+      render();save(true);mediaSession();
+      try{if('mediaSession' in navigator)navigator.mediaSession.playbackState='playing';}catch(e){}
+      return;
+    }
+    if(a!==cur)return;
+    if(evt==='pause'){render();save(true);try{if('mediaSession' in navigator)navigator.mediaSession.playbackState='paused';}catch(e){}}
+    else if(evt==='timeupdate'){renderTime();save(false);}
+    else if(evt==='loadedmetadata'){renderTime();}
+    else if(evt==='ended'){
+      var n=siblingAudio(1);
+      if(n){n.currentTime=0;playElement(n);}else close();
+    }
+  }
+  ['play','pause','ended','timeupdate','loadedmetadata'].forEach(function(evt){
+    document.addEventListener(evt,function(e){var a=e.target;if(a&&a.matches&&a.matches(AUDIO_SEL))onMedia(evt,a);},true);
+  });
+  function wireOrphan(a){
+    ['play','pause','ended','timeupdate','loadedmetadata'].forEach(function(evt){a.addEventListener(evt,function(){onMedia(evt,a);});});
+  }
+
+  /* ---------- resume after a page change ---------- */
+  function whenBody(fn){
+    if(document.body)return fn();
+    var mo=new (window.__NativeMO||MutationObserver)(function(){if(document.body){mo.disconnect();fn();}});
+    mo.observe(document.documentElement,{childList:true});
+  }
+  function restore(){
+    var st=null;
+    try{st=JSON.parse(sessionStorage.getItem(KEY)||'null');}catch(e){}
+    if(!st||!st.src)return;
+    var gap=(Date.now()-(+st.savedAt||0))/1000;
+    if(!(gap>=0)||gap>1800){clearState();return;}
+    // only a short gap means "we were still playing while the page changed"
+    var resume=!!st.playing&&gap<=8;
+    meta={author:st.author||'',when:st.when||'',src:st.src,dur:+st.dur||0};
+    ghost={t:(+st.t||0)+(resume?gap*prefs.rate:0),dur:meta.dur,playing:resume};
+    open(true);render();
+    // start fetching now: the real <audio> exists only after the page's scripts have run
+    try{warm=new Audio();warm.preload='auto';warm.src=st.src;}catch(e){warm=null;}
+    var attach=function(){
+      var el=audios().filter(function(a){return srcOf(a)===st.src;})[0];
+      var t=(+st.t||0)+(resume?((Date.now()-(+st.savedAt||0))/1000)*prefs.rate:0);
+      if(meta.dur&&t>=meta.dur-0.15){close();return;}   // it finished while we were navigating
+      if(el){
+        if(warm){try{warm.removeAttribute('src');}catch(e){}warm=null;}
+        cur=el;
+      }else if(warm){
+        orphan=warm;warm=null;wireOrphan(orphan);cur=orphan;
+      }else return;
+      ghost=null;
+      applyPrefs(cur);
+      try{cur.currentTime=t;}catch(e){}
+      if(resume){var pr=cur.play();if(pr&&pr.catch)pr.catch(function(){render();});}
+      render();
+      if(!resume)save(true);
+    };
+    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',attach);else attach();
+  }
+  whenBody(function(){ensureUI();restore();});
+
+  window.AhVoiceDock={close:close,toggle:toggle,next:next,prev:prev};
+})();
+</script>
 <script id="server-banner-top-half-hover">
 (function(){
   function bind(head){
