@@ -6,7 +6,7 @@
   <title>#{{ channel.name }} // {{ server.name }}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Baloo+2:wght@700;800&family=Bangers&family=Bungee&family=Bungee+Shade&family=Cinzel+Decorative:wght@700&family=Creepster&family=Fredoka:wght@700;800&family=Honk&family=Inter:wght@400;500;600;700;800&family=Jersey+10&family=JetBrains+Mono:wght@400;700&family=Lilita+One&family=Luckiest+Guy&family=Modak&family=Monoton&family=Pixelify+Sans:wght@700&family=Press+Start+2P&family=Righteous&family=Rubik+Glitch&family=Rubik+Iso&family=Rubik+Wet+Paint&family=Silkscreen:wght@700&family=Tilt+Prism&family=Titan+One&family=Unbounded:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Baloo+2:wght@700;800&family=Bangers&family=Bungee&family=Bungee+Shade&family=Cinzel+Decorative:wght@700&family=Creepster&family=Fredoka:wght@700;800&family=Honk&family=Inter:wght@400;500;600;700;800&family=Jersey+10&family=JetBrains+Mono:wght@400;700&family=Lilita+One&family=Luckiest+Guy&family=Modak&family=Monoton&family=Pixelify+Sans:wght@700&family=Press+Start+2P&family=Righteous&family=Rubik+Glitch&family=Rubik+Iso&family=Rubik+Wet+Paint&family=Silkscreen:wght@700&family=Tilt+Prism&family=Titan+One&family=Unbounded:wght@700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Baloo+2:wght@700;800&family=Bangers&family=Bungee&family=Bungee+Shade&family=Cinzel+Decorative:wght@700&family=Creepster&family=Fredoka:wght@700;800&family=Honk&family=Inter:wght@400;500;600;700;800&family=Jersey+10&family=JetBrains+Mono:wght@400;700&family=Lilita+One&family=Luckiest+Guy&family=Modak&family=Monoton&family=Pixelify+Sans:wght@700&family=Press+Start+2P&family=Righteous&family=Rubik+Glitch&family=Rubik+Iso&family=Rubik+Wet+Paint&family=Silkscreen:wght@700&family=Tilt+Prism&family=Titan+One&family=Unbounded:wght@700;800&display=swap"></noscript>
   <style>
     :root {
       --bg: #141414; --bg-elevated: #1c1c1c; --bg-header: #101010;
@@ -1740,6 +1740,43 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
 .server-head.has-server-banner .server-head-invite-btn:hover{color:#fff!important}
 .server-head.has-server-banner .server-menu{top:48px!important;z-index:4}
 </style>
+<script id="ah-perf-helper">
+/* Perf helper: lets the many page-wide MutationObservers skip mutations that cannot matter
+   (typing indicator, timers, toasts...) and run at most once per frame. */
+(function(){
+  if(window.__ahPerf)return;
+  var MSG_SEL='.msg,.message,.dm-message-text,.message-content-text';
+  function elOf(n){return n&&n.nodeType===1?n:(n?n.parentElement:null);}
+  function touchesMessages(records){
+    for(var i=0;i<records.length;i++){
+      var r=records[i];
+      if(r.type==='childList'){
+        for(var j=0;j<r.addedNodes.length;j++){
+          var n=r.addedNodes[j];
+          if(n.nodeType!==1)continue;
+          if(n.matches(MSG_SEL)||n.querySelector(MSG_SEL))return true;
+        }
+      }
+      var t=elOf(r.target);
+      if(t&&t.closest&&t.closest(MSG_SEL))return true;
+    }
+    return false;
+  }
+  var pending={};
+  function once(key,fn){
+    if(pending[key])return;
+    pending[key]=1;
+    var run=function(){
+      if(!pending[key])return;
+      pending[key]=0;
+      try{fn();}catch(e){console.error(e);}
+    };
+    if(document.hidden)setTimeout(run,300);
+    else{requestAnimationFrame(run);setTimeout(run,120);}
+  }
+  window.__ahPerf={touchesMessages:touchesMessages,once:once,MSG_SEL:MSG_SEL};
+})();
+</script>
 <script id="server-banner-top-half-hover">
 (function(){
   function bind(head){
@@ -2559,7 +2596,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
           </div>
           {% endif %}
           <div class="message-content" id="content-{{ item.message.id }}"><span class="message-content-text">{{ item.message.content }}</span><span class="message-edited {{ '' if item.message.edited_at else 'hidden' }}" id="edited-{{ item.message.id }}"><!--i18n:common.label.modified-->{{ i18n_t('common.label.modified') }}</span></div>
-          {% if item.message.image_url %}{% set msg_imgs = item.message.image_url.split('\n')|map('trim')|select|list %}{% if msg_imgs|length > 1 %}<div class="message-image-group ah-carousel"><div class="ah-carousel-track" tabindex="0">{% for img_url in msg_imgs %}<div class="ah-carousel-slide"><img src="{{ img_url }}" class="message-image" alt="" draggable="false"></div>{% endfor %}</div><div class="ah-carousel-dots">{% for img_url in msg_imgs %}<button type="button" class="ah-carousel-dot{% if loop.first %} active{% endif %}" aria-label="{{ loop.index }}"></button>{% endfor %}</div></div>{% elif msg_imgs %}<div class="message-image-group"><img src="{{ msg_imgs[0] }}" class="message-image" alt=""></div>{% endif %}{% endif %}{% if item.message.voice_url %}{% set _vsecs = (item.message.voice_duration or 0)|int %}<div class="ah-voice-message"><button type="button" class="ah-voice-play" onclick="ahToggleVoicePlay(this)" aria-label="Відтворити голосове повідомлення"><svg class="ah-voice-play-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><svg class="ah-voice-pause-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg></button><div class="ah-voice-track"><div class="ah-voice-progress"></div></div><span class="ah-voice-duration">{{ '%d:%02d'|format(_vsecs // 60, _vsecs % 60) }}</span><audio class="ah-voice-audio" preload="none" src="{{ item.message.voice_url }}"></audio></div>{% endif %}
+          {% if item.message.image_url %}{% set msg_imgs = item.message.image_url.split('\n')|map('trim')|select|list %}{% if msg_imgs|length > 1 %}<div class="message-image-group ah-carousel"><div class="ah-carousel-track" tabindex="0">{% for img_url in msg_imgs %}<div class="ah-carousel-slide"><img src="{{ img_url }}" class="message-image" alt="" decoding="async" draggable="false"></div>{% endfor %}</div><div class="ah-carousel-dots">{% for img_url in msg_imgs %}<button type="button" class="ah-carousel-dot{% if loop.first %} active{% endif %}" aria-label="{{ loop.index }}"></button>{% endfor %}</div></div>{% elif msg_imgs %}<div class="message-image-group"><img src="{{ msg_imgs[0] }}" class="message-image" alt="" decoding="async"></div>{% endif %}{% endif %}{% if item.message.voice_url %}{% set _vsecs = (item.message.voice_duration or 0)|int %}<div class="ah-voice-message"><button type="button" class="ah-voice-play" onclick="ahToggleVoicePlay(this)" aria-label="Відтворити голосове повідомлення"><svg class="ah-voice-play-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><svg class="ah-voice-pause-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg></button><div class="ah-voice-track"><div class="ah-voice-progress"></div></div><span class="ah-voice-duration">{{ '%d:%02d'|format(_vsecs // 60, _vsecs % 60) }}</span><audio class="ah-voice-audio" preload="none" src="{{ item.message.voice_url }}"></audio></div>{% endif %}
 
           {% if is_mine and not is_forwarded %}
           <form id="edit-form-{{ item.message.id }}" class="edit-form" method="post" action="/community/servers/{{ server.id }}/channel/{{ channel.id }}/message/{{ item.message.id }}/edit">
@@ -3467,7 +3504,8 @@ function openChannelInviteModal(event, btn) {
     }
 
     pollNotifications();
-    setInterval(pollNotifications, 20000);
+    setInterval(function () { if (!document.hidden) pollNotifications(); }, 20000);
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) pollNotifications(); });
     document.addEventListener('click', function (e) {
       var wrap = document.querySelector('.notif-wrap');
       if (wrap && !wrap.contains(e.target)) document.getElementById('notif-dropdown').style.display = 'none';
@@ -3953,9 +3991,13 @@ function openChannelInviteModal(event, btn) {
       actions.innerHTML = ('' + "<button type=\"button\" class=\"message-more-btn\" onclick=\"openMessageMenu(event)\" title=\"" + window.AlexiHubI18n.t("common.aria.more") + "\"><svg viewBox=\"0 0 24 24\" fill=\"currentColor\"><circle cx=\"5\" cy=\"12\" r=\"2\"/><circle cx=\"12\" cy=\"12\" r=\"2\"/><circle cx=\"19\" cy=\"12\" r=\"2\"/></svg></button>");
       article.appendChild(actions);
 
-      var nextMessage = Array.from(messagesEl.querySelectorAll('.message[data-message-id]')).find(function (row) {
-        return Number(row.dataset.messageId || 0) > Number(msg.id || 0);
-      });
+      // Walk back from the end: normally the new message is the newest, so this stops at once
+      // (was: scan every message on the page for each new one).
+      var nextMessage = null;
+      for (var scanEl = messagesEl.lastElementChild; scanEl; scanEl = scanEl.previousElementSibling) {
+        if (!scanEl.matches('.message[data-message-id]')) continue;
+        if (Number(scanEl.dataset.messageId || 0) > Number(msg.id || 0)) nextMessage = scanEl; else break;
+      }
       if (nextMessage) messagesEl.insertBefore(article, nextMessage);
       else messagesEl.appendChild(article);
       if (String(msg.content || '').includes('[[ah:emoji:') && window.__ahReloadCustomMedia) window.__ahReloadCustomMedia();
@@ -7339,10 +7381,10 @@ if (typeof window.openSelfProfileSettings !== 'function') {
   function close(){document.getElementById('ah-media-picker')?.classList.remove('open');}
   function submitComposer(){const form=document.getElementById('composer-form')||document.querySelector('form.composer-wrap')||document.querySelector('form[action$="/message"]');if(form){if(form.requestSubmit)form.requestSubmit();else form.submit();}}
   function use(i){if(!i)return;if(!i.allowed){const p=ensure();p.querySelector('.ah-media-footer').innerHTML=('' + "<svg class=\"ah-ui-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"5\" y=\"10\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8 10V7a4 4 0 0 1 8 0v3\"/></svg> <span>" + window.AlexiHubI18n.t("common.text.for_a_ls_or_another_server_you_need_nitro") + "</span>");return;}const ta=document.getElementById('composer-textarea')||document.querySelector('textarea[name=content]');const img=document.getElementById('composer-image-url')||document.querySelector('input[name=image_url]');if(i.type==='emoji'){if(ta){ta.value+=(ta.value&&!ta.value.endsWith(' ')?' ':'')+':'+cleanName(i.name)+': ';ta.focus();ta.dispatchEvent(new Event('input',{bubbles:true}));}}else{if(ta)ta.value='[[ah:sticker:'+String(i.id)+']]';if(img)img.value=i.image_url||'';submitComposer();}close();}
-  function renderCustomMedia(root){const emojis=lib.emojis||[],scope=root||document;scope.querySelectorAll('.msg,.message').forEach(row=>{const raw=(row.dataset.messageContent||row.querySelector('.dm-message-text,.message-content-text')?.textContent||'').trim();if(/^\[\[ah:sticker:\d+\]\]$/.test(raw)){row.classList.add('ah-sticker-message');const img=row.querySelector('.msg-img,.message-image');if(img)img.classList.add('ah-sticker-img');}});scope.querySelectorAll('.dm-message-text,.message-content-text').forEach(el=>{if(el.dataset.mediaRendered==='1')return;const text=el.textContent||'';if(/^\[\[ah:sticker:\d+\]\]$/.test(text.trim())){el.textContent='';el.dataset.mediaRendered='1';return;}let html=esc(text);emojis.forEach(x=>{if(!(x.allowed||x.local))return;const code=':'+String(x.name||'')+':';if(!code||code==='::')return;html=html.split(esc(code)).join(`<img class="ah-custom-emoji" src="${esc(x.image_url)}" alt="${esc(code)}">`);});el.innerHTML=html;el.dataset.mediaRendered='1';});}
+  function renderCustomMedia(root){const emojis=lib.emojis||[],scope=root||document;scope.querySelectorAll('.msg:not([data-ah-media-checked]),.message:not([data-ah-media-checked])').forEach(row=>{row.dataset.ahMediaChecked='1';const raw=(row.dataset.messageContent||row.querySelector('.dm-message-text,.message-content-text')?.textContent||'').trim();if(/^\[\[ah:sticker:\d+\]\]$/.test(raw)){row.classList.add('ah-sticker-message');const img=row.querySelector('.msg-img,.message-image');if(img)img.classList.add('ah-sticker-img');}});scope.querySelectorAll('.dm-message-text:not([data-media-rendered="1"]),.message-content-text:not([data-media-rendered="1"])').forEach(el=>{if(el.dataset.mediaRendered==='1')return;const text=el.textContent||'';if(/^\[\[ah:sticker:\d+\]\]$/.test(text.trim())){el.textContent='';el.dataset.mediaRendered='1';return;}let html=esc(text);emojis.forEach(x=>{if(!(x.allowed||x.local))return;const code=':'+String(x.name||'')+':';if(!code||code==='::')return;html=html.split(esc(code)).join(`<img class="ah-custom-emoji" src="${esc(x.image_url)}" alt="${esc(code)}">`);});el.innerHTML=html;el.dataset.mediaRendered='1';});}
   document.addEventListener('click',function(e){const b=e.target.closest('.composer-icon-btn');if(!b)return;const action=(b.getAttribute('data-media-action')||'').toLowerCase();const title=(b.getAttribute('title')||'').toLowerCase();const isEmoji=action==='emoji'||(!action&&title.includes('emoji'));const isSticker=action==='sticker'||(!action&&title.includes('sticker'));if(isEmoji){e.preventDefault();e.stopImmediatePropagation();open('emojis');}if(isSticker){e.preventDefault();e.stopImmediatePropagation();open('stickers');}},true);
   document.addEventListener('click',function(e){const p=document.getElementById('ah-media-picker');if(p&&p.classList.contains('open')&&!p.contains(e.target)&&!e.target.closest('.composer-icon-btn'))close();},true);
-  document.addEventListener('DOMContentLoaded',load);setTimeout(load,600);new MutationObserver(()=>renderCustomMedia(document)).observe(document.body,{childList:true,subtree:true});window.AlexiHubMediaPicker={open,close,load,renderCustomMedia};
+  document.addEventListener('DOMContentLoaded',load);setTimeout(load,600);(function(){var P=window.__ahPerf;new MutationObserver(function(rec){if(P&&!P.touchesMessages(rec))return;if(P)P.once('legacyMedia',function(){renderCustomMedia(document)});else renderCustomMedia(document);}).observe(document.body,{childList:true,subtree:true});})();window.AlexiHubMediaPicker={open,close,load,renderCustomMedia};
 })();
 </script>
 
@@ -7569,16 +7611,24 @@ if (typeof window.openSelfProfileSettings !== 'function') {
       }
     };
 
-    composer.querySelector('.ah-dm-open-emojis')?.addEventListener('click', function(e){
-      e.preventDefault();
-      e.stopPropagation();
-      open('emojis');
-    });
-    composer.querySelector('.ah-dm-open-stickers')?.addEventListener('click', function(e){
-      e.preventDefault();
-      e.stopPropagation();
-      open('stickers');
-    });
+    const emojiOpenBtn = composer.querySelector('.ah-dm-open-emojis');
+    if(emojiOpenBtn && emojiOpenBtn.dataset.ahBound !== '1'){
+      emojiOpenBtn.dataset.ahBound = '1';
+      emojiOpenBtn.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        open('emojis');
+      });
+    }
+    const stickerOpenBtn = composer.querySelector('.ah-dm-open-stickers');
+    if(stickerOpenBtn && stickerOpenBtn.dataset.ahBound !== '1'){
+      stickerOpenBtn.dataset.ahBound = '1';
+      stickerOpenBtn.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        open('stickers');
+      });
+    }
   }
 
   let mediaRenderTimer = null;
@@ -7599,9 +7649,10 @@ if (typeof window.openSelfProfileSettings !== 'function') {
     forceRenderSavedCustomMedia();
   }, 300);
 
-  new MutationObserver(function(){
-    injectDmMediaButtons();
-    scheduleRender();
+  new MutationObserver(function(records){
+    var P = window.__ahPerf;
+    if(P) P.once('mediaButtons', injectDmMediaButtons); else injectDmMediaButtons();
+    if(!P || P.touchesMessages(records)) scheduleRender();
   }).observe(document.documentElement, {childList:true, subtree:true});
 })();
 </script>
@@ -7825,10 +7876,10 @@ body .composer-wrap{
   window.addEventListener('resize', function(){ lastBottom=null; schedulePosition(); });
   window.addEventListener('scroll', schedulePosition, true);
 
-  const obs = new MutationObserver(function(){
+  const obs = new MutationObserver(function(records){
     wrapOpen();
     schedulePosition();
-    if(window.AlexiHubMediaPicker && typeof window.AlexiHubMediaPicker.renderCustomMedia === 'function'){
+    if(window.AlexiHubMediaPicker && typeof window.AlexiHubMediaPicker.renderCustomMedia === 'function' && (!window.__ahPerf || window.__ahPerf.touchesMessages(records))){
       clearTimeout(obs._r);
       obs._r=setTimeout(function(){try{window.AlexiHubMediaPicker.renderCustomMedia(document);}catch(e){}},180);
     }
@@ -8101,7 +8152,24 @@ body .composer-wrap{
 
   document.addEventListener('click',e=>{if(picker&&picker.classList.contains('open')&&!picker.contains(e.target)&&!(activeAnchor&&activeAnchor.contains(e.target)))closePicker();},true);
   window.addEventListener('resize',closePicker);
-  const observer=new MutationObserver(muts=>{let changed=false;muts.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType===1){install(n);changed=true;}}));if(changed)setTimeout(()=>install(document),20);});observer.observe(document.body,{childList:true,subtree:true});
+  const REACT_ROW_SEL=cfg.context==='dm'?'.msg[data-message-id],.msg[data-id]':'.message[data-message-id]';
+  const reactionDirty=new Set();let reactionRaf=0;
+  const observer=new MutationObserver(muts=>{
+    muts.forEach(m=>{
+      if(m.type==='childList'){
+        m.addedNodes.forEach(n=>{
+          if(n.nodeType!==1)return;
+          if(n.matches(REACT_ROW_SEL))reactionDirty.add(n);
+          else if(n.querySelectorAll)n.querySelectorAll(REACT_ROW_SEL).forEach(r=>reactionDirty.add(r));
+        });
+      }
+      const t=m.target&&m.target.nodeType===1?m.target:(m.target&&m.target.parentElement);
+      const row=t&&t.closest?t.closest(REACT_ROW_SEL):null;
+      if(row)reactionDirty.add(row);
+    });
+    if(!reactionDirty.size||reactionRaf)return;
+    reactionRaf=requestAnimationFrame(()=>{reactionRaf=0;const rows=Array.from(reactionDirty);reactionDirty.clear();rows.forEach(row=>{if(row.isConnected){ensureAction(row);ensureBar(row);}});});
+  });observer.observe(document.body,{childList:true,subtree:true});
   window.AlexiHubReactions={version:1,applyUpdate:renderBar,handleRealtime:loadOne,reload:loadAll,open:openPicker,close:closePicker};
   document.addEventListener('DOMContentLoaded',()=>{install(document);loadLibrary();setTimeout(loadAll,120);});
   if(document.readyState!=='loading'){install(document);loadLibrary();setTimeout(loadAll,120);}
@@ -8812,11 +8880,24 @@ body .composer-wrap{
   }
   const messageRoot=document.getElementById('messages')||document.querySelector('.messages');
   if(messageRoot){
+    const mentionDirty=new Set();let mentionRaf=0;
     const observer=new MutationObserver(mutations=>{
       mutations.forEach(m=>{
+        if(m.type==='childList'){
+          // new rows: render just those, not the whole list
+          m.addedNodes.forEach(n=>{if(n.nodeType===1&&!n.closest('.ah-mention-token'))mentionDirty.add(n.closest('.msg,.message')||n);});
+          if(!m.addedNodes.length)return; // pure removals need no work
+          // text nodes added inside an existing message (edits, rich-text re-render)
+          const host=m.target.nodeType===1?m.target:m.target.parentElement;
+          if(host&&!host.closest('.ah-mention-token')){const hostRow=host.closest('.msg,.message');if(hostRow)mentionDirty.add(hostRow);}
+          return;
+        }
         const root=m.target.nodeType===1?m.target:m.target.parentElement;
-        if(root)renderMentions(root.closest('.msg,.message')||root);
+        if(!root||root.closest('.ah-mention-token'))return;
+        mentionDirty.add(root.closest('.msg,.message')||root);
       });
+      if(!mentionDirty.size||mentionRaf)return;
+      mentionRaf=requestAnimationFrame(()=>{mentionRaf=0;const roots=Array.from(mentionDirty);mentionDirty.clear();roots.forEach(r=>{if(r.isConnected)renderMentions(r);});});
     });
     observer.observe(messageRoot,{childList:true,subtree:true,characterData:true});
   }
@@ -9596,7 +9677,7 @@ body .composer-wrap{
 
   function init(){
     injectSidebarEventEntry();renderEventList();
-    window.setInterval(renderOngoingEventPanel,15000);
+    window.setInterval(function(){if(!document.hidden)renderOngoingEventPanel();},15000);
     $("#ah-event-next")?.addEventListener("click",nextEventStep);$("#ah-event-back")?.addEventListener("click",previousEventStep);
     $("#ah-event-location")?.addEventListener("input",e=>$("#ah-event-location-hidden").value=e.target.value.trim());
     $$(".ah-event-select-option").forEach(option=>option.addEventListener("click",()=>{$("#ah-event-recurrence-hidden").value=option.dataset.value;$("#ah-event-recurrence-label").textContent=recurrenceLabels[option.dataset.value]||option.textContent;$$(".ah-event-select-option").forEach(o=>o.classList.toggle("active",o===option));$("#ah-event-recurrence-select").classList.remove("open")}));
@@ -10332,7 +10413,16 @@ document.addEventListener('alexihub:block-status-changed',event=>{const detail=e
   async function loadEmojiMap(){try{const response=await fetch(cfg.mediaUrl,{credentials:'same-origin'}),data=await response.json();(data.emojis||[]).forEach(item=>{if((item.allowed||item.local)&&item.name&&safeHttpUrl(item.image_url)){emojiByName.set(String(item.name).toLowerCase(),item);emojiById.set(String(item.id),item);}});emojiVersion++;renderAll(document);}catch(_){}}
   document.addEventListener('click',event=>{const spoiler=event.target.closest('.ah-rich-spoiler');if(spoiler){spoiler.classList.toggle('revealed');return;}const button=event.target.closest('.ah-rich-code-copy');if(button){const code=button.closest('.ah-rich-code')?.querySelector('code')?.textContent||'';navigator.clipboard?.writeText(code).then(()=>{const old=button.textContent;button.textContent=window.AlexiHubI18n.t("common.label.copied");setTimeout(()=>button.textContent=old,1100);}).catch(()=>{});}});
   document.addEventListener('keydown',event=>{if((event.key==='Enter'||event.key===' ')&&event.target.closest('.ah-rich-spoiler')){event.preventDefault();event.target.closest('.ah-rich-spoiler').classList.toggle('revealed');}});
-  const root=document.getElementById('messages')||document.querySelector('.messages');if(root)new MutationObserver(()=>schedule(root)).observe(root,{childList:true,subtree:true,characterData:true});
+  const root=document.getElementById('messages')||document.querySelector('.messages');if(root){const richDirty=new Set();let richRaf=0;const ROW_SEL=cfg.context==='dm'?'.msg':'.message';
+  new MutationObserver(function(rec){
+    rec.forEach(function(m){
+      if(m.type==='childList')m.addedNodes.forEach(function(n){if(n.nodeType!==1)return;if(n.matches(ROW_SEL))richDirty.add(n);else if(n.querySelectorAll)n.querySelectorAll(ROW_SEL).forEach(function(r){richDirty.add(r);});});
+      const t=m.target&&m.target.nodeType===1?m.target:(m.target&&m.target.parentElement);
+      const row=t&&t.closest?t.closest(ROW_SEL):null;if(row)richDirty.add(row);
+    });
+    if(!richDirty.size||richRaf)return;
+    richRaf=requestAnimationFrame(function(){richRaf=0;const rows=Array.from(richDirty);richDirty.clear();rows.forEach(function(r){if(r.isConnected)renderRow(r);});});
+  }).observe(root,{childList:true,subtree:true,characterData:true});}
   [0,80,350,900].forEach(delay=>setTimeout(()=>renderAll(document),delay));loadEmojiMap();
   window.AlexiHubRichText={render:renderAll};
 })();
