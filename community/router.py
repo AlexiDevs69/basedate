@@ -1108,6 +1108,8 @@ async def _emit_dm_sidebar_update(thread_id: int, message_id: int) -> None:
                 "author_id": int(message.author_id),
                 "content": (message.content or "")[:4000],
                 "image_url": message.image_url or None,
+                "voice_url": getattr(message, "voice_url", None) or None,
+                "voice_duration": getattr(message, "voice_duration", None),
                 "created_at": message.created_at.isoformat(),
                 "is_forwarded": bool(getattr(message, "is_forwarded", False)),
             }
@@ -1380,6 +1382,8 @@ def _reply_payload(message, author) -> dict | None:
         "id": message.id,
         "content": message.content or "",
         "image_url": message.image_url,
+        "voice_url": getattr(message, "voice_url", None) or None,
+        "voice_duration": getattr(message, "voice_duration", None),
         "author": _account_payload(author) if author else {"id": None, "username": "видалений юзер", "avatar_url": ""},
     }
 
@@ -3798,6 +3802,8 @@ async def api_forward_message(request: Request, db: AsyncSession = Depends(get_d
 
     source_content = ""
     source_image_url = ""
+    source_voice_url = ""
+    source_voice_duration = 0
 
     if source_type == "dm":
         source = await crud.get_dm_message_by_id(db, message_id)
@@ -3805,12 +3811,16 @@ async def api_forward_message(request: Request, db: AsyncSession = Depends(get_d
             return JSONResponse({"ok": False, "error": "source_not_found"}, status_code=404)
         source_content = source.content or ""
         source_image_url = source.image_url or ""
+        source_voice_url = getattr(source, "voice_url", None) or ""
+        source_voice_duration = int(getattr(source, "voice_duration", None) or 0)
     else:
         source = await crud.get_server_message_by_id(db, message_id)
         if not source or not await crud.is_server_member(db, source.server_id, account.id):
             return JSONResponse({"ok": False, "error": "source_not_found"}, status_code=404)
         source_content = source.content or ""
         source_image_url = source.image_url or ""
+        source_voice_url = getattr(source, "voice_url", None) or ""
+        source_voice_duration = int(getattr(source, "voice_duration", None) or 0)
 
     if crud.parse_nitro_dm_gift_marker(source_content):
         return JSONResponse({
@@ -3819,7 +3829,7 @@ async def api_forward_message(request: Request, db: AsyncSession = Depends(get_d
             "message": "Nitro-подарок нельзя пересылать: он привязан к получателю.",
         }, status_code=400)
 
-    if not source_content.strip() and not source_image_url.strip():
+    if not source_content.strip() and not source_image_url.strip() and not source_voice_url.strip():
         return JSONResponse({"ok": False, "error": "empty_source"}, status_code=400)
 
     # Store primitive values before commits to avoid MissingGreenlet surprises
@@ -3859,7 +3869,10 @@ async def api_forward_message(request: Request, db: AsyncSession = Depends(get_d
             retry_after_ms = await message_rate_limiter.check(account_id)
             if retry_after_ms:
                 return _message_rate_limit_json_response(retry_after_ms, sent=sent)
-            msg = await crud.create_dm_message(db, thread_id, account_id, source_content, source_image_url, is_forwarded=True)
+            msg = await crud.create_dm_message(
+                db, thread_id, account_id, source_content, source_image_url, is_forwarded=True,
+                voice_url=source_voice_url or None, voice_duration=source_voice_duration or None,
+            )
             mention_affected = await _sync_dm_message_mentions(db, msg)
             await _broadcast_mention_counts(mention_affected)
             message_payload = {
@@ -3868,6 +3881,8 @@ async def api_forward_message(request: Request, db: AsyncSession = Depends(get_d
                 "author_id": account_id,
                 "content": msg.content,
                 "image_url": msg.image_url,
+                "voice_url": getattr(msg, "voice_url", None) or None,
+                "voice_duration": getattr(msg, "voice_duration", None),
                 "created_at": msg.created_at.isoformat(),
                 "reply_to_id": None,
                 "reply": None,
@@ -3897,7 +3912,10 @@ async def api_forward_message(request: Request, db: AsyncSession = Depends(get_d
             retry_after_ms = await message_rate_limiter.check(account_id)
             if retry_after_ms:
                 return _message_rate_limit_json_response(retry_after_ms, sent=sent)
-            msg = await crud.create_server_message(db, server_id, channel_id, account_id, source_content, source_image_url, is_forwarded=True)
+            msg = await crud.create_server_message(
+                db, server_id, channel_id, account_id, source_content, source_image_url, is_forwarded=True,
+                voice_url=source_voice_url or None, voice_duration=source_voice_duration or None,
+            )
             mention_affected = await _sync_server_message_mentions(db, msg)
             streak_state = await crud.bump_channel_streak(db, channel_id)
             await _broadcast_mention_counts(mention_affected)
@@ -3908,6 +3926,8 @@ async def api_forward_message(request: Request, db: AsyncSession = Depends(get_d
                 "author_id": account_id,
                 "content": msg.content,
                 "image_url": msg.image_url,
+                "voice_url": getattr(msg, "voice_url", None) or None,
+                "voice_duration": getattr(msg, "voice_duration", None),
                 "created_at": msg.created_at.isoformat(),
                 "reply_to_id": None,
                 "reply": None,
