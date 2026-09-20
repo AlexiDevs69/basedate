@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.203.0",
+      "date": "2026-09-21",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: initial CSS styles for application layout."
+      ],
+      "source_sha": "a0a38030e8e6f282a1a744e1534cae336a556ea6"
+    },
+    {
       "version": "1.202.0",
       "date": "2026-09-21",
       "title": "Нові можливості AlexiHub",
