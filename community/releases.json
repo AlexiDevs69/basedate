@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.198.4",
+      "date": "2026-09-20",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update crud.py."
+      ],
+      "source_sha": "c958b4e35600914399ce574a4b90f7f3f4a201a2"
+    },
+    {
       "version": "1.198.3",
       "date": "2026-09-20",
       "title": "Виправлення та стабільність",
