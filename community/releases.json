@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.198.0",
+      "date": "2026-09-20",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: voice message support in server channel template."
+      ],
+      "source_sha": "c17a2a8962907d302b60b86621b24c53458967e3"
+    },
+    {
       "version": "1.197.0",
       "date": "2026-09-20",
       "title": "Нові можливості AlexiHub",
