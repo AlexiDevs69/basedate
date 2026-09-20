@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.196.0",
+      "date": "2026-09-20",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: voice URL and duration to message handling."
+      ],
+      "source_sha": "63795700feab0230b6375a356073f7c2eed32fdf"
+    },
+    {
       "version": "1.195.0",
       "date": "2026-09-20",
       "title": "Нові можливості AlexiHub",
