@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.197.0",
+      "date": "2026-09-20",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: voice_url and voice_duration to message serialization."
+      ],
+      "source_sha": "24ab23512224e2313de7911283ce48a170e00e52"
+    },
+    {
       "version": "1.196.0",
       "date": "2026-09-20",
       "title": "Нові можливості AlexiHub",
