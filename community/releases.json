@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.199.0",
+      "date": "2026-09-20",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: voice dock UI and functionality."
+      ],
+      "source_sha": "fcac23c6635a07b045b2694e93315e13fa428a09"
+    },
+    {
       "version": "1.198.4",
       "date": "2026-09-20",
       "title": "Виправлення та стабільність",
