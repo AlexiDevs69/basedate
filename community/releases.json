@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.200.0",
+      "date": "2026-09-20",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: voice dock for audio message playback."
+      ],
+      "source_sha": "48c0f3d71384e7d1a01e09797d2552402a24b13f"
+    },
+    {
       "version": "1.199.0",
       "date": "2026-09-20",
       "title": "Нові можливості AlexiHub",
