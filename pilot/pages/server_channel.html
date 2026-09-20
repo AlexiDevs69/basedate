@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<title>#general // Дев-хаб // AlexiHub</title>
+<link rel="stylesheet" href="../assets/shell.css">
+</head>
+<body>
+  <div class="app" id="app-root">
+    <aside class="server-rail">
+      <a class="server-dot home-dot" href="/community/dm/marichka">DM</a>
+      <div class="server-sep"></div>
+      <a class="server-dot active" href="/community/servers/1/channel/10" style="background:linear-gradient(135deg,#f5576c,#7367f0)">D</a>
+      <a class="server-dot" href="/community/servers/2/channel/20" style="background:#3a4dd1">І</a>
+    </aside>
+
+    <div id="app-dynamic">
+      <aside class="server-sidebar">
+        <div class="server-head">Дев-хаб</div>
+        <div class="sidebar-scroll">
+          <div class="sidebar-label">Канали</div>
+          <a class="chan-link active" href="/community/servers/1/channel/10" data-channel-id="10">
+            <span class="chan-symbol">#</span><span>general</span>
+          </a>
+          <a class="chan-link" href="/community/servers/1/channel/11" data-channel-id="11">
+            <span class="chan-symbol">#</span><span>frontend</span>
+          </a>
+          <a class="chan-link" href="/community/servers/1/channel/12" data-channel-id="12">
+            <span class="chan-symbol">🔊</span><span>войс</span>
+          </a>
+        </div>
+        <div class="user-panel">
+          <span class="avatar" style="background:#00C4B4">Я</span>
+          <div class="user-info"><b>you</b><span><i class="status-dot status-online"></i>В мережі</span></div>
+        </div>
+      </aside>
+
+      <main class="chat-main" id="channel-main">
+        <div class="channel-header">
+          <h1># general</h1>
+          <p>Загальний чат сервера «Дев-хаб»</p>
+        </div>
+
+        <section id="messages" class="messages">
+          <article class="message" data-message-id="201" data-message-author="Олег">
+            <a class="avatar" style="background:#3a4dd1">О</a>
+            <div class="message-body">
+              <div class="message-head"><span class="visual-name">Олег</span><span class="message-time">15:10</span></div>
+              <div class="message-content">Залив пілотний index.html з рейкою і доком — гляньте структуру.</div>
+            </div>
+          </article>
+
+          <article class="message" data-message-id="202" data-message-author="Олег">
+            <a class="avatar" style="background:#3a4dd1">О</a>
+            <div class="message-body">
+              <div class="message-head"><span class="visual-name">Олег</span><span class="message-time">15:11</span></div>
+              <div class="ah-voice-message">
+                <button type="button" class="ah-voice-play" onclick="ahToggleVoicePlay(this)" aria-label="Відтворити голосове повідомлення">
+                  <svg class="ah-voice-play-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                  <svg class="ah-voice-pause-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+                </button>
+                <div class="ah-voice-track"><div class="ah-voice-progress"></div></div>
+                <span class="ah-voice-duration">0:09</span>
+                <audio class="ah-voice-audio" preload="none" src="https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3"></audio>
+              </div>
+            </div>
+          </article>
+
+          <article class="message" data-message-id="203" data-message-author="you">
+            <a class="avatar" style="background:#00C4B4">Я</a>
+            <div class="message-body">
+              <div class="message-head"><span class="visual-name">you</span><span class="message-time">15:13</span></div>
+              <div class="message-content">Плеєр не зупинився після переходу з ЛС — саме це і треба було перевірити 🎧</div>
+            </div>
+          </article>
+        </section>
+
+        <div class="composer-wrap">
+          <div class="composer">
+            <button class="dm-plus-btn" type="button">+</button>
+            <textarea placeholder="Повідомлення в #general" rows="1"></textarea>
+            <button class="dm-send-btn" type="button" title="Надіслати">➤</button>
+          </div>
+        </div>
+      </main>
+
+      <aside class="members-sidebar">
+        <div class="members-title">В мережі — 2</div>
+        <a class="member-row" href="#">
+          <span class="member-avatar" style="background:#00C4B4">Я</span>
+          <span><span class="visual-name">you</span><span class="member-role">учасник</span></span>
+        </a>
+        <a class="member-row" href="#">
+          <span class="member-avatar" style="background:#3a4dd1">О</span>
+          <span><span class="visual-name">Олег</span><span class="member-role">адмін</span></span>
+        </a>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    // Приклад page-level init-скрипту: підсвітити активний канал.
+    (function () {
+      document.querySelectorAll('.server-sidebar .chan-link').forEach(function (link) {
+        link.classList.toggle('active', link.getAttribute('href') === location.pathname);
+      });
+    })();
+  </script>
+</body>
+</html>
