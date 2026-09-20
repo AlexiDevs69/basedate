@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.198.1",
+      "date": "2026-09-20",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update print statement to reflect farewell message."
+      ],
+      "source_sha": "691f309ab923551ac88721ed31104eeecad14f74"
+    },
+    {
       "version": "1.198.0",
       "date": "2026-09-20",
       "title": "Нові можливості AlexiHub",
