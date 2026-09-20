@@ -4502,6 +4502,8 @@ async def _build_dm_pin_payload(db: AsyncSession, *, message: DirectMessage, pin
         "thread_id": int(message.thread_id),
         "content": message.content or "",
         "image_url": message.image_url or "",
+        "voice_url": getattr(message, "voice_url", None) or "",
+        "voice_duration": getattr(message, "voice_duration", None),
         "created_at": message.created_at.isoformat() if getattr(message, 'created_at', None) else None,
         "pinned_at": created_at.isoformat() if created_at else None,
         "author": {
@@ -4580,6 +4582,8 @@ async def _build_server_pin_payload(db: AsyncSession, *, message: ServerMessage,
         "channel_id": int(message.channel_id),
         "content": message.content or "",
         "image_url": message.image_url or "",
+        "voice_url": getattr(message, "voice_url", None) or "",
+        "voice_duration": getattr(message, "voice_duration", None),
         "created_at": message.created_at.isoformat() if getattr(message, 'created_at', None) else None,
         "pinned_at": created_at.isoformat() if created_at else None,
         "author": {
