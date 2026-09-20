@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.204.0",
+      "date": "2026-09-21",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: dm_chat.html for direct messaging interface."
+      ],
+      "source_sha": "bf88f4e0259b94b658b780bbe7555171e0e0a40d"
+    },
+    {
       "version": "1.203.0",
       "date": "2026-09-21",
       "title": "Нові можливості AlexiHub",
