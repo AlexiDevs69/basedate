@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.205.1",
+      "date": "2026-09-21",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Delete pilot directory."
+      ],
+      "source_sha": "1c9fcfca050de8d4440626b0313d3410b30caa78"
+    },
+    {
       "version": "1.205.0",
       "date": "2026-09-21",
       "title": "Нові можливості AlexiHub",
