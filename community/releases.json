@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.205.0",
+      "date": "2026-09-21",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: server_channel.html for general chat interface."
+      ],
+      "source_sha": "b032486fdf719f289eaed0241466b378b73e1294"
+    },
+    {
       "version": "1.204.0",
       "date": "2026-09-21",
       "title": "Нові можливості AlexiHub",
