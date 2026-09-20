@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.202.0",
+      "date": "2026-09-21",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: AhVoiceDock and AhRouter implementations."
+      ],
+      "source_sha": "174cdbf9758b81fe7099fb5fc93b48b08f64be35"
+    },
+    {
       "version": "1.201.0",
       "date": "2026-09-21",
       "title": "Нові можливості AlexiHub",
