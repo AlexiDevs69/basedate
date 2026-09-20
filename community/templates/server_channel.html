@@ -2544,7 +2544,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
       {% for item in feed %}
       {% set author = item.author %}
       {% set is_mine = author and author.id == account.id %}{% set is_forwarded = item.message.is_forwarded if item.message.is_forwarded is defined else false %}
-      <article class="message" id="message-{{ item.message.id }}" data-message-id="{{ item.message.id }}" data-message-content="{{ item.message.content|e }}" data-message-author="{{ (author.display_name or author.username) if author else i18n_t('common.user.deleted') }}" data-message-avatar="{{ author.avatar_url if author and author.avatar_url else '' }}" data-message-delete-url="/community/servers/{{ server.id }}/channel/{{ channel.id }}/message/{{ item.message.id }}/delete" data-own="{{ '1' if is_mine else '0' }}" data-message-editable="{{ '1' if is_mine and not is_forwarded else '0' }}" data-message-forwarded="{{ '1' if is_forwarded else '0' }}" data-message-edited="{{ '1' if item.message.edited_at else '0' }}">
+      <article class="message" id="message-{{ item.message.id }}" data-message-id="{{ item.message.id }}" data-message-content="{{ item.message.content|e }}" data-message-author="{{ (author.display_name or author.username) if author else i18n_t('common.user.deleted') }}" data-message-avatar="{{ author.avatar_url if author and author.avatar_url else '' }}" data-message-delete-url="/community/servers/{{ server.id }}/channel/{{ channel.id }}/message/{{ item.message.id }}/delete" data-own="{{ '1' if is_mine else '0' }}" data-message-editable="{{ '1' if is_mine and not is_forwarded and not item.message.voice_url else '0' }}" data-message-voice="{{ '1' if item.message.voice_url else '0' }}" data-message-voice-duration="{{ (item.message.voice_duration or 0)|int if item.message.voice_url else 0 }}" data-message-forwarded="{{ '1' if is_forwarded else '0' }}" data-message-edited="{{ '1' if item.message.edited_at else '0' }}">
         <a href="/community/profile/{{ author.username if author else '' }}" class="avatar mini-profile-trigger profile-click" data-mini-username="{{ author.username if author else i18n_t('common.user.deleted') }}" data-mini-display="{{ (author.display_name or author.username) if author else i18n_t('common.user.deleted') }}" data-mini-avatar="{{ author.avatar_url if author and author.avatar_url else '' }}" data-mini-status="{{ account.account_status if author and author.id == account.id else (author.account_status if author and author.account_status else 'offline') }}" data-mini-banner="{{ author.banner_url if author and author.banner_url else '' }}" data-mini-role="{{ author.role_label if author and author.role_label else 'member' }}" data-mini-effect="{{ author.name_effect if author and author.name_effect else 'none' }}" data-mini-font="{{ author.name_font if author and author.name_font else 'default' }}" data-mini-c1="{{ author.role_color_start if author and author.role_color_start else '#f5576c' }}" data-mini-c2="{{ author.role_color_end if author and author.role_color_end else '#7367f0' }}" data-mini-profile="/community/profile/{{ author.username if author else '' }}" data-mini-bio="{{ author.bio if author and author.bio else '' }}" data-mini-created="{{ author.created_at.strftime('%d.%m.%Y') if author and author.created_at else '' }}" {% if author and author.avatar_url %}style="background-image:url('{{ author.avatar_url }}');"{% endif %}>{% if author and not author.avatar_url %}{{ author.username[:1]|upper }}{% endif %}</a>
         <div class="message-body">
           <div class="message-head">
@@ -2555,7 +2555,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
           {% if item.reply and item.reply.message %}
           <div class="message-reply" onclick="jumpToMessage({{ item.reply.message.id }})">
             <span class="message-reply-author">{{ (item.reply.author.display_name or item.reply.author.username) if item.reply.author else i18n_t('common.user.deleted') }}</span>
-            <span class="message-reply-text">{{ item.reply.message.content if item.reply.message.content else i18n_t('common.attachment') }}</span>
+            <span class="message-reply-text">{{ item.reply.message.content if item.reply.message.content else ('🎤 Голосове повідомлення' if item.reply.message.voice_url else i18n_t('common.attachment')) }}</span>
           </div>
           {% endif %}
           <div class="message-content" id="content-{{ item.message.id }}"><span class="message-content-text">{{ item.message.content }}</span><span class="message-edited {{ '' if item.message.edited_at else 'hidden' }}" id="edited-{{ item.message.id }}"><!--i18n:common.label.modified-->{{ i18n_t('common.label.modified') }}</span></div>
@@ -2855,6 +2855,10 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
   </style>
   <script id="ah-voice-message-js">
     /* Voice message player: play/pause + click/drag to seek. Global on purpose (used by inline onclick). */
+    function ahVoiceLabel(sec){
+      var n=Math.max(0,parseInt(sec||0,10)||0);
+      return '🎤 Голосове повідомлення'+(n?' · '+ahVoiceFmt(n):'');
+    }
     function ahVoiceEsc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
     function ahVoiceFmt(sec){
       sec=Math.max(0,Math.floor(sec||0));
@@ -3153,7 +3157,7 @@ function openChannelInviteModal(event, btn) {
       if (!input || !box) return;
       input.value = msg.dataset.messageId || '';
       if (author) author.textContent = msg.dataset.messageAuthor || 'user';
-      if (text) text.textContent = (msg.dataset.messageContent || window.AlexiHubI18n.t("common.text.a_contribution")).slice(0, 180);
+      if (text) text.textContent = (msg.dataset.messageContent || (msg.dataset.messageVoice === '1' ? ahVoiceLabel(msg.dataset.messageVoiceDuration) : window.AlexiHubI18n.t("common.text.a_contribution"))).slice(0, 180);
       box.classList.remove('hidden');
       var area = document.getElementById('composer-textarea');
       if (area) area.focus();
@@ -3326,14 +3330,14 @@ function openChannelInviteModal(event, btn) {
       if(!msg) return;
       const id = msg.dataset.messageId || msg.dataset.id;
       if(!id) return;
-      ahForwardSource = {type: kind, id: id, author: msg.dataset.messageAuthor || 'user', content: msg.dataset.messageContent || '', image: msg.dataset.messageImage || ''};
+      ahForwardSource = {type: kind, id: id, author: msg.dataset.messageAuthor || 'user', content: msg.dataset.messageContent || '', image: msg.dataset.messageImage || '', voice: msg.dataset.messageVoice === '1', voiceDuration: msg.dataset.messageVoiceDuration || 0};
       const modal = document.getElementById('ah-forward-modal');
       const author = document.getElementById('ah-forward-preview-author');
       const text = document.getElementById('ah-forward-preview-text');
       const note = document.getElementById('ah-forward-note');
       const search = document.getElementById('ah-forward-search');
       if(author) author.textContent = ahForwardSource.author;
-      if(text) text.textContent = (ahForwardSource.content || (ahForwardSource.image ? window.AlexiHubI18n.t("common.text.an_investment") : window.AlexiHubI18n.t("common.text.a_message"))).slice(0, 260);
+      if(text) text.textContent = (ahForwardSource.content || (ahForwardSource.voice ? ahVoiceLabel(ahForwardSource.voiceDuration) : (ahForwardSource.image ? window.AlexiHubI18n.t("common.text.an_investment") : window.AlexiHubI18n.t("common.text.a_message")))).slice(0, 260);
       if(note) note.value = '';
       if(search) search.value = '';
       document.querySelectorAll('#ah-forward-list .ah-forward-check').forEach(ch=>ch.checked=false);
@@ -3804,7 +3808,7 @@ function openChannelInviteModal(event, btn) {
       au.textContent = reply.author ? (reply.author.display_name || reply.author.username || window.AlexiHubI18n.t("common.text.vidence_of_user")) : window.AlexiHubI18n.t("common.text.vidence_of_user");
       var tx = document.createElement('span');
       tx.className = 'message-reply-text';
-      tx.textContent = reply.content || (reply.image_url ? window.AlexiHubI18n.t("common.text.a_contribution") : window.AlexiHubI18n.t("common.text.a_message"));
+      tx.textContent = reply.content || (reply.voice_url ? ahVoiceLabel(reply.voice_duration) : (reply.image_url ? window.AlexiHubI18n.t("common.text.a_contribution") : window.AlexiHubI18n.t("common.text.a_message")));
       line.appendChild(au);
       line.appendChild(tx);
       return line;
@@ -3863,7 +3867,9 @@ function openChannelInviteModal(event, btn) {
       article.dataset.messageDeleteUrl = '/community/servers/{{ server.id }}/channel/{{ channel.id }}/message/' + msg.id + '/delete';
       var isForwarded = msg.is_forwarded === true || msg.is_forwarded === '1' || msg.forwarded === true || msg.forwarded === '1';
       article.dataset.own = (author.id === myAccountId) ? '1' : '0';
-      article.dataset.messageEditable = (author.id === myAccountId && !isForwarded) ? '1' : '0';
+      article.dataset.messageEditable = (author.id === myAccountId && !isForwarded && !msg.voice_url) ? '1' : '0';
+      article.dataset.messageVoice = msg.voice_url ? '1' : '0';
+      article.dataset.messageVoiceDuration = String(parseInt(msg.voice_duration || 0, 10) || 0);
       article.dataset.messageForwarded = isForwarded ? '1' : '0';
       article.dataset.messageEdited = msg.edited_at ? '1' : '0';
       article.appendChild(buildAvatar(author));
