@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.205.2",
+      "date": "2026-09-22",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено продуктивність: font loading and add voice dock feature."
+      ],
+      "source_sha": "350a7199226cc22552f780e3543269fe8c6ed1b6"
+    },
+    {
       "version": "1.205.1",
       "date": "2026-09-21",
       "title": "Виправлення та стабільність",
