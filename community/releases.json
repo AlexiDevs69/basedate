@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.205.9",
+      "date": "2026-09-22",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Виправлено: HTML closing tag and add missing newline."
+      ],
+      "source_sha": "005d54cbb3b838e6f4d105dfcf80697e6f4a6801"
+    },
+    {
       "version": "1.205.8",
       "date": "2026-09-22",
       "title": "Виправлення та стабільність",
