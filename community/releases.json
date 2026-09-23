@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.206.11",
+      "date": "2026-09-24",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update print statement to use 'Goodbye World'."
+      ],
+      "source_sha": "d3a89e4fd70bfb4d3ca1492aa592578044d60e7f"
+    },
+    {
       "version": "1.206.10",
       "date": "2026-09-24",
       "title": "Оновлення AlexiHub",
