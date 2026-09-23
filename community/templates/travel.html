@@ -120,6 +120,11 @@
 @keyframes ahv3pop{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
 .ah-v3-banner{height:96px;background:linear-gradient(135deg,var(--ah-c1,#5865f2),var(--ah-c2,#9b5cf6));background-size:cover;background-position:center;position:relative;overflow:hidden}
 .ah-v3-banner:after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 78% 18%,rgba(255,255,255,.20),transparent 32%),linear-gradient(180deg,rgba(255,255,255,.02),rgba(0,0,0,.22))}
+/* Profile effect: decorative art layered over the banner+avatar, with alpha
+   transparency baked into the asset (and a blend mode) so the user's own
+   banner still shows through underneath, instead of being fully covered. */
+.ah-v3-effect{position:absolute;left:0;right:0;top:0;height:150px;pointer-events:none;z-index:6;background-repeat:no-repeat;background-position:center top;background-size:cover;mix-blend-mode:screen;-webkit-mask-image:linear-gradient(180deg,#000 0,#000 66%,transparent 100%);mask-image:linear-gradient(180deg,#000 0,#000 66%,transparent 100%);opacity:0;transition:opacity .15s ease}
+.ah-v3-effect.has-effect{opacity:1}
 .ah-v3-body{padding:0 14px 14px;position:relative;background:#23242b}
 .ah-v3-avatar{width:88px;height:88px;border-radius:50%;background:#111 center/cover no-repeat;border:6px solid #23242b;margin-top:-44px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:950;font-size:30px;position:relative;cursor:pointer;box-shadow:0 0 0 1px rgba(255,255,255,.08);padding:0;overflow:hidden}
 .ah-v3-avatar:hover{filter:brightness(1.08)}
@@ -130,6 +135,7 @@
 .ah-v3-overlay{position:fixed;inset:0;z-index:2147482900;display:none;background:rgba(0,0,0,.72);backdrop-filter:blur(5px);align-items:center;justify-content:center;padding:24px}.ah-v3-overlay.open{display:flex;animation:ahv3fade .13s ease both}@keyframes ahv3fade{from{opacity:0}to{opacity:1}}
 .ah-v3-full{width:min(820px,calc(100vw - 40px));max-height:min(790px,calc(100vh - 46px));overflow:hidden;border-radius:18px;background:#202127;border:1px solid rgba(255,255,255,.12);box-shadow:0 32px 110px rgba(0,0,0,.68);display:grid;grid-template-columns:330px 1fr;position:relative;color:#f4f4f5}
 .ah-v3-close{position:absolute;right:14px;top:14px;z-index:5;width:34px;height:34px;border:0;border-radius:10px;background:rgba(0,0,0,.35);color:#fff;font-size:22px;cursor:pointer}.ah-v3-close:hover{background:rgba(0,0,0,.5)}
+.ah-v3-full-effect{height:235px}
 .ah-v3-full-left{position:relative;min-height:540px;background:#25263a;overflow:hidden}.ah-v3-full-left:before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,var(--ah-c1,#5865f2),var(--ah-c2,#9b5cf6));opacity:.47}.ah-v3-full-banner{height:150px;background:linear-gradient(135deg,var(--ah-c1,#5865f2),var(--ah-c2,#9b5cf6));background-size:cover;background-position:center;position:absolute;left:0;right:0;top:0}.ah-v3-full-left-inner{position:relative;z-index:2;padding:124px 24px 24px}.ah-v3-full-avatar{width:108px;height:108px;border-radius:50%;background:#111 center/cover no-repeat;border:7px solid #25263a;display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:950}.ah-v3-full-name{font-size:29px;font-weight:950;letter-spacing:-.04em;margin-top:16px}.ah-v3-full-handle{font-size:13px;color:#d8dbe2;margin-top:4px}.ah-v3-full-name-row{display:flex;align-items:center;gap:8px;min-width:0;margin-top:16px}.ah-v3-full-name-row .ah-v3-full-name{margin-top:0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ah-v3-full-name-row .ah-v3-tag{margin-top:0;flex:0 0 auto}.ah-v3-full-meta{margin-top:18px;color:#d8dbe2;font-size:13px;line-height:1.5}.ah-v3-full-right{padding:26px;overflow:auto;background:#202127}.ah-v3-full-right h3{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:#b5bac1;margin:0 0 10px}.ah-v3-widget{background:#2b2d34;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:14px;margin-bottom:12px}.ah-v3-widget-title{font-weight:950;margin-bottom:5px}.ah-v3-widget p{font-size:13px;color:#b5bac1;line-height:1.45;margin:0}
 .account-actions button,.account-actions a,.user-actions button,.user-actions a{width:28px!important;height:28px!important;border:0!important;border-radius:7px!important;background:transparent!important;color:#b5bac1!important;display:flex!important;align-items:center!important;justify-content:center!important;text-decoration:none!important;cursor:pointer!important;padding:0!important;font-size:0!important;line-height:0!important}.account-actions button:hover,.account-actions a:hover,.user-actions button:hover,.user-actions a:hover{background:#2e3038!important;color:#fff!important}.account-actions svg,.user-actions svg{width:17px!important;height:17px!important;display:block!important;fill:none!important;stroke:currentColor!important;stroke-width:2!important;stroke-linecap:round!important;stroke-linejoin:round!important}.account-actions .voice-control,.user-actions .voice-control{position:relative!important;transition:background .16s ease,color .16s ease,transform .12s ease!important}.account-actions .voice-control:active,.user-actions .voice-control:active{transform:scale(.88)!important}.account-actions .voice-control.off,.user-actions .voice-control.off{background:rgba(242,63,66,.16)!important;color:#f23f42!important}.account-actions .voice-control.off:after,.user-actions .voice-control.off:after{content:"";position:absolute;width:18px;height:2px;background:#f23f42;border-radius:99px;transform:rotate(-42deg);box-shadow:0 0 0 2px rgba(242,63,66,.08)}
 .member-row,.msg-avatar,.msg-name,.avatar,.visual-name,.account-panel,.user-panel,.dm-item,.profile-card,.profile-click,.mini-profile-trigger{cursor:pointer!important}
@@ -1453,6 +1459,7 @@ document.addEventListener('DOMContentLoaded',()=>{
       <button class="ah-v3-status-btn" type="button" data-presence="invisible"><span class="ah-v3-dot invisible"></span><span><!--i18n:status.invisible-->{{ i18n_t('status.invisible') }}<small><!--i18n:common.text.show_yak_of_offline-->{{ i18n_t('common.text.show_yak_of_offline') }}</small></span></button>
     </div>
   </div>
+  <div id="ah-v3-effect" class="ah-v3-effect" aria-hidden="true"></div>
 </div>
 <div id="ah-v3-overlay" class="ah-v3-overlay" aria-hidden="true">
   <div class="ah-v3-full">
@@ -1482,6 +1489,7 @@ document.addEventListener('DOMContentLoaded',()=>{
         </div>
         <div id="ah-v3-full-meta" class="ah-v3-full-meta"><!--i18n:common.text.alexihub_profile_card-->{{ i18n_t('common.text.alexihub_profile_card') }}</div>
       </div>
+      <div id="ah-v3-full-effect" class="ah-v3-effect ah-v3-full-effect" aria-hidden="true"></div>
     </div>
     <div class="ah-v3-full-right">
       <div class="ah-v3-full-tabs">
@@ -1853,6 +1861,15 @@ document.addEventListener('DOMContentLoaded',()=>{
       let bEl = el.closest('[data-mini-banner]');
       if(bEl && bEl.dataset) banner = bEl.dataset.miniBanner || '';
     }
+    let effect=el.dataset.miniEffect||'';
+    if(!effect && msg){ let fe = msg.querySelector('[data-mini-effect]'); if(fe) effect = fe.dataset.miniEffect || ''; }
+    if(!effect && mem) effect = mem.dataset.miniEffect || '';
+    if(!effect && dm) effect = dm.dataset.miniEffect || '';
+    if(!effect && panel) effect = panel.dataset.miniEffect || '{{ account.profile_effect_url or "" }}';
+    if(!effect){
+      let fEl = el.closest('[data-mini-effect]');
+      if(fEl && fEl.dataset) effect = fEl.dataset.miniEffect || '';
+    }
     let role=el.dataset.miniRole||'';
     if(!role && mem) role=clean(txt($('.member-role,.role-pill',mem)));
     if(!role && msg) role=clean(txt($('.role-pill,.badge',msg)));
@@ -1883,9 +1900,22 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(!created && panel) created = panel.dataset.miniCreated || '';
     if(!created){ let cCarrier = el.closest('[data-mini-created]'); if(cCarrier && cCarrier.dataset) created = cCarrier.dataset.miniCreated || ''; }
     if(!created && isSelf){ let cd=document.getElementById('ah-profile-created-at'); if(cd) created=(cd.textContent||'').trim(); }
-    return {name:clean(name)||'user',display:clean(display)||clean(name)||'user',avatar,banner,role,c1,c2,profile,isSelf,status,bio,tag,created};
+    return {name:clean(name)||'user',display:clean(display)||clean(name)||'user',avatar,banner,effect,role,c1,c2,profile,isSelf,status,bio,tag,created};
   }
   function setAvatar(el,textEl,url,name){ if(!el)return; el.style.backgroundImage=url?`url('${safeUrl(url)}')`:''; if(textEl) textEl.textContent=url?'':(name||'?').slice(0,1).toUpperCase(); }
+  /* Demo profile-effect art: a soft warm/violet glow with sparkles, drawn with
+     alpha transparency baked in, so it can sit on top of ANY banner and the
+     banner's own colors/image still read through the transparent parts —
+     exactly like Discord's Nitro "profile effects". Swap AH_DEMO_EFFECT for a
+     real PNG/WebP/GIF (with a transparent background) whenever you have one;
+     the mechanism (setEffect + .ah-v3-effect) doesn't need to change. */
+  const AH_DEMO_EFFECT = "data:image/svg+xml," + encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 240'><defs><radialGradient id='g1' cx='78%' cy='12%' r='65%'><stop offset='0%' stop-color='#ffb347' stop-opacity='.9'/><stop offset='45%' stop-color='#ff6a3d' stop-opacity='.4'/><stop offset='100%' stop-color='#ff6a3d' stop-opacity='0'/></radialGradient><radialGradient id='g2' cx='14%' cy='82%' r='60%'><stop offset='0%' stop-color='#7c6bff' stop-opacity='.55'/><stop offset='60%' stop-color='#7c6bff' stop-opacity='.14'/><stop offset='100%' stop-color='#7c6bff' stop-opacity='0'/></radialGradient></defs><rect width='320' height='240' fill='url(#g1)'/><rect width='320' height='240' fill='url(#g2)'/><g fill='#fff'><circle cx='262' cy='34' r='2' opacity='.7'/><circle cx='240' cy='66' r='1.3' opacity='.55'/><circle cx='283' cy='84' r='1.7' opacity='.6'/><circle cx='36' cy='176' r='1.6' opacity='.5'/><circle cx='58' cy='198' r='1.1' opacity='.4'/></g></svg>`);
+  function setEffect(el,url){
+    if(!el)return;
+    const useUrl = url || AH_DEMO_EFFECT;
+    el.style.backgroundImage = useUrl ? `url("${useUrl}")` : '';
+    el.classList.toggle('has-effect', !!useUrl);
+  }
   function tintFromBanner(url,target){
     if(!target || !url) return;
     try{
@@ -1913,11 +1943,11 @@ document.addEventListener('DOMContentLoaded',()=>{
   function place(pop,e){ pop.classList.add('open'); let r=pop.getBoundingClientRect(); let x=e?e.clientX:90, y=e?e.clientY:window.innerHeight-80; pop.style.left=Math.min(Math.max(10,x+14),window.innerWidth-r.width-10)+'px'; pop.style.top=Math.min(Math.max(10,y-52),window.innerHeight-r.height-10)+'px'; }
   function openMini(el,e){
     active=dataFrom(el); let pop=$('#ah-v3-mini'); if(!pop)return;
-    pop.classList.toggle('self',!!active.isSelf); pop.style.setProperty('--ah-c1',active.c1); pop.style.setProperty('--ah-c2',active.c2); setBanner($('#ah-v3-banner'), active.banner, active.c1, active.c2);
+    pop.classList.toggle('self',!!active.isSelf); pop.style.setProperty('--ah-c1',active.c1); pop.style.setProperty('--ah-c2',active.c2); setBanner($('#ah-v3-banner'), active.banner, active.c1, active.c2); setEffect($('#ah-v3-effect'), active.effect);
     setAvatar($('#ah-v3-avatar'),$('#ah-v3-avatar-text'),active.avatar,active.display); const miniNameNode=$('#ah-v3-name'); if(miniNameNode){miniNameNode.dataset.profileUsername=active.name; miniNameNode.textContent=active.display;} $('#ah-v3-handle').textContent='@'+active.name; $('#ah-v3-role').textContent=active.role||'member'; (function(){var t=$('#ah-v3-tag'); if(!t)return; if(active.tag&&active.tag.text){t.hidden=false;t.title=active.tag.serverName||'';t.dataset.tagServerId=active.tag.serverId||'';t.dataset.tagServerName=active.tag.serverName||'';t.dataset.tagIconGlyph=active.tag.glyph||'';t.dataset.tagIconUrl=active.tag.iconUrl||'';t.dataset.tagText=active.tag.text||'';t.dataset.tagMemberCount=active.tag.memberCount||'';t.dataset.tagOnlineCount=active.tag.onlineCount||'';t.dataset.tagDescription=active.tag.description||'';t.dataset.tagInvite=active.tag.invite||'';var bb=t.querySelector('b');if(bb)bb.textContent=active.tag.glyph||'◆';var ss=t.querySelector('span');if(ss)ss.textContent=active.tag.text;}else{t.hidden=true;} })(); let st=$('#ah-v3-status'); if(st) st.className='ah-v3-status '+(active.status||'offline'); let msg=$('#ah-v3-message'); if(msg){msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; msg.textContent=active.isSelf?window.AlexiHubI18n.t("settings.edit_profile"):'Message'} place(pop,e);
   }
   function closeMini(){let p=$('#ah-v3-mini'); if(p)p.classList.remove('open')}
-  function openFull(){ if(!active)return; let ov=$('#ah-v3-overlay'); if(!ov)return; ov.style.setProperty('--ah-c1',active.c1); ov.style.setProperty('--ah-c2',active.c2); setBanner($('#ah-v3-full-banner'), active.banner, active.c1, active.c2); setAvatar($('#ah-v3-full-avatar'),$('#ah-v3-full-avatar-text'),active.avatar,active.display); const fullNameNode=$('#ah-v3-full-name'); if(fullNameNode){fullNameNode.dataset.profileUsername=active.name; fullNameNode.textContent=active.display;} $('#ah-v3-full-handle').textContent='@'+active.name; (function(){var t=$('#ah-v3-full-tag'); if(!t)return; if(active.tag&&active.tag.text){t.hidden=false;t.title=active.tag.serverName||'';t.dataset.tagServerId=active.tag.serverId||'';t.dataset.tagServerName=active.tag.serverName||'';t.dataset.tagIconGlyph=active.tag.glyph||'';t.dataset.tagIconUrl=active.tag.iconUrl||'';t.dataset.tagText=active.tag.text||'';t.dataset.tagMemberCount=active.tag.memberCount||'';t.dataset.tagOnlineCount=active.tag.onlineCount||'';t.dataset.tagDescription=active.tag.description||'';t.dataset.tagInvite=active.tag.invite||'';var bb=t.querySelector('b');if(bb)bb.textContent=active.tag.glyph||'◆';var ss=t.querySelector('span');if(ss)ss.textContent=active.tag.text;}else{t.hidden=true;} })(); $('#ah-v3-full-meta').textContent=(function(){var val=(active.created||'').trim();if(val)return window.AlexiHubI18n.t("common.text.registered")+': '+val;return active.isSelf?window.AlexiHubI18n.t("common.text.your_alexihub_card"):window.AlexiHubI18n.t("common.text.ussing_alexihub_user_card");})(); $('#ah-v3-full-about').textContent=(active.bio||'').trim() || (active.isSelf?window.AlexiHubI18n.t("common.text.there_will_be_a_full_profile_activity_games_integration_and"):window.AlexiHubI18n.t("common.text.look_to_view_the_profile_on_top_of_the_current")); let msg=$('#ah-v3-full-message'); if(msg){ msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; } closeMini(); ov.classList.add('open'); document.dispatchEvent(new CustomEvent('alexihub:full-profile-open',{detail:active})); }
+  function openFull(){ if(!active)return; let ov=$('#ah-v3-overlay'); if(!ov)return; ov.style.setProperty('--ah-c1',active.c1); ov.style.setProperty('--ah-c2',active.c2); setBanner($('#ah-v3-full-banner'), active.banner, active.c1, active.c2); setEffect($('#ah-v3-full-effect'), active.effect); setAvatar($('#ah-v3-full-avatar'),$('#ah-v3-full-avatar-text'),active.avatar,active.display); const fullNameNode=$('#ah-v3-full-name'); if(fullNameNode){fullNameNode.dataset.profileUsername=active.name; fullNameNode.textContent=active.display;} $('#ah-v3-full-handle').textContent='@'+active.name; (function(){var t=$('#ah-v3-full-tag'); if(!t)return; if(active.tag&&active.tag.text){t.hidden=false;t.title=active.tag.serverName||'';t.dataset.tagServerId=active.tag.serverId||'';t.dataset.tagServerName=active.tag.serverName||'';t.dataset.tagIconGlyph=active.tag.glyph||'';t.dataset.tagIconUrl=active.tag.iconUrl||'';t.dataset.tagText=active.tag.text||'';t.dataset.tagMemberCount=active.tag.memberCount||'';t.dataset.tagOnlineCount=active.tag.onlineCount||'';t.dataset.tagDescription=active.tag.description||'';t.dataset.tagInvite=active.tag.invite||'';var bb=t.querySelector('b');if(bb)bb.textContent=active.tag.glyph||'◆';var ss=t.querySelector('span');if(ss)ss.textContent=active.tag.text;}else{t.hidden=true;} })(); $('#ah-v3-full-meta').textContent=(function(){var val=(active.created||'').trim();if(val)return window.AlexiHubI18n.t("common.text.registered")+': '+val;return active.isSelf?window.AlexiHubI18n.t("common.text.your_alexihub_card"):window.AlexiHubI18n.t("common.text.ussing_alexihub_user_card");})(); $('#ah-v3-full-about').textContent=(active.bio||'').trim() || (active.isSelf?window.AlexiHubI18n.t("common.text.there_will_be_a_full_profile_activity_games_integration_and"):window.AlexiHubI18n.t("common.text.look_to_view_the_profile_on_top_of_the_current")); let msg=$('#ah-v3-full-message'); if(msg){ msg.href=active.isSelf?'#':'/community/dm/'+encodeURIComponent(active.name); if(msg.dataset) msg.dataset.self=active.isSelf?'1':'0'; } closeMini(); ov.classList.add('open'); document.dispatchEvent(new CustomEvent('alexihub:full-profile-open',{detail:active})); }
   function closeFull(){let ov=$('#ah-v3-overlay'); if(ov)ov.classList.remove('open')}
   document.addEventListener('click',function(e){
     if(e.target.closest('#ah-v3-mini,#ah-v3-overlay')) return;
