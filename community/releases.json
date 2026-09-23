@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.206.5",
+      "date": "2026-09-23",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: full profile layout and update tabs."
+      ],
+      "source_sha": "f714b9442911d2033086e04a901442a67fd7bbd4"
+    },
+    {
       "version": "1.206.4",
       "date": "2026-09-23",
       "title": "Виправлення та стабільність",
