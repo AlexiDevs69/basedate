@@ -7012,7 +7012,7 @@ html.ah-theme-anim *,html.ah-theme-anim *::before,html.ah-theme-anim *::after{tr
 </script>
 <style id="ah-banner-backdrop-css">
 /* === Banner backdrop: banner image softly bleeds behind the whole profile card === */
-.ah-v3-mini.ah-bg-on:not(.ah-profile-theme),
+.ah-v3-mini.ah-bg-on:not(.ah-profile-theme){isolation:isolate}
 .self-profile-card.ah-bg-on,
 .ah-custom-profile-card.ah-bg-on{position:relative;isolation:isolate}
 .ah-v3-mini.ah-bg-on:not(.ah-profile-theme)::before,
@@ -7020,21 +7020,17 @@ html.ah-theme-anim *,html.ah-theme-anim *::before,html.ah-theme-anim *::after{tr
 .ah-custom-profile-card.ah-bg-on::before,
 .ah-v3-full-left.ah-bg-on::after{
   content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
-  background:linear-gradient(rgba(18,19,24,.38),rgba(18,19,24,.38)),var(--ah-banner-img) center top/cover no-repeat;
-  opacity:.68;
-  filter:blur(14px) saturate(1.15);
-  transform:scale(1.18);
-  -webkit-mask-image:linear-gradient(180deg,#000 0,rgba(0,0,0,.7) 38%,transparent 92%);
-  mask-image:linear-gradient(180deg,#000 0,rgba(0,0,0,.7) 38%,transparent 92%);
+  background:var(--ah-banner-img) center/cover no-repeat;
+  opacity:.4;
 }
 /* body of the cards must not paint a solid colour over the backdrop */
 .ah-v3-mini.ah-bg-on:not(.ah-profile-theme) .ah-v3-body{
-  background:linear-gradient(180deg,rgba(35,36,43,0) 0,rgba(35,36,43,.5) 100%)!important;
+  background:transparent!important;
 }
 /* full profile: image goes under the existing colour gradient (::before) */
 .ah-v3-full-left.ah-bg-on{isolation:isolate}
 .ah-v3-full-left.ah-bg-on::before{
-  background:linear-gradient(180deg,rgba(36,38,58,.10) 0,rgba(36,38,58,.78) 58%,#24263a 100%)!important;
+  background:linear-gradient(180deg,rgba(36,38,58,0) 0,rgba(36,38,58,.15) 100%)!important;
   opacity:1!important;
 }
 .ah-v3-full-left.ah-bg-on .ah-v3-full-banner{z-index:1}
