@@ -7010,5 +7010,68 @@ html.ah-theme-anim *,html.ah-theme-anim *::before,html.ah-theme-anim *::after{tr
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 </script>
+<style id="ah-banner-backdrop-css">
+/* === Banner backdrop: banner image softly bleeds behind the whole profile card === */
+.ah-v3-mini.ah-bg-on:not(.ah-profile-theme),
+.self-profile-card.ah-bg-on,
+.ah-custom-profile-card.ah-bg-on{position:relative;isolation:isolate}
+.ah-v3-mini.ah-bg-on:not(.ah-profile-theme)::before,
+.self-profile-card.ah-bg-on::before,
+.ah-custom-profile-card.ah-bg-on::before,
+.ah-v3-full-left.ah-bg-on::after{
+  content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:linear-gradient(rgba(18,19,24,.38),rgba(18,19,24,.38)),var(--ah-banner-img) center top/cover no-repeat;
+  opacity:.68;
+  filter:blur(14px) saturate(1.15);
+  transform:scale(1.18);
+  -webkit-mask-image:linear-gradient(180deg,#000 0,rgba(0,0,0,.7) 38%,transparent 92%);
+  mask-image:linear-gradient(180deg,#000 0,rgba(0,0,0,.7) 38%,transparent 92%);
+}
+/* body of the cards must not paint a solid colour over the backdrop */
+.ah-v3-mini.ah-bg-on:not(.ah-profile-theme) .ah-v3-body{
+  background:linear-gradient(180deg,rgba(35,36,43,0) 0,rgba(35,36,43,.5) 100%)!important;
+}
+/* full profile: image goes under the existing colour gradient (::before) */
+.ah-v3-full-left.ah-bg-on{isolation:isolate}
+.ah-v3-full-left.ah-bg-on::before{
+  background:linear-gradient(180deg,rgba(36,38,58,.10) 0,rgba(36,38,58,.78) 58%,#24263a 100%)!important;
+  opacity:1!important;
+}
+.ah-v3-full-left.ah-bg-on .ah-v3-full-banner{z-index:1}
+</style>
+<script id="ah-banner-backdrop-js">
+(function(){
+  if(window.__ahBannerBackdropReady) return; window.__ahBannerBackdropReady=true;
+  const PAIRS=[
+    ['#ah-v3-banner','.ah-v3-mini'],
+    ['#ah-v3-full-banner','.ah-v3-full-left'],
+    ['.self-profile-banner','.self-profile-card'],
+    ['#ah-profile-preview-banner','.ah-custom-profile-card']
+  ];
+  function sync(banner,card){
+    if(!banner||!card) return;
+    const bg=banner.style.backgroundImage||'';
+    if(bg.indexOf('url(')!==-1){
+      card.style.setProperty('--ah-banner-img',bg);
+      card.classList.add('ah-bg-on');
+    }else{
+      card.style.removeProperty('--ah-banner-img');
+      card.classList.remove('ah-bg-on');
+    }
+  }
+  function init(){
+    PAIRS.forEach(function(pair){
+      document.querySelectorAll(pair[0]).forEach(function(banner){
+        const card=banner.closest(pair[1]);
+        if(!card) return;
+        sync(banner,card);
+        // any code that changes the banner (open profile, upload preview, reset) is picked up automatically
+        new MutationObserver(function(){sync(banner,card)}).observe(banner,{attributes:true,attributeFilter:['style']});
+      });
+    });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+})();
+</script>
 </body>
 </html>
