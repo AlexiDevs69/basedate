@@ -1484,11 +1484,25 @@ document.addEventListener('DOMContentLoaded',()=>{
       </div>
     </div>
     <div class="ah-v3-full-right">
-      <div class="ah-v3-full-tabs">
-        <span><!--i18n:common.text.doshos-->{{ i18n_t('common.text.doshos') }}</span>
-        <span id="ah-v3-mutual-tab" class="active"><!--i18n:common.text.jo_collected_servers-->{{ i18n_t('common.text.jo_collected_servers') }}</span>
+      <div class="ah-v3-full-tabs" id="ah-v3-full-tabpanel">
+        <span id="ah-v3-tab-activity" class="active" data-ah-tab="activity"><!--i18n:common.text.doshos-->{{ i18n_t('common.text.doshos') }}</span>
+        <span id="ah-v3-tab-wishlist" data-ah-tab="wishlist"><!--i18n:common.text.wishlist-->{{ i18n_t('common.text.wishlist') }}</span>
+        <span id="ah-v3-tab-friends" data-ah-tab="friends"><!--i18n:common.text.no_shared_friends-->{{ i18n_t('common.text.no_shared_friends') }}</span>
+        <span id="ah-v3-mutual-tab" data-ah-tab="servers"><!--i18n:common.text.jo_collected_servers-->{{ i18n_t('common.text.jo_collected_servers') }}</span>
       </div>
-      <div id="ah-v3-mutual-list" class="ah-v3-mutual-list"></div>
+      <div id="ah-v3-panel-activity" class="ah-v3-tab-panel" data-ah-panel="activity">
+        <div class="ah-v3-full-subhead"><!--i18n:common.text.recent_activity-->{{ i18n_t('common.text.recent_activity') }}</div>
+        <div id="ah-v3-activity-list" class="ah-v3-activity-list">
+          <div class="ah-v3-mutual-empty"><span>⌁</span><b><!--i18n:common.text.no_recent_activity-->{{ i18n_t('common.text.no_recent_activity') }}</b></div>
+        </div>
+      </div>
+      <div id="ah-v3-panel-wishlist" class="ah-v3-tab-panel" data-ah-panel="wishlist" hidden>
+        <div class="ah-v3-mutual-empty"><span>🎁</span><b><!--i18n:common.text.wishlist_empty-->{{ i18n_t('common.text.wishlist_empty') }}</b></div>
+      </div>
+      <div id="ah-v3-panel-friends" class="ah-v3-tab-panel" data-ah-panel="friends" hidden>
+        <div class="ah-v3-mutual-empty"><span>⌁</span><b><!--i18n:common.text.no_shared_friends-->{{ i18n_t('common.text.no_shared_friends') }}</b></div>
+      </div>
+      <div id="ah-v3-mutual-list" class="ah-v3-mutual-list ah-v3-tab-panel" data-ah-panel="servers" hidden></div>
     </div>
     <div id="ah-v3-full-menu" class="ah-v3-full-menu" aria-hidden="true">
       <a id="ah-v3-full-profile-link" class="ah-v3-full-menu-item" href="#">
@@ -1513,6 +1527,24 @@ document.addEventListener('DOMContentLoaded',()=>{
     <div id="ah-v3-full-tooltip" class="ah-v3-full-tooltip" role="tooltip"></div>
   </div>
 </div>
+<script id="ah-v3-full-tabs-js">
+(function(){
+  function switchTab(name){
+    document.querySelectorAll('#ah-v3-full-tabpanel [data-ah-tab]').forEach(function(t){
+      t.classList.toggle('active', t.getAttribute('data-ah-tab') === name);
+    });
+    document.querySelectorAll('.ah-v3-full-right [data-ah-panel]').forEach(function(p){
+      p.hidden = p.getAttribute('data-ah-panel') !== name;
+    });
+  }
+  document.addEventListener('click', function(e){
+    var tab = e.target.closest('#ah-v3-full-tabpanel [data-ah-tab]');
+    if(!tab) return;
+    switchTab(tab.getAttribute('data-ah-tab'));
+  });
+  document.addEventListener('alexihub:full-profile-open', function(){ switchTab('activity'); });
+})();
+</script>
 
 <style id="ah-profile-actions-style">
 .ah-v3-full-actions{display:flex;align-items:center;gap:8px;margin-top:18px}
@@ -1560,9 +1592,25 @@ document.addEventListener('DOMContentLoaded',()=>{
 #ah-v3-full-about{color:#e1e3e7;font-size:13px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
 .ah-v3-full-meta{margin-top:22px!important;padding-top:18px;border-top:1px solid rgba(255,255,255,.12);color:#c2c5cc!important}
 .ah-v3-full-right{padding:54px 34px 28px!important;background:#17181c!important}
-.ah-v3-full-tabs{height:44px;display:flex;align-items:flex-end;gap:26px;border-bottom:1px solid rgba(255,255,255,.10);margin-bottom:12px}
-.ah-v3-full-tabs span{height:44px;display:flex;align-items:center;position:relative;color:#949ba4;font-size:13px;font-weight:850;white-space:nowrap}
+.ah-v3-full-tabs{height:44px;display:flex;align-items:flex-end;gap:22px;border-bottom:1px solid rgba(255,255,255,.10);margin-bottom:14px;overflow-x:auto;scrollbar-width:none}
+.ah-v3-full-tabs::-webkit-scrollbar{display:none}
+.ah-v3-full-tabs span{height:44px;display:flex;align-items:center;position:relative;color:#949ba4;font-size:13px;font-weight:850;white-space:nowrap;cursor:pointer;flex:0 0 auto}
 .ah-v3-full-tabs span.active{color:#f2f3f5}.ah-v3-full-tabs span.active:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;border-radius:4px;background:#f2f3f5}
+.ah-v3-tab-panel[hidden]{display:none!important}
+.ah-v3-full-subhead{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.04em;color:#949ba4;margin-bottom:10px}
+.ah-v3-activity-list{display:grid;gap:8px}
+.ah-v3-activity-row{display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:12px;padding:10px;border-radius:8px;background:#2b2d34}
+.ah-v3-activity-icon{width:44px;height:44px;border-radius:6px;background:#3a3c45 center/cover no-repeat}
+.ah-v3-activity-copy{min-width:0}
+.ah-v3-activity-copy b{display:block;font-size:13px;font-weight:850;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ah-v3-activity-copy span{display:block;font-size:12px;color:#b5bac1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ah-v3-activity-copy small{display:block;font-size:11px;color:#8b919d;margin-top:2px}
+:where(html[data-theme="light"]) .ah-v3-full-tabs{border-bottom:1px solid rgba(0,0,0,.085)}
+:where(html[data-theme="light"]) .ah-v3-full-subhead{color:#5c6069}
+:where(html[data-theme="light"]) .ah-v3-activity-row{background:#e3e5e8}
+:where(html[data-theme="light"]) .ah-v3-activity-icon{background:#d2d5da}
+:where(html[data-theme="light"]) .ah-v3-activity-copy span{color:#4e5058}
+:where(html[data-theme="light"]) .ah-v3-activity-copy small{color:#5c6069}
 .ah-v3-mutual-list{display:grid;align-content:start}
 .ah-v3-mutual-row{min-height:62px;padding:8px 10px;margin:1px 0;border-radius:9px;color:#f2f3f5;text-decoration:none;display:grid;grid-template-columns:44px minmax(0,1fr) 18px;align-items:center;gap:11px;transition:background .14s ease,transform .14s ease}
 .ah-v3-mutual-row:hover{background:#24262c;transform:translateX(2px)}
@@ -7026,7 +7074,7 @@ html:not([data-theme="light"]) .ah-v3-full.ah-bg-on{
 }
 html:not([data-theme="light"]) .ah-v3-full.ah-bg-on::before{
   content:"";position:absolute;left:0;right:0;top:0;height:440px;z-index:-1;pointer-events:none;
-  background:var(--ah-banner-img) center top/100% auto no-repeat;
+  background:var(--ah-banner-img) center top/cover no-repeat;
   opacity:.32;filter:blur(2px);
   -webkit-mask-image:linear-gradient(180deg,#000 0,rgba(0,0,0,.55) 45%,transparent 100%);
   mask-image:linear-gradient(180deg,#000 0,rgba(0,0,0,.55) 45%,transparent 100%);
