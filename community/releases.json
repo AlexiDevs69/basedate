@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.206.7",
+      "date": "2026-09-23",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance travel.html with profile effect features."
+      ],
+      "source_sha": "c5244c8800512b7b0e898a99e4b9231704e1d9a4"
+    },
+    {
       "version": "1.206.6",
       "date": "2026-09-23",
       "title": "Виправлення та стабільність",
