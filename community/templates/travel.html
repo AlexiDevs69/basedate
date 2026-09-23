@@ -7204,5 +7204,56 @@ html:not([data-theme="light"]) .ah-v3-full.ah-bg-on .ah-v3-widget{background:rgb
 })();
 </script>
 
+<style id="ah-full-profile-match-editor-css">
+/* Робимо вигляд картки повного профілю ідентичним картці в редагуванні профілю */
+.ah-v3-full{border-radius:15px!important}
+.ah-v3-full-left{background:#24252b!important}
+.ah-v3-full-left::before{display:none!important;content:none!important}
+.ah-v3-full-banner{
+  height:126px!important;
+  background:linear-gradient(135deg,#20204d,#443b88)!important;
+  background-size:cover!important;background-position:center!important
+}
+.ah-v3-full-banner.has-image{background:center/cover no-repeat!important}
+.ah-v3-full-banner::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(to bottom,transparent 48%,rgba(36,37,43,.48))
+}
+.ah-v3-full-left-inner{padding:73px 24px 24px!important}
+.ah-v3-full-avatar{
+  width:102px!important;height:102px!important;
+  border-width:7px!important;border-color:#24252b!important;
+  font-size:31px!important
+}
+.ah-v3-full-name-row{margin-top:13px!important}
+.ah-v3-full-name{font-size:25px!important;font-weight:950!important;letter-spacing:-.04em!important}
+.ah-v3-full-handle{font-size:12px!important;color:#c3c6cc!important;margin-top:4px!important}
+
+.ah-v3-full-actions{gap:8px!important;margin-top:19px!important}
+.ah-v3-friend-action,.ah-v3-full-icon-button{
+  height:35px!important;border-radius:7px!important;background:#35373d!important
+}
+.ah-v3-friend-action.state-none,.ah-v3-friend-action.state-pending_received{
+  flex:1;padding:0 13px!important;border-radius:7px!important;
+  background:#5865f2!important;font-weight:850!important
+}
+.ah-v3-friend-action.state-none:hover,.ah-v3-friend-action.state-pending_received:hover{background:#4752c4!important;filter:none!important}
+.ah-v3-friend-action.state-friends,.ah-v3-friend-action.state-pending_sent,.ah-v3-friend-action.state-loading{
+  width:36px!important;height:35px!important;border-radius:7px!important
+}
+.ah-v3-full-icon-button{width:36px!important;height:35px!important;border-radius:7px!important}
+.ah-v3-full-icon-button:hover{background:#3f4147!important}
+
+.ah-v3-full-about-block{margin-top:19px!important}
+#ah-v3-full-about{font-size:13px!important;line-height:1.45!important;color:#dbdee1!important}
+
+.ah-v3-full-meta{
+  display:block!important;margin-top:20px!important;padding:0!important;
+  background:none!important;border-radius:0!important;
+  font-size:12px!important;font-weight:400!important;color:#b5bac1!important
+}
+#ah-v3-full-meta::before{content:none!important}
+</style>
+
 </body>
 </html>
