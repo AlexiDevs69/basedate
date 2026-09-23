@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.205.13",
+      "date": "2026-09-23",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Change hero title color to white."
+      ],
+      "source_sha": "124db9b5f937d4d731e83aab3c91a34193f2f50d"
+    },
+    {
       "version": "1.205.12",
       "date": "2026-09-23",
       "title": "Виправлення та стабільність",
