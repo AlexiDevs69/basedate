@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.206.22",
+      "date": "2026-09-24",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update styles for light theme in server_home.html."
+      ],
+      "source_sha": "f8c38598cd83a51db783fc1d07be3e53206322cb"
+    },
+    {
       "version": "1.206.21",
       "date": "2026-09-24",
       "title": "Виправлення та стабільність",
