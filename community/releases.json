@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.206.17",
+      "date": "2026-09-24",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update travel.html with new styles and scripts."
+      ],
+      "source_sha": "c994f08b2ee2ba56fbc46629e9322e67d24ff784"
+    },
+    {
       "version": "1.206.16",
       "date": "2026-09-24",
       "title": "Виправлення та стабільність",
