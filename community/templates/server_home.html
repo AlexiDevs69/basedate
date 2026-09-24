@@ -3305,7 +3305,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     <div id="ah-v3-mini-private-bar" class="ah-v3-full-private-bar ah-v3-mini-private-bar" hidden>
       <span id="ah-v3-mini-private-bar-text"></span>
     </div>
-    <div class="ah-v3-actions"><a id="ah-v3-message" href="#"><span id="ah-v3-message-label"><!--i18n:privacy.blocking.message-->{{ i18n_t("privacy.blocking.message") }}</span></a><button id="ah-v3-open-full" type="button"><!--i18n:privacy.blocking.full-->{{ i18n_t('privacy.blocking.full') }}</button></div>
+    <div class="ah-v3-actions"><a id="ah-v3-message" href="#"><svg id="ah-v3-message-pencil" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="M16.7 3.3a2.5 2.5 0 0 1 3.5 3.5L8.5 18.5 3 20l1.5-5.5Z"/></svg><span id="ah-v3-message-label"><!--i18n:privacy.blocking.message-->{{ i18n_t("privacy.blocking.message") }}</span></a><button id="ah-v3-open-full" type="button"><!--i18n:privacy.blocking.full-->{{ i18n_t('privacy.blocking.full') }}</button></div>
     <div class="ah-v3-status-menu">
       <button class="ah-v3-status-btn" type="button" data-presence="online"><span class="ah-v3-dot"></span><span><!--i18n:common.text.online-->{{ i18n_t('common.text.online') }}<small><!--i18n:common.text.showkensike_yak_online-->{{ i18n_t('common.text.showkensike_yak_online') }}</small></span></button>
       <button class="ah-v3-status-btn" type="button" data-presence="idle"><span class="ah-v3-dot idle"></span><span><!--i18n:status.idle-->{{ i18n_t('status.idle') }}<small><!--i18n:common.text.text_27b907e-->{{ i18n_t('common.text.text_27b907e') }}</small></span></button>
@@ -9888,6 +9888,8 @@ html[data-theme="light"] .user-panel{background:#e3e5e8!important;border-color:r
 /* Self mini-profile: drop the "full profile" button, stretch edit-profile button, add pencil icon */
 .ah-v3-mini.self .ah-v3-actions #ah-v3-open-full{display:none!important}
 .ah-v3-mini.self .ah-v3-actions{gap:0!important}
+#ah-v3-message-pencil{width:14px;height:14px;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:none!important}
+#ah-v3-message[data-self="1"] #ah-v3-message-pencil{display:inline-flex!important}
 .ah-v3-mini.self .ah-v3-actions #ah-v3-message{flex:1 1 100%!important;width:100%!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:7px!important}
 </style>
 </body>
