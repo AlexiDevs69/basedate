@@ -11857,9 +11857,14 @@ html body .ah-v3-full-name{font-size:25px!important;line-height:1.15!important;l
 html body .ah-v3-full-handle{margin-top:4px!important;font-size:12px!important;color:#c3c6cc!important}
 
 /* action buttons: same buttons, same sizes as the own-profile card */
-html body .ah-v3-full-actions{gap:8px!important;margin-top:19px!important}
-html body .ah-v3-full-actions>a,html body .ah-v3-full-actions>button{height:35px!important;min-height:35px!important;border-radius:7px!important;font-weight:850!important;line-height:1!important}
-html body #ah-v3-full-message{flex:1!important}
+html body .ah-v3-full-actions{gap:6px!important;margin-top:17px!important;justify-content:flex-start!important}
+html body .ah-v3-full-actions>a,html body .ah-v3-full-actions>button{height:30px!important;min-height:30px!important;border-radius:7px!important;font-weight:850!important;font-size:12px!important;line-height:1!important;flex:0 0 auto!important}
+html body #ah-v3-full-message{flex:0 0 auto!important;padding:0 12px!important;gap:6px!important}
+html body #ah-v3-full-message svg{width:14px!important;height:14px!important}
+html body .ah-v3-full-icon-button,html body .ah-v3-friend-action.state-friends,html body .ah-v3-friend-action.state-pending_sent,html body .ah-v3-friend-action.state-loading{width:30px!important;height:30px!important;padding:0!important}
+html body .ah-v3-friend-action.state-none,html body .ah-v3-friend-action.state-pending_received{padding:0 11px!important}
+html body .ah-v3-friend-action svg{width:16px!important;height:16px!important}
+html body .ah-v3-full-icon-button svg{width:18px!important;height:18px!important}
 html body .ah-v3-full-actions>a:hover,html body .ah-v3-full-actions>button:hover{filter:brightness(1.1)}
 
 /* about / registered: flat text blocks like in the own card */
@@ -11869,12 +11874,16 @@ html body #ah-v3-full-about{color:#dbdee1!important;font-size:13px!important;lin
 html body .ah-v3-full-meta{margin-top:20px!important;padding-top:0!important;border-top:0!important;color:#b5bac1!important;font-size:12px!important}
 
 /* right column: tabs + list rows like the own profile */
-html body .ah-v3-full-right{background:#18191d!important;padding:50px 28px 30px 18px!important;overflow:auto!important;scrollbar-width:thin;scrollbar-color:#5d6069 transparent}
+html body .ah-v3-full-right{background:#18191d!important;padding:50px 22px 24px 18px!important;overflow:hidden!important;display:flex!important;flex-direction:column;min-height:0}
+html body .ah-v3-full-tabs{flex:0 0 auto}
 html body .ah-v3-full-tabs{height:39px!important;margin-bottom:0!important;border-bottom:1px solid #32343a!important;gap:26px!important}
 html body .ah-v3-full-tabs span{height:39px!important;color:#9ca0aa!important;font-weight:850!important;font-size:inherit!important}
 html body .ah-v3-full-tabs span.active{color:#fff!important}
 html body .ah-v3-full-tabs span.active:after{background:#fff!important;bottom:-1px}
-html body .ah-v3-mutual-list{padding-top:16px;gap:8px}
+html body .ah-v3-mutual-list{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding:16px 8px 6px 0;margin-right:0;gap:8px;align-content:start;scrollbar-width:thin;scrollbar-color:#5d6069 transparent}
+html body .ah-v3-mutual-list::-webkit-scrollbar{width:8px}
+html body .ah-v3-mutual-list::-webkit-scrollbar-thumb{background:#5d6069;border-radius:8px;border:2px solid transparent;background-clip:content-box}
+html body .ah-v3-mutual-list::-webkit-scrollbar-track{background:transparent}
 html body .ah-v3-mutual-row{min-height:58px!important;margin:0!important;padding:8px 10px!important;border:1px solid transparent;border-radius:10px!important;background:#2b2d31;grid-template-columns:40px minmax(0,1fr) 18px!important}
 html body .ah-v3-mutual-row:hover{background:#31333a!important;border-color:#41434b;transform:translateY(-1px)!important}
 html body .ah-v3-mutual-server-icon{width:40px!important;height:40px!important;border-radius:12px!important;background-color:#3a3c43;font-size:13px!important}
@@ -11895,7 +11904,8 @@ html body .ah-v3-mini .ah-v3-name{font-size:22px}
   html body .ah-v3-full{width:100%!important;height:auto!important;max-height:88vh!important;border-radius:22px 22px 0 0!important;border-left:0!important;border-right:0!important;border-bottom:0!important;grid-template-columns:1fr!important;grid-template-rows:none!important;overflow:auto!important}
   html body .ah-v3-full-left{overflow:visible!important;padding:48px 14px 18px!important}
   html body .ah-v3-full-left-inner{padding:0 20px 24px!important}
-  html body .ah-v3-full-right{overflow:visible!important;padding:16px 14px 24px!important}
+  html body .ah-v3-full-right{overflow:visible!important;padding:16px 14px 24px!important;display:block!important}
+  html body .ah-v3-mutual-list{overflow:visible!important;padding-right:0}
 }
 </style>
 </body>
