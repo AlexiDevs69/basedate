@@ -10040,6 +10040,70 @@ html body .ah-v3-mini .ah-v3-name{font-size:22px}
   html body .ah-v3-mutual-list{overflow:visible!important;padding-right:0}
 }
 </style>
+<style id="ah-profile-light-fix">
+/* === Light theme fix: mini + full profile must not stay dark ===
+   ah-unified-profile-look forces dark colours via "html body .x !important";
+   the light rules use :where() (zero specificity) and lose. These overrides have higher specificity. */
+html[data-theme="light"] body .ah-v3-overlay{background:rgba(20,22,28,.45)!important}
+
+/* ---------- FULL PROFILE ---------- */
+html[data-theme="light"] body .ah-v3-full{background:#e3e5e8!important;border:1px solid #cdd1d7!important;color:#111318!important;box-shadow:0 30px 90px rgba(15,17,21,.28)!important}
+html[data-theme="light"] body .ah-v3-close{background:#f5f6f8!important;border:1px solid #cdd1d7!important;color:#4e5058!important}
+html[data-theme="light"] body .ah-v3-close:hover{background:#d8dbe0!important;color:#111318!important}
+html[data-theme="light"] body .ah-v3-full-left{background:#e3e5e8!important;scrollbar-color:#a9adb6 transparent}
+html[data-theme="light"] body .ah-v3-full-profile-card{background:#f5f6f8!important;border:1px solid rgba(0,0,0,.08)!important;box-shadow:0 10px 30px rgba(15,17,21,.12)!important}
+html[data-theme="light"] body .ah-v3-full-banner::after{background:linear-gradient(to bottom,transparent 48%,rgba(245,246,248,.48))!important}
+html[data-theme="light"] body .ah-v3-full-avatar{border-color:#f5f6f8!important}
+html[data-theme="light"] body .ah-v3-full-avatar .presence{border-color:#f5f6f8!important}
+html[data-theme="light"] body .ah-v3-full-name{color:#111318!important}
+html[data-theme="light"] body .ah-v3-full-handle{color:#4e5058!important}
+html[data-theme="light"] body .ah-v3-full-section-title{color:#6b6f78!important}
+html[data-theme="light"] body #ah-v3-full-about{color:#2e3338!important}
+html[data-theme="light"] body .ah-v3-full-meta{color:#4e5058!important}
+html[data-theme="light"] body .ah-v3-full-about-block{border-top-color:rgba(0,0,0,.1)!important}
+
+html[data-theme="light"] body .ah-v3-full-right{background:#e3e5e8!important}
+html[data-theme="light"] body .ah-v3-full-tabs{border-bottom-color:#cdd1d7!important}
+html[data-theme="light"] body .ah-v3-full-tabs span{color:#6b6f78!important}
+html[data-theme="light"] body .ah-v3-full-tabs span.active{color:#111318!important}
+html[data-theme="light"] body .ah-v3-full-tabs span.active:after{background:#111318!important}
+html[data-theme="light"] body .ah-v3-mutual-row{background:#f5f6f8!important;color:#1b1c20!important}
+html[data-theme="light"] body .ah-v3-mutual-row:hover{background:#ebedf0!important;border-color:#d0d3d9!important}
+html[data-theme="light"] body .ah-v3-mutual-server-icon{background-color:#d2d5da!important;color:#111318!important}
+html[data-theme="light"] body .ah-v3-mutual-server-copy b{color:#1b1c20!important}
+html[data-theme="light"] body .ah-v3-mutual-server-copy small{color:#5c6069!important}
+html[data-theme="light"] body .ah-v3-mutual-row>svg{stroke:#6b6f78!important}
+html[data-theme="light"] body .ah-v3-full-right:hover .ah-v3-mutual-list::-webkit-scrollbar-thumb{background-color:#a9adb6!important}
+html[data-theme="light"] body .ah-v3-full-right:hover .ah-v3-mutual-list::-webkit-scrollbar-thumb:hover{background-color:#8a8e99!important}
+@supports not selector(::-webkit-scrollbar){
+  html[data-theme="light"] body .ah-v3-full-right:hover .ah-v3-mutual-list{scrollbar-color:#a9adb6 transparent!important}
+}
+
+/* private-profile bars (full + mini) */
+html[data-theme="light"] body .ah-v3-full-topbar{background:#d8dbe0!important;border-bottom-color:rgba(0,0,0,.1)!important;color:#2e3338!important}
+html[data-theme="light"] body .ah-v3-full-topbar svg{color:#6b6f78!important}
+html[data-theme="light"] body .ah-v3-full-private-bar{background:rgba(0,0,0,.06)!important;color:#2e3338!important}
+
+/* ---------- MINI PROFILE ---------- */
+html[data-theme="light"] body .ah-v3-mini:not(.ah-profile-theme){background:#f5f6f8!important;border:1px solid rgba(0,0,0,.1)!important;color:#111318!important;box-shadow:0 15px 44px rgba(15,17,21,.22)!important}
+html[data-theme="light"] body .ah-v3-mini:not(.ah-profile-theme) .ah-v3-body{background:linear-gradient(180deg,color-mix(in srgb,var(--ah-banner-soft,#5865f2) 24%,#f5f6f8),#f5f6f8 34%)!important;color:#111318!important}
+html[data-theme="light"] body .ah-v3-mini:not(.ah-profile-theme) .ah-v3-status,
+html[data-theme="light"] body .ah-v3-mini:not(.ah-profile-theme) #ah-v3-status{border-color:#f5f6f8!important}
+html[data-theme="light"] body .ah-v3-mini:not(.ah-profile-theme) .ah-v3-avatar{border-color:#f5f6f8!important}
+html[data-theme="light"] body .ah-v3-mini:not(.ah-profile-theme) .ah-v3-name{color:#111318!important}
+html[data-theme="light"] body .ah-v3-mini:not(.ah-profile-theme) .ah-v3-handle{color:#4e5058!important}
+html[data-theme="light"] body .ah-v3-mini:not(.ah-profile-theme) .ah-v3-actions button{color:#111318!important}
+html[data-theme="light"] body .ah-v3-banner::after{background:linear-gradient(to bottom,transparent 48%,rgba(245,246,248,.48))!important}
+html[data-theme="light"] body .ah-v3-banner.has-image::after{background:linear-gradient(180deg,rgba(0,0,0,.02),rgba(0,0,0,.18))!important}
+
+/* custom profile theme in the mini card stays dark by design: keep its text readable */
+html[data-theme="light"] body .ah-v3-mini.ah-profile-theme .ah-v3-name{color:#fff!important}
+html[data-theme="light"] body .ah-v3-mini.ah-profile-theme .ah-v3-handle{color:#d8dbe2!important}
+html[data-theme="light"] body .ah-v3-mini.ah-profile-theme .ah-v3-role{background:rgba(255,255,255,.12)!important;color:#fff!important}
+html[data-theme="light"] body .ah-v3-mini.ah-profile-theme .ah-v3-status-btn{color:#f4f4f5!important}
+html[data-theme="light"] body .ah-v3-mini.ah-profile-theme .ah-v3-status,
+html[data-theme="light"] body .ah-v3-mini.ah-profile-theme #ah-v3-status{border-color:#23242b!important}
+</style>
 <style id="ah-self-mini-profile-css">
 /* Self mini-profile: drop the "full profile" button, stretch edit-profile button, add pencil icon */
 .ah-v3-mini.self .ah-v3-actions #ah-v3-open-full{display:none!important}
