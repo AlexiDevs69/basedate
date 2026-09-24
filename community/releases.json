@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.206.24",
+      "date": "2026-09-24",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update server home template for action buttons."
+      ],
+      "source_sha": "6ebe1a7a1c25078ab782750bf75642f1939b1190"
+    },
+    {
       "version": "1.206.23",
       "date": "2026-09-24",
       "title": "Виправлення та стабільність",
