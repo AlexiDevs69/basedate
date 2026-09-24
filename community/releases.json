@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.207.0",
+      "date": "2026-09-24",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: unified profile styling in server_channel.html."
+      ],
+      "source_sha": "e943f611a3d33b93d07c075a070665081f5b5ec9"
+    },
+    {
       "version": "1.206.27",
       "date": "2026-09-24",
       "title": "Оновлення AlexiHub",
