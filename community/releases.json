@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.206.27",
+      "date": "2026-09-24",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: profile action buttons and message handling."
+      ],
+      "source_sha": "a8d1ca3fd42372b9d54acbcb743f69672b6be9e0"
+    },
+    {
       "version": "1.206.26",
       "date": "2026-09-24",
       "title": "Виправлення та стабільність",
