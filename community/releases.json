@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.206.25",
+      "date": "2026-09-24",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update message action with pencil icon."
+      ],
+      "source_sha": "399ddcb62415ac30edb96f75b49cb1a6cceef02f"
+    },
+    {
       "version": "1.206.24",
       "date": "2026-09-24",
       "title": "Виправлення та стабільність",
