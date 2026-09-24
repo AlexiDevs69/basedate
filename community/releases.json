@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.207.4",
+      "date": "2026-09-24",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Change banner gradient colors in server_home.html."
+      ],
+      "source_sha": "66604fe5df1b7d625423f79b7e8960992215e1ea"
+    },
+    {
       "version": "1.207.3",
       "date": "2026-09-24",
       "title": "Оновлення AlexiHub",
