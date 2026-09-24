@@ -12743,6 +12743,14 @@ html[data-theme="light"] .ah-rich-embed-desc{color:#2e3338}
 html[data-theme="light"] .ah-rich-embed-image{background:#e3e5e8}
 html.ah-theme-anim *,html.ah-theme-anim *::before,html.ah-theme-anim *::after{transition:background-color .25s ease,color .25s ease,border-color .25s ease,fill .25s ease,stroke .25s ease,box-shadow .25s ease!important}
 </style>
+<style id="ah-rail-light-hover-css">
+/* light theme: the left rail keeps the teal hover/active state (compass, plus, servers), like the dark theme and server_home */
+html[data-theme="light"] .server-dot.home-dot{background:linear-gradient(135deg,#00C4B4,#00A89B)!important;color:#fff!important}
+html[data-theme="light"] .server-dot:hover,
+html[data-theme="light"] .server-dot.active{background-color:#00C4B4!important;color:#fff!important}
+html[data-theme="light"] .server-dot.plus:hover,
+html[data-theme="light"] .server-dot.plus.active{background-color:#00C4B4!important;color:#fff!important}
+</style>
 <style id="ah-unified-profile-look">
 /* === Unified profile look: every profile now looks like the own-profile card === */
 html body .ah-v3-overlay{background:rgba(0,0,0,.74)!important;backdrop-filter:blur(3px)!important;padding:28px!important}
