@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.206.20",
+      "date": "2026-09-24",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance mini-profile actions with pencil icon."
+      ],
+      "source_sha": "a5a534732a3d1d93f3a3ca7caed4b65bdab160ef"
+    },
+    {
       "version": "1.206.19",
       "date": "2026-09-24",
       "title": "Виправлення та стабільність",
