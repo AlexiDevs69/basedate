@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.206.26",
+      "date": "2026-09-24",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance light theme styles for event elements."
+      ],
+      "source_sha": "cda61acb0efdcbd3609718d1eb7546a713e5101a"
+    },
+    {
       "version": "1.206.25",
       "date": "2026-09-24",
       "title": "Виправлення та стабільність",
