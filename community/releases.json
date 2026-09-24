@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.208.4",
+      "date": "2026-09-25",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance light theme styles in dm_chat.html."
+      ],
+      "source_sha": "59a022276caac28cd600f36405ddfbd72a4f0196"
+    },
+    {
       "version": "1.208.3",
       "date": "2026-09-25",
       "title": "Виправлення та стабільність",
