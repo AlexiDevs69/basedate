@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.207.3",
+      "date": "2026-09-24",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: scrollbar styles in server_channel.html."
+      ],
+      "source_sha": "1ed514b8bda9962dce5c50c15deb39a79a3d4c4e"
+    },
+    {
       "version": "1.207.2",
       "date": "2026-09-24",
       "title": "Виправлення та стабільність",
