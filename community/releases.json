@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.207.1",
+      "date": "2026-09-24",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: styles for server channel template."
+      ],
+      "source_sha": "dd15ffd08fc5a1283bc7ee9f3bc48a61dd2bb9b4"
+    },
+    {
       "version": "1.207.0",
       "date": "2026-09-24",
       "title": "Нові можливості AlexiHub",
