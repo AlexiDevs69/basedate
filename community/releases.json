@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.206.18",
+      "date": "2026-09-24",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update travel.html for light theme styles."
+      ],
+      "source_sha": "24d956c651113c14a77dcba74ee0100aee987b89"
+    },
+    {
       "version": "1.206.17",
       "date": "2026-09-24",
       "title": "Виправлення та стабільність",
