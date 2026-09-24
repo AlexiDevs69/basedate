@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.208.0",
+      "date": "2026-09-24",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: light theme styles for profiles."
+      ],
+      "source_sha": "733ddec8ad2dd9d0ff15d9c9b155787601be674f"
+    },
+    {
       "version": "1.207.5",
       "date": "2026-09-24",
       "title": "Виправлення та стабільність",
