@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.207.5",
+      "date": "2026-09-24",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update color scheme for profile components."
+      ],
+      "source_sha": "dafa00c00ffb80996f78a997933997493cfbaf35"
+    },
+    {
       "version": "1.207.4",
       "date": "2026-09-24",
       "title": "Виправлення та стабільність",
