@@ -3207,8 +3207,8 @@ body.ah-store-product-open{overflow:hidden}
                     <linearGradient id="giftBotV2" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#b7c0ff"/><stop offset="1" stop-color="#6879ec"/></linearGradient>
                     <filter id="giftShadowV2"><feDropShadow dx="0" dy="12" stdDeviation="10" flood-color="#100b32" flood-opacity=".45"/></filter>
                   </defs>
-                  <rect x="18" y="24" width="424" height="224" rx="28" fill="url(#giftSceneV2)"/>
-                  <path d="M18 187c57-26 105-12 151 5 57 22 102 27 163 0 40-18 76-15 110-2v58H18Z" fill="#5a28ba" opacity=".46"/>
+                  <rect class="ah-gift-scene-bg" x="18" y="24" width="424" height="224" rx="28" fill="url(#giftSceneV2)"/>
+                  <path class="ah-gift-scene-wave" d="M18 187c57-26 105-12 151 5 57 22 102 27 163 0 40-18 76-15 110-2v58H18Z" fill="#5a28ba" opacity=".46"/>
                   <g class="ah-gift-cloud" opacity=".85"><path d="M45 103c10-17 25-19 34-7 11-10 29-2 31 12 15-2 24 7 24 17H39c-4-10-1-17 6-22Z" fill="#b47eff" opacity=".52"/></g>
                   <g class="ah-gift-cloud" opacity=".72"><path d="M324 75c11-17 25-17 34-5 13-8 31 1 30 16 14-1 22 7 22 16h-98c-2-12 2-22 12-27Z" fill="#f18cff" opacity=".42"/></g>
                   <g transform="translate(39 46)">
@@ -13911,6 +13911,15 @@ html[data-theme="light"] .ah-benefit-body p{color:#4e5058!important}
 html[data-theme="light"] .ah-benefit-card:hover .ah-benefit-body p,
 html[data-theme="light"] .ah-benefit-card:focus-visible .ah-benefit-body p{color:#1b1c20!important}
 html[data-theme="light"] .ah-benefit-more{color:#5c6069!important}
+
+/* Нижня панель "Даруй Nitro" на сторінці Nitro */
+html[data-theme="light"] .ah-nitro-gift-banner{background:linear-gradient(135deg,#f2f3f5 0%,#eceaf3 52%,#e6e1f0 100%)!important;border-color:#dcdfe4!important}
+html[data-theme="light"] .ah-gift-scene-bg{fill:#eceaf3!important}
+html[data-theme="light"] .ah-gift-scene-wave{fill:#d9d3ec!important;opacity:.55!important}
+html[data-theme="light"] .ah-gift-copy h2{color:#1b1c20!important}
+html[data-theme="light"] .ah-gift-copy p{color:#4e5058!important}
+html[data-theme="light"] .ah-gift-copy button{background:#5865f2!important;color:#fff!important}
+html[data-theme="light"] .ah-gift-copy button:hover{background:#4752c4!important}
 </style>
 <style id="ah-rail-light-hover-css">
 /* light theme: the left rail keeps the teal hover/active state (compass, plus, servers), like the dark theme and server_home */
