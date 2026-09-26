@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.211.0",
+      "date": "2026-09-26",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: light theme styles to home.html."
+      ],
+      "source_sha": "e73569fb0847da62a473c4444b929e88dd058686"
+    },
+    {
       "version": "1.210.0",
       "date": "2026-09-26",
       "title": "Нові можливості AlexiHub",
