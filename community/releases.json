@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.212.2",
+      "date": "2026-09-27",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update gift scene SVG elements and styles."
+      ],
+      "source_sha": "9602d4671ff11fbfdb18a1c22dfaa970e1ced3af"
+    },
+    {
       "version": "1.212.1",
       "date": "2026-09-27",
       "title": "Виправлення та стабільність",
