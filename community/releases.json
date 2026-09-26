@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.208.7",
+      "date": "2026-09-26",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Виправлено: HTML structure by adding missing closing tag."
+      ],
+      "source_sha": "2320a0ffde2fc954709d6dfe6426dce84ffa15ef"
+    },
+    {
       "version": "1.208.6",
       "date": "2026-09-26",
       "title": "Виправлення та стабільність",
