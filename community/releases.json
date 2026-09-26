@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.212.0",
+      "date": "2026-09-26",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: light theme styles for Nitro shop."
+      ],
+      "source_sha": "a9242147bc50e6de6b293de8bdcf382944c0a5e8"
+    },
+    {
       "version": "1.211.0",
       "date": "2026-09-26",
       "title": "Нові можливості AlexiHub",
