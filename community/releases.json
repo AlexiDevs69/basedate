@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.210.0",
+      "date": "2026-09-26",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: light theme styles for friend interface."
+      ],
+      "source_sha": "3ac16642ff43e1bceffe48c5d71edd93e4c1dddb"
+    },
+    {
       "version": "1.209.0",
       "date": "2026-09-26",
       "title": "Нові можливості AlexiHub",
