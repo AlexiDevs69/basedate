@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.208.6",
+      "date": "2026-09-26",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update print statement from 'Hello' to 'Goodbye'."
+      ],
+      "source_sha": "896e8bf36ac8452d32eb6b52c416f543167629e8"
+    },
+    {
       "version": "1.208.5",
       "date": "2026-09-26",
       "title": "Виправлення та стабільність",
