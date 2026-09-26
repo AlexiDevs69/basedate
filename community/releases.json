@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.209.0",
+      "date": "2026-09-26",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: profile card to home.html."
+      ],
+      "source_sha": "08b2fece54f795712d7ffb3a383d77a91e9fb0d8"
+    },
+    {
       "version": "1.208.7",
       "date": "2026-09-26",
       "title": "Виправлення та стабільність",
