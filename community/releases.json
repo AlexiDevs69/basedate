@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.213.0",
+      "date": "2026-09-28",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: unread message tracking to DM sidebar."
+      ],
+      "source_sha": "898a70ef22ed8f6fa51a3802b329a16adcdad036"
+    },
+    {
       "version": "1.212.4",
       "date": "2026-09-28",
       "title": "Виправлення та стабільність",
