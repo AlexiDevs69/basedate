@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.212.3",
+      "date": "2026-09-28",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: login page design and add dynamic canvas."
+      ],
+      "source_sha": "7a23b23924c45d0074ca539ba7a23dcfde235a0c"
+    },
+    {
       "version": "1.212.2",
       "date": "2026-09-27",
       "title": "Виправлення та стабільність",
