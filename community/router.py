@@ -1127,6 +1127,13 @@ async def _emit_dm_sidebar_update(thread_id: int, message_id: int) -> None:
                 other_tags = await crud.list_account_active_server_tags(db, [int(other.id)])
                 other_profile["server_tag"] = other_tags.get(int(other.id))
                 other_online, other_status = await account_realtime.public_status(int(other.id), other_profile)
+                # Notification-sound hints for the client. Only the recipient
+                # of the message should hear a sound, and not while their own
+                # status is "Do not disturb". The client additionally applies
+                # its local on/off preference and skips the currently open chat.
+                is_incoming = viewer_id == int(recipient.id)
+                viewer_account = recipient if is_incoming else sender
+                viewer_dnd = str(getattr(viewer_account, "account_status", "") or "").lower() == "dnd"
                 await account_realtime.send_to_account(
                     viewer_id,
                     {
@@ -1138,6 +1145,8 @@ async def _emit_dm_sidebar_update(thread_id: int, message_id: int) -> None:
                         "other": other_profile,
                         "other_online": other_online,
                         "other_status": other_status,
+                        "incoming": is_incoming,
+                        "notify_sound": bool(is_incoming and not viewer_dnd),
                     },
                 )
     except Exception as exc:
