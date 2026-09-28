@@ -8796,6 +8796,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
       return;
     }
     if (data.type === 'dm_sidebar_update') {
+      if (window.__ahDmUnreadNote) window.__ahDmUnreadNote(data);
       upsertDmSidebar(data);
       setTimeout(sendWatchList, 0);
       return;
@@ -14211,5 +14212,74 @@ html[data-theme="light"][data-dark-sidebar] .dm-sidebar .dm-row .avatar{backgrou
 })();
 </script>
 
+
+<style id="ah-dm-unread-style">
+.dm-row .dm-name{color:#a3a8b1;font-weight:700;transition:color .14s ease}
+.dm-row:hover .dm-name,.dm-row.active .dm-name{color:var(--text)}
+.dm-row.ah-dm-unread .dm-name{color:#ffffff;font-weight:800}
+html[data-theme="light"] .dm-row .dm-name{color:#6b6f78}
+html[data-theme="light"] .dm-row:hover .dm-name,html[data-theme="light"] .dm-row.active .dm-name{color:#1b1c20}
+html[data-theme="light"] .dm-row.ah-dm-unread .dm-name{color:#0b0c0f}
+html[data-theme="light"][data-dark-sidebar] .dm-row .dm-name{color:#9ca3af}
+html[data-theme="light"][data-dark-sidebar] .dm-row:hover .dm-name,html[data-theme="light"][data-dark-sidebar] .dm-row.active .dm-name,html[data-theme="light"][data-dark-sidebar] .dm-row.ah-dm-unread .dm-name{color:#ffffff}
+</style>
+<script id="ah-dm-unread-script">
+(function(){
+  var KEY='ah_dm_unread_threads';
+  function load(){try{var v=JSON.parse(localStorage.getItem(KEY)||'[]');return Array.isArray(v)?v.map(String):[]}catch(e){return[]}}
+  function save(list){try{localStorage.setItem(KEY,JSON.stringify(list.slice(-200)))}catch(e){}}
+  function has(id){return load().indexOf(String(id))!==-1}
+  function mark(id){id=String(id);if(!id||id==='0')return;var l=load();if(l.indexOf(id)===-1){l.push(id);save(l)}refresh()}
+  function clear(id){id=String(id);var l=load();var i=l.indexOf(id);if(i!==-1){l.splice(i,1);save(l)}refresh()}
+  function body(){return document.body||{dataset:{}}}
+  function pageActive(){return document.visibilityState==='visible'&&(!document.hasFocus||document.hasFocus())}
+  function badgeCount(row){var b=row.querySelector('.ah-mention-count');return b&&!b.hidden?(parseInt(b.textContent,10)||1):0}
+  function refresh(){
+    var list=document.getElementById('dm-list');if(!list)return;
+    var activeAcc=Number(body().dataset.activeDmAccountId||0);
+    list.querySelectorAll('.dm-row').forEach(function(row){
+      var tid=row.dataset.threadId||'';
+      if(activeAcc&&Number(row.dataset.accountId||0)===activeAcc&&pageActive()&&has(tid)){
+        var l=load(),i=l.indexOf(String(tid));if(i!==-1){l.splice(i,1);save(l)}
+      }
+      var isActiveRow=activeAcc&&Number(row.dataset.accountId||0)===activeAcc;
+      var unread=!isActiveRow&&(has(tid)||badgeCount(row)>0);
+      row.classList.toggle('ah-dm-unread',!!unread);
+    });
+  }
+  function senderId(last){
+    var c=[last.sender_id,last.account_id,last.author_id,last.user_id,last.from_id,last.sender&&last.sender.id,last.author&&last.author.id,last.account&&last.account.id];
+    for(var i=0;i<c.length;i++){if(c[i]!==undefined&&c[i]!==null&&c[i]!=='')return Number(c[i])}
+    return null;
+  }
+  window.__ahDmUnreadNote=function(data){
+    try{
+      if(!data||!data.other)return;
+      var last=data.last_message||{};
+      var me=Number(body().dataset.currentAccountId||0);
+      var sid=senderId(last);
+      var own=last.is_own===true||last.mine===true||last.from_me===true||last.is_mine===true||(sid!==null&&me&&sid===me);
+      if(own)return;
+      var activeAcc=Number(body().dataset.activeDmAccountId||0);
+      if(activeAcc&&Number(data.other.id||0)===activeAcc&&pageActive())return;
+      mark(data.thread_id);
+    }catch(e){}
+  };
+  document.addEventListener('click',function(e){
+    var row=e.target.closest&&e.target.closest('.dm-list .dm-row');
+    if(row&&row.dataset.threadId)clear(row.dataset.threadId);
+  },true);
+  window.addEventListener('storage',function(e){if(e.key===KEY)refresh()});
+  window.addEventListener('focus',refresh);
+  document.addEventListener('visibilitychange',refresh);
+  window.addEventListener('alexihub:mention-counts',function(){setTimeout(refresh,0)});
+  function init(){
+    refresh();
+    var list=document.getElementById('dm-list');
+    if(list&&window.MutationObserver){new MutationObserver(function(){refresh()}).observe(list,{childList:true})}
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
 </body>
 </html>
