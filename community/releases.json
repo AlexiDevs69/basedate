@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.215.0",
+      "date": "2026-09-28",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: notification sound for direct messages."
+      ],
+      "source_sha": "1990badce78e858a429d5e053eba4b92ffe9f9ef"
+    },
+    {
       "version": "1.214.0",
       "date": "2026-09-28",
       "title": "Нові можливості AlexiHub",
