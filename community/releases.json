@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.214.0",
+      "date": "2026-09-28",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: unread message handling to DM sidebar."
+      ],
+      "source_sha": "646aaf713045b720ba22b5ba2e7991826a6292c0"
+    },
+    {
       "version": "1.213.0",
       "date": "2026-09-28",
       "title": "Нові можливості AlexiHub",
