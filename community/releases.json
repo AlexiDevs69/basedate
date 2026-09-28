@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.212.4",
+      "date": "2026-09-28",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update register.html with new styles and scripts."
+      ],
+      "source_sha": "ded0c931c6ecb936172c7b06aef97da0888b4d8b"
+    },
+    {
       "version": "1.212.3",
       "date": "2026-09-28",
       "title": "Оновлення AlexiHub",
