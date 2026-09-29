@@ -1842,31 +1842,15 @@ async def _load_voice_bytes(voice_url: str) -> tuple[bytes, str, str] | None:
     return data, name, ctype
 
 
-@router.post("/api/dm/message/{message_id}/transcribe")
-async def api_transcribe_dm_voice(
-    message_id: int,
-    request: Request,
-    lang: str = Form(""),
-    db: AsyncSession = Depends(get_db),
-):
-    account = await current_account(request, db)
-    if not account:
-        return JSONResponse({"ok": False, "error": "not_authenticated"}, status_code=401)
-    await crud.ensure_message_meta_columns(db)
-    row = (
-        await db.execute(
-            text("SELECT thread_id, voice_url, voice_transcript FROM community_direct_messages WHERE id = :id"),
-            {"id": message_id},
-        )
-    ).first()
-    if not row or not (row[1] or "").strip():
-        return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
-    thread_id, voice_url, cached = row[0], row[1], (row[2] or "").strip()
-    if not await crud.is_dm_participant(db, thread_id, account.id):
-        return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
-    if cached:
-        return JSONResponse({"ok": True, "text": cached, "cached": True})
+_STT_TABLES = ("community_direct_messages", "community_server_messages")
 
+
+async def _transcribe_voice_message(
+    db: AsyncSession, table: str, message_id: int, voice_url: str, lang: str
+) -> JSONResponse:
+    """Shared by the DM and server-channel endpoints: call the STT provider and cache the text."""
+    if table not in _STT_TABLES:
+        raise ValueError("bad table")
     provider = _stt_provider()
     if provider is None:
         return JSONResponse({"ok": False, "error": "stt_not_configured"}, status_code=503)
@@ -1899,11 +1883,76 @@ async def api_transcribe_dm_voice(
     transcript = str(payload.get("text") or "").strip()[:STT_MAX_TEXT_CHARS]
     if transcript:  # an empty result is not cached, so the user can retry
         await db.execute(
-            text("UPDATE community_direct_messages SET voice_transcript = :t WHERE id = :id"),
+            text(f"UPDATE {table} SET voice_transcript = :t WHERE id = :id"),
             {"t": transcript, "id": message_id},
         )
         await db.commit()
     return JSONResponse({"ok": True, "text": transcript, "cached": False})
+
+
+@router.post("/api/dm/message/{message_id}/transcribe")
+async def api_transcribe_dm_voice(
+    message_id: int,
+    request: Request,
+    lang: str = Form(""),
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_authenticated"}, status_code=401)
+    await crud.ensure_message_meta_columns(db)
+    row = (
+        await db.execute(
+            text("SELECT thread_id, voice_url, voice_transcript FROM community_direct_messages WHERE id = :id"),
+            {"id": message_id},
+        )
+    ).first()
+    if not row or not (row[1] or "").strip():
+        return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
+    thread_id, voice_url, cached = row[0], row[1], (row[2] or "").strip()
+    if not await crud.is_dm_participant(db, thread_id, account.id):
+        return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
+    if cached:
+        return JSONResponse({"ok": True, "text": cached, "cached": True})
+
+    return await _transcribe_voice_message(db, "community_direct_messages", message_id, voice_url, lang)
+
+
+@router.post("/servers/{server_id}/channel/{channel_id}/message/{message_id}/transcribe")
+async def api_transcribe_server_voice(
+    server_id: int,
+    channel_id: int,
+    message_id: int,
+    request: Request,
+    lang: str = Form(""),
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_authenticated"}, status_code=401)
+    if not await crud.is_server_member(db, server_id, account.id):
+        return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
+    channel = await crud.get_server_channel(db, server_id, channel_id)
+    if not channel:
+        return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
+    if not await crud.can_access_server_channel(db, server_id, channel, account.id):
+        return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
+    await crud.ensure_message_meta_columns(db)
+    row = (
+        await db.execute(
+            text(
+                "SELECT voice_url, voice_transcript FROM community_server_messages "
+                "WHERE id = :id AND channel_id = :cid"
+            ),
+            {"id": message_id, "cid": channel_id},
+        )
+    ).first()
+    if not row or not (row[0] or "").strip():
+        return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
+    cached = (row[1] or "").strip()
+    if cached:
+        return JSONResponse({"ok": True, "text": cached, "cached": True})
+    return await _transcribe_voice_message(db, "community_server_messages", message_id, row[0], lang)
 
 
 async def server_rail_context(db: AsyncSession, account_id: int, active_server_id: int | None = None) -> dict:
