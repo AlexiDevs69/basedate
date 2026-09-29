@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.219.0",
+      "date": "2026-09-30",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: voice-to-text functionality to messages."
+      ],
+      "source_sha": "56eb79ef306ca677e373b0631740ac68e9df6773"
+    },
+    {
       "version": "1.218.1",
       "date": "2026-09-30",
       "title": "Оновлення AlexiHub",
