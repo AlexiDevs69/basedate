@@ -3459,6 +3459,8 @@ _MESSAGE_META_COLUMNS: list[tuple[str, str]] = [
     # Voice messages: URL of the uploaded audio clip and its duration in whole seconds.
     ("voice_url", "TEXT"),
     ("voice_duration", "INTEGER"),
+    # Cached speech-to-text result for a voice message (filled on demand by the transcribe endpoint).
+    ("voice_transcript", "TEXT"),
 ]
 _MESSAGE_META_ADVISORY_KEY = 7331002
 
