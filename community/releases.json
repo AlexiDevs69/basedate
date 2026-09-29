@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.218.0",
+      "date": "2026-09-30",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: voice transcription functionality to API."
+      ],
+      "source_sha": "283211fcac5df77bd928a582d39a2e56a80cfca9"
+    },
+    {
       "version": "1.217.0",
       "date": "2026-09-30",
       "title": "Нові можливості AlexiHub",
