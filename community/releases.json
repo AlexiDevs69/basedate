@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.221.0",
+      "date": "2026-09-30",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: quick reply button functionality to server channel."
+      ],
+      "source_sha": "862ddbdb9191be3445d7f853fe81157967f113c1"
+    },
+    {
       "version": "1.220.0",
       "date": "2026-09-30",
       "title": "Нові можливості AlexiHub",
