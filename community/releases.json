@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.217.0",
+      "date": "2026-09-30",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: voice transcript field and fix return formatting."
+      ],
+      "source_sha": "b0ca91629f0709637ea86fe96336d53df12a410c"
+    },
+    {
       "version": "1.216.0",
       "date": "2026-09-30",
       "title": "Нові можливості AlexiHub",
