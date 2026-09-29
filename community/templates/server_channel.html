@@ -12759,5 +12759,60 @@ html[data-theme="light"] body .ah-v3-mini.ah-profile-theme #ah-v3-status{border-
   window.AhVoiceToText={transcribe:transcribe};
 })();
 </script>
+<style id="ah-quick-reply-css">
+.ah-reply-action{width:28px;height:26px;padding:0;display:flex;align-items:center;justify-content:center;border:0;border-radius:6px;background:transparent;color:var(--text-secondary,#b5bac1);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ah-reply-action:hover{background:rgba(255,255,255,.07);color:var(--text-primary,#fff)}
+.ah-reply-action svg{width:17px;height:17px;display:block}
+html[data-theme="light"] .ah-reply-action:hover{background:#e3e5e8;color:#111318}
+</style>
+<script id="ah-quick-reply-js">
+/* Quick "Reply" button in the hover action bar (next to the emoji and three-dots buttons). */
+(function(){
+  if(window.__ahQuickReply)return;window.__ahQuickReply=true;
+  var CFG={"rows": ".message[data-message-id]", "box": ".message-actions", "more": ".message-more-btn", "reply": "setReplyTarget", "close": "closeMessageMenu"};
+  var ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>';
+  function label(){
+    try{var t=window.AlexiHubI18n&&window.AlexiHubI18n.t&&window.AlexiHubI18n.t('common.text.respond');
+      if(t&&t!=='common.text.respond')return t;}catch(e){}
+    return 'Відповісти';
+  }
+  function enhance(){
+    var rows=document.querySelectorAll(CFG.rows);
+    for(var i=0;i<rows.length;i++){
+      var row=rows[i],box=row.querySelector(CFG.box);
+      if(!box||box.querySelector('.ah-reply-action'))continue;
+      var b=document.createElement('button');
+      b.type='button';b.className='ah-reply-action';
+      var l=label();b.title=l;b.setAttribute('aria-label',l);
+      b.innerHTML=ICON;
+      var more=box.querySelector(CFG.more);
+      if(more)box.insertBefore(b,more);else box.appendChild(b);
+    }
+  }
+  function onClick(e){
+    var b=e.target.closest&&e.target.closest('.ah-reply-action');
+    if(!b)return;
+    e.preventDefault();e.stopPropagation();
+    var row=b.closest(CFG.rows);
+    var id=row&&(row.dataset.messageId||row.dataset.id||'');
+    if(!row||!/^\d+$/.test(id))return;
+    var fn=window[CFG.reply];
+    if(typeof fn==='function')fn(row);
+    var close=window[CFG.close];
+    if(typeof close==='function'){try{close();}catch(_){}}
+  }
+  var scheduled=false;
+  function schedule(){
+    if(scheduled)return;scheduled=true;
+    (window.requestAnimationFrame||setTimeout)(function(){scheduled=false;enhance();});
+  }
+  function init(){
+    enhance();
+    document.addEventListener('click',onClick,true);
+    if(window.MutationObserver)new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
 </body>
 </html>
