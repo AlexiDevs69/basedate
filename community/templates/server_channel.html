@@ -12656,5 +12656,108 @@ html[data-theme="light"] body .ah-v3-mini.ah-profile-theme .ah-v3-status-btn{col
 html[data-theme="light"] body .ah-v3-mini.ah-profile-theme .ah-v3-status,
 html[data-theme="light"] body .ah-v3-mini.ah-profile-theme #ah-v3-status{border-color:#23242b!important}
 </style>
+<style id="ah-stt-css">
+.ah-voice-message{flex-wrap:wrap}
+.ah-stt-btn{width:28px;height:28px;padding:0;border:0;border-radius:50%;background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;-webkit-tap-highlight-color:transparent;transition:color .15s ease,background .15s ease}
+.ah-stt-btn:hover{color:var(--accent);background:rgba(128,128,128,.16)}
+.ah-stt-btn svg{width:17px;height:17px}
+.ah-stt-btn.busy{color:var(--accent);pointer-events:none;animation:ah-stt-pulse 1s ease-in-out infinite}
+.ah-stt-btn.done{color:var(--accent)}
+@keyframes ah-stt-pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.ah-stt-text{flex:0 0 100%;width:100%;box-sizing:border-box;margin-top:2px;padding-top:8px;border-top:1px solid rgba(128,128,128,.28);font-size:13.5px;line-height:1.4;white-space:pre-wrap;word-break:break-word;-webkit-user-select:text;user-select:text;cursor:text}
+.ah-stt-text.status{opacity:.75;font-style:italic}
+.ah-stt-text.err{color:#f23f42}
+.ah-stt-text[hidden]{display:none}
+</style>
+<script id="ah-stt-js">
+/* Voice-to-text: adds a "text" button to every .ah-voice-message. The server transcribes the
+   clip (POST /community/servers/{sid}/channel/{cid}/message/{id}/transcribe) and caches the result. */
+(function(){
+  if(window.AhVoiceToText)return;
+  var ICON='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 5h16v2H4zm0 4h16v2H4zm0 4h10v2H4zm0 4h13v2H4z"/></svg>';
+  var ERRORS={
+    stt_not_configured:'Розпізнавання не налаштоване на сервері (потрібен GROQ_API_KEY або OPENAI_API_KEY).',
+    audio_unavailable:'Не вдалося отримати аудіофайл цього повідомлення.',
+    stt_failed:'Сервіс розпізнавання не відповів. Спробуй ще раз пізніше.',
+    not_authenticated:'Потрібно увійти в акаунт.',
+    forbidden:'Немає доступу до цього повідомлення.',
+    not_found:'Повідомлення не знайдено.'
+  };
+
+  function endpoint(id){
+    var m=location.pathname.match(/\/servers\/(\d+)\/channel\/(\d+)/);
+    if(!m)throw new Error('Не вдалося визначити канал.');
+    return '/community/servers/'+m[1]+'/channel/'+m[2]+'/message/'+encodeURIComponent(id)+'/transcribe';
+  }
+  function transcribe(id){
+    var fd=new FormData();
+    fd.append('lang',(document.documentElement.lang||'').toLowerCase().slice(0,2));
+    return fetch(endpoint(id),{method:'POST',body:fd,credentials:'same-origin'}).then(function(r){
+      return r.json().catch(function(){return {};}).then(function(j){
+        if(!r.ok||!j||!j.ok)throw new Error(ERRORS[j&&j.error]||('помилка сервера ('+r.status+')'));
+        return String(j.text||'').trim();
+      });
+    });
+  }
+
+  function boxOf(wrap){
+    var b=wrap.querySelector('.ah-stt-text');
+    if(!b){b=document.createElement('div');b.className='ah-stt-text';wrap.appendChild(b);}
+    return b;
+  }
+  function onClick(e){
+    var btn=e.target.closest&&e.target.closest('.ah-stt-btn');
+    if(!btn)return;
+    e.preventDefault();e.stopPropagation();
+    var wrap=btn.closest('.ah-voice-message');
+    var row=wrap&&wrap.closest('[data-message-id]');
+    if(!wrap)return;
+    var box=wrap.querySelector('.ah-stt-text');
+    if(btn.classList.contains('busy'))return;
+    if(btn.classList.contains('done')&&box){box.hidden=!box.hidden;return;}
+    var id=row&&(row.dataset.messageId||row.dataset.id||'');
+    box=boxOf(wrap);box.hidden=false;
+    if(!/^\d+$/.test(id||'')){
+      box.className='ah-stt-text err';box.textContent='Повідомлення ще надсилається, спробуй за мить.';return;
+    }
+    box.className='ah-stt-text status';box.textContent='Розпізнавання…';
+    btn.classList.add('busy');
+    transcribe(id).then(function(text){
+      btn.classList.remove('busy');
+      if(text){box.className='ah-stt-text';box.textContent=text;btn.classList.add('done');}
+      else{box.className='ah-stt-text status';box.textContent='Мовлення не розпізнано.';}
+    }).catch(function(err){
+      btn.classList.remove('busy');
+      box.className='ah-stt-text err';
+      box.textContent=(err&&err.message)||'Не вдалося розпізнати.';
+    });
+  }
+
+  function enhance(){
+    var list=document.querySelectorAll('.ah-voice-message:not([data-ah-stt])');
+    for(var i=0;i<list.length;i++){
+      var w=list[i];w.setAttribute('data-ah-stt','1');
+      var b=document.createElement('button');
+      b.type='button';b.className='ah-stt-btn';
+      b.title='Перетворити на текст';b.setAttribute('aria-label','Перетворити голосове повідомлення на текст');
+      b.innerHTML=ICON;
+      var a=w.querySelector('audio');
+      if(a)w.insertBefore(b,a);else w.appendChild(b);
+    }
+  }
+  var scheduled=false;
+  function schedule(){
+    if(scheduled)return;scheduled=true;
+    (window.requestAnimationFrame||setTimeout)(function(){scheduled=false;enhance();});
+  }
+  function init(){
+    enhance();
+    document.addEventListener('click',onClick);
+    if(window.MutationObserver)new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+  window.AhVoiceToText={transcribe:transcribe};
+})();
+</script>
 </body>
 </html>
