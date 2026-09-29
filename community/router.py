@@ -1780,6 +1780,132 @@ async def api_upload_voice(
     return JSONResponse({"ok": True, "url": url, "duration": safe_duration})
 
 
+# --- Voice message -> text -------------------------------------------------
+# Provider is picked from the environment (no config.py change needed):
+#   GROQ_API_KEY   -> Groq   whisper-large-v3-turbo (free tier, fast)
+#   OPENAI_API_KEY -> OpenAI whisper-1
+# Optional: STT_MODEL overrides the model name of whichever provider is used.
+STT_ALLOWED_AUDIO_HOSTS = ("res.cloudinary.com",)
+STT_MAX_TEXT_CHARS = 8000
+
+
+def _stt_provider() -> tuple[str, str, str] | None:
+    groq_key = os.getenv("GROQ_API_KEY", "").strip()
+    if groq_key:
+        return (
+            "https://api.groq.com/openai/v1/audio/transcriptions",
+            groq_key,
+            os.getenv("STT_MODEL", "").strip() or "whisper-large-v3-turbo",
+        )
+    openai_key = os.getenv("OPENAI_API_KEY", "").strip()
+    if openai_key:
+        return (
+            "https://api.openai.com/v1/audio/transcriptions",
+            openai_key,
+            os.getenv("STT_MODEL", "").strip() or "whisper-1",
+        )
+    return None
+
+
+async def _load_voice_bytes(voice_url: str) -> tuple[bytes, str, str] | None:
+    """Return (bytes, filename, content_type) for a stored voice message, or None.
+
+    Only our own voice folder and Cloudinary are read -- voice_url is user-supplied
+    (see _clean_voice_url), so fetching arbitrary URLs here would be an SSRF hole.
+    """
+    ext_to_type = {ext: ctype for ctype, ext in ALLOWED_VOICE_TYPES.items()}
+    ext_to_type[".m4a"] = "audio/mp4"
+    url = (voice_url or "").strip()
+    if url.startswith("/static/uploads/voice/"):
+        base = VOICE_UPLOAD_DIR.resolve()
+        path = (base / Path(url).name).resolve()
+        if path.parent != base or not path.is_file():
+            return None
+        data = await asyncio.to_thread(path.read_bytes)
+        ctype = ext_to_type.get(path.suffix.lower(), "audio/webm")
+        return (data, path.name, ctype) if 0 < len(data) <= MAX_VOICE_BYTES else None
+    parts = urlsplit(url)
+    host = (parts.hostname or "").lower()
+    if parts.scheme != "https" or host not in STT_ALLOWED_AUDIO_HOSTS:
+        return None
+    try:
+        async with httpx.AsyncClient(timeout=30.0, follow_redirects=False) as client:
+            resp = await client.get(url)
+    except Exception as exc:
+        print("Voice download error:", repr(exc))
+        return None
+    data = resp.content
+    if resp.status_code != 200 or not data or len(data) > MAX_VOICE_BYTES:
+        return None
+    name = Path(parts.path).name or "voice.webm"
+    ctype = ext_to_type.get(Path(name).suffix.lower()) or (resp.headers.get("content-type", "").split(";")[0].strip() or "audio/webm")
+    return data, name, ctype
+
+
+@router.post("/api/dm/message/{message_id}/transcribe")
+async def api_transcribe_dm_voice(
+    message_id: int,
+    request: Request,
+    lang: str = Form(""),
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_authenticated"}, status_code=401)
+    await crud.ensure_message_meta_columns(db)
+    row = (
+        await db.execute(
+            text("SELECT thread_id, voice_url, voice_transcript FROM community_direct_messages WHERE id = :id"),
+            {"id": message_id},
+        )
+    ).first()
+    if not row or not (row[1] or "").strip():
+        return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
+    thread_id, voice_url, cached = row[0], row[1], (row[2] or "").strip()
+    if not await crud.is_dm_participant(db, thread_id, account.id):
+        return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
+    if cached:
+        return JSONResponse({"ok": True, "text": cached, "cached": True})
+
+    provider = _stt_provider()
+    if provider is None:
+        return JSONResponse({"ok": False, "error": "stt_not_configured"}, status_code=503)
+    loaded = await _load_voice_bytes(voice_url)
+    if loaded is None:
+        return JSONResponse({"ok": False, "error": "audio_unavailable"}, status_code=400)
+    data, filename, content_type = loaded
+
+    api_url, api_key, model = provider
+    form = {"model": model, "response_format": "json", "temperature": "0"}
+    lang_code = (lang or "").strip().lower()
+    if re.fullmatch(r"[a-z]{2}", lang_code):
+        form["language"] = lang_code
+    try:
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            resp = await client.post(
+                api_url,
+                headers={"Authorization": f"Bearer {api_key}"},
+                data=form,
+                files={"file": (filename, data, content_type)},
+            )
+        payload = resp.json()
+    except Exception as exc:
+        print("Voice transcription error:", repr(exc))
+        return JSONResponse({"ok": False, "error": "stt_failed"}, status_code=502)
+    if resp.status_code != 200:
+        print("Voice transcription failed:", resp.status_code, payload)
+        return JSONResponse({"ok": False, "error": "stt_failed"}, status_code=502)
+
+    transcript = str(payload.get("text") or "").strip()[:STT_MAX_TEXT_CHARS]
+    if transcript:  # an empty result is not cached, so the user can retry
+        await db.execute(
+            text("UPDATE community_direct_messages SET voice_transcript = :t WHERE id = :id"),
+            {"t": transcript, "id": message_id},
+        )
+        await db.commit()
+    return JSONResponse({"ok": True, "text": transcript, "cached": False})
+
+
 async def server_rail_context(db: AsyncSession, account_id: int, active_server_id: int | None = None) -> dict:
     """Small shared context used by pages that show the Discord-style server rail."""
     return {
