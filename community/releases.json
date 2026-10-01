@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.223.0",
+      "date": "2026-10-01",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: recent emoji storage and media picker functionality."
+      ],
+      "source_sha": "2a78aa33fef04c1d7e8d85890ec7d99f99f03661"
+    },
+    {
       "version": "1.222.0",
       "date": "2026-10-01",
       "title": "Нові можливості AlexiHub",
