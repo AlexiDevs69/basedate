@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.224.10",
+      "date": "2026-10-02",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update routing and hash handling in dm_chat.html."
+      ],
+      "source_sha": "8776e2cec89dcf8e14cdd6ec68af5291597d398b"
+    },
+    {
       "version": "1.224.9",
       "date": "2026-10-02",
       "title": "Виправлення та стабільність",
