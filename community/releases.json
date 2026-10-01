@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.224.5",
+      "date": "2026-10-02",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update ROUTE_RE regex and fix HTML closing tag."
+      ],
+      "source_sha": "628a15f871602e23cfe35794c90407811b1d21a8"
+    },
+    {
       "version": "1.224.4",
       "date": "2026-10-02",
       "title": "Оновлення AlexiHub",
