@@ -56,6 +56,313 @@
   window.AhTheme={get:stored,effective:function(){return effective(stored());},set:function(m){if(m!=='light'&&m!=='dark'&&m!=='system')return;try{localStorage.setItem(KEY,m);}catch(e){}apply(m,true);}};
 })();
 </script>
+<script id="ah-fast-nav">
+(function(){
+  'use strict';
+  if(window.__ahFastNavLoaded) return;
+  window.__ahFastNavLoaded = true;
+
+  var IN_FRAME = false;
+  try{ IN_FRAME = window.self !== window.top; }catch(e){ IN_FRAME = true; }
+  var ROUTE_RE = /^\/community(?:\/dm\/[^\/]+)?$/;
+  var MAX_FRAMES = 4;
+  var LOAD_TIMEOUT = 10000;
+  var api = null;
+
+  function parse(href){
+    try{
+      var u = new URL(href, location.href);
+      if(u.origin !== location.origin) return null;
+      var path = u.pathname.replace(/\/+$/, '') || '/';
+      if(!ROUTE_RE.test(path)) return null;
+      return {key:path, search:u.search, hash:u.hash, full:u.pathname + u.search + u.hash};
+    }catch(e){ return null; }
+  }
+  function hereKey(){ var p = parse(location.href); return p ? p.key : null; }
+  function topApi(){
+    if(!IN_FRAME) return api;
+    try{ return window.top.__ahFastNav || null; }catch(e){ return null; }
+  }
+  function closestLink(e){
+    return (e.target && e.target.closest) ? e.target.closest('a[href]') : null;
+  }
+  function routeOf(e){
+    var a = closestLink(e);
+    if(!a || (a.target && a.target !== '_self')) return null;
+    var p = parse(a.getAttribute('href'));
+    return (p && p.key !== hereKey()) ? p : null;
+  }
+
+  // Для JS-переходів (location.href = ...) всередині сторінок
+  window.__ahGo = function(url){
+    var p = parse(url), t = topApi();
+    if(p && t){ t.go(p.full); return; }
+    try{ (IN_FRAME ? window.top : window).location.href = url; }catch(e){ location.href = url; }
+  };
+
+  // Кліки по посиланнях
+  document.addEventListener('click', function(e){
+    if(e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    var a = closestLink(e);
+    if(!a || (a.target && a.target !== '_self') || a.hasAttribute('download')) return;
+    var href = a.getAttribute('href');
+    if(!href || href.charAt(0) === '#' || /^(javascript|mailto|tel):/i.test(href)) return;
+    var p = parse(href), t = topApi();
+    if(p){
+      if(p.key === hereKey() || !t) return;   // та сама сторінка — нехай працює як раніше
+      e.preventDefault();
+      t.go(p.full);
+      return;
+    }
+    if(IN_FRAME){   // інші посилання з фрейму відкриваємо у верхньому вікні
+      var u; try{ u = new URL(a.href, location.href); }catch(err){ return; }
+      if(/^https?:$/.test(u.protocol)){
+        e.preventDefault();
+        try{ window.top.location.href = u.href; }catch(err2){ location.href = u.href; }
+      }
+    }
+  }, false);
+
+  // Передзавантаження при наведенні / дотику
+  var hoverTimer = null;
+  document.addEventListener('mouseover', function(e){
+    var p = routeOf(e); if(!p) return;
+    clearTimeout(hoverTimer);
+    hoverTimer = setTimeout(function(){ var t = topApi(); if(t) t.prefetch(p.full); }, 70);
+  }, true);
+  document.addEventListener('mouseout', function(){ clearTimeout(hoverTimer); }, true);
+  document.addEventListener('pointerdown', function(e){
+    var p = routeOf(e); if(!p) return;
+    var t = topApi(); if(t) t.prefetch(p.full);
+  }, true);
+
+  if(IN_FRAME) return;   // далі — тільки для верхнього вікна
+
+  var topKey = hereKey();
+  var frames = {};       // key -> {key, full, el, ready, hover, visited, used, dead}
+  var active = null;     // null = показана сама верхня сторінка, інакше rec фрейму
+  var pending = null;
+  var bar = null;
+
+  function showBar(){
+    if(!bar){
+      bar = document.createElement('div');
+      bar.style.cssText = 'position:fixed;left:0;top:0;height:2px;width:0;background:#5865f2;z-index:2147483647;opacity:0;pointer-events:none;transition:width .5s ease,opacity .2s ease';
+      document.body.appendChild(bar);
+    }
+    bar.style.transition = 'none'; bar.style.width = '0'; bar.style.opacity = '1';
+    void bar.offsetWidth;
+    bar.style.transition = 'width .5s ease,opacity .2s ease';
+    bar.style.width = '70%';
+  }
+  function hideBar(){
+    if(!bar) return;
+    bar.style.width = '100%';
+    setTimeout(function(){ if(bar) bar.style.opacity = '0'; }, 150);
+  }
+
+  function setActive(win, on){
+    try{
+      var d = win.document;
+      if(on){
+        delete d.hidden; delete d.visibilityState;
+        if(win.__ahOrigPlay){ win.playNotifySound = win.__ahOrigPlay; win.__ahOrigPlay = null; }
+      }else{
+        Object.defineProperty(d, 'hidden', {configurable:true, get:function(){ return true; }});
+        Object.defineProperty(d, 'visibilityState', {configurable:true, get:function(){ return 'hidden'; }});
+        if(win.playNotifySound && !win.__ahOrigPlay){ win.__ahOrigPlay = win.playNotifySound; win.playNotifySound = function(){}; }
+      }
+      d.dispatchEvent(new win.Event('visibilitychange', {bubbles:true}));
+    }catch(e){}
+  }
+
+  function destroy(rec){
+    rec.dead = true;
+    if(frames[rec.key] === rec) delete frames[rec.key];
+    if(active === rec) active = null;
+    if(rec.el.parentNode) rec.el.parentNode.removeChild(rec.el);
+  }
+
+  function trim(extra){
+    var list = Object.keys(frames).map(function(k){ return frames[k]; }).filter(function(r){
+      return r !== active && !(pending && pending.rec === r);
+    }).sort(function(a, b){ return a.used - b.used; });
+    var count = Object.keys(frames).length;
+    while(count + extra > MAX_FRAMES && list.length){ destroy(list.shift()); count--; }
+  }
+
+  // Фонова сторінка не має красти фокус у того, хто зараз друкує
+  function guardFocus(rec, keepWin, keepEl){
+    function restore(){
+      if(rec.dead || active === rec) return;
+      var stolen = false;
+      try{ stolen = (document.activeElement === rec.el); }catch(e){}
+      if(!stolen) return;
+      try{ rec.el.blur(); }catch(e){}
+      try{ keepWin.focus(); if(keepEl && keepEl.focus) keepEl.focus(); }catch(e){}
+    }
+    rec.el.addEventListener('load', function(){ restore(); setTimeout(restore, 300); setTimeout(restore, 1200); });
+  }
+
+  function createFrame(p, hover){
+    trim(1);
+    var el = document.createElement('iframe');
+    el.setAttribute('aria-hidden', 'true');
+    el.tabIndex = -1;
+    var bg = ''; try{ bg = getComputedStyle(document.body).backgroundColor; }catch(e){}
+    el.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;border:0;margin:0;padding:0;z-index:2147483000;visibility:hidden;pointer-events:none;background:' + (bg || '#1e1f22');
+    var rec = {key:p.key, full:p.full, el:el, ready:false, hover:!!hover, visited:false, used:Date.now(), dead:false};
+    frames[p.key] = rec;
+    var keepWin = window, keepEl = null;
+    try{
+      if(active){ keepWin = active.el.contentWindow; keepEl = keepWin.document.activeElement; }
+      else keepEl = document.activeElement;
+    }catch(e){}
+    guardFocus(rec, keepWin, keepEl);
+    el.addEventListener('load', function(){ onFrameLoad(rec); });
+    el.src = p.full;
+    document.body.appendChild(el);
+    return rec;
+  }
+
+  function rekey(rec, newKey){
+    if(frames[rec.key] === rec) delete frames[rec.key];
+    var other = frames[newKey];
+    if(other && other !== rec && other !== active && !(pending && pending.rec === other)) destroy(other);
+    rec.key = newKey;
+    frames[newKey] = rec;
+  }
+
+  function fail(rec, href){
+    var needNav = (active === rec) || (pending && pending.rec === rec);
+    var url = href || rec.full;
+    destroy(rec);
+    if(needNav){ cancelPending(); location.href = url; }   // звичайний повний перехід
+  }
+
+  function onFrameLoad(rec){
+    if(rec.dead) return;
+    var win, href;
+    try{ win = rec.el.contentWindow; href = win.location.href; }catch(e){ return fail(rec); }  // напр. заблоковано X-Frame-Options
+    if(!href || href === 'about:blank'){ if(rec.ready) fail(rec); return; }
+    var fp = parse(href);
+    if(!fp) return fail(rec, href);   // редірект на логін / інший розділ сайту
+    rec.ready = true;
+    if(fp.key !== rec.key) rekey(rec, fp.key);
+    rec.full = fp.key + fp.search + fp.hash;
+    if(active !== rec) setActive(win, false);
+    if(active === rec){
+      try{ history.replaceState(history.state, '', rec.full); }catch(e){}
+      try{ if(win.document.title) document.title = win.document.title; }catch(e){}
+    }
+    if(pending && pending.rec === rec){
+      var pp = pending; cancelPending();
+      var p = pp.p;
+      if(p.key !== rec.key) p = {key:rec.key, search:'', hash:p.hash, full:rec.key + (p.hash || '')};
+      commit(p, rec, pp.popped);
+    }
+  }
+
+  function show(rec){
+    if(active === rec) return;
+    var prev = active;
+    var prevWin = prev ? prev.el.contentWindow : window;
+    var nextWin = rec ? rec.el.contentWindow : window;
+    if(prev){ prev.el.style.visibility = 'hidden'; prev.el.style.pointerEvents = 'none'; prev.el.setAttribute('aria-hidden', 'true'); }
+    if(rec){ rec.el.style.visibility = 'visible'; rec.el.style.pointerEvents = 'auto'; rec.el.removeAttribute('aria-hidden'); rec.visited = true; rec.hover = false; rec.used = Date.now(); }
+    active = rec;
+    setActive(prevWin, false);
+    setActive(nextWin, true);
+    try{ nextWin.focus(); }catch(e){}
+    try{ var t = nextWin.document.title; if(t) document.title = t; }catch(e){}
+  }
+
+  function applyHash(rec, p){
+    if(!p.hash || p.key !== '/community') return;
+    var w = rec ? rec.el.contentWindow : window;
+    var view = p.hash.replace(/^#/, '');
+    try{
+      if(typeof w.switchHomeView === 'function' && ['friends', 'nitro', 'store'].indexOf(view) > -1){
+        w.switchHomeView(view, w.document.querySelector('[data-home-view="' + view + '"]'));
+      }
+    }catch(e){}
+  }
+
+  function commit(p, rec, popped){
+    show(rec);
+    if(!popped){ try{ history.pushState({ahFast:1}, '', p.full); }catch(e){} }
+    applyHash(rec, p);
+    trim(0);
+  }
+
+  function cancelPending(){
+    if(pending){ clearTimeout(pending.timer); pending = null; hideBar(); }
+  }
+  function beginPending(p, rec, popped){
+    cancelPending();
+    pending = {p:p, rec:rec, popped:popped, timer:setTimeout(function(){
+      var pp = pending; pending = null; hideBar();
+      if(pp) location.href = pp.p.full;
+    }, LOAD_TIMEOUT)};
+    showBar();
+  }
+
+  function go(full, opts){
+    opts = opts || {};
+    var p = parse(full);
+    if(!p){ location.href = full; return; }
+    var here = active ? active.key : topKey;
+    if(p.key === here){
+      cancelPending();
+      applyHash(active, p);
+      if(!opts.popped && p.hash){ try{ history.replaceState(history.state, '', p.full); }catch(e){} }
+      return;
+    }
+    var rec = (p.key === topKey) ? null : frames[p.key];
+    if(p.key !== topKey && !rec) rec = createFrame(p, false);
+    if(rec && !rec.ready){ beginPending(p, rec, !!opts.popped); return; }
+    cancelPending();
+    commit(p, rec, !!opts.popped);
+  }
+
+  function prefetch(full){
+    var p = parse(full); if(!p) return;
+    var here = active ? active.key : topKey;
+    if(p.key === here || p.key === topKey || frames[p.key]) return;
+    Object.keys(frames).forEach(function(k){   // тримаємо лише один "гаданий" фрейм від наведення
+      var r = frames[k];
+      if(r.hover && !r.visited && r !== active && !(pending && pending.rec === r)) destroy(r);
+    });
+    if(Object.keys(frames).length >= MAX_FRAMES) return;
+    createFrame(p, true);
+  }
+
+  function idlePrefetch(){
+    var target = null;
+    if(topKey && topKey !== '/community') target = '/community';
+    else{
+      var row = document.querySelector('a.dm-row[href^="/community/dm/"]');
+      if(row) target = row.getAttribute('href');
+    }
+    var p = target ? parse(target) : null;
+    if(p && p.key !== topKey && !frames[p.key]) createFrame(p, false);
+  }
+  window.addEventListener('load', function(){
+    setTimeout(function(){
+      (window.requestIdleCallback || function(f){ setTimeout(f, 0); })(idlePrefetch);
+    }, 1200);
+  });
+
+  window.addEventListener('popstate', function(){
+    var p = parse(location.href);
+    if(p) go(p.full, {popped:true});
+  });
+
+  api = {go:go, prefetch:prefetch};
+  window.__ahFastNav = api;
+})();
+</script>
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>@{{ other.username }} // AlexiHub</title>
@@ -9082,7 +9389,7 @@ document.addEventListener('DOMContentLoaded', async function(){
     if(action){
       event.preventDefault();event.stopPropagation();const kind=action.dataset.blockAction;const username=selectedUser?.username||usernameFromMini();
       if(kind==='full'){closeProfileMenu();document.getElementById('ah-v3-open-full')?.click();}
-      if(kind==='message'&&username) location.href='/community/dm/'+encodeURIComponent(username);
+      if(kind==='message'&&username) (window.__ahGo||function(u){location.href=u})('/community/dm/'+encodeURIComponent(username));
       if(kind==='toggle'&&username){currentStatus?.blocked_by_me?unblockUser(username).then(closeProfileMenu).catch(e=>notify(e.message||text().actionError)):openConfirm();}
       if(kind==='copy'&&selectedUser?.id){try{await navigator.clipboard.writeText(String(selectedUser.id));notify(text().copied);}catch(e){}closeProfileMenu();}
       return;
