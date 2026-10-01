@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.224.0",
+      "date": "2026-10-01",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: recent emoji functionality to media picker."
+      ],
+      "source_sha": "b2113eaeb2ffa713c9e48f343a9e434a4cfad814"
+    },
+    {
       "version": "1.223.0",
       "date": "2026-10-01",
       "title": "Нові можливості AlexiHub",
