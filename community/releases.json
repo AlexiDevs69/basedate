@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.224.2",
+      "date": "2026-10-01",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance fast navigation and link handling in dm_chat.html."
+      ],
+      "source_sha": "4718593cd07078278125b60cb43ea050b92871f6"
+    },
+    {
       "version": "1.224.1",
       "date": "2026-10-01",
       "title": "Оновлення AlexiHub",
