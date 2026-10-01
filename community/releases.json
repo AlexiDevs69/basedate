@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.224.8",
+      "date": "2026-10-02",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update route regex to include '/travel' path."
+      ],
+      "source_sha": "1344c00c3c225cab3c54f68c91534ee5080bb8e8"
+    },
+    {
       "version": "1.224.7",
       "date": "2026-10-02",
       "title": "Виправлення та стабільність",
