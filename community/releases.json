@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.224.7",
+      "date": "2026-10-02",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update ROUTE_RE regex and fix HTML closing tag."
+      ],
+      "source_sha": "fbecb2ba94f61a7626c7b3b37ff97f2ab2c18616"
+    },
+    {
       "version": "1.224.6",
       "date": "2026-10-02",
       "title": "Виправлення та стабільність",
