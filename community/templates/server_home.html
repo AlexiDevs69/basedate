@@ -64,7 +64,7 @@
 
   var IN_FRAME = false;
   try{ IN_FRAME = window.self !== window.top; }catch(e){ IN_FRAME = true; }
-  var ROUTE_RE = /^\/community(?:\/dm\/[^\/]+|\/servers\/\d+)?$/;
+  var ROUTE_RE = /^\/community(?:\/dm\/[^\/]+|\/servers\/\d+(?:\/channel\/\d+)?)?$/;
   var MAX_FRAMES = 4;
   var LOAD_TIMEOUT = 10000;
   var api = null;
