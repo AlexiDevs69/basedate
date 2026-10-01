@@ -1048,7 +1048,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
 .composer-menu-item{width:100%;height:38px;border:0;border-radius:6px;background:transparent;color:#dbdee1;display:flex;align-items:center;gap:10px;padding:0 10px;font-weight:800;font-size:13px;cursor:pointer;text-align:left;}
 .composer-menu-item:hover{background:#3a3c45;color:#fff;}
 .composer-menu-item svg{width:17px;height:17px;color:#b5bac1;}
-.composer-textarea{min-height:38px!important;height:38px!important;max-height:140px!important;padding:9px 4px!important;font-size:15px!important;line-height:20px!important;overflow-y:auto!important;}
+.composer-textarea{min-height:38px!important;max-height:140px!important;padding:9px 4px!important;font-size:15px!important;line-height:20px!important;overflow-y:auto!important;}
 .composer-textarea::placeholder{color:#8e949f!important;}
 .composer-tools{border-top:0!important;margin:0!important;padding:0!important;gap:4px!important;flex:0 0 auto!important;display:flex!important;align-items:center!important;}
 .composer-icon-btn{width:30px;height:30px;border:0;border-radius:6px;background:transparent;color:#b5bac1;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .13s ease,color .13s ease,transform .08s ease;}
@@ -3013,7 +3013,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
             <button class="composer-menu-item" type="button" onclick="showActionToast && showActionToast(window.AlexiHubI18n.t('server.stub.create_thread'))"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v12"/><path d="M18 9v12"/><path d="M6 15a6 6 0 0 0 6-6"/><path d="M12 9h6"/></svg><span><!--i18n:server_channel.text.collude_the_branch-->{{ i18n_t('server_channel.text.collude_the_branch') }}</span></button>
             <button class="composer-menu-item" type="button" onclick="showActionToast && showActionToast(window.AlexiHubI18n.t('server.stub.poll'))"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M8 17V9"/><path d="M12 19V3"/><path d="M16 15v-4"/><path d="M20 17V7"/></svg><span><!--i18n:server_channel.text.colours_the_survey-->{{ i18n_t('server_channel.text.colours_the_survey') }}</span></button>
           </div>
-          <textarea id="composer-textarea" class="composer-textarea" name="content" placeholder="{{ i18n_t('server.channel.composer_placeholder', channel=channel.name) }}"></textarea>
+          <textarea id="composer-textarea" class="composer-textarea" rows="1" name="content" placeholder="{{ i18n_t('server.channel.composer_placeholder', channel=channel.name) }}"></textarea>
           <input id="composer-image-url" type="hidden" name="image_url" value="">
           <input id="composer-file-input" type="file" accept="image/*" multiple hidden>
           <div class="composer-tools">
@@ -12814,5 +12814,38 @@ html[data-theme="light"] .ah-reply-action:hover{background:#e3e5e8;color:#111318
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 </script>
+<style id="channel-composer-match-dm">
+/* Рядок вводу каналу = рядок вводу DM (десктоп). Функціонал не змінюється. */
+@media (min-width:821px){
+  #composer-form.composer-wrap{padding:0 16px 18px!important}
+  .composer-box.discord-composer{border-radius:10px!important;padding:10px 12px!important;min-height:0!important;border:1px solid transparent!important;box-shadow:none!important}
+  .composer-box.discord-composer .composer-row{align-items:flex-end!important;gap:10px!important;padding:0!important;min-height:0!important}
+  .composer-box.discord-composer .composer-plus-btn{width:34px!important;height:34px!important;border-radius:8px!important;flex:0 0 auto!important}
+  .composer-box.discord-composer .composer-plus-btn svg{width:20px!important;height:20px!important;stroke-width:3!important}
+  .composer-box.discord-composer .composer-plus-menu{left:0!important;bottom:calc(100% + 8px)!important}
+  .composer-box.discord-composer .composer-textarea{min-height:24px!important;max-height:160px!important;padding:0!important;font-size:14px!important;line-height:1.45!important;align-self:flex-end}
+  .composer-box.discord-composer .composer-tools [data-media-action="emoji"]{order:-1}
+  .composer-box.discord-composer .composer-tools{gap:10px!important;height:34px!important;align-items:center!important}
+  .composer-box.discord-composer .composer-tools .hide-mobile{display:none!important}
+  .composer-box.discord-composer .composer-tools .composer-icon-btn{width:34px!important;height:34px!important;border-radius:8px!important;flex:0 0 34px!important}
+  .composer-box.discord-composer .composer-tools .composer-icon-btn svg{width:22px!important;height:22px!important}
+  .composer-box.discord-composer .send-btn{width:36px!important;height:34px!important;border-radius:8px!important}
+  .composer-box.discord-composer #composer-record-timer{align-self:center}
+}
+/* темна тема: ті самі кольори, що в DM */
+@media (min-width:821px){
+  html:not([data-theme="light"]) #composer-form.composer-wrap{background:linear-gradient(to top,#18191d 92%,rgba(24,25,29,.76))!important}
+  html:not([data-theme="light"]) .composer-box.discord-composer{background:#1c1c1c!important}
+  html:not([data-theme="light"]) .composer-box.discord-composer:focus-within{border-color:#343743!important}
+  html:not([data-theme="light"]) .composer-box.discord-composer .composer-plus-btn{background:#353740!important;color:#dbdee1!important}
+  html:not([data-theme="light"]) .composer-box.discord-composer .composer-plus-btn:hover,html:not([data-theme="light"]) .composer-box.discord-composer .composer-plus-btn.open{background:#454854!important;color:#fff!important}
+  html:not([data-theme="light"]) .composer-box.discord-composer .composer-tools .composer-icon-btn{color:#9ca3af!important}
+  html:not([data-theme="light"]) .composer-box.discord-composer .composer-tools .composer-icon-btn:hover{background:rgba(255,255,255,.07)!important;color:#fff!important}
+  html:not([data-theme="light"]) .composer-box.discord-composer .composer-textarea::placeholder{color:#6b7280!important}
+}
+@media (min-width:821px){
+  html[data-theme="light"] .composer-box.discord-composer .composer-plus-btn{background:#d3d5db!important;color:#2e3338!important}
+}
+</style>
 </body>
 </html>
