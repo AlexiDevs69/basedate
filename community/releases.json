@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.224.1",
+      "date": "2026-10-01",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: navigation handling in home template."
+      ],
+      "source_sha": "7ab7a4b64266eba49b0d42d4b36c039dc236843b"
+    },
+    {
       "version": "1.224.0",
       "date": "2026-10-01",
       "title": "Нові можливості AlexiHub",
