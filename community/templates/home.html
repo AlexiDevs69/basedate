@@ -63,7 +63,7 @@
 
   var IN_FRAME = false;
   try{ IN_FRAME = window.self !== window.top; }catch(e){ IN_FRAME = true; }
-  var ROUTE_RE = /^\/community(?:\/dm\/[^\/]+)?$/;
+  var ROUTE_RE = /^\/community(?:\/dm\/[^\/]+|\/travel|\/servers\/\d+(?:\/channel\/\d+)?)?$/;
   var MAX_FRAMES = 4;
   var LOAD_TIMEOUT = 10000;
   var api = null;
@@ -277,12 +277,16 @@
   }
 
   function applyHash(rec, p){
-    if(!p.hash || p.key !== '/community') return;
+    if(!p.hash) return;
     var w = rec ? rec.el.contentWindow : window;
     var view = p.hash.replace(/^#/, '');
     try{
-      if(typeof w.switchHomeView === 'function' && ['friends', 'nitro', 'store'].indexOf(view) > -1){
-        w.switchHomeView(view, w.document.querySelector('[data-home-view="' + view + '"]'));
+      if(p.key === '/community'){
+        if(typeof w.switchHomeView === 'function' && ['friends', 'nitro', 'store'].indexOf(view) > -1){
+          w.switchHomeView(view, w.document.querySelector('[data-home-view="' + view + '"]'));
+        }
+      }else if(/^\/community\/servers\/\d+$/.test(p.key) && view === 'members'){
+        if(typeof w.cvShowTab === 'function') w.cvShowTab('members');
       }
     }catch(e){}
   }
