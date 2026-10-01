@@ -1785,7 +1785,7 @@
     <main class="main" id="dm-main">
       <div id="dm-dropzone-overlay" class="dm-dropzone-overlay"><div class="dm-dropzone-inner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg><span data-i18n="common.text.send_a_file"><!--i18n:common.text.send_a_file-->{{ i18n_t('common.text.send_a_file') }}</span></div></div>
       <header class="topbar">
-        <div class="top-title"><span class="avatar" {% if other.avatar_url %}style="background-image:url('{{ other.avatar_url }}')"{% endif %}>{% if not other.avatar_url %}{{ other.username[:1]|upper }}{% endif %}{% if other_visible %}<span class="presence status-{{ other_status }}"></span>{% endif %}</span>{{ other.display_name or other.username }} <span id="live-status" class="live"><!--i18n:dm.text.connecting-->{{ i18n_t("dm.text.connecting") }}</span></div>
+        <div class="top-title"><span class="avatar dm-top-avatar" data-mini-open-full="1" role="button" tabindex="0" data-mini-username="{{ other.username }}" data-mini-display="{{ other.display_name or other.username }}" data-mini-avatar="{{ other.avatar_url or '' }}" data-mini-banner="{{ other.banner_url or '' }}" data-mini-status="{{ other_status if other_visible else 'offline' }}" data-mini-role="{{ other.role_label or 'member' }}" data-mini-c1="{{ other.role_color_start or '#5865f2' }}" data-mini-c2="{{ other.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ other.username }}" data-mini-bio="{{ other.bio or '' }}" data-mini-created="{{ other.created_at.strftime('%d.%m.%Y') if other.created_at else '' }}" {% if other.avatar_url %}style="background-image:url('{{ other.avatar_url }}')"{% endif %}>{% if not other.avatar_url %}{{ other.username[:1]|upper }}{% endif %}{% if other_visible %}<span class="presence status-{{ other_status }}"></span>{% endif %}</span>{{ other.display_name or other.username }} <span id="live-status" class="live" hidden style="display:none !important"><!--i18n:dm.text.connecting-->{{ i18n_t("dm.text.connecting") }}</span></div>
         <div class="top-actions"><button id="dm-pin-trigger-btn" title="{{ i18n_t('dm.aria.pin') }}" data-i18n-title="dm.aria.pin"><svg class="icon"><use href="#i-pin"></use></svg></button>{% if friend_status != 'friends' %}<button title="{% if friend_status == 'pending_sent' %}{{ i18n_t('dm.friend.request_sent') }}{% elif friend_status == 'pending_received' %}{{ i18n_t('dm.friend.request_accept') }}{% else %}{{ i18n_t('ui.add_friend') }}{% endif %}" onclick="showActionToast(window.AlexiHubI18n.t('dm.stub.friendship'))"><svg class="icon"><use href="#i-invite"></use></svg></button>{% endif %}<button type="button" id="dm-toggle-profile-btn" class="active" title="Скрыть профиль пользователя" onclick="toggleDmProfilePanel(this)"><svg class="icon"><use href="#i-user-profile"></use></svg></button><input class="top-search" id="message-search" placeholder="{{ i18n_t('dm.search_conversation', username=other.username) }}"><button title="{{ i18n_t('settings.search_placeholder') }}" data-i18n-title="settings.search_placeholder" onclick="document.getElementById('message-search')?.focus()"><svg class="icon"><use href="#i-search"></use></svg></button></div>
       </header>
       <section id="messages" class="messages">
@@ -12795,6 +12795,55 @@ html[data-theme="light"] .ah-reply-action:hover{background:#e3e5e8;color:#111318
     if(window.MutationObserver)new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+<style id="dm-topbar-profile-fix">.top-title .dm-top-avatar{cursor:pointer;transition:filter .12s ease}.top-title .dm-top-avatar:hover{filter:brightness(1.15)}.live,#live-status{display:none!important}</style>
+<script id="dm-right-status-sync">
+(function(){
+  function init(){
+    var card=document.querySelector('.right .profile-card[data-mini-username]');
+    if(!card) return;
+    var uname=String(card.dataset.miniUsername||'').toLowerCase();
+    var box=card.querySelector('.profile-status');
+    var topAvatar=document.querySelector('.top-title .dm-top-avatar');
+    function row(){
+      var rows=document.querySelectorAll('.dm-list .dm-row[data-mini-username]');
+      for(var i=0;i<rows.length;i++){ if(String(rows[i].dataset.miniUsername||'').toLowerCase()===uname) return rows[i]; }
+      return null;
+    }
+    var last=null;
+    function render(){
+      var r=row();
+      var st=(r&&r.dataset.miniStatus)||card.dataset.miniStatus||'offline';
+      if(['online','idle','dnd'].indexOf(st)<0) st='offline';
+      if(st===last) return; last=st;
+      card.dataset.miniStatus=st;
+      if(topAvatar) topAvatar.dataset.miniStatus=st;
+      var dotCls='status-'+(st==='offline'?'invisible':st);
+      if(box){
+        var label=(window.AlexiHubI18n&&window.AlexiHubI18n.t)?window.AlexiHubI18n.t('status.'+st):st;
+        box.innerHTML='';
+        var dot=document.createElement('i'); dot.className='status-dot '+dotCls;
+        box.appendChild(dot); box.appendChild(document.createTextNode(label));
+      }
+      if(topAvatar){
+        var pr=topAvatar.querySelector('.presence');
+        if(st==='offline'){ if(pr) pr.remove(); }
+        else{
+          if(!pr){ pr=document.createElement('span'); topAvatar.appendChild(pr); }
+          pr.className='presence status-'+st;
+        }
+      }
+    }
+    var mo=new MutationObserver(render);
+    var opts={attributes:true,attributeFilter:['data-mini-status']};
+    mo.observe(card,opts);
+    var r0=row(); if(r0) mo.observe(r0,opts);
+    var list=document.querySelector('.dm-list');
+    if(list){ new MutationObserver(function(){ var r=row(); if(r){ mo.observe(r,opts); } render(); }).observe(list,{childList:true}); }
+    last=null; render();
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
 })();
 </script>
 </body>
