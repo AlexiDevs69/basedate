@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.222.0",
+      "date": "2026-10-01",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: rows attribute to composer textarea."
+      ],
+      "source_sha": "4fd95f78ca565610a0a8a4764032a7691388550c"
+    },
+    {
       "version": "1.221.2",
       "date": "2026-10-01",
       "title": "Оновлення AlexiHub",
