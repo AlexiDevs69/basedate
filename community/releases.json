@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.224.9",
+      "date": "2026-10-02",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update routing and hash handling in home.html."
+      ],
+      "source_sha": "83ad2bdc55999a798280e4f47b02c5a2cc83b176"
+    },
+    {
       "version": "1.224.8",
       "date": "2026-10-02",
       "title": "Виправлення та стабільність",
