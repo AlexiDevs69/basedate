@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.224.6",
+      "date": "2026-10-02",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance fast navigation and update link handling."
+      ],
+      "source_sha": "50c1b00b702fddf0f858ece24a3998cc1b5aad9c"
+    },
+    {
       "version": "1.224.5",
       "date": "2026-10-02",
       "title": "Виправлення та стабільність",
