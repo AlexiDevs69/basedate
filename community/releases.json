@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.224.3",
+      "date": "2026-10-02",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: navigation handling in server_home.html."
+      ],
+      "source_sha": "c23b44ed3fa71668a44db93a4be135ba95f55c5e"
+    },
+    {
       "version": "1.224.2",
       "date": "2026-10-01",
       "title": "Виправлення та стабільність",
