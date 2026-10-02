@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.228.8",
+      "date": "2026-10-03",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Change greeting from 'Hello' to 'Goodbye'."
+      ],
+      "source_sha": "2b5589d7bec3dd46d2e03eda0435e13bf84d6893"
+    },
+    {
       "version": "1.228.7",
       "date": "2026-10-03",
       "title": "Виправлення та стабільність",
