@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.224.13",
+      "date": "2026-10-02",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено продуктивність: frame management based on device capabilities."
+      ],
+      "source_sha": "f99517b714751d8a040d01f8aea0c2a9af399402"
+    },
+    {
       "version": "1.224.12",
       "date": "2026-10-02",
       "title": "Оновлення AlexiHub",
