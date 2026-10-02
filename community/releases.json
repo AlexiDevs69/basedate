@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.227.0",
+      "date": "2026-10-03",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: message grouping with timestamps."
+      ],
+      "source_sha": "6bcd2875b625f1b2b6652e37d3763bb71298821a"
+    },
+    {
       "version": "1.226.0",
       "date": "2026-10-03",
       "title": "Нові можливості AlexiHub",
