@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.228.5",
+      "date": "2026-10-03",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Integrate full Unicode 15.0 emoji set."
+      ],
+      "source_sha": "0edca5dd0e39718619a3580416021686f3cf50a7"
+    },
+    {
       "version": "1.228.4",
       "date": "2026-10-03",
       "title": "Виправлення та стабільність",
