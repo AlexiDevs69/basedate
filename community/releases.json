@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.224.14",
+      "date": "2026-10-02",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено продуктивність: frame loading based on device performance."
+      ],
+      "source_sha": "c8ffa048025acdd6c075d11259e546712f130f7d"
+    },
+    {
       "version": "1.224.13",
       "date": "2026-10-02",
       "title": "Оновлення AlexiHub",
