@@ -13403,5 +13403,84 @@ html[data-theme="light"] .ah-reply-action:hover{background:#e3e5e8;color:#111318
   html[data-theme="light"] .composer-box.discord-composer .composer-plus-btn{background:#d3d5db!important;color:#2e3338!important}
 }
 </style>
+
+<style id="ah-msg-grouping-css">
+
+.message.ah-grouped{padding-top:0!important;margin-top:0!important}
+.message.ah-grouped .message-head{display:none!important}
+.message.ah-grouped .avatar{visibility:hidden!important;height:0!important;min-height:0!important;margin:0!important;border:0!important;overflow:visible!important;position:relative!important}
+.message.ah-grouped .ah-gtime{position:absolute;left:0;right:0;top:3px;text-align:center;font-size:10px;line-height:14px;font-weight:700;color:#8e949f;visibility:hidden;pointer-events:none;white-space:nowrap}
+.message.ah-grouped:hover .ah-gtime{visibility:visible}
+
+</style>
+<script id="ah-msg-grouping">
+(function(){
+  if(window.__ahMsgGrouping) return;
+  window.__ahMsgGrouping = true;
+  var CFG = {container:'#messages',msg:'.message',time:'.message-time',avatar:'.avatar',reply:'.message-reply'};
+  var WINDOW_MS = 7 * 60 * 1000; // messages from the same author within 7 min are grouped
+
+  function parseTs(el){
+    var t = el && el.querySelector(CFG.time);
+    if(!t) return NaN;
+    var raw = String(t.dataset.messageTimestamp || t.textContent || '').trim();
+    if(!raw) return NaN;
+    try{
+      var d = (window.AlexiHubMessageTime && window.AlexiHubMessageTime.parse) ? window.AlexiHubMessageTime.parse(raw) : new Date(raw);
+      var ms = d && d.getTime ? d.getTime() : NaN;
+      return ms;
+    }catch(e){ return NaN; }
+  }
+  function authorOf(el){
+    var a = el.querySelector('[data-mini-username]');
+    if(a && a.dataset.miniUsername) return 'u:' + a.dataset.miniUsername;
+    return el.dataset.messageAuthor ? 'n:' + el.dataset.messageAuthor : '';
+  }
+  function shortTime(ms){
+    var d = new Date(ms);
+    return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  }
+  function regroup(){
+    var box = document.querySelector(CFG.container);
+    if(!box) return;
+    var prev = null, prevAuthor = '', prevTs = NaN;
+    Array.prototype.forEach.call(box.children, function(el){
+      if(!el.matches(CFG.msg)){ prev = null; return; }
+      var author = authorOf(el), ts = parseTs(el);
+      var hasReply = !!el.querySelector(CFG.reply);
+      var forwarded = el.dataset.messageForwarded === '1';
+      var grouped = !!(prev && author && author === prevAuthor && !hasReply && !forwarded &&
+        isFinite(ts) && isFinite(prevTs) && ts - prevTs >= 0 && ts - prevTs <= WINDOW_MS);
+      el.classList.toggle('ah-grouped', grouped);
+      if(grouped){
+        var av = el.querySelector(CFG.avatar);
+        if(av && !av.querySelector('.ah-gtime')){
+          var s = document.createElement('span');
+          s.className = 'ah-gtime';
+          s.textContent = shortTime(ts);
+          av.appendChild(s);
+        }
+      }
+      prev = el; prevAuthor = author; prevTs = ts;
+    });
+  }
+  var queued = false;
+  function schedule(){
+    if(queued) return;
+    queued = true;
+    requestAnimationFrame(function(){ queued = false; regroup(); });
+  }
+  function init(){
+    var box = document.querySelector(CFG.container);
+    if(!box) return;
+    regroup();
+    new MutationObserver(schedule).observe(box, {childList:true}); // new / deleted messages
+    setTimeout(regroup, 400);  // after message times are hydrated
+    setTimeout(regroup, 1500);
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+  window.addEventListener('load', schedule);
+})();
+</script>
 </body>
 </html>
