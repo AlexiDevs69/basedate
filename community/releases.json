@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.225.0",
+      "date": "2026-10-03",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: image paste handling in DM chat."
+      ],
+      "source_sha": "b37d4eba0bdc77a5803a900bd35efda6bfb8295e"
+    },
+    {
       "version": "1.224.20",
       "date": "2026-10-02",
       "title": "Виправлення та стабільність",
