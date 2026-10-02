@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.224.12",
+      "date": "2026-10-02",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено продуктивність: frame management for slow devices."
+      ],
+      "source_sha": "01e6f3b68f0c88dc72b0d96dc74a4bfe1292b704"
+    },
+    {
       "version": "1.224.11",
       "date": "2026-10-02",
       "title": "Виправлення та стабільність",
