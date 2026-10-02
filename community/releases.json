@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.228.2",
+      "date": "2026-10-03",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Виправлено: missing newline at end of server_channel.html."
+      ],
+      "source_sha": "9126e63e24bb84cdc45c0ddab2c5858b42e349a7"
+    },
+    {
       "version": "1.228.1",
       "date": "2026-10-03",
       "title": "Виправлення та стабільність",
