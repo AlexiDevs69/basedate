@@ -65,8 +65,14 @@
   var IN_FRAME = false;
   try{ IN_FRAME = window.self !== window.top; }catch(e){ IN_FRAME = true; }
   var ROUTE_RE = /^\/community(?:\/dm\/[^\/]+|\/travel|\/servers\/\d+(?:\/channel\/\d+)?)?$/;
-  var MAX_FRAMES = 4;
+  var CONN = navigator.connection || {};
+  var SLOW = !!(CONN.saveData || /(^|-)2g$/.test(CONN.effectiveType || ''));
+  var MEM = navigator.deviceMemory || 8, CPU = navigator.hardwareConcurrency || 8;
+  // Слабкі пристрої / економія трафіку — менше фонових сторінок
+  var MAX_FRAMES = (SLOW || MEM <= 2 || CPU <= 2) ? 2 : (MEM <= 4 || CPU <= 4) ? 3 : 4;
   var LOAD_TIMEOUT = 10000;
+  var STALE_MS = 15 * 60 * 1000;   // фонову сторінку, що давно прихована, перестворюємо
+  var RESUME_MS = 45 * 1000;       // після такої паузи "будимо" сторінку (focus / ah:resume)
   var api = null;
 
   function parse(href){
@@ -92,6 +98,20 @@
     var p = parse(a.getAttribute('href'));
     return (p && p.key !== hereKey()) ? p : null;
   }
+
+  // Чи є у вікні незбережений текст (чернетка) — таку сторінку не видаляємо
+  function hasDraft(win){
+    try{
+      var nodes = win.document.querySelectorAll('textarea, input[type="text"], input:not([type]), [contenteditable="true"], [contenteditable=""]');
+      for(var i = 0; i < nodes.length; i++){
+        var n = nodes[i], v = ('value' in n) ? n.value : n.textContent;
+        if(v && String(v).trim()) return true;
+      }
+    }catch(e){}
+    return false;
+  }
+  // Викликати перед зміною даних (вступ на сервер тощо): кеш сторінок застарів
+  window.__ahInvalidate = function(){ var t = topApi(); if(t && t.invalidate) t.invalidate(); };
 
   // Для JS-переходів (location.href = ...) всередині сторінок
   window.__ahGo = function(url){
@@ -127,8 +147,10 @@
   var hoverTimer = null;
   document.addEventListener('mouseover', function(e){
     var p = routeOf(e); if(!p) return;
+    if(SLOW) return;
     clearTimeout(hoverTimer);
-    hoverTimer = setTimeout(function(){ var t = topApi(); if(t) t.prefetch(p.full); }, 70);
+    var delay = /\/channel\/\d+$/.test(p.key) ? 180 : 70;   // канали вантажимо лише за "справжнього" наміру
+    hoverTimer = setTimeout(function(){ var t = topApi(); if(t) t.prefetch(p.full); }, delay);
   }, true);
   document.addEventListener('mouseout', function(){ clearTimeout(hoverTimer); }, true);
   document.addEventListener('pointerdown', function(e){
@@ -143,6 +165,8 @@
   var active = null;     // null = показана сама верхня сторінка, інакше rec фрейму
   var pending = null;
   var bar = null;
+  var topStale = false;  // верхня сторінка застаріла (напр. змінився список серверів)
+  var topHiddenAt = 0;
 
   function showBar(){
     if(!bar){
@@ -176,8 +200,14 @@
     }catch(e){}
   }
 
+  function resume(win){
+    try{ win.dispatchEvent(new win.Event('focus')); }catch(e){}
+    try{ win.dispatchEvent(new win.CustomEvent('ah:resume')); }catch(e){}
+  }
+
   function destroy(rec){
     rec.dead = true;
+    try{ if(rec.mo) rec.mo.disconnect(); }catch(e){}
     if(frames[rec.key] === rec) delete frames[rec.key];
     if(active === rec) active = null;
     if(rec.el.parentNode) rec.el.parentNode.removeChild(rec.el);
@@ -186,7 +216,10 @@
   function trim(extra){
     var list = Object.keys(frames).map(function(k){ return frames[k]; }).filter(function(r){
       return r !== active && !(pending && pending.rec === r);
-    }).sort(function(a, b){ return a.used - b.used; });
+    }).sort(function(a, b){
+      var da = hasDraft(a.el.contentWindow) ? 1 : 0, db = hasDraft(b.el.contentWindow) ? 1 : 0;
+      return (da - db) || ((a.hiddenAt || a.used) - (b.hiddenAt || b.used));   // спершу найстаріші без чернеток
+    });
     var count = Object.keys(frames).length;
     while(count + extra > MAX_FRAMES && list.length){ destroy(list.shift()); count--; }
   }
@@ -251,6 +284,16 @@
     if(fp.key !== rec.key) rekey(rec, fp.key);
     rec.full = fp.key + fp.search + fp.hash;
     if(active !== rec) setActive(win, false);
+    try{   // заголовок (напр. лічильник непрочитаного) оновлюється й у активному фреймі
+      var tt = win.document.querySelector('title');
+      if(tt){
+        if(rec.mo) rec.mo.disconnect();
+        rec.mo = new win.MutationObserver(function(){
+          if(active === rec && !rec.dead){ try{ document.title = win.document.title; }catch(e){} }
+        });
+        rec.mo.observe(tt, {childList:true, characterData:true, subtree:true});
+      }
+    }catch(e){}
     if(active === rec){
       try{ history.replaceState(history.state, '', rec.full); }catch(e){}
       try{ if(win.document.title) document.title = win.document.title; }catch(e){}
@@ -268,12 +311,15 @@
     var prev = active;
     var prevWin = prev ? prev.el.contentWindow : window;
     var nextWin = rec ? rec.el.contentWindow : window;
+    var away = Date.now() - ((rec ? rec.hiddenAt : topHiddenAt) || Date.now());
+    if(prev) prev.hiddenAt = Date.now(); else topHiddenAt = Date.now();
     if(prev){ prev.el.style.visibility = 'hidden'; prev.el.style.pointerEvents = 'none'; prev.el.setAttribute('aria-hidden', 'true'); }
     if(rec){ rec.el.style.visibility = 'visible'; rec.el.style.pointerEvents = 'auto'; rec.el.removeAttribute('aria-hidden'); rec.visited = true; rec.hover = false; rec.used = Date.now(); }
     active = rec;
     setActive(prevWin, false);
     setActive(nextWin, true);
     try{ nextWin.focus(); }catch(e){}
+    if(away > RESUME_MS) resume(nextWin);
     try{ var t = nextWin.document.title; if(t) document.title = t; }catch(e){}
   }
 
@@ -322,7 +368,15 @@
       if(!opts.popped && p.hash){ try{ history.replaceState(history.state, '', p.full); }catch(e){} }
       return;
     }
+    if(p.key === topKey && topStale && active && !hasDraft(window)){   // повертаємось на застарілу верхню сторінку
+      topStale = false; cancelPending();
+      if(opts.popped) location.reload(); else location.href = p.full;
+      return;
+    }
     var rec = (p.key === topKey) ? null : frames[p.key];
+    if(rec && rec.ready && rec !== active && (rec.stale || Date.now() - (rec.hiddenAt || rec.used) > STALE_MS) && !hasDraft(rec.el.contentWindow)){
+      destroy(rec); rec = null;   // стара / застаріла фонова сторінка — беремо свіжу
+    }
     if(p.key !== topKey && !rec) rec = createFrame(p, false);
     if(rec && !rec.ready){ beginPending(p, rec, !!opts.popped); return; }
     cancelPending();
@@ -342,6 +396,7 @@
   }
 
   function idlePrefetch(){
+    if(SLOW || MAX_FRAMES < 3) return;   // не вантажимо зайве на слабких пристроях
     var target = null;
     if(topKey && topKey !== '/community') target = '/community';
     else{
@@ -362,7 +417,24 @@
     if(p) go(p.full, {popped:true});
   });
 
-  api = {go:go, prefetch:prefetch};
+  function invalidate(){
+    topStale = true;
+    Object.keys(frames).forEach(function(k){
+      var r = frames[k];
+      if(r === active || (pending && pending.rec === r) || hasDraft(r.el.contentWindow)) r.stale = true;
+      else destroy(r);
+    });
+  }
+  // Прибираємо давно непотрібні фонові сторінки (звільняє пам'ять і з'єднання)
+  setInterval(function(){
+    Object.keys(frames).forEach(function(k){
+      var r = frames[k];
+      if(r === active || (pending && pending.rec === r)) return;
+      if(Date.now() - (r.hiddenAt || r.used) > STALE_MS && !hasDraft(r.el.contentWindow)) destroy(r);
+    });
+  }, 60000);
+
+  api = {go:go, prefetch:prefetch, invalidate:invalidate};
   window.__ahFastNav = api;
 })();
 </script>
@@ -4186,7 +4258,7 @@ function openChannelInviteModal(event, btn) {
         body: JSON.stringify({ accept: accept }),
       }).then(function () {
         pollNotifications();
-        if (accept) setTimeout(function () { window.location.reload(); }, 350);
+        if (accept) { window.__ahInvalidate&&window.__ahInvalidate(); setTimeout(function () { window.location.reload(); }, 350); }
       }).catch(function () {});
     }
 
