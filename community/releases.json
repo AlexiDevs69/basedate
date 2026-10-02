@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.226.0",
+      "date": "2026-10-03",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: image paste support in composer."
+      ],
+      "source_sha": "53f02bc64acb8436fec5303aed43e3e94cc2cafd"
+    },
+    {
       "version": "1.225.0",
       "date": "2026-10-03",
       "title": "Нові можливості AlexiHub",
