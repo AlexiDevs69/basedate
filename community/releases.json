@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.224.11",
+      "date": "2026-10-02",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance background page management and cleanup logic."
+      ],
+      "source_sha": "3d6b12add34e5b66496278e0f428928ec7f415cd"
+    },
+    {
       "version": "1.224.10",
       "date": "2026-10-02",
       "title": "Виправлення та стабільність",
