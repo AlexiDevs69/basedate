@@ -6201,6 +6201,32 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
       handleFiles(e.dataTransfer.files);
     });
   }
+
+  // Paste: Ctrl+V / Cmd+V (or context-menu Paste) with an image in the clipboard attaches it.
+  document.addEventListener('paste',function(e){
+    const t=e.target;
+    if(t&&t.closest){
+      // ignore pastes into other fields (settings, modals, message editing)
+      const inField=t.closest('input,textarea,[contenteditable=""],[contenteditable="true"]');
+      if(inField&&!inField.closest('#dm-main'))return;
+      if(t.closest('.dm-edit-form'))return;
+      if(t.closest('.ah-settings-backdrop,.ah-v3-overlay,.ah-server-modal-backdrop,.dm-delete-backdrop,.ah-block-modal'))return;
+    }
+    const cd=e.clipboardData;
+    if(!cd)return;
+    let files=[];
+    if(cd.items&&cd.items.length){
+      Array.prototype.forEach.call(cd.items,function(it){
+        if(it.kind==='file'&&/^image\//.test(it.type)){const f=it.getAsFile();if(f)files.push(f);}
+      });
+    }
+    if(!files.length&&cd.files&&cd.files.length){
+      files=Array.prototype.filter.call(cd.files,function(f){return /^image\//.test(f.type)});
+    }
+    if(!files.length)return; // plain text paste works as usual
+    e.preventDefault();
+    handleFiles(files);
+  });
 })();
 </script>
 
