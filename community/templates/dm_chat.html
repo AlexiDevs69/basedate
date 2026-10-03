@@ -5850,7 +5850,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     bar.setAttribute('aria-hidden',dirty ? 'false' : 'true');
     if(!dirty) bar.classList.remove('shake');
   }
-  function refreshDirty(){ setDirty(isDirty()); }
+  function refreshDirty(){ setDirty(isDirty() || !!(window.ahProfileColorsDirty && window.ahProfileColorsDirty())); }
 
   function startEditing(){
     editor.classList.add('editing');
@@ -5905,6 +5905,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     document.querySelectorAll('.account-panel[data-mini-username],.user-panel[data-mini-username]').forEach(function(panel){
       panel.dataset.miniBanner = INITIAL.banner;
     });
+    if(window.ahProfileColorsReset) window.ahProfileColorsReset();
     setDirty(false);
   }
 
@@ -10148,7 +10149,7 @@ document.addEventListener('DOMContentLoaded', async function(){
 .ah-v3-mini.ah-profile-theme{--ah-theme-overlay:.58;--ah-theme-text:#fff;--ah-theme-accent:#5865f2;background:#23242b!important}.ah-v3-mini.ah-profile-theme .ah-v3-banner{isolation:isolate;background-size:cover!important;background-position:center!important;opacity:1!important}.ah-v3-mini.ah-profile-theme .ah-v3-body{display:flow-root;background-color:#23242b!important;background-image:linear-gradient(rgba(8,9,12,var(--ah-theme-overlay)),rgba(8,9,12,var(--ah-theme-overlay))),var(--ah-theme-image)!important;background-size:cover!important;background-position:center!important;color:var(--ah-theme-text)!important;box-shadow:inset 0 2px 0 color-mix(in srgb,var(--ah-theme-accent) 34%,#111214)!important}.ah-v3-mini.ah-profile-theme .ah-v3-avatar{border-color:color-mix(in srgb,var(--ah-theme-accent) 38%,#23242b)!important}
 </style>
 <script id="ah-mini-profile-theme-js">
-(function(){if(window.__ahMiniProfileThemesReady)return;window.__ahMiniProfileThemesReady=true;const cache=new Map();let version=0;const mini=()=>document.getElementById('ah-v3-mini');const safeUrl=value=>String(value||'').replace(/[\n\r'"\\()]/g,c=>encodeURIComponent(c));function apply(theme){const card=mini();if(!card)return;card.classList.toggle('ah-profile-theme',!!theme);if(!theme){card.style.removeProperty('--ah-theme-image');return;}card.style.setProperty('--ah-theme-image',`url('${safeUrl(theme.image_url)}')`);card.style.setProperty('--ah-theme-overlay',String(Math.max(0,Math.min(90,Number(theme.overlay_strength||58)))/100));card.style.setProperty('--ah-theme-text',theme.text_color||'#fff');card.style.setProperty('--ah-theme-accent',theme.accent_color||'#5865f2');}async function load(username){username=String(username||'').replace(/^@/,'').trim();if(!username)return;const token=++version,hit=cache.get(username.toLowerCase());if(hit&&Date.now()-hit.at<30000){apply(hit.theme);return;}try{const response=await fetch('/community/api/friend-status/'+encodeURIComponent(username),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'}}),data=await response.json();if(token!==version||!response.ok||!data.ok)return;cache.set(username.toLowerCase(),{theme:data.mini_profile_theme||null,at:Date.now()});apply(data.mini_profile_theme||null);}catch(_error){}}function sync(){const card=mini();if(!card||!card.classList.contains('open'))return;load(document.getElementById('ah-v3-name')?.dataset.profileUsername||document.getElementById('ah-v3-handle')?.textContent||'');}const observer=new MutationObserver(sync);document.addEventListener('DOMContentLoaded',()=>{const card=mini();if(card)observer.observe(card,{attributes:true,subtree:true,childList:true});});document.addEventListener('alexihub:full-profile-open',event=>load(event.detail?.name||event.detail?.username));window.AlexiHubProfileThemes={preview:apply,invalidate(){cache.clear();sync();}};})();
+(function(){if(window.__ahMiniProfileThemesReady)return;window.__ahMiniProfileThemesReady=true;const cache=new Map();let version=0;const mini=()=>document.getElementById('ah-v3-mini');const safeUrl=value=>String(value||'').replace(/[\n\r'"\\()]/g,c=>encodeURIComponent(c));function apply(theme){const card=mini();if(!card)return;card.classList.toggle('ah-profile-theme',!!theme);if(!theme){card.style.removeProperty('--ah-theme-image');return;}card.style.setProperty('--ah-theme-image',`url('${safeUrl(theme.image_url)}')`);card.style.setProperty('--ah-theme-overlay',String(Math.max(0,Math.min(90,Number(theme.overlay_strength||58)))/100));card.style.setProperty('--ah-theme-text',theme.text_color||'#fff');card.style.setProperty('--ah-theme-accent',theme.accent_color||'#5865f2');}async function load(username){username=String(username||'').replace(/^@/,'').trim();if(!username)return;window.ahApplyProfileColors&&window.ahApplyProfileColors(null);const token=++version,hit=cache.get(username.toLowerCase());if(hit&&Date.now()-hit.at<30000){apply(hit.theme);window.ahApplyProfileColors&&window.ahApplyProfileColors(hit.colors);return;}try{const response=await fetch('/community/api/friend-status/'+encodeURIComponent(username),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'}}),data=await response.json();if(token!==version||!response.ok||!data.ok)return;cache.set(username.toLowerCase(),{theme:data.mini_profile_theme||null,colors:data.profile_colors||null,at:Date.now()});apply(data.mini_profile_theme||null);window.ahApplyProfileColors&&window.ahApplyProfileColors(data.profile_colors||null);}catch(_error){}}function sync(){const card=mini();if(!card||!card.classList.contains('open'))return;load(document.getElementById('ah-v3-name')?.dataset.profileUsername||document.getElementById('ah-v3-handle')?.textContent||'');}const observer=new MutationObserver(sync);document.addEventListener('DOMContentLoaded',()=>{const card=mini();if(card)observer.observe(card,{attributes:true,subtree:true,childList:true});});document.addEventListener('alexihub:full-profile-open',event=>load(event.detail?.name||event.detail?.username));window.AlexiHubProfileThemes={preview:apply,invalidate(){cache.clear();sync();}};})();
 </script>
 
 <style id="ah-profile-theme-library-css">
@@ -13573,6 +13574,98 @@ html[data-theme="light"] .ah-reply-action:hover{background:#e3e5e8;color:#111318
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
   window.addEventListener('load', schedule);
+})();
+</script>
+
+<style id="ah-profile-colors-css">
+.ah-colored{--ah-pc1:#4054c8;--ah-pc2:#b84a3c}
+.ah-custom-profile-card.ah-colored{background:linear-gradient(180deg,color-mix(in srgb,var(--ah-pc1) 62%,#0d0e12) 0%,color-mix(in srgb,var(--ah-pc2) 50%,#0d0e12) 100%)!important;border-color:color-mix(in srgb,var(--ah-pc1) 40%,transparent)!important}
+.ah-v3-mini.ah-colored .ah-v3-body{background-color:#23242b!important;background-image:linear-gradient(180deg,color-mix(in srgb,var(--ah-pc1) 62%,#0d0e12),color-mix(in srgb,var(--ah-pc2) 50%,#0d0e12))!important}
+.ah-v3-mini.ah-colored{background:color-mix(in srgb,var(--ah-pc1) 62%,#0d0e12)!important}
+/* slide-out theme panel */
+.ah-pc-panel{position:absolute;left:0;top:0;bottom:0;width:268px;z-index:11;display:flex;flex-direction:column;gap:14px;padding:16px 16px 18px;background:#232428;border-right:1px solid #35373d;box-shadow:12px 0 34px rgba(0,0,0,.45);overflow-y:auto;transform:translateX(-104%);transition:transform .28s cubic-bezier(.2,.8,.2,1);scrollbar-width:thin;color:#f2f3f5;font-family:inherit}
+.ah-profile-customizer-shell.ah-pc-open .ah-pc-panel{transform:none}
+.ah-pc-head b{display:block;font-size:15px;font-weight:800;margin:2px 0 4px 34px;line-height:22px}
+.ah-pc-head p{margin:10px 0 0;font-size:12.5px;line-height:1.4;color:#b5bac1}
+.ah-pc-sec h4{margin:0 0 8px;font-size:13px;font-weight:800;color:#f2f3f5}
+.ah-pc-strip{position:relative;height:104px;border-radius:9px;background:linear-gradient(180deg,var(--ah-pc1),var(--ah-pc2));box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+.ah-pc-dot{position:absolute;left:50%;width:24px;height:24px;margin-left:-12px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,.45);cursor:pointer;overflow:hidden;transition:transform .12s}
+.ah-pc-dot:hover{transform:scale(1.14)}
+.ah-pc-dot.top{top:8px;background:var(--ah-pc1)}
+.ah-pc-dot.bot{bottom:8px;background:var(--ah-pc2)}
+.ah-pc-dot input{position:absolute;inset:-8px;width:44px;height:44px;opacity:0;cursor:pointer;border:0;padding:0}
+.ah-pc-presets{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.ah-pc-preset{height:36px;border:2px solid transparent;border-radius:8px;cursor:pointer;padding:0;transition:transform .12s,border-color .12s}
+.ah-pc-preset:hover{transform:translateY(-1px);border-color:rgba(255,255,255,.5)}
+.ah-pc-preset.active{border-color:#fff}
+.ah-pc-reset{margin-top:auto;height:36px;border:0;border-radius:8px;background:#35373d;color:#f2f3f5;font-weight:700;font-size:13px;cursor:pointer}
+.ah-pc-reset:hover{background:#3f4148}
+.ah-pc-handle{position:absolute;left:0;top:50%;z-index:12;width:22px;height:84px;margin-top:-42px;padding:0;border:1px solid #3b3d45;border-left:0;border-radius:0 11px 11px 0;background:#2b2d33;color:#b5bac1;cursor:pointer;display:grid;place-items:center;transition:left .28s cubic-bezier(.2,.8,.2,1),background .15s,color .15s}
+.ah-pc-handle:hover{background:#35373f;color:#fff}
+.ah-pc-handle svg{width:14px;height:14px;transition:transform .28s}
+.ah-profile-customizer-shell.ah-pc-open .ah-pc-handle{left:268px}
+.ah-profile-customizer-shell.ah-pc-open .ah-pc-handle svg{transform:rotate(180deg)}
+.ah-pc-back{position:absolute;left:12px;top:12px;width:30px;height:30px;border:0;border-radius:8px;background:transparent;color:#b5bac1;cursor:pointer;display:grid;place-items:center}
+.ah-pc-back:hover{background:#35373d;color:#fff}
+.ah-pc-back svg{width:18px;height:18px}
+@media(max-width:560px){.ah-pc-panel{width:min(268px,86vw)}.ah-profile-customizer-shell.ah-pc-open .ah-pc-handle{left:min(268px,86vw)}}
+</style>
+<script id="ah-profile-colors-js">
+(function(){
+  if(window.__ahProfileColors)return;window.__ahProfileColors=true;
+  var DEF={p:'#4054c8',a:'#b84a3c'};
+  var PRESETS=[['#4054c8','#b84a3c'],['#6a3de8','#e0457b'],['#0f9b8e','#1d4ed8'],['#f59e0b','#be123c'],['#22c55e','#0e7490'],['#ec4899','#7c3aed'],['#334155','#0f172a'],['#e11d48','#111827']];
+  var saved=null,cur=null,loaded=false,shell,panel,in1,in2,h1,h2;
+  function norm(c){return c&&c.p&&c.a?{p:String(c.p).toLowerCase(),a:String(c.a).toLowerCase()}:null}
+  function same(x,y){return (!x&&!y)||(x&&y&&x.p===y.p&&x.a===y.a)}
+  function targets(){return document.querySelectorAll('.ah-custom-profile-card')}
+  function paint(){
+    var c=cur||DEF;
+    if(panel){panel.style.setProperty('--ah-pc1',c.p);panel.style.setProperty('--ah-pc2',c.a);in1.value=c.p;in2.value=c.a;
+      panel.querySelectorAll('.ah-pc-preset').forEach(function(b){b.classList.toggle('active',!!cur&&b.dataset.p===cur.p&&b.dataset.a===cur.a)});}
+    targets().forEach(function(card){card.classList.toggle('ah-colored',!!cur);if(cur){card.style.setProperty('--ah-pc1',cur.p);card.style.setProperty('--ah-pc2',cur.a);}else{card.style.removeProperty('--ah-pc1');card.style.removeProperty('--ah-pc2');}});
+    if(h1){h1.value=cur?cur.p:'';h2.value=cur?cur.a:'';h1.disabled=h2.disabled=!loaded;}
+  }
+  function change(next){cur=next;paint();if(h1)h1.dispatchEvent(new Event('input',{bubbles:true}));}
+  window.ahProfileColorsDirty=function(){return loaded&&!same(cur,saved)};
+  window.ahProfileColorsReset=function(){cur=saved;paint();};
+  window.ahApplyProfileColors=function(colors){
+    var m=document.getElementById('ah-v3-mini');if(!m)return;
+    if(colors&&colors.primary&&colors.accent){m.classList.add('ah-colored');m.style.setProperty('--ah-pc1',colors.primary);m.style.setProperty('--ah-pc2',colors.accent);}
+    else{m.classList.remove('ah-colored');m.style.removeProperty('--ah-pc1');m.style.removeProperty('--ah-pc2');}
+  };
+  function build(){
+    shell=document.querySelector('#ah-profile-customizer .ah-profile-customizer-shell');
+    var form=document.getElementById('ah-profile-edit-form');
+    if(!shell||!form||document.getElementById('ah-pc-panel'))return;
+    panel=document.createElement('aside');panel.id='ah-pc-panel';panel.className='ah-pc-panel';panel.setAttribute('aria-hidden','true');
+    panel.innerHTML='<button type="button" class="ah-pc-back" aria-label="Закрити"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>'+
+      '<div class="ah-pc-head"><b>Тема профілю</b><p>Так може виглядати ваш профіль із власними кольорами.</p></div>'+
+      '<div class="ah-pc-sec"><h4>Кольори теми</h4><div class="ah-pc-strip"><label class="ah-pc-dot top" title="Верхній колір"><input type="color" id="ah-pc-in1" aria-label="Верхній колір"></label><label class="ah-pc-dot bot" title="Нижній колір"><input type="color" id="ah-pc-in2" aria-label="Нижній колір"></label></div></div>'+
+      '<div class="ah-pc-sec"><h4>Готові теми</h4><div class="ah-pc-presets">'+PRESETS.map(function(x){return '<button type="button" class="ah-pc-preset" data-p="'+x[0]+'" data-a="'+x[1]+'" style="background:linear-gradient(180deg,'+x[0]+','+x[1]+')" aria-label="Тема"></button>'}).join('')+'</div></div>'+
+      '<button type="button" class="ah-pc-reset">Скинути кольори</button>';
+    var handle=document.createElement('button');handle.type='button';handle.className='ah-pc-handle';handle.setAttribute('aria-label','Тема профілю');handle.setAttribute('aria-expanded','false');handle.title='Тема профілю';
+    handle.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
+    shell.appendChild(panel);shell.appendChild(handle);
+    h1=document.createElement('input');h1.type='hidden';h1.name='profile_color_primary';h1.disabled=true;
+    h2=document.createElement('input');h2.type='hidden';h2.name='profile_color_accent';h2.disabled=true;
+    form.appendChild(h1);form.appendChild(h2);
+    in1=panel.querySelector('#ah-pc-in1');in2=panel.querySelector('#ah-pc-in2');
+    function toggle(open){var o=typeof open==='boolean'?open:!shell.classList.contains('ah-pc-open');shell.classList.toggle('ah-pc-open',o);handle.setAttribute('aria-expanded',String(o));panel.setAttribute('aria-hidden',String(!o));}
+    handle.addEventListener('click',function(){toggle()});
+    panel.querySelector('.ah-pc-back').addEventListener('click',function(){toggle(false)});
+    in1.addEventListener('input',function(){change({p:in1.value.toLowerCase(),a:(cur||DEF).a})});
+    in2.addEventListener('input',function(){change({p:(cur||DEF).p,a:in2.value.toLowerCase()})});
+    panel.querySelector('.ah-pc-presets').addEventListener('click',function(e){var b=e.target.closest('.ah-pc-preset');if(b)change({p:b.dataset.p,a:b.dataset.a})});
+    panel.querySelector('.ah-pc-reset').addEventListener('click',function(){change(null)});
+    document.addEventListener('keydown',function(e){if(e.key==='Escape'&&shell.classList.contains('ah-pc-open')&&shell.offsetParent!==null){toggle(false);}});
+    paint();
+    fetch('/community/api/my-profile-colors',{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'}})
+      .then(function(r){return r.json()}).then(function(d){
+        if(d&&d.ok){var c=d.profile_colors?norm({p:d.profile_colors.primary,a:d.profile_colors.accent}):null;saved=c;if(!cur||same(cur,null))cur=c;loaded=true;paint();}
+      }).catch(function(){});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',build);else build();
 })();
 </script>
 </body>
