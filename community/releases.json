@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.231.7",
+      "date": "2026-10-03",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Ensure profile color columns are initialized once."
+      ],
+      "source_sha": "d8b237fda6214d5d3a4b3baf5651b35d07ea4c98"
+    },
+    {
       "version": "1.231.6",
       "date": "2026-10-03",
       "title": "Виправлення та стабільність",
