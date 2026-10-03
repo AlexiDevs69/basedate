@@ -13595,7 +13595,13 @@ html[data-theme="light"] .ah-reply-action:hover{background:#e3e5e8;color:#111318
 .ah-v3-overlay.ah-colored .ah-v3-full-banner{position:relative}
 /* theme panel: slides out to the LEFT of the editor window, as an extension of it */
 .ah-profile-customizer-shell{overflow:visible!important;left:0;transition:left .28s cubic-bezier(.2,.8,.2,1)}
-.ah-profile-customizer-form{border-radius:15px}
+.ah-profile-customizer-shell{transition:left .28s cubic-bezier(.2,.8,.2,1),border-radius 0s linear .28s}
+.ah-profile-customizer-form{border-radius:15px;transition:border-radius 0s linear .28s}
+/* panel open: the window's left edge is flush against the panel (square corners); closing restores the round corners after the slide */
+@media(min-width:701px){
+.ah-profile-customizer-shell.ah-pc-open{border-radius:0 16px 16px 0;transition:left .28s cubic-bezier(.2,.8,.2,1),border-radius 0s}
+.ah-profile-customizer-shell.ah-pc-open .ah-profile-customizer-form{border-radius:0 15px 15px 0;transition:border-radius 0s}
+}
 .ah-pc-panel{box-sizing:border-box;position:absolute;right:calc(100% + 1px);top:-1px;bottom:-1px;width:268px;z-index:-1;display:flex;flex-direction:column;gap:14px;padding:16px 16px 18px;background:#232428;border:1px solid #3b3d45;border-right:0;border-radius:16px 0 0 16px;box-shadow:-14px 10px 40px rgba(0,0,0,.45);overflow-y:auto;transform:translateX(100%);visibility:hidden;transition:transform .28s cubic-bezier(.2,.8,.2,1),visibility 0s linear .28s;scrollbar-width:thin;color:#f2f3f5;font-family:inherit}
 .ah-profile-customizer-shell.ah-pc-open .ah-pc-panel{transform:none;visibility:visible;transition:transform .28s cubic-bezier(.2,.8,.2,1)}
 .ah-pc-head b{display:block;font-size:15px;font-weight:800;margin:2px 0 4px 34px;line-height:22px}
