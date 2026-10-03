@@ -98,6 +98,8 @@ async def ensure_account_visual_columns(db: AsyncSession) -> None:
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS account_status VARCHAR(16) DEFAULT 'online' NOT NULL"))
     await db.execute(text("UPDATE community_accounts SET account_status = 'online' WHERE account_status IS NULL OR account_status = ''"))
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS custom_status_text VARCHAR(128)"))
+    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS profile_color_primary VARCHAR(16)"))
+    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS profile_color_accent VARCHAR(16)"))
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS custom_status_emoji VARCHAR(32)"))
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS custom_status_expires_at TIMESTAMP WITH TIME ZONE"))
     await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS language VARCHAR(8) DEFAULT 'ru' NOT NULL"))
@@ -788,6 +790,36 @@ async def update_own_profile(
     await db.commit()
     await db.refresh(account)
     return account
+
+
+# ---- Custom profile colors (two-colour gradient theme chosen by the account owner) ----
+def _clean_profile_color(value: str | None) -> str | None:
+    import re
+    value = (value or "").strip()
+    return value.lower() if re.fullmatch(r"#[0-9a-fA-F]{6}", value) else None
+
+
+async def get_profile_colors(db: AsyncSession, account_id: int) -> dict | None:
+    await ensure_account_visual_columns(db)
+    row = (await db.execute(
+        text("SELECT profile_color_primary, profile_color_accent FROM community_accounts WHERE id = :id"),
+        {"id": int(account_id)},
+    )).first()
+    if not row or not row[0] or not row[1]:
+        return None
+    return {"primary": row[0], "accent": row[1]}
+
+
+async def set_profile_colors(db: AsyncSession, account_id: int, primary: str | None, accent: str | None) -> None:
+    await ensure_account_visual_columns(db)
+    p, a = _clean_profile_color(primary), _clean_profile_color(accent)
+    if not (p and a):
+        p = a = None  # empty / invalid -> reset to the default look
+    await db.execute(
+        text("UPDATE community_accounts SET profile_color_primary = :p, profile_color_accent = :a WHERE id = :id"),
+        {"p": p, "a": a, "id": int(account_id)},
+    )
+    await db.commit()
 
 
 # ============================================================================
