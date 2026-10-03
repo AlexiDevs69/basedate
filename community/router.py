@@ -6535,8 +6535,7 @@ async def settings_submit(
         bio=bio.strip(),
         is_private=is_private,
     )
-    # Custom profile colours: field absent (None) -> leave as is,
-    # empty/invalid -> reset to the default look, valid pair -> save.
+    # Colours: field absent -> untouched, empty/invalid -> reset, valid pair -> save.
     if profile_color_primary is not None or profile_color_accent is not None:
         await crud.set_profile_colors(db, account.id, profile_color_primary, profile_color_accent)
     await account_realtime.set_profile_and_broadcast(_account_payload(updated))
@@ -6658,6 +6657,7 @@ async def api_friend_status(username: str, request: Request, db: AsyncSession = 
             "nitro": target_nitro,
         },
         "mini_profile_theme": target_mini_theme,
+        "profile_colors": await crud.get_profile_colors(db, int(target.id)),
         "is_private_restricted": is_private_restricted,
         **block,
     })
