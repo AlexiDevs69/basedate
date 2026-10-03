@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.231.4",
+      "date": "2026-10-03",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: profile card styles and theme panel behavior."
+      ],
+      "source_sha": "1df22ab1167183567bd24964c8b48a8ff2d25666"
+    },
+    {
       "version": "1.231.3",
       "date": "2026-10-03",
       "title": "Виправлення та стабільність",
