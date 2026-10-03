@@ -4634,6 +4634,40 @@ async def api_my_profile_theme(request: Request, db: AsyncSession = Depends(get_
     return JSONResponse({"ok": True, "theme": await crud.get_equipped_profile_theme(db, account.id)})
 
 
+@router.get("/api/my-profile-colors")
+async def api_my_profile_colors(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    return JSONResponse({"ok": True, "profile_colors": await crud.get_profile_colors(db, account.id)})
+
+
+@router.post("/api/my-profile-colors")
+async def api_save_my_profile_colors(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    if not isinstance(body, dict):
+        body = {}
+    await crud.set_profile_colors(db, account.id, body.get("primary"), body.get("accent"))
+    return JSONResponse({"ok": True, "profile_colors": await crud.get_profile_colors(db, account.id)})
+
+
+@router.get("/api/users/{username}/profile-colors")
+async def api_user_profile_colors(username: str, request: Request, db: AsyncSession = Depends(get_db)):
+    viewer = await current_account(request, db)
+    if not viewer:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    owner = await crud.get_account_by_username_ci(db, username)
+    if not owner:
+        return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
+    return JSONResponse({"ok": True, "profile_colors": await crud.get_profile_colors(db, owner.id)})
+
+
 @router.get("/api/users/{username}/nitro")
 async def api_user_nitro(username: str, request: Request, db: AsyncSession = Depends(get_db)):
     viewer = await current_account(request, db)
@@ -6479,10 +6513,10 @@ async def settings_submit(
     bio: str = Form(""),
     is_private: bool = Form(False),
     next_url: str = Form(""),
-    avatar_file: UploadFile | None = File(None),
-    banner_file: UploadFile | None = File(None),
     profile_color_primary: str | None = Form(None),
     profile_color_accent: str | None = Form(None),
+    avatar_file: UploadFile | None = File(None),
+    banner_file: UploadFile | None = File(None),
     db: AsyncSession = Depends(get_db),
 ):
     account = await current_account(request, db)
@@ -6501,6 +6535,8 @@ async def settings_submit(
         bio=bio.strip(),
         is_private=is_private,
     )
+    # Custom profile colours: field absent (None) -> leave as is,
+    # empty/invalid -> reset to the default look, valid pair -> save.
     if profile_color_primary is not None or profile_color_accent is not None:
         await crud.set_profile_colors(db, account.id, profile_color_primary, profile_color_accent)
     await account_realtime.set_profile_and_broadcast(_account_payload(updated))
@@ -6563,14 +6599,6 @@ async def api_respond_friend_request(friendship_id: int, request: Request, db: A
     return JSONResponse({"status": friendship.status})
 
 
-@router.get("/api/my-profile-colors")
-async def api_my_profile_colors(request: Request, db: AsyncSession = Depends(get_db)):
-    account = await current_account(request, db)
-    if not account:
-        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
-    return JSONResponse({"ok": True, "profile_colors": await crud.get_profile_colors(db, int(account.id))})
-
-
 @router.get("/api/friend-status/{username}")
 async def api_friend_status(username: str, request: Request, db: AsyncSession = Depends(get_db)):
     viewer = await current_account(request, db)
@@ -6630,7 +6658,6 @@ async def api_friend_status(username: str, request: Request, db: AsyncSession = 
             "nitro": target_nitro,
         },
         "mini_profile_theme": target_mini_theme,
-        "profile_colors": await crud.get_profile_colors(db, int(target.id)),
         "is_private_restricted": is_private_restricted,
         **block,
     })
