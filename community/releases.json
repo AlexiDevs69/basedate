@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.228.10",
+      "date": "2026-10-03",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance profile color customization features."
+      ],
+      "source_sha": "b87aeb640276eeb554894dcb959d4d3dbc5b9712"
+    },
+    {
       "version": "1.228.9",
       "date": "2026-10-03",
       "title": "Виправлення та стабільність",
