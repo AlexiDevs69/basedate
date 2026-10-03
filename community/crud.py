@@ -792,7 +792,7 @@ async def update_own_profile(
     return account
 
 
-# ---- Custom profile colors (two-colour gradient theme chosen by the account owner) ----
+# ---- Custom profile colours (two-colour gradient theme chosen by the account owner) ----
 def _clean_profile_color(value: str | None) -> str | None:
     import re
     value = (value or "").strip()
