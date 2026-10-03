@@ -793,6 +793,19 @@ async def update_own_profile(
 
 
 # ---- Custom profile colours (two-colour gradient theme chosen by the account owner) ----
+_PROFILE_COLOR_COLUMNS_READY = False
+
+
+async def _ensure_profile_color_columns_once(db: AsyncSession) -> None:
+    """get_profile_colors runs on every mini-profile open, so the (idempotent but
+    chatty) column migration is executed only once per process."""
+    global _PROFILE_COLOR_COLUMNS_READY
+    if _PROFILE_COLOR_COLUMNS_READY:
+        return
+    await ensure_account_visual_columns(db)
+    _PROFILE_COLOR_COLUMNS_READY = True
+
+
 def _clean_profile_color(value: str | None) -> str | None:
     import re
     value = (value or "").strip()
@@ -800,7 +813,7 @@ def _clean_profile_color(value: str | None) -> str | None:
 
 
 async def get_profile_colors(db: AsyncSession, account_id: int) -> dict | None:
-    await ensure_account_visual_columns(db)
+    await _ensure_profile_color_columns_once(db)
     row = (await db.execute(
         text("SELECT profile_color_primary, profile_color_accent FROM community_accounts WHERE id = :id"),
         {"id": int(account_id)},
@@ -811,7 +824,7 @@ async def get_profile_colors(db: AsyncSession, account_id: int) -> dict | None:
 
 
 async def set_profile_colors(db: AsyncSession, account_id: int, primary: str | None, accent: str | None) -> None:
-    await ensure_account_visual_columns(db)
+    await _ensure_profile_color_columns_once(db)
     p, a = _clean_profile_color(primary), _clean_profile_color(accent)
     if not (p and a):
         p = a = None  # empty / invalid -> reset to the default look
