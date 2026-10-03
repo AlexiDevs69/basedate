@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.230.0",
+      "date": "2026-10-03",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: color fetching and painting for user profiles."
+      ],
+      "source_sha": "f67825f69ae8953dbb3bc92d150ed5c7e2a736f6"
+    },
+    {
       "version": "1.229.0",
       "date": "2026-10-03",
       "title": "Нові можливості AlexiHub",
