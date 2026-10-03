@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.231.1",
+      "date": "2026-10-03",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update DM chat HTML for profile theme management."
+      ],
+      "source_sha": "c31d8bee507a2316e54ab312aafa3912551c0ca6"
+    },
+    {
       "version": "1.231.0",
       "date": "2026-10-03",
       "title": "Нові можливості AlexiHub",
