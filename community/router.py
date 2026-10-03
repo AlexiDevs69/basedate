@@ -4665,7 +4665,10 @@ async def api_user_profile_colors(username: str, request: Request, db: AsyncSess
     owner = await crud.get_account_by_username_ci(db, username)
     if not owner:
         return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
-    return JSONResponse({"ok": True, "profile_colors": await crud.get_profile_colors(db, owner.id)})
+    return JSONResponse(
+        {"ok": True, "profile_colors": await crud.get_profile_colors(db, owner.id)},
+        headers={"Cache-Control": "private, max-age=30"},
+    )
 
 
 @router.get("/api/users/{username}/nitro")
