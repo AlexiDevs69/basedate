@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.229.0",
+      "date": "2026-10-03",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: profile color customization to community accounts."
+      ],
+      "source_sha": "5ba5c3fe1a7c5b20ef77b908deb24d3c8aaf6b4d"
+    },
+    {
       "version": "1.228.12",
       "date": "2026-10-03",
       "title": "Виправлення та стабільність",
