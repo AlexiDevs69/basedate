@@ -10149,7 +10149,7 @@ document.addEventListener('DOMContentLoaded', async function(){
 .ah-v3-mini.ah-profile-theme{--ah-theme-overlay:.58;--ah-theme-text:#fff;--ah-theme-accent:#5865f2;background:#23242b!important}.ah-v3-mini.ah-profile-theme .ah-v3-banner{isolation:isolate;background-size:cover!important;background-position:center!important;opacity:1!important}.ah-v3-mini.ah-profile-theme .ah-v3-body{display:flow-root;background-color:#23242b!important;background-image:linear-gradient(rgba(8,9,12,var(--ah-theme-overlay)),rgba(8,9,12,var(--ah-theme-overlay))),var(--ah-theme-image)!important;background-size:cover!important;background-position:center!important;color:var(--ah-theme-text)!important;box-shadow:inset 0 2px 0 color-mix(in srgb,var(--ah-theme-accent) 34%,#111214)!important}.ah-v3-mini.ah-profile-theme .ah-v3-avatar{border-color:color-mix(in srgb,var(--ah-theme-accent) 38%,#23242b)!important}
 </style>
 <script id="ah-mini-profile-theme-js">
-(function(){if(window.__ahMiniProfileThemesReady)return;window.__ahMiniProfileThemesReady=true;const cache=new Map();let version=0;const mini=()=>document.getElementById('ah-v3-mini');const safeUrl=value=>String(value||'').replace(/[\n\r'"\\()]/g,c=>encodeURIComponent(c));function apply(theme){const card=mini();if(!card)return;card.classList.toggle('ah-profile-theme',!!theme);if(!theme){card.style.removeProperty('--ah-theme-image');return;}card.style.setProperty('--ah-theme-image',`url('${safeUrl(theme.image_url)}')`);card.style.setProperty('--ah-theme-overlay',String(Math.max(0,Math.min(90,Number(theme.overlay_strength||58)))/100));card.style.setProperty('--ah-theme-text',theme.text_color||'#fff');card.style.setProperty('--ah-theme-accent',theme.accent_color||'#5865f2');}async function load(username){username=String(username||'').replace(/^@/,'').trim();if(!username)return;window.ahApplyProfileColors&&window.ahApplyProfileColors(null);const token=++version,hit=cache.get(username.toLowerCase());if(hit&&Date.now()-hit.at<30000){apply(hit.theme);window.ahApplyProfileColors&&window.ahApplyProfileColors(hit.colors);return;}try{const response=await fetch('/community/api/friend-status/'+encodeURIComponent(username),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'}}),data=await response.json();if(token!==version||!response.ok||!data.ok)return;cache.set(username.toLowerCase(),{theme:data.mini_profile_theme||null,colors:data.profile_colors||null,at:Date.now()});apply(data.mini_profile_theme||null);window.ahApplyProfileColors&&window.ahApplyProfileColors(data.profile_colors||null);}catch(_error){}}function sync(){const card=mini();if(!card||!card.classList.contains('open'))return;load(document.getElementById('ah-v3-name')?.dataset.profileUsername||document.getElementById('ah-v3-handle')?.textContent||'');}const observer=new MutationObserver(sync);document.addEventListener('DOMContentLoaded',()=>{const card=mini();if(card)observer.observe(card,{attributes:true,subtree:true,childList:true});});document.addEventListener('alexihub:full-profile-open',event=>load(event.detail?.name||event.detail?.username));window.AlexiHubProfileThemes={preview:apply,invalidate(){cache.clear();sync();}};})();
+(function(){if(window.__ahMiniProfileThemesReady)return;window.__ahMiniProfileThemesReady=true;const cache=new Map();let version=0;const mini=()=>document.getElementById('ah-v3-mini');const safeUrl=value=>String(value||'').replace(/[\n\r'"\\()]/g,c=>encodeURIComponent(c));function apply(theme){const card=mini();if(!card)return;card.classList.toggle('ah-profile-theme',!!theme);if(!theme){card.style.removeProperty('--ah-theme-image');return;}card.style.setProperty('--ah-theme-image',`url('${safeUrl(theme.image_url)}')`);card.style.setProperty('--ah-theme-overlay',String(Math.max(0,Math.min(90,Number(theme.overlay_strength||58)))/100));card.style.setProperty('--ah-theme-text',theme.text_color||'#fff');card.style.setProperty('--ah-theme-accent',theme.accent_color||'#5865f2');}async function load(username){username=String(username||'').replace(/^@/,'').trim();if(!username)return;const token=++version,hit=cache.get(username.toLowerCase());if(hit&&Date.now()-hit.at<30000){apply(hit.theme);window.ahApplyProfileColors&&window.ahApplyProfileColors(hit.colors);return;}try{const response=await fetch('/community/api/friend-status/'+encodeURIComponent(username),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'}}),data=await response.json();if(token!==version||!response.ok||!data.ok)return;cache.set(username.toLowerCase(),{theme:data.mini_profile_theme||null,colors:data.profile_colors||null,at:Date.now()});apply(data.mini_profile_theme||null);window.ahApplyProfileColors&&window.ahApplyProfileColors(data.profile_colors||null);}catch(_error){}}let lastUser='';function sync(){const card=mini();if(!card||!card.classList.contains('open')){lastUser='';return;}const u=String(document.getElementById('ah-v3-name')?.dataset.profileUsername||document.getElementById('ah-v3-handle')?.textContent||'').replace(/^@/,'').trim().toLowerCase();if(!u||u===lastUser)return;lastUser=u;load(u);}const observer=new MutationObserver(sync);document.addEventListener('DOMContentLoaded',()=>{const card=mini();if(card)observer.observe(card,{attributes:true,subtree:true,childList:true});});document.addEventListener('alexihub:full-profile-open',event=>load(event.detail?.name||event.detail?.username));window.AlexiHubProfileThemes={preview:apply,invalidate(){cache.clear();lastUser='';sync();}};})();
 </script>
 
 <style id="ah-profile-theme-library-css">
@@ -13584,8 +13584,8 @@ html[data-theme="light"] .ah-reply-action:hover{background:#e3e5e8;color:#111318
 .ah-v3-mini.ah-colored{background:color-mix(in srgb,var(--ah-pc1) 62%,#0d0e12)!important}
 .profile-card.ah-colored{background:linear-gradient(180deg,color-mix(in srgb,var(--ah-pc1) 62%,#0d0e12),color-mix(in srgb,var(--ah-pc2) 50%,#0d0e12))!important;border-color:color-mix(in srgb,var(--ah-pc1) 40%,transparent)!important}
 /* slide-out theme panel */
-.ah-pc-panel{position:absolute;left:0;top:0;bottom:0;width:268px;z-index:11;display:flex;flex-direction:column;gap:14px;padding:16px 16px 18px;background:#232428;border-right:1px solid #35373d;box-shadow:12px 0 34px rgba(0,0,0,.45);overflow-y:auto;transform:translateX(-104%);transition:transform .28s cubic-bezier(.2,.8,.2,1);scrollbar-width:thin;color:#f2f3f5;font-family:inherit}
-.ah-profile-customizer-shell.ah-pc-open .ah-pc-panel{transform:none}
+.ah-pc-panel{position:absolute;left:0;top:0;bottom:0;width:268px;z-index:11;display:flex;flex-direction:column;gap:14px;padding:16px 16px 18px;background:#232428;border-right:1px solid #35373d;box-shadow:12px 0 34px rgba(0,0,0,.45);overflow-y:auto;transform:translateX(-104%);visibility:hidden;transition:transform .28s cubic-bezier(.2,.8,.2,1),visibility 0s linear .28s;scrollbar-width:thin;color:#f2f3f5;font-family:inherit}
+.ah-profile-customizer-shell.ah-pc-open .ah-pc-panel{transform:none;visibility:visible;transition:transform .28s cubic-bezier(.2,.8,.2,1)}
 .ah-pc-head b{display:block;font-size:15px;font-weight:800;margin:2px 0 4px 34px;line-height:22px}
 .ah-pc-head p{margin:10px 0 0;font-size:12.5px;line-height:1.4;color:#b5bac1}
 .ah-pc-sec h4{margin:0 0 8px;font-size:13px;font-weight:800;color:#f2f3f5}
@@ -13610,6 +13610,7 @@ html[data-theme="light"] .ah-reply-action:hover{background:#e3e5e8;color:#111318
 .ah-pc-back:hover{background:#35373d;color:#fff}
 .ah-pc-back svg{width:18px;height:18px}
 @media(max-width:560px){.ah-pc-panel{width:min(268px,86vw)}.ah-profile-customizer-shell.ah-pc-open .ah-pc-handle{left:min(268px,86vw)}}
+@media(prefers-reduced-motion:reduce){.ah-pc-panel,.ah-pc-handle,.ah-pc-handle svg{transition:none}}
 </style>
 <script id="ah-profile-colors-js">
 (function(){
@@ -13619,22 +13620,36 @@ html[data-theme="light"] .ah-reply-action:hover{background:#e3e5e8;color:#111318
   var saved=null,cur=null,loaded=false,shell,panel,in1,in2,h1,h2;
   function norm(c){return c&&c.p&&c.a?{p:String(c.p).toLowerCase(),a:String(c.a).toLowerCase()}:null}
   function same(x,y){return (!x&&!y)||(x&&y&&x.p===y.p&&x.a===y.a)}
-  function targets(){return document.querySelectorAll('.ah-custom-profile-card')}
+
+  /* Idempotent: touches the DOM only when something really changes (no MutationObserver feedback loops). */
+  function paintNode(node,c){
+    if(!node)return;
+    if(c&&c.primary&&c.accent){
+      if(!node.classList.contains('ah-colored'))node.classList.add('ah-colored');
+      if(node.style.getPropertyValue('--ah-pc1')!==c.primary)node.style.setProperty('--ah-pc1',c.primary);
+      if(node.style.getPropertyValue('--ah-pc2')!==c.accent)node.style.setProperty('--ah-pc2',c.accent);
+    }else{
+      if(node.classList.contains('ah-colored'))node.classList.remove('ah-colored');
+      if(node.style.getPropertyValue('--ah-pc1'))node.style.removeProperty('--ah-pc1');
+      if(node.style.getPropertyValue('--ah-pc2'))node.style.removeProperty('--ah-pc2');
+    }
+  }
+  window.ahApplyProfileColors=function(colors){paintNode(document.getElementById('ah-v3-mini'),colors);};
+
   function paint(){
     var c=cur||DEF;
-    if(panel){panel.style.setProperty('--ah-pc1',c.p);panel.style.setProperty('--ah-pc2',c.a);in1.value=c.p;in2.value=c.a;
-      panel.querySelectorAll('.ah-pc-preset').forEach(function(b){b.classList.toggle('active',!!cur&&b.dataset.p===cur.p&&b.dataset.a===cur.a)});}
-    targets().forEach(function(card){card.classList.toggle('ah-colored',!!cur);if(cur){card.style.setProperty('--ah-pc1',cur.p);card.style.setProperty('--ah-pc2',cur.a);}else{card.style.removeProperty('--ah-pc1');card.style.removeProperty('--ah-pc2');}});
+    if(panel){
+      panel.style.setProperty('--ah-pc1',c.p);panel.style.setProperty('--ah-pc2',c.a);
+      in1.value=c.p;in2.value=c.a;
+      panel.querySelectorAll('.ah-pc-preset').forEach(function(b){b.classList.toggle('active',!!cur&&b.dataset.p===cur.p&&b.dataset.a===cur.a)});
+    }
+    document.querySelectorAll('.ah-custom-profile-card').forEach(function(card){paintNode(card,cur?{primary:cur.p,accent:cur.a}:null)});
     if(h1){h1.value=cur?cur.p:'';h2.value=cur?cur.a:'';h1.disabled=h2.disabled=!loaded;}
   }
   function change(next){cur=next;paint();if(h1)h1.dispatchEvent(new Event('input',{bubbles:true}));}
   window.ahProfileColorsDirty=function(){return loaded&&!same(cur,saved)};
   window.ahProfileColorsReset=function(){cur=saved;paint();};
-  window.ahApplyProfileColors=function(colors){
-    var m=document.getElementById('ah-v3-mini');if(!m)return;
-    if(colors&&colors.primary&&colors.accent){m.classList.add('ah-colored');m.style.setProperty('--ah-pc1',colors.primary);m.style.setProperty('--ah-pc2',colors.accent);}
-    else{m.classList.remove('ah-colored');m.style.removeProperty('--ah-pc1');m.style.removeProperty('--ah-pc2');}
-  };
+
   function build(){
     shell=document.querySelector('#ah-profile-customizer .ah-profile-customizer-shell');
     var form=document.getElementById('ah-profile-edit-form');
@@ -13668,39 +13683,14 @@ html[data-theme="light"] .ah-reply-action:hover{background:#e3e5e8;color:#111318
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',build);else build();
 
-  /* --- show saved colours of other users (mini popover + DM right card) --- */
-  var cache={};
-  function fetchColors(u){
-    u=String(u||'').trim();if(!u)return Promise.resolve(null);
-    if(cache[u])return cache[u];
-    cache[u]=fetch('/community/api/users/'+encodeURIComponent(u)+'/profile-colors',{credentials:'same-origin',headers:{Accept:'application/json'}})
-      .then(function(r){return r.ok?r.json():null}).then(function(d){return d&&d.ok?d.profile_colors:null}).catch(function(){delete cache[u];return null});
-    return cache[u];
-  }
-  function paintNode(node,c){
-    if(!node)return;
-    if(c&&c.primary&&c.accent){node.classList.add('ah-colored');node.style.setProperty('--ah-pc1',c.primary);node.style.setProperty('--ah-pc2',c.accent);}
-    else{node.classList.remove('ah-colored');node.style.removeProperty('--ah-pc1');node.style.removeProperty('--ah-pc2');}
-  }
-  function initViewers(){
-    var mini=document.getElementById('ah-v3-mini');
-    if(mini){
-      var lastUser='';
-      var sync=function(){
-        if(!mini.classList.contains('open'))return;
-        var n=document.getElementById('ah-v3-name');var u=n&&n.dataset.profileUsername;
-        if(!u||u===lastUser)return;lastUser=u;
-        paintNode(mini,null);
-        fetchColors(u).then(function(c){var cur=document.getElementById('ah-v3-name');if(cur&&cur.dataset.profileUsername===u)paintNode(mini,c);});
-      };
-      new MutationObserver(function(){if(!mini.classList.contains('open'))lastUser='';sync();}).observe(mini,{attributes:true,attributeFilter:['class']});
-      var nm=document.getElementById('ah-v3-name');
-      if(nm)new MutationObserver(sync).observe(nm,{childList:true,characterData:true,subtree:true,attributes:true,attributeFilter:['data-profile-username']});
-    }
+  /* Colours of the DM partner on the right-hand profile card (one fetch, no observers). */
+  function initCard(){
     var card=document.querySelector('.profile-card[data-mini-username]');
-    if(card)fetchColors(card.dataset.miniUsername).then(function(c){paintNode(card,c);});
+    if(!card)return;
+    fetch('/community/api/users/'+encodeURIComponent(card.dataset.miniUsername)+'/profile-colors',{credentials:'same-origin',headers:{Accept:'application/json'}})
+      .then(function(r){return r.ok?r.json():null}).then(function(d){if(d&&d.ok)paintNode(card,d.profile_colors)}).catch(function(){});
   }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initViewers);else initViewers();
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initCard);else initCard();
 })();
 </script>
 </body>
