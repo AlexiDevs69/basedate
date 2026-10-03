@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.231.8",
+      "date": "2026-10-03",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: profile card styles and gradients."
+      ],
+      "source_sha": "6bfea1613c3c61b01258baabadf36572206a8383"
+    },
+    {
       "version": "1.231.7",
       "date": "2026-10-03",
       "title": "Виправлення та стабільність",
