@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.231.5",
+      "date": "2026-10-03",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance profile theme management and color caching."
+      ],
+      "source_sha": "67001e75709a6264f6f916a4f9a21c50da0bf3c4"
+    },
+    {
       "version": "1.231.4",
       "date": "2026-10-03",
       "title": "Оновлення AlexiHub",
