@@ -13636,6 +13636,10 @@ html[data-theme="light"] .ah-reply-action:hover{background:#e3e5e8;color:#111318
 .ah-v3-overlay.ah-colored .ah-v3-full-avatar,.ah-v3-overlay.ah-colored .ah-v3-full-avatar .presence{border-color:color-mix(in srgb,var(--ah-pc-top) 88%,color-mix(in srgb,var(--ah-pc2) 50%,#0d0e12))!important}
 .ah-v3-mini.ah-colored .ah-v3-avatar,.ah-v3-mini.ah-colored .ah-v3-status{border-color:var(--ah-pc-top)!important}
 .profile-card.ah-colored .big-avatar{border-color:var(--ah-pc-top)}
+/* right DM card: avatar must sit above the banner */
+.profile-card .banner{position:relative;z-index:0}
+.profile-card .profile-body{position:relative;z-index:1}
+.profile-card .big-avatar{position:relative;z-index:2}
 </style>
 <script id="ah-profile-colors-js">
 (function(){
