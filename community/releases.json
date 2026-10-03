@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.231.3",
+      "date": "2026-10-03",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Виправлено: spelling of 'colours' in comments."
+      ],
+      "source_sha": "0a807496be4c0ed3d5dabb1650a22a7454be7a9f"
+    },
+    {
       "version": "1.231.2",
       "date": "2026-10-03",
       "title": "Виправлення та стабільність",
