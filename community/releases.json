@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.231.2",
+      "date": "2026-10-03",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Refine comments on profile color logic."
+      ],
+      "source_sha": "e210c00e33376e3a9285b314321c34c22ab0dad8"
+    },
+    {
       "version": "1.231.1",
       "date": "2026-10-03",
       "title": "Виправлення та стабільність",
