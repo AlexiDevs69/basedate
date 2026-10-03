@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.228.11",
+      "date": "2026-10-03",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance profile color handling and theme application."
+      ],
+      "source_sha": "4113bce5acbb412641446e95e6984d24aaec346c"
+    },
+    {
       "version": "1.228.10",
       "date": "2026-10-03",
       "title": "Виправлення та стабільність",
