@@ -13586,16 +13586,12 @@ html[data-theme="light"] .ah-reply-action:hover{background:#e3e5e8;color:#111318
 .profile-card.ah-colored{background:linear-gradient(180deg,color-mix(in srgb,var(--ah-pc1) 62%,#0d0e12),color-mix(in srgb,var(--ah-pc2) 50%,#0d0e12))!important;border-color:color-mix(in srgb,var(--ah-pc1) 40%,transparent)!important}
 /* colour spreads over the whole card: the banner is tinted and fades into the card gradient */
 .ah-colored{--ah-pc-top:color-mix(in srgb,var(--ah-pc1) 62%,#0d0e12);--ah-pc-edge:color-mix(in srgb,color-mix(in srgb,var(--ah-pc1) 62%,#0d0e12) 80%,color-mix(in srgb,var(--ah-pc2) 50%,#0d0e12))}
-.ah-custom-profile-card.ah-colored .ah-custom-profile-banner:after{background:linear-gradient(180deg,color-mix(in srgb,var(--ah-pc1) 30%,transparent) 0%,color-mix(in srgb,var(--ah-pc1) 52%,transparent) 55%,var(--ah-pc-edge) 100%)!important}
-.ah-v3-mini.ah-colored .ah-v3-banner::after{background:linear-gradient(180deg,color-mix(in srgb,var(--ah-pc1) 30%,transparent) 0%,color-mix(in srgb,var(--ah-pc1) 52%,transparent) 55%,var(--ah-pc-top) 100%)!important}
 .profile-card.ah-colored .banner{position:relative}
-.profile-card.ah-colored .banner:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,color-mix(in srgb,var(--ah-pc1) 30%,transparent) 0%,color-mix(in srgb,var(--ah-pc1) 52%,transparent) 55%,var(--ah-pc-edge) 100%)}
 
 /* the theme spreads over the WHOLE window, not only the card */
 .ah-profile-customizer-shell.ah-colored,.ah-v3-overlay.ah-colored .ah-v3-full{background:linear-gradient(180deg,color-mix(in srgb,var(--ah-pc1) 26%,#0b0c10),color-mix(in srgb,var(--ah-pc2) 26%,#0b0c10))!important;border-color:color-mix(in srgb,var(--ah-pc1) 30%,#3b3d45)!important}
 .ah-profile-customizer-shell.ah-colored .ah-profile-customizer-preview,.ah-profile-customizer-shell.ah-colored .ah-profile-customizer-collections,.ah-v3-overlay.ah-colored .ah-v3-full-right,.ah-v3-overlay.ah-colored .ah-v3-full-left{background:transparent!important}
 .ah-v3-overlay.ah-colored .ah-v3-full-left::before{background:linear-gradient(180deg,var(--ah-pc-top),color-mix(in srgb,var(--ah-pc2) 50%,#0d0e12))!important;opacity:1!important}
-.ah-v3-overlay.ah-colored .ah-v3-full-banner::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,color-mix(in srgb,var(--ah-pc1) 30%,transparent) 0%,color-mix(in srgb,var(--ah-pc1) 52%,transparent) 55%,var(--ah-pc-top) 100%)!important}
 .ah-v3-overlay.ah-colored .ah-v3-full-banner{position:relative}
 /* theme panel: slides out to the LEFT of the editor window, as an extension of it */
 .ah-profile-customizer-shell{overflow:visible!important;left:0;transition:left .28s cubic-bezier(.2,.8,.2,1)}
@@ -13635,6 +13631,11 @@ html[data-theme="light"] .ah-reply-action:hover{background:#e3e5e8;color:#111318
 .ah-profile-customizer-shell.ah-pc-open .ah-pc-handle svg{transform:rotate(180deg)}
 }
 @media(prefers-reduced-motion:reduce){.ah-pc-panel,.ah-pc-handle,.ah-pc-handle svg,.ah-profile-customizer-shell{transition:none}}
+/* banner keeps the user's own image; colours only paint the card body */
+.ah-v3-overlay.ah-colored .ah-v3-full-profile-card{background:linear-gradient(180deg,var(--ah-pc-top),color-mix(in srgb,var(--ah-pc2) 50%,#0d0e12))!important;border-color:color-mix(in srgb,var(--ah-pc1) 40%,transparent)!important}
+.ah-v3-overlay.ah-colored .ah-v3-full-avatar,.ah-v3-overlay.ah-colored .ah-v3-full-avatar .presence{border-color:color-mix(in srgb,var(--ah-pc-top) 88%,color-mix(in srgb,var(--ah-pc2) 50%,#0d0e12))!important}
+.ah-v3-mini.ah-colored .ah-v3-avatar,.ah-v3-mini.ah-colored .ah-v3-status{border-color:var(--ah-pc-top)!important}
+.profile-card.ah-colored .big-avatar{border-color:var(--ah-pc-top)}
 </style>
 <script id="ah-profile-colors-js">
 (function(){
