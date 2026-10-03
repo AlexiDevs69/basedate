@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.231.0",
+      "date": "2026-10-03",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: API endpoints for profile colors management."
+      ],
+      "source_sha": "4a53e58050d3c2f01062231596b01cba36751def"
+    },
+    {
       "version": "1.230.0",
       "date": "2026-10-03",
       "title": "Нові можливості AlexiHub",
