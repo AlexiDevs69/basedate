@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.231.9",
+      "date": "2026-10-03",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update DM card styles and structure."
+      ],
+      "source_sha": "50d82024e0ebb9b89b3f029854b9b1920d026e8a"
+    },
+    {
       "version": "1.231.8",
       "date": "2026-10-03",
       "title": "Оновлення AlexiHub",
