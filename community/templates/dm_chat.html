@@ -4329,6 +4329,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     closeMini();
     closeFullMenu();
     ov.classList.add('open');
+    document.dispatchEvent(new CustomEvent('alexihub:full-profile-open',{detail:{name:active.name}}));
     refreshFriendState(active);
   }
   function closeFull(){const ov=$('#ah-v3-overlay');if(ov)ov.classList.remove('open');closeFullMenu();hideFullTooltip()}
@@ -10149,7 +10150,7 @@ document.addEventListener('DOMContentLoaded', async function(){
 .ah-v3-mini.ah-profile-theme{--ah-theme-overlay:.58;--ah-theme-text:#fff;--ah-theme-accent:#5865f2;background:#23242b!important}.ah-v3-mini.ah-profile-theme .ah-v3-banner{isolation:isolate;background-size:cover!important;background-position:center!important;opacity:1!important}.ah-v3-mini.ah-profile-theme .ah-v3-body{display:flow-root;background-color:#23242b!important;background-image:linear-gradient(rgba(8,9,12,var(--ah-theme-overlay)),rgba(8,9,12,var(--ah-theme-overlay))),var(--ah-theme-image)!important;background-size:cover!important;background-position:center!important;color:var(--ah-theme-text)!important;box-shadow:inset 0 2px 0 color-mix(in srgb,var(--ah-theme-accent) 34%,#111214)!important}.ah-v3-mini.ah-profile-theme .ah-v3-avatar{border-color:color-mix(in srgb,var(--ah-theme-accent) 38%,#23242b)!important}
 </style>
 <script id="ah-mini-profile-theme-js">
-(function(){if(window.__ahMiniProfileThemesReady)return;window.__ahMiniProfileThemesReady=true;const cache=new Map();let version=0;const mini=()=>document.getElementById('ah-v3-mini');const safeUrl=value=>String(value||'').replace(/[\n\r'"\\()]/g,c=>encodeURIComponent(c));function apply(theme){const card=mini();if(!card)return;card.classList.toggle('ah-profile-theme',!!theme);if(!theme){card.style.removeProperty('--ah-theme-image');return;}card.style.setProperty('--ah-theme-image',`url('${safeUrl(theme.image_url)}')`);card.style.setProperty('--ah-theme-overlay',String(Math.max(0,Math.min(90,Number(theme.overlay_strength||58)))/100));card.style.setProperty('--ah-theme-text',theme.text_color||'#fff');card.style.setProperty('--ah-theme-accent',theme.accent_color||'#5865f2');}async function load(username){username=String(username||'').replace(/^@/,'').trim();if(!username)return;const token=++version,hit=cache.get(username.toLowerCase());if(hit&&Date.now()-hit.at<30000){apply(hit.theme);window.ahApplyProfileColors&&window.ahApplyProfileColors(hit.colors);return;}try{const response=await fetch('/community/api/friend-status/'+encodeURIComponent(username),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'}}),data=await response.json();if(token!==version||!response.ok||!data.ok)return;cache.set(username.toLowerCase(),{theme:data.mini_profile_theme||null,colors:data.profile_colors||null,at:Date.now()});apply(data.mini_profile_theme||null);window.ahApplyProfileColors&&window.ahApplyProfileColors(data.profile_colors||null);}catch(_error){}}let lastUser='';function sync(){const card=mini();if(!card||!card.classList.contains('open')){lastUser='';return;}const u=String(document.getElementById('ah-v3-name')?.dataset.profileUsername||document.getElementById('ah-v3-handle')?.textContent||'').replace(/^@/,'').trim().toLowerCase();if(!u||u===lastUser)return;lastUser=u;load(u);}const observer=new MutationObserver(sync);document.addEventListener('DOMContentLoaded',()=>{const card=mini();if(card)observer.observe(card,{attributes:true,subtree:true,childList:true});});document.addEventListener('alexihub:full-profile-open',event=>load(event.detail?.name||event.detail?.username));window.AlexiHubProfileThemes={preview:apply,invalidate(){cache.clear();lastUser='';sync();}};})();
+(function(){if(window.__ahMiniProfileThemesReady)return;window.__ahMiniProfileThemesReady=true;const cache=new Map();let version=0;const mini=()=>document.getElementById('ah-v3-mini');const safeUrl=value=>String(value||'').replace(/[\n\r'"\\()]/g,c=>encodeURIComponent(c));function apply(theme){const card=mini();if(!card)return;card.classList.toggle('ah-profile-theme',!!theme);if(!theme){card.style.removeProperty('--ah-theme-image');return;}card.style.setProperty('--ah-theme-image',`url('${safeUrl(theme.image_url)}')`);card.style.setProperty('--ah-theme-overlay',String(Math.max(0,Math.min(90,Number(theme.overlay_strength||58)))/100));card.style.setProperty('--ah-theme-text',theme.text_color||'#fff');card.style.setProperty('--ah-theme-accent',theme.accent_color||'#5865f2');}async function load(username){username=String(username||'').replace(/^@/,'').trim();if(!username)return;const token=++version,hit=cache.get(username.toLowerCase());if(hit&&Date.now()-hit.at<30000){apply(hit.theme);window.ahApplyProfileColors&&window.ahApplyProfileColors(hit.colors);return;}try{const response=await fetch('/community/api/friend-status/'+encodeURIComponent(username),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'}}),data=await response.json();if(token!==version||!response.ok||!data.ok)return;cache.set(username.toLowerCase(),{theme:data.mini_profile_theme||null,colors:data.profile_colors||null,at:Date.now()});window.AlexiHubProfileColors&&window.AlexiHubProfileColors.set(username,data.profile_colors||null);apply(data.mini_profile_theme||null);window.ahApplyProfileColors&&window.ahApplyProfileColors(data.profile_colors||null);}catch(_error){}}let lastUser='';function sync(){const card=mini();if(!card||!card.classList.contains('open')){lastUser='';return;}const u=String(document.getElementById('ah-v3-name')?.dataset.profileUsername||document.getElementById('ah-v3-handle')?.textContent||'').replace(/^@/,'').trim().toLowerCase();if(!u||u===lastUser)return;lastUser=u;load(u);}const observer=new MutationObserver(sync);document.addEventListener('DOMContentLoaded',()=>{const card=mini();if(card)observer.observe(card,{attributes:true,subtree:true,childList:true});});document.addEventListener('alexihub:full-profile-open',event=>load(event.detail?.name||event.detail?.username));window.AlexiHubProfileThemes={preview:apply,invalidate(){cache.clear();lastUser='';sync();}};})();
 </script>
 
 <style id="ah-profile-theme-library-css">
@@ -13590,6 +13591,12 @@ html[data-theme="light"] .ah-reply-action:hover{background:#e3e5e8;color:#111318
 .profile-card.ah-colored .banner{position:relative}
 .profile-card.ah-colored .banner:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,color-mix(in srgb,var(--ah-pc1) 30%,transparent) 0%,color-mix(in srgb,var(--ah-pc1) 52%,transparent) 55%,var(--ah-pc-edge) 100%)}
 
+/* the theme spreads over the WHOLE window, not only the card */
+.ah-profile-customizer-shell.ah-colored,.ah-v3-overlay.ah-colored .ah-v3-full{background:linear-gradient(180deg,color-mix(in srgb,var(--ah-pc1) 26%,#0b0c10),color-mix(in srgb,var(--ah-pc2) 26%,#0b0c10))!important;border-color:color-mix(in srgb,var(--ah-pc1) 30%,#3b3d45)!important}
+.ah-profile-customizer-shell.ah-colored .ah-profile-customizer-preview,.ah-profile-customizer-shell.ah-colored .ah-profile-customizer-collections,.ah-v3-overlay.ah-colored .ah-v3-full-right,.ah-v3-overlay.ah-colored .ah-v3-full-left{background:transparent!important}
+.ah-v3-overlay.ah-colored .ah-v3-full-left::before{background:linear-gradient(180deg,var(--ah-pc-top),color-mix(in srgb,var(--ah-pc2) 50%,#0d0e12))!important;opacity:1!important}
+.ah-v3-overlay.ah-colored .ah-v3-full-banner::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,color-mix(in srgb,var(--ah-pc1) 30%,transparent) 0%,color-mix(in srgb,var(--ah-pc1) 52%,transparent) 55%,var(--ah-pc-top) 100%)!important}
+.ah-v3-overlay.ah-colored .ah-v3-full-banner{position:relative}
 /* theme panel: slides out to the LEFT of the editor window, as an extension of it */
 .ah-profile-customizer-shell{overflow:visible!important;left:0;transition:left .28s cubic-bezier(.2,.8,.2,1)}
 .ah-profile-customizer-form{border-radius:15px}
@@ -13634,7 +13641,7 @@ html[data-theme="light"] .ah-reply-action:hover{background:#e3e5e8;color:#111318
   if(window.__ahProfileColors)return;window.__ahProfileColors=true;
   var DEF={p:'#4054c8',a:'#b84a3c'};
   var PRESETS=[['#4054c8','#b84a3c'],['#6a3de8','#e0457b'],['#0f9b8e','#1d4ed8'],['#f59e0b','#be123c'],['#22c55e','#0e7490'],['#ec4899','#7c3aed'],['#334155','#0f172a'],['#e11d48','#111827']];
-  var saved=null,cur=null,loaded=false,shell,panel,in1,in2,h1,h2;
+  var saved=null,cur=null,loaded=false,shell,panel,card,in1,in2,h1,h2,raf=0;
   function norm(c){return c&&c.p&&c.a?{p:String(c.p).toLowerCase(),a:String(c.a).toLowerCase()}:null}
   function same(x,y){return (!x&&!y)||(x&&y&&x.p===y.p&&x.a===y.a)}
 
@@ -13651,19 +13658,43 @@ html[data-theme="light"] .ah-reply-action:hover{background:#e3e5e8;color:#111318
       if(node.style.getPropertyValue('--ah-pc2'))node.style.removeProperty('--ah-pc2');
     }
   }
-  window.ahApplyProfileColors=function(colors){paintNode(document.getElementById('ah-v3-mini'),colors);};
+
+  /* One shared cache for everybody's colours (mini popover, full profile, DM card). */
+  var store=new Map(),TTL=60000;
+  var api=window.AlexiHubProfileColors={
+    set:function(u,c){store.set(String(u||'').toLowerCase(),{c:c||null,t:Date.now()});},
+    invalidate:function(u){if(u)store.delete(String(u).toLowerCase());else store.clear();},
+    get:function(u){
+      var k=String(u||'').trim().toLowerCase();if(!k)return Promise.resolve(null);
+      var hit=store.get(k);if(hit&&(hit.p||Date.now()-hit.t<TTL))return hit.p||Promise.resolve(hit.c);
+      var p=fetch('/community/api/users/'+encodeURIComponent(k)+'/profile-colors',{credentials:'same-origin',headers:{Accept:'application/json'}})
+        .then(function(r){return r.ok?r.json():null}).then(function(d){var c=d&&d.ok?d.profile_colors:null;store.set(k,{c:c,t:Date.now()});return c;})
+        .catch(function(){store.delete(k);return null;});
+      store.set(k,{p:p,t:Date.now()});return p;
+    }
+  };
+
+  /* mini popover + full profile overlay share the "currently shown user" colours */
+  window.ahApplyProfileColors=function(colors){
+    paintNode(document.getElementById('ah-v3-mini'),colors);
+    paintNode(document.getElementById('ah-v3-overlay'),colors);
+  };
 
   function paint(){
-    var c=cur||DEF;
+    var c=cur||DEF,v=cur?{primary:cur.p,accent:cur.a}:null;
     if(panel){
       panel.style.setProperty('--ah-pc1',c.p);panel.style.setProperty('--ah-pc2',c.a);
-      in1.value=c.p;in2.value=c.a;
+      if(in1.value!==c.p)in1.value=c.p;if(in2.value!==c.a)in2.value=c.a;
       panel.querySelectorAll('.ah-pc-preset').forEach(function(b){b.classList.toggle('active',!!cur&&b.dataset.p===cur.p&&b.dataset.a===cur.a)});
     }
-    document.querySelectorAll('.ah-custom-profile-card').forEach(function(card){paintNode(card,cur?{primary:cur.p,accent:cur.a}:null)});
+    paintNode(card,v);paintNode(shell,v);
     if(h1){h1.value=cur?cur.p:'';h2.value=cur?cur.a:'';h1.disabled=h2.disabled=!loaded;}
   }
-  function change(next){cur=next;paint();if(h1)h1.dispatchEvent(new Event('input',{bubbles:true}));}
+  /* dragging a colour picker fires dozens of events per second: repaint once per frame */
+  function change(next){
+    cur=next;if(raf)return;
+    raf=requestAnimationFrame(function(){raf=0;paint();if(h1)h1.dispatchEvent(new Event('input',{bubbles:true}));});
+  }
   window.ahProfileColorsDirty=function(){return loaded&&!same(cur,saved)};
   window.ahProfileColorsReset=function(){cur=saved;paint();};
 
@@ -13671,9 +13702,10 @@ html[data-theme="light"] .ah-reply-action:hover{background:#e3e5e8;color:#111318
     shell=document.querySelector('#ah-profile-customizer .ah-profile-customizer-shell');
     var form=document.getElementById('ah-profile-edit-form');
     if(!shell||!form||document.getElementById('ah-pc-panel'))return;
+    card=shell.querySelector('.ah-custom-profile-card');
     panel=document.createElement('aside');panel.id='ah-pc-panel';panel.className='ah-pc-panel';panel.setAttribute('aria-hidden','true');
     panel.innerHTML='<button type="button" class="ah-pc-back" aria-label="Закрити"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>'+
-      '<div class="ah-pc-head"><b>Тема профілю</b><p>Так може виглядати ваш профіль із власними кольорами.</p></div>'+
+      '<div class="ah-pc-head"><b>Тема профілю</b><p>Так може виглядати ваш профіль із власними кольорами. Її побачать усі.</p></div>'+
       '<div class="ah-pc-sec"><h4>Кольори теми</h4><div class="ah-pc-strip"><label class="ah-pc-dot top" title="Верхній колір"><input type="color" id="ah-pc-in1" aria-label="Верхній колір"></label><label class="ah-pc-dot bot" title="Нижній колір"><input type="color" id="ah-pc-in2" aria-label="Нижній колір"></label></div></div>'+
       '<div class="ah-pc-sec"><h4>Готові теми</h4><div class="ah-pc-presets">'+PRESETS.map(function(x){return '<button type="button" class="ah-pc-preset" data-p="'+x[0]+'" data-a="'+x[1]+'" style="background:linear-gradient(180deg,'+x[0]+','+x[1]+')" aria-label="Тема"></button>'}).join('')+'</div></div>'+
       '<button type="button" class="ah-pc-reset">Скинути кольори</button>';
@@ -13689,11 +13721,10 @@ html[data-theme="light"] .ah-reply-action:hover{background:#e3e5e8;color:#111318
       var o=shell.classList.contains('ah-pc-open');
       if(!o||window.innerWidth<=700){shell.style.left='0px';return;}
       var natural=(window.innerWidth-shell.offsetWidth)/2, need=268+22+12;
-      var shift=Math.max(0,Math.min(need-natural,natural-8));
-      shell.style.left=shift+'px';
+      shell.style.left=Math.max(0,Math.min(need-natural,natural-8))+'px';
     }
     function toggle(open){var o=typeof open==='boolean'?open:!shell.classList.contains('ah-pc-open');shell.classList.toggle('ah-pc-open',o);handle.setAttribute('aria-expanded',String(o));panel.setAttribute('aria-hidden',String(!o));reposition();}
-    window.addEventListener('resize',reposition);
+    window.addEventListener('resize',reposition,{passive:true});
     handle.addEventListener('click',function(){toggle()});
     panel.querySelector('.ah-pc-back').addEventListener('click',function(){toggle(false)});
     in1.addEventListener('input',function(){change({p:in1.value.toLowerCase(),a:(cur||DEF).a})});
@@ -13709,12 +13740,10 @@ html[data-theme="light"] .ah-reply-action:hover{background:#e3e5e8;color:#111318
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',build);else build();
 
-  /* Colours of the DM partner on the right-hand profile card (one fetch, no observers). */
+  /* DM partner card on the right: colours come from the shared cache (one request, reused by the popovers) */
   function initCard(){
-    var card=document.querySelector('.profile-card[data-mini-username]');
-    if(!card)return;
-    fetch('/community/api/users/'+encodeURIComponent(card.dataset.miniUsername)+'/profile-colors',{credentials:'same-origin',headers:{Accept:'application/json'}})
-      .then(function(r){return r.ok?r.json():null}).then(function(d){if(d&&d.ok)paintNode(card,d.profile_colors)}).catch(function(){});
+    var el=document.querySelector('.profile-card[data-mini-username]');
+    if(el)api.get(el.dataset.miniUsername).then(function(c){paintNode(el,c)});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initCard);else initCard();
 })();
