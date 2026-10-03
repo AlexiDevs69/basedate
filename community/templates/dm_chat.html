@@ -13583,8 +13583,17 @@ html[data-theme="light"] .ah-reply-action:hover{background:#e3e5e8;color:#111318
 .ah-v3-mini.ah-colored .ah-v3-body{background-color:#23242b!important;background-image:linear-gradient(180deg,color-mix(in srgb,var(--ah-pc1) 62%,#0d0e12),color-mix(in srgb,var(--ah-pc2) 50%,#0d0e12))!important}
 .ah-v3-mini.ah-colored{background:color-mix(in srgb,var(--ah-pc1) 62%,#0d0e12)!important}
 .profile-card.ah-colored{background:linear-gradient(180deg,color-mix(in srgb,var(--ah-pc1) 62%,#0d0e12),color-mix(in srgb,var(--ah-pc2) 50%,#0d0e12))!important;border-color:color-mix(in srgb,var(--ah-pc1) 40%,transparent)!important}
-/* slide-out theme panel */
-.ah-pc-panel{position:absolute;left:0;top:0;bottom:0;width:268px;z-index:11;display:flex;flex-direction:column;gap:14px;padding:16px 16px 18px;background:#232428;border-right:1px solid #35373d;box-shadow:12px 0 34px rgba(0,0,0,.45);overflow-y:auto;transform:translateX(-104%);visibility:hidden;transition:transform .28s cubic-bezier(.2,.8,.2,1),visibility 0s linear .28s;scrollbar-width:thin;color:#f2f3f5;font-family:inherit}
+/* colour spreads over the whole card: the banner is tinted and fades into the card gradient */
+.ah-colored{--ah-pc-top:color-mix(in srgb,var(--ah-pc1) 62%,#0d0e12);--ah-pc-edge:color-mix(in srgb,color-mix(in srgb,var(--ah-pc1) 62%,#0d0e12) 80%,color-mix(in srgb,var(--ah-pc2) 50%,#0d0e12))}
+.ah-custom-profile-card.ah-colored .ah-custom-profile-banner:after{background:linear-gradient(180deg,color-mix(in srgb,var(--ah-pc1) 30%,transparent) 0%,color-mix(in srgb,var(--ah-pc1) 52%,transparent) 55%,var(--ah-pc-edge) 100%)!important}
+.ah-v3-mini.ah-colored .ah-v3-banner::after{background:linear-gradient(180deg,color-mix(in srgb,var(--ah-pc1) 30%,transparent) 0%,color-mix(in srgb,var(--ah-pc1) 52%,transparent) 55%,var(--ah-pc-top) 100%)!important}
+.profile-card.ah-colored .banner{position:relative}
+.profile-card.ah-colored .banner:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,color-mix(in srgb,var(--ah-pc1) 30%,transparent) 0%,color-mix(in srgb,var(--ah-pc1) 52%,transparent) 55%,var(--ah-pc-edge) 100%)}
+
+/* theme panel: slides out to the LEFT of the editor window, as an extension of it */
+.ah-profile-customizer-shell{overflow:visible!important;left:0;transition:left .28s cubic-bezier(.2,.8,.2,1)}
+.ah-profile-customizer-form{border-radius:15px}
+.ah-pc-panel{box-sizing:border-box;position:absolute;right:calc(100% + 1px);top:-1px;bottom:-1px;width:268px;z-index:-1;display:flex;flex-direction:column;gap:14px;padding:16px 16px 18px;background:#232428;border:1px solid #3b3d45;border-right:0;border-radius:16px 0 0 16px;box-shadow:-14px 10px 40px rgba(0,0,0,.45);overflow-y:auto;transform:translateX(100%);visibility:hidden;transition:transform .28s cubic-bezier(.2,.8,.2,1),visibility 0s linear .28s;scrollbar-width:thin;color:#f2f3f5;font-family:inherit}
 .ah-profile-customizer-shell.ah-pc-open .ah-pc-panel{transform:none;visibility:visible;transition:transform .28s cubic-bezier(.2,.8,.2,1)}
 .ah-pc-head b{display:block;font-size:15px;font-weight:800;margin:2px 0 4px 34px;line-height:22px}
 .ah-pc-head p{margin:10px 0 0;font-size:12.5px;line-height:1.4;color:#b5bac1}
@@ -13601,16 +13610,24 @@ html[data-theme="light"] .ah-reply-action:hover{background:#e3e5e8;color:#111318
 .ah-pc-preset.active{border-color:#fff}
 .ah-pc-reset{margin-top:auto;height:36px;border:0;border-radius:8px;background:#35373d;color:#f2f3f5;font-weight:700;font-size:13px;cursor:pointer}
 .ah-pc-reset:hover{background:#3f4148}
-.ah-pc-handle{position:absolute;left:0;top:50%;z-index:12;width:22px;height:84px;margin-top:-42px;padding:0;border:1px solid #3b3d45;border-left:0;border-radius:0 11px 11px 0;background:#2b2d33;color:#b5bac1;cursor:pointer;display:grid;place-items:center;transition:left .28s cubic-bezier(.2,.8,.2,1),background .15s,color .15s}
+.ah-pc-handle{position:absolute;right:calc(100% + 1px);top:50%;z-index:12;width:22px;height:84px;margin-top:-42px;padding:0;border:1px solid #3b3d45;border-right:0;border-radius:11px 0 0 11px;background:#2b2d33;color:#b5bac1;cursor:pointer;display:grid;place-items:center;transition:right .28s cubic-bezier(.2,.8,.2,1),background .15s,color .15s}
 .ah-pc-handle:hover{background:#35373f;color:#fff}
-.ah-pc-handle svg{width:14px;height:14px;transition:transform .28s}
-.ah-profile-customizer-shell.ah-pc-open .ah-pc-handle{left:268px}
-.ah-profile-customizer-shell.ah-pc-open .ah-pc-handle svg{transform:rotate(180deg)}
+.ah-pc-handle svg{width:14px;height:14px;transition:transform .28s;transform:rotate(180deg)}
+.ah-profile-customizer-shell.ah-pc-open .ah-pc-handle{right:calc(100% + 269px)}
+.ah-profile-customizer-shell.ah-pc-open .ah-pc-handle svg{transform:none}
 .ah-pc-back{position:absolute;left:12px;top:12px;width:30px;height:30px;border:0;border-radius:8px;background:transparent;color:#b5bac1;cursor:pointer;display:grid;place-items:center}
 .ah-pc-back:hover{background:#35373d;color:#fff}
 .ah-pc-back svg{width:18px;height:18px}
-@media(max-width:560px){.ah-pc-panel{width:min(268px,86vw)}.ah-profile-customizer-shell.ah-pc-open .ah-pc-handle{left:min(268px,86vw)}}
-@media(prefers-reduced-motion:reduce){.ah-pc-panel,.ah-pc-handle,.ah-pc-handle svg{transition:none}}
+/* narrow screens: no room outside the window, panel slides in over it instead */
+@media(max-width:700px){
+.ah-profile-customizer-shell{overflow:hidden!important}
+.ah-pc-panel{right:auto;left:0;top:0;bottom:0;z-index:11;width:min(268px,86vw);border:0;border-right:1px solid #35373d;border-radius:0;transform:translateX(-104%);box-shadow:12px 0 34px rgba(0,0,0,.45)}
+.ah-pc-handle{right:auto;left:0;border:1px solid #3b3d45;border-left:0;border-radius:0 11px 11px 0;transition:left .28s cubic-bezier(.2,.8,.2,1),background .15s,color .15s}
+.ah-pc-handle svg{transform:none}
+.ah-profile-customizer-shell.ah-pc-open .ah-pc-handle{right:auto;left:min(268px,86vw)}
+.ah-profile-customizer-shell.ah-pc-open .ah-pc-handle svg{transform:rotate(180deg)}
+}
+@media(prefers-reduced-motion:reduce){.ah-pc-panel,.ah-pc-handle,.ah-pc-handle svg,.ah-profile-customizer-shell{transition:none}}
 </style>
 <script id="ah-profile-colors-js">
 (function(){
@@ -13667,7 +13684,16 @@ html[data-theme="light"] .ah-reply-action:hover{background:#e3e5e8;color:#111318
     h2=document.createElement('input');h2.type='hidden';h2.name='profile_color_accent';h2.disabled=true;
     form.appendChild(h1);form.appendChild(h2);
     in1=panel.querySelector('#ah-pc-in1');in2=panel.querySelector('#ah-pc-in2');
-    function toggle(open){var o=typeof open==='boolean'?open:!shell.classList.contains('ah-pc-open');shell.classList.toggle('ah-pc-open',o);handle.setAttribute('aria-expanded',String(o));panel.setAttribute('aria-hidden',String(!o));}
+    /* make room on the left when the window is too close to the screen edge */
+    function reposition(){
+      var o=shell.classList.contains('ah-pc-open');
+      if(!o||window.innerWidth<=700){shell.style.left='0px';return;}
+      var natural=(window.innerWidth-shell.offsetWidth)/2, need=268+22+12;
+      var shift=Math.max(0,Math.min(need-natural,natural-8));
+      shell.style.left=shift+'px';
+    }
+    function toggle(open){var o=typeof open==='boolean'?open:!shell.classList.contains('ah-pc-open');shell.classList.toggle('ah-pc-open',o);handle.setAttribute('aria-expanded',String(o));panel.setAttribute('aria-hidden',String(!o));reposition();}
+    window.addEventListener('resize',reposition);
     handle.addEventListener('click',function(){toggle()});
     panel.querySelector('.ah-pc-back').addEventListener('click',function(){toggle(false)});
     in1.addEventListener('input',function(){change({p:in1.value.toLowerCase(),a:(cur||DEF).a})});
