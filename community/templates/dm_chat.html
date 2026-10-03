@@ -13582,6 +13582,7 @@ html[data-theme="light"] .ah-reply-action:hover{background:#e3e5e8;color:#111318
 .ah-custom-profile-card.ah-colored{background:linear-gradient(180deg,color-mix(in srgb,var(--ah-pc1) 62%,#0d0e12) 0%,color-mix(in srgb,var(--ah-pc2) 50%,#0d0e12) 100%)!important;border-color:color-mix(in srgb,var(--ah-pc1) 40%,transparent)!important}
 .ah-v3-mini.ah-colored .ah-v3-body{background-color:#23242b!important;background-image:linear-gradient(180deg,color-mix(in srgb,var(--ah-pc1) 62%,#0d0e12),color-mix(in srgb,var(--ah-pc2) 50%,#0d0e12))!important}
 .ah-v3-mini.ah-colored{background:color-mix(in srgb,var(--ah-pc1) 62%,#0d0e12)!important}
+.profile-card.ah-colored{background:linear-gradient(180deg,color-mix(in srgb,var(--ah-pc1) 62%,#0d0e12),color-mix(in srgb,var(--ah-pc2) 50%,#0d0e12))!important;border-color:color-mix(in srgb,var(--ah-pc1) 40%,transparent)!important}
 /* slide-out theme panel */
 .ah-pc-panel{position:absolute;left:0;top:0;bottom:0;width:268px;z-index:11;display:flex;flex-direction:column;gap:14px;padding:16px 16px 18px;background:#232428;border-right:1px solid #35373d;box-shadow:12px 0 34px rgba(0,0,0,.45);overflow-y:auto;transform:translateX(-104%);transition:transform .28s cubic-bezier(.2,.8,.2,1);scrollbar-width:thin;color:#f2f3f5;font-family:inherit}
 .ah-profile-customizer-shell.ah-pc-open .ah-pc-panel{transform:none}
@@ -13666,6 +13667,40 @@ html[data-theme="light"] .ah-reply-action:hover{background:#e3e5e8;color:#111318
       }).catch(function(){});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',build);else build();
+
+  /* --- show saved colours of other users (mini popover + DM right card) --- */
+  var cache={};
+  function fetchColors(u){
+    u=String(u||'').trim();if(!u)return Promise.resolve(null);
+    if(cache[u])return cache[u];
+    cache[u]=fetch('/community/api/users/'+encodeURIComponent(u)+'/profile-colors',{credentials:'same-origin',headers:{Accept:'application/json'}})
+      .then(function(r){return r.ok?r.json():null}).then(function(d){return d&&d.ok?d.profile_colors:null}).catch(function(){delete cache[u];return null});
+    return cache[u];
+  }
+  function paintNode(node,c){
+    if(!node)return;
+    if(c&&c.primary&&c.accent){node.classList.add('ah-colored');node.style.setProperty('--ah-pc1',c.primary);node.style.setProperty('--ah-pc2',c.accent);}
+    else{node.classList.remove('ah-colored');node.style.removeProperty('--ah-pc1');node.style.removeProperty('--ah-pc2');}
+  }
+  function initViewers(){
+    var mini=document.getElementById('ah-v3-mini');
+    if(mini){
+      var lastUser='';
+      var sync=function(){
+        if(!mini.classList.contains('open'))return;
+        var n=document.getElementById('ah-v3-name');var u=n&&n.dataset.profileUsername;
+        if(!u||u===lastUser)return;lastUser=u;
+        paintNode(mini,null);
+        fetchColors(u).then(function(c){var cur=document.getElementById('ah-v3-name');if(cur&&cur.dataset.profileUsername===u)paintNode(mini,c);});
+      };
+      new MutationObserver(function(){if(!mini.classList.contains('open'))lastUser='';sync();}).observe(mini,{attributes:true,attributeFilter:['class']});
+      var nm=document.getElementById('ah-v3-name');
+      if(nm)new MutationObserver(sync).observe(nm,{childList:true,characterData:true,subtree:true,attributes:true,attributeFilter:['data-profile-username']});
+    }
+    var card=document.querySelector('.profile-card[data-mini-username]');
+    if(card)fetchColors(card.dataset.miniUsername).then(function(c){paintNode(card,c);});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initViewers);else initViewers();
 })();
 </script>
 </body>
