@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.231.6",
+      "date": "2026-10-03",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Include Cache-Control header in profile colors response."
+      ],
+      "source_sha": "aaea05edaa7f8f8010c3379292999dc27ffbcb0d"
+    },
+    {
       "version": "1.231.5",
       "date": "2026-10-03",
       "title": "Виправлення та стабільність",
