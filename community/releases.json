@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.240.4",
+      "date": "2026-10-04",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Remove role display from DM chat template."
+      ],
+      "source_sha": "0663b542355079c71d8efd47957cc006fd8fc3e5"
+    },
+    {
       "version": "1.240.3",
       "date": "2026-10-04",
       "title": "Виправлення та стабільність",
