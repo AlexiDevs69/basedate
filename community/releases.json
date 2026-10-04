@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.242.1",
+      "date": "2026-10-04",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update styles for context menu and sub-panel."
+      ],
+      "source_sha": "26ba57ddfd30ff768e781a789b9f863552b40791"
+    },
+    {
       "version": "1.242.0",
       "date": "2026-10-04",
       "title": "Нові можливості AlexiHub",
