@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.241.0",
+      "date": "2026-10-04",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: floating date island feature to chat."
+      ],
+      "source_sha": "0f209396b7786404be6995f6d5f5c940f124af8e"
+    },
+    {
       "version": "1.240.11",
       "date": "2026-10-04",
       "title": "Оновлення AlexiHub",
