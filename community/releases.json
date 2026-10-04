@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.238.3",
+      "date": "2026-10-04",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance login.html with Cloudflare integration."
+      ],
+      "source_sha": "197cc8642f788424b7419b119f86183d41b44c5b"
+    },
+    {
       "version": "1.238.2",
       "date": "2026-10-04",
       "title": "Оновлення AlexiHub",
