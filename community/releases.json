@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.235.0",
+      "date": "2026-10-04",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: Turnstile token verification."
+      ],
+      "source_sha": "8a74e674da16ab0bf96c3711233735ea3e7f54b4"
+    },
+    {
       "version": "1.234.1",
       "date": "2026-10-04",
       "title": "Виправлення та стабільність",
