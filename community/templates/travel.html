@@ -4085,7 +4085,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     bar.setAttribute('aria-hidden',dirty ? 'false' : 'true');
     if(!dirty) bar.classList.remove('shake');
   }
-  function refreshDirty(){ setDirty(isDirty()); }
+  function refreshDirty(){ setDirty(isDirty() || !!(window.ahProfileColorsDirty && window.ahProfileColorsDirty())); }
 
   function startEditing(){
     editor.classList.add('editing');
@@ -4140,6 +4140,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     document.querySelectorAll('.account-panel[data-mini-username],.user-panel[data-mini-username]').forEach(function(panel){
       panel.dataset.miniBanner = INITIAL.banner;
     });
+    if(window.ahProfileColorsReset) window.ahProfileColorsReset();
     setDirty(false);
   }
 
@@ -6250,7 +6251,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
 .ah-v3-mini.ah-profile-theme{--ah-theme-overlay:.58;--ah-theme-text:#fff;--ah-theme-accent:#5865f2;background:#23242b!important}.ah-v3-mini.ah-profile-theme .ah-v3-banner{isolation:isolate;background-size:cover!important;background-position:center!important;opacity:1!important}.ah-v3-mini.ah-profile-theme .ah-v3-body{display:flow-root;background-color:#23242b!important;background-image:linear-gradient(rgba(8,9,12,var(--ah-theme-overlay)),rgba(8,9,12,var(--ah-theme-overlay))),var(--ah-theme-image)!important;background-size:cover!important;background-position:center!important;color:var(--ah-theme-text)!important;box-shadow:inset 0 2px 0 color-mix(in srgb,var(--ah-theme-accent) 34%,#111214)!important}.ah-v3-mini.ah-profile-theme .ah-v3-avatar{border-color:color-mix(in srgb,var(--ah-theme-accent) 38%,#23242b)!important}
 </style>
 <script id="ah-mini-profile-theme-js">
-(function(){if(window.__ahMiniProfileThemesReady)return;window.__ahMiniProfileThemesReady=true;const cache=new Map();let version=0;const mini=()=>document.getElementById('ah-v3-mini');const safeUrl=value=>String(value||'').replace(/[\n\r'"\\()]/g,c=>encodeURIComponent(c));function apply(theme){const card=mini();if(!card)return;card.classList.toggle('ah-profile-theme',!!theme);if(!theme){card.style.removeProperty('--ah-theme-image');return;}card.style.setProperty('--ah-theme-image',`url('${safeUrl(theme.image_url)}')`);card.style.setProperty('--ah-theme-overlay',String(Math.max(0,Math.min(90,Number(theme.overlay_strength||58)))/100));card.style.setProperty('--ah-theme-text',theme.text_color||'#fff');card.style.setProperty('--ah-theme-accent',theme.accent_color||'#5865f2');}async function load(username){username=String(username||'').replace(/^@/,'').trim();if(!username)return;const token=++version,hit=cache.get(username.toLowerCase());if(hit&&Date.now()-hit.at<30000){apply(hit.theme);return;}try{const response=await fetch('/community/api/friend-status/'+encodeURIComponent(username),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'}}),data=await response.json();if(token!==version||!response.ok||!data.ok)return;cache.set(username.toLowerCase(),{theme:data.mini_profile_theme||null,at:Date.now()});apply(data.mini_profile_theme||null);}catch(_error){}}function sync(){const card=mini();if(!card||!card.classList.contains('open'))return;load(document.getElementById('ah-v3-name')?.dataset.profileUsername||document.getElementById('ah-v3-handle')?.textContent||'');}const observer=new MutationObserver(sync);document.addEventListener('DOMContentLoaded',()=>{const card=mini();if(card)observer.observe(card,{attributes:true,subtree:true,childList:true});});document.addEventListener('alexihub:full-profile-open',event=>load(event.detail?.name||event.detail?.username));window.AlexiHubProfileThemes={preview:apply,invalidate(){cache.clear();sync();}};})();
+(function(){if(window.__ahMiniProfileThemesReady)return;window.__ahMiniProfileThemesReady=true;const cache=new Map();let version=0;const mini=()=>document.getElementById('ah-v3-mini');const safeUrl=value=>String(value||'').replace(/[\n\r'"\\()]/g,c=>encodeURIComponent(c));function apply(theme){const card=mini();if(!card)return;card.classList.toggle('ah-profile-theme',!!theme);if(!theme){card.style.removeProperty('--ah-theme-image');return;}card.style.setProperty('--ah-theme-image',`url('${safeUrl(theme.image_url)}')`);card.style.setProperty('--ah-theme-overlay',String(Math.max(0,Math.min(90,Number(theme.overlay_strength||58)))/100));card.style.setProperty('--ah-theme-text',theme.text_color||'#fff');card.style.setProperty('--ah-theme-accent',theme.accent_color||'#5865f2');}async function load(username){username=String(username||'').replace(/^@/,'').trim();if(!username)return;const token=++version,hit=cache.get(username.toLowerCase());if(hit&&Date.now()-hit.at<30000){apply(hit.theme);window.ahApplyProfileColors&&window.ahApplyProfileColors(hit.colors);return;}try{const response=await fetch('/community/api/friend-status/'+encodeURIComponent(username),{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'}}),data=await response.json();if(token!==version||!response.ok||!data.ok)return;cache.set(username.toLowerCase(),{theme:data.mini_profile_theme||null,colors:data.profile_colors||null,at:Date.now()});window.AlexiHubProfileColors&&window.AlexiHubProfileColors.set(username,data.profile_colors||null);apply(data.mini_profile_theme||null);window.ahApplyProfileColors&&window.ahApplyProfileColors(data.profile_colors||null);}catch(_error){}}let lastUser='';function sync(){const card=mini();if(!card||!card.classList.contains('open')){lastUser='';return;}const u=String(document.getElementById('ah-v3-name')?.dataset.profileUsername||document.getElementById('ah-v3-handle')?.textContent||'').replace(/^@/,'').trim().toLowerCase();if(!u||u===lastUser)return;lastUser=u;load(u);}const observer=new MutationObserver(sync);document.addEventListener('DOMContentLoaded',()=>{const card=mini();if(card)observer.observe(card,{attributes:true,subtree:true,childList:true});});document.addEventListener('alexihub:full-profile-open',event=>load(event.detail?.name||event.detail?.username));window.AlexiHubProfileThemes={preview:apply,invalidate(){cache.clear();lastUser='';sync();}};})();
 </script>
 
 <style id="ah-profile-theme-library-css">
@@ -7488,6 +7489,187 @@ html.ah-theme-anim *,html.ah-theme-anim *::before,html.ah-theme-anim *::after{tr
     syncUI();
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+<style id="ah-profile-colors-css">
+.ah-colored{--ah-pc1:#4054c8;--ah-pc2:#b84a3c}
+.ah-custom-profile-card.ah-colored{background:linear-gradient(180deg,color-mix(in srgb,var(--ah-pc1) 62%,#0d0e12) 0%,color-mix(in srgb,var(--ah-pc2) 50%,#0d0e12) 100%)!important;border-color:color-mix(in srgb,var(--ah-pc1) 40%,transparent)!important}
+.ah-v3-mini.ah-colored .ah-v3-body{background-color:#23242b!important;background-image:linear-gradient(180deg,color-mix(in srgb,var(--ah-pc1) 62%,#0d0e12),color-mix(in srgb,var(--ah-pc2) 50%,#0d0e12))!important}
+.ah-v3-mini.ah-colored{background:color-mix(in srgb,var(--ah-pc1) 62%,#0d0e12)!important}
+.profile-card.ah-colored{background:linear-gradient(180deg,color-mix(in srgb,var(--ah-pc1) 62%,#0d0e12),color-mix(in srgb,var(--ah-pc2) 50%,#0d0e12))!important;border-color:color-mix(in srgb,var(--ah-pc1) 40%,transparent)!important}
+/* colour spreads over the whole card: the banner is tinted and fades into the card gradient */
+.ah-colored{--ah-pc-top:color-mix(in srgb,var(--ah-pc1) 62%,#0d0e12);--ah-pc-edge:color-mix(in srgb,color-mix(in srgb,var(--ah-pc1) 62%,#0d0e12) 80%,color-mix(in srgb,var(--ah-pc2) 50%,#0d0e12))}
+.profile-card.ah-colored .banner{position:relative}
+
+/* the theme spreads over the WHOLE window, not only the card */
+.ah-profile-customizer-shell.ah-colored,.ah-v3-overlay.ah-colored .ah-v3-full{background:linear-gradient(180deg,color-mix(in srgb,var(--ah-pc1) 26%,#0b0c10),color-mix(in srgb,var(--ah-pc2) 26%,#0b0c10))!important;border-color:color-mix(in srgb,var(--ah-pc1) 30%,#3b3d45)!important}
+.ah-profile-customizer-shell.ah-colored .ah-profile-customizer-preview,.ah-profile-customizer-shell.ah-colored .ah-profile-customizer-collections,.ah-v3-overlay.ah-colored .ah-v3-full-right,.ah-v3-overlay.ah-colored .ah-v3-full-left{background:transparent!important}
+.ah-v3-overlay.ah-colored .ah-v3-full-left::before{background:linear-gradient(180deg,var(--ah-pc-top),color-mix(in srgb,var(--ah-pc2) 50%,#0d0e12))!important;opacity:1!important}
+.ah-v3-overlay.ah-colored .ah-v3-full-banner{position:relative}
+/* theme panel: slides out to the LEFT of the editor window, as an extension of it */
+.ah-profile-customizer-shell{overflow:visible!important;left:0;transition:left .28s cubic-bezier(.2,.8,.2,1)}
+.ah-profile-customizer-shell{transition:left .28s cubic-bezier(.2,.8,.2,1),border-radius 0s linear .28s}
+.ah-profile-customizer-form{border-radius:15px;transition:border-radius 0s linear .28s}
+/* panel open: the window's left edge is flush against the panel (square corners); closing restores the round corners after the slide */
+@media(min-width:701px){
+.ah-profile-customizer-shell.ah-pc-open{border-radius:0 16px 16px 0;transition:left .28s cubic-bezier(.2,.8,.2,1),border-radius 0s}
+.ah-profile-customizer-shell.ah-pc-open .ah-profile-customizer-form{border-radius:0 15px 15px 0;transition:border-radius 0s}
+}
+.ah-pc-panel{box-sizing:border-box;position:absolute;right:calc(100% + 1px);top:-1px;bottom:-1px;width:268px;z-index:-1;display:flex;flex-direction:column;gap:14px;padding:16px 16px 18px;background:#232428;border:1px solid #3b3d45;border-right:0;border-radius:16px 0 0 16px;box-shadow:-14px 10px 40px rgba(0,0,0,.45);overflow-y:auto;transform:translateX(100%);visibility:hidden;transition:transform .28s cubic-bezier(.2,.8,.2,1),visibility 0s linear .28s;scrollbar-width:thin;color:#f2f3f5;font-family:inherit}
+.ah-profile-customizer-shell.ah-pc-open .ah-pc-panel{transform:none;visibility:visible;transition:transform .28s cubic-bezier(.2,.8,.2,1)}
+.ah-pc-head b{display:block;font-size:15px;font-weight:800;margin:2px 0 4px 34px;line-height:22px}
+.ah-pc-head p{margin:10px 0 0;font-size:12.5px;line-height:1.4;color:#b5bac1}
+.ah-pc-sec h4{margin:0 0 8px;font-size:13px;font-weight:800;color:#f2f3f5}
+.ah-pc-strip{position:relative;height:104px;border-radius:9px;background:linear-gradient(180deg,var(--ah-pc1),var(--ah-pc2));box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+.ah-pc-dot{position:absolute;left:50%;width:24px;height:24px;margin-left:-12px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,.45);cursor:pointer;overflow:hidden;transition:transform .12s}
+.ah-pc-dot:hover{transform:scale(1.14)}
+.ah-pc-dot.top{top:8px;background:var(--ah-pc1)}
+.ah-pc-dot.bot{bottom:8px;background:var(--ah-pc2)}
+.ah-pc-dot input{position:absolute;inset:-8px;width:44px;height:44px;opacity:0;cursor:pointer;border:0;padding:0}
+.ah-pc-presets{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.ah-pc-preset{height:36px;border:2px solid transparent;border-radius:8px;cursor:pointer;padding:0;transition:transform .12s,border-color .12s}
+.ah-pc-preset:hover{transform:translateY(-1px);border-color:rgba(255,255,255,.5)}
+.ah-pc-preset.active{border-color:#fff}
+.ah-pc-reset{margin-top:auto;height:36px;border:0;border-radius:8px;background:#35373d;color:#f2f3f5;font-weight:700;font-size:13px;cursor:pointer}
+.ah-pc-reset:hover{background:#3f4148}
+.ah-pc-handle{position:absolute;right:calc(100% + 1px);top:50%;z-index:12;width:22px;height:84px;margin-top:-42px;padding:0;border:1px solid #3b3d45;border-right:0;border-radius:11px 0 0 11px;background:#2b2d33;color:#b5bac1;cursor:pointer;display:grid;place-items:center;transition:right .28s cubic-bezier(.2,.8,.2,1),background .15s,color .15s}
+.ah-pc-handle:hover{background:#35373f;color:#fff}
+.ah-pc-handle svg{width:14px;height:14px;transition:transform .28s;transform:rotate(180deg)}
+.ah-profile-customizer-shell.ah-pc-open .ah-pc-handle{right:calc(100% + 269px)}
+.ah-profile-customizer-shell.ah-pc-open .ah-pc-handle svg{transform:none}
+.ah-pc-back{position:absolute;left:12px;top:12px;width:30px;height:30px;border:0;border-radius:8px;background:transparent;color:#b5bac1;cursor:pointer;display:grid;place-items:center}
+.ah-pc-back:hover{background:#35373d;color:#fff}
+.ah-pc-back svg{width:18px;height:18px}
+/* narrow screens: no room outside the window, panel slides in over it instead */
+@media(max-width:700px){
+.ah-profile-customizer-shell{overflow:hidden!important}
+.ah-pc-panel{right:auto;left:0;top:0;bottom:0;z-index:11;width:min(268px,86vw);border:0;border-right:1px solid #35373d;border-radius:0;transform:translateX(-104%);box-shadow:12px 0 34px rgba(0,0,0,.45)}
+.ah-pc-handle{right:auto;left:0;border:1px solid #3b3d45;border-left:0;border-radius:0 11px 11px 0;transition:left .28s cubic-bezier(.2,.8,.2,1),background .15s,color .15s}
+.ah-pc-handle svg{transform:none}
+.ah-profile-customizer-shell.ah-pc-open .ah-pc-handle{right:auto;left:min(268px,86vw)}
+.ah-profile-customizer-shell.ah-pc-open .ah-pc-handle svg{transform:rotate(180deg)}
+}
+@media(prefers-reduced-motion:reduce){.ah-pc-panel,.ah-pc-handle,.ah-pc-handle svg,.ah-profile-customizer-shell{transition:none}}
+/* banner keeps the user's own image; colours only paint the card body */
+.ah-v3-overlay.ah-colored .ah-v3-full-profile-card{background:linear-gradient(180deg,var(--ah-pc-top),color-mix(in srgb,var(--ah-pc2) 50%,#0d0e12))!important;border-color:color-mix(in srgb,var(--ah-pc1) 40%,transparent)!important}
+.ah-v3-overlay.ah-colored .ah-v3-full-avatar,.ah-v3-overlay.ah-colored .ah-v3-full-avatar .presence{border-color:color-mix(in srgb,var(--ah-pc-top) 88%,color-mix(in srgb,var(--ah-pc2) 50%,#0d0e12))!important}
+.ah-v3-mini.ah-colored .ah-v3-avatar,.ah-v3-mini.ah-colored .ah-v3-status{border-color:var(--ah-pc-top)!important}
+.profile-card.ah-colored .big-avatar{border-color:var(--ah-pc-top)}
+/* right DM card: avatar must sit above the banner */
+.profile-card .banner{position:relative;z-index:0}
+.profile-card .profile-body{position:relative;z-index:1}
+.profile-card .big-avatar{position:relative;z-index:2}
+</style>
+<script id="ah-profile-colors-js">
+(function(){
+  if(window.__ahProfileColors)return;window.__ahProfileColors=true;
+  var DEF={p:'#4054c8',a:'#b84a3c'};
+  var PRESETS=[['#4054c8','#b84a3c'],['#6a3de8','#e0457b'],['#0f9b8e','#1d4ed8'],['#f59e0b','#be123c'],['#22c55e','#0e7490'],['#ec4899','#7c3aed'],['#334155','#0f172a'],['#e11d48','#111827']];
+  var saved=null,cur=null,loaded=false,shell,panel,card,in1,in2,h1,h2,raf=0;
+  function norm(c){return c&&c.p&&c.a?{p:String(c.p).toLowerCase(),a:String(c.a).toLowerCase()}:null}
+  function same(x,y){return (!x&&!y)||(x&&y&&x.p===y.p&&x.a===y.a)}
+
+  /* Idempotent: touches the DOM only when something really changes (no MutationObserver feedback loops). */
+  function paintNode(node,c){
+    if(!node)return;
+    if(c&&c.primary&&c.accent){
+      if(!node.classList.contains('ah-colored'))node.classList.add('ah-colored');
+      if(node.style.getPropertyValue('--ah-pc1')!==c.primary)node.style.setProperty('--ah-pc1',c.primary);
+      if(node.style.getPropertyValue('--ah-pc2')!==c.accent)node.style.setProperty('--ah-pc2',c.accent);
+    }else{
+      if(node.classList.contains('ah-colored'))node.classList.remove('ah-colored');
+      if(node.style.getPropertyValue('--ah-pc1'))node.style.removeProperty('--ah-pc1');
+      if(node.style.getPropertyValue('--ah-pc2'))node.style.removeProperty('--ah-pc2');
+    }
+  }
+
+  /* One shared cache for everybody's colours (mini popover, full profile, DM card). */
+  var store=new Map(),TTL=60000;
+  var api=window.AlexiHubProfileColors={
+    set:function(u,c){store.set(String(u||'').toLowerCase(),{c:c||null,t:Date.now()});},
+    invalidate:function(u){if(u)store.delete(String(u).toLowerCase());else store.clear();},
+    get:function(u){
+      var k=String(u||'').trim().toLowerCase();if(!k)return Promise.resolve(null);
+      var hit=store.get(k);if(hit&&(hit.p||Date.now()-hit.t<TTL))return hit.p||Promise.resolve(hit.c);
+      var p=fetch('/community/api/users/'+encodeURIComponent(k)+'/profile-colors',{credentials:'same-origin',headers:{Accept:'application/json'}})
+        .then(function(r){return r.ok?r.json():null}).then(function(d){var c=d&&d.ok?d.profile_colors:null;store.set(k,{c:c,t:Date.now()});return c;})
+        .catch(function(){store.delete(k);return null;});
+      store.set(k,{p:p,t:Date.now()});return p;
+    }
+  };
+
+  /* mini popover + full profile overlay share the "currently shown user" colours */
+  window.ahApplyProfileColors=function(colors){
+    paintNode(document.getElementById('ah-v3-mini'),colors);
+    paintNode(document.getElementById('ah-v3-overlay'),colors);
+  };
+
+  function paint(){
+    var c=cur||DEF,v=cur?{primary:cur.p,accent:cur.a}:null;
+    if(panel){
+      panel.style.setProperty('--ah-pc1',c.p);panel.style.setProperty('--ah-pc2',c.a);
+      if(in1.value!==c.p)in1.value=c.p;if(in2.value!==c.a)in2.value=c.a;
+      panel.querySelectorAll('.ah-pc-preset').forEach(function(b){b.classList.toggle('active',!!cur&&b.dataset.p===cur.p&&b.dataset.a===cur.a)});
+    }
+    paintNode(card,v);paintNode(shell,v);
+    if(h1){h1.value=cur?cur.p:'';h2.value=cur?cur.a:'';h1.disabled=h2.disabled=!loaded;}
+  }
+  /* dragging a colour picker fires dozens of events per second: repaint once per frame */
+  function change(next){
+    cur=next;if(raf)return;
+    raf=requestAnimationFrame(function(){raf=0;paint();if(h1)h1.dispatchEvent(new Event('input',{bubbles:true}));});
+  }
+  window.ahProfileColorsDirty=function(){return loaded&&!same(cur,saved)};
+  window.ahProfileColorsReset=function(){cur=saved;paint();};
+
+  function build(){
+    shell=document.querySelector('#ah-profile-customizer .ah-profile-customizer-shell');
+    var form=document.getElementById('ah-profile-edit-form');
+    if(!shell||!form||document.getElementById('ah-pc-panel'))return;
+    card=shell.querySelector('.ah-custom-profile-card');
+    panel=document.createElement('aside');panel.id='ah-pc-panel';panel.className='ah-pc-panel';panel.setAttribute('aria-hidden','true');
+    panel.innerHTML='<button type="button" class="ah-pc-back" aria-label="Закрити"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>'+
+      '<div class="ah-pc-head"><b>Тема профілю</b><p>Так може виглядати ваш профіль із власними кольорами. Її побачать усі.</p></div>'+
+      '<div class="ah-pc-sec"><h4>Кольори теми</h4><div class="ah-pc-strip"><label class="ah-pc-dot top" title="Верхній колір"><input type="color" id="ah-pc-in1" aria-label="Верхній колір"></label><label class="ah-pc-dot bot" title="Нижній колір"><input type="color" id="ah-pc-in2" aria-label="Нижній колір"></label></div></div>'+
+      '<div class="ah-pc-sec"><h4>Готові теми</h4><div class="ah-pc-presets">'+PRESETS.map(function(x){return '<button type="button" class="ah-pc-preset" data-p="'+x[0]+'" data-a="'+x[1]+'" style="background:linear-gradient(180deg,'+x[0]+','+x[1]+')" aria-label="Тема"></button>'}).join('')+'</div></div>'+
+      '<button type="button" class="ah-pc-reset">Скинути кольори</button>';
+    var handle=document.createElement('button');handle.type='button';handle.className='ah-pc-handle';handle.setAttribute('aria-label','Тема профілю');handle.setAttribute('aria-expanded','false');handle.title='Тема профілю';
+    handle.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
+    shell.appendChild(panel);shell.appendChild(handle);
+    h1=document.createElement('input');h1.type='hidden';h1.name='profile_color_primary';h1.disabled=true;
+    h2=document.createElement('input');h2.type='hidden';h2.name='profile_color_accent';h2.disabled=true;
+    form.appendChild(h1);form.appendChild(h2);
+    in1=panel.querySelector('#ah-pc-in1');in2=panel.querySelector('#ah-pc-in2');
+    /* make room on the left when the window is too close to the screen edge */
+    function reposition(){
+      var o=shell.classList.contains('ah-pc-open');
+      if(!o||window.innerWidth<=700){shell.style.left='0px';return;}
+      var natural=(window.innerWidth-shell.offsetWidth)/2, need=268+22+12;
+      shell.style.left=Math.max(0,Math.min(need-natural,natural-8))+'px';
+    }
+    function toggle(open){var o=typeof open==='boolean'?open:!shell.classList.contains('ah-pc-open');shell.classList.toggle('ah-pc-open',o);handle.setAttribute('aria-expanded',String(o));panel.setAttribute('aria-hidden',String(!o));reposition();}
+    window.addEventListener('resize',reposition,{passive:true});
+    handle.addEventListener('click',function(){toggle()});
+    panel.querySelector('.ah-pc-back').addEventListener('click',function(){toggle(false)});
+    in1.addEventListener('input',function(){change({p:in1.value.toLowerCase(),a:(cur||DEF).a})});
+    in2.addEventListener('input',function(){change({p:(cur||DEF).p,a:in2.value.toLowerCase()})});
+    panel.querySelector('.ah-pc-presets').addEventListener('click',function(e){var b=e.target.closest('.ah-pc-preset');if(b)change({p:b.dataset.p,a:b.dataset.a})});
+    panel.querySelector('.ah-pc-reset').addEventListener('click',function(){change(null)});
+    document.addEventListener('keydown',function(e){if(e.key==='Escape'&&shell.classList.contains('ah-pc-open')&&shell.offsetParent!==null){toggle(false);}});
+    paint();
+    fetch('/community/api/my-profile-colors',{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'}})
+      .then(function(r){return r.json()}).then(function(d){
+        if(d&&d.ok){var c=d.profile_colors?norm({p:d.profile_colors.primary,a:d.profile_colors.accent}):null;saved=c;if(!cur||same(cur,null))cur=c;loaded=true;paint();}
+      }).catch(function(){});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',build);else build();
+
+  /* DM partner card on the right: colours come from the shared cache (one request, reused by the popovers) */
+  function initCard(){
+    var el=document.querySelector('.profile-card[data-mini-username]');
+    if(el)api.get(el.dataset.miniUsername).then(function(c){paintNode(el,c)});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initCard);else initCard();
 })();
 </script>
 </body>
