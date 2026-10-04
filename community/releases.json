@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.240.2",
+      "date": "2026-10-04",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance mini profile with badge toggle functionality."
+      ],
+      "source_sha": "9a26eccb60153593840cae18ec8aa850a03fda3d"
+    },
+    {
       "version": "1.240.1",
       "date": "2026-10-04",
       "title": "Виправлення та стабільність",
