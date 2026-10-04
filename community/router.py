@@ -4207,6 +4207,9 @@ async def api_forward_message(request: Request, db: AsyncSession = Depends(get_d
         source_voice_url = getattr(source, "voice_url", None) or ""
         source_voice_duration = int(getattr(source, "voice_duration", None) or 0)
 
+    if crud.parse_poll_marker(source_content):
+        return JSONResponse({"ok": False, "error": "poll_not_forwardable"}, status_code=400)
+
     if crud.parse_nitro_dm_gift_marker(source_content):
         return JSONResponse({
             "ok": False,
@@ -4995,6 +4998,122 @@ async def api_claim_dm_nitro_gift(public_token: str, request: Request, db: Async
             {"type": "nitro_gift_update", "gift": gift},
         )
     return JSONResponse(result)
+
+# ---------------------------------------------------------------------------
+# Polls: create (DM / server channel), batch fetch, vote.
+# A poll is stored in its own tables; the chat message only carries the marker
+# "[[ah:poll:<id>]]" which the client turns into a live poll card.
+# ---------------------------------------------------------------------------
+@router.post("/api/dm/{username}/polls")
+async def api_create_dm_poll(username: str, request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    other = await crud.get_account_by_username(db, username)
+    if not other or other.id == account.id:
+        return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
+    if await crud.is_blocked_between(db, account.id, other.id):
+        return JSONResponse({"ok": False, "error": "blocked_relationship"}, status_code=403)
+    permission = await crud.direct_message_permission(db, account.id, other.id)
+    if not permission["allowed"]:
+        return JSONResponse({"ok": False, "error": "privacy"}, status_code=403)
+    body = await _json_dict(request)
+    clean, error = crud.clean_poll_input(body.get("question"), body.get("options"), body.get("duration_hours"))
+    if error:
+        return JSONResponse({"ok": False, "error": error}, status_code=400)
+    retry_after_ms = await message_rate_limiter.check(account.id)
+    if retry_after_ms:
+        return _message_rate_limit_json_response(retry_after_ms)
+    thread = await crud.get_or_create_dm_thread(db, account.id, other.id)
+    if not thread:
+        return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
+    thread_id = int(thread.id)
+    account_id = int(account.id)
+    poll_id = await crud.create_poll(
+        db, scope="dm", author_id=account_id, question=clean["question"], options=clean["options"],
+        allow_multiple=bool(body.get("allow_multiple")), hours=clean["hours"], thread_id=thread_id,
+    )
+    try:
+        msg = await crud.create_dm_message(db, thread_id, account_id, crud.make_poll_marker(poll_id))
+    except Exception:
+        await crud.delete_poll(db, poll_id)
+        raise
+    await crud.attach_poll_message(db, poll_id, int(msg.id))
+    realtime_payload = await _dm_message_realtime_event(db, msg)
+    await _emit_dm_sidebar_update(thread_id, int(msg.id))
+    await realtime_channels.broadcast((0, thread_id), realtime_payload)
+    return JSONResponse({"ok": True, "poll_id": poll_id, "message_id": int(msg.id)})
+
+
+@router.post("/api/servers/{server_id}/channels/{channel_id}/polls")
+async def api_create_server_poll(server_id: int, channel_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    if not await crud.is_server_member(db, server_id, account.id):
+        return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
+    channel = await crud.get_server_channel(db, server_id, channel_id)
+    if not channel:
+        return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
+    if not await crud.can_access_server_channel(db, server_id, channel, account.id):
+        return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
+    body = await _json_dict(request)
+    clean, error = crud.clean_poll_input(body.get("question"), body.get("options"), body.get("duration_hours"))
+    if error:
+        return JSONResponse({"ok": False, "error": error}, status_code=400)
+    retry_after_ms = await message_rate_limiter.check(account.id)
+    if retry_after_ms:
+        return _message_rate_limit_json_response(retry_after_ms)
+    account_id = int(account.id)
+    poll_id = await crud.create_poll(
+        db, scope="server", author_id=account_id, question=clean["question"], options=clean["options"],
+        allow_multiple=bool(body.get("allow_multiple")), hours=clean["hours"],
+        server_id=int(server_id), channel_id=int(channel_id),
+    )
+    try:
+        msg = await crud.create_server_message(db, server_id, channel_id, account_id, crud.make_poll_marker(poll_id))
+    except Exception:
+        await crud.delete_poll(db, poll_id)
+        raise
+    await crud.attach_poll_message(db, poll_id, int(msg.id))
+    realtime_payload = await _server_message_realtime_event(db, msg)
+    streak_state = await crud.bump_channel_streak(db, channel_id)
+    await realtime_channels.broadcast((server_id, channel_id), realtime_payload)
+    await realtime_channels.broadcast((server_id, channel_id), {"type": "channel_streak", "streak": streak_state})
+    return JSONResponse({"ok": True, "poll_id": poll_id, "message_id": int(msg.id)})
+
+
+@router.get("/api/polls")
+async def api_get_polls(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in", "polls": []}, status_code=401)
+    ids = []
+    for part in str(request.query_params.get("ids") or "").split(","):
+        value = _parse_optional_int(part.strip())
+        if value:
+            ids.append(value)
+    polls = await crud.get_polls_payload(db, ids, int(account.id))
+    return JSONResponse({"ok": True, "polls": polls})
+
+
+@router.post("/api/polls/{poll_id}/vote")
+async def api_vote_poll(poll_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    if _guess_limited(account.id, "poll_vote", 60, 60):
+        return JSONResponse({"ok": False, "error": "rate_limited"}, status_code=429)
+    body = await _json_dict(request)
+    option_id = _parse_optional_int(body.get("option_id"))
+    if not option_id:
+        return JSONResponse({"ok": False, "error": "bad_option"}, status_code=400)
+    poll, error = await crud.vote_poll(db, poll_id, int(account.id), option_id)
+    if error:
+        status = {"not_found": 404, "ended": 409, "bad_option": 400}.get(error, 400)
+        return JSONResponse({"ok": False, "error": error}, status_code=status)
+    return JSONResponse({"ok": True, "poll": poll})
+
 
 @router.get("/api/dm/{username}/pins")
 async def api_list_dm_pins(username: str, request: Request, db: AsyncSession = Depends(get_db)):
