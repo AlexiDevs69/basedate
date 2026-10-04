@@ -2611,14 +2611,49 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
   function prune(){var m=read(),ch=false;for(var k in m){if(!live(m[k])){delete m[k];ch=true}}if(ch)write(m);return m}
   function get(info){var n=norm(info),m=prune();for(var k in m){if(matches(k,m[k],n))return m[k]}return null}
   function isMuted(info){return !!get(info)}
-  function isMutedData(d){if(!d)return false;var o=d.other||{};return isMuted({key:d.thread_id,acc:o.id,user:o.username})}
+  function isMutedData(d){if(!d)return false;if(d.muted===true)return true;var o=d.other||{};return isMuted({key:d.thread_id,acc:o.id,user:o.username})}
   function changed(){schedule();syncRows();try{window.dispatchEvent(new CustomEvent('alexihub:dm-mute-changed'))}catch(e){}}
+  function remote(method,user,ms){
+    if(!user||!window.fetch)return Promise.resolve(false);
+    var o={method:method,credentials:'same-origin',headers:{Accept:'application/json','Content-Type':'application/json'}};
+    if(method==='POST')o.body=JSON.stringify({duration_ms:ms||0});
+    return fetch('/community/api/dm-mutes/'+encodeURIComponent(user),o).then(function(r){return r.ok}).catch(function(){return false});
+  }
   function set(info,ms){
     var n=norm(info),m=prune(),key=n.key||n.acc||n.user;if(!key)return;
     for(var k in m){if(k!==key&&matches(k,m[k],n))delete m[k]}
     m[key]={until:ms?Date.now()+ms:-1,acc:n.acc,user:n.user};write(m);changed();
+    remote('POST',n.user,ms);
   }
-  function clear(info){var n=norm(info),m=read();for(var k in m){if(matches(k,m[k],n))delete m[k]}write(m);changed()}
+  function clear(info){
+    var n=norm(info),m=read(),users={};if(n.user)users[n.user]=1;
+    for(var k in m){if(matches(k,m[k],n)){if(m[k]&&m[k].user)users[m[k].user]=1;delete m[k]}}
+    write(m);changed();
+    Object.keys(users).forEach(function(u){remote('DELETE',u)});
+  }
+  /* server is the source of truth: pull the list, replace synced entries, migrate old local mutes once */
+  var SYNC_FLAG='ah_dm_mute_synced_v1',pulling=false;
+  function pull(){
+    if(pulling||!window.fetch)return;pulling=true;
+    fetch('/community/api/dm-mutes',{credentials:'same-origin',cache:'no-store',headers:{Accept:'application/json'}})
+      .then(function(r){return r.ok?r.json():null}).then(function(d){
+        pulling=false;if(!d||d.ok===false||!Array.isArray(d.mutes))return;
+        var local=prune(),next={},seen={};
+        d.mutes.forEach(function(x){
+          var u=String(x.username||'').toLowerCase();seen[u]=1;
+          next['u:'+u]={until:x.forever?-1:new Date(x.until).getTime(),acc:String(x.id),user:u};
+        });
+        var migrated=false;try{migrated=localStorage.getItem(SYNC_FLAG)==='1'}catch(e){}
+        for(var k in local){
+          var e=local[k];if(!e||!e.user||seen[e.user])continue;
+          if(!migrated){next[k]=e;remote('POST',e.user,e.until===-1?0:Math.max(1000,e.until-Date.now()))}
+          else if(!e.user){next[k]=e}
+        }
+        for(var k2 in local){if(local[k2]&&!local[k2].user&&!next[k2])next[k2]=local[k2]}
+        try{localStorage.setItem(SYNC_FLAG,'1')}catch(e){}
+        write(next);changed();
+      }).catch(function(){pulling=false});
+  }
   function pad(x){return(x<10?'0':'')+x}
   function describe(e){
     if(!e)return'';if(e.until===-1)return'Поки не увімкнете';
@@ -2636,10 +2671,12 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
       row.classList.toggle('ah-dm-muted',on);
     });
   }
-  window.AlexiHubDmMute={get:get,isMuted:isMuted,isMutedData:isMutedData,set:set,clear:clear,describe:describe,syncRows:syncRows};
+  window.AlexiHubDmMute={pull:pull,get:get,isMuted:isMuted,isMutedData:isMutedData,set:set,clear:clear,describe:describe,syncRows:syncRows};
   window.addEventListener('storage',function(e){if(e.key===LS)changed()});
+  window.addEventListener('focus',function(){pull()});
+  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')pull()});
   function init(){
-    syncRows();schedule();
+    syncRows();schedule();pull();
     var list=document.getElementById('dm-list');
     if(list&&window.MutationObserver)new MutationObserver(function(){syncRows()}).observe(list,{childList:true});
   }
