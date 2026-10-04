@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.233.8",
+      "date": "2026-10-04",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: theme color input elements in home.html."
+      ],
+      "source_sha": "6831b41e6ecb0ee4d1dcd62979eabc3f267efd59"
+    },
+    {
       "version": "1.233.7",
       "date": "2026-10-04",
       "title": "Оновлення AlexiHub",
