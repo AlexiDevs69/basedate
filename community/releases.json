@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.232.0",
+      "date": "2026-10-04",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: DM mute functionality and update notifications."
+      ],
+      "source_sha": "348748201468e51a298745be114e74395d5be5c4"
+    },
+    {
       "version": "1.231.19",
       "date": "2026-10-04",
       "title": "Виправлення та стабільність",
