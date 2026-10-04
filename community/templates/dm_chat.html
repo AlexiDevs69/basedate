@@ -2367,7 +2367,7 @@ html[data-theme="light"] .app .right .dm-right-sec h4,html[data-theme="light"] h
     </main>
 
     <aside class="right">
-      <div class="profile-card mini-profile-trigger"
+      <div class="profile-card"
            data-mini-username="{{ other.username }}" data-mini-display="{{ other.display_name or other.username }}"
            data-mini-avatar="{{ other.avatar_url or '' }}"
            data-mini-banner="{{ other.banner_url or '' }}"
@@ -2380,8 +2380,10 @@ html[data-theme="light"] .app .right .dm-right-sec h4,html[data-theme="light"] h
            data-mini-created="{{ other.created_at.strftime('%d.%m.%Y') if other.created_at else '' }}">
         <div class="banner" {% if other.banner_url %}style="background-image:url('{{ other.banner_url }}');background-size:cover;background-position:center"{% endif %}></div>
         <div class="profile-body">
-          <div class="big-avatar" {% if other.avatar_url %}style="background-image:url('{{ other.avatar_url }}')"{% endif %}>{% if not other.avatar_url %}{{ other.username[:1]|upper }}{% endif %}{% if other_visible and other_status in ['online','idle','dnd'] %}<span class="presence status-{{ other_status }}"></span>{% endif %}</div>
+          <div class="dm-right-head">
+          <div class="big-avatar" data-mini-open-full="1" role="button" tabindex="0" data-mini-username="{{ other.username }}" data-mini-display="{{ other.display_name or other.username }}" data-mini-avatar="{{ other.avatar_url or '' }}" data-mini-banner="{{ other.banner_url or '' }}" data-mini-status="{{ other_status if other_visible else 'offline' }}" data-mini-role="{{ other.role_label or 'member' }}" data-mini-c1="{{ other.role_color_start or '#5865f2' }}" data-mini-c2="{{ other.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ other.username }}" data-mini-bio="{{ other.bio or '' }}" data-mini-created="{{ other.created_at.strftime('%d.%m.%Y') if other.created_at else '' }}" {% if other.avatar_url %}style="background-image:url('{{ other.avatar_url }}')"{% endif %}>{% if not other.avatar_url %}{{ other.username[:1]|upper }}{% endif %}{% if other_visible and other_status in ['online','idle','dnd'] %}<span class="presence status-{{ other_status }}"></span>{% endif %}</div>
           <div class="profile-name-row"><h2>{{ other.display_name or other.username }}</h2>{% if other_tag %}<span class="dm-server-tag ah-tag-clickable" title="{{ other_tag.server_name }}" data-tag-server-id="{{ other_tag.server_id or '' }}" data-tag-server-name="{{ other_tag.server_name or '' }}" data-tag-icon-glyph="{{ other_tag.icon_glyph or '' }}" data-tag-icon-url="{{ other_tag.icon_url or '' }}" data-tag-text="{{ other_tag.text or '' }}" data-tag-member-count="{{ other_tag.member_count or '' }}" data-tag-online-count="{{ other_tag.online_count or '' }}" data-tag-description="{{ other_tag.description or '' }}" data-tag-invite="{{ other_tag.invite_url or '' }}"><b>{{ other_tag.icon_glyph }}</b>{{ other_tag.text }}</span>{% endif %}</div><div class="profile-handle">@{{ other.username }}</div>
+          </div>
           <div class="profile-status">{% if other_visible %}<i class="status-dot status-{{ other_status }}"></i>{{ i18n_t('status.' ~ other_status) }}{% else %}<i class="status-dot status-invisible"></i>{{ i18n_t('status.offline') }}{% endif %}</div>
           {% set mutual_count = mutual_servers|length %}
           {% set mutual_mod10 = mutual_count % 10 %}
@@ -4471,6 +4473,8 @@ document.addEventListener('DOMContentLoaded',()=>{
       return;
     }
 
+    // Right-hand profile panel: not clickable (only the avatar / full-profile button open the full profile).
+    if(e.target.closest('.right .profile-card') && !e.target.closest('[data-mini-open-full]')){ closeMini(); return; }
     const t=e.target.closest('[data-mini-username],.mini-profile-trigger,.profile-click,a[href*="/community/profile/"],.member-row,.msg-avatar,.msg-name,.dm-item,.account-panel,.user-panel');
     if(!t){ closeMini(); return; }
     e.preventDefault(); e.stopPropagation(); if(e.stopImmediatePropagation)e.stopImmediatePropagation();
@@ -14350,5 +14354,19 @@ html body .ah-settings-nav{min-height:48px}
   sync();
 })();
 </script>
+<style id="dm-right-panel-mini-layout">
+/* Right panel: layout identical to the mini profile (avatar on the right, name + handle on the left) */
+html body .app .right .profile-card{cursor:default!important}
+html body .app .right .profile-body{padding:0 14px 14px!important}
+html body .app .right .dm-right-head{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:10px;align-items:start;flex:none}
+html body .app .right .dm-right-head .big-avatar{grid-column:2;grid-row:1 / span 2;justify-self:end;width:88px;height:88px;margin:-44px 0 0 0;border-width:6px;font-size:30px;font-weight:950;cursor:pointer!important;box-shadow:0 0 0 1px rgba(255,255,255,.08)}
+html body .app .right .dm-right-head .big-avatar:hover{filter:brightness(1.08)}
+html body .app .right .dm-right-head .big-avatar .presence{width:19px;height:19px;right:0;bottom:4px;transform:translate(28%,28%);border-width:4px;z-index:30}
+html body .app .right .dm-right-head .profile-name-row{grid-column:1;grid-row:1;align-self:end;margin:0;padding-top:10px;min-width:0;flex-wrap:nowrap;gap:6px}
+html body .app .right .dm-right-head .profile-name-row h2{margin:0!important;min-width:0;flex:0 1 auto;font-size:22px;line-height:1.06;font-weight:950;letter-spacing:-.04em;white-space:nowrap;overflow:hidden!important;text-overflow:ellipsis}
+html body .app .right .dm-right-head .profile-name-row .dm-server-tag{flex:0 0 auto}
+html body .app .right .dm-right-head .profile-handle{grid-column:1;grid-row:2;align-self:start;min-width:0;margin-top:3px;font-size:12px;font-weight:750;color:#b5bac1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html[data-theme="light"] body .app .right .dm-right-head .profile-handle{color:#5c6069}
+</style>
 </body>
 </html>
