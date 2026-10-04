@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.233.4",
+      "date": "2026-10-04",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance mute functionality and synchronization logic."
+      ],
+      "source_sha": "842be2c9e503c100f05395cebbd78e580641f278"
+    },
+    {
       "version": "1.233.3",
       "date": "2026-10-04",
       "title": "Виправлення та стабільність",
