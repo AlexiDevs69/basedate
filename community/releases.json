@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.244.0",
+      "date": "2026-10-04",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: API endpoints for creating and voting on polls."
+      ],
+      "source_sha": "d0577a35bbc3436068d8102e71f0392c5d2d7084"
+    },
+    {
       "version": "1.243.0",
       "date": "2026-10-04",
       "title": "Нові можливості AlexiHub",
