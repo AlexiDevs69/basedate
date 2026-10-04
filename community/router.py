@@ -1134,6 +1134,13 @@ async def _emit_dm_sidebar_update(thread_id: int, message_id: int) -> None:
                 is_incoming = viewer_id == int(recipient.id)
                 viewer_account = recipient if is_incoming else sender
                 viewer_dnd = str(getattr(viewer_account, "account_status", "") or "").lower() == "dnd"
+                # Per-sender mute: the viewer silenced this person (optionally time-limited).
+                try:
+                    viewer_muted_other = bool(is_incoming) and await crud.is_dm_muted(
+                        db, viewer_id, int(other.id)
+                    )
+                except Exception:
+                    viewer_muted_other = False
                 await account_realtime.send_to_account(
                     viewer_id,
                     {
@@ -1146,7 +1153,8 @@ async def _emit_dm_sidebar_update(thread_id: int, message_id: int) -> None:
                         "other_online": other_online,
                         "other_status": other_status,
                         "incoming": is_incoming,
-                        "notify_sound": bool(is_incoming and not viewer_dnd),
+                        "notify_sound": bool(is_incoming and not viewer_dnd and not viewer_muted_other),
+                        "muted": bool(viewer_muted_other),
                     },
                 )
     except Exception as exc:
@@ -6201,6 +6209,65 @@ async def api_unblock_account(username: str, request: Request, db: AsyncSession 
         **status,
         "message": f"@{target_username} розблоковано.",
     })
+
+
+# --- Muted DM senders (silence notifications from one specific person) ------
+
+@router.get("/api/dm-mutes")
+async def api_list_dm_mutes(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return _settings_error("Потрібно знову увійти в акаунт.", 401, "not_authenticated")
+    return JSONResponse({"ok": True, "mutes": await crud.list_active_dm_mutes(db, int(account.id))})
+
+
+@router.post("/api/dm-mutes/{username}")
+async def api_set_dm_mute(username: str, request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return _settings_error("Потрібно знову увійти в акаунт.", 401, "not_authenticated")
+    target = await crud.get_account_by_username_ci(db, username)
+    if not target:
+        return _settings_error("Користувача не знайдено.", 404, "not_found")
+    if int(target.id) == int(account.id):
+        return _settings_error("Не можна заглушити самого себе.", 400, "cannot_mute_self")
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    raw = body.get("duration_ms") if isinstance(body, dict) else None
+    try:
+        duration_ms = int(raw) if raw not in (None, "", 0, "0") else None
+    except (TypeError, ValueError):
+        return _settings_error("Некоректна тривалість.", 400, "bad_duration")
+    if duration_ms is not None and duration_ms < 0:
+        return _settings_error("Некоректна тривалість.", 400, "bad_duration")
+    account_id = int(account.id)
+    target_id = int(target.id)
+    target_username = target.username
+    mute = await crud.set_dm_mute(db, account_id, target_id, duration_ms)
+    await _broadcast_mention_counts([account_id])
+    return JSONResponse({
+        "ok": True,
+        "mute": {"id": target_id, "username": target_username, "until": mute["until"], "forever": mute["forever"]},
+        "message": f"@{target_username} заглушено.",
+    })
+
+
+@router.delete("/api/dm-mutes/{username}")
+async def api_clear_dm_mute(username: str, request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return _settings_error("Потрібно знову увійти в акаунт.", 401, "not_authenticated")
+    target = await crud.get_account_by_username_ci(db, username)
+    if not target:
+        return _settings_error("Користувача не знайдено.", 404, "not_found")
+    account_id = int(account.id)
+    target_username = target.username
+    await crud.clear_dm_mute(db, account_id, int(target.id))
+    await _broadcast_mention_counts([account_id])
+    return JSONResponse({"ok": True, "user": {"id": int(target.id), "username": target_username},
+                         "message": f"@{target_username} знову може сповіщати."})
 
 
 # --- Stories (24h ephemeral photo/text updates shown to friends) ------------
