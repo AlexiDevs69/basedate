@@ -10,20 +10,28 @@ login can never collide or leak into each other.
 """
 import hashlib
 import hmac
+import logging
 import os
 import time
 from collections import deque
 from urllib.parse import urlsplit
 
 import bcrypt
+import httpx
 from fastapi import Request
 
 from config import get_settings
 
 settings = get_settings()
+logger = logging.getLogger(__name__)
 
 SESSION_KEY = "community_account_id"
 SESSION_VERSION_KEY = "community_session_version"
+
+# Cloudflare Turnstile. The site key is public (it is rendered into the page);
+# the secret key is read ONLY from the TURNSTILE_SECRET_KEY env variable.
+TURNSTILE_SITE_KEY = os.getenv("TURNSTILE_SITE_KEY", "0x4AAAAAAFNjOzg34QNMzaCf")
+TURNSTILE_VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
 
 # bcrypt only looks at the first 72 bytes of the password.
 MAX_PASSWORD_BYTES = 72
@@ -197,3 +205,34 @@ def get_logged_in_session_version(request: Request) -> int:
         return max(1, int(request.session.get(SESSION_VERSION_KEY) or 1))
     except (TypeError, ValueError):
         return 1
+
+
+# --- Cloudflare Turnstile ---------------------------------------------------
+
+async def verify_turnstile(token: str, remote_ip: str | None = None) -> bool:
+    """
+    Verify a Turnstile token server-side. Fails closed: a missing secret,
+    empty token, network error or non-success answer all return False.
+    """
+    secret = os.getenv("TURNSTILE_SECRET_KEY", "").strip()
+    token = (token or "").strip()
+    if not secret:
+        logger.error("TURNSTILE_SECRET_KEY is not set - captcha check rejected")
+        return False
+    if not token or len(token) > 2048:
+        return False
+
+    payload = {"secret": secret, "response": token}
+    if remote_ip and remote_ip != "unknown":
+        payload["remoteip"] = remote_ip
+    try:
+        async with httpx.AsyncClient(timeout=8.0) as client:
+            resp = await client.post(TURNSTILE_VERIFY_URL, data=payload)
+        data = resp.json()
+    except (httpx.HTTPError, ValueError):
+        logger.warning("Turnstile siteverify request failed", exc_info=True)
+        return False
+    if not data.get("success"):
+        logger.info("Turnstile rejected token: %s", data.get("error-codes"))
+        return False
+    return True
