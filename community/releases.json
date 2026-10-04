@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.236.2",
+      "date": "2026-10-04",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Integrate Turnstile captcha in registration template."
+      ],
+      "source_sha": "9815704f84bd1ca6e42ef761d1c39dbb23c8d0f1"
+    },
+    {
       "version": "1.236.1",
       "date": "2026-10-04",
       "title": "Виправлення та стабільність",
