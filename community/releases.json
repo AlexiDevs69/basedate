@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.231.18",
+      "date": "2026-10-04",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update Nitro references to Plus in server_home.html."
+      ],
+      "source_sha": "01666f5dc989e7fb91f2c20d8a8737ec88db0b1d"
+    },
+    {
       "version": "1.231.17",
       "date": "2026-10-04",
       "title": "Виправлення та стабільність",
