@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.240.0",
+      "date": "2026-10-04",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: badges toggle button and related styles."
+      ],
+      "source_sha": "216fee33b155ab4884dd760deb27b0fb6cadb061"
+    },
+    {
       "version": "1.239.0",
       "date": "2026-10-04",
       "title": "Нові можливості AlexiHub",
