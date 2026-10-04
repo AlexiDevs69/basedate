@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.234.0",
+      "date": "2026-10-04",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: CSRF protection and media upload handling."
+      ],
+      "source_sha": "8f0fef8b569dc9c5157f41d681b845bf364dab9c"
+    },
+    {
       "version": "1.233.10",
       "date": "2026-10-04",
       "title": "Оновлення AlexiHub",
