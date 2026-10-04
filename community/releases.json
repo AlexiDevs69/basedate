@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.233.7",
+      "date": "2026-10-04",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: color theme dot classes in dm_chat.html."
+      ],
+      "source_sha": "276b31360a0a68cc1a1c11cca6133a4d590d19ee"
+    },
+    {
       "version": "1.233.6",
       "date": "2026-10-04",
       "title": "Оновлення AlexiHub",
