@@ -1766,6 +1766,32 @@
 .dm-row.ah-dm-muted .ah-mention-count{display:none!important}
 .dm-row.ah-dm-muted .dm-name::after{content:'';display:inline-block;width:13px;height:13px;margin-left:6px;vertical-align:-2px;opacity:.75;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 8a6 6 0 0 0-9.3-5M6.3 6.3A6 6 0 0 0 6 8c0 7-3 9-3 9h14M10.3 21a2 2 0 0 0 3.4 0M2 2l20 20'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 8a6 6 0 0 0-9.3-5M6.3 6.3A6 6 0 0 0 6 8c0 7-3 9-3 9h14M10.3 21a2 2 0 0 0 3.4 0M2 2l20 20'/%3E%3C/svg%3E") center/contain no-repeat}
 </style>
+
+<style id="dm-right-panel-discord">
+/* Right profile panel: full-height Discord-style column */
+.app .right{padding:0!important;display:flex!important;flex-direction:column;overflow:hidden!important;background:var(--side,#101010)!important;border-left:1px solid #111318}
+.app .right .profile-card{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;border:0!important;border-radius:0!important;background:transparent!important;overflow:visible!important}
+.app .right .profile-card.ah-colored{background:linear-gradient(180deg,color-mix(in srgb,var(--ah-pc1) 62%,#0d0e12),color-mix(in srgb,var(--ah-pc2) 50%,#0d0e12))!important}
+.app .right .banner{height:96px!important;flex:none;border-radius:0!important;overflow:hidden!important}
+.app .right .profile-body{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;padding:0 16px 16px!important;overflow-y:auto}
+.app .right .big-avatar{width:92px;height:92px;margin-top:-46px;border:6px solid var(--side,#101010);font-size:30px;flex:none;position:relative;overflow:visible!important}
+.app .right .big-avatar .presence{position:absolute;right:-2px;bottom:-2px;width:22px;height:22px;border-radius:50%;border:5px solid var(--side,#101010);box-sizing:border-box}
+.app .right .profile-card.ah-colored .big-avatar .presence{border-color:var(--ah-pc-top)}
+.app .right .profile-body h2{font-size:20px;font-weight:800;margin-top:10px}
+.app .right .profile-handle{font-size:13px;font-weight:600;color:#c7cad1;margin-top:1px}
+.app .right .profile-status{margin-top:6px}
+.app .right .dm-mutual-summary{margin:12px 0 0}
+.app .right .dm-right-bio{color:#dbdee1;font-size:13px;font-weight:600;margin:14px 0 0}
+.app .right .dm-right-sec{margin-top:18px}
+.app .right .dm-right-sec h4,.app .right .dm-right-sec-val{font-size:13px;color:#dbdee1}
+.app .right .dm-right-full-profile{margin-top:auto!important;flex:none;display:flex;align-items:center;justify-content:center;width:100%;min-height:38px;border-radius:8px;background:#2b2d33;color:#f2f3f5;font-weight:800;text-decoration:none}
+.app .right .dm-right-full-profile:hover{background:#363840}
+html[data-theme="light"] .app .right{background:#f2f3f5!important}
+html[data-theme="light"] .app .right .big-avatar{border-color:#f2f3f5}
+html[data-theme="light"] .app .right .big-avatar .presence{border-color:#f2f3f5}
+html[data-theme="light"] .app .right .dm-right-bio,html[data-theme="light"] .app .right .dm-right-sec-val{color:#2e3338}
+html[data-theme="light"] .app .right .dm-right-sec h4,html[data-theme="light"] html[data-theme="light"] .app .right .dm-right-full-profile{background:#e3e5e8;color:#1b1c20}
+</style>
 </head>
 <body data-current-account-id="{{ account.id }}" data-active-dm-account-id="{{ other.id }}">
   <style id="ah-message-rate-limit-style">
@@ -2354,7 +2380,7 @@
            data-mini-created="{{ other.created_at.strftime('%d.%m.%Y') if other.created_at else '' }}">
         <div class="banner" {% if other.banner_url %}style="background-image:url('{{ other.banner_url }}');background-size:cover;background-position:center"{% endif %}></div>
         <div class="profile-body">
-          <div class="big-avatar" {% if other.avatar_url %}style="background-image:url('{{ other.avatar_url }}')"{% endif %}>{% if not other.avatar_url %}{{ other.username[:1]|upper }}{% endif %}</div>
+          <div class="big-avatar" {% if other.avatar_url %}style="background-image:url('{{ other.avatar_url }}')"{% endif %}>{% if not other.avatar_url %}{{ other.username[:1]|upper }}{% endif %}{% if other_visible and other_status in ['online','idle','dnd'] %}<span class="presence status-{{ other_status }}"></span>{% endif %}</div>
           <div class="profile-name-row"><h2>{{ other.display_name or other.username }}</h2>{% if other_tag %}<span class="dm-server-tag ah-tag-clickable" title="{{ other_tag.server_name }}" data-tag-server-id="{{ other_tag.server_id or '' }}" data-tag-server-name="{{ other_tag.server_name or '' }}" data-tag-icon-glyph="{{ other_tag.icon_glyph or '' }}" data-tag-icon-url="{{ other_tag.icon_url or '' }}" data-tag-text="{{ other_tag.text or '' }}" data-tag-member-count="{{ other_tag.member_count or '' }}" data-tag-online-count="{{ other_tag.online_count or '' }}" data-tag-description="{{ other_tag.description or '' }}" data-tag-invite="{{ other_tag.invite_url or '' }}"><b>{{ other_tag.icon_glyph }}</b>{{ other_tag.text }}</span>{% endif %}</div><div class="profile-handle">@{{ other.username }}</div>
           <div class="profile-status">{% if other_visible %}<i class="status-dot status-{{ other_status }}"></i>{{ i18n_t('status.' ~ other_status) }}{% else %}<i class="status-dot status-invisible"></i>{{ i18n_t('status.offline') }}{% endif %}</div>
           {% set mutual_count = mutual_servers|length %}
@@ -2370,7 +2396,8 @@
             <span class="dm-mutual-label">{% if mutual_mod10 == 1 and mutual_mod100 != 11 %}{{ i18n_t('dm.mutual_servers.one', count=mutual_count) }}{% elif mutual_mod10 in [2, 3, 4] and mutual_mod100 not in [12, 13, 14] %}{{ i18n_t('dm.mutual_servers.few', count=mutual_count) }}{% else %}{{ i18n_t('dm.mutual_servers.many', count=mutual_count) }}{% endif %}</span>
             <svg class="dm-mutual-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>
           </button>
-          <p>{{ other.bio or i18n_t('common.profile.default_bio') }}</p>
+          <p class="dm-right-bio">{{ other.bio or i18n_t('common.profile.default_bio') }}</p>
+          <div class="dm-right-sec"><h4><!--i18n:common.text.registered-->{{ i18n_t('common.text.registered') }}</h4><div class="dm-right-sec-val" id="dm-right-created-at" data-created-at="{{ other.created_at.isoformat() if other.created_at else '' }}">{{ other.created_at.strftime('%d.%m.%Y') if other.created_at else '—' }}</div></div>
           <a class="btn dm-right-full-profile"
              href="/community/profile/{{ other.username }}"
              data-mini-open-full="1"
@@ -13997,5 +14024,15 @@ html body .ah-v3-mini.ah-profile-theme .ah-v3-badges{background:rgba(255,255,255
 })();
 </script>
 
+<script id="dm-right-created-fmt">
+(function(){
+  var n=document.getElementById('dm-right-created-at');if(!n)return;
+  var raw=String(n.getAttribute('data-created-at')||'').trim();if(!raw)return;
+  var d=new Date(raw);if(isNaN(d.getTime()))return;
+  var l=String(document.documentElement.lang||'uk').toLowerCase();
+  var loc=l.indexOf('ru')===0?'ru-RU':l.indexOf('en')===0?'en-US':'uk-UA';
+  try{n.textContent=d.toLocaleDateString(loc,{day:'numeric',month:'long',year:'numeric'});}catch(e){}
+})();
+</script>
 </body>
 </html>
