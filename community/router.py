@@ -27,7 +27,19 @@ from zoneinfo import ZoneInfo
 
 import httpx
 
-from fastapi import APIRouter, Depends, File, Form, Request, UploadFile, WebSocket, WebSocketDisconnect
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Request,
+    UploadFile,
+    WebSocket,
+    WebSocketDisconnect,
+    WebSocketException,
+)
+from starlette.requests import HTTPConnection
 from fastapi.responses import JSONResponse, RedirectResponse, PlainTextResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import text
@@ -39,7 +51,25 @@ from config import get_settings
 from database import AsyncSessionLocal, get_db
 
 settings = get_settings()
-router = APIRouter(prefix="/community", tags=["community"])
+async def _origin_guard(conn: HTTPConnection) -> None:
+    """Router-wide CSRF / cross-site WebSocket hijacking guard.
+
+    Every state-changing request (POST/PUT/PATCH/DELETE) and every WebSocket
+    handshake must come from our own origin. Requests without an Origin header
+    (curl, native apps) are not browser-driven and pass through. If the app is
+    served from several hostnames, list them in COMMUNITY_ALLOWED_ORIGINS.
+    """
+    if conn.scope["type"] == "websocket":
+        if not auth.origin_is_trusted(conn):
+            raise WebSocketException(code=1008)
+        return
+    if conn.scope.get("method", "GET").upper() in {"GET", "HEAD", "OPTIONS"}:
+        return
+    if not auth.origin_is_trusted(conn):
+        raise HTTPException(status_code=403, detail="Cross-site request blocked")
+
+
+router = APIRouter(prefix="/community", tags=["community"], dependencies=[Depends(_origin_guard)])
 
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
@@ -226,19 +256,42 @@ MAX_VOICE_SECONDS = 600
 VOICE_UPLOAD_DIR = ROOT_DIR / "static" / "uploads" / "voice"
 
 
+_LOCAL_VOICE_URL_RE = re.compile(r"^/static/uploads/voice/[A-Za-z0-9_.-]{1,120}$")
+
+
 def _clean_voice_url(value) -> str:
-    """Accept only what /api/upload-voice can return: our local voice folder or an http(s) URL."""
+    """Accept only what /api/upload-voice can return: a file in our local voice
+    folder, or an https Cloudinary URL. Arbitrary external URLs are refused so a
+    voice message cannot be used as a tracking pixel / mixed-content vector."""
     url = str(value or "").strip()
-    if url.startswith("/static/uploads/voice/") or re.match(r"^https?://", url, re.I):
-        return url[:2000]
+    if not url or len(url) > 2000:
+        return ""
+    if _LOCAL_VOICE_URL_RE.fullmatch(url) and ".." not in url:
+        return url
+    try:
+        parts = urlsplit(url)
+    except ValueError:
+        return ""
+    if (
+        parts.scheme == "https"
+        and (parts.hostname or "").lower() in STT_ALLOWED_AUDIO_HOSTS
+        and not parts.username
+        and not parts.password
+        and not re.search(r"[\s\x00-\x1f<>\"'`\\]", url)
+    ):
+        return url
     return ""
+
+
 SERVER_BANNER_REQUIRED_BOOSTS = 5
 PUBLIC_SERVER_REQUIRED_BOOSTS = crud.PUBLIC_SERVER_REQUIRED_BOOSTS
 
 
 def _safe_next_url(next_url: str | None, fallback: str = "/community") -> str:
     target = (next_url or "").strip()
-    if target.startswith("/community") and not target.startswith("//"):
+    # Exactly /community or /community/... (optionally ?query / #hash). No
+    # backslashes / control chars, which some browsers normalise into "//".
+    if re.fullmatch(r"/community(?:[/?#][^\\\x00-\x1f\x7f]*)?", target):
         return target
     return fallback
 
@@ -418,16 +471,63 @@ async def _set_server_banner_url(db: AsyncSession, server_id: int, banner_url: s
     await db.commit()
 
 
+def _sniff_image_type(data: bytes) -> str | None:
+    if data.startswith(b"\xff\xd8\xff"):
+        return "image/jpeg"
+    if data.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "image/png"
+    if data[:6] in (b"GIF87a", b"GIF89a"):
+        return "image/gif"
+    if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        return "image/webp"
+    return None
+
+
+_AUDIO_KIND_BY_TYPE = {
+    "audio/webm": "webm",
+    "audio/ogg": "ogg",
+    "audio/mp4": "mp4",
+    "audio/x-m4a": "mp4",
+    "audio/mpeg": "mp3",
+}
+
+
+def _sniff_audio_kind(data: bytes) -> str | None:
+    if data.startswith(b"\x1a\x45\xdf\xa3"):
+        return "webm"
+    if data.startswith(b"OggS"):
+        return "ogg"
+    if data[4:8] == b"ftyp":
+        return "mp4"
+    if data.startswith(b"ID3") or (len(data) > 1 and data[0] == 0xFF and (data[1] & 0xE0) == 0xE0):
+        return "mp3"
+    return None
+
+
+async def _read_limited(upload: UploadFile, max_bytes: int) -> bytes | None:
+    # Read at most max_bytes+1 so an oversized upload is rejected without
+    # pulling the whole thing into memory.
+    data = await upload.read(max_bytes + 1)
+    if not data or len(data) > max_bytes:
+        return None
+    return data
+
+
 async def _read_profile_upload(upload: UploadFile | None) -> tuple[bytes, str] | None:
     if upload is None or not getattr(upload, "filename", None):
         return None
     content_type = (upload.content_type or "").split(";")[0].strip().lower()
     if content_type not in ALLOWED_IMAGE_TYPES:
         return None
-    data = await upload.read()
-    if not data or len(data) > MAX_PROFILE_IMAGE_BYTES:
+    data = await _read_limited(upload, MAX_PROFILE_IMAGE_BYTES)
+    if data is None:
         return None
-    return data, content_type
+    # The Content-Type header is client-controlled. Trust the file's real
+    # signature instead, so HTML/SVG/script cannot be stored as ".png".
+    real_type = _sniff_image_type(data)
+    if real_type is None or real_type not in ALLOWED_IMAGE_TYPES:
+        return None
+    return data, real_type
 
 
 async def _read_voice_upload(upload: UploadFile | None) -> tuple[bytes, str] | None:
@@ -436,10 +536,49 @@ async def _read_voice_upload(upload: UploadFile | None) -> tuple[bytes, str] | N
     content_type = (upload.content_type or "").split(";")[0].strip().lower()
     if content_type not in ALLOWED_VOICE_TYPES:
         return None
-    data = await upload.read()
-    if not data or len(data) > MAX_VOICE_BYTES:
+    data = await _read_limited(upload, MAX_VOICE_BYTES)
+    if data is None:
+        return None
+    if _sniff_audio_kind(data) != _AUDIO_KIND_BY_TYPE.get(content_type):
         return None
     return data, content_type
+
+
+async def _json_dict(request: Request) -> dict:
+    """request.json() that never raises and always returns a dict."""
+    try:
+        payload = await request.json()
+    except Exception:
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def _guess_limited(account_id: int, bucket: str, limit: int, window: float) -> bool:
+    """Throttle guessable-secret endpoints (invite codes, gift codes).
+    Records the attempt and returns True when the account is over the limit."""
+    key = f"{bucket}:{int(account_id)}"
+    if auth.rate_limiter.blocked(key, limit, window):
+        return True
+    auth.rate_limiter.record(key, window)
+    return False
+
+
+_RATE_LIMITED_JSON = {"ok": False, "error": "rate_limited", "message": "Забагато спроб. Спробуй пізніше."}
+
+
+async def _ws_channel_still_allowed(
+    db: AsyncSession, websocket: WebSocket, account_id: int, server_id: int, channel_id: int
+) -> bool:
+    """Re-check, on every sensitive WebSocket action, what was only checked at
+    connect time: account not banned, session not revoked, still a member and
+    still allowed into this (possibly private) channel."""
+    account = await crud.get_account_by_id(db, account_id)
+    if not account or not _ws_session_matches_account(websocket, account):
+        return False
+    if not await crud.is_server_member(db, server_id, account_id):
+        return False
+    channel = await crud.get_server_channel(db, server_id, channel_id)
+    return bool(channel and await crud.can_access_server_channel(db, server_id, channel, account_id))
 
 
 async def _upload_voice_to_cloudinary(data: bytes, content_type: str) -> str | None:
@@ -569,7 +708,7 @@ async def _profile_image_url_from_form(upload: UploadFile | None, url_value: str
         if external_url:
             return external_url
         return _save_profile_upload_local(data, content_type, account_id, kind)
-    return (url_value or "").strip()
+    return crud.clean_media_url(url_value, 512)
 
 
 @router.on_event("startup")
@@ -1559,6 +1698,7 @@ async def ws_account_realtime(websocket: WebSocket):
                 raw_ids = data.get("account_ids") or []
                 if not isinstance(raw_ids, list):
                     raw_ids = []
+                raw_ids = raw_ids[:200]
                 accounts = await account_realtime.presence_snapshot_for(raw_ids)
                 await websocket.send_json({"type": "presence_snapshot", "accounts": accounts})
                 continue
@@ -2041,6 +2181,11 @@ async def register_submit(
             status_code=status_code,
         )
 
+    ip = auth.client_ip(request)
+    if auth.rate_limiter.blocked(f"register:{ip}", 10, 3600):
+        return error("Забагато спроб реєстрації. Спробуй пізніше.", 429)
+    auth.rate_limiter.record(f"register:{ip}", 3600)
+
     if not _SETTINGS_USERNAME_RE.fullmatch(username):
         return error("Username: 2–32 символи, лише латинські літери, цифри, крапка та _.")
     if len(email) > 255 or not _SETTINGS_EMAIL_RE.fullmatch(email):
@@ -2058,9 +2203,10 @@ async def register_submit(
     if await crud.get_account_by_email(db, email):
         return error("Акаунт з таким email вже існує.")
 
+    password_hash = await asyncio.to_thread(auth.hash_password, password)
     try:
         account = await crud.create_account(
-            db, username=username, email=email, password_hash=auth.hash_password(password)
+            db, username=username, email=email, password_hash=password_hash
         )
     except IntegrityError:
         await db.rollback()
@@ -2101,13 +2247,31 @@ async def login_submit(
             status_code=status_code,
         )
 
-    account = await crud.get_account_by_email(db, email.strip().lower())
-    if not account or not account.password_hash or not auth.verify_password(password, account.password_hash):
+    email_key = email.strip().lower()[:255]
+    ip_key = f"login-ip:{auth.client_ip(request)}"
+    acct_key = f"login-acct:{email_key}"
+    # 8 failures per account / 40 per IP per 15 minutes (brute-force guard).
+    if auth.rate_limiter.blocked(acct_key, 8, 900) or auth.rate_limiter.blocked(ip_key, 40, 900):
+        return error("Забагато невдалих спроб входу. Спробуй через 15 хвилин.", 429)
+
+    account = await crud.get_account_by_email(db, email_key)
+    has_password = bool(account and account.password_hash)
+    # Always run one bcrypt check (dummy hash if the account is unknown) so
+    # response time does not reveal whether the email is registered.
+    password_ok = await asyncio.to_thread(
+        auth.verify_password,
+        password,
+        account.password_hash if has_password else auth.DUMMY_PASSWORD_HASH,
+    )
+    if not (account and has_password and password_ok):
+        auth.rate_limiter.record(acct_key, 900)
+        auth.rate_limiter.record(ip_key, 900)
         return error("Невірний email або пароль.", 401)
 
     if account.is_banned:
         return error("Цей акаунт заблоковано.", 403)
 
+    auth.rate_limiter.reset(acct_key)
     auth.log_in(request, account.id, getattr(account, "session_version", 1))
     return RedirectResponse(url="/community", status_code=303)
 
@@ -2123,7 +2287,10 @@ async def telegram_callback(request: Request, db: AsyncSession = Depends(get_db)
     if not auth.verify_telegram_login(data):
         return RedirectResponse(url="/community/login?error=telegram", status_code=303)
 
-    telegram_id = int(data["id"])
+    try:
+        telegram_id = int(data["id"])
+    except (KeyError, TypeError, ValueError):
+        return RedirectResponse(url="/community/login?error=telegram", status_code=303)
     account = await crud.get_account_by_telegram_id(db, telegram_id)
 
     if account is None:
@@ -2153,8 +2320,9 @@ async def telegram_callback(request: Request, db: AsyncSession = Depends(get_db)
             account = await crud.get_account_by_telegram_id(db, telegram_id)
             if account is None:
                 return RedirectResponse(url="/community/login?error=telegram", status_code=303)
-        if data.get("photo_url"):
-            account.avatar_url = data["photo_url"]
+        safe_photo = crud.clean_media_url(data.get("photo_url"), 512)
+        if safe_photo:
+            account.avatar_url = safe_photo
             await db.commit()
 
     if account.is_banned:
@@ -2166,6 +2334,10 @@ async def telegram_callback(request: Request, db: AsyncSession = Depends(get_db)
 
 @router.get("/logout")
 async def logout(request: Request):
+    # GET logout can be triggered by any third-party page (<img src=...>).
+    # Browsers tell us when the navigation is cross-site; ignore those.
+    if (request.headers.get("sec-fetch-site") or "").lower() == "cross-site":
+        return RedirectResponse(url="/community", status_code=303)
     auth.log_out(request)
     return RedirectResponse(url="/community/login", status_code=303)
 
@@ -2268,6 +2440,8 @@ async def api_toggle_like(post_id: int, request: Request, db: AsyncSession = Dep
     if not account:
         return JSONResponse({"error": "not_logged_in"}, status_code=401)
 
+    if not await crud.post_exists(db, post_id):
+        return JSONResponse({"error": "not_found"}, status_code=404)
     liked = await crud.toggle_like(db, post_id, account.id)
     count = await crud.count_likes(db, post_id)
     return JSONResponse({"liked": liked, "count": count})
@@ -2372,7 +2546,9 @@ async def server_join_submit(
     if not account:
         return RedirectResponse(url="/community/login", status_code=303)
 
-    raw_invite = (invite or "").strip()
+    if _guess_limited(account.id, "join", 20, 600):
+        return PlainTextResponse("Too many attempts. Try again later.", status_code=429)
+    raw_invite = (invite or "").strip()[:300]
     # Secure invite parser: accepts alexihub://server-invite/<code>,
     # /community/api/server-invites/respond/<code>, discord-like links ending in a code,
     # or just the random code itself. Direct server ids are no longer accepted.
@@ -2953,6 +3129,7 @@ async def server_message_submit(
             status_code=303,
         )
 
+    image_url = crud.clean_media_url(image_url)
     content, image_url, _media_item = await _prepare_custom_media_message(
         db, account.id, content, image_url, context="server", server_id=server_id
     )
@@ -3003,9 +3180,13 @@ async def server_message_edit_submit(
     if not await crud.is_server_member(db, server_id, account.id):
         return _forbidden_response()
 
+    channel = await crud.get_server_channel(db, server_id, channel_id)
+    if not channel or not await crud.can_access_server_channel(db, server_id, channel, account.id):
+        return _forbidden_response()
+
     message = await crud.get_server_message(db, server_id, channel_id, message_id)
     if message and message.author_id == account.id and not getattr(message, "is_forwarded", False) and content.strip():
-        updated = await crud.update_server_message(db, message, content.strip(), image_url.strip())
+        updated = await crud.update_server_message(db, message, content.strip(), crud.clean_media_url(image_url))
         mention_affected = await _sync_server_message_mentions(db, updated)
         await _broadcast_mention_counts(mention_affected)
         await realtime_channels.broadcast(
@@ -3035,6 +3216,10 @@ async def server_message_delete_submit(
     if not account:
         return RedirectResponse(url="/community/login", status_code=303)
     if not await crud.is_server_member(db, server_id, account.id):
+        return _forbidden_response()
+
+    channel = await crud.get_server_channel(db, server_id, channel_id)
+    if not channel or not await crud.can_access_server_channel(db, server_id, channel, account.id):
         return _forbidden_response()
 
     message = await crud.get_server_message(db, server_id, channel_id, message_id)
@@ -3134,7 +3319,7 @@ async def server_settings_submit(
         if int(boost_status.get("total_boosts") or 0) >= SERVER_BANNER_REQUIRED_BOOSTS:
             next_banner_url = "" if remove_server_banner == "1" else server_banner_url
             await _set_server_banner_url(db, server_id, next_banner_url)
-    safe_redirect = redirect_to if redirect_to.startswith("/community/") else f"/community/servers/{server_id}"
+    safe_redirect = _safe_next_url(redirect_to, f"/community/servers/{server_id}")
     return RedirectResponse(url=safe_redirect, status_code=303)
 
 
@@ -3333,10 +3518,7 @@ async def api_respond_server_application(
         return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
     if not await crud.can_manage_server(db, server_id, account.id):
         return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
-    try:
-        body = await request.json()
-    except Exception:
-        body = {}
+    body = await _json_dict(request)
     action = str(body.get("action") or "").strip().lower()
     if action not in {"accept", "decline"}:
         return JSONResponse({"ok": False, "error": "invalid_action"}, status_code=400)
@@ -3374,6 +3556,8 @@ async def api_redeem_server_boost_code(request: Request, db: AsyncSession = Depe
         body = await request.json()
     except Exception:
         body = {}
+    if _guess_limited(account.id, "redeem", 10, 600):
+        return JSONResponse(_RATE_LIMITED_JSON, status_code=429)
     result = await crud.redeem_server_boost_gift_code(
         db,
         account.id,
@@ -3627,10 +3811,7 @@ async def api_moderate_server_member(
     if not await crud.can_manage_server(db, server_id, actor.id):
         return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
 
-    try:
-        body = await request.json()
-    except Exception:
-        body = {}
+    body = await _json_dict(request)
     action = str(body.get("action") or "").strip().lower()
 
     if action == "set_role":
@@ -3759,7 +3940,7 @@ async def server_invite_submit(
                     {"ok": False, "error": "rate_limited", "retry_after_ms": retry_after_ms},
                     status_code=429,
                 )
-            safe_redirect = redirect_to if redirect_to.startswith("/community/") else f"/community/servers/{server_id}"
+            safe_redirect = _safe_next_url(redirect_to, f"/community/servers/{server_id}")
             return _message_rate_limit_redirect(safe_redirect, retry_after_ms)
 
         invite = await crud.invite_friend_to_server(db, server_id, account_id, target_id)
@@ -3813,7 +3994,7 @@ async def server_invite_submit(
             },
             status_code=409,
         )
-    safe_redirect = redirect_to if redirect_to.startswith("/community/") else f"/community/servers/{server_id}"
+    safe_redirect = _safe_next_url(redirect_to, f"/community/servers/{server_id}")
     return RedirectResponse(url=safe_redirect, status_code=303)
 
 
@@ -4147,8 +4328,10 @@ async def api_accept_server_invite_by_code(invite_code: str, request: Request, d
     viewer = await current_account(request, db)
     if not viewer:
         return JSONResponse({"error": "not_logged_in"}, status_code=401)
-    body = await request.json() if request.headers.get("content-type", "").lower().startswith("application/json") else {}
+    body = await _json_dict(request)
     requested_channel_id = _parse_optional_int(body.get("channel_id"))
+    if _guess_limited(viewer.id, "join", 20, 600):
+        return JSONResponse({"error": "rate_limited"}, status_code=429)
     invite = await crud.accept_server_invite_by_code(db, invite_code, viewer.id)
     if not invite:
         return JSONResponse({"error": "not_found_or_used"}, status_code=404)
@@ -4167,9 +4350,11 @@ async def api_respond_server_invite(invite_code: str, request: Request, db: Asyn
     if not viewer:
         return JSONResponse({"error": "not_logged_in"}, status_code=401)
 
-    body = await request.json()
+    body = await _json_dict(request)
     accept = bool(body.get("accept"))
     requested_channel_id = _parse_optional_int(body.get("channel_id"))
+    if _guess_limited(viewer.id, "join", 20, 600):
+        return JSONResponse({"error": "rate_limited"}, status_code=429)
     invite = await crud.respond_server_invite(db, invite_code, viewer.id, accept)
     if not invite:
         return JSONResponse({"error": "not_found_or_used"}, status_code=404)
@@ -4218,6 +4403,8 @@ async def api_nitro_redeem(request: Request, db: AsyncSession = Depends(get_db))
             code = str(form.get("code") or "")
         except Exception:
             code = ""
+    if _guess_limited(account.id, "redeem", 10, 600):
+        return JSONResponse(_RATE_LIMITED_JSON, status_code=429)
     result = await crud.redeem_nitro_gift_code(db, account.id, code)
     return JSONResponse(result, status_code=200 if result.get("ok") else 400)
 
@@ -5315,7 +5502,7 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
                 except Exception:
                     after_id = 0
                 async with AsyncSessionLocal() as db:
-                    if not await crud.is_server_member(db, server_id, account_id):
+                    if not await _ws_channel_still_allowed(db, websocket, account_id, server_id, channel_id):
                         await websocket.close(code=1008)
                         return
                     missed = await crud.list_server_messages_after(
@@ -5367,14 +5554,14 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
                 except Exception:
                     edit_id = 0
                 content = (data.get("content") or "").strip()
-                image_url = (data.get("image_url") or "").strip()
+                image_url = crud.clean_media_url(data.get("image_url"))
                 if not edit_id or not content:
                     continue
                 if len(content) > 4000:
                     content = content[:4000]
 
                 async with AsyncSessionLocal() as db:
-                    if not await crud.is_server_member(db, server_id, account_id):
+                    if not await _ws_channel_still_allowed(db, websocket, account_id, server_id, channel_id):
                         await websocket.close(code=1008)
                         return
                     message = await crud.get_server_message(db, server_id, channel_id, edit_id)
@@ -5397,7 +5584,7 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
                 continue
 
             content = (data.get("content") or "").strip()
-            image_url = (data.get("image_url") or "").strip()
+            image_url = crud.clean_media_url(data.get("image_url"))
             voice_url = _clean_voice_url(data.get("voice_url"))
             voice_duration = _parse_optional_int(data.get("voice_duration")) or 0
             voice_duration = max(0, min(voice_duration, MAX_VOICE_SECONDS)) if voice_url else 0
@@ -5414,7 +5601,7 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
                 continue
 
             async with AsyncSessionLocal() as db:
-                if not await crud.is_server_member(db, server_id, account_id):
+                if not await _ws_channel_still_allowed(db, websocket, account_id, server_id, channel_id):
                     await websocket.close(code=1008)
                     return
                 channel = await crud.get_server_channel(db, server_id, channel_id)
@@ -5584,11 +5771,13 @@ async def dm_message_submit(
         return RedirectResponse(url=f"/community/dm/{other.username}", status_code=303)
 
     thread = await crud.get_or_create_dm_thread(db, account.id, other.id)
+    image_url = crud.clean_media_url(image_url)
     content, image_url, _media_item = await _prepare_custom_media_message(
         db, account.id, content, image_url, context="dm", server_id=None
     )
-    voice_url = (voice_url or "").strip()
+    voice_url = _clean_voice_url(voice_url)
     safe_voice_duration = _parse_optional_int(voice_duration) or 0
+    safe_voice_duration = max(0, min(safe_voice_duration, MAX_VOICE_SECONDS)) if voice_url else 0
     realtime_payload = None
     if thread and (content.strip() or image_url.strip() or voice_url):
         retry_after_ms = await message_rate_limiter.check(account.id)
@@ -5640,7 +5829,7 @@ async def dm_message_edit_submit(
         and not crud.parse_nitro_dm_gift_marker(message.content)
         and content.strip()
     ):
-        updated = await crud.update_dm_message(db, message, content.strip(), image_url.strip())
+        updated = await crud.update_dm_message(db, message, content.strip(), crud.clean_media_url(image_url))
         mention_affected = await _sync_dm_message_mentions(db, updated)
         await _broadcast_mention_counts(mention_affected)
         await realtime_channels.broadcast(
@@ -5807,7 +5996,7 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
                 except Exception:
                     edit_id = 0
                 content = (data.get("content") or "").strip()
-                image_url = (data.get("image_url") or "").strip()
+                image_url = crud.clean_media_url(data.get("image_url"))
                 if not edit_id or not content:
                     continue
                 if len(content) > 4000:
@@ -5842,8 +6031,8 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
                 continue
 
             content = (data.get("content") or "").strip()
-            image_url = (data.get("image_url") or "").strip()
-            voice_url = (data.get("voice_url") or "").strip()
+            image_url = crud.clean_media_url(data.get("image_url"))
+            voice_url = _clean_voice_url(data.get("voice_url"))
             voice_duration = _parse_optional_int(data.get("voice_duration")) or 0
             voice_duration = max(0, min(voice_duration, MAX_VOICE_SECONDS)) if voice_url else 0
             client_nonce = str(data.get("client_nonce") or "").strip()[:64] or None
@@ -6005,7 +6194,10 @@ async def api_settings_change_password(request: Request, db: AsyncSession = Depe
     confirm_password = str(data.get("confirm_password") or "")
     revoke_other_sessions = bool(data.get("revoke_other_sessions", True))
 
+    if auth.rate_limiter.blocked(f"pwcheck:{account.id}", 8, 900):
+        return _settings_error("Забагато спроб. Спробуй пізніше.", 429, "rate_limited")
     if not _current_password_is_valid(account, current_password):
+        auth.rate_limiter.record(f"pwcheck:{account.id}", 900)
         return _settings_error("Поточний пароль неправильний.", 401, "invalid_current_password")
     if new_password != confirm_password:
         return _settings_error("Новий пароль і підтвердження не збігаються.", 400, "password_mismatch")
@@ -6021,7 +6213,7 @@ async def api_settings_change_password(request: Request, db: AsyncSession = Depe
     updated = await crud.update_account_password(
         db,
         account.id,
-        auth.hash_password(new_password),
+        await asyncio.to_thread(auth.hash_password, new_password),
         revoke_other_sessions=revoke_other_sessions,
     )
     if not updated:
@@ -6049,7 +6241,10 @@ async def api_settings_change_identity(request: Request, db: AsyncSession = Depe
     field = str(data.get("field") or "").strip().lower()
     value = str(data.get("value") or "").strip()
     current_password = str(data.get("current_password") or "")
+    if auth.rate_limiter.blocked(f"pwcheck:{account.id}", 8, 900):
+        return _settings_error("Забагато спроб. Спробуй пізніше.", 429, "rate_limited")
     if not _current_password_is_valid(account, current_password):
+        auth.rate_limiter.record(f"pwcheck:{account.id}", 900)
         return _settings_error("Поточний пароль неправильний.", 401, "invalid_current_password")
 
     username = None
@@ -6658,7 +6853,7 @@ async def api_respond_friend_request(friendship_id: int, request: Request, db: A
     if not viewer:
         return JSONResponse({"error": "not_logged_in"}, status_code=401)
 
-    body = await request.json()
+    body = await _json_dict(request)
     accept = bool(body.get("accept"))
 
     friendship = await crud.respond_friend_request(db, friendship_id, viewer.id, accept)
