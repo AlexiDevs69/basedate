@@ -11170,6 +11170,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
 
   function closeSub() {
     sub.classList.remove('open');
+    sub.style.display = '';
     sub.innerHTML = '';
     state.subFor = null;
     menu.querySelectorAll('.open-sub').forEach(function (n) { n.classList.remove('open-sub'); });
@@ -11177,6 +11178,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
 
   function closeMenu() {
     menu.classList.remove('open');
+    menu.style.display = '';
     menu.innerHTML = '';
     closeSub();
     state.serverId = null;
@@ -11199,7 +11201,6 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     sub.appendChild(panelEl);
     state.subFor = id;
     var r = anchorEl.getBoundingClientRect();
-    sub.style.display = 'block';
     placeFixed(sub, r.right + 4, r.top - 6);
     menu.querySelectorAll('.open-sub').forEach(function (n) { n.classList.remove('open-sub'); });
     anchorEl.classList.add('open-sub');
@@ -11436,6 +11437,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     var hasUnread = !!(unreadBadge && !unreadBadge.hidden);
     var isMuted = p.muteUntil === -1 || (p.muteUntil && p.muteUntil > Date.now());
 
+    closeSub();
     menu.innerHTML = '';
 
     menu.appendChild(makeItem({
@@ -11863,12 +11865,14 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
 
   function closeSub() {
     sub.classList.remove('open');
+    sub.style.display = '';
     sub.innerHTML = '';
     state.subFor = null;
     menu.querySelectorAll('.open-sub').forEach(function (n) { n.classList.remove('open-sub'); });
   }
   function closeMenu() {
     menu.classList.remove('open');
+    menu.style.display = '';
     menu.innerHTML = '';
     closeSub();
   }
@@ -11888,7 +11892,6 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     sub.appendChild(panelEl);
     state.subFor = id;
     var r = anchorEl.getBoundingClientRect();
-    sub.style.display = 'block';
     placeFixed(sub, r.right + 4, r.top - 6);
     menu.querySelectorAll('.open-sub').forEach(function (n) { n.classList.remove('open-sub'); });
     anchorEl.classList.add('open-sub');
@@ -12205,6 +12208,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     var isPinned = row.classList.contains('ah-dm-pinned');
     var isIgnored = row.classList.contains('ah-dm-ignored');
 
+    closeSub();
     menu.innerHTML = '';
 
     menu.appendChild(makeItem({
@@ -15194,5 +15198,10 @@ html body .ah-v3-mini.ah-profile-theme .ah-v3-badges{background:rgba(255,255,255
 })();
 </script>
 
+<style id="ah-ctx-menu-hidden-fix">
+/* Closed context menus / submenus must never leave an empty grey "island" behind */
+.ahctx-menu:not(.open),.ahctx-sub-panel:not(.open){display:none!important}
+.ahctx-sub-panel:empty,.ahctx-menu:empty{display:none!important}
+</style>
 </body>
 </html>
