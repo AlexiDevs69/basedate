@@ -83,7 +83,11 @@ a:hover{text-decoration:underline}
             <input class="form-input" type="password" id="password" name="password" required autocomplete="current-password">
           </div>
 
-          <button class="submit-btn" type="submit">Log In</button>
+          {% if turnstile_site_key %}
+            <div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-theme="dark" style="margin: 4px 0 16px;"></div>
+            <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+            {% endif %}
+            <button class="submit-btn" type="submit">Log In</button>
         </form>
 
         <div class="switch-link">Need an account? <a href="/community/register">Register</a></div>
