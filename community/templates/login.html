@@ -7,6 +7,7 @@
   <title>Log In // AlexiHub</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  {% if turnstile_site_key %}<link rel="preconnect" href="https://challenges.cloudflare.com">{% endif %}
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
   <style>
 :root{--brand:#ff9f43;--brand-hover:#f28a1f;--panel:rgba(17,36,46,.92);--field:#0c1a22;--field-border:#284655;--text:#eef7f9;--muted:#a9c3cc;--muted-2:#7f9fab;--link:#5fd3e6;--danger:#ff6b6b;--font:'Nunito',system-ui,-apple-system,'Segoe UI',sans-serif}
@@ -18,7 +19,7 @@ body{margin:0;min-height:100vh;min-height:100dvh;overflow-x:hidden;color:var(--t
 .brand-mark{width:31px;height:25px;display:grid;place-items:center;border-radius:9px;background:rgba(255,255,255,.96);color:#4f5deb;box-shadow:0 8px 24px rgba(17,20,80,.25)}
 .brand-mark svg{width:21px;height:21px;display:block}
 .page{position:relative;z-index:2;min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:84px 20px 120px}
-.auth-card{width:min(var(--w),100%);padding:34px 32px;border-radius:8px;background:var(--panel);border:1px solid #23495a;box-shadow:0 6px 0 rgba(6,20,27,.7),0 24px 50px rgba(0,0,0,.35);backdrop-filter:blur(6px)}
+.auth-card{width:min(var(--w),100%);padding:34px 32px;border-radius:8px;background:var(--panel);border:1px solid #23495a;box-shadow:0 6px 0 rgba(6,20,27,.7),0 24px 50px rgba(0,0,0,.35)}
 .heading{margin:0;text-align:center;font-size:26px;line-height:1.25;font-weight:900}
 .subtitle{margin:7px 0 22px;text-align:center;color:var(--muted);font-size:15px}
 .heading.solo{margin-bottom:24px}
@@ -85,13 +86,12 @@ a:hover{text-decoration:underline}
           </div>
 
           {% if turnstile_site_key %}
-          <link rel="preconnect" href="https://challenges.cloudflare.com">
           <style>
             #ts-box{min-height:0}
             #ts-box.ts-modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10001;
               padding:14px;background:#1b1b1f;border:1px solid rgba(255,255,255,.12);border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
             #ts-overlay{position:fixed;inset:0;z-index:10000;display:none;align-items:center;justify-content:center;
-              background:rgba(10,10,14,.72);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+              background:rgba(10,10,14,.85)}
             #ts-overlay.on{display:flex}
             .ts-card{display:flex;flex-direction:column;align-items:center;gap:14px;padding:26px 34px;min-width:200px;
               background:#1b1b1f;border:1px solid rgba(255,255,255,.1);border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.55);
@@ -121,13 +121,17 @@ a:hover{text-decoration:underline}
             var overlay = document.getElementById("ts-overlay");
             var card = document.getElementById("ts-card");
             var labelEl = document.getElementById("ts-label");
-            var widgetId = null, busy = false, ready = false, pending = false;
+            var widgetId = null, busy = false, ready = false, pending = false, pendingTimer = null;
+            // 3D-фон ставимо на паузу, поки Cloudflare рахує виклик (інакше GPU/CPU зайняті і капча «зависає»)
+            window.__catsHold = true;
+            function releaseCats() { window.__catsHold = false; if (window.__catsResume) window.__catsResume(); }
+            setTimeout(releaseCats, 20000); // запобіжник: фон не лишиться статичним назавжди
 
             function show(t) { msg.textContent = t; msg.style.display = t ? "" : "none"; }
             function overlayOn(text) { labelEl.textContent = text || "Перевіряємо…"; overlay.classList.add("on"); }
             function overlayOff() { overlay.classList.remove("on"); card.classList.remove("interactive"); box.classList.remove("ts-modal"); }
             function idle() { busy = false; pending = false; overlayOff(); }
-            function go() { form.dataset.tsOk = "1"; overlayOn("Перевіряємо…"); form.submit(); }
+            function go() { clearTimeout(pendingTimer); form.dataset.tsOk = "1"; overlayOn("Перевіряємо…"); form.submit(); }
 
             window.__tsLoaded = function () {
               show("");
@@ -135,9 +139,10 @@ a:hover{text-decoration:underline}
                 sitekey: SITEKEY,
                 theme: "dark",
                 appearance: "interaction-only", // runs in background on page load; shown only if interaction is required
-                callback: function () { ready = true; if (pending) go(); },
+                callback: function () { ready = true; releaseCats(); if (pending) go(); },
                 "before-interactive-callback": function () {
                   // Cloudflare needs a click: show its widget on top of our overlay.
+                  clearTimeout(pendingTimer);
                   if (pending) { card.classList.add("interactive"); labelEl.textContent = "Підтвердь, що ти не робот"; }
                   else { overlayOn("Підтвердь, що ти не робот"); card.classList.add("interactive"); }
                   box.classList.add("ts-modal");
@@ -147,7 +152,7 @@ a:hover{text-decoration:underline}
                   if (!pending) overlayOff();
                 },
                 "error-callback": function (code) {
-                  ready = false; idle(); show("Помилка капчі (" + code + "). Онови сторінку та спробуй ще раз.");
+                  ready = false; idle(); releaseCats(); show("Помилка капчі (" + code + "). Онови сторінку та спробуй ще раз.");
                   return true;
                 },
                 "expired-callback": function () { ready = false; },
@@ -156,7 +161,7 @@ a:hover{text-decoration:underline}
             };
 
             setTimeout(function () {
-              if (widgetId === null) show("Капча не завантажилась (адблок/CSP/домен). Відкрий консоль (F12) і глянь помилку.");
+              if (widgetId === null) { releaseCats(); show("Капча не завантажилась (адблок/CSP/домен). Відкрий консоль (F12) і глянь помилку."); }
             }, 6000);
 
             form.addEventListener("submit", function (e) {
@@ -170,6 +175,13 @@ a:hover{text-decoration:underline}
               show("");
               if (ready) { go(); return; }
               pending = true; busy = true; overlayOn("Перевіряємо…");
+              // Якщо перевірка зависла — не тримаємо оверлей вічно, даємо повторити
+              clearTimeout(pendingTimer);
+              pendingTimer = setTimeout(function () {
+                if (!pending) return;
+                idle(); show("Перевірка триває надто довго. Спробуй ще раз.");
+                if (widgetId !== null) turnstile.reset(widgetId);
+              }, 25000);
             });
 
             // Coming back with the Back button: drop the stuck overlay and get a fresh token.
@@ -280,7 +292,7 @@ let W,H,U,footY,cats=[],extra=[];
 function clear(){cats.forEach(c=>{scene.remove(c.g);scene.remove(c.sh)});extra.forEach(o=>scene.remove(o));cats=[];extra=[]}
 function resize(){
  clear();
- const d=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;
+ const d=Math.min(devicePixelRatio||1,1.5);W=innerWidth;H=innerHeight;
  R.setPixelRatio(d);R.setSize(W,H,false);
  U=W<600?2.4:3.6;const floor=Math.min(90,H*.14),visH=H/U,visW=W/U,ang=.22;
  const dist=visH/2/Math.tan(THREE.MathUtils.degToRad(17.5)),feetScreen=H-floor+floor*.6;
@@ -304,7 +316,7 @@ function resize(){
  R.render(scene,cam);
 }
 const still=matchMedia('(prefers-reduced-motion:reduce)').matches;
-let last=performance.now(),T=0;
+let last=performance.now(),T=0,raf=0,paused=!!window.__catsHold;
 function frame(now){
  const dt=Math.min(.05,(now-last)/1000);last=now;if(!still)T+=dt;
  const visW=W/U;
@@ -315,10 +327,12 @@ function frame(now){
   c.g.scale.y=1+s*.012;c.tail.rotation.z=Math.sin(T*2.6+c.ph)*.35;c.sh.scale.x=1-hop/45;
  });
  R.render(scene,cam);
- if(!still)requestAnimationFrame(frame);
+ if(!still&&!paused&&!raf)raf=requestAnimationFrame(tick);
 }
-addEventListener('resize',()=>{resize();if(still)frame(performance.now())});
-resize();requestAnimationFrame(frame);
+function tick(now){raf=0;frame(now)}
+window.__catsResume=()=>{paused=false;if(!still&&!raf){last=performance.now();raf=requestAnimationFrame(tick)}};
+addEventListener('resize',()=>{resize();if(still||paused)frame(performance.now())});
+resize();raf=requestAnimationFrame(tick);
 })();
 </script>
 </body>
