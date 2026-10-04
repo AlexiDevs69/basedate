@@ -2030,9 +2030,11 @@ document.addEventListener('DOMContentLoaded',()=>{
     <button id="ah-v3-avatar" class="ah-v3-avatar" type="button"><span id="ah-v3-avatar-text"></span><span id="ah-v3-status" class="ah-v3-status offline"></span></button>
     <div class="ah-v3-name-row">
       <div id="ah-v3-name" class="ah-v3-name"><!--i18n:common.text.user-->{{ i18n_t("common.text.user") }}</div>
+      <button id="ah-v3-badges-toggle" class="ah-v3-caret" type="button" aria-expanded="false" aria-controls="ah-v3-badges" aria-label="Badges" hidden><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M1.5 3.5h9L6 9.2z"/></svg></button>
       <span id="ah-v3-tag" class="ah-v3-tag ah-tag-clickable" hidden><b></b><span></span></span>
     </div>
     <div id="ah-v3-handle" class="ah-v3-handle">@user</div>
+    <div id="ah-v3-badges" class="ah-v3-badges" role="group" aria-label="Badges" hidden></div>
     <div id="ah-v3-role" class="ah-v3-role"><!--i18n:common.text.member-->{{ i18n_t("common.text.member") }}</div>
     <div class="ah-v3-actions"><a id="ah-v3-message" href="#"><svg id="ah-v3-message-pencil" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="M16.7 3.3a2.5 2.5 0 0 1 3.5 3.5L8.5 18.5 3 20l1.5-5.5Z"/></svg><span id="ah-v3-message-label"><!--i18n:privacy.blocking.message-->{{ i18n_t("privacy.blocking.message") }}</span></a><button id="ah-v3-open-full" type="button"><!--i18n:privacy.blocking.full-->{{ i18n_t('privacy.blocking.full') }}</button></div>
     <div class="ah-v3-status-menu">
@@ -4501,6 +4503,7 @@ const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabe
     html+=verifiedBadgeHtml(nitro);
     if(nitro&&nitro.active)html+=badgeHtml(nitro);
     html+=gifterBadgeHtml(nitro);
+    if(el.id==='ah-v3-name' && window.AlexiHubMiniBadges){window.AlexiHubMiniBadges.set(html,el.dataset.profileUsername||'');return;}
     if(html)el.insertAdjacentHTML('afterend',html);
   }
   function profileUsernameForName(el){
@@ -7762,5 +7765,136 @@ html.ah-theme-anim *,html.ah-theme-anim *::before,html.ah-theme-anim *::after{tr
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initCard);else initCard();
 })();
 </script>
+
+<style id="ah-mini-profile-right-avatar">
+/* === Mini profile: avatar on the right, name at avatar level, caret toggles badges === */
+html body .ah-v3-mini .ah-v3-body{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto;
+  column-gap:10px;
+  align-items:start;
+  padding:0 14px 14px!important;
+}
+html body .ah-v3-mini .ah-v3-body > *{grid-column:1 / -1;grid-row:auto}
+html body .ah-v3-mini .ah-v3-avatar{
+  grid-column:2!important;
+  grid-row:1 / span 2!important;
+  justify-self:end;
+  margin:-44px 0 0 0!important;
+}
+html body .ah-v3-mini .ah-v3-name-row{
+  grid-column:1!important;
+  grid-row:1!important;
+  align-self:end;
+  margin:0!important;
+  padding-top:10px;
+  min-width:0;
+}
+html body .ah-v3-mini .ah-v3-name-row .ah-v3-name{
+  flex:0 1 auto;
+  min-width:0;
+  overflow:hidden!important;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+html body .ah-v3-mini .ah-v3-handle{
+  grid-column:1!important;
+  grid-row:2!important;
+  align-self:start;
+  min-width:0;
+}
+html body .ah-v3-mini .ah-v3-role{justify-self:start}
+html body .ah-v3-mini .ah-v3-caret{
+  flex:0 0 auto;
+  width:20px!important;height:20px!important;
+  padding:0!important;margin:0!important;
+  border:0!important;border-radius:6px!important;
+  background:transparent!important;
+  color:#b5bac1;
+  display:inline-grid;place-items:center;
+  cursor:pointer;
+  transition:background .14s ease,color .14s ease;
+}
+html body .ah-v3-mini .ah-v3-caret[hidden]{display:none!important}
+html body .ah-v3-mini .ah-v3-caret:hover{background:rgba(255,255,255,.10)!important;color:#fff}
+html body .ah-v3-mini .ah-v3-caret:focus-visible{outline:2px solid #5865f2;outline-offset:1px}
+html body .ah-v3-mini .ah-v3-caret svg{width:12px;height:12px;display:block;fill:currentColor;transition:transform .16s ease}
+html body .ah-v3-mini.ah-badges-open .ah-v3-caret svg{transform:rotate(180deg)}
+html body .ah-v3-mini .ah-v3-badges{
+  display:none;
+  justify-self:start;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:9px;
+  max-width:100%;
+  margin-top:10px;
+  padding:7px 11px;
+  border-radius:10px;
+  background:rgba(255,255,255,.07);
+  box-sizing:border-box;
+}
+html body .ah-v3-mini .ah-v3-badges[hidden]{display:none!important}
+html body .ah-v3-mini.ah-badges-open .ah-v3-badges:not([hidden]){display:flex;animation:ahv3badges .16s ease-out both}
+html body .ah-v3-mini .ah-v3-badges > *{margin:0!important;top:0!important}
+@keyframes ahv3badges{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+html[data-theme="light"] body .ah-v3-mini .ah-v3-caret{color:#4e5058}
+html[data-theme="light"] body .ah-v3-mini .ah-v3-caret:hover{background:rgba(0,0,0,.08)!important;color:#111318}
+html[data-theme="light"] body .ah-v3-mini .ah-v3-badges{background:rgba(0,0,0,.06)}
+html body .ah-v3-mini.ah-profile-theme .ah-v3-caret{color:#d8dbe2}
+html body .ah-v3-mini.ah-profile-theme .ah-v3-badges{background:rgba(255,255,255,.12)}
+@media (prefers-reduced-motion:reduce){
+  html body .ah-v3-mini .ah-v3-caret svg{transition:none}
+  html body .ah-v3-mini.ah-badges-open .ah-v3-badges:not([hidden]){animation:none}
+}
+</style>
+
+<script id="ah-mini-badge-drawer-js">
+(function(){
+  if(window.AlexiHubMiniBadges) return;
+  var KEY='ah_mini_badges_open', byUser={}, current='';
+  function mini(){return document.getElementById('ah-v3-mini')}
+  function drawer(){return document.getElementById('ah-v3-badges')}
+  function caret(){return document.getElementById('ah-v3-badges-toggle')}
+  function nameEl(){return document.getElementById('ah-v3-name')}
+  function wantOpen(){try{return localStorage.getItem(KEY)==='1'}catch(e){return false}}
+  function saveOpen(v){try{localStorage.setItem(KEY,v?'1':'0')}catch(e){}}
+  function render(html){
+    var m=mini(), d=drawer(), c=caret(); if(!m||!d||!c) return;
+    html=html||'';
+    if(d.dataset.html!==html){ d.innerHTML=html; d.dataset.html=html; }
+    var has=!!html.trim();
+    c.hidden=!has; d.hidden=!has;
+    var open=has&&wantOpen();
+    m.classList.toggle('ah-badges-open',open);
+    c.setAttribute('aria-expanded',open?'true':'false');
+  }
+  function userNow(){var n=nameEl();return String(n&&n.dataset&&n.dataset.profileUsername||'').toLowerCase()}
+  window.AlexiHubMiniBadges={
+    set:function(html,user){
+      var key=String(user||userNow()||'').toLowerCase();
+      byUser[key]=html||'';
+      if(key===userNow()||!userNow()) render(byUser[key]);
+    }
+  };
+  function init(){
+    var c=caret(), n=nameEl(); if(!c||!n) return;
+    c.addEventListener('click',function(e){
+      e.preventDefault(); e.stopPropagation();
+      var m=mini(); if(!m) return;
+      var open=!m.classList.contains('ah-badges-open');
+      saveOpen(open);
+      render(drawer()?drawer().dataset.html:'');
+    });
+    // Another user got loaded into the card: show cached badges at once, or hide the old ones until the fetch returns.
+    new MutationObserver(function(){
+      var u=userNow(); if(u===current) return; current=u;
+      render(byUser[u]||'');
+    }).observe(n,{childList:true,characterData:true,subtree:true,attributes:true,attributeFilter:['data-profile-username']});
+    current=userNow();
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+})();
+</script>
+
 </body>
 </html>
