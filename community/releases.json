@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.242.3",
+      "date": "2026-10-04",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Виправлено: submenu display handling in dm_chat.html."
+      ],
+      "source_sha": "2619d5782a01ca3a2f3506ee83ed7ec25872c28b"
+    },
+    {
       "version": "1.242.2",
       "date": "2026-10-04",
       "title": "Виправлення та стабільність",
