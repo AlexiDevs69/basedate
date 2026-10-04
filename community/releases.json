@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.231.19",
+      "date": "2026-10-04",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update Nitro references to Plus in travel.html."
+      ],
+      "source_sha": "0a54c8e22c210e33c3c8e9fe1f82b89205c5d712"
+    },
+    {
       "version": "1.231.18",
       "date": "2026-10-04",
       "title": "Виправлення та стабільність",
