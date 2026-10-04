@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.231.13",
+      "date": "2026-10-04",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance profile color management in home.html."
+      ],
+      "source_sha": "ee946f699182a05088e018db730d6a8d3cab5132"
+    },
+    {
       "version": "1.231.12",
       "date": "2026-10-04",
       "title": "Виправлення та стабільність",
