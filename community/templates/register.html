@@ -76,7 +76,11 @@ a:hover{text-decoration:underline}
 
         <p class="terms">By registering, you agree to the AlexiHub community rules and privacy policy.</p>
 
-        <button class="submit-btn" type="submit">Continue</button>
+        {% if turnstile_site_key %}
+            <div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-theme="dark" style="margin: 4px 0 16px;"></div>
+            <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+            {% endif %}
+            <button class="submit-btn" type="submit">Continue</button>
       </form>
 
       <div class="switch-link">Already have an account? <a href="/community/login">Log In</a></div>
