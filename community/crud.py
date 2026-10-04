@@ -11,7 +11,7 @@ import secrets
 
 from sqlalchemy import and_, delete, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import DBAPIError
+from sqlalchemy.exc import DBAPIError, IntegrityError
 from sqlalchemy.orm import aliased, selectinload
 
 from community.models import (
@@ -191,6 +191,30 @@ def parse_server_invite_dm_content(content: str | None) -> tuple[str, int | None
     invite_code = m.group(1)
     channel_id = int(m.group(2)) if m.group(2) else None
     return invite_code, channel_id
+
+
+MAX_MESSAGE_CHARS = 4000
+MAX_POST_CHARS = 4000
+MAX_COMMENT_CHARS = 1000
+MAX_BIO_CHARS = 2000
+
+# Characters that could break out of an HTML attribute / CSS url(...) context.
+_MEDIA_URL_FORBIDDEN = re.compile(r"[\s\x00-\x1f\x7f<>\"'`()\\]")
+
+
+def clean_media_url(value, max_len: int = 2000) -> str:
+    """Return a URL that is safe to store/render as an image or media source,
+    or "" when it is not. Only our own /static/uploads/ files and plain
+    http(s) URLs are accepted -- never javascript:, data:, protocol-relative
+    URLs, or anything containing quotes/brackets/whitespace."""
+    url = str(value or "").strip()
+    if not url or len(url) > max_len or _MEDIA_URL_FORBIDDEN.search(url):
+        return ""
+    if url.startswith("/static/uploads/"):
+        return "" if ".." in url else url
+    if re.match(r"^https?://[^/\s]+", url, re.I):
+        return url
+    return ""
 
 
 def _new_invite_code() -> str:
@@ -397,32 +421,50 @@ async def get_server_invite_link_by_code(db: AsyncSession, code: str) -> dict | 
 
 async def accept_server_invite_link(db: AsyncSession, code: str, account_id: int) -> dict | None:
     """Join a server through a reusable link. Unlike accept_server_invite_by_code
-    this has no fixed invitee, can be reused, and only fails on expiry/limits/bans."""
+    this has no fixed invitee, can be reused, and only fails on expiry/limits/bans.
+
+    The use counter is claimed with ONE atomic UPDATE, so concurrent requests
+    can never push a link past max_uses (the old read-then-write allowed it)."""
     await ensure_server_invite_link_table(db)
     link = await get_server_invite_link_by_code(db, code)
     if not link or link["revoked"]:
         return None
     if link["expires_at"] and link["expires_at"] <= datetime.now(timezone.utc):
         return None
-    if link["max_uses"] and link["uses"] >= link["max_uses"]:
-        return None
 
     server_id = int(link["server_id"])
     if await is_server_banned(db, server_id, account_id):
         return None
 
-    is_new_member = not await is_server_member(db, server_id, account_id)
-    if is_new_member:
-        db.add(ServerMember(server_id=server_id, account_id=account_id, role="member"))
+    if await is_server_member(db, server_id, account_id):
+        # Already inside: just let the caller redirect, don't burn a use.
+        return link
 
-    await db.execute(
-        text("UPDATE community_server_invite_links SET uses = uses + 1 WHERE id = :id"),
+    claimed = await db.execute(
+        text(
+            "UPDATE community_server_invite_links SET uses = uses + 1 "
+            "WHERE id = :id AND revoked = FALSE "
+            "AND (expires_at IS NULL OR expires_at > NOW()) "
+            "AND (max_uses IS NULL OR max_uses = 0 OR uses < max_uses) "
+            "RETURNING uses"
+        ),
         {"id": link["id"]},
     )
-    await db.commit()
-    if is_new_member:
-        await mark_server_onboarding_pending(db, server_id, account_id)
-    link["uses"] = int(link["uses"]) + 1
+    row = claimed.first()
+    if row is None:
+        await db.rollback()
+        return None
+
+    db.add(ServerMember(server_id=server_id, account_id=account_id, role="member"))
+    try:
+        await db.commit()
+    except IntegrityError:
+        # Two simultaneous joins: the other one won. Roll back (this also
+        # undoes our use increment) and treat it as "already a member".
+        await db.rollback()
+        return link
+    await mark_server_onboarding_pending(db, server_id, account_id)
+    link["uses"] = int(row[0])
     return link
 
 
@@ -455,9 +497,12 @@ async def get_account_by_username(db: AsyncSession, username: str) -> Account | 
 
 async def get_account_by_username_ci(db: AsyncSession, username: str) -> Account | None:
     result = await db.execute(
-        select(Account).where(func.lower(Account.username) == username.strip().lower())
+        select(Account)
+        .where(func.lower(Account.username) == username.strip().lower())
+        .order_by(Account.id)
+        .limit(1)
     )
-    return result.scalar_one_or_none()
+    return result.scalars().first()
 
 
 async def get_account_by_telegram_id(db: AsyncSession, telegram_id: int) -> Account | None:
@@ -783,9 +828,9 @@ async def update_own_profile(
         char for char in (pronouns or "").strip()
         if char >= " " and char != "\x7f"
     )[:40].strip() or None
-    account.avatar_url = avatar_url or None
-    account.banner_url = banner_url or None
-    account.bio = bio or None
+    account.avatar_url = clean_media_url(avatar_url, 512) or None
+    account.banner_url = clean_media_url(banner_url, 512) or None
+    account.bio = (bio or "").strip()[:MAX_BIO_CHARS] or None
     account.is_private = bool(is_private)
     await db.commit()
     await db.refresh(account)
@@ -1181,7 +1226,12 @@ async def get_channel_by_slug(db: AsyncSession, slug: str) -> Channel | None:
 async def create_post(
     db: AsyncSession, channel_id: int, author_id: int, content: str, image_url: str | None = None
 ) -> Post:
-    post = Post(channel_id=channel_id, author_id=author_id, content=content, image_url=image_url or None)
+    post = Post(
+        channel_id=channel_id,
+        author_id=author_id,
+        content=(content or "").strip()[:MAX_POST_CHARS],
+        image_url=clean_media_url(image_url, 512) or None,
+    )
     db.add(post)
     await db.commit()
     await db.refresh(post)
@@ -1195,8 +1245,15 @@ async def list_posts_for_channel(db: AsyncSession, channel_id: int, limit: int =
     return list(result.scalars().all())
 
 
+async def post_exists(db: AsyncSession, post_id: int) -> bool:
+    result = await db.execute(select(Post.id).where(Post.id == post_id))
+    return result.scalar_one_or_none() is not None
+
+
 async def toggle_like(db: AsyncSession, post_id: int, account_id: int) -> bool:
     """Returns True if the post is now liked, False if the like was just removed."""
+    if not await post_exists(db, post_id):
+        return False
     result = await db.execute(
         select(PostLike).where(PostLike.post_id == post_id, PostLike.account_id == account_id)
     )
@@ -1206,7 +1263,11 @@ async def toggle_like(db: AsyncSession, post_id: int, account_id: int) -> bool:
         await db.commit()
         return False
     db.add(PostLike(post_id=post_id, account_id=account_id))
-    await db.commit()
+    try:
+        await db.commit()
+    except IntegrityError:
+        # Double click / two tabs: the unique constraint caught the duplicate.
+        await db.rollback()
     return True
 
 
@@ -1222,8 +1283,11 @@ async def has_liked(db: AsyncSession, post_id: int, account_id: int) -> bool:
     return result.scalar_one_or_none() is not None
 
 
-async def add_comment(db: AsyncSession, post_id: int, author_id: int, content: str) -> Comment:
-    comment = Comment(post_id=post_id, author_id=author_id, content=content)
+async def add_comment(db: AsyncSession, post_id: int, author_id: int, content: str) -> Comment | None:
+    clean_content = (content or "").strip()[:MAX_COMMENT_CHARS]
+    if not clean_content or not await post_exists(db, post_id):
+        return None
+    comment = Comment(post_id=post_id, author_id=author_id, content=clean_content)
     db.add(comment)
     await db.commit()
     await db.refresh(comment)
@@ -2252,7 +2316,13 @@ async def accept_server_invite_by_code(db: AsyncSession, invite_code: str | int,
     if is_new_member:
         db.add(ServerMember(server_id=server_id, account_id=account_id, role="member"))
 
-    await db.commit()
+    try:
+        await db.commit()
+    except IntegrityError:
+        # Concurrent accept of the same invite -- the other request already
+        # created the membership. Don't turn that into a 500.
+        await db.rollback()
+        return None
     await db.refresh(invite)
     if is_new_member:
         await mark_server_onboarding_pending(db, server_id, account_id)
@@ -2277,7 +2347,7 @@ async def create_server(
     server = CommunityServer(
         owner_id=owner_id,
         name=name.strip()[:64],
-        icon_url=icon_url.strip() if icon_url else None,
+        icon_url=clean_media_url(icon_url, 512) or None,
         description=description.strip()[:255] if description else None,
     )
     db.add(server)
@@ -2304,7 +2374,7 @@ async def update_server_settings(
     clean_name = name.strip()[:64]
     if clean_name:
         server.name = clean_name
-    server.icon_url = icon_url.strip()[:512] if icon_url and icon_url.strip() else None
+    server.icon_url = clean_media_url(icon_url, 512) or None
     server.description = description.strip()[:255] if description and description.strip() else None
     await db.commit()
     await db.refresh(server)
@@ -2802,7 +2872,7 @@ async def create_server_message(
         author_id=author_id,
         reply_to_id=reply_to_id,
         is_forwarded=bool(is_forwarded),
-        content=content.strip(),
+        content=content.strip()[:MAX_MESSAGE_CHARS],
         image_url=image_url.strip() if image_url else None,
         **voice_kwargs,
     )
@@ -2845,7 +2915,7 @@ async def update_server_message(
     await ensure_message_meta_columns(db)
     if getattr(message, "is_forwarded", False):
         return message
-    message.content = content.strip()
+    message.content = content.strip()[:MAX_MESSAGE_CHARS]
     message.image_url = image_url.strip() if image_url and image_url.strip() else None
     message.edited_at = datetime.now(timezone.utc)
     await db.commit()
@@ -3654,7 +3724,7 @@ async def create_dm_message(
         author_id=author_id,
         reply_to_id=reply_to_id,
         is_forwarded=bool(is_forwarded),
-        content=content.strip(),
+        content=content.strip()[:MAX_MESSAGE_CHARS],
         image_url=image_url.strip() if image_url and image_url.strip() else None,
         voice_url=voice_url.strip() if voice_url and voice_url.strip() else None,
         voice_duration=max(0, int(voice_duration)) if voice_duration else None,
@@ -3756,7 +3826,7 @@ async def update_dm_message(
     await ensure_message_meta_columns(db)
     if getattr(message, "is_forwarded", False):
         return message
-    message.content = content.strip()
+    message.content = content.strip()[:MAX_MESSAGE_CHARS]
     message.image_url = image_url.strip() if image_url and image_url.strip() else None
     message.edited_at = datetime.now(timezone.utc)
 
