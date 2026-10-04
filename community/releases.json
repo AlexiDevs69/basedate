@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.233.6",
+      "date": "2026-10-04",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: color theme input elements in travel.html."
+      ],
+      "source_sha": "97ae2fcc041b4fe6541ea602fbbe279cfd95313c"
+    },
+    {
       "version": "1.233.5",
       "date": "2026-10-04",
       "title": "Виправлення та стабільність",
