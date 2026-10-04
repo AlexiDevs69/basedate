@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.231.14",
+      "date": "2026-10-04",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance profile color handling in travel.html."
+      ],
+      "source_sha": "1d75e2c7366e0f0652539404e5e1fe5982fbcd17"
+    },
+    {
       "version": "1.231.13",
       "date": "2026-10-04",
       "title": "Виправлення та стабільність",
