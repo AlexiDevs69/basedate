@@ -2913,7 +2913,7 @@ async def update_server_message(
     image_url: str | None = None,
 ) -> ServerMessage:
     await ensure_message_meta_columns(db)
-    if getattr(message, "is_forwarded", False):
+    if getattr(message, "is_forwarded", False) or parse_poll_marker(message.content):
         return message
     message.content = content.strip()[:MAX_MESSAGE_CHARS]
     message.image_url = image_url.strip() if image_url and image_url.strip() else None
@@ -3824,7 +3824,7 @@ async def update_dm_message(
     image_url: str | None = None,
 ) -> DirectMessage:
     await ensure_message_meta_columns(db)
-    if getattr(message, "is_forwarded", False):
+    if getattr(message, "is_forwarded", False) or parse_poll_marker(message.content):
         return message
     message.content = content.strip()[:MAX_MESSAGE_CHARS]
     message.image_url = image_url.strip() if image_url and image_url.strip() else None
@@ -9613,3 +9613,279 @@ async def delete_story(db: AsyncSession, story_id: int, account_id: int) -> bool
     ), {"story_id": int(story_id), "account_id": int(account_id)})
     await db.commit()
     return bool(result.rowcount)
+
+
+# ============================================================================
+# Polls (DM + server channels)
+#
+# A poll message is a regular message whose content is the marker
+# "[[ah:poll:<id>]]". The client sees the marker and renders a live poll card,
+# the same way Nitro DM gifts work. Poll data lives in its own tables, so no
+# changes to the message models are needed.
+# ============================================================================
+
+POLL_MARKER_RE = re.compile(r"^\[\[ah:poll:(\d{1,12})\]\]$")
+POLL_QUESTION_MAX = 300
+POLL_OPTION_MAX = 55
+POLL_MIN_OPTIONS = 2
+POLL_MAX_OPTIONS = 10
+POLL_DURATIONS_HOURS = {1, 4, 8, 24, 72, 168, 336}
+POLL_DEFAULT_HOURS = 24
+_POLL_TABLES_READY = False
+
+
+def make_poll_marker(poll_id: int) -> str:
+    return f"[[ah:poll:{int(poll_id)}]]"
+
+
+def parse_poll_marker(content: str | None) -> int | None:
+    match = POLL_MARKER_RE.fullmatch((content or "").strip())
+    return int(match.group(1)) if match else None
+
+
+async def ensure_poll_tables(db: AsyncSession) -> None:
+    global _POLL_TABLES_READY
+    if _POLL_TABLES_READY:
+        return
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_polls (
+            id SERIAL PRIMARY KEY,
+            scope VARCHAR(8) NOT NULL,
+            thread_id INTEGER,
+            server_id INTEGER,
+            channel_id INTEGER,
+            message_id INTEGER,
+            author_id INTEGER NOT NULL,
+            question TEXT NOT NULL,
+            allow_multiple BOOLEAN NOT NULL DEFAULT FALSE,
+            expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+        )
+    """))
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_poll_options (
+            id SERIAL PRIMARY KEY,
+            poll_id INTEGER NOT NULL REFERENCES community_polls(id) ON DELETE CASCADE,
+            position INTEGER NOT NULL DEFAULT 0,
+            text VARCHAR(120) NOT NULL,
+            emoji VARCHAR(32)
+        )
+    """))
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_poll_votes (
+            id SERIAL PRIMARY KEY,
+            poll_id INTEGER NOT NULL REFERENCES community_polls(id) ON DELETE CASCADE,
+            option_id INTEGER NOT NULL REFERENCES community_poll_options(id) ON DELETE CASCADE,
+            account_id INTEGER NOT NULL,
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+            CONSTRAINT uq_community_poll_vote UNIQUE (option_id, account_id)
+        )
+    """))
+    await db.execute(text("CREATE INDEX IF NOT EXISTS ix_community_poll_options_poll ON community_poll_options (poll_id, position)"))
+    await db.execute(text("CREATE INDEX IF NOT EXISTS ix_community_poll_votes_poll ON community_poll_votes (poll_id, account_id)"))
+    await db.commit()
+    _POLL_TABLES_READY = True
+
+
+def clean_poll_input(question, options, duration_hours) -> tuple[dict | None, str | None]:
+    """Validate raw client input. Returns (clean, None) or (None, error_code)."""
+    q = re.sub(r"\s+", " ", str(question or "")).strip()
+    if not q:
+        return None, "question_required"
+    if len(q) > POLL_QUESTION_MAX:
+        return None, "question_too_long"
+    if not isinstance(options, list):
+        return None, "options_required"
+    clean_options: list[dict] = []
+    for raw in options:
+        if isinstance(raw, str):
+            raw = {"text": raw}
+        if not isinstance(raw, dict):
+            continue
+        label = re.sub(r"\s+", " ", str(raw.get("text") or "")).strip()
+        if not label:
+            continue
+        if len(label) > POLL_OPTION_MAX:
+            return None, "option_too_long"
+        emoji = str(raw.get("emoji") or "").strip()[:16]
+        clean_options.append({"text": label, "emoji": emoji or None})
+    if len(clean_options) < POLL_MIN_OPTIONS:
+        return None, "not_enough_options"
+    if len(clean_options) > POLL_MAX_OPTIONS:
+        return None, "too_many_options"
+    try:
+        hours = int(duration_hours)
+    except (TypeError, ValueError):
+        hours = POLL_DEFAULT_HOURS
+    if hours not in POLL_DURATIONS_HOURS:
+        hours = POLL_DEFAULT_HOURS
+    return {"question": q, "options": clean_options, "hours": hours}, None
+
+
+async def create_poll(
+    db: AsyncSession,
+    *,
+    scope: str,
+    author_id: int,
+    question: str,
+    options: list[dict],
+    allow_multiple: bool,
+    hours: int,
+    thread_id: int | None = None,
+    server_id: int | None = None,
+    channel_id: int | None = None,
+) -> int:
+    await ensure_poll_tables(db)
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=int(hours))
+    row = (await db.execute(text("""
+        INSERT INTO community_polls
+            (scope, thread_id, server_id, channel_id, author_id, question, allow_multiple, expires_at)
+        VALUES (:scope, :thread_id, :server_id, :channel_id, :author_id, :question, :multi, :expires_at)
+        RETURNING id
+    """), {
+        "scope": scope, "thread_id": thread_id, "server_id": server_id, "channel_id": channel_id,
+        "author_id": int(author_id), "question": question, "multi": bool(allow_multiple),
+        "expires_at": expires_at,
+    })).first()
+    poll_id = int(row[0])
+    for position, option in enumerate(options):
+        await db.execute(text("""
+            INSERT INTO community_poll_options (poll_id, position, text, emoji)
+            VALUES (:poll_id, :position, :text, :emoji)
+        """), {"poll_id": poll_id, "position": position, "text": option["text"], "emoji": option.get("emoji")})
+    await db.commit()
+    return poll_id
+
+
+async def attach_poll_message(db: AsyncSession, poll_id: int, message_id: int) -> None:
+    await db.execute(text("UPDATE community_polls SET message_id = :m WHERE id = :p"), {"m": int(message_id), "p": int(poll_id)})
+    await db.commit()
+
+
+async def delete_poll(db: AsyncSession, poll_id: int) -> None:
+    await db.execute(text("DELETE FROM community_polls WHERE id = :p"), {"p": int(poll_id)})
+    await db.commit()
+
+
+async def _poll_row(db: AsyncSession, poll_id: int):
+    return (await db.execute(text("""
+        SELECT id, scope, thread_id, server_id, channel_id, message_id, author_id,
+               question, allow_multiple, expires_at
+        FROM community_polls WHERE id = :p
+    """), {"p": int(poll_id)})).mappings().first()
+
+
+async def can_view_poll(db: AsyncSession, poll, account_id: int) -> bool:
+    if not poll:
+        return False
+    if poll["scope"] == "dm":
+        return bool(poll["thread_id"]) and await is_dm_participant(db, int(poll["thread_id"]), account_id)
+    if poll["scope"] == "server":
+        if not poll["server_id"] or not poll["channel_id"]:
+            return False
+        if not await is_server_member(db, int(poll["server_id"]), account_id):
+            return False
+        channel = await get_server_channel(db, int(poll["server_id"]), int(poll["channel_id"]))
+        return bool(channel) and await can_access_server_channel(db, int(poll["server_id"]), channel, account_id)
+    return False
+
+
+async def _poll_payloads(db: AsyncSession, polls: list, viewer_id: int) -> list[dict]:
+    if not polls:
+        return []
+    ids = [int(p["id"]) for p in polls]
+    opt_rows = (await db.execute(text("""
+        SELECT id, poll_id, position, text, emoji FROM community_poll_options
+        WHERE poll_id = ANY(:ids) ORDER BY poll_id, position, id
+    """), {"ids": ids})).mappings().all()
+    vote_rows = (await db.execute(text("""
+        SELECT poll_id, option_id, account_id FROM community_poll_votes WHERE poll_id = ANY(:ids)
+    """), {"ids": ids})).mappings().all()
+    votes_by_option: dict[int, int] = {}
+    voters_by_poll: dict[int, set[int]] = {}
+    mine: set[int] = set()
+    for v in vote_rows:
+        votes_by_option[int(v["option_id"])] = votes_by_option.get(int(v["option_id"]), 0) + 1
+        voters_by_poll.setdefault(int(v["poll_id"]), set()).add(int(v["account_id"]))
+        if int(v["account_id"]) == int(viewer_id):
+            mine.add(int(v["option_id"]))
+    options_by_poll: dict[int, list[dict]] = {}
+    for o in opt_rows:
+        options_by_poll.setdefault(int(o["poll_id"]), []).append({
+            "id": int(o["id"]),
+            "text": o["text"],
+            "emoji": o["emoji"] or "",
+            "votes": votes_by_option.get(int(o["id"]), 0),
+            "voted": int(o["id"]) in mine,
+        })
+    now = datetime.now(timezone.utc)
+    result = []
+    for p in polls:
+        pid = int(p["id"])
+        expires = p["expires_at"]
+        if expires is not None and expires.tzinfo is None:
+            expires = expires.replace(tzinfo=timezone.utc)
+        opts = options_by_poll.get(pid, [])
+        result.append({
+            "id": pid,
+            "question": p["question"],
+            "allow_multiple": bool(p["allow_multiple"]),
+            "expires_at": expires.isoformat() if expires else None,
+            "ended": bool(expires and expires <= now),
+            "author_id": int(p["author_id"]),
+            "total_voters": len(voters_by_poll.get(pid, set())),
+            "total_votes": sum(o["votes"] for o in opts),
+            "options": opts,
+        })
+    return result
+
+
+async def get_polls_payload(db: AsyncSession, poll_ids: list[int], viewer_id: int) -> list[dict]:
+    await ensure_poll_tables(db)
+    ids = sorted({int(i) for i in poll_ids if int(i) > 0})[:50]
+    if not ids:
+        return []
+    rows = (await db.execute(text("""
+        SELECT id, scope, thread_id, server_id, channel_id, message_id, author_id,
+               question, allow_multiple, expires_at
+        FROM community_polls WHERE id = ANY(:ids)
+    """), {"ids": ids})).mappings().all()
+    allowed = [r for r in rows if await can_view_poll(db, r, viewer_id)]
+    return await _poll_payloads(db, allowed, viewer_id)
+
+
+async def vote_poll(db: AsyncSession, poll_id: int, account_id: int, option_id: int) -> tuple[dict | None, str | None]:
+    """Toggle a vote. Single-choice polls move the vote; multi-choice toggles each option."""
+    await ensure_poll_tables(db)
+    poll = await _poll_row(db, poll_id)
+    if not poll or not await can_view_poll(db, poll, account_id):
+        return None, "not_found"
+    expires = poll["expires_at"]
+    if expires is not None and expires.tzinfo is None:
+        expires = expires.replace(tzinfo=timezone.utc)
+    if expires and expires <= datetime.now(timezone.utc):
+        return None, "ended"
+    option = (await db.execute(text(
+        "SELECT id FROM community_poll_options WHERE id = :o AND poll_id = :p"
+    ), {"o": int(option_id), "p": int(poll_id)})).first()
+    if not option:
+        return None, "bad_option"
+    existing = (await db.execute(text(
+        "SELECT id FROM community_poll_votes WHERE option_id = :o AND account_id = :a"
+    ), {"o": int(option_id), "a": int(account_id)})).first()
+    if existing:
+        await db.execute(text(
+            "DELETE FROM community_poll_votes WHERE option_id = :o AND account_id = :a"
+        ), {"o": int(option_id), "a": int(account_id)})
+    else:
+        if not poll["allow_multiple"]:
+            await db.execute(text(
+                "DELETE FROM community_poll_votes WHERE poll_id = :p AND account_id = :a"
+            ), {"p": int(poll_id), "a": int(account_id)})
+        await db.execute(text("""
+            INSERT INTO community_poll_votes (poll_id, option_id, account_id)
+            VALUES (:p, :o, :a) ON CONFLICT DO NOTHING
+        """), {"p": int(poll_id), "o": int(option_id), "a": int(account_id)})
+    await db.commit()
+    payloads = await _poll_payloads(db, [poll], account_id)
+    return (payloads[0] if payloads else None), None
