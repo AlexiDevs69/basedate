@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.234.1",
+      "date": "2026-10-04",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance auth.py with rate limiting and security checks."
+      ],
+      "source_sha": "c7e181a83fde917113740f8041ac8d076be982eb"
+    },
+    {
       "version": "1.234.0",
       "date": "2026-10-04",
       "title": "Нові можливості AlexiHub",
