@@ -2159,7 +2159,8 @@ async def _decorate_dm_thread_tags(db: AsyncSession, dm_threads: list[dict]) -> 
 async def register_form(request: Request):
     return templates.TemplateResponse(
         "register.html",
-        {"request": request, "error": None, "bot_username": settings.bot_username},
+        {"request": request, "error": None, "bot_username": settings.bot_username,
+         "turnstile_site_key": auth.TURNSTILE_SITE_KEY},
     )
 
 
@@ -2169,6 +2170,7 @@ async def register_submit(
     username: str = Form(...),
     email: str = Form(...),
     password: str = Form(...),
+    cf_turnstile_response: str = Form("", alias="cf-turnstile-response"),
     db: AsyncSession = Depends(get_db),
 ):
     username = username.strip()
@@ -2177,7 +2179,8 @@ async def register_submit(
     def error(message: str, status_code: int = 400):
         return templates.TemplateResponse(
             "register.html",
-            {"request": request, "error": message, "bot_username": settings.bot_username},
+            {"request": request, "error": message, "bot_username": settings.bot_username,
+             "turnstile_site_key": auth.TURNSTILE_SITE_KEY},
             status_code=status_code,
         )
 
@@ -2185,6 +2188,9 @@ async def register_submit(
     if auth.rate_limiter.blocked(f"register:{ip}", 10, 3600):
         return error("Забагато спроб реєстрації. Спробуй пізніше.", 429)
     auth.rate_limiter.record(f"register:{ip}", 3600)
+
+    if not await auth.verify_turnstile(cf_turnstile_response, ip):
+        return error("Підтвердь, що ти не робот, і спробуй ще раз.")
 
     if not _SETTINGS_USERNAME_RE.fullmatch(username):
         return error("Username: 2–32 символи, лише латинські літери, цифри, крапка та _.")
@@ -2229,6 +2235,7 @@ async def login_form(request: Request, error: str | None = None):
             "request": request,
             "error": error_messages.get(error),
             "bot_username": settings.bot_username,
+            "turnstile_site_key": auth.TURNSTILE_SITE_KEY,
         },
     )
 
@@ -2238,12 +2245,14 @@ async def login_submit(
     request: Request,
     email: str = Form(...),
     password: str = Form(...),
+    cf_turnstile_response: str = Form("", alias="cf-turnstile-response"),
     db: AsyncSession = Depends(get_db),
 ):
     def error(message: str, status_code: int):
         return templates.TemplateResponse(
             "login.html",
-            {"request": request, "error": message, "bot_username": settings.bot_username},
+            {"request": request, "error": message, "bot_username": settings.bot_username,
+             "turnstile_site_key": auth.TURNSTILE_SITE_KEY},
             status_code=status_code,
         )
 
@@ -2253,6 +2262,9 @@ async def login_submit(
     # 8 failures per account / 40 per IP per 15 minutes (brute-force guard).
     if auth.rate_limiter.blocked(acct_key, 8, 900) or auth.rate_limiter.blocked(ip_key, 40, 900):
         return error("Забагато невдалих спроб входу. Спробуй через 15 хвилин.", 429)
+
+    if not await auth.verify_turnstile(cf_turnstile_response, auth.client_ip(request)):
+        return error("Підтвердь, що ти не робот, і спробуй ще раз.", 400)
 
     account = await crud.get_account_by_email(db, email_key)
     has_password = bool(account and account.password_hash)
