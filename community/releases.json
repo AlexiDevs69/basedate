@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.242.2",
+      "date": "2026-10-04",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Виправлено: submenu display handling in home.html."
+      ],
+      "source_sha": "3a82909d74be5b95b904c876e76b2c5ef91f498a"
+    },
+    {
       "version": "1.242.1",
       "date": "2026-10-04",
       "title": "Виправлення та стабільність",
