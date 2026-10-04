@@ -10831,6 +10831,7 @@ document.addEventListener('DOMContentLoaded', async function(){
 
   function closeSub() {
     sub.classList.remove('open');
+    sub.style.display = '';
     sub.innerHTML = '';
     state.subFor = null;
     menu.querySelectorAll('.open-sub').forEach(function (n) { n.classList.remove('open-sub'); });
@@ -10838,6 +10839,7 @@ document.addEventListener('DOMContentLoaded', async function(){
 
   function closeMenu() {
     menu.classList.remove('open');
+    menu.style.display = '';
     menu.innerHTML = '';
     closeSub();
     state.serverId = null;
@@ -10860,7 +10862,6 @@ document.addEventListener('DOMContentLoaded', async function(){
     sub.appendChild(panelEl);
     state.subFor = id;
     var r = anchorEl.getBoundingClientRect();
-    sub.style.display = 'block';
     placeFixed(sub, r.right + 4, r.top - 6);
     menu.querySelectorAll('.open-sub').forEach(function (n) { n.classList.remove('open-sub'); });
     anchorEl.classList.add('open-sub');
@@ -11097,6 +11098,7 @@ document.addEventListener('DOMContentLoaded', async function(){
     var hasUnread = !!(unreadBadge && !unreadBadge.hidden);
     var isMuted = p.muteUntil === -1 || (p.muteUntil && p.muteUntil > Date.now());
 
+    closeSub();
     menu.innerHTML = '';
 
     menu.appendChild(makeItem({
@@ -11524,12 +11526,14 @@ document.addEventListener('DOMContentLoaded', async function(){
 
   function closeSub() {
     sub.classList.remove('open');
+    sub.style.display = '';
     sub.innerHTML = '';
     state.subFor = null;
     menu.querySelectorAll('.open-sub').forEach(function (n) { n.classList.remove('open-sub'); });
   }
   function closeMenu() {
     menu.classList.remove('open');
+    menu.style.display = '';
     menu.innerHTML = '';
     closeSub();
   }
@@ -11549,7 +11553,6 @@ document.addEventListener('DOMContentLoaded', async function(){
     sub.appendChild(panelEl);
     state.subFor = id;
     var r = anchorEl.getBoundingClientRect();
-    sub.style.display = 'block';
     placeFixed(sub, r.right + 4, r.top - 6);
     menu.querySelectorAll('.open-sub').forEach(function (n) { n.classList.remove('open-sub'); });
     anchorEl.classList.add('open-sub');
@@ -11866,6 +11869,7 @@ document.addEventListener('DOMContentLoaded', async function(){
     var isPinned = row.classList.contains('ah-dm-pinned');
     var isIgnored = row.classList.contains('ah-dm-ignored');
 
+    closeSub();
     menu.innerHTML = '';
 
     menu.appendChild(makeItem({
@@ -14459,5 +14463,10 @@ html[data-theme="light"] .ah-date-island{background:rgba(255,255,255,.88);border
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
 })();
 </script>
+<style id="ah-ctx-menu-hidden-fix">
+/* Closed context menus / submenus must never leave an empty grey "island" behind */
+.ahctx-menu:not(.open),.ahctx-sub-panel:not(.open){display:none!important}
+.ahctx-sub-panel:empty,.ahctx-menu:empty{display:none!important}
+</style>
 </body>
 </html>
