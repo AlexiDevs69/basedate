@@ -10726,8 +10726,9 @@ html[data-theme="light"] body .ah-v3-mini.ah-profile-theme #ah-v3-status{border-
 .ah-pc-strip{position:relative;height:104px;border-radius:9px;background:linear-gradient(180deg,var(--ah-pc1),var(--ah-pc2));box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
 .ah-pc-dot{position:absolute;left:50%;width:24px;height:24px;margin-left:-12px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,.45);cursor:pointer;overflow:hidden;transition:transform .12s}
 .ah-pc-dot:hover{transform:scale(1.14)}
-.ah-pc-dot.top{top:8px;background:var(--ah-pc1)}
-.ah-pc-dot.bot{bottom:8px;background:var(--ah-pc2)}
+.ah-pc-dot{display:block;box-sizing:border-box;flex:none;padding:0;gap:0;min-width:0;max-width:24px;max-height:24px;border-bottom:2px solid #fff;position:absolute}
+.ah-pc-dot.ah-pc-dot-top{top:8px;background:var(--ah-pc1)}
+.ah-pc-dot.ah-pc-dot-bot{bottom:8px;background:var(--ah-pc2)}
 .ah-pc-dot input{position:absolute;inset:-8px;width:44px;height:44px;opacity:0;cursor:pointer;border:0;padding:0}
 .ah-pc-presets{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .ah-pc-preset{height:36px;border:2px solid transparent;border-radius:8px;cursor:pointer;padding:0;transition:transform .12s,border-color .12s}
@@ -10833,7 +10834,7 @@ html[data-theme="light"] body .ah-v3-mini.ah-profile-theme #ah-v3-status{border-
     panel=document.createElement('aside');panel.id='ah-pc-panel';panel.className='ah-pc-panel';panel.setAttribute('aria-hidden','true');
     panel.innerHTML='<button type="button" class="ah-pc-back" aria-label="Закрити"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>'+
       '<div class="ah-pc-head"><b>Тема профілю</b><p>Так може виглядати ваш профіль із власними кольорами. Її побачать усі.</p></div>'+
-      '<div class="ah-pc-sec"><h4>Кольори теми</h4><div class="ah-pc-strip"><label class="ah-pc-dot top" title="Верхній колір"><input type="color" id="ah-pc-in1" aria-label="Верхній колір"></label><label class="ah-pc-dot bot" title="Нижній колір"><input type="color" id="ah-pc-in2" aria-label="Нижній колір"></label></div></div>'+
+      '<div class="ah-pc-sec"><h4>Кольори теми</h4><div class="ah-pc-strip"><label class="ah-pc-dot ah-pc-dot-top" title="Верхній колір"><input type="color" id="ah-pc-in1" aria-label="Верхній колір"></label><label class="ah-pc-dot ah-pc-dot-bot" title="Нижній колір"><input type="color" id="ah-pc-in2" aria-label="Нижній колір"></label></div></div>'+
       '<div class="ah-pc-sec"><h4>Готові теми</h4><div class="ah-pc-presets">'+PRESETS.map(function(x){return '<button type="button" class="ah-pc-preset" data-p="'+x[0]+'" data-a="'+x[1]+'" style="background:linear-gradient(180deg,'+x[0]+','+x[1]+')" aria-label="Тема"></button>'}).join('')+'</div></div>'+
       '<button type="button" class="ah-pc-reset">Скинути кольори</button>';
     var handle=document.createElement('button');handle.type='button';handle.className='ah-pc-handle';handle.setAttribute('aria-label','Тема профілю');handle.setAttribute('aria-expanded','false');handle.title='Тема профілю';
