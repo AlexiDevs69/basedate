@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.238.0",
+      "date": "2026-10-04",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: Turnstile captcha integration to login form."
+      ],
+      "source_sha": "d6998e22a5e8a8a9ca872d3c57a961e9a86df352"
+    },
+    {
       "version": "1.237.3",
       "date": "2026-10-04",
       "title": "Оновлення AlexiHub",
