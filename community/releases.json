@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.239.0",
+      "date": "2026-10-04",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: badges toggle in mini profile."
+      ],
+      "source_sha": "0251203583f5c06893acd8e4b8ce74e0375a8977"
+    },
+    {
       "version": "1.238.3",
       "date": "2026-10-04",
       "title": "Виправлення та стабільність",
