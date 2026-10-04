@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.242.6",
+      "date": "2026-10-04",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update styles for context menu and sub-panel."
+      ],
+      "source_sha": "cc75badc49c20e2c40e5b155f70f05ccb45252d0"
+    },
+    {
       "version": "1.242.5",
       "date": "2026-10-04",
       "title": "Виправлення та стабільність",
