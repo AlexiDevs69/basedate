@@ -2599,6 +2599,58 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
 })();
 </script>
 {% include "i18n_runtime.html" %}
+<script id="ah-dm-mute-core">
+(function(){
+  if(window.AlexiHubDmMute) return;
+  var LS='ah_dm_mute_v1', timer=null;
+  function read(){try{var m=JSON.parse(localStorage.getItem(LS)||'{}');return m&&typeof m==='object'&&!Array.isArray(m)?m:{}}catch(e){return{}}}
+  function write(m){try{localStorage.setItem(LS,JSON.stringify(m))}catch(e){}}
+  function live(e){return !!e&&(e.until===-1||Number(e.until)>Date.now())}
+  function norm(i){i=i||{};return{key:String(i.key||i.threadId||''),acc:String(i.acc||i.accountId||''),user:String(i.user||i.username||'').replace(/^@/,'').toLowerCase()}}
+  function matches(k,e,n){return (n.key&&k===n.key)||(n.acc&&e&&e.acc&&String(e.acc)===n.acc)||(n.user&&e&&e.user&&e.user===n.user)}
+  function prune(){var m=read(),ch=false;for(var k in m){if(!live(m[k])){delete m[k];ch=true}}if(ch)write(m);return m}
+  function get(info){var n=norm(info),m=prune();for(var k in m){if(matches(k,m[k],n))return m[k]}return null}
+  function isMuted(info){return !!get(info)}
+  function isMutedData(d){if(!d)return false;var o=d.other||{};return isMuted({key:d.thread_id,acc:o.id,user:o.username})}
+  function changed(){schedule();syncRows();try{window.dispatchEvent(new CustomEvent('alexihub:dm-mute-changed'))}catch(e){}}
+  function set(info,ms){
+    var n=norm(info),m=prune(),key=n.key||n.acc||n.user;if(!key)return;
+    for(var k in m){if(k!==key&&matches(k,m[k],n))delete m[k]}
+    m[key]={until:ms?Date.now()+ms:-1,acc:n.acc,user:n.user};write(m);changed();
+  }
+  function clear(info){var n=norm(info),m=read();for(var k in m){if(matches(k,m[k],n))delete m[k]}write(m);changed()}
+  function pad(x){return(x<10?'0':'')+x}
+  function describe(e){
+    if(!e)return'';if(e.until===-1)return'Поки не увімкнете';
+    var d=new Date(e.until),now=new Date(),hm=pad(d.getHours())+':'+pad(d.getMinutes());
+    return d.toDateString()===now.toDateString()?'До '+hm:'До '+pad(d.getDate())+'.'+pad(d.getMonth()+1)+' '+hm;
+  }
+  function schedule(){
+    clearTimeout(timer);var m=read(),next=0;
+    for(var k in m){var u=m[k].until;if(u!==-1&&u>Date.now()&&(!next||u<next))next=u}
+    if(next)timer=setTimeout(function(){prune();changed()},Math.min(next-Date.now()+500,2147000000));
+  }
+  function syncRows(){
+    document.querySelectorAll('.dm-list .dm-row, #dm-list .dm-row').forEach(function(row){
+      var on=isMuted({key:row.getAttribute('data-thread-id'),acc:row.getAttribute('data-account-id'),user:row.getAttribute('data-mini-username')});
+      row.classList.toggle('ah-dm-muted',on);
+    });
+  }
+  window.AlexiHubDmMute={get:get,isMuted:isMuted,isMutedData:isMutedData,set:set,clear:clear,describe:describe,syncRows:syncRows};
+  window.addEventListener('storage',function(e){if(e.key===LS)changed()});
+  function init(){
+    syncRows();schedule();
+    var list=document.getElementById('dm-list');
+    if(list&&window.MutationObserver)new MutationObserver(function(){syncRows()}).observe(list,{childList:true});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+<style id="ah-dm-mute-css">
+.dm-row.ah-dm-muted .dm-name{opacity:.5}
+.dm-row.ah-dm-muted .ah-mention-count{display:none!important}
+.dm-row.ah-dm-muted .dm-name::after{content:'';display:inline-block;width:13px;height:13px;margin-left:6px;vertical-align:-2px;opacity:.75;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 8a6 6 0 0 0-9.3-5M6.3 6.3A6 6 0 0 0 6 8c0 7-3 9-3 9h14M10.3 21a2 2 0 0 0 3.4 0M2 2l20 20'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 8a6 6 0 0 0-9.3-5M6.3 6.3A6 6 0 0 0 6 8c0 7-3 9-3 9h14M10.3 21a2 2 0 0 0 3.4 0M2 2l20 20'/%3E%3C/svg%3E") center/contain no-repeat}
+</style>
 </head>
 <body data-current-account-id="{{ account.id }}">
   <aside class="server-rail">
@@ -4163,7 +4215,7 @@ document.addEventListener('DOMContentLoaded',()=>{
       </div>
     </div>
     <div class="ah-image-editor-nitro">
-      <span id="ah-image-editor-nitro-text"><!--i18n:common.text.add_an_animated_avatar_with_a_subscription-->{{ i18n_t('common.text.add_an_animated_avatar_with_a_subscription') }} <b>Nitro</b></span>
+      <span id="ah-image-editor-nitro-text"><!--i18n:common.text.add_an_animated_avatar_with_a_subscription-->{{ i18n_t('common.text.add_an_animated_avatar_with_a_subscription') }} <b>Plus</b></span>
       <button id="ah-image-editor-nitro-button" type="button"><!--i18n:common.action.subscribe_to_nitro-->{{ i18n_t('common.action.subscribe_to_nitro') }}</button>
     </div>
     <p class="ah-image-editor-hint"><!--i18n:common.text.list_the_image_and_move_it_to_customize_the_position-->{{ i18n_t('common.text.list_the_image_and_move_it_to_customize_the_position') }}</p>
@@ -5041,7 +5093,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
 
   function verifiedBadge(){const title=window.AlexiHubI18n.t("common.text.bed_alexihub_participant_alexihub");return '<span class="ah-verified-profile-badge" data-title="'+title+'" title="'+title+'" tabindex="0" aria-label="'+title+'"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor"><path d="M14.68 3.03a5.02 5.02 0 0 0-5.43 6.55L3.53 15.3a2.45 2.45 0 0 0 3.47 3.47l5.73-5.72a5.02 5.02 0 0 0 6.53-5.45l-2.72 2.72-2.85-.76-.76-2.85 2.75-2.68Z"/><path d="m4.14 4.08 1.4-1.4 3.03 2.14-.63.63 2.37 2.37-1.82 1.82-2.37-2.37-.63.63-2.15-3.02.8-.8Z"/><path d="m11.45 12.88 1.83-1.83 7.13 7.13a1.29 1.29 0 0 1-1.83 1.82l-7.13-7.12Z"/></g></svg></span>'}
-  function nitroBadge(sub){if(!sub||!sub.active)return '';const tier=String(sub.tier||'basic').toLowerCase();const label=String(sub.tier_label||'Nitro');const title=window.AlexiHubI18n.t("common.text.a_subscription")+label;return '<span class="ah-nitro-profile-badge tier-'+esc(tier)+'" title="'+esc(title)+'" data-title="'+esc(title)+'" data-nitro-tier="'+esc(tier)+'" tabindex="0" aria-label="'+esc(title)+'"><span class="ah-nitro-medal"></span></span>'}
+  function nitroBadge(sub){if(!sub||!sub.active)return '';const tier=String(sub.tier||'basic').toLowerCase();const label=String(sub.tier_label||'Plus');const title=window.AlexiHubI18n.t("common.text.a_subscription")+label;return '<span class="ah-nitro-profile-badge tier-'+esc(tier)+'" title="'+esc(title)+'" data-title="'+esc(title)+'" data-nitro-tier="'+esc(tier)+'" tabindex="0" aria-label="'+esc(title)+'"><span class="ah-nitro-medal"></span></span>'}
   function gifterBadge(sub){const gifting=sub&&sub.gifting&&sub.gifting.active?sub.gifting:null;if(!gifting)return '';const tier=['legend','philanthropist','icon'].includes(String(gifting.tier||''))?String(gifting.tier):'legend';const label=String(gifting.label||({legend:window.AlexiHubI18n.t("common.text.legend"),philanthropist:window.AlexiHubI18n.t("common.text.the_philanthropist"),icon:window.AlexiHubI18n.t("common.text.icon")}[tier]));const title=String(gifting.title||(window.AlexiHubI18n.t("common.text.gifts_level")+label+'»'));return '<span class="ah-gifter-profile-badge gifter-tier-'+esc(tier)+'" data-gifter-tier="'+esc(tier)+'" data-gifter-count="'+Number(gifting.count||0)+'" data-title="'+esc(title)+'" tabindex="0" aria-label="'+esc(title)+'"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="ah-gift-box" d="M5 12.2h14v8.3H5z"/><path class="ah-gift-lid" d="M3.7 8.3h16.6v4.4H3.7z"/><path class="ah-gift-ribbon" d="M12 8.5v12M12 8.5c-1.5-3.7-5.6-3.6-5.4-.8.1 1.6 2.1 2.1 5.4.8Zm0 0c1.5-3.7 5.6-3.6 5.4-.8-.1 1.6-2.1 2.1-5.4.8Z"/><path class="ah-gift-spark" d="m19.5 4 .55 1.45L21.5 6l-1.45.55L19.5 8l-.55-1.45L17.5 6l1.45-.55Z"/></svg></span>'}
   function renderRealBadges(badges){const box=$('#ah-custom-profile-badges');if(!box)return;const data=badges||{},sub=data.nitro||{};box.innerHTML=(data.verified?verifiedBadge():'')+nitroBadge(sub)+gifterBadge(sub);box.hidden=!box.childElementCount}
 
@@ -5752,7 +5804,7 @@ if (typeof window.openSelfProfileSettings !== 'function') {
   function tierLabel(nitro){
     const tier = tierFromNitro(nitro);
     if(nitro && nitro.tier_label) return nitro.tier_label;
-    return {ruby:window.AlexiHubI18n.t("common.text.ruby_nitro"), emerald:window.AlexiHubI18n.t("common.text.emerald_nitro"), diamond:window.AlexiHubI18n.t("common.text.damn_nitro_diamond"), platinum:window.AlexiHubI18n.t("common.text.platinum_nitro"), gold:window.AlexiHubI18n.t("common.text.narior_nitro"), basic:'AlexiHub Nitro'}[tier] || window.AlexiHubI18n.t("common.text.alexihub_nitro");
+    return {ruby:window.AlexiHubI18n.t("common.text.ruby_nitro"), emerald:window.AlexiHubI18n.t("common.text.emerald_nitro"), diamond:window.AlexiHubI18n.t("common.text.damn_nitro_diamond"), platinum:window.AlexiHubI18n.t("common.text.platinum_nitro"), gold:window.AlexiHubI18n.t("common.text.narior_nitro"), basic:'AlexiHub Plus'}[tier] || window.AlexiHubI18n.t("common.text.alexihub_nitro");
   }
   function tierBadgeHtml(nitro, big=false){
     const tier = tierFromNitro(nitro);
@@ -5980,7 +6032,7 @@ if (typeof window.openSelfProfileSettings !== 'function') {
 
 
 <style id="ah-nitro-badge-ui-fix">
-/* Nitro badge polish: do not render tooltip inside tiny profile cards. */
+/* Plus badge polish: do not render tooltip inside tiny profile cards. */
 .ah-nitro-profile-badge:hover::before,
 .ah-nitro-profile-badge:hover::after{
   display:none!important;
@@ -6147,8 +6199,8 @@ if (typeof window.openSelfProfileSettings !== 'function') {
 </script>
 
 
-<!-- Nitro badge corner + tooltip portal fix -->
-<!-- Nitro tiers + Discord-like rich hover card -->
+<!-- Plus badge corner + tooltip portal fix -->
+<!-- Plus tiers + Discord-like rich hover card -->
 <style id="ah-nitro-corner-tooltip-fix">
 .ah-v3-mini,
 .ah-v3-full,
@@ -6273,7 +6325,7 @@ if (typeof window.openSelfProfileSettings !== 'function') {
   if(window.__ahNitroTooltipPortalInit) return;
   window.__ahNitroTooltipPortalInit = true;
 
-  const labels={basic:'AlexiHub Nitro',gold:window.AlexiHubI18n.t("common.text.narior_nitro"),platinum:window.AlexiHubI18n.t("common.text.platinum_nitro"),diamond:window.AlexiHubI18n.t("common.text.damn_nitro_diamond"),emerald:window.AlexiHubI18n.t("common.text.emerald_nitro"),ruby:window.AlexiHubI18n.t("common.text.ruby_nitro")};
+  const labels={basic:'AlexiHub Plus',gold:window.AlexiHubI18n.t("common.text.narior_nitro"),platinum:window.AlexiHubI18n.t("common.text.platinum_nitro"),diamond:window.AlexiHubI18n.t("common.text.damn_nitro_diamond"),emerald:window.AlexiHubI18n.t("common.text.emerald_nitro"),ruby:window.AlexiHubI18n.t("common.text.ruby_nitro")};
   let activeBadge=null;
   let tip=null;
 
@@ -6862,7 +6914,7 @@ if (typeof window.openSelfProfileSettings !== 'function') {
       return;
     }
     if (data.type === 'dm_sidebar_update') {
-      if (data.notify_sound && window.playNotifySound) window.playNotifySound();
+      if (data.notify_sound && window.playNotifySound && !(window.AlexiHubDmMute&&window.AlexiHubDmMute.isMutedData(data))) window.playNotifySound();
       upsertDmSidebar(data);
       setTimeout(sendWatchList, 0);
       return;
@@ -8037,7 +8089,7 @@ if (typeof window.openSelfProfileSettings !== 'function') {
     if(!page.querySelector('#ah-boost-code-input')){page.innerHTML=('' + "<div class=\"ah-promo-boost-head\"><div><h1><span class=\"ah-promo-boost-gem\">◆</span>" + window.AlexiHubI18n.t("common.text.servan_bones_of_the_server") + "</h1><p>" + window.AlexiHubI18n.t("common.text.distribute_the_busts_nitro_and_activated_promo_codes_between_your") + "</p></div><div class=\"ah-promo-boost-art\" aria-hidden=\"true\"><span>◆</span></div></div><div id=\"ah-user-boost-summary\" class=\"ah-promo-boost-summary\"><div class=\"ah-promo-boost-summary-icon\">◆</div><div><strong>" + window.AlexiHubI18n.t("common.text.download_the_bets") + "</strong><span>" + window.AlexiHubI18n.t("common.text.ygiving_the_available_limit") + "</span></div></div><div class=\"ah-promo-code-card\"><div class=\"ah-promo-code-copy\"><b>" + window.AlexiHubI18n.t("common.text.activate_the_promo_code_of_busts") + "</b><span>" + window.AlexiHubI18n.t("common.text.code_is_disposable_bsite_boosts_will_be_added_forever_to") + "</span></div><div class=\"ah-promo-code-form\"><input id=\"ah-boost-code-input\" class=\"ah-promo-code-input code\" maxlength=\"40\" autocomplete=\"off\" placeholder=\"ALEXI-BOOST-AAAAA-BBBBB-CCCCC\"><button id=\"ah-boost-redeem-btn\" class=\"ah-promo-code-button\" type=\"button\" onclick=\"redeemBoostCode()\">" + window.AlexiHubI18n.t("common.text.activate") + "</button></div><div id=\"ah-boost-code-status\" class=\"ah-promo-code-status\"></div><div id=\"ah-boost-code-generator\" class=\"ah-promo-code-generator\"><div class=\"ah-promo-code-copy\"><b>" + window.AlexiHubI18n.t("common.text.generalize_disposable_code") + "</b><span>" + window.AlexiHubI18n.t("common.text.all_available_to_verified_users") + "</span></div><div class=\"ah-promo-code-generator-grid\"><input id=\"ah-boost-gen-amount\" class=\"ah-promo-code-input\" type=\"number\" min=\"1\" max=\"100\" value=\"2\" aria-label=\"" + window.AlexiHubI18n.t("common.aria.the_number_of_beads") + "\"><input id=\"ah-boost-gen-note\" class=\"ah-promo-code-input\" maxlength=\"255\" placeholder=\"" + window.AlexiHubI18n.t("common.placeholder.note_not_necessarily") + "\"><button id=\"ah-boost-generate-btn\" class=\"ah-promo-code-button\" type=\"button\" onclick=\"generateBoostCode()\">" + window.AlexiHubI18n.t("common.text.generate") + "</button></div><div id=\"ah-boost-code-output\" class=\"ah-promo-code-output\"><input id=\"ah-boost-generated-code\" class=\"ah-promo-code-input code\" readonly><button class=\"ah-promo-code-button secondary\" type=\"button\" onclick=\"copyGeneratedBoostCode()\">" + window.AlexiHubI18n.t("common.text.copy") + "</button></div></div></div><h2 class=\"ah-promo-boost-title\">" + window.AlexiHubI18n.t("common.text.your_servers") + "</h2><div id=\"ah-user-boost-list\" class=\"ah-promo-boost-list\"><div class=\"ah-promo-boost-loading\">" + window.AlexiHubI18n.t("common.text.servail_download") + "</div></div>")}
     const input=page.querySelector('#ah-boost-code-input');if(input&&!input.dataset.enterReady){input.dataset.enterReady='1';input.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();window.redeemBoostCode()}})}return page;
   }
-  function render(data){const summary=document.getElementById('ah-user-boost-summary'),list=document.getElementById('ah-user-boost-list');if(!summary||!list)return;const active=!!data.subscription?.active,promo=Number(data.promo_boosts||0),nitro=Number(data.nitro_capacity||0),capacity=Number(data.capacity||0),label=data.subscription?.tier_label||'Nitro';const source=active?(promo?window.AlexiHubI18n.t("common.text.ycbod_promo_codes", {p0:(esc(label)),p1:(nitro),p2:(promo)}):esc(label)):(promo?window.AlexiHubI18n.t("common.text.promo_codes", {p0:(promo)}):window.AlexiHubI18n.t("common.text.activate_nitro_or_promo_code_to_get_boosts"));summary.innerHTML=`<div class="ah-promo-boost-summary-icon">◆</div><div><strong>${capacity?window.AlexiHubI18n.t("common.text.available_limit_bus", {p0:(capacity)}):window.AlexiHubI18n.t("common.text.bit_boosts_with_nitro_or_promo_code")}</strong><span>${capacity?window.AlexiHubI18n.t("common.text.used_zxqxz_freely", {p0:(source),p1:(Number(data.allocated||0)),p2:(Number(data.remaining||0))}):source}</span></div>`;document.getElementById('ah-boost-code-generator')?.classList.toggle('show',!!data.can_generate);const servers=Array.isArray(data.servers)?data.servers:[];if(!servers.length){list.innerHTML=('' + "<div class=\"ah-promo-boost-empty\">" + window.AlexiHubI18n.t("common.text.yuncture_you_havent_joined_any_server_yet") + "</div>");return}list.innerHTML=servers.map(server=>{const id=Number(server.id)||0,tag=server.tag?.active?`<span class="ah-promo-server-tag${server.tag_selected?' selected':''}">${esc(server.tag.icon_glyph||server.tag.glyph||'◆')} ${esc(server.tag.text)}${server.tag_selected?window.AlexiHubI18n.t("common.text.selected"):''}</span>`:'';return ('' + "<div class=\"ah-promo-boost-row\"><div class=\"ah-promo-boost-icon\"" + String((server.icon_url?` data-server-icon="${esc(server.icon_url)}"`:'')) + ">" + String((server.icon_url?'':esc(String(server.name||'?').slice(0,2).toUpperCase()))) + "</div><div class=\"ah-promo-boost-copy\"><b>" + String((esc(server.name))) + "</b><span>" + window.AlexiHubI18n.t("common.text.bets_yours", {p3:(Number(server.total_boosts||0)),p4:(server.level?Number(server.level)+window.AlexiHubI18n.t("common.text.a_level"):window.AlexiHubI18n.t("common.text.numn_level_not_open")),p5:(Number(server.allocated_here||0))}) + "</span>" + String((tag)) + "</div><div class=\"ah-promo-boost-actions\"><button class=\"ah-promo-boost-btn\" type=\"button\" onclick=\"ahPromoBoostChange(" + String((id)) + ",-1)\" " + String((Number(server.allocated_here||0)<1?'disabled':'')) + ">−</button><button class=\"ah-promo-boost-btn primary\" type=\"button\" onclick=\"ahPromoBoostChange(" + String((id)) + ",1)\" " + String((Number(data.remaining||0)<1?'disabled':'')) + ">" + window.AlexiHubI18n.t("common.text.give_the_bust") + "</button>" + String((server.tag?.active?`<button class="ah-promo-boost-btn" type="button" title="${server.tag_selected?window.AlexiHubI18n.t("common.text.sume_tagging"):window.AlexiHubI18n.t("common.text.show_tag_near_the_name")}" onclick="ahPromoSelectTag(${server.tag_selected?'null':id})">${server.tag_selected?'✓':'🏷'}</button>`:'')) + "</div></div>")}).join('');list.querySelectorAll('[data-server-icon]').forEach(element=>{element.style.backgroundImage=`url(${JSON.stringify(element.dataset.serverIcon)})`})}
+  function render(data){const summary=document.getElementById('ah-user-boost-summary'),list=document.getElementById('ah-user-boost-list');if(!summary||!list)return;const active=!!data.subscription?.active,promo=Number(data.promo_boosts||0),nitro=Number(data.nitro_capacity||0),capacity=Number(data.capacity||0),label=data.subscription?.tier_label||'Plus';const source=active?(promo?window.AlexiHubI18n.t("common.text.ycbod_promo_codes", {p0:(esc(label)),p1:(nitro),p2:(promo)}):esc(label)):(promo?window.AlexiHubI18n.t("common.text.promo_codes", {p0:(promo)}):window.AlexiHubI18n.t("common.text.activate_nitro_or_promo_code_to_get_boosts"));summary.innerHTML=`<div class="ah-promo-boost-summary-icon">◆</div><div><strong>${capacity?window.AlexiHubI18n.t("common.text.available_limit_bus", {p0:(capacity)}):window.AlexiHubI18n.t("common.text.bit_boosts_with_nitro_or_promo_code")}</strong><span>${capacity?window.AlexiHubI18n.t("common.text.used_zxqxz_freely", {p0:(source),p1:(Number(data.allocated||0)),p2:(Number(data.remaining||0))}):source}</span></div>`;document.getElementById('ah-boost-code-generator')?.classList.toggle('show',!!data.can_generate);const servers=Array.isArray(data.servers)?data.servers:[];if(!servers.length){list.innerHTML=('' + "<div class=\"ah-promo-boost-empty\">" + window.AlexiHubI18n.t("common.text.yuncture_you_havent_joined_any_server_yet") + "</div>");return}list.innerHTML=servers.map(server=>{const id=Number(server.id)||0,tag=server.tag?.active?`<span class="ah-promo-server-tag${server.tag_selected?' selected':''}">${esc(server.tag.icon_glyph||server.tag.glyph||'◆')} ${esc(server.tag.text)}${server.tag_selected?window.AlexiHubI18n.t("common.text.selected"):''}</span>`:'';return ('' + "<div class=\"ah-promo-boost-row\"><div class=\"ah-promo-boost-icon\"" + String((server.icon_url?` data-server-icon="${esc(server.icon_url)}"`:'')) + ">" + String((server.icon_url?'':esc(String(server.name||'?').slice(0,2).toUpperCase()))) + "</div><div class=\"ah-promo-boost-copy\"><b>" + String((esc(server.name))) + "</b><span>" + window.AlexiHubI18n.t("common.text.bets_yours", {p3:(Number(server.total_boosts||0)),p4:(server.level?Number(server.level)+window.AlexiHubI18n.t("common.text.a_level"):window.AlexiHubI18n.t("common.text.numn_level_not_open")),p5:(Number(server.allocated_here||0))}) + "</span>" + String((tag)) + "</div><div class=\"ah-promo-boost-actions\"><button class=\"ah-promo-boost-btn\" type=\"button\" onclick=\"ahPromoBoostChange(" + String((id)) + ",-1)\" " + String((Number(server.allocated_here||0)<1?'disabled':'')) + ">−</button><button class=\"ah-promo-boost-btn primary\" type=\"button\" onclick=\"ahPromoBoostChange(" + String((id)) + ",1)\" " + String((Number(data.remaining||0)<1?'disabled':'')) + ">" + window.AlexiHubI18n.t("common.text.give_the_bust") + "</button>" + String((server.tag?.active?`<button class="ah-promo-boost-btn" type="button" title="${server.tag_selected?window.AlexiHubI18n.t("common.text.sume_tagging"):window.AlexiHubI18n.t("common.text.show_tag_near_the_name")}" onclick="ahPromoSelectTag(${server.tag_selected?'null':id})">${server.tag_selected?'✓':'🏷'}</button>`:'')) + "</div></div>")}).join('');list.querySelectorAll('[data-server-icon]').forEach(element=>{element.style.backgroundImage=`url(${JSON.stringify(element.dataset.serverIcon)})`})}
   window.loadMyBoostSettings=async function(){ensurePage();const list=document.getElementById('ah-user-boost-list');if(list)list.innerHTML=('' + "<div class=\"ah-promo-boost-loading\">" + window.AlexiHubI18n.t("common.text.servail_download") + "</div>");try{render(await api('/community/api/boosts/me'))}catch(error){if(list)list.innerHTML=`<div class="ah-promo-boost-empty">${esc(errorText(error))}</div>`}};
   window.ahPromoBoostChange=async function(serverId,delta){if(typeof window.ahUserBoostChange==='function')return window.ahUserBoostChange(serverId,delta);try{await api(`/community/api/servers/${serverId}/boosts`,{method:'POST',body:JSON.stringify({delta:Number(delta)})});await window.loadMyBoostSettings()}catch(error){notify(errorText(error))}};
   window.ahPromoSelectTag=async function(serverId){if(typeof window.ahSelectServerTag==='function')return window.ahSelectServerTag(serverId);try{await api('/community/api/boosts/tag-selection',{method:'POST',body:JSON.stringify({server_id:serverId})});await window.loadMyBoostSettings()}catch(error){notify(errorText(error))}};
@@ -8368,7 +8420,7 @@ if (typeof window.openSelfProfileSettings !== 'function') {
   function ensureV2(){const page=document.querySelector('[data-settings-page="boosts"]');if(!page)return null;if(!page.querySelector('.ah-boost-page-v2'))page.innerHTML=window.__AH_BOOST_V2_MARKUP||'';return page}
   function render(data){
     const page=ensureV2(),summary=document.getElementById('ah-user-boost-summary'),list=document.getElementById('ah-user-boost-list');if(!page||!summary||!list)return;
-    const active=!!data.subscription?.active,promo=Number(data.promo_boosts||0),nitro=Number(data.nitro_capacity||0),capacity=Number(data.capacity||0),remaining=Number(data.remaining||0),label=data.subscription?.tier_label||'Nitro';
+    const active=!!data.subscription?.active,promo=Number(data.promo_boosts||0),nitro=Number(data.nitro_capacity||0),capacity=Number(data.capacity||0),remaining=Number(data.remaining||0),label=data.subscription?.tier_label||'Plus';
     const source=active?(promo?window.AlexiHubI18n.t("common.text.ycbod_promo_codes", {p0:(esc(label)),p1:(nitro),p2:(promo)}):esc(label)):(promo?window.AlexiHubI18n.t("common.text.promo_codes", {p0:(promo)}):window.AlexiHubI18n.t("common.text.activate_nitro_or_promo_code_to_get_boosts"));
     summary.innerHTML=`<div class="ah-boost-summary-gem">${crystal()}</div><div><strong>${capacity?window.AlexiHubI18n.t("common.text.available_limit_bus", {p0:(capacity)}):window.AlexiHubI18n.t("common.text.bit_boosts_with_nitro_or_promo_code")}</strong><span>${capacity?window.AlexiHubI18n.t("common.text.used_zxqxz_freely", {p0:(source),p1:(Number(data.allocated||0)),p2:(remaining)}):source}</span></div>`;
     const caption=document.getElementById('ah-boost-nitro-caption');if(caption)caption.textContent=active?window.AlexiHubI18n.t("common.text.s_zxqxz_zxqxz_zxqxz_buses_on_enabled", {p0:(label),p1:(nitro),p2:(remaining)}):window.AlexiHubI18n.t("common.text.subscription_nitro_includes_2_boosts");
@@ -10273,7 +10325,7 @@ html.ah-theme-anim *,html.ah-theme-anim *::before,html.ah-theme-anim *::after{tr
     grid.dataset.built='1';
     var html='<button type="button" class="ah-color-theme-tile wand" aria-label="Создать тему" onclick="window.showSettingsTab?.(\'subscriptions\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4V2m0 14v-2M8 9h2M20 9h2M17.8 11.8 19 13M15 9h.01M17.8 6.2 19 5M3 21l9-9M12.2 6.2 11 5"/></svg></button>';
     COLOR_THEMES.forEach(function(t,i){
-      html+='<button type="button" class="ah-color-theme-tile" style="background:'+t.c+'" aria-label="Тема '+(i+1)+' (Nitro)" onclick="settingsToast(\'Доступно с подпиской Nitro\')"><span class="lock"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 9h-1V7a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2Zm-7-2a2 2 0 1 1 4 0v2h-4V7Z"/></svg></span></button>';
+      html+='<button type="button" class="ah-color-theme-tile" style="background:'+t.c+'" aria-label="Тема '+(i+1)+' (Plus)" onclick="settingsToast(\'Доступно с подпиской Plus\')"><span class="lock"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 9h-1V7a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2Zm-7-2a2 2 0 1 1 4 0v2h-4V7Z"/></svg></span></button>';
     });
     grid.innerHTML=html;
   }
