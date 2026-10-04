@@ -14368,5 +14368,96 @@ html body .app .right .dm-right-head .profile-name-row .dm-server-tag{flex:0 0 a
 html body .app .right .dm-right-head .profile-handle{grid-column:1;grid-row:2;align-self:start;min-width:0;margin-top:3px;font-size:12px;font-weight:750;color:#b5bac1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 html[data-theme="light"] body .app .right .dm-right-head .profile-handle{color:#5c6069}
 </style>
+<style id="ah-scroll-date-island-css">
+/* Floating date "island" shown while scrolling up through the chat */
+.main{position:relative}
+.ah-date-island{position:absolute;left:50%;top:60px;z-index:130;display:flex;align-items:center;gap:7px;height:30px;padding:0 14px 0 11px;border-radius:999px;background:rgba(30,31,36,.82);-webkit-backdrop-filter:blur(10px) saturate(1.2);backdrop-filter:blur(10px) saturate(1.2);border:1px solid rgba(255,255,255,.1);box-shadow:0 8px 26px rgba(0,0,0,.45);color:#f2f3f5;font-size:12px;font-weight:800;letter-spacing:.01em;white-space:nowrap;pointer-events:none;opacity:0;visibility:hidden;transform:translate(-50%,-14px) scale(.86);transform-origin:50% 0;transition:opacity .22s ease,transform .32s cubic-bezier(.34,1.56,.64,1),visibility 0s linear .32s}
+.ah-date-island.show{opacity:1;visibility:visible;transform:translate(-50%,0) scale(1);transition:opacity .2s ease,transform .36s cubic-bezier(.34,1.56,.64,1),visibility 0s}
+.ah-date-island svg{width:14px;height:14px;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:.75}
+.ah-date-island span{display:inline-block;transition:opacity .12s ease,transform .12s ease}
+.ah-date-island.swap span{opacity:0;transform:translateY(3px)}
+html[data-theme="light"] .ah-date-island{background:rgba(255,255,255,.88);border-color:rgba(0,0,0,.09);box-shadow:0 8px 24px rgba(0,0,0,.16);color:#1b1c20}
+@media(prefers-reduced-motion:reduce){.ah-date-island,.ah-date-island.show,.ah-date-island span{transition:opacity .15s ease}}
+</style>
+<script id="ah-scroll-date-island-js">
+(function(){
+  if(window.__ahDateIsland) return;
+  window.__ahDateIsland=true;
+  function init(){
+    var box=document.getElementById('messages');
+    var main=box&&box.closest('.main');
+    if(!box||!main) return;
+    var el=document.createElement('div');
+    el.className='ah-date-island';
+    el.setAttribute('aria-hidden','true');
+    el.innerHTML='<svg viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="16.5" rx="3"/><path d="M3 10h18M8 2.5v4M16 2.5v4"/></svg><span></span>';
+    main.appendChild(el);
+    var label=el.querySelector('span');
+    var lastTop=box.scrollTop, hideT=0, swapT=0, raf=0, shownKey='';
+    function loc(){
+      var l=String(document.documentElement.lang||'uk').toLowerCase();
+      return l.indexOf('ru')===0?'ru-RU':l.indexOf('en')===0?'en-US':'uk-UA';
+    }
+    function tsOf(m){
+      var t=m.querySelector('.msg-time');
+      if(!t) return null;
+      var raw=String(t.dataset.messageTimestamp||t.textContent||'').trim();
+      if(!raw) return null;
+      try{
+        var d=(window.AlexiHubMessageTime&&window.AlexiHubMessageTime.parse)?window.AlexiHubMessageTime.parse(raw):new Date(raw);
+        return d&&isFinite(d.getTime())?d:null;
+      }catch(e){return null;}
+    }
+    function fmt(d){
+      var o={day:'numeric',month:'long'};
+      if(d.getFullYear()!==new Date().getFullYear()) o.year='numeric';
+      try{return d.toLocaleDateString(loc(),o);}catch(e){return d.toDateString();}
+    }
+    function topMessage(){
+      var top=box.getBoundingClientRect().top+6;
+      var kids=box.children;
+      for(var i=0;i<kids.length;i++){
+        var k=kids[i];
+        if(!k.classList||!k.classList.contains('msg')) continue;
+        if(k.getBoundingClientRect().bottom>top) return k;
+      }
+      return null;
+    }
+    function place(){ el.style.top=(box.offsetTop+10)+'px'; }
+    function setText(txt){
+      if(txt===shownKey) return;
+      var first=!shownKey||!el.classList.contains('show');
+      shownKey=txt;
+      if(first){label.textContent=txt;return;}
+      clearTimeout(swapT);
+      el.classList.add('swap');
+      swapT=setTimeout(function(){label.textContent=txt;el.classList.remove('swap');},110);
+    }
+    function hide(){ el.classList.remove('show'); }
+    function update(goingUp){
+      var atBottom=box.scrollHeight-box.scrollTop-box.clientHeight<40;
+      var m=topMessage(), d=m&&tsOf(m);
+      if(!d||box.scrollTop<=0&&!goingUp||atBottom){ if(!d||atBottom) hide(); return; }
+      if(!el.classList.contains('show')){
+        if(!goingUp) return;           // only pop up when scrolling up
+        place();
+        shownKey='';
+      }
+      setText(fmt(d));
+      el.classList.add('show');
+      clearTimeout(hideT);
+      hideT=setTimeout(hide,1400);
+    }
+    box.addEventListener('scroll',function(){
+      var cur=box.scrollTop, up=cur<lastTop-1;
+      lastTop=cur;
+      if(raf) return;
+      raf=requestAnimationFrame(function(){raf=0;update(up);});
+    },{passive:true});
+    window.addEventListener('resize',function(){hide();place();});
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+})();
+</script>
 </body>
 </html>
