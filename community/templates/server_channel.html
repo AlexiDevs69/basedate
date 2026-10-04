@@ -3513,7 +3513,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
           {% if item.reply and item.reply.message %}
           <div class="message-reply" onclick="jumpToMessage({{ item.reply.message.id }})">
             <span class="message-reply-author">{{ (item.reply.author.display_name or item.reply.author.username) if item.reply.author else i18n_t('common.user.deleted') }}</span>
-            <span class="message-reply-text">{{ item.reply.message.content if item.reply.message.content else ('🎤 Голосове повідомлення' if item.reply.message.voice_url else i18n_t('common.attachment')) }}</span>
+            <span class="message-reply-text">{{ ('📊 Опитування' if item.reply.message.content and item.reply.message.content.startswith('[[ah:poll:') else item.reply.message.content) if item.reply.message.content else ('🎤 Голосове повідомлення' if item.reply.message.voice_url else i18n_t('common.attachment')) }}</span>
           </div>
           {% endif %}
           <div class="message-content" id="content-{{ item.message.id }}"><span class="message-content-text">{{ item.message.content }}</span><span class="message-edited {{ '' if item.message.edited_at else 'hidden' }}" id="edited-{{ item.message.id }}"><!--i18n:common.label.modified-->{{ i18n_t('common.label.modified') }}</span></div>
@@ -3555,7 +3555,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
           <div id="composer-plus-menu" class="composer-plus-menu">
             <button class="composer-menu-item" type="button" onclick="triggerComposerUpload(event)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg><span><!--i18n:server_channel.text.send_photo_upload-->{{ i18n_t('server_channel.text.send_photo_upload') }}</span></button>
             <button class="composer-menu-item" type="button" onclick="showActionToast && showActionToast(window.AlexiHubI18n.t('server.stub.create_thread'))"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v12"/><path d="M18 9v12"/><path d="M6 15a6 6 0 0 0 6-6"/><path d="M12 9h6"/></svg><span><!--i18n:server_channel.text.collude_the_branch-->{{ i18n_t('server_channel.text.collude_the_branch') }}</span></button>
-            <button class="composer-menu-item" type="button" onclick="showActionToast && showActionToast(window.AlexiHubI18n.t('server.stub.poll'))"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M8 17V9"/><path d="M12 19V3"/><path d="M16 15v-4"/><path d="M20 17V7"/></svg><span><!--i18n:server_channel.text.colours_the_survey-->{{ i18n_t('server_channel.text.colours_the_survey') }}</span></button>
+            <button class="composer-menu-item" type="button" onclick="ahOpenPollModal(event)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M8 17V9"/><path d="M12 19V3"/><path d="M16 15v-4"/><path d="M20 17V7"/></svg><span><!--i18n:server_channel.text.colours_the_survey-->{{ i18n_t('server_channel.text.colours_the_survey') }}</span></button>
           </div>
           <textarea id="composer-textarea" class="composer-textarea" rows="1" name="content" placeholder="{{ i18n_t('server.channel.composer_placeholder', channel=channel.name) }}"></textarea>
           <input id="composer-image-url" type="hidden" name="image_url" value="">
@@ -14077,5 +14077,477 @@ html[data-theme="light"] .ah-date-island{background:rgba(255,255,255,.88);border
 .ahctx-menu:not(.open),.ahctx-sub-panel:not(.open){display:none!important}
 .ahctx-sub-panel:empty,.ahctx-menu:empty{display:none!important}
 </style>
+
+<!-- ===== Polls: creation modal + live poll cards (DM and server channels) ===== -->
+<style id="ah-poll-css">
+.ah-poll-bg{position:fixed;inset:0;z-index:19500;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;padding:20px}
+.ah-poll-bg.open{display:flex;animation:ahPollFade .14s ease both}
+@keyframes ahPollFade{from{opacity:0}to{opacity:1}}
+.ah-poll-modal{width:min(440px,100%);max-height:calc(100dvh - 40px);overflow:auto;background:#232428;border:1px solid #2f3136;border-radius:12px;box-shadow:0 28px 90px rgba(0,0,0,.6);color:#f2f3f5;padding:22px 22px 20px;position:relative;font-family:inherit}
+.ah-poll-title{font-size:20px;font-weight:800;margin:0 0 22px;padding-right:32px}
+.ah-poll-close{position:absolute;right:16px;top:16px;width:32px;height:32px;border:0;border-radius:8px;background:transparent;color:#b5bac1;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.ah-poll-close:hover{background:#2e3035;color:#fff}
+.ah-poll-close svg{width:22px;height:22px}
+.ah-poll-label{display:block;font-size:15px;font-weight:800;margin:0 0 10px;color:#f2f3f5}
+.ah-poll-section{margin-bottom:22px}
+.ah-poll-input,.ah-poll-select{width:100%;height:46px;border-radius:8px;border:1px solid #3a3c43;background:#1e1f22;color:#f2f3f5;padding:0 14px;font:inherit;font-size:15px;outline:0;box-sizing:border-box}
+.ah-poll-input::placeholder{color:#80848e}
+.ah-poll-input:focus,.ah-poll-select:focus{border-color:#5865f2;box-shadow:0 0 0 1px #5865f2}
+.ah-poll-count{text-align:right;font-size:12px;color:#949ba4;margin-top:6px}
+.ah-poll-answers{display:flex;flex-direction:column;gap:8px}
+.ah-poll-answer{display:flex;align-items:center;gap:6px;height:46px;border-radius:8px;border:1px solid #3a3c43;background:#1e1f22;padding:0 8px 0 8px;position:relative}
+.ah-poll-answer:focus-within{border-color:#5865f2;box-shadow:0 0 0 1px #5865f2}
+.ah-poll-answer input{flex:1;min-width:0;height:100%;border:0;outline:0;background:transparent;color:#f2f3f5;font:inherit;font-size:15px}
+.ah-poll-answer input::placeholder{color:#80848e}
+.ah-poll-emoji{width:34px;height:34px;border:0;border-radius:6px;background:transparent;color:#b5bac1;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:20px;flex:0 0 auto}
+.ah-poll-emoji:hover{background:#2e3035}
+.ah-poll-emoji svg{width:22px;height:22px}
+.ah-poll-del{width:32px;height:32px;border:0;border-radius:6px;background:transparent;color:#f2f3f5;cursor:pointer;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.ah-poll-del:hover{background:#2e3035}
+.ah-poll-del[disabled]{opacity:.35;cursor:not-allowed}
+.ah-poll-del[disabled]:hover{background:transparent}
+.ah-poll-del svg{width:18px;height:18px}
+.ah-poll-emoji-pop{position:absolute;left:0;top:calc(100% + 6px);z-index:5;width:244px;background:#2b2d31;border:1px solid #3a3c43;border-radius:10px;padding:8px;display:none;grid-template-columns:repeat(6,1fr);gap:2px;box-shadow:0 14px 40px rgba(0,0,0,.5)}
+.ah-poll-emoji-pop.open{display:grid}
+.ah-poll-emoji-pop button{height:34px;border:0;border-radius:6px;background:transparent;font-size:20px;cursor:pointer;color:#b5bac1}
+.ah-poll-emoji-pop button:hover{background:#3a3c43}
+.ah-poll-add-wrap{display:flex;justify-content:flex-end;margin-top:8px}
+.ah-poll-add{height:40px;border:0;border-radius:8px;background:#2e3035;color:#f2f3f5;font:inherit;font-size:14px;font-weight:800;padding:0 16px;cursor:pointer;display:flex;align-items:center;gap:8px}
+.ah-poll-add:hover{background:#383a40}
+.ah-poll-add[disabled]{opacity:.45;cursor:not-allowed}
+.ah-poll-add svg{width:16px;height:16px}
+.ah-poll-select{appearance:none;-webkit-appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23f2f3f5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:40px}
+.ah-poll-footer{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:6px}
+.ah-poll-check{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:700;cursor:pointer;user-select:none;min-width:0}
+.ah-poll-check input{position:absolute;opacity:0;pointer-events:none}
+.ah-poll-box{width:20px;height:20px;border-radius:4px;border:2px solid #80848e;display:flex;align-items:center;justify-content:center;flex:0 0 auto;transition:background .12s,border-color .12s}
+.ah-poll-box svg{width:14px;height:14px;opacity:0;color:#fff}
+.ah-poll-check input:checked+.ah-poll-box{background:#5865f2;border-color:#5865f2}
+.ah-poll-check input:checked+.ah-poll-box svg{opacity:1}
+.ah-poll-check input:focus-visible+.ah-poll-box{box-shadow:0 0 0 2px rgba(88,101,242,.5)}
+.ah-poll-publish{height:42px;border:0;border-radius:8px;background:#5865f2;color:#fff;font:inherit;font-size:14px;font-weight:800;padding:0 22px;cursor:pointer;flex:0 0 auto}
+.ah-poll-publish:hover{background:#4752c4}
+.ah-poll-publish[disabled]{opacity:.5;cursor:not-allowed}
+.ah-poll-error{color:#ff6b6f;font-size:13px;font-weight:700;margin:-10px 0 14px;display:none}
+.ah-poll-error.show{display:block}
+
+/* poll card inside a chat message */
+.ah-poll-message .dm-message-text,.ah-poll-message .msg-text,.ah-poll-message .message-content{display:none!important}
+.ah-poll-slot{margin-top:6px;max-width:440px}
+.ah-poll-card{background:#2b2d31;border:1px solid #3a3c43;border-radius:12px;padding:14px 14px 12px;color:#f2f3f5}
+.ah-poll-q{font-size:16px;font-weight:800;line-height:1.3;word-break:break-word;margin:0 0 4px}
+.ah-poll-hint{font-size:12px;color:#949ba4;font-weight:700;margin-bottom:10px}
+.ah-poll-opts{display:flex;flex-direction:column;gap:6px}
+.ah-poll-opt{position:relative;overflow:hidden;width:100%;min-height:42px;border-radius:8px;border:1px solid #3a3c43;background:#1e1f22;color:#f2f3f5;font:inherit;font-size:14px;font-weight:700;text-align:left;cursor:pointer;display:flex;align-items:center;gap:10px;padding:0 12px}
+.ah-poll-opt:hover{border-color:#5865f2}
+.ah-poll-opt.voted{border-color:#5865f2}
+.ah-poll-opt[disabled]{cursor:default}
+.ah-poll-opt[disabled]:hover{border-color:#3a3c43}
+.ah-poll-opt.voted[disabled]:hover{border-color:#5865f2}
+.ah-poll-fill{position:absolute;left:0;top:0;bottom:0;width:0;background:rgba(88,101,242,.22);transition:width .35s ease;pointer-events:none}
+.ah-poll-opt.voted .ah-poll-fill{background:rgba(88,101,242,.4)}
+.ah-poll-opt>*:not(.ah-poll-fill){position:relative}
+.ah-poll-mark{width:18px;height:18px;border-radius:50%;border:2px solid #80848e;display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:#fff}
+.ah-poll-card.multi .ah-poll-mark{border-radius:4px}
+.ah-poll-mark svg{width:12px;height:12px;opacity:0}
+.ah-poll-opt.voted .ah-poll-mark{background:#5865f2;border-color:#5865f2}
+.ah-poll-opt.voted .ah-poll-mark svg{opacity:1}
+.ah-poll-opt-emoji{font-size:18px;flex:0 0 auto}
+.ah-poll-opt-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ah-poll-opt-pct{flex:0 0 auto;font-size:13px;color:#dbdee1}
+.ah-poll-meta{margin-top:10px;font-size:12px;color:#949ba4;font-weight:700}
+.ah-poll-card.ended .ah-poll-hint{color:#f0b232}
+@media(max-width:620px){
+  .ah-poll-bg{align-items:flex-end;padding:0}
+  .ah-poll-modal{width:100%;max-height:92dvh;border-radius:16px 16px 0 0}
+  .ah-poll-slot{max-width:100%}
+}
+</style>
+<script id="ah-poll-js">
+(function(){
+  if(window.__ahPollInit)return;
+  window.__ahPollInit=true;
+  var CFG={createUrl:'/community/api/servers/{{ server.id }}/channels/{{ channel.id }}/polls',rowIdPrefix:'message-'};
+  var MARKER=/^\[\[ah:poll:(\d{1,12})\]\]$/;
+  var ROW_SEL='.msg,.message';
+  var API='/community/api';
+  var LANG=((document.documentElement.getAttribute('lang')||'uk').slice(0,2)).toLowerCase();
+  if(LANG!=='ru'&&LANG!=='en')LANG='uk';
+  var T={
+    uk:{title:'Створення опитування',question:'Питання',qph:'Яке питання ви хочете задати?',answers:'Відповіді',aph:'Введіть відповідь',add:'Додати ще одну відповідь',term:'Термін',multi:'Дозволити кілька відповідей',publish:'Публікація',close:'Закрити',
+      pickOne:'Оберіть одну відповідь',pickMany:'Оберіть кілька відповідей',ended:'Опитування завершено',left:'Залишилось',lessMin:'менше хвилини',
+      min:'хв',hour:'год',day:'дн',votes:['голос','голоси','голосів'],noVotes:'Ще немає голосів',
+      h1:'1 год',h4:'4 год',h8:'8 год',h24:'24 год',h72:'3 дні',h168:'1 тиждень',h336:'2 тижні',
+      errGeneric:'Не вдалося створити опитування',errRate:'Надто швидко. Спробуйте за мить.',errBlocked:'Не вдалося надіслати: користувач недоступний.',errVote:'Не вдалося проголосувати',errEnded:'Опитування вже завершено',errLong:'Забагато символів',errQuestion:'Введіть питання',errOptions:'Потрібно мінімум 2 відповіді',
+      pollLabel:'Опитування'},
+    ru:{title:'Создание опроса',question:'Вопрос',qph:'Какой вопрос вы хотите задать?',answers:'Ответы',aph:'Введите ответ',add:'Добавить ещё один ответ',term:'Срок',multi:'Разрешить несколько ответов',publish:'Публикация',close:'Закрыть',
+      pickOne:'Выберите один ответ',pickMany:'Выберите несколько ответов',ended:'Опрос завершён',left:'Осталось',lessMin:'меньше минуты',
+      min:'мин',hour:'ч',day:'дн',votes:['голос','голоса','голосов'],noVotes:'Пока нет голосов',
+      h1:'1 ч',h4:'4 ч',h8:'8 ч',h24:'24 ч',h72:'3 дня',h168:'1 неделя',h336:'2 недели',
+      errGeneric:'Не удалось создать опрос',errRate:'Слишком быстро. Попробуйте через секунду.',errBlocked:'Не удалось отправить: пользователь недоступен.',errVote:'Не удалось проголосовать',errEnded:'Опрос уже завершён',errLong:'Слишком много символов',errQuestion:'Введите вопрос',errOptions:'Нужно минимум 2 ответа',
+      pollLabel:'Опрос'},
+    en:{title:'Create poll',question:'Question',qph:'What question do you want to ask?',answers:'Answers',aph:'Type an answer',add:'Add another answer',term:'Duration',multi:'Allow multiple answers',publish:'Post',close:'Close',
+      pickOne:'Select one answer',pickMany:'Select one or more answers',ended:'Poll ended',left:'Left',lessMin:'less than a minute',
+      min:'min',hour:'h',day:'d',votes:['vote','votes','votes'],noVotes:'No votes yet',
+      h1:'1 hour',h4:'4 hours',h8:'8 hours',h24:'24 hours',h72:'3 days',h168:'1 week',h336:'2 weeks',
+      errGeneric:'Could not create the poll',errRate:'Too fast. Try again in a moment.',errBlocked:'Could not send: user unavailable.',errVote:'Could not vote',errEnded:'This poll has ended',errLong:'Too many characters',errQuestion:'Enter a question',errOptions:'At least 2 answers are required',
+      pollLabel:'Poll'}
+  }[LANG];
+  var DURATIONS=[[1,'h1'],[4,'h4'],[8,'h8'],[24,'h24'],[72,'h72'],[168,'h168'],[336,'h336']];
+  var EMOJIS=['😀','😂','😍','😎','🤔','😮','😢','😡','👍','👎','❤️','🔥','🎉','✅','❌','⭐','🍕','🎮','🎵','⚽','🐶','🐱','☕','🚀'];
+  var QMAX=300,AMAX=55,MIN_OPTS=2,MAX_OPTS=10;
+  var ICON_X='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+  var ICON_SMILE='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm-3.5 7.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm7 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 18c-2.2 0-4.1-1.3-5-3.2-.2-.4.2-.8.6-.8h8.8c.4 0 .8.4.6.8-.9 1.9-2.8 3.2-5 3.2Z"/></svg>';
+  var ICON_TRASH='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-3 6h12l-1 11a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 9Z"/></svg>';
+  var ICON_PLUS='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
+  var ICON_CHECK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg>';
+
+  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]})}
+  function toast(msg){if(typeof window.showActionToast==='function')window.showActionToast(msg);else window.alert(msg)}
+  function plural(n,forms){
+    if(LANG==='en')return n===1?forms[0]:forms[1];
+    var m10=n%10,m100=n%100;
+    if(m10===1&&m100!==11)return forms[0];
+    if(m10>=2&&m10<=4&&(m100<10||m100>=20))return forms[1];
+    return forms[2];
+  }
+  function errText(code){
+    if(code==='rate_limited')return T.errRate;
+    if(code==='blocked_relationship'||code==='privacy'||code==='forbidden')return T.errBlocked;
+    if(code==='question_required')return T.errQuestion;
+    if(code==='not_enough_options')return T.errOptions;
+    if(code==='question_too_long'||code==='option_too_long')return T.errLong;
+    return T.errGeneric;
+  }
+
+  /* ---------- creation modal ---------- */
+  var bg=null,qInput=null,qCount=null,answersEl=null,addBtn=null,termSel=null,multiBox=null,pubBtn=null,errEl=null,busy=false;
+
+  function closePlusMenus(){
+    document.querySelectorAll('#dm-plus-menu.open,#composer-plus-menu.open,.dm-plus-btn.open,#composer-plus-btn.open').forEach(function(el){el.classList.remove('open')});
+  }
+
+  function build(){
+    bg=document.createElement('div');
+    bg.className='ah-poll-bg';
+    bg.setAttribute('role','dialog');
+    bg.setAttribute('aria-modal','true');
+    var opts=DURATIONS.map(function(d){return '<option value="'+d[0]+'"'+(d[0]===24?' selected':'')+'>'+esc(T[d[1]])+'</option>'}).join('');
+    bg.innerHTML=
+      '<div class="ah-poll-modal">'
+      +'<button type="button" class="ah-poll-close" aria-label="'+esc(T.close)+'">'+ICON_X+'</button>'
+      +'<h2 class="ah-poll-title">'+esc(T.title)+'</h2>'
+      +'<div class="ah-poll-section"><label class="ah-poll-label" for="ah-poll-q">'+esc(T.question)+'</label>'
+      +'<input id="ah-poll-q" class="ah-poll-input" type="text" maxlength="'+QMAX+'" autocomplete="off" placeholder="'+esc(T.qph)+'">'
+      +'<div class="ah-poll-count">0 / '+QMAX+'</div></div>'
+      +'<div class="ah-poll-section"><div class="ah-poll-label">'+esc(T.answers)+'</div>'
+      +'<div class="ah-poll-answers"></div>'
+      +'<div class="ah-poll-add-wrap"><button type="button" class="ah-poll-add">'+ICON_PLUS+'<span>'+esc(T.add)+'</span></button></div></div>'
+      +'<div class="ah-poll-section"><label class="ah-poll-label" for="ah-poll-term">'+esc(T.term)+'</label>'
+      +'<select id="ah-poll-term" class="ah-poll-select">'+opts+'</select></div>'
+      +'<div class="ah-poll-error"></div>'
+      +'<div class="ah-poll-footer">'
+      +'<label class="ah-poll-check"><input type="checkbox" class="ah-poll-multi"><span class="ah-poll-box">'+ICON_CHECK+'</span><span>'+esc(T.multi)+'</span></label>'
+      +'<button type="button" class="ah-poll-publish" disabled>'+esc(T.publish)+'</button></div>'
+      +'</div>';
+    document.body.appendChild(bg);
+    qInput=bg.querySelector('#ah-poll-q');
+    qCount=bg.querySelector('.ah-poll-count');
+    answersEl=bg.querySelector('.ah-poll-answers');
+    addBtn=bg.querySelector('.ah-poll-add');
+    termSel=bg.querySelector('#ah-poll-term');
+    multiBox=bg.querySelector('.ah-poll-multi');
+    pubBtn=bg.querySelector('.ah-poll-publish');
+    errEl=bg.querySelector('.ah-poll-error');
+
+    bg.addEventListener('mousedown',function(e){if(e.target===bg)closeModal()});
+    bg.querySelector('.ah-poll-close').addEventListener('click',closeModal);
+    qInput.addEventListener('input',function(){qCount.textContent=qInput.value.length+' / '+QMAX;refresh()});
+    qInput.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();var f=answersEl.querySelector('input');if(f)f.focus()}});
+    addBtn.addEventListener('click',function(){addAnswer(true)});
+    pubBtn.addEventListener('click',submit);
+    bg.addEventListener('click',function(e){
+      if(!e.target.closest('.ah-poll-emoji')&&!e.target.closest('.ah-poll-emoji-pop'))closeEmojiPops();
+    });
+  }
+
+  function closeEmojiPops(){if(!answersEl)return;answersEl.querySelectorAll('.ah-poll-emoji-pop.open').forEach(function(p){p.classList.remove('open')})}
+
+  function addAnswer(focus){
+    if(answersEl.children.length>=MAX_OPTS)return;
+    var row=document.createElement('div');
+    row.className='ah-poll-answer';
+    row.dataset.emoji='';
+    row.innerHTML=
+      '<button type="button" class="ah-poll-emoji" aria-label="emoji">'+ICON_SMILE+'</button>'
+      +'<input type="text" maxlength="'+AMAX+'" autocomplete="off" placeholder="'+esc(T.aph)+'">'
+      +'<button type="button" class="ah-poll-del" aria-label="delete">'+ICON_TRASH+'</button>'
+      +'<div class="ah-poll-emoji-pop"></div>';
+    var pop=row.querySelector('.ah-poll-emoji-pop');
+    var emojiBtn=row.querySelector('.ah-poll-emoji');
+    var input=row.querySelector('input');
+    function setEmoji(value){
+      row.dataset.emoji=value||'';
+      emojiBtn.innerHTML=value?esc(value):ICON_SMILE;
+    }
+    pop.innerHTML=EMOJIS.map(function(e){return '<button type="button" data-e="'+esc(e)+'">'+esc(e)+'</button>'}).join('')+'<button type="button" data-e="" aria-label="clear">'+ICON_X.replace('<svg','<svg width="16" height="16"')+'</button>';
+    pop.addEventListener('click',function(e){
+      var b=e.target.closest('button');if(!b)return;
+      setEmoji(b.dataset.e);pop.classList.remove('open');input.focus();
+    });
+    emojiBtn.addEventListener('click',function(e){
+      e.stopPropagation();
+      var wasOpen=pop.classList.contains('open');
+      closeEmojiPops();
+      if(!wasOpen)pop.classList.add('open');
+    });
+    row.querySelector('.ah-poll-del').addEventListener('click',function(){
+      if(answersEl.children.length<=MIN_OPTS)return;
+      row.remove();refresh();
+    });
+    input.addEventListener('input',refresh);
+    input.addEventListener('keydown',function(e){
+      if(e.key!=='Enter')return;
+      e.preventDefault();
+      var rows=Array.prototype.slice.call(answersEl.children);
+      var idx=rows.indexOf(row);
+      if(idx<rows.length-1){rows[idx+1].querySelector('input').focus()}
+      else if(rows.length<MAX_OPTS){addAnswer(true)}
+    });
+    answersEl.appendChild(row);
+    refresh();
+    if(focus)input.focus();
+  }
+
+  function collect(){
+    var options=[];
+    answersEl.querySelectorAll('.ah-poll-answer').forEach(function(row){
+      var text=row.querySelector('input').value.trim();
+      if(text)options.push({text:text,emoji:row.dataset.emoji||''});
+    });
+    return {question:qInput.value.trim(),options:options,allow_multiple:!!multiBox.checked,duration_hours:parseInt(termSel.value,10)||24};
+  }
+
+  function refresh(){
+    if(!bg)return;
+    var data=collect();
+    pubBtn.disabled=busy||!data.question||data.options.length<MIN_OPTS;
+    addBtn.disabled=answersEl.children.length>=MAX_OPTS;
+    var many=answersEl.children.length>MIN_OPTS;
+    answersEl.querySelectorAll('.ah-poll-del').forEach(function(b){b.disabled=!many});
+  }
+
+  function showError(msg){errEl.textContent=msg||'';errEl.classList.toggle('show',!!msg)}
+
+  function openModal(){
+    if(!bg)build();
+    qInput.value='';qCount.textContent='0 / '+QMAX;
+    answersEl.innerHTML='';
+    multiBox.checked=false;termSel.value='24';
+    busy=false;showError('');
+    addAnswer(false);addAnswer(false);
+    refresh();
+    bg.classList.add('open');
+    setTimeout(function(){qInput.focus()},30);
+  }
+  function closeModal(){if(bg){bg.classList.remove('open');closeEmojiPops()}}
+
+  async function submit(){
+    if(busy)return;
+    var data=collect();
+    if(!data.question){showError(T.errQuestion);return}
+    if(data.options.length<MIN_OPTS){showError(T.errOptions);return}
+    busy=true;pubBtn.disabled=true;showError('');
+    try{
+      var res=await fetch(CFG.createUrl,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+      var body=await res.json().catch(function(){return{}});
+      if(!res.ok||!body.ok){showError(errText(body.error));busy=false;refresh();return}
+      closeModal();
+      busy=false;
+      // The new message normally arrives through the realtime socket; fall back to a reload if it does not.
+      var mid=body.message_id;
+      setTimeout(function(){
+        if(mid&&!document.getElementById((CFG.rowIdPrefix)+mid))window.location.reload();
+      },2500);
+    }catch(err){
+      showError(T.errGeneric);busy=false;refresh();
+    }
+  }
+
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&bg&&bg.classList.contains('open')){e.stopPropagation();closeModal()}},true);
+
+  window.ahOpenPollModal=function(e){
+    if(e){e.preventDefault();e.stopPropagation()}
+    closePlusMenus();
+    openModal();
+  };
+
+  /* ---------- poll cards in the chat ---------- */
+  var polls=new Map();      // id -> latest payload
+  var inflight=new Set();   // ids being fetched
+  var voting=new Set();
+  var missing=new Set();    // ids the server did not return (deleted / no access)
+
+  function markerFromRow(row){
+    var raw=(row.dataset&&row.dataset.messageContent)||'';
+    if(!raw){var t=row.querySelector('.dm-message-text,.message-content-text');raw=t?t.textContent:''}
+    var m=String(raw).trim().match(MARKER);
+    return m?parseInt(m[1],10):0;
+  }
+
+  function remainingText(poll){
+    if(poll.ended)return T.ended;
+    var ms=new Date(poll.expires_at).getTime()-Date.now();
+    if(!isFinite(ms))return '';
+    if(ms<=0)return T.ended;
+    var mins=Math.ceil(ms/60000);
+    var part;
+    if(mins<2)part=T.lessMin;
+    else if(mins<60)part=mins+' '+T.min;
+    else if(mins<48*60)part=Math.ceil(mins/60)+' '+T.hour;
+    else part=Math.ceil(mins/1440)+' '+T.day;
+    return T.left+': '+part;
+  }
+
+  function isEnded(poll){return poll.ended||(poll.expires_at&&new Date(poll.expires_at).getTime()<=Date.now())}
+
+  function cardHtml(poll){
+    var ended=isEnded(poll);
+    var voters=poll.total_voters||0;
+    var opts=poll.options.map(function(o){
+      var pct=voters>0?Math.round((o.votes/voters)*100):0;
+      return '<button type="button" class="ah-poll-opt'+(o.voted?' voted':'')+'" data-option="'+o.id+'"'+(ended?' disabled':'')+'>'
+        +'<span class="ah-poll-fill" style="width:'+pct+'%"></span>'
+        +'<span class="ah-poll-mark">'+ICON_CHECK+'</span>'
+        +(o.emoji?'<span class="ah-poll-opt-emoji">'+esc(o.emoji)+'</span>':'')
+        +'<span class="ah-poll-opt-text">'+esc(o.text)+'</span>'
+        +'<span class="ah-poll-opt-pct">'+pct+'%</span>'
+        +'</button>';
+    }).join('');
+    var hint=ended?T.ended:(poll.allow_multiple?T.pickMany:T.pickOne);
+    var votesLine=voters>0?(voters+' '+plural(voters,T.votes)):T.noVotes;
+    var left=ended?'':remainingText(poll);
+    return '<div class="ah-poll-card'+(poll.allow_multiple?' multi':'')+(ended?' ended':'')+'" data-poll="'+poll.id+'">'
+      +'<div class="ah-poll-q">'+esc(poll.question)+'</div>'
+      +'<div class="ah-poll-hint">'+esc(hint)+'</div>'
+      +'<div class="ah-poll-opts">'+opts+'</div>'
+      +'<div class="ah-poll-meta">'+esc(votesLine)+(left?' · '+esc(left):'')+'</div>'
+      +'</div>';
+  }
+
+  function renderInto(slot,poll){slot.innerHTML=cardHtml(poll)}
+
+  function renderAll(id){
+    var poll=polls.get(id);if(!poll)return;
+    document.querySelectorAll('.ah-poll-slot[data-poll-id="'+id+'"]').forEach(function(slot){renderInto(slot,poll)});
+  }
+
+  function prepareRow(row,id){
+    row.classList.add('ah-poll-message');
+    row.dataset.ahPoll='1';
+    row.dataset.ahPollId=String(id);
+    row.dataset.messageEditable='0';
+    var body=row.querySelector('.msg-body,.message-body');
+    if(!body)return null;
+    var slot=body.querySelector('.ah-poll-slot');
+    if(!slot){
+      slot=document.createElement('div');
+      slot.className='ah-poll-slot';
+      slot.dataset.pollId=String(id);
+      body.appendChild(slot);
+    }
+    return slot;
+  }
+
+  async function fetchPolls(ids){
+    var need=ids.filter(function(id){return !inflight.has(id)});
+    if(!need.length)return;
+    need.forEach(function(id){inflight.add(id)});
+    try{
+      var res=await fetch(API+'/polls?ids='+need.join(','),{credentials:'same-origin'});
+      var body=await res.json().catch(function(){return{}});
+      var got=new Set();
+      (body.polls||[]).forEach(function(p){polls.set(p.id,p);got.add(p.id);renderAll(p.id)});
+      need.forEach(function(id){
+        if(!got.has(id)&&res.ok){
+          missing.add(id);
+          document.querySelectorAll('.ah-poll-slot[data-poll-id="'+id+'"]').forEach(function(slot){
+            if(!slot.firstChild)slot.innerHTML='<div class="ah-poll-card ended"><div class="ah-poll-q">'+esc(T.pollLabel)+'</div><div class="ah-poll-meta">'+esc(T.errEnded)+'</div></div>';
+          });
+        }
+      });
+    }catch(e){}
+    finally{need.forEach(function(id){inflight.delete(id)})}
+  }
+
+  function hydrate(root){
+    var scope=root||document;
+    var rows=[];
+    if(scope.nodeType===1&&scope.matches&&scope.matches(ROW_SEL))rows.push(scope);
+    if(scope.querySelectorAll)scope.querySelectorAll(ROW_SEL).forEach(function(r){rows.push(r)});
+    var toFetch=[];
+    rows.forEach(function(row){
+      var id=markerFromRow(row);
+      if(!id)return;
+      var slot=prepareRow(row,id);
+      if(!slot)return;
+      if(polls.has(id)){if(!slot.firstChild)renderInto(slot,polls.get(id))}
+      else if(!missing.has(id)&&toFetch.indexOf(id)<0)toFetch.push(id);
+    });
+    if(toFetch.length)fetchPolls(toFetch);
+  }
+
+  async function vote(id,optionId){
+    var key=id+':'+optionId;
+    if(voting.has(key))return;
+    voting.add(key);
+    try{
+      var res=await fetch(API+'/polls/'+id+'/vote',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({option_id:optionId})});
+      var body=await res.json().catch(function(){return{}});
+      if(res.ok&&body.ok&&body.poll){polls.set(id,body.poll);renderAll(id)}
+      else if(body.error==='ended'){toast(T.errEnded);fetchPolls([id])}
+      else if(body.error==='rate_limited'){toast(T.errRate)}
+      else toast(T.errVote);
+    }catch(e){toast(T.errVote)}
+    finally{voting.delete(key)}
+  }
+
+  document.addEventListener('click',function(e){
+    var btn=e.target.closest&&e.target.closest('.ah-poll-opt');
+    if(!btn||btn.disabled)return;
+    var card=btn.closest('.ah-poll-card');if(!card)return;
+    e.preventDefault();e.stopPropagation();
+    vote(parseInt(card.dataset.poll,10),parseInt(btn.dataset.option,10));
+  });
+
+  // Hydrate rows that are added later (realtime messages, history loading).
+  var pending=false;
+  var observer=new MutationObserver(function(){
+    if(pending)return;
+    pending=true;
+    setTimeout(function(){pending=false;hydrate(document)},60);
+  });
+  function start(){
+    hydrate(document);
+    observer.observe(document.body,{childList:true,subtree:true});
+    // Refresh counts from other voters + countdown while the tab is open.
+    setInterval(function(){
+      if(document.hidden)return;
+      var ids=[];
+      document.querySelectorAll('.ah-poll-slot[data-poll-id]').forEach(function(slot){
+        var id=parseInt(slot.dataset.pollId,10);
+        var p=polls.get(id);
+        if(id&&ids.indexOf(id)<0&&!missing.has(id)&&!(p&&isEnded(p)))ids.push(id);
+      });
+      if(ids.length)fetchPolls(ids.slice(0,50));
+    },6000);
+    setInterval(function(){
+      polls.forEach(function(p,id){if(!document.hidden)renderAll(id)});
+    },30000);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+})();
+</script>
+
 </body>
 </html>
