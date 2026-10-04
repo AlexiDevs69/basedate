@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.238.1",
+      "date": "2026-10-04",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Integrate Cloudflare Turnstile for registration."
+      ],
+      "source_sha": "aa6cfaad422d5e83da0027f420ea336a1a1ec094"
+    },
+    {
       "version": "1.238.0",
       "date": "2026-10-04",
       "title": "Нові можливості AlexiHub",
