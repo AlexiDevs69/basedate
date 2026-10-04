@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.243.0",
+      "date": "2026-10-04",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: poll creation and management features."
+      ],
+      "source_sha": "75bf66097b6d9e075cf66082e6180c33fe2f59e0"
+    },
+    {
       "version": "1.242.6",
       "date": "2026-10-04",
       "title": "Виправлення та стабільність",
