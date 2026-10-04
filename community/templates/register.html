@@ -35,6 +35,7 @@ a{color:var(--link);text-decoration:none}
 a:hover{text-decoration:underline}
 .brand,.brand:hover{color:#fff;text-decoration:none}
 .submit-btn{width:100%;height:46px;border:0;border-radius:6px;background:var(--brand);color:#2b1804;font:900 15px/1 var(--font);cursor:pointer;box-shadow:0 4px 0 #b8630f;transition:background .15s,transform .08s,box-shadow .08s}
+.submit-btn:disabled{opacity:.7;cursor:wait}
 .submit-btn:hover{background:var(--brand-hover)}
 .submit-btn:active{transform:translateY(3px);box-shadow:0 1px 0 #b8630f}
 .submit-btn:focus-visible{outline:3px solid #fff;outline-offset:2px}
@@ -57,7 +58,7 @@ a:hover{text-decoration:underline}
       <div class="error" role="alert">{{ error }}</div>
       {% endif %}
 
-      <form method="post" action="/community/register">
+      <form id="auth-form" method="post" action="/community/register">
         <div class="form-group">
           <label class="form-label" for="email">Email <span class="required">*</span></label>
           <input class="form-input" type="email" id="email" name="email" required autocomplete="email" autofocus>
@@ -77,10 +78,53 @@ a:hover{text-decoration:underline}
         <p class="terms">By registering, you agree to the AlexiHub community rules and privacy policy.</p>
 
         {% if turnstile_site_key %}
-            <div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-theme="dark" style="margin: 4px 0 16px;"></div>
-            <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-            {% endif %}
-            <button class="submit-btn" type="submit">Continue</button>
+          <div id="ts-box" style="margin:0 0 12px"></div>
+          <div class="error" id="ts-msg" role="alert" style="display:none"></div>
+          <script>
+          (function () {
+            var SITEKEY = "{{ turnstile_site_key }}";
+            var form = document.getElementById("auth-form");
+            var btn = form.querySelector(".submit-btn");
+            var msg = document.getElementById("ts-msg");
+            var label = btn.textContent;
+            var widgetId = null, busy = false;
+
+            function show(t) { msg.textContent = t; msg.style.display = t ? "" : "none"; }
+            function idle() { busy = false; btn.disabled = false; btn.textContent = label; }
+
+            window.__tsLoaded = function () {
+              widgetId = turnstile.render("#ts-box", {
+                sitekey: SITEKEY,
+                theme: "dark",
+                execution: "execute",           // challenge runs only on button click
+                appearance: "interaction-only", // visible only if the user must interact
+                callback: function () { form.dataset.tsOk = "1"; form.submit(); },
+                "error-callback": function (code) {
+                  idle(); show("Помилка капчі (" + code + "). Онови сторінку та спробуй ще раз.");
+                  return true;
+                },
+                "expired-callback": function () { idle(); },
+                "timeout-callback": function () { idle(); }
+              });
+            };
+
+            form.addEventListener("submit", function (e) {
+              if (form.dataset.tsOk) return;     // token ready -> real submit
+              e.preventDefault();
+              if (busy) return;
+              if (widgetId === null || !window.turnstile) {
+                show("Капча ще завантажується або заблокована. Зачекай секунду і спробуй знову.");
+                return;
+              }
+              show(""); busy = true; btn.disabled = true; btn.textContent = "Перевірка…";
+              turnstile.reset(widgetId);
+              turnstile.execute(widgetId);
+            });
+          })();
+          </script>
+          <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=__tsLoaded" async defer></script>
+          {% endif %}
+          <button class="submit-btn" type="submit">Continue</button>
       </form>
 
       <div class="switch-link">Already have an account? <a href="/community/login">Log In</a></div>
