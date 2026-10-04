@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.242.4",
+      "date": "2026-10-04",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Виправлено: HTML structure and style for context menus."
+      ],
+      "source_sha": "b5fe2a65fb4b3a6b90f7f69c2602f63df2197685"
+    },
+    {
       "version": "1.242.3",
       "date": "2026-10-04",
       "title": "Виправлення та стабільність",
