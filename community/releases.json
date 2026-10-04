@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.236.0",
+      "date": "2026-10-04",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: Turnstile verification to registration and login."
+      ],
+      "source_sha": "642a07fc0861060c97e20b80c742b67b96582e18"
+    },
+    {
       "version": "1.235.0",
       "date": "2026-10-04",
       "title": "Нові можливості AlexiHub",
