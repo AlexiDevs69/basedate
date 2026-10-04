@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.237.2",
+      "date": "2026-10-04",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: button initialization in login template."
+      ],
+      "source_sha": "5c13fbfb52f75906710e775cf17a025c31942973"
+    },
+    {
       "version": "1.237.1",
       "date": "2026-10-04",
       "title": "Виправлення та стабільність",
