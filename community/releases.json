@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.240.11",
+      "date": "2026-10-04",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: right-hand profile panel layout and styles."
+      ],
+      "source_sha": "c3c773f90c3fb1d961faacfe18ebc450973d4bc9"
+    },
+    {
       "version": "1.240.10",
       "date": "2026-10-04",
       "title": "Виправлення та стабільність",
