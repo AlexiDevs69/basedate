@@ -4158,15 +4158,24 @@ async def mark_server_channel_mentions_read(
 async def unread_mention_summary(db: AsyncSession, account_id: int) -> dict:
     await ensure_mention_table(db)
 
+    await ensure_dm_mutes_table(db)
     dm_result = await db.execute(
         text("""
-            SELECT thread_id, COUNT(*)
-            FROM community_message_mentions
-            WHERE target_account_id = :account_id
-              AND message_kind = 'dm'
-              AND read_at IS NULL
-              AND thread_id IS NOT NULL
-            GROUP BY thread_id
+            SELECT mm.thread_id, COUNT(*)
+            FROM community_message_mentions mm
+            JOIN community_direct_threads t ON t.id = mm.thread_id
+            WHERE mm.target_account_id = :account_id
+              AND mm.message_kind = 'dm'
+              AND mm.read_at IS NULL
+              AND mm.thread_id IS NOT NULL
+              AND NOT EXISTS (
+                  SELECT 1 FROM community_dm_mutes dmm
+                  WHERE dmm.account_id = :account_id
+                    AND dmm.muted_id = CASE WHEN t.user_low_id = :account_id
+                                            THEN t.user_high_id ELSE t.user_low_id END
+                    AND (dmm.muted_until IS NULL OR dmm.muted_until > NOW())
+              )
+            GROUP BY mm.thread_id
         """),
         {"account_id": int(account_id)},
     )
@@ -4214,6 +4223,116 @@ async def unread_mention_summary(db: AsyncSession, account_id: int) -> dict:
         "server_by_id": server_by_id,
         "channel_by_id": channel_by_id,
     }
+
+
+# ============================================================================
+# Muted direct-message senders (per-account, optionally time-limited)
+# ============================================================================
+
+_DM_MUTES_TABLE_READY = False
+
+
+async def ensure_dm_mutes_table(db: AsyncSession) -> None:
+    """Create the per-account DM mute table idempotently (no migration needed)."""
+    global _DM_MUTES_TABLE_READY
+    if _DM_MUTES_TABLE_READY:
+        return
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_dm_mutes (
+            account_id INTEGER NOT NULL REFERENCES community_accounts(id) ON DELETE CASCADE,
+            muted_id INTEGER NOT NULL REFERENCES community_accounts(id) ON DELETE CASCADE,
+            muted_until TIMESTAMP WITH TIME ZONE NULL,
+            created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+            PRIMARY KEY (account_id, muted_id),
+            CONSTRAINT ck_community_dm_mutes_not_self CHECK (account_id <> muted_id)
+        )
+    """))
+    await db.commit()
+    _DM_MUTES_TABLE_READY = True
+
+
+async def set_dm_mute(
+    db: AsyncSession,
+    account_id: int,
+    muted_id: int,
+    duration_ms: int | None,
+) -> dict:
+    """Mute ``muted_id`` for ``account_id``. ``duration_ms`` falsy/None = until unmuted."""
+    await ensure_dm_mutes_table(db)
+    if int(account_id) == int(muted_id):
+        raise ValueError("cannot mute self")
+    until = None
+    if duration_ms:
+        # Hard cap at one year so a bad client value can never overflow the column.
+        seconds = max(1, min(int(duration_ms) // 1000, 365 * 24 * 3600))
+        until = datetime.now(timezone.utc) + timedelta(seconds=seconds)
+    await db.execute(
+        text("""
+            INSERT INTO community_dm_mutes (account_id, muted_id, muted_until, created_at)
+            VALUES (:account_id, :muted_id, :until, NOW())
+            ON CONFLICT (account_id, muted_id)
+            DO UPDATE SET muted_until = EXCLUDED.muted_until, created_at = NOW()
+        """),
+        {"account_id": int(account_id), "muted_id": int(muted_id), "until": until},
+    )
+    await db.commit()
+    return {"muted_id": int(muted_id), "until": until.isoformat() if until else None, "forever": until is None}
+
+
+async def clear_dm_mute(db: AsyncSession, account_id: int, muted_id: int) -> None:
+    await ensure_dm_mutes_table(db)
+    await db.execute(
+        text("DELETE FROM community_dm_mutes WHERE account_id = :a AND muted_id = :m"),
+        {"a": int(account_id), "m": int(muted_id)},
+    )
+    await db.commit()
+
+
+async def list_active_dm_mutes(db: AsyncSession, account_id: int) -> list[dict]:
+    """Active mutes of an account; expired rows are pruned on the way."""
+    await ensure_dm_mutes_table(db)
+    await db.execute(
+        text("""
+            DELETE FROM community_dm_mutes
+            WHERE account_id = :a AND muted_until IS NOT NULL AND muted_until <= NOW()
+        """),
+        {"a": int(account_id)},
+    )
+    await db.commit()
+    rows = (await db.execute(
+        text("""
+            SELECT m.muted_id, m.muted_until, a.username
+            FROM community_dm_mutes m
+            JOIN community_accounts a ON a.id = m.muted_id
+            WHERE m.account_id = :a
+            ORDER BY m.created_at DESC
+        """),
+        {"a": int(account_id)},
+    )).mappings().all()
+    return [
+        {
+            "id": int(r["muted_id"]),
+            "username": r["username"],
+            "until": r["muted_until"].isoformat() if r["muted_until"] else None,
+            "forever": r["muted_until"] is None,
+        }
+        for r in rows
+    ]
+
+
+async def is_dm_muted(db: AsyncSession, account_id: int, muted_id: int) -> bool:
+    """True while ``account_id`` has an active mute on ``muted_id``."""
+    await ensure_dm_mutes_table(db)
+    row = (await db.execute(
+        text("""
+            SELECT 1 FROM community_dm_mutes
+            WHERE account_id = :a AND muted_id = :m
+              AND (muted_until IS NULL OR muted_until > NOW())
+            LIMIT 1
+        """),
+        {"a": int(account_id), "m": int(muted_id)},
+    )).first()
+    return row is not None
 
 
 # ============================================================================
