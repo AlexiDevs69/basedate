@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.237.1",
+      "date": "2026-10-04",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance login form with Turnstile CAPTCHA."
+      ],
+      "source_sha": "6710e840cb42306d6bf045abbb83ade3934ef18f"
+    },
+    {
       "version": "1.237.0",
       "date": "2026-10-04",
       "title": "Нові можливості AlexiHub",
