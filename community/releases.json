@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.237.0",
+      "date": "2026-10-04",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: Turnstile captcha to registration form."
+      ],
+      "source_sha": "291517a315c0d8ec154b3beccce7e1cbb44ce80f"
+    },
+    {
       "version": "1.236.2",
       "date": "2026-10-04",
       "title": "Виправлення та стабільність",
