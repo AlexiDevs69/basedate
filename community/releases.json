@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.240.6",
+      "date": "2026-10-04",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Remove role display from mini profile."
+      ],
+      "source_sha": "17ab55da53c1d366afb23817f42e9ae681073f92"
+    },
+    {
       "version": "1.240.5",
       "date": "2026-10-04",
       "title": "Виправлення та стабільність",
