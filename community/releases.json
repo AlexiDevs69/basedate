@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.245.1",
+      "date": "2026-10-06",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance poll UI with animations and styles."
+      ],
+      "source_sha": "4e2d5acdc7212aa7c686837a31c7dd2d066442b3"
+    },
+    {
       "version": "1.245.0",
       "date": "2026-10-06",
       "title": "Нові можливості AlexiHub",
