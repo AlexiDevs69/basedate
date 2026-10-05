@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.244.6",
+      "date": "2026-10-05",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: emoji loading and rendering logic."
+      ],
+      "source_sha": "0819f7a2b8aac2d0f3d9668da1bf1cf54abdd357"
+    },
+    {
       "version": "1.244.5",
       "date": "2026-10-05",
       "title": "Виправлення та стабільність",
