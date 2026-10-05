@@ -15153,6 +15153,69 @@ html[data-theme="light"] .ah-date-island{background:rgba(255,255,255,.88);border
   .ah-poll-slot{max-width:100%}
 }
 </style>
+<style id="ah-poll-anim-css">
+/* ---- Опитування: анімації та покращений вигляд ---- */
+.ah-poll-bg.open .ah-poll-modal{animation:ahPollPop .24s cubic-bezier(.2,.9,.3,1.15) both}
+@keyframes ahPollPop{from{opacity:0;transform:translateY(14px) scale(.95)}to{opacity:1;transform:none}}
+.ah-poll-bg.open{backdrop-filter:blur(3px)}
+.ah-poll-answer{animation:ahPollRowIn .2s ease both;transition:border-color .15s,box-shadow .15s}
+@keyframes ahPollRowIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.ah-poll-emoji-pop.open{animation:ahPollPopIn .16s cubic-bezier(.2,.9,.3,1.2) both;transform-origin:top left}
+@keyframes ahPollPopIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}
+.ah-poll-emoji-pop button{transition:background .12s,transform .1s}
+.ah-poll-emoji-pop button:hover{transform:scale(1.18)}
+.ah-poll-add,.ah-poll-publish,.ah-poll-del,.ah-poll-emoji,.ah-poll-close{transition:background .15s,transform .12s,box-shadow .15s,opacity .15s}
+.ah-poll-add:not([disabled]):active,.ah-poll-publish:not([disabled]):active{transform:scale(.96)}
+.ah-poll-publish:not([disabled]):hover{box-shadow:0 6px 18px rgba(88,101,242,.4);transform:translateY(-1px)}
+.ah-poll-close:hover{transform:rotate(90deg)}
+.ah-poll-box{transition:background .15s,border-color .15s,transform .15s}
+.ah-poll-box svg{transition:opacity .12s,transform .18s cubic-bezier(.2,.9,.3,1.4);transform:scale(.4)}
+.ah-poll-check input:checked+.ah-poll-box{transform:scale(1.06)}
+.ah-poll-check input:checked+.ah-poll-box svg{transform:scale(1)}
+.ah-poll-error.show{animation:ahPollShake .35s ease}
+@keyframes ahPollShake{20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
+
+/* картка в чаті */
+.ah-poll-card{background:linear-gradient(180deg,#2e3036,#2a2c31);box-shadow:0 2px 10px rgba(0,0,0,.18);transition:border-color .2s,box-shadow .2s}
+.ah-poll-card:hover{border-color:#4a4d57;box-shadow:0 6px 20px rgba(0,0,0,.28)}
+.ah-poll-card.ah-poll-enter{animation:ahPollCardIn .38s cubic-bezier(.2,.8,.2,1) both}
+@keyframes ahPollCardIn{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
+.ah-poll-card.ah-poll-enter .ah-poll-opt{animation:ahPollOptIn .4s cubic-bezier(.2,.8,.2,1) both}
+.ah-poll-card.ah-poll-enter .ah-poll-opt:nth-child(1){animation-delay:.05s}
+.ah-poll-card.ah-poll-enter .ah-poll-opt:nth-child(2){animation-delay:.1s}
+.ah-poll-card.ah-poll-enter .ah-poll-opt:nth-child(3){animation-delay:.15s}
+.ah-poll-card.ah-poll-enter .ah-poll-opt:nth-child(4){animation-delay:.2s}
+.ah-poll-card.ah-poll-enter .ah-poll-opt:nth-child(n+5){animation-delay:.25s}
+@keyframes ahPollOptIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
+.ah-poll-q{letter-spacing:.1px}
+.ah-poll-opt{transition:border-color .18s,background .18s,transform .14s,box-shadow .18s}
+.ah-poll-opt:not([disabled]):hover{transform:translateY(-1px);background:#23252b;box-shadow:0 4px 12px rgba(0,0,0,.25)}
+.ah-poll-opt:not([disabled]):active{transform:scale(.985)}
+.ah-poll-fill{background:linear-gradient(90deg,rgba(88,101,242,.34),rgba(88,101,242,.16));border-radius:0 6px 6px 0;transition:width .75s cubic-bezier(.22,1,.36,1),background .3s}
+.ah-poll-opt.voted .ah-poll-fill{background:linear-gradient(90deg,rgba(88,101,242,.62),rgba(120,132,255,.3))}
+.ah-poll-opt.voted{background:#22243a;box-shadow:0 0 0 1px rgba(88,101,242,.35) inset}
+.ah-poll-opt.lead .ah-poll-opt-pct{color:#fff;font-weight:800}
+.ah-poll-opt.lead .ah-poll-fill{box-shadow:inset -2px 0 0 rgba(140,150,255,.55)}
+.ah-poll-opt-pct{font-variant-numeric:tabular-nums;min-width:34px;text-align:right}
+.ah-poll-mark{transition:background .18s,border-color .18s,transform .18s}
+.ah-poll-mark svg{transform:scale(.3);transition:opacity .15s,transform .22s cubic-bezier(.2,.9,.3,1.5)}
+.ah-poll-opt.voted .ah-poll-mark svg{transform:scale(1)}
+.ah-poll-opt.just-voted .ah-poll-mark{animation:ahPollMarkPop .42s cubic-bezier(.2,.9,.3,1.4)}
+.ah-poll-opt.just-voted{animation:ahPollVoteFlash .6s ease-out}
+@keyframes ahPollMarkPop{0%{transform:scale(.6)}55%{transform:scale(1.35)}100%{transform:scale(1)}}
+@keyframes ahPollVoteFlash{0%{box-shadow:0 0 0 0 rgba(88,101,242,.55)}100%{box-shadow:0 0 0 10px rgba(88,101,242,0)}}
+.ah-poll-card.ended .ah-poll-opt{opacity:.92}
+.ah-poll-card.ended .ah-poll-opt.lead{border-color:#f0b232}
+.ah-poll-card.ended .ah-poll-opt.lead .ah-poll-fill{background:linear-gradient(90deg,rgba(240,178,50,.38),rgba(240,178,50,.14))}
+@media(max-width:620px){
+  .ah-poll-bg.open .ah-poll-modal{animation:ahPollSheet .3s cubic-bezier(.2,.9,.3,1) both}
+  @keyframes ahPollSheet{from{transform:translateY(100%)}to{transform:none}}
+}
+@media(prefers-reduced-motion:reduce){
+  .ah-poll-bg.open .ah-poll-modal,.ah-poll-answer,.ah-poll-emoji-pop.open,.ah-poll-card.ah-poll-enter,.ah-poll-card.ah-poll-enter .ah-poll-opt,.ah-poll-opt.just-voted,.ah-poll-opt.just-voted .ah-poll-mark,.ah-poll-error.show{animation:none!important}
+  .ah-poll-fill,.ah-poll-opt,.ah-poll-mark,.ah-poll-card{transition:none!important}
+}
+</style>
 <script id="ah-poll-js">
 (function(){
   if(window.__ahPollInit)return;
@@ -15435,7 +15498,43 @@ html[data-theme="light"] .ah-date-island{background:rgba(255,255,255,.88);border
       +'</div>';
   }
 
-  function renderInto(slot,poll){slot.innerHTML=cardHtml(poll)}
+  var REDUCE=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function animatePct(el,from,to){
+    if(REDUCE||from===to){el.textContent=to+'%';return}
+    var t0=null,dur=650;
+    function step(ts){
+      if(t0===null)t0=ts;
+      var k=Math.min(1,(ts-t0)/dur),e=1-Math.pow(1-k,3);
+      el.textContent=Math.round(from+(to-from)*e)+'%';
+      if(k<1&&el.isConnected)requestAnimationFrame(step);else el.textContent=to+'%';
+    }
+    requestAnimationFrame(step);
+  }
+  function renderInto(slot,poll){
+    var had=!!slot.querySelector('.ah-poll-card'),prev={};
+    slot.querySelectorAll('.ah-poll-opt').forEach(function(b){
+      var f=b.querySelector('.ah-poll-fill'),p=b.querySelector('.ah-poll-opt-pct');
+      prev[b.dataset.option]={w:f?(parseFloat(f.style.width)||0):0,p:p?(parseInt(p.textContent,10)||0):0,voted:b.classList.contains('voted')};
+    });
+    slot.innerHTML=cardHtml(poll);
+    var card=slot.querySelector('.ah-poll-card');if(!card)return;
+    if(!had)card.classList.add('ah-poll-enter');
+    var max=0;(poll.options||[]).forEach(function(o){if((o.votes||0)>max)max=o.votes||0});
+    var jobs=[];
+    card.querySelectorAll('.ah-poll-opt').forEach(function(b,i){
+      var f=b.querySelector('.ah-poll-fill'),p=b.querySelector('.ah-poll-opt-pct'),o=poll.options[i];
+      var target=f?(parseFloat(f.style.width)||0):0,old=prev[b.dataset.option];
+      var from=old?old.w:0,fromP=old?old.p:0;
+      if(o&&max>0&&(o.votes||0)===max)b.classList.add('lead');
+      if(old&&!old.voted&&b.classList.contains('voted'))b.classList.add('just-voted');
+      if(f&&from!==target){f.style.width=from+'%';jobs.push([f,target])}
+      if(p)animatePct(p,fromP,parseInt(p.textContent,10)||0);
+    });
+    if(jobs.length){
+      void card.offsetWidth;
+      requestAnimationFrame(function(){requestAnimationFrame(function(){jobs.forEach(function(j){j[0].style.width=j[1]+'%'})})});
+    }
+  }
 
   function renderAll(id){
     var poll=polls.get(id);if(!poll)return;
