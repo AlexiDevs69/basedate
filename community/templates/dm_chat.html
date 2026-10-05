@@ -3711,12 +3711,12 @@ function handleDmRealtimeData(data){
     // just because one of the two sources hasn't loaded it.
     const rich=(window.AlexiHubRichText&&window.AlexiHubRichText.resolveEmoji)?window.AlexiHubRichText.resolveEmoji(id):null;
     if(rich&&rich.image_url){
-      console.log('[AH-EMOJI-DEBUG] id='+id+' resolved from thread-scoped map:',rich);
+      
       return rich;
     }
     const own=typingEmojiById(id);
     if(own&&own.image_url){
-      console.log('[AH-EMOJI-DEBUG] id='+id+' resolved from account-wide typing library (fallback):',own);
+      
       return own;
     }
     console.warn('[AH-EMOJI-DEBUG] id='+id+' NOT FOUND in either source.',
@@ -11087,7 +11087,7 @@ document.addEventListener('DOMContentLoaded', async function(){
   }
   function renderAll(root){(root||document).querySelectorAll(cfg.context==='dm'?'.msg':'.message').forEach(renderRow);}
   function schedule(root){if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;renderAll(root||document);});}
-  async function loadEmojiMap(){try{const response=await fetch(cfg.mediaUrl,{credentials:'same-origin'}),data=await response.json();console.log('[AH-EMOJI-DEBUG] thread-scoped media/library response ('+cfg.mediaUrl+'):',response.status,data);let skipped=[];(data.emojis||[]).forEach(item=>{if((item.allowed||item.local)&&item.name&&safeHttpUrl(item.image_url)){emojiByName.set(String(item.name).toLowerCase(),item);emojiById.set(String(item.id),item);}else{skipped.push(item);}});if(skipped.length)console.warn('[AH-EMOJI-DEBUG] thread-scoped map SKIPPED these items (failed allowed/local/name/image_url check):',skipped);console.log('[AH-EMOJI-DEBUG] thread-scoped map loaded, usable ids:',Array.from(emojiById.keys()));emojiVersion++;renderAll(document);}catch(e){console.error('[AH-EMOJI-DEBUG] thread-scoped media/library fetch FAILED:',e);}}
+  async function loadEmojiMap(){try{const response=await fetch(cfg.mediaUrl,{credentials:'same-origin'}),data=await response.json();let skipped=[];(data.emojis||[]).forEach(item=>{if((item.allowed||item.local)&&item.name&&safeHttpUrl(item.image_url)){emojiByName.set(String(item.name).toLowerCase(),item);emojiById.set(String(item.id),item);}else{skipped.push(item);}});if(skipped.length)console.warn('[AH-EMOJI-DEBUG] thread-scoped map SKIPPED these items (failed allowed/local/name/image_url check):',skipped);emojiVersion++;renderAll(document);}catch(e){console.error('[AH-EMOJI-DEBUG] thread-scoped media/library fetch FAILED:',e);}}
   document.addEventListener('click',event=>{const spoiler=event.target.closest('.ah-rich-spoiler');if(spoiler){spoiler.classList.toggle('revealed');return;}const button=event.target.closest('.ah-rich-code-copy');if(button){const code=button.closest('.ah-rich-code')?.querySelector('code')?.textContent||'';navigator.clipboard?.writeText(code).then(()=>{const old=button.textContent;button.textContent=window.AlexiHubI18n.t("common.label.copied");setTimeout(()=>button.textContent=old,1100);}).catch(()=>{});}});
   document.addEventListener('keydown',event=>{if((event.key==='Enter'||event.key===' ')&&event.target.closest('.ah-rich-spoiler')){event.preventDefault();event.target.closest('.ah-rich-spoiler').classList.toggle('revealed');}});
   const root=document.getElementById('messages')||document.querySelector('.messages');if(root){const richDirty=new Set();let richRaf=0;const ROW_SEL=cfg.context==='dm'?'.msg':'.message';
@@ -15546,6 +15546,136 @@ html[data-theme="light"] .ah-date-island{background:rgba(255,255,255,.88);border
     },30000);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+})();
+</script>
+
+<style id="ah-twemoji-unify-css">
+.ah-tw{background-repeat:no-repeat;background-position:center;background-size:contain;color:transparent!important;-webkit-text-fill-color:transparent!important}
+#content.ah-tw-on{-webkit-text-fill-color:transparent!important}
+.ah-tw-mirror{position:absolute;display:none;margin:0;border:0;overflow:hidden;pointer-events:none;white-space:pre-wrap;overflow-wrap:break-word;word-break:break-word;box-sizing:border-box;z-index:2;background:none!important}
+.ah-tw-mirror.on{display:block}
+</style>
+<script id="ah-twemoji-unify-js">
+(function(){
+  'use strict';
+  if(window.AhTwemoji)return;
+  // Той самий набір Twemoji, що й у меню емодзі -> однаковий вигляд у меню, рядку вводу й чаті.
+  var BASE='https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/';
+  var QUICK=/[\u00a9\u00ae\u203c-\u3299\u{1F000}-\u{1FAFF}\u20E3\uFE0F]/u;
+  var EMO_SRC='[\\u{1F1E6}-\\u{1F1FF}]{2}|[#*0-9]\\uFE0F?\\u20E3|(?:\\p{Emoji_Presentation}|\\p{Extended_Pictographic}\\uFE0F)\\p{Emoji_Modifier}?(?:\\u200D(?:\\p{Emoji_Presentation}|\\p{Extended_Pictographic})\\uFE0F?\\p{Emoji_Modifier}?)*(?:[\\u{E0020}-\\u{E007E}]+\\u{E007F})?';
+  var EMO=new RegExp(EMO_SRC,'gu');
+  var EMO1=new RegExp(EMO_SRC,'u');
+
+  function twUrl(e){
+    var s=String(e||'');if(s.indexOf('\u200d')<0)s=s.replace(/\uFE0F/g,'');
+    var cp=[];for(var i=0;i<s.length;){var c=s.codePointAt(i);cp.push(c.toString(16));i+=c>0xffff?2:1;}
+    return BASE+cp.join('-')+'.svg';
+  }
+  function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+
+  // url -> 1 (завантажено) | 0 (помилка) | масив елементів, що чекають
+  var st=new Map(),afterLoad=null;
+  function paint(el,url){el.style.backgroundImage='url("'+url+'")';el.classList.add('ah-tw');}
+  function load(url){
+    if(st.has(url))return;
+    var w=[];st.set(url,w);
+    var im=new Image();im.decoding='async';
+    im.onload=function(){st.set(url,1);w.forEach(function(e){if(e.isConnected)paint(e,url);});if(afterLoad)afterLoad();};
+    im.onerror=function(){st.set(url,0);};
+    im.src=url;
+  }
+  function bind(el,url){
+    var s=st.get(url);
+    if(s===1){paint(el,url);return;}
+    if(s===0)return;
+    if(!s)load(url);
+    st.get(url).push(el);
+  }
+
+  // ---------- Чат ----------
+  function twemojify(root){
+    if(!root||!root.firstChild)return;
+    var w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:function(n){
+      var v=n.nodeValue;if(!v||!QUICK.test(v))return NodeFilter.FILTER_REJECT;
+      var p=n.parentNode;if(p&&p.closest&&p.closest('.ah-tw-s,pre,code,textarea,script,style'))return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;}});
+    var nodes=[];while(w.nextNode())nodes.push(w.currentNode);
+    nodes.forEach(function(node){
+      var text=node.nodeValue,last=0,m,frag=null;EMO.lastIndex=0;
+      while((m=EMO.exec(text))){
+        if(!frag)frag=document.createDocumentFragment();
+        if(m.index>last)frag.appendChild(document.createTextNode(text.slice(last,m.index)));
+        var s=document.createElement('span');s.className='ah-tw-s';s.textContent=m[0];
+        bind(s,twUrl(m[0]));frag.appendChild(s);last=EMO.lastIndex;
+      }
+      if(!frag)return;
+      if(last<text.length)frag.appendChild(document.createTextNode(text.slice(last)));
+      node.replaceWith(frag);
+    });
+  }
+  var dirty=new Set(),raf=0,SEL='.dm-message-text';
+  function flush(){raf=0;var a=Array.from(dirty);dirty.clear();a.forEach(function(el){if(el.isConnected)twemojify(el);});}
+  function mark(n){if(!raf)raf=requestAnimationFrame(flush);dirty.add(n);}
+  function initChat(){
+    var root=document.getElementById('messages')||document.querySelector('.messages');
+    if(!root)return;
+    root.querySelectorAll(SEL).forEach(mark);
+    new MutationObserver(function(recs){
+      for(var i=0;i<recs.length;i++){
+        var m=recs[i],t=m.target.nodeType===1?m.target:m.target.parentElement;
+        var c=t&&t.closest?t.closest(SEL):null;if(c)mark(c);
+        for(var j=0;j<m.addedNodes.length;j++){
+          var n=m.addedNodes[j];if(n.nodeType!==1)continue;
+          if(n.matches(SEL))mark(n);else if(n.firstElementChild)n.querySelectorAll(SEL).forEach(mark);
+        }
+      }
+    }).observe(root,{childList:true,subtree:true,characterData:true});
+  }
+
+  // ---------- Рядок вводу ----------
+  // textarea не вміє показувати картинки, тому поверх неї лежить прозорий "дзеркальний" шар
+  // з тим самим текстом; сам текст textarea стає прозорим (курсор і виділення лишаються).
+  function initComposer(){
+    var ta=document.getElementById('content');
+    if(!ta||ta.dataset.ahTw)return;ta.dataset.ahTw='1';
+    var mir=document.createElement('div');mir.className='ah-tw-mirror';mir.setAttribute('aria-hidden','true');
+    ta.parentNode.insertBefore(mir,ta.nextSibling);
+    var active=false,r=0,ro=null;
+    var COPY=['fontFamily','fontSize','fontWeight','fontStyle','letterSpacing','wordSpacing','lineHeight','textTransform','textIndent','textAlign','direction','tabSize','paddingTop','paddingRight','paddingBottom','paddingLeft','color'];
+    function style(){var cs=getComputedStyle(ta);COPY.forEach(function(k){mir.style[k]=cs[k];});}
+    function geom(){
+      mir.style.left=(ta.offsetLeft+ta.clientLeft)+'px';mir.style.top=(ta.offsetTop+ta.clientTop)+'px';
+      mir.style.width=ta.clientWidth+'px';mir.style.height=ta.clientHeight+'px';mir.scrollTop=ta.scrollTop;
+    }
+    function off(){if(!active)return;active=false;ta.classList.remove('ah-tw-on');mir.classList.remove('on');mir.textContent='';if(ro)ro.disconnect();}
+    function render(){
+      r=0;var v=ta.value;
+      if(!v||!QUICK.test(v)||!EMO1.test(v)){off();return;}
+      if(!active){active=true;ta.classList.add('ah-tw-on');mir.classList.add('on');if(!ro&&window.ResizeObserver)ro=new ResizeObserver(sched);if(ro)ro.observe(ta);}
+      style();
+      var out='',last=0,m;EMO.lastIndex=0;
+      while((m=EMO.exec(v))){
+        if(m.index>last)out+=esc(v.slice(last,m.index));
+        var u=twUrl(m[0]);if(!st.has(u))load(u);
+        out+=(st.get(u)===1)?'<span class="ah-tw" style="background-image:url(&quot;'+u+'&quot;)">'+esc(m[0])+'</span>':'<span>'+esc(m[0])+'</span>';
+        last=EMO.lastIndex;
+      }
+      mir.innerHTML=out+esc(v.slice(last))+'\u200b';
+      geom();
+    }
+    function sched(){if(!r)r=requestAnimationFrame(render);}
+    afterLoad=function(){if(active)sched();};
+    var d=Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype,'value');
+    if(d&&d.get&&d.set)Object.defineProperty(ta,'value',{configurable:true,get:function(){return d.get.call(this);},set:function(v){d.set.call(this,v);sched();}});
+    ta.addEventListener('input',sched);
+    ta.addEventListener('scroll',function(){if(active)mir.scrollTop=ta.scrollTop;},{passive:true});
+    window.addEventListener('resize',function(){if(active)sched();},{passive:true});
+    sched();
+  }
+
+  function init(){initChat();initComposer();}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+  window.AhTwemoji={apply:twemojify,url:twUrl};
 })();
 </script>
 
