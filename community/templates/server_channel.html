@@ -1460,9 +1460,9 @@ body{background:#0A0A0A!important;overflow:hidden!important}.server-rail{backgro
 .member-name{font-size:13px!important;line-height:18px!important;}
 .member-role{font-size:11px!important;line-height:14px!important;color:#8e949f!important;text-transform:none!important;letter-spacing:0!important;font-weight:650!important;}
 .message{padding:2px 18px!important;margin:0!important;border-radius:0!important;}
-.message:hover{background:#2e3038!important;}
+.message:hover{background:rgba(255,255,255,.035)!important;}
 .message-head{gap:7px!important;}
-.message-time{font-size:11px!important;color:#8e949f!important;}
+.message-time{font-size:11px!important;color:#6b7280!important;font-family:'Inter',system-ui,sans-serif!important;font-weight:400!important;}
 .message-content{line-height:1.35!important;}
 .composer-card,.composer{background:#24262d!important;border:1px solid #30323a!important;border-radius:10px!important;}
 @media(max-width:1100px){.discord-channel-topbar{right:0!important}.discord-search{width:180px;min-width:160px}.members-sidebar{display:none!important}.main,.chat-main{margin-right:0!important}}
@@ -1490,7 +1490,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
 .discord-tool-btn svg{width:18px!important;height:18px!important;stroke-width:2.15!important;}
 .discord-search{width:250px!important;min-width:220px!important;height:30px!important;background:#111217!important;border-color:#30323a!important;}
 .members-sidebar{top:48px!important;}
-.composer-wrap{padding:0 14px 14px!important;background:linear-gradient(to top,#18191d 78%,rgba(24,25,29,0))!important;}
+.composer-wrap{padding:0 14px 14px!important;background:linear-gradient(to top,#141414 78%,rgba(20,20,20,0))!important;}
 .composer-box.discord-composer{background:#24262d!important;border:1px solid #30323a!important;border-radius:8px!important;padding:0!important;box-shadow:none!important;min-height:44px!important;position:relative!important;}
 .composer-box.discord-composer .composer-row{align-items:center!important;gap:8px!important;padding:0 8px!important;min-height:44px!important;}
 .composer-plus-btn{width:30px;height:30px;border:0;border-radius:50%;background:transparent;color:#b5bac1;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .13s ease,color .13s ease,transform .08s ease;flex:0 0 auto;}
@@ -14173,7 +14173,7 @@ html[data-theme="light"] .ah-reply-action:hover{background:#e3e5e8;color:#111318
 }
 /* темна тема: ті самі кольори, що в DM */
 @media (min-width:821px){
-  html:not([data-theme="light"]) #composer-form.composer-wrap{background:linear-gradient(to top,#18191d 92%,rgba(24,25,29,.76))!important}
+  html:not([data-theme="light"]) #composer-form.composer-wrap{background:linear-gradient(to top,#141414 92%,rgba(20,20,20,.76))!important}
   html:not([data-theme="light"]) .composer-box.discord-composer{background:#1c1c1c!important}
   html:not([data-theme="light"]) .composer-box.discord-composer:focus-within{border-color:#343743!important}
   html:not([data-theme="light"]) .composer-box.discord-composer .composer-plus-btn{background:#353740!important;color:#dbdee1!important}
@@ -14192,7 +14192,7 @@ html[data-theme="light"] .ah-reply-action:hover{background:#e3e5e8;color:#111318
 .message.ah-grouped{padding-top:0!important;margin-top:0!important}
 .message.ah-grouped .message-head{display:none!important}
 .message.ah-grouped .avatar{visibility:hidden!important;height:0!important;min-height:0!important;margin:0!important;border:0!important;overflow:visible!important;position:relative!important}
-.message.ah-grouped .ah-gtime{position:absolute;left:0;right:0;top:3px;text-align:center;font-size:10px;line-height:14px;font-weight:700;color:#8e949f;visibility:hidden;pointer-events:none;white-space:nowrap}
+.message.ah-grouped .ah-gtime{position:absolute;left:0;right:0;top:3px;text-align:center;font-family:'Inter',system-ui,sans-serif;font-size:10px;line-height:14px;font-weight:700;color:#8e949f;visibility:hidden;pointer-events:none;white-space:nowrap}
 .message.ah-grouped:hover .ah-gtime{visibility:visible}
 
 .message .message-actions{top:auto!important;bottom:calc(100% - 9px)!important}
@@ -14754,7 +14754,7 @@ html[data-theme="light"] .ah-date-island{background:rgba(255,255,255,.88);border
 .ah-poll-opt-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ah-poll-opt-pct{flex:0 0 auto;font-size:13px;color:#dbdee1}
 .ah-poll-meta{margin-top:10px;font-size:12px;color:#949ba4;font-weight:700}
-.ah-poll-card.ended .ah-poll-hint{color:#f0b232}
+.ah-poll-card.ended .ah-poll-hint{color:#8f98ff}
 @media(max-width:620px){
   .ah-poll-bg{align-items:flex-end;padding:0}
   .ah-poll-modal{width:100%;max-height:92dvh;border-radius:16px 16px 0 0}
@@ -14795,8 +14795,8 @@ html[data-theme="light"] .ah-date-island{background:rgba(255,255,255,.88);border
 @keyframes ahPollMarkPop{0%{transform:scale(.6)}55%{transform:scale(1.35)}100%{transform:scale(1)}}
 @keyframes ahPollVoteFlash{0%{box-shadow:0 0 0 0 rgba(88,101,242,.55)}100%{box-shadow:0 0 0 10px rgba(88,101,242,0)}}
 .ah-poll-card.ended .ah-poll-opt{opacity:.92}
-.ah-poll-card.ended .ah-poll-opt.lead{border-color:#f0b232}
-.ah-poll-card.ended .ah-poll-opt.lead .ah-poll-fill{background:linear-gradient(90deg,rgba(240,178,50,.38),rgba(240,178,50,.14))}
+.ah-poll-card.ended .ah-poll-opt.lead{border-color:#7a82f6}
+.ah-poll-card.ended .ah-poll-opt.lead .ah-poll-fill{background:linear-gradient(90deg,rgba(88,101,242,.62),rgba(120,132,255,.3))}
 @media(prefers-reduced-motion:reduce){
   .ah-poll-bg.open .ah-poll-modal,.ah-poll-answer,.ah-poll-emoji-pop.open,.ah-poll-card.ah-poll-enter,.ah-poll-card.ah-poll-enter .ah-poll-opt,.ah-poll-opt.just-voted,.ah-poll-opt.just-voted .ah-poll-mark,.ah-poll-error.show{animation:none!important}
   .ah-poll-fill,.ah-poll-opt,.ah-poll-mark,.ah-poll-card{transition:none!important}
@@ -14809,7 +14809,7 @@ html[data-theme="light"] .ah-date-island{background:rgba(255,255,255,.88);border
 .ah-poll-card:hover{border-color:#35373d;box-shadow:none}
 .ah-poll-q{font-size:16px;font-weight:800;color:#f2f3f5;margin:0 0 3px}
 .ah-poll-hint{font-size:14px;font-weight:500;color:#9aa0aa;margin-bottom:9px}
-.ah-poll-card.ended .ah-poll-hint{color:#f0b232}
+.ah-poll-card.ended .ah-poll-hint{color:#8f98ff}
 .ah-poll-opts{gap:7px}
 .ah-poll-opt{min-height:42px;border-radius:9px;border:1px solid transparent;background:#2d2f34;padding:0 14px;gap:10px;box-shadow:none}
 .ah-poll-opt:not([disabled]):hover{background:#33353b;border-color:#4a4d57;transform:none;box-shadow:none}
@@ -14817,8 +14817,8 @@ html[data-theme="light"] .ah-date-island{background:rgba(255,255,255,.88);border
 .ah-poll-fill{background:#3a3c46;border-radius:0;box-shadow:none}
 .ah-poll-opt.voted .ah-poll-fill{background:#3b3e7a}
 .ah-poll-opt.lead .ah-poll-fill{box-shadow:none}
-.ah-poll-card.ended .ah-poll-opt.lead{border-color:transparent}
-.ah-poll-card.ended .ah-poll-opt.lead .ah-poll-fill{background:#4a4636}
+.ah-poll-card.ended .ah-poll-opt.lead{border-color:#7a82f6}
+.ah-poll-card.ended .ah-poll-opt.lead .ah-poll-fill{background:#3b3e7a}
 .ah-poll-opt-text{font-size:15px;font-weight:800;color:#f2f3f5}
 .ah-poll-votes{flex:0 0 auto;font-size:13px;font-weight:800;color:#e3e5e8;text-decoration:underline;text-underline-offset:2px;cursor:default;white-space:nowrap}
 .ah-poll-opt-pct{font-size:15px;font-weight:800;color:#fff;min-width:38px;text-align:right}
@@ -15035,7 +15035,7 @@ html[data-theme="light"] .ah-date-island{background:rgba(255,255,255,.88);border
     var options=[];
     answersEl.querySelectorAll('.ah-poll-answer').forEach(function(row){
       var text=row.querySelector('input').value.trim();
-      if(text)options.push({text:text,emoji:row.dataset.emoji||''});
+      if(text&&!options.some(function(o){return o.text.toLowerCase()===text.toLowerCase()}))options.push({text:text,emoji:row.dataset.emoji||''});
     });
     return {question:qInput.value.trim(),options:options,allow_multiple:!!multiBox.checked,duration_hours:parseInt(termSel.value,10)||24};
   }
@@ -15099,6 +15099,8 @@ html[data-theme="light"] .ah-date-island{background:rgba(255,255,255,.88);border
   var inflight=new Set();   // ids being fetched
   var voting=new Set();
   var missing=new Set();    // ids the server did not return (deleted / no access)
+  var freshAt=new Map();    // id -> time of last vote response (newer than any older in-flight fetch)
+  var endTimers=new Map();  // id -> timer that flips the card to 'ended' exactly at expiry
 
   function markerFromRow(row){
     var raw=(row.dataset&&row.dataset.messageContent)||'';
@@ -15198,6 +15200,15 @@ html[data-theme="light"] .ah-date-island{background:rgba(255,255,255,.88);border
     }
   }
 
+  function setPoll(p){
+    polls.set(p.id,p);
+    var old=endTimers.get(p.id);if(old){clearTimeout(old);endTimers.delete(p.id)}
+    if(p.ended||!p.expires_at)return;
+    var ms=new Date(p.expires_at).getTime()-Date.now();
+    if(!isFinite(ms)||ms>2147483000)return;
+    endTimers.set(p.id,setTimeout(function(){endTimers.delete(p.id);renderAll(p.id);fetchPolls([p.id])},Math.max(0,ms)+400));
+  }
+
   function renderAll(id){
     var poll=polls.get(id);if(!poll)return;
     document.querySelectorAll('.ah-poll-slot[data-poll-id="'+id+'"]').forEach(function(slot){renderInto(slot,poll)});
@@ -15224,11 +15235,12 @@ html[data-theme="light"] .ah-date-island{background:rgba(255,255,255,.88);border
     var need=ids.filter(function(id){return !inflight.has(id)});
     if(!need.length)return;
     need.forEach(function(id){inflight.add(id)});
+    var startedAt=Date.now();
     try{
       var res=await fetch(API+'/polls?ids='+need.join(','),{credentials:'same-origin'});
       var body=await res.json().catch(function(){return{}});
       var got=new Set();
-      (body.polls||[]).forEach(function(p){polls.set(p.id,p);got.add(p.id);renderAll(p.id)});
+      (body.polls||[]).forEach(function(p){got.add(p.id);if((freshAt.get(p.id)||0)>startedAt)return;setPoll(p);renderAll(p.id)});
       need.forEach(function(id){
         if(!got.has(id)&&res.ok){
           missing.add(id);
@@ -15265,7 +15277,7 @@ html[data-theme="light"] .ah-date-island{background:rgba(255,255,255,.88);border
     try{
       var res=await fetch(API+'/polls/'+id+'/vote',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({option_id:optionId})});
       var body=await res.json().catch(function(){return{}});
-      if(res.ok&&body.ok&&body.poll){polls.set(id,body.poll);renderAll(id)}
+      if(res.ok&&body.ok&&body.poll){freshAt.set(id,Date.now());setPoll(body.poll);renderAll(id)}
       else if(body.error==='ended'){toast(T.errEnded);fetchPolls([id])}
       else if(body.error==='rate_limited'){toast(T.errRate)}
       else toast(T.errVote);
