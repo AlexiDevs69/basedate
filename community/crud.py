@@ -79,46 +79,108 @@ def _normalize_name_font(value: str | None) -> str | None:
     return font
 
 
+_ACCOUNT_VISUAL_COLUMNS_READY = False
+_ACCOUNT_VISUAL_COLUMNS_LOCK = asyncio.Lock()
+_ACCOUNT_VISUAL_ADVISORY_LOCK_KEY = 824_617_340
+
+# column -> (DDL type/default, backfill SQL run only when the column was just added)
+_ACCOUNT_VISUAL_COLUMNS: tuple[tuple[str, str, str | None], ...] = (
+    ("avatar_url", "VARCHAR(512)", None),
+    ("banner_url", "VARCHAR(512)", None),
+    ("bio", "TEXT", None),
+    ("display_name", "VARCHAR(32)", None),
+    ("pronouns", "VARCHAR(40)", None),
+    ("name_effect", "VARCHAR(32)", None),
+    ("name_color_start", "VARCHAR(16)", None),
+    ("name_color_end", "VARCHAR(16)", None),
+    ("name_font", "VARCHAR(32)", None),
+    ("profile_card_bg_url", "VARCHAR(512)", None),
+    ("account_status", "VARCHAR(16) DEFAULT 'online' NOT NULL", None),
+    ("custom_status_text", "VARCHAR(128)", None),
+    ("profile_color_primary", "VARCHAR(16)", None),
+    ("profile_color_accent", "VARCHAR(16)", None),
+    ("custom_status_emoji", "VARCHAR(32)", None),
+    ("custom_status_expires_at", "TIMESTAMP WITH TIME ZONE", None),
+    ("language", "VARCHAR(8) DEFAULT 'ru' NOT NULL", None),
+    ("typing_text", "VARCHAR(150)", None),
+    ("allow_dm_from_server_members", "BOOLEAN DEFAULT TRUE NOT NULL", None),
+    ("allow_friend_requests_everyone", "BOOLEAN DEFAULT TRUE NOT NULL", None),
+    ("allow_friend_requests_mutual_friends", "BOOLEAN DEFAULT TRUE NOT NULL", None),
+    ("allow_friend_requests_server_members", "BOOLEAN DEFAULT TRUE NOT NULL", None),
+    ("session_version", "INTEGER DEFAULT 1 NOT NULL", None),
+    ("is_private", "BOOLEAN DEFAULT FALSE NOT NULL", None),
+)
+
+
+async def _account_visual_plan(db: AsyncSession) -> tuple[list[tuple[str, str, str | None]], bool]:
+    """Read-only look at information_schema (takes no table lock)."""
+    rows = (await db.execute(text(
+        "SELECT column_name, character_maximum_length FROM information_schema.columns "
+        "WHERE table_schema = current_schema() AND table_name = 'community_accounts'"
+    ))).all()
+    existing = {r[0]: r[1] for r in rows}
+    missing = [c for c in _ACCOUNT_VISUAL_COLUMNS if c[0] not in existing]
+    widen_typing = "typing_text" in existing and existing["typing_text"] is not None and existing["typing_text"] < 150
+    return missing, widen_typing
+
+
 async def ensure_account_visual_columns(db: AsyncSession) -> None:
     """
     create_all() creates only missing tables; it does not add new columns to
-    existing tables. This tiny idempotent helper safely upgrades the existing
-    community_accounts table on Render/PostgreSQL without Alembic migrations.
+    existing tables. This idempotent helper upgrades community_accounts on
+    Render/PostgreSQL without Alembic.
+
+    ALTER TABLE ... ADD COLUMN IF NOT EXISTS takes ACCESS EXCLUSIVE even when the
+    column exists, and community_accounts is FK-referenced by most tables, so
+    running it per request / from several workers deadlocks. Therefore: do the
+    real work once per process, plan from information_schema first, and only
+    when something is missing take an advisory lock + lock_timeout and issue a
+    single ALTER, retrying on deadlock.
     """
-    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(512)"))
-    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS banner_url VARCHAR(512)"))
-    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS bio TEXT"))
-    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS display_name VARCHAR(32)"))
-    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS pronouns VARCHAR(40)"))
-    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS name_effect VARCHAR(32)"))
-    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS name_color_start VARCHAR(16)"))
-    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS name_color_end VARCHAR(16)"))
-    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS name_font VARCHAR(32)"))
-    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS profile_card_bg_url VARCHAR(512)"))
-    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS account_status VARCHAR(16) DEFAULT 'online' NOT NULL"))
-    await db.execute(text("UPDATE community_accounts SET account_status = 'online' WHERE account_status IS NULL OR account_status = ''"))
-    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS custom_status_text VARCHAR(128)"))
-    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS profile_color_primary VARCHAR(16)"))
-    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS profile_color_accent VARCHAR(16)"))
-    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS custom_status_emoji VARCHAR(32)"))
-    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS custom_status_expires_at TIMESTAMP WITH TIME ZONE"))
-    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS language VARCHAR(8) DEFAULT 'ru' NOT NULL"))
-    await db.execute(text("UPDATE community_accounts SET language = 'ru' WHERE language IS NULL OR language = ''"))
-    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS typing_text VARCHAR(40)"))
-    await db.execute(text("ALTER TABLE community_accounts ALTER COLUMN typing_text TYPE VARCHAR(150)"))
-    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS allow_dm_from_server_members BOOLEAN DEFAULT TRUE NOT NULL"))
-    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS allow_friend_requests_everyone BOOLEAN DEFAULT TRUE NOT NULL"))
-    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS allow_friend_requests_mutual_friends BOOLEAN DEFAULT TRUE NOT NULL"))
-    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS allow_friend_requests_server_members BOOLEAN DEFAULT TRUE NOT NULL"))
-    await db.execute(text("UPDATE community_accounts SET allow_dm_from_server_members = TRUE WHERE allow_dm_from_server_members IS NULL"))
-    await db.execute(text("UPDATE community_accounts SET allow_friend_requests_everyone = TRUE WHERE allow_friend_requests_everyone IS NULL"))
-    await db.execute(text("UPDATE community_accounts SET allow_friend_requests_mutual_friends = TRUE WHERE allow_friend_requests_mutual_friends IS NULL"))
-    await db.execute(text("UPDATE community_accounts SET allow_friend_requests_server_members = TRUE WHERE allow_friend_requests_server_members IS NULL"))
-    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS session_version INTEGER DEFAULT 1 NOT NULL"))
-    await db.execute(text("UPDATE community_accounts SET session_version = 1 WHERE session_version IS NULL OR session_version < 1"))
-    await db.execute(text("ALTER TABLE community_accounts ADD COLUMN IF NOT EXISTS is_private BOOLEAN DEFAULT FALSE NOT NULL"))
-    await db.execute(text("UPDATE community_accounts SET is_private = FALSE WHERE is_private IS NULL"))
-    await db.commit()
+    global _ACCOUNT_VISUAL_COLUMNS_READY
+    if _ACCOUNT_VISUAL_COLUMNS_READY:
+        return
+    async with _ACCOUNT_VISUAL_COLUMNS_LOCK:
+        if _ACCOUNT_VISUAL_COLUMNS_READY:
+            return
+        for attempt in range(_STORE_SCHEMA_RETRY_ATTEMPTS):
+            try:
+                missing, widen_typing = await _account_visual_plan(db)
+                if not missing and not widen_typing:
+                    await db.commit()  # close the read-only transaction
+                    _ACCOUNT_VISUAL_COLUMNS_READY = True
+                    return
+                await db.execute(text("SET LOCAL lock_timeout = '10s'"))
+                await db.execute(
+                    text("SELECT pg_advisory_xact_lock(:key)"),
+                    {"key": _ACCOUNT_VISUAL_ADVISORY_LOCK_KEY},
+                )
+                # Re-plan: another worker may have finished while we waited.
+                missing, widen_typing = await _account_visual_plan(db)
+                clauses = [f"ADD COLUMN IF NOT EXISTS {n} {t}" for n, t, _ in missing]
+                if widen_typing:
+                    clauses.append("ALTER COLUMN typing_text TYPE VARCHAR(150)")
+                if clauses:
+                    await db.execute(text("ALTER TABLE community_accounts " + ", ".join(clauses)))
+                    added = {n for n, _, _ in missing}
+                    # Columns are NOT NULL DEFAULT, so old rows are filled by
+                    # PostgreSQL itself; only repair empty-string legacy values
+                    # for freshly added columns.
+                    if "account_status" in added:
+                        await db.execute(text("UPDATE community_accounts SET account_status = 'online' WHERE account_status = ''"))
+                    if "language" in added:
+                        await db.execute(text("UPDATE community_accounts SET language = 'ru' WHERE language = ''"))
+                    if "session_version" in added:
+                        await db.execute(text("UPDATE community_accounts SET session_version = 1 WHERE session_version < 1"))
+                await db.commit()
+                _ACCOUNT_VISUAL_COLUMNS_READY = True
+                return
+            except DBAPIError as exc:
+                await db.rollback()
+                retryable = _is_store_schema_deadlock(exc) or _postgres_sqlstate(exc) == "55P03"
+                if not retryable or attempt >= _STORE_SCHEMA_RETRY_ATTEMPTS - 1:
+                    raise
+                await _store_schema_retry_delay(attempt)
 
 
 _USER_BLOCKS_TABLE_READY = False
