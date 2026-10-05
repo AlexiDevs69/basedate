@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.246.7",
+      "date": "2026-10-06",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update styles and functionality for poll components."
+      ],
+      "source_sha": "4bb4ff6369a76340cc6d8ac640496cd240cf2827"
+    },
+    {
       "version": "1.246.6",
       "date": "2026-10-06",
       "title": "Виправлення та стабільність",
