@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.246.6",
+      "date": "2026-10-06",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update poll card styles and voting logic."
+      ],
+      "source_sha": "ed50a268440cc6739884e2835f481e32e016aea9"
+    },
+    {
       "version": "1.246.5",
       "date": "2026-10-06",
       "title": "Виправлення та стабільність",
