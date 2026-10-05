@@ -14804,14 +14804,14 @@ html[data-theme="light"] .ah-date-island{background:rgba(255,255,255,.88);border
 </style>
 <style id="ah-poll-discord-css">
 /* ---- Вигляд як у Discord: заливка зліва направо, галочка справа ---- */
-.ah-poll-slot{max-width:480px}
-.ah-poll-card{background:#232428;border:1px solid #35373d;border-radius:14px;padding:16px 16px 14px;box-shadow:none}
+.ah-poll-slot{max-width:520px}
+.ah-poll-card{background:#232428;border:1px solid #35373d;border-radius:14px;padding:12px 16px 10px;box-shadow:none}
 .ah-poll-card:hover{border-color:#35373d;box-shadow:none}
-.ah-poll-q{font-size:16px;font-weight:800;color:#f2f3f5;margin:0 0 6px}
-.ah-poll-hint{font-size:14px;font-weight:500;color:#9aa0aa;margin-bottom:14px}
+.ah-poll-q{font-size:16px;font-weight:800;color:#f2f3f5;margin:0 0 3px}
+.ah-poll-hint{font-size:14px;font-weight:500;color:#9aa0aa;margin-bottom:9px}
 .ah-poll-card.ended .ah-poll-hint{color:#f0b232}
-.ah-poll-opts{gap:10px}
-.ah-poll-opt{min-height:50px;border-radius:9px;border:1px solid transparent;background:#2d2f34;padding:0 14px;gap:10px;box-shadow:none}
+.ah-poll-opts{gap:7px}
+.ah-poll-opt{min-height:42px;border-radius:9px;border:1px solid transparent;background:#2d2f34;padding:0 14px;gap:10px;box-shadow:none}
 .ah-poll-opt:not([disabled]):hover{background:#33353b;border-color:#4a4d57;transform:none;box-shadow:none}
 .ah-poll-opt.voted,.ah-poll-opt.voted:not([disabled]):hover,.ah-poll-opt.voted[disabled]:hover{background:#2d2f34;border-color:#7a82f6;box-shadow:none}
 .ah-poll-fill{background:#3a3c46;border-radius:0;box-shadow:none}
@@ -14823,7 +14823,7 @@ html[data-theme="light"] .ah-date-island{background:rgba(255,255,255,.88);border
 .ah-poll-votes{flex:0 0 auto;font-size:13px;font-weight:800;color:#e3e5e8;text-decoration:underline;text-underline-offset:2px;cursor:default;white-space:nowrap}
 .ah-poll-opt-pct{font-size:15px;font-weight:800;color:#fff;min-width:38px;text-align:right}
 .ah-poll-opt.lead .ah-poll-opt-pct{color:#fff}
-.ah-poll-mark{width:24px;height:24px;border:2px solid #6d717c;background:transparent;border-radius:50%;margin-left:2px}
+.ah-poll-mark{width:22px;height:22px;border:2px solid #6d717c;background:transparent;border-radius:50%;margin-left:2px}
 .ah-poll-card.multi .ah-poll-mark{border-radius:6px}
 .ah-poll-mark svg{width:14px;height:14px}
 .ah-poll-card.has-vote .ah-poll-opt:not(.voted) .ah-poll-mark{display:none}
@@ -14832,11 +14832,11 @@ html[data-theme="light"] .ah-date-island{background:rgba(255,255,255,.88);border
 .ah-poll-opt.just-voted{animation:none}
 .ah-poll-opt.just-voted .ah-poll-fill{animation:ahPollSweep .75s cubic-bezier(.22,1,.36,1) both}
 @keyframes ahPollSweep{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
-.ah-poll-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;min-height:40px}
+.ah-poll-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px;min-height:34px}
 .ah-poll-meta{margin:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px;font-weight:500;color:#9aa0aa}
 .ah-poll-meta b{color:#f2f3f5;font-weight:800}
 .ah-poll-dot{width:4px;height:4px;border-radius:50%;background:#80848e;display:inline-block}
-.ah-poll-remove{height:40px;padding:0 16px;border:0;border-radius:8px;background:#3a3c43;color:#f2f3f5;font:inherit;font-size:14px;font-weight:800;cursor:pointer;flex:0 0 auto;transition:background .15s,transform .12s;animation:ahPollRowIn .25s ease both}
+.ah-poll-remove{height:34px;padding:0 14px;border:0;border-radius:8px;background:#3a3c43;color:#f2f3f5;font:inherit;font-size:14px;font-weight:800;cursor:pointer;flex:0 0 auto;transition:background .15s,transform .12s}
 .ah-poll-remove:hover{background:#464952}
 .ah-poll-remove:active{transform:scale(.96)}
 .ah-poll-remove[disabled]{opacity:.5;cursor:default}
@@ -15171,12 +15171,14 @@ html[data-theme="light"] .ah-date-island{background:rgba(255,255,255,.88);border
     requestAnimationFrame(step);
   }
   function renderInto(slot,poll){
+    var html0=cardHtml(poll);
+    if(slot.firstChild&&slot.__ahHtml===html0)return;
     var had=!!slot.querySelector('.ah-poll-card'),prev={};
     slot.querySelectorAll('.ah-poll-opt').forEach(function(b){
       var f=b.querySelector('.ah-poll-fill'),p=b.querySelector('.ah-poll-opt-pct');
       prev[b.dataset.option]={w:f?(parseFloat(f.style.width)||0):0,p:p?(parseInt(p.textContent,10)||0):0,voted:b.classList.contains('voted')};
     });
-    slot.innerHTML=cardHtml(poll);
+    slot.innerHTML=html0;slot.__ahHtml=html0;
     var card=slot.querySelector('.ah-poll-card');if(!card)return;
     if(!had)card.classList.add('ah-poll-enter');
     var max=0;(poll.options||[]).forEach(function(o){if((o.votes||0)>max)max=o.votes||0});
@@ -15279,7 +15281,7 @@ html[data-theme="light"] .ah-date-island{background:rgba(255,255,255,.88);border
       var pid=parseInt(rc.dataset.poll,10),ids=[];
       rc.querySelectorAll('.ah-poll-opt.voted').forEach(function(o){ids.push(parseInt(o.dataset.option,10))});
       rm.disabled=true;
-      (async function(){for(var i=0;i<ids.length;i++)await vote(pid,ids[i])})();
+      (async function(){for(var i=0;i<ids.length;i++)await vote(pid,ids[i]);if(rm.isConnected)rm.disabled=false})();
       return;
     }
     if(e.target.closest&&e.target.closest('.ah-poll-votes')){e.preventDefault();e.stopPropagation();return}
