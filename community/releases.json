@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.248.0",
+      "date": "2026-10-06",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: hidden inputs for avatar and banner cropping."
+      ],
+      "source_sha": "1f6adcd24872f7d32a10165401b1c90c0c882a7f"
+    },
+    {
       "version": "1.247.0",
       "date": "2026-10-06",
       "title": "Нові можливості AlexiHub",
