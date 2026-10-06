@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.246.11",
+      "date": "2026-10-06",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update SVG background and HTML closing tag."
+      ],
+      "source_sha": "0fcb0e9db0a290cf58271fd90619559a28cff965"
+    },
+    {
       "version": "1.246.10",
       "date": "2026-10-06",
       "title": "Виправлення та стабільність",
