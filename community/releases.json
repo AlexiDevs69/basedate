@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.248.3",
+      "date": "2026-10-06",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance image upload with crop fields and WebP support."
+      ],
+      "source_sha": "66139ace9ed50e2d339fef683fd210bc23e124ab"
+    },
+    {
       "version": "1.248.2",
       "date": "2026-10-06",
       "title": "Виправлення та стабільність",
