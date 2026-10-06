@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.248.4",
+      "date": "2026-10-06",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance profile image upload with cropping support."
+      ],
+      "source_sha": "cdba09638a80c94d0ce9f14a0ae341f5065216b6"
+    },
+    {
       "version": "1.248.3",
       "date": "2026-10-06",
       "title": "Виправлення та стабільність",
