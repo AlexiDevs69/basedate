@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.246.8",
+      "date": "2026-10-06",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: Nitro tiers and labels in crud.py."
+      ],
+      "source_sha": "e256e368608301929c5c242161371c8d6c476815"
+    },
+    {
       "version": "1.246.7",
       "date": "2026-10-06",
       "title": "Виправлення та стабільність",
