@@ -5001,6 +5001,8 @@ document.addEventListener('DOMContentLoaded',()=>{
       <input type="hidden" name="next_url" value="{{ request.url.path }}">
       <input type="hidden" name="avatar_url" value="{{ account.avatar_url or '' }}">
       <input type="hidden" name="banner_url" value="{{ account.banner_url or '' }}">
+      <input type="hidden" name="avatar_crop" id="ah-avatar-crop" value="">
+      <input type="hidden" name="banner_crop" id="ah-banner-crop" value="">
       <input id="ah-avatar-file" class="ah-hidden-file" type="file" name="avatar_file" accept="image/png,image/jpeg,image/webp,image/gif">
       <input id="ah-banner-file" class="ah-hidden-file" type="file" name="banner_file" accept="image/png,image/jpeg,image/webp,image/gif">
 
@@ -5328,8 +5330,21 @@ document.addEventListener('DOMContentLoaded',()=>{
   const state = {
     open:false, kind:'avatar', input:null, sourceUrl:'', naturalWidth:0,
     naturalHeight:0, baseScale:1, zoom:1, offsetX:0, offsetY:0,
-    pointerId:null, lastX:0, lastY:0, token:0
+    pointerId:null, lastX:0, lastY:0, token:0, animated:false
   };
+  const MAX_ANIMATED_BYTES = 12*1024*1024;
+
+  function cropField(kind){ return document.getElementById(kind === 'avatar' ? 'ah-avatar-crop' : 'ah-banner-crop'); }
+
+  /* GIF is always animated-capable; WebP only when its VP8X header has the animation flag. */
+  function detectAnimated(file){
+    if(file.type === 'image/gif') return Promise.resolve(true);
+    if(file.type !== 'image/webp') return Promise.resolve(false);
+    return file.slice(0,32).arrayBuffer().then(function(buf){
+      const b = new Uint8Array(buf);
+      return b.length > 20 && b[12]===0x56 && b[13]===0x50 && b[14]===0x38 && b[15]===0x58 && (b[20] & 0x02) !== 0;
+    }).catch(function(){ return false; });
+  }
 
   function notify(message){
     if(typeof window.settingsToast === 'function') window.settingsToast(message);
@@ -5389,7 +5404,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     viewport.classList.remove('dragging');
     backdrop.classList.remove('open');
     backdrop.setAttribute('aria-hidden','true');
-    if(clearInput && state.input) state.input.value = '';
+    if(clearInput && state.input){ state.input.value = ''; const cf = cropField(state.kind); if(cf) cf.value = ''; }
     if(state.sourceUrl){
       URL.revokeObjectURL(state.sourceUrl);
       state.sourceUrl = '';
@@ -5402,6 +5417,13 @@ document.addEventListener('DOMContentLoaded',()=>{
   function openEditor(input,kind){
     const file = input && input.files && input.files[0];
     if(!file || !String(file.type || '').startsWith('image/')) return;
+    if(file.size > MAX_ANIMATED_BYTES){
+      notify('Файл завеликий. Максимум 12 МБ.');
+      input.value = '';
+      return;
+    }
+    state.animated = false;
+    detectAnimated(file).then(function(flag){ if(state.input === input) state.animated = flag; });
     state.open = true;
     state.token += 1;
     state.kind = kind;
@@ -5437,21 +5459,26 @@ document.addEventListener('DOMContentLoaded',()=>{
     image.src = state.sourceUrl;
   }
 
-  function updatePreview(blob){
+  function previewFit(target,rect){
+    if(!rect){ target.style.backgroundSize = 'cover'; target.style.backgroundPosition = 'center'; return; }
+    /* show exactly the chosen part of the original (animated) file, no re-encoding in the browser */
+    target.style.backgroundSize = (100/rect.fw)+'% '+(100/rect.fh)+'%';
+    target.style.backgroundPosition = (rect.fw < 1 ? rect.fx/(1-rect.fw)*100 : 0)+'% '+(rect.fh < 1 ? rect.fy/(1-rect.fh)*100 : 0)+'%';
+  }
+
+  function updatePreview(blob,rect){
     const previewUrl = URL.createObjectURL(blob);
     if(state.kind === 'avatar'){
       document.querySelectorAll('#ah-profile-preview-avatar,#ah-customizer-avatar-tile').forEach(function(target){
         target.style.backgroundImage = 'url("' + previewUrl + '")';
-        target.style.backgroundSize = 'cover';
-        target.style.backgroundPosition = 'center';
+        previewFit(target,rect);
         const fallback = target.querySelector('span:not(.edit),b');
         if(fallback) fallback.textContent = '';
       });
     }else{
       document.querySelectorAll('#ah-profile-preview-banner,#ah-customizer-banner-tile,.self-profile-banner').forEach(function(target){
         target.style.backgroundImage = 'url("' + previewUrl + '")';
-        target.style.backgroundSize = 'cover';
-        target.style.backgroundPosition = 'center';
+        previewFit(target,rect);
       });
       document.querySelectorAll('.account-panel[data-mini-username],.user-panel[data-mini-username]').forEach(function(panel){
         panel.dataset.miniBanner = previewUrl;
@@ -5465,9 +5492,31 @@ document.addEventListener('DOMContentLoaded',()=>{
     saveButton.disabled = true;
     saveButton.textContent = window.AlexiHubI18n.t("common.label.download");
     const crop = cropBox();
+    if(state.animated){
+      /* Animated GIF / WebP: do NOT flatten it through a canvas (that keeps only frame 1).
+         Send the original file + the chosen crop rectangle; the server crops, shrinks and
+         re-encodes it as a small animated WebP. */
+      const file = state.input.files && state.input.files[0];
+      const dw = state.naturalWidth * state.baseScale * state.zoom;
+      const dh = state.naturalHeight * state.baseScale * state.zoom;
+      const dl = crop.x+(crop.width-dw)/2 + state.offsetX;
+      const dt = crop.y+(crop.height-dh)/2 + state.offsetY;
+      const fw = clamp(crop.width/dw,0.02,1), fh = clamp(crop.height/dh,0.02,1);
+      const fx = clamp((crop.x-dl)/dw,0,1-fw), fy = clamp((crop.y-dt)/dh,0,1-fh);
+      const cf = cropField(state.kind);
+      if(cf) cf.value = [fx,fy,fw,fh].map(function(v){ return v.toFixed(5); }).join(',');
+      updatePreview(file,{fx:fx,fy:fy,fw:fw,fh:fh});
+      const form = document.getElementById('ah-profile-edit-form');
+      if(form) form.dispatchEvent(new Event('input',{bubbles:true}));
+      closeEditor(false);
+      notify(state.kind === 'avatar' ? window.AlexiHubI18n.t("common.message.the_position_of_the_avatar_is_preserved") : window.AlexiHubI18n.t("common.message.the_banner_position_saved"));
+      return;
+    }
+    const cf0 = cropField(state.kind); if(cf0) cf0.value = '';
+    /* WebP is ~10x smaller than PNG at the same visual quality; old Safari falls back below. */
     const output = state.kind === 'avatar'
-      ? {width:512,height:512,type:'image/png',extension:'png',quality:0.96}
-      : {width:1500,height:600,type:'image/jpeg',extension:'jpg',quality:0.92};
+      ? {width:512,height:512,type:'image/webp',extension:'webp',quality:0.92}
+      : {width:1500,height:600,type:'image/webp',extension:'webp',quality:0.9};
     const canvas = document.createElement('canvas');
     canvas.width = output.width;
     canvas.height = output.height;
@@ -5480,7 +5529,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     }
     context.imageSmoothingEnabled = true;
     context.imageSmoothingQuality = 'high';
-    if(output.type === 'image/jpeg'){
+    if(state.kind === 'banner'){
       context.fillStyle = '#111217';
       context.fillRect(0,0,output.width,output.height);
     }
@@ -5495,7 +5544,16 @@ document.addEventListener('DOMContentLoaded',()=>{
       drawWidth * output.width/crop.width,
       drawHeight * output.height/crop.height
     );
-    canvas.toBlob(function(blob){
+    function encodeWithFallback(done){
+      canvas.toBlob(function(blob){
+        if(blob && blob.type === 'image/webp'){ done(blob,'webp'); return; }
+        const alt = state.kind === 'avatar' ? ['image/png','png'] : ['image/jpeg','jpg'];
+        canvas.toBlob(function(b2){ done(b2,alt[1]); },alt[0],0.92);
+      },'image/webp',output.quality);
+    }
+    encodeWithFallback(function(blob,ext){
+      output.extension = ext;
+      output.type = blob ? blob.type : output.type;
       if(!state.open || token !== state.token) return;
       if(!blob){
         notify(window.AlexiHubI18n.t("common.message.could_not_process_the_image"));
@@ -5520,7 +5578,7 @@ document.addEventListener('DOMContentLoaded',()=>{
         saveButton.disabled = false;
         saveButton.textContent = window.AlexiHubI18n.t("common.label.stastoveti");
       }
-    },output.type,output.quality);
+    });
   }
 
   document.addEventListener('change',function(event){
