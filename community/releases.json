@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.248.2",
+      "date": "2026-10-06",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance profile edit form with crop input fields."
+      ],
+      "source_sha": "8aaf77cc2c9d0fb3f23f1dd6e01820368309d27f"
+    },
+    {
       "version": "1.248.1",
       "date": "2026-10-06",
       "title": "Виправлення та стабільність",
