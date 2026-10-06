@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.248.1",
+      "date": "2026-10-06",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance image upload with cropping and animation support."
+      ],
+      "source_sha": "f5abb30628f129e95987f197b949c4735ded2960"
+    },
+    {
       "version": "1.248.0",
       "date": "2026-10-06",
       "title": "Нові можливості AlexiHub",
