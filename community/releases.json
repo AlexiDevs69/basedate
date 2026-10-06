@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.246.13",
+      "date": "2026-10-06",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: styles for AlexiHub Plus logo and tooltips."
+      ],
+      "source_sha": "6abee79557df6316d0f055b21e8c68474d554a2b"
+    },
+    {
       "version": "1.246.12",
       "date": "2026-10-06",
       "title": "Виправлення та стабільність",
