@@ -5030,21 +5030,11 @@ BOOST_CODE_PREFIX = "ALEXI-BOOST-"
 BOOST_CODE_MIN_AMOUNT = 1
 BOOST_CODE_MAX_AMOUNT = 100
 NITRO_TIER_LABELS = {
-    "basic": "AlexiHub Nitro",
-    "gold": "Золото Nitro",
-    "platinum": "Платина Nitro",
-    "diamond": "Алмаз Nitro",
-    "emerald": "Изумруд Nitro",
-    "ruby": "Рубин Nitro",
+    "basic": "AlexiHub Plus",
 }
 
 NITRO_TIER_BOOSTS = {
     "basic": 2,
-    "gold": 4,
-    "platinum": 6,
-    "diamond": 8,
-    "emerald": 10,
-    "ruby": 12,
 }
 
 SERVER_BOOST_LEVELS = (
@@ -5182,21 +5172,8 @@ def nitro_gifter_badge_from_count(claimed_gifts: int | float | None) -> dict:
 
 
 def nitro_tier_from_duration(duration_days: int | float | None) -> tuple[str, str]:
-    """Return one canonical Nitro tier for the full uninterrupted credit period."""
-    days = max(0, int(duration_days or 0))
-    if days >= 500:
-        tier = "ruby"
-    elif days >= 200:
-        tier = "emerald"
-    elif days >= 101:
-        tier = "diamond"
-    elif days >= 61:
-        tier = "platinum"
-    elif days >= 31:
-        tier = "gold"
-    else:
-        tier = "basic"
-    return tier, NITRO_TIER_LABELS[tier]
+    """Plus has a single level now; duration no longer changes the tier."""
+    return "basic", NITRO_TIER_LABELS["basic"]
 
 
 def _nitro_datetime_utc(value: datetime | None) -> datetime | None:
