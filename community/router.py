@@ -11,6 +11,7 @@ import asyncio
 import json
 import hashlib
 import html as html_lib
+import io
 import ipaddress
 import math
 import os
@@ -240,6 +241,25 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 PROFILE_UPLOAD_DIR = ROOT_DIR / "static" / "uploads" / "profiles"
 ALLOWED_IMAGE_TYPES = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp", "image/gif": ".gif"}
 MAX_PROFILE_IMAGE_BYTES = 5 * 1024 * 1024
+
+# Animated avatars / banners (GIF, animated WebP). The original upload may be
+# larger than a static image, but it is never stored as-is: it is cropped,
+# downscaled and re-encoded as a small animated WebP (usually 5-15x smaller
+# than the source GIF, with better colours and a real alpha channel).
+MAX_ANIMATED_SOURCE_BYTES = 12 * 1024 * 1024
+ANIMATED_MAX_FRAME_PIXELS = 40_000_000       # one source frame (w*h)
+ANIMATED_MAX_DECODE_PIXELS = 700_000_000     # w*h*frames decode budget
+ANIMATED_MAX_FRAMES = 100                    # frames kept in the output
+ANIMATED_MIN_FRAME_MS = 40                   # cap at ~25 fps
+ANIMATED_MAX_SECONDS = 15                    # longer loops are trimmed
+PROFILE_ANIMATED_SPECS = {
+    # kind: (width, height, max output bytes)
+    "avatar": (256, 256, 600 * 1024),
+    "banner": (960, 384, 1400 * 1024),
+}
+PROFILE_ANIMATED_DEFAULT_MAX_SIDE = 640      # other uploads (event covers...)
+PROFILE_ANIMATED_DEFAULT_MAX_BYTES = 1400 * 1024
+_ANIMATED_ENCODE_SLOTS = asyncio.Semaphore(2)  # never let uploads hog the CPU
 
 # Voice messages (DM composer mic button). MediaRecorder in Chrome/Firefox
 # produces webm/opus by default, Safari produces mp4/aac -- accept the
@@ -483,6 +503,142 @@ def _sniff_image_type(data: bytes) -> str | None:
     return None
 
 
+def _is_animated_source(data: bytes, content_type: str) -> bool:
+    """GIFs are always re-encoded (even single-frame ones); WebP only when the
+    VP8X header says it carries an animation."""
+    if content_type == "image/gif":
+        return True
+    if content_type == "image/webp":
+        return len(data) > 21 and data[12:16] == b"VP8X" and bool(data[20] & 0x02)
+    return False
+
+
+def _parse_crop_box(crop: str, width: int, height: int, aspect: float | None) -> tuple[float, float, float, float]:
+    """crop = "x,y,w,h" as fractions (0..1) of the source image, sent by the
+    cropper UI. Returns a pixel box (left, top, right, bottom). Falls back to a
+    centred "cover" crop and always matches `aspect` so nothing is stretched."""
+    fx = fy = 0.0
+    fw = fh = 1.0
+    try:
+        parts = [float(v) for v in str(crop or "").split(",")]
+        if len(parts) == 4 and all(math.isfinite(v) for v in parts):
+            fx, fy, fw, fh = parts
+            fw = min(max(fw, 0.02), 1.0)
+            fh = min(max(fh, 0.02), 1.0)
+            fx = min(max(fx, 0.0), 1.0 - fw)
+            fy = min(max(fy, 0.0), 1.0 - fh)
+        else:
+            raise ValueError
+    except (ValueError, TypeError):
+        fx = fy = 0.0
+        fw = fh = 1.0
+    left, top = fx * width, fy * height
+    box_w, box_h = fw * width, fh * height
+    if aspect:
+        if box_w / box_h > aspect:      # too wide -> trim sides around the centre
+            new_w = box_h * aspect
+            left += (box_w - new_w) / 2
+            box_w = new_w
+        else:                           # too tall -> trim top/bottom
+            new_h = box_w / aspect
+            top += (box_h - new_h) / 2
+            box_h = new_h
+    return left, top, left + box_w, top + box_h
+
+
+def _optimize_animated_profile_image(data: bytes, kind: str, crop: str) -> tuple[bytes, str] | None:
+    """Blocking (run in a thread). GIF / animated WebP -> cropped, resized,
+    frame-rate-limited animated WebP. Returns (bytes, "image/webp") or None."""
+    try:
+        from PIL import Image, ImageSequence
+    except Exception:
+        return None
+    try:
+        img = Image.open(io.BytesIO(data))
+        width, height = img.size
+        total_frames = max(1, int(getattr(img, "n_frames", 1) or 1))
+        if width < 1 or height < 1 or width * height > ANIMATED_MAX_FRAME_PIXELS:
+            return None
+        if width * height * total_frames > ANIMATED_MAX_DECODE_PIXELS:
+            return None
+
+        spec = PROFILE_ANIMATED_SPECS.get(kind)
+        if spec:
+            target_w, target_h, max_bytes = spec
+            aspect = target_w / target_h
+        else:
+            scale = min(1.0, PROFILE_ANIMATED_DEFAULT_MAX_SIDE / max(width, height))
+            target_w, target_h = max(1, round(width * scale)), max(1, round(height * scale))
+            max_bytes, aspect = PROFILE_ANIMATED_DEFAULT_MAX_BYTES, None
+        box = _parse_crop_box(crop if spec else "", width, height, aspect)
+
+        # Pass 1: frame delays only -> decide which frames survive.
+        delays: list[int] = []
+        for index in range(total_frames):
+            img.seek(index)
+            delay = int(img.info.get("duration") or 0)
+            delays.append(delay if delay >= 20 else 100)  # browsers treat <20ms as 100ms
+        total_ms = 0
+        keep_until = len(delays)
+        for index, delay in enumerate(delays):
+            if total_ms >= ANIMATED_MAX_SECONDS * 1000:
+                keep_until = index
+                break
+            total_ms += delay
+        delays = delays[:keep_until]
+        total_ms = sum(delays)
+        min_ms = max(ANIMATED_MIN_FRAME_MS, total_ms / ANIMATED_MAX_FRAMES)
+        plan: dict[int, int] = {}   # source frame index -> output duration (ms)
+        current = -1
+        for index, delay in enumerate(delays):
+            if current >= 0 and plan[current] < min_ms:
+                plan[current] += delay      # absorb into the previous kept frame
+            else:
+                current = index
+                plan[current] = delay
+
+        # Pass 2: decode, crop + resize only the frames we keep.
+        frames = []
+        durations = []
+        for index, frame in enumerate(ImageSequence.Iterator(img)):
+            if index >= keep_until:
+                break
+            if index not in plan:
+                continue
+            rgba = frame.convert("RGBA").resize(
+                (target_w, target_h), Image.LANCZOS, box=box, reducing_gap=2.0
+            )
+            frames.append(rgba)
+            durations.append(plan[index])
+        if not frames:
+            return None
+
+        # Encode; step quality / size down until the file is small enough.
+        attempts = ((1.0, 82), (1.0, 70), (0.85, 66), (0.7, 62), (0.55, 58))
+        best: bytes | None = None
+        for scale, quality in attempts:
+            if scale == 1.0:
+                out_frames = frames
+            else:
+                size = (max(16, int(target_w * scale)), max(16, int(target_h * scale)))
+                out_frames = [f.resize(size, Image.LANCZOS) for f in frames]
+            buffer = io.BytesIO()
+            if len(out_frames) == 1:
+                out_frames[0].save(buffer, format="WEBP", quality=min(92, quality + 10), method=5)
+            else:
+                out_frames[0].save(
+                    buffer, format="WEBP", save_all=True, append_images=out_frames[1:],
+                    duration=durations, loop=0, quality=quality, method=4, lossless=False,
+                )
+            best = buffer.getvalue()
+            if len(best) <= max_bytes:
+                break
+        return (best, "image/webp") if best else None
+    except Exception as exc:  # corrupt / hostile file -> caller falls back
+        print("Animated profile image optimisation failed:", repr(exc))
+        return None
+
+
 _AUDIO_KIND_BY_TYPE = {
     "audio/webm": "webm",
     "audio/ogg": "ogg",
@@ -519,13 +675,17 @@ async def _read_profile_upload(upload: UploadFile | None) -> tuple[bytes, str] |
     content_type = (upload.content_type or "").split(";")[0].strip().lower()
     if content_type not in ALLOWED_IMAGE_TYPES:
         return None
-    data = await _read_limited(upload, MAX_PROFILE_IMAGE_BYTES)
+    # Animated sources may be bigger: they are re-encoded to a tiny WebP later.
+    limit = MAX_ANIMATED_SOURCE_BYTES if content_type in ("image/gif", "image/webp") else MAX_PROFILE_IMAGE_BYTES
+    data = await _read_limited(upload, limit)
     if data is None:
         return None
     # The Content-Type header is client-controlled. Trust the file's real
     # signature instead, so HTML/SVG/script cannot be stored as ".png".
     real_type = _sniff_image_type(data)
     if real_type is None or real_type not in ALLOWED_IMAGE_TYPES:
+        return None
+    if len(data) > MAX_PROFILE_IMAGE_BYTES and not _is_animated_source(data, real_type):
         return None
     return data, real_type
 
@@ -698,10 +858,20 @@ def _save_profile_upload_local(data: bytes, content_type: str, account_id: int, 
     return f"/static/uploads/profiles/{filename}"
 
 
-async def _profile_image_url_from_form(upload: UploadFile | None, url_value: str, account_id: int, kind: str) -> str:
+async def _profile_image_url_from_form(
+    upload: UploadFile | None, url_value: str, account_id: int, kind: str, crop: str = ""
+) -> str:
     prepared = await _read_profile_upload(upload)
     if prepared:
         data, content_type = prepared
+        if _is_animated_source(data, content_type):
+            async with _ANIMATED_ENCODE_SLOTS:
+                optimized = await asyncio.to_thread(_optimize_animated_profile_image, data, kind, crop)
+            if optimized:
+                data, content_type = optimized
+            elif len(data) > MAX_PROFILE_IMAGE_BYTES:
+                # Could not shrink it (Pillow missing / broken file) and it is too big to keep.
+                return crud.clean_media_url(url_value, 512)
         external_url = await _upload_to_cloudinary(data, content_type)
         if not external_url:
             external_url = await _upload_to_imgur(data, content_type)
@@ -6913,14 +7083,16 @@ async def settings_submit(
     profile_color_accent: str | None = Form(None),
     avatar_file: UploadFile | None = File(None),
     banner_file: UploadFile | None = File(None),
+    avatar_crop: str = Form(""),
+    banner_crop: str = Form(""),
     db: AsyncSession = Depends(get_db),
 ):
     account = await current_account(request, db)
     if not account:
         return RedirectResponse(url="/community/login", status_code=303)
 
-    avatar_final = await _profile_image_url_from_form(avatar_file, avatar_url, account.id, "avatar")
-    banner_final = await _profile_image_url_from_form(banner_file, banner_url, account.id, "banner")
+    avatar_final = await _profile_image_url_from_form(avatar_file, avatar_url, account.id, "avatar", avatar_crop)
+    banner_final = await _profile_image_url_from_form(banner_file, banner_url, account.id, "banner", banner_crop)
 
     updated = await crud.update_own_profile(
         db, account.id,
