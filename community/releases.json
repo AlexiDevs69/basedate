@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.246.17",
+      "date": "2026-10-06",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: Nitro badge and tooltip styles."
+      ],
+      "source_sha": "d66f2041e07db03148173944d9357b2e4b968615"
+    },
+    {
       "version": "1.246.16",
       "date": "2026-10-06",
       "title": "Виправлення та стабільність",
