@@ -1734,9 +1734,9 @@
   }
   function pad(x){return(x<10?'0':'')+x}
   function describe(e){
-    if(!e)return'';if(e.until===-1)return'Поки не увімкнете';
+    if(!e)return'';if(e.until===-1)returnwindow.AlexiHubI18n.t('common.mute.until_enabled');
     var d=new Date(e.until),now=new Date(),hm=pad(d.getHours())+':'+pad(d.getMinutes());
-    return d.toDateString()===now.toDateString()?'До '+hm:'До '+pad(d.getDate())+'.'+pad(d.getMonth()+1)+' '+hm;
+    return d.toDateString()===now.toDateString()?window.AlexiHubI18n.t('common.mute.until_prefix')+' '+hm:window.AlexiHubI18n.t('common.mute.until_prefix')+' '+pad(d.getDate())+'.'+pad(d.getMonth()+1)+' '+hm;
   }
   function schedule(){
     clearTimeout(timer);var m=read(),next=0;
@@ -1971,16 +1971,16 @@ html[data-theme="light"] .app .right .dm-right-sec h4,html[data-theme="light"] h
     var el=document.createElement('div');
     el.id='ah-voice-dock';
     el.setAttribute('role','region');
-    el.setAttribute('aria-label','Голосове повідомлення');
+    el.setAttribute('aria-label',window.AlexiHubI18n.t('common.voice.message'));
     el.innerHTML='<div class="ahvd-card"><div class="ahvd-main">'
-      +'<button type="button" class="ahvd-btn ahvd-prev" title="Попереднє" aria-label="Попереднє">'+I.prev+'</button>'
-      +'<button type="button" class="ahvd-btn ahvd-play" title="Відтворити / пауза" aria-label="Відтворити / пауза">'+I.play+'</button>'
-      +'<button type="button" class="ahvd-btn ahvd-next" title="Наступне" aria-label="Наступне">'+I.next+'</button>'
+      +'<button type="button" class="ahvd-btn ahvd-prev" title="'+window.AlexiHubI18n.t('common.voice.prev')+'" aria-label="'+window.AlexiHubI18n.t('common.voice.prev')+'">'+I.prev+'</button>'
+      +'<button type="button" class="ahvd-btn ahvd-play" title="'+window.AlexiHubI18n.t('common.voice.play_pause')+'" aria-label="'+window.AlexiHubI18n.t('common.voice.play_pause')+'">'+I.play+'</button>'
+      +'<button type="button" class="ahvd-btn ahvd-next" title="'+window.AlexiHubI18n.t('common.voice.next')+'" aria-label="'+window.AlexiHubI18n.t('common.voice.next')+'">'+I.next+'</button>'
       +'<div class="ahvd-info"><b class="ahvd-author"></b><span class="ahvd-when"></span></div>'
       +'<span class="ahvd-time">00:00</span>'
-      +'<div class="ahvd-vol"><button type="button" class="ahvd-btn ahvd-mute" title="Звук" aria-label="Звук">'+I.vol+'</button><input class="ahvd-range" type="range" min="0" max="1" step="0.05" aria-label="Гучність"></div>'
-      +'<button type="button" class="ahvd-rate" title="Швидкість" aria-label="Швидкість">1x</button>'
-      +'<button type="button" class="ahvd-btn ahvd-close" title="Закрити" aria-label="Закрити">'+I.close+'</button>'
+      +'<div class="ahvd-vol"><button type="button" class="ahvd-btn ahvd-mute" title="'+window.AlexiHubI18n.t('common.voice.sound')+'" aria-label="'+window.AlexiHubI18n.t('common.voice.sound')+'">'+I.vol+'</button><input class="ahvd-range" type="range" min="0" max="1" step="0.05" aria-label="'+window.AlexiHubI18n.t('common.voice.volume')+'"></div>'
+      +'<button type="button" class="ahvd-rate" title="'+window.AlexiHubI18n.t('common.voice.speed')+'" aria-label="'+window.AlexiHubI18n.t('common.voice.speed')+'">1x</button>'
+      +'<button type="button" class="ahvd-btn ahvd-close" title="'+window.AlexiHubI18n.t('common.actions.close')+'" aria-label="'+window.AlexiHubI18n.t('common.actions.close')+'">'+I.close+'</button>'
       +'</div><div class="ahvd-bar"><div class="ahvd-fill"></div></div></div>';
     document.body.appendChild(el);
     var q=function(s){return el.querySelector(s);};
@@ -2024,7 +2024,7 @@ html[data-theme="light"] .app .right .dm-right-sec h4,html[data-theme="light"] h
     if(!ui)return;
     var v=view();
     ui.el.classList.toggle('playing',v.playing);
-    ui.author.textContent=meta.author||'Голосове повідомлення';
+    ui.author.textContent=meta.author||window.AlexiHubI18n.t('common.voice.message');
     ui.when.textContent=meta.when||'';
     ui.rate.textContent=(prefs.rate===1?'1':String(prefs.rate))+'x';
     ui.rate.classList.toggle('fast',prefs.rate!==1);
@@ -2090,7 +2090,7 @@ html[data-theme="light"] .app .right .dm-right-sec h4,html[data-theme="light"] h
   function mediaSession(){
     if(!('mediaSession' in navigator))return;
     try{
-      navigator.mediaSession.metadata=new MediaMetadata({title:'Голосове повідомлення',artist:meta.author||'',album:meta.when||''});
+      navigator.mediaSession.metadata=new MediaMetadata({title:window.AlexiHubI18n.t('common.voice.message'),artist:meta.author||'',album:meta.when||''});
       navigator.mediaSession.setActionHandler('play',toggle);
       navigator.mediaSession.setActionHandler('pause',toggle);
       navigator.mediaSession.setActionHandler('previoustrack',prev);
@@ -2357,13 +2357,13 @@ html[data-theme="light"] .app .right .dm-right-sec h4,html[data-theme="light"] h
       <div id="dm-dropzone-overlay" class="dm-dropzone-overlay"><div class="dm-dropzone-inner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg><span data-i18n="common.text.send_a_file"><!--i18n:common.text.send_a_file-->{{ i18n_t('common.text.send_a_file') }}</span></div></div>
       <header class="topbar">
         <div class="top-title"><span class="avatar dm-top-avatar" data-mini-open-full="1" role="button" tabindex="0" data-mini-username="{{ other.username }}" data-mini-display="{{ other.display_name or other.username }}" data-mini-avatar="{{ other.avatar_url or '' }}" data-mini-banner="{{ other.banner_url or '' }}" data-mini-status="{{ other_status if other_visible else 'offline' }}" data-mini-role="{{ other.role_label or 'member' }}" data-mini-c1="{{ other.role_color_start or '#5865f2' }}" data-mini-c2="{{ other.role_color_end or '#9b5cf6' }}" data-mini-profile="/community/profile/{{ other.username }}" data-mini-bio="{{ other.bio or '' }}" data-mini-created="{{ other.created_at.strftime('%d.%m.%Y') if other.created_at else '' }}" {% if other.avatar_url %}style="background-image:url('{{ other.avatar_url }}')"{% endif %}>{% if not other.avatar_url %}{{ other.username[:1]|upper }}{% endif %}{% if other_visible %}<span class="presence status-{{ other_status }}"></span>{% endif %}</span>{{ other.display_name or other.username }} <span id="live-status" class="live" hidden style="display:none !important"><!--i18n:dm.text.connecting-->{{ i18n_t("dm.text.connecting") }}</span></div>
-        <div class="top-actions"><button id="dm-pin-trigger-btn" title="{{ i18n_t('dm.aria.pin') }}" data-i18n-title="dm.aria.pin"><svg class="icon"><use href="#i-pin"></use></svg></button>{% if friend_status != 'friends' %}<button title="{% if friend_status == 'pending_sent' %}{{ i18n_t('dm.friend.request_sent') }}{% elif friend_status == 'pending_received' %}{{ i18n_t('dm.friend.request_accept') }}{% else %}{{ i18n_t('ui.add_friend') }}{% endif %}" onclick="showActionToast(window.AlexiHubI18n.t('dm.stub.friendship'))"><svg class="icon"><use href="#i-invite"></use></svg></button>{% endif %}<button type="button" id="dm-toggle-profile-btn" class="active" title="Скрыть профиль пользователя" onclick="toggleDmProfilePanel(this)"><svg class="icon"><use href="#i-user-profile"></use></svg></button><input class="top-search" id="message-search" placeholder="{{ i18n_t('dm.search_conversation', username=other.username) }}"><button title="{{ i18n_t('settings.search_placeholder') }}" data-i18n-title="settings.search_placeholder" onclick="document.getElementById('message-search')?.focus()"><svg class="icon"><use href="#i-search"></use></svg></button></div>
+        <div class="top-actions"><button id="dm-pin-trigger-btn" title="{{ i18n_t('dm.aria.pin') }}" data-i18n-title="dm.aria.pin"><svg class="icon"><use href="#i-pin"></use></svg></button>{% if friend_status != 'friends' %}<button title="{% if friend_status == 'pending_sent' %}{{ i18n_t('dm.friend.request_sent') }}{% elif friend_status == 'pending_received' %}{{ i18n_t('dm.friend.request_accept') }}{% else %}{{ i18n_t('ui.add_friend') }}{% endif %}" onclick="showActionToast(window.AlexiHubI18n.t('dm.stub.friendship'))"><svg class="icon"><use href="#i-invite"></use></svg></button>{% endif %}<button type="button" id="dm-toggle-profile-btn" class="active" title="{{ i18n_t('dm.text.hide_profile_btn') }}" data-i18n-title="dm.text.hide_profile_btn" onclick="toggleDmProfilePanel(this)"><svg class="icon"><use href="#i-user-profile"></use></svg></button><input class="top-search" id="message-search" placeholder="{{ i18n_t('dm.search_conversation', username=other.username) }}"><button title="{{ i18n_t('settings.search_placeholder') }}" data-i18n-title="settings.search_placeholder" onclick="document.getElementById('message-search')?.focus()"><svg class="icon"><use href="#i-search"></use></svg></button></div>
       </header>
       <section id="messages" class="messages">
         <div class="dm-start"><span class="avatar" {% if other.avatar_url %}style="background-image:url('{{ other.avatar_url }}')"{% endif %}>{% if not other.avatar_url %}{{ other.username[:1]|upper }}{% endif %}{% if other_visible %}<span class="presence status-{{ other_status }}"></span>{% endif %}</span><h1>{{ other.display_name or other.username }}</h1><div class="profile-handle">@{{ other.username }}</div><p><!--i18n:dm.text.this_is_the_beginning_of_your_personal_dialogue-->{{ i18n_t('dm.text.this_is_the_beginning_of_your_personal_dialogue') }}</p></div>
-        {% for item in messages %}{% set msg=item.message %}{% set au=item.author %}{% set is_forwarded = msg.is_forwarded if msg.is_forwarded is defined else false %}<div class="msg" id="dm-message-{{ msg.id }}" data-id="{{ msg.id }}" data-message-id="{{ msg.id }}" data-own="{{ '1' if msg.author_id == account.id else '0' }}" data-message-editable="{{ '1' if msg.author_id == account.id and not is_forwarded and not msg.voice_url else '0' }}" data-message-author="{{ (au.display_name or au.username) if au else '?' }}" data-message-avatar="{{ au.avatar_url if au and au.avatar_url else '' }}" data-message-content="{{ msg.content|e }}" data-message-delete-url="/community/dm/{{ other.username }}/message/{{ msg.id }}/delete" data-message-edited="{{ '1' if msg.edited_at else '0' }}" data-message-forwarded="{{ '1' if is_forwarded else '0' }}" data-message-image="{{ msg.image_url or '' }}" data-message-voice="{{ '1' if msg.voice_url else '0' }}" data-message-voice-duration="{{ (msg.voice_duration or 0)|int if msg.voice_url else 0 }}"><span class="msg-avatar mini-profile-trigger" data-mini-username="{{ au.username if au else '?' }}" data-mini-display="{{ (au.display_name or au.username) if au else '?' }}" data-mini-avatar="{{ au.avatar_url if au and au.avatar_url else '' }}" data-mini-banner="{{ au.banner_url if au and au.banner_url else '' }}" data-mini-status="{{ account.account_status if au and au.id == account.id else (other_status if au and au.id == other.id and other_visible else 'offline') }}" data-mini-role="{{ au.role_label if au and au.role_label else 'member' }}" data-mini-c1="{{ au.role_color_start if au and au.role_color_start else '#5865f2' }}" data-mini-c2="{{ au.role_color_end if au and au.role_color_end else '#9b5cf6' }}" data-mini-profile="/community/profile/{{ au.username if au else '' }}" data-mini-bio="{{ au.bio if au and au.bio else '' }}" data-mini-created="{{ au.created_at.strftime('%d.%m.%Y') if au and au.created_at else '' }}" {% if au and au.avatar_url %}style="background-image:url('{{ au.avatar_url }}')"{% endif %}>{% if au and not au.avatar_url %}{{ (au.display_name or au.username)|first|upper }}{% endif %}</span><div class="msg-body"><div class="msg-head"><span class="msg-name mini-profile-trigger" data-mini-username="{{ au.username if au else '?' }}" data-mini-display="{{ (au.display_name or au.username) if au else '?' }}" data-mini-avatar="{{ au.avatar_url if au and au.avatar_url else '' }}" data-mini-banner="{{ au.banner_url if au and au.banner_url else '' }}" data-mini-status="{{ account.account_status if au and au.id == account.id else (other_status if au and au.id == other.id and other_visible else 'offline') }}" data-mini-role="{{ au.role_label if au and au.role_label else 'member' }}" data-mini-c1="{{ au.role_color_start if au and au.role_color_start else '#5865f2' }}" data-mini-c2="{{ au.role_color_end if au and au.role_color_end else '#9b5cf6' }}" data-mini-profile="/community/profile/{{ au.username if au else '' }}" data-mini-bio="{{ au.bio if au and au.bio else '' }}" data-mini-created="{{ au.created_at.strftime('%d.%m.%Y') if au and au.created_at else '' }}">{{ (au.display_name or au.username) if au else '?' }}</span>{% if item.server_tag %}<span class="message-server-tag ah-tag-clickable" title="{{ item.server_tag.server_name }}" data-tag-server-id="{{ item.server_tag.server_id or '' }}" data-tag-server-name="{{ item.server_tag.server_name or '' }}" data-tag-icon-glyph="{{ item.server_tag.icon_glyph or '' }}" data-tag-icon-url="{{ item.server_tag.icon_url or '' }}" data-tag-text="{{ item.server_tag.text or '' }}" data-tag-member-count="{{ item.server_tag.member_count or '' }}" data-tag-online-count="{{ item.server_tag.online_count or '' }}" data-tag-description="{{ item.server_tag.description or '' }}" data-tag-invite="{{ item.server_tag.invite_url or '' }}"><b>{{ item.server_tag.icon_glyph }}</b>{{ item.server_tag.text }}</span>{% endif %}<span class="msg-time">{{ msg.created_at }}</span></div>{% if is_forwarded %}<div class="dm-forwarded-label"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg><span><!--i18n:common.text.undpentent-->{{ i18n_t('common.text.undpentent') }}</span></div>{% endif %}{% if item.reply and item.reply.message %}<div class="dm-reply" onclick="jumpToDmMessage({{ item.reply.message.id }})"><span class="dm-reply-author">{{ (item.reply.author.display_name or item.reply.author.username) if item.reply.author else i18n_t('common.user.deleted') }}</span><span class="dm-reply-text">{{ ('📊 Опитування' if item.reply.message.content and item.reply.message.content.startswith('[[ah:poll:') else item.reply.message.content) if item.reply.message.content else ('🎤 Голосове повідомлення' if item.reply.message.voice_url else i18n_t('common.attachment')) }}</span></div>{% endif %}<div class="msg-text"><span class="dm-message-text">{{ msg.content }}</span><span class="dm-message-edited {{ '' if msg.edited_at else 'hidden' }}" id="dm-edited-{{ msg.id }}"><!--i18n:common.label.modified-->{{ i18n_t('common.label.modified') }}</span></div>{% if msg.image_url %}{% set msg_imgs = msg.image_url.split('\n')|map('trim')|select|list %}{% if msg_imgs|length > 1 %}<div class="msg-image-group ah-carousel"><div class="ah-carousel-track" tabindex="0">{% for img_url in msg_imgs %}<div class="ah-carousel-slide"><img class="msg-img" src="{{ img_url }}" alt="" decoding="async" draggable="false"></div>{% endfor %}</div><div class="ah-carousel-dots">{% for img_url in msg_imgs %}<button type="button" class="ah-carousel-dot{% if loop.first %} active{% endif %}" aria-label="{{ loop.index }}"></button>{% endfor %}</div></div>{% elif msg_imgs %}<img class="msg-img" src="{{ msg_imgs[0] }}" alt="" decoding="async">{% endif %}{% endif %}{% if msg.voice_url %}<div class="dm-voice-message"><button type="button" class="dm-voice-play" onclick="toggleDmVoicePlay(this)" aria-label="Відтворити голосове повідомлення"><svg class="dm-voice-play-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><svg class="dm-voice-pause-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg></button><div class="dm-voice-track"><div class="dm-voice-progress"></div></div><span class="dm-voice-duration">{{ '%d:%02d'|format((msg.voice_duration or 0) // 60, (msg.voice_duration or 0) % 60) }}</span><audio class="dm-voice-audio" preload="none" src="{{ msg.voice_url }}"></audio></div>{% endif %}</div><div class="msg-actions"><button type="button" class="dm-message-more-btn" onclick="openDmMessageMenu(event)" title="{{ i18n_t('common.aria.more') }}" data-i18n-title="common.aria.more"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button></div></div>{% endfor %}
+        {% for item in messages %}{% set msg=item.message %}{% set au=item.author %}{% set is_forwarded = msg.is_forwarded if msg.is_forwarded is defined else false %}<div class="msg" id="dm-message-{{ msg.id }}" data-id="{{ msg.id }}" data-message-id="{{ msg.id }}" data-own="{{ '1' if msg.author_id == account.id else '0' }}" data-message-editable="{{ '1' if msg.author_id == account.id and not is_forwarded and not msg.voice_url else '0' }}" data-message-author="{{ (au.display_name or au.username) if au else '?' }}" data-message-avatar="{{ au.avatar_url if au and au.avatar_url else '' }}" data-message-content="{{ msg.content|e }}" data-message-delete-url="/community/dm/{{ other.username }}/message/{{ msg.id }}/delete" data-message-edited="{{ '1' if msg.edited_at else '0' }}" data-message-forwarded="{{ '1' if is_forwarded else '0' }}" data-message-image="{{ msg.image_url or '' }}" data-message-voice="{{ '1' if msg.voice_url else '0' }}" data-message-voice-duration="{{ (msg.voice_duration or 0)|int if msg.voice_url else 0 }}"><span class="msg-avatar mini-profile-trigger" data-mini-username="{{ au.username if au else '?' }}" data-mini-display="{{ (au.display_name or au.username) if au else '?' }}" data-mini-avatar="{{ au.avatar_url if au and au.avatar_url else '' }}" data-mini-banner="{{ au.banner_url if au and au.banner_url else '' }}" data-mini-status="{{ account.account_status if au and au.id == account.id else (other_status if au and au.id == other.id and other_visible else 'offline') }}" data-mini-role="{{ au.role_label if au and au.role_label else 'member' }}" data-mini-c1="{{ au.role_color_start if au and au.role_color_start else '#5865f2' }}" data-mini-c2="{{ au.role_color_end if au and au.role_color_end else '#9b5cf6' }}" data-mini-profile="/community/profile/{{ au.username if au else '' }}" data-mini-bio="{{ au.bio if au and au.bio else '' }}" data-mini-created="{{ au.created_at.strftime('%d.%m.%Y') if au and au.created_at else '' }}" {% if au and au.avatar_url %}style="background-image:url('{{ au.avatar_url }}')"{% endif %}>{% if au and not au.avatar_url %}{{ (au.display_name or au.username)|first|upper }}{% endif %}</span><div class="msg-body"><div class="msg-head"><span class="msg-name mini-profile-trigger" data-mini-username="{{ au.username if au else '?' }}" data-mini-display="{{ (au.display_name or au.username) if au else '?' }}" data-mini-avatar="{{ au.avatar_url if au and au.avatar_url else '' }}" data-mini-banner="{{ au.banner_url if au and au.banner_url else '' }}" data-mini-status="{{ account.account_status if au and au.id == account.id else (other_status if au and au.id == other.id and other_visible else 'offline') }}" data-mini-role="{{ au.role_label if au and au.role_label else 'member' }}" data-mini-c1="{{ au.role_color_start if au and au.role_color_start else '#5865f2' }}" data-mini-c2="{{ au.role_color_end if au and au.role_color_end else '#9b5cf6' }}" data-mini-profile="/community/profile/{{ au.username if au else '' }}" data-mini-bio="{{ au.bio if au and au.bio else '' }}" data-mini-created="{{ au.created_at.strftime('%d.%m.%Y') if au and au.created_at else '' }}">{{ (au.display_name or au.username) if au else '?' }}</span>{% if item.server_tag %}<span class="message-server-tag ah-tag-clickable" title="{{ item.server_tag.server_name }}" data-tag-server-id="{{ item.server_tag.server_id or '' }}" data-tag-server-name="{{ item.server_tag.server_name or '' }}" data-tag-icon-glyph="{{ item.server_tag.icon_glyph or '' }}" data-tag-icon-url="{{ item.server_tag.icon_url or '' }}" data-tag-text="{{ item.server_tag.text or '' }}" data-tag-member-count="{{ item.server_tag.member_count or '' }}" data-tag-online-count="{{ item.server_tag.online_count or '' }}" data-tag-description="{{ item.server_tag.description or '' }}" data-tag-invite="{{ item.server_tag.invite_url or '' }}"><b>{{ item.server_tag.icon_glyph }}</b>{{ item.server_tag.text }}</span>{% endif %}<span class="msg-time">{{ msg.created_at }}</span></div>{% if is_forwarded %}<div class="dm-forwarded-label"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg><span><!--i18n:common.text.undpentent-->{{ i18n_t('common.text.undpentent') }}</span></div>{% endif %}{% if item.reply and item.reply.message %}<div class="dm-reply" onclick="jumpToDmMessage({{ item.reply.message.id }})"><span class="dm-reply-author">{{ (item.reply.author.display_name or item.reply.author.username) if item.reply.author else i18n_t('common.user.deleted') }}</span><span class="dm-reply-text">{{ ('📊 Опитування' if item.reply.message.content and item.reply.message.content.startswith('[[ah:poll:') else item.reply.message.content) if item.reply.message.content else ('🎤 Голосове повідомлення' if item.reply.message.voice_url else i18n_t('common.attachment')) }}</span></div>{% endif %}<div class="msg-text"><span class="dm-message-text">{{ msg.content }}</span><span class="dm-message-edited {{ '' if msg.edited_at else 'hidden' }}" id="dm-edited-{{ msg.id }}"><!--i18n:common.label.modified-->{{ i18n_t('common.label.modified') }}</span></div>{% if msg.image_url %}{% set msg_imgs = msg.image_url.split('\n')|map('trim')|select|list %}{% if msg_imgs|length > 1 %}<div class="msg-image-group ah-carousel"><div class="ah-carousel-track" tabindex="0">{% for img_url in msg_imgs %}<div class="ah-carousel-slide"><img class="msg-img" src="{{ img_url }}" alt="" decoding="async" draggable="false"></div>{% endfor %}</div><div class="ah-carousel-dots">{% for img_url in msg_imgs %}<button type="button" class="ah-carousel-dot{% if loop.first %} active{% endif %}" aria-label="{{ loop.index }}"></button>{% endfor %}</div></div>{% elif msg_imgs %}<img class="msg-img" src="{{ msg_imgs[0] }}" alt="" decoding="async">{% endif %}{% endif %}{% if msg.voice_url %}<div class="dm-voice-message"><button type="button" class="dm-voice-play" onclick="toggleDmVoicePlay(this)" aria-label="{{ i18n_t('voice.play_message') }}" data-i18n-aria-label="voice.play_message"><svg class="dm-voice-play-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><svg class="dm-voice-pause-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg></button><div class="dm-voice-track"><div class="dm-voice-progress"></div></div><span class="dm-voice-duration">{{ '%d:%02d'|format((msg.voice_duration or 0) // 60, (msg.voice_duration or 0) % 60) }}</span><audio class="dm-voice-audio" preload="none" src="{{ msg.voice_url }}"></audio></div>{% endif %}</div><div class="msg-actions"><button type="button" class="dm-message-more-btn" onclick="openDmMessageMenu(event)" title="{{ i18n_t('common.aria.more') }}" data-i18n-title="common.aria.more"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button></div></div>{% endfor %}
       </section>
-      <div class="composer-wrap"><div id="typing" class="typing"></div><form id="dm-form" method="post" action="/community/dm/{{ other.username }}/message"><input id="dm-file-input" type="file" accept="image/*" multiple style="display:none"><input id="image_url" name="image_url" type="hidden" value=""><input id="voice_url" name="voice_url" type="hidden" value=""><input id="voice_duration" name="voice_duration" type="hidden" value=""><div id="dm-reply-preview" class="dm-reply-preview hidden"><span><!--i18n:common.text.the_answer_to-->{{ i18n_t('common.text.the_answer_to') }} <b id="dm-reply-author"></b></span><span id="dm-reply-text" class="dm-reply-preview-text"></span><button type="button" onclick="clearDmReply()" aria-label="{{ i18n_t('common.aria.cancel_reply') }}" data-i18n-aria-label="common.aria.cancel_reply">×</button><input id="dm-reply-to-id" type="hidden" name="reply_to_id" value=""></div><div class="dm-composer-shell"><div id="dm-plus-menu" class="dm-plus-menu"><button type="button" onclick="chooseDmImage()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="M9 15h6"/></svg><span><!--i18n:common.text.send_a_file-->{{ i18n_t('common.text.send_a_file') }}</span></button><button type="button" onclick="ahOpenPollModal(event)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M8 17V9"/><path d="M12 19V3"/><path d="M16 15v-4"/><path d="M20 17V7"/></svg><span><!--i18n:dm.text.create_a_survey-->{{ i18n_t('dm.text.create_a_survey') }}</span></button><button type="button" onclick="showActionToast && showActionToast(window.AlexiHubI18n.t('dm.stub.apps'))"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span><!--i18n:dm.text.use_the_applications-->{{ i18n_t('dm.text.use_the_applications') }}</span></button></div><div id="dm-attachment-preview" class="composer-upload-preview"></div><div class="composer"><button class="dm-plus-btn" id="dm-plus-btn" type="button" onclick="toggleDmPlus(event)" title="{{ i18n_t('dm.aria.add_an_addition') }}" data-i18n-title="dm.aria.add_an_addition">+</button><textarea id="content" name="content" placeholder="{{ i18n_t('dm.composer.placeholder', username=other.username) }}" rows="1"></textarea><span id="dm-record-timer"></span><button class="dm-send-btn mode-voice" id="dm-send-btn" type="submit" title="Утримуйте, щоб записати голосове"><svg class="dm-send-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg><svg class="dm-mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button></div></div></form></div>
+      <div class="composer-wrap"><div id="typing" class="typing"></div><form id="dm-form" method="post" action="/community/dm/{{ other.username }}/message"><input id="dm-file-input" type="file" accept="image/*" multiple style="display:none"><input id="image_url" name="image_url" type="hidden" value=""><input id="voice_url" name="voice_url" type="hidden" value=""><input id="voice_duration" name="voice_duration" type="hidden" value=""><div id="dm-reply-preview" class="dm-reply-preview hidden"><span><!--i18n:common.text.the_answer_to-->{{ i18n_t('common.text.the_answer_to') }} <b id="dm-reply-author"></b></span><span id="dm-reply-text" class="dm-reply-preview-text"></span><button type="button" onclick="clearDmReply()" aria-label="{{ i18n_t('common.aria.cancel_reply') }}" data-i18n-aria-label="common.aria.cancel_reply">×</button><input id="dm-reply-to-id" type="hidden" name="reply_to_id" value=""></div><div class="dm-composer-shell"><div id="dm-plus-menu" class="dm-plus-menu"><button type="button" onclick="chooseDmImage()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="M9 15h6"/></svg><span><!--i18n:common.text.send_a_file-->{{ i18n_t('common.text.send_a_file') }}</span></button><button type="button" onclick="ahOpenPollModal(event)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5"/><path d="M8 17V9"/><path d="M12 19V3"/><path d="M16 15v-4"/><path d="M20 17V7"/></svg><span><!--i18n:dm.text.create_a_survey-->{{ i18n_t('dm.text.create_a_survey') }}</span></button><button type="button" onclick="showActionToast && showActionToast(window.AlexiHubI18n.t('dm.stub.apps'))"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span><!--i18n:dm.text.use_the_applications-->{{ i18n_t('dm.text.use_the_applications') }}</span></button></div><div id="dm-attachment-preview" class="composer-upload-preview"></div><div class="composer"><button class="dm-plus-btn" id="dm-plus-btn" type="button" onclick="toggleDmPlus(event)" title="{{ i18n_t('dm.aria.add_an_addition') }}" data-i18n-title="dm.aria.add_an_addition">+</button><textarea id="content" name="content" placeholder="{{ i18n_t('dm.composer.placeholder', username=other.username) }}" rows="1"></textarea><span id="dm-record-timer"></span><button class="dm-send-btn mode-voice" id="dm-send-btn" type="submit" title="{{ i18n_t('voice.hold_to_record') }}" data-i18n-title="voice.hold_to_record"><svg class="dm-send-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg><svg class="dm-mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button></div></div></form></div>
     </main>
 
     <aside class="right">
@@ -2921,7 +2921,7 @@ function ahTypingPickerGroupItems(items){
   items.forEach(i=>{
     const key=String(i.server_id||'0');
     if(!map.has(key)){
-      map.set(key,{server_id:key,server_name:i.server_name||(window.AlexiHubI18n?window.AlexiHubI18n.t("common.text.the_server"):'Сервер'),server_icon_url:i.server_icon_url||'',items:[]});
+      map.set(key,{server_id:key,server_name:i.server_name||(window.AlexiHubI18n?window.AlexiHubI18n.t("common.text.the_server"):window.AlexiHubI18n.t('common.server.default_custom')),server_icon_url:i.server_icon_url||'',items:[]});
       out.push(map.get(key));
     }
     map.get(key).items.push(i);
@@ -3145,7 +3145,7 @@ window.saveTypingText=async function(){
       currentTypingText=ttInput.value;
       const preview=document.getElementById('ah-typing-text-preview');
       if(preview)preview.innerHTML=renderTypingTextPreviewHtml(currentUser.username+' '+(ttInput.value||(window.AlexiHubI18n?window.AlexiHubI18n.t('dm.text.preferring'):'')));
-      if(typeof settingsToast==='function')settingsToast('Збережено');
+      if(typeof settingsToast==='function')settingsToast(window.AlexiHubI18n.t('common.message.saved'));
     }else{
       // Surface the real problem instead of failing silently -- this is
       // almost always because /community/api/settings/typing-text isn't
@@ -3153,11 +3153,11 @@ window.saveTypingText=async function(){
       // authenticated.
       const reason=(data&&(data.error||data.detail))||('HTTP '+res.status);
       console.error('[AlexiHub] saveTypingText failed:',reason);
-      if(typeof settingsToast==='function')settingsToast('Не вдалося зберегти ('+reason+')');
+      if(typeof settingsToast==='function')settingsToast(window.AlexiHubI18n.t('settings.save_failed')+' ('+reason+')');
     }
   }catch(e){
     console.error('[AlexiHub] saveTypingText network error:',e);
-    if(typeof settingsToast==='function')settingsToast('Не вдалося зберегти: немає з’єднання');
+    if(typeof settingsToast==='function')settingsToast(window.AlexiHubI18n.t('settings.save_failed_offline'));
   }
 };
 const live=document.getElementById('live-status');
@@ -3254,7 +3254,7 @@ document.addEventListener('pause',function(e){
 /* --- voice message: seek / drag support --- */
 function dmVoiceLabel(sec){
   var n=Math.max(0,parseInt(sec||0,10)||0);
-  return '🎤 Голосове повідомлення'+(n?' · '+dmVoiceFmt(n):'');
+  return '🎤 '+window.AlexiHubI18n.t('common.voice.message')+(n?' · '+dmVoiceFmt(n):'');
 }
 function dmVoiceFmt(sec){
   sec=Math.max(0,Math.floor(sec||0));
@@ -3360,7 +3360,7 @@ function updateDmSendButtonMode(){
 async function startDmVoiceHold(){
   if(dmVoiceHolding||dmSendButtonMode()!=='voice')return;
   if(!navigator.mediaDevices||!window.MediaRecorder){
-    if(window.showActionToast)showActionToast('Мікрофон не підтримується цим браузером');
+    if(window.showActionToast)showActionToast(window.AlexiHubI18n.t('voice.mic_unsupported'));
     return;
   }
   dmVoiceHolding=true;
@@ -3396,7 +3396,7 @@ async function startDmVoiceHold(){
   }catch(e){
     dmVoiceHolding=false;
     if(btn)btn.classList.remove('holding');
-    if(window.showActionToast)showActionToast('Немає доступу до мікрофона');
+    if(window.showActionToast)showActionToast(window.AlexiHubI18n.t('voice.mic_denied'));
   }
 }
 
@@ -3440,7 +3440,7 @@ async function sendDmVoiceMessage(blob,durationSec){
     data=await res.json();
   }catch(e){}
   if(!data||!data.ok||!data.url){
-    if(window.showActionToast)showActionToast('Не вдалося надіслати голосове повідомлення');
+    if(window.showActionToast)showActionToast(window.AlexiHubI18n.t('voice.send_failed'));
     return;
   }
   const replyInput=document.getElementById('dm-reply-to-id');
@@ -3756,7 +3756,7 @@ function handleDmRealtimeData(data){
       // it) with no leading space, which glues onto the username -- e.g.
       // "Alexiprefering". Fall back to a sane default in that case.
       if(!defaultSuffix||!/^\s/.test(defaultSuffix)||/preferring|typing/i.test(defaultSuffix)){
-        defaultSuffix=' печатает...';
+        defaultSuffix=' '+window.AlexiHubI18n.t('dm.text.preferring');
       }
       const raw=custom?(u.username+' '+custom):(u.username+defaultSuffix);
       lastTypingRaw=raw;
@@ -3876,7 +3876,7 @@ window.addEventListener('pageshow',(event)=>{
 function applyDmMessageEdit(msg){if(!msg||!msg.id)return;const row=document.getElementById('dm-message-'+msg.id);if(!row)return;row.dataset.messageContent=msg.content||'';row.dataset.messageEdited='1';if(msg.image_url!==undefined)row.dataset.messageImage=msg.image_url||'';const box=row.querySelector('.msg-text');if(box){let text=box.querySelector('.dm-message-text');if(!text){const old=(box.textContent||'').replace(/\s*\(изменено\)\s*$/,'');box.textContent='';text=document.createElement('span');text.className='dm-message-text';box.appendChild(text);let ed=document.createElement('span');ed.className='dm-message-edited hidden';ed.id='dm-edited-'+msg.id;ed.textContent=window.AlexiHubI18n.t("common.label.modified");box.appendChild(ed);if(!msg.content)msg.content=old}text.textContent=msg.content||'';let edited=document.getElementById('dm-edited-'+msg.id)||box.querySelector('.dm-message-edited');if(!edited){edited=document.createElement('span');edited.className='dm-message-edited';edited.id='dm-edited-'+msg.id;edited.textContent=window.AlexiHubI18n.t("common.label.modified");box.appendChild(edited)}edited.classList.remove('hidden')}const form=row.querySelector('.dm-edit-form');if(form){const area=form.querySelector('textarea[name="content"]');if(area)area.value=msg.content||''}}
 function wireDmInlineEdit(form){if(!form||form.dataset.inlineEditReady==='1')return;form.dataset.inlineEditReady='1';const area=form.querySelector('textarea');function autosize(){if(!area)return;area.style.height='auto';area.style.height=Math.min(area.scrollHeight,190)+'px'}if(area){area.addEventListener('input',autosize);area.addEventListener('keydown',function(e){if(e.key==='Escape'){e.preventDefault();const msg=form.closest('.msg');if(msg)closeDmInlineEdit(msg.dataset.messageId||msg.dataset.id)}if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();if(form.requestSubmit)form.requestSubmit();else form.submit()}});setTimeout(autosize,0)}form.addEventListener('submit',function(e){const row=form.closest('.msg');const id=row?(row.dataset.messageId||row.dataset.id):'';const content=area?area.value.trim():'';if(ws&&ws.readyState===1){e.preventDefault();if(!id||!content)return;const imgEl=row?row.querySelector('.msg-img'):null;const imageUrl=(row&&(row.dataset.messageImage||''))||(imgEl&&imgEl.getAttribute('src'))||'';ws.send(JSON.stringify({type:'edit',id:id,content:content,image_url:imageUrl}));closeDmInlineEdit(id)}})}
 function closeDmInlineEdit(id){const msg=document.getElementById('dm-message-'+id);if(!msg)return;const text=msg.querySelector('.msg-text');const edit=msg.querySelector('.dm-edit-form');if(text)text.style.display='';if(edit)edit.classList.remove('open');msg.classList.remove('is-editing')}
-function editMessage(id){document.querySelectorAll('.dm-edit-form.open').forEach(function(opened){const old=opened.closest('.msg');if(old&&String(old.dataset.messageId||old.dataset.id)!==String(id))closeDmInlineEdit(old.dataset.messageId||old.dataset.id)});const msg=document.getElementById('dm-message-'+id);if(!msg)return;if(msg.dataset.messageForwarded==='1')return;if(!(msg.dataset.messageEditable==='1'||msg.dataset.own==='1'))return;const body=msg.querySelector('.msg-body');const text=msg.querySelector('.msg-text');if(!body||!text)return;let edit=msg.querySelector('.dm-edit-form');if(!edit){edit=document.createElement('form');edit.className='dm-edit-form';edit.method='post';edit.action=`/community/dm/{{ other.username }}/message/${id}/edit`;edit.innerHTML=('' + "<textarea name=\"content\" required></textarea><div class=\"dm-edit-hint\"><span>" + window.AlexiHubI18n.t("common.text.esc_for") + "</span><button type=\"button\" class=\"dm-edit-cancel\">" + window.AlexiHubI18n.t("common.text.annault") + "</button><span>" + window.AlexiHubI18n.t("common.text.enter_to_save") + "</span><button type=\"submit\" class=\"dm-edit-submit\" aria-label=\"" + window.AlexiHubI18n.t("common.action.save") + "\">" + window.AlexiHubI18n.t("common.action.save") + "</button></div>");const cancel=edit.querySelector('.dm-edit-cancel');if(cancel)cancel.addEventListener('click',function(){closeDmInlineEdit(id)});text.insertAdjacentElement('afterend',edit);wireDmInlineEdit(edit)}const area=edit.querySelector('textarea');if(area){const innerText=text.querySelector('.dm-message-text');area.value=(msg.dataset.messageContent||(innerText?innerText.textContent:text.textContent)||'').trim();area.style.height='auto';area.style.height=Math.min(area.scrollHeight,190)+'px'}text.style.display='none';edit.classList.add('open');msg.classList.add('is-editing');if(area){area.focus();area.setSelectionRange(area.value.length,area.value.length)}}const search=document.getElementById('dm-search');if(search)search.addEventListener('input',()=>{const q=search.value.trim().toLowerCase();document.querySelectorAll('[data-name]').forEach(r=>r.style.display=r.dataset.name.includes(q)?'flex':'none')});const msgSearch=document.getElementById('message-search');if(msgSearch)msgSearch.addEventListener('input',()=>{const q=msgSearch.value.trim().toLowerCase();document.querySelectorAll('.msg').forEach(m=>m.style.display=m.textContent.toLowerCase().includes(q)?'flex':'none')});function toggleStatusMenu(event){event.stopPropagation();const menu=document.getElementById('status-menu');if(menu)menu.classList.toggle('open')}function ahStatusLabel(status){return window.AlexiHubI18n.t('status.' + status)}function toggleDmProfilePanel(btn){const app=document.querySelector('.app');if(!app)return;const hidden=app.classList.toggle('ah-profile-hidden');if(btn){btn.classList.toggle('active',!hidden);const label=hidden?'Показать профиль пользователя':'Скрыть профиль пользователя';btn.title=label;btn.setAttribute('aria-label',label)}}
+function editMessage(id){document.querySelectorAll('.dm-edit-form.open').forEach(function(opened){const old=opened.closest('.msg');if(old&&String(old.dataset.messageId||old.dataset.id)!==String(id))closeDmInlineEdit(old.dataset.messageId||old.dataset.id)});const msg=document.getElementById('dm-message-'+id);if(!msg)return;if(msg.dataset.messageForwarded==='1')return;if(!(msg.dataset.messageEditable==='1'||msg.dataset.own==='1'))return;const body=msg.querySelector('.msg-body');const text=msg.querySelector('.msg-text');if(!body||!text)return;let edit=msg.querySelector('.dm-edit-form');if(!edit){edit=document.createElement('form');edit.className='dm-edit-form';edit.method='post';edit.action=`/community/dm/{{ other.username }}/message/${id}/edit`;edit.innerHTML=('' + "<textarea name=\"content\" required></textarea><div class=\"dm-edit-hint\"><span>" + window.AlexiHubI18n.t("common.text.esc_for") + "</span><button type=\"button\" class=\"dm-edit-cancel\">" + window.AlexiHubI18n.t("common.text.annault") + "</button><span>" + window.AlexiHubI18n.t("common.text.enter_to_save") + "</span><button type=\"submit\" class=\"dm-edit-submit\" aria-label=\"" + window.AlexiHubI18n.t("common.action.save") + "\">" + window.AlexiHubI18n.t("common.action.save") + "</button></div>");const cancel=edit.querySelector('.dm-edit-cancel');if(cancel)cancel.addEventListener('click',function(){closeDmInlineEdit(id)});text.insertAdjacentElement('afterend',edit);wireDmInlineEdit(edit)}const area=edit.querySelector('textarea');if(area){const innerText=text.querySelector('.dm-message-text');area.value=(msg.dataset.messageContent||(innerText?innerText.textContent:text.textContent)||'').trim();area.style.height='auto';area.style.height=Math.min(area.scrollHeight,190)+'px'}text.style.display='none';edit.classList.add('open');msg.classList.add('is-editing');if(area){area.focus();area.setSelectionRange(area.value.length,area.value.length)}}const search=document.getElementById('dm-search');if(search)search.addEventListener('input',()=>{const q=search.value.trim().toLowerCase();document.querySelectorAll('[data-name]').forEach(r=>r.style.display=r.dataset.name.includes(q)?'flex':'none')});const msgSearch=document.getElementById('message-search');if(msgSearch)msgSearch.addEventListener('input',()=>{const q=msgSearch.value.trim().toLowerCase();document.querySelectorAll('.msg').forEach(m=>m.style.display=m.textContent.toLowerCase().includes(q)?'flex':'none')});function toggleStatusMenu(event){event.stopPropagation();const menu=document.getElementById('status-menu');if(menu)menu.classList.toggle('open')}function ahStatusLabel(status){return window.AlexiHubI18n.t('status.' + status)}function toggleDmProfilePanel(btn){const app=document.querySelector('.app');if(!app)return;const hidden=app.classList.toggle('ah-profile-hidden');if(btn){btn.classList.toggle('active',!hidden);const label=hidden?window.AlexiHubI18n.t('dm.text.show_profile_btn'):window.AlexiHubI18n.t('dm.text.hide_profile_btn');btn.title=label;btn.setAttribute('aria-label',label)}}
 const statusLabels = new Proxy({}, { get: function(_, prop){ return ahStatusLabel(String(prop)); } });function applyLocalStatus(status){['my-status-dot','my-avatar-status','modal-avatar-status'].forEach(id=>{const el=document.getElementById(id);if(!el)return;el.classList.remove('status-online','status-idle','status-dnd','status-invisible');el.classList.add('status-'+status)});const label=document.getElementById('my-status-label');if(label)label.textContent=statusLabels[status]||statusLabels.online;const menu=document.getElementById('status-menu');if(menu)menu.classList.remove('open')}function setPresenceStatus(status){applyLocalStatus(status);fetch('/community/presence/status',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})}).catch(()=>{})}document.addEventListener('click',()=>{const menu=document.getElementById('status-menu');if(menu)menu.classList.remove('open')});
 
 
@@ -4768,12 +4768,12 @@ document.addEventListener('DOMContentLoaded',()=>{
         <h1><!--i18n:settings.appearance-->{{ i18n_t('settings.appearance') }}</h1>
 <div class="ah-settings-section ah-appearance-section">
 
-  <div class="ah-appearance-block-title">Тема</div>
+  <div class="ah-appearance-block-title" data-i18n="home.text.theme"><!--i18n:home.text.theme-->{{ i18n_t('home.text.theme') }}</div>
 
   <div class="ah-appearance-toggle-row">
     <div class="ah-appearance-toggle-copy">
-      <b>Как тема устройства</b>
-      <span>Такой же режим, как на вашем устройстве.</span>
+      <b data-i18n="common.theme.device_title"><!--i18n:common.theme.device_title-->{{ i18n_t('common.theme.device_title') }}</b>
+      <span data-i18n="common.theme.device_desc"><!--i18n:common.theme.device_desc-->{{ i18n_t('common.theme.device_desc') }}</span>
     </div>
     <label class="ah-privacy-switch">
       <input type="checkbox" id="ah-theme-sync-system">
@@ -4781,17 +4781,17 @@ document.addEventListener('DOMContentLoaded',()=>{
     </label>
   </div>
 
-  <div class="ah-appearance-subtitle">Темы по умолчанию</div>
-  <div class="ah-theme-swatch-row" id="ah-theme-swatch-row" role="radiogroup" aria-label="Темы по умолчанию">
-    <button type="button" class="ah-theme-swatch-btn" data-swatch="light" role="radio" aria-label="Светлая">
+  <div class="ah-appearance-subtitle" data-i18n="common.theme.defaults"><!--i18n:common.theme.defaults-->{{ i18n_t('common.theme.defaults') }}</div>
+  <div class="ah-theme-swatch-row" id="ah-theme-swatch-row" role="radiogroup" aria-label="{{ i18n_t('common.theme.defaults') }}" data-i18n-aria-label="common.theme.defaults">
+    <button type="button" class="ah-theme-swatch-btn" data-swatch="light" role="radio" aria-label="{{ i18n_t('common.theme.light') }}" data-i18n-aria-label="common.theme.light">
       <span class="ah-swatch-fill light"></span>
       <svg class="ah-swatch-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"></path></svg>
     </button>
-    <button type="button" class="ah-theme-swatch-btn" data-swatch="dark" role="radio" aria-label="Тёмная">
+    <button type="button" class="ah-theme-swatch-btn" data-swatch="dark" role="radio" aria-label="{{ i18n_t('common.theme.dark') }}" data-i18n-aria-label="common.theme.dark">
       <span class="ah-swatch-fill dark"></span>
       <svg class="ah-swatch-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"></path></svg>
     </button>
-    <button type="button" class="ah-theme-swatch-btn" data-swatch="darker" role="radio" aria-label="Тёмнее">
+    <button type="button" class="ah-theme-swatch-btn" data-swatch="darker" role="radio" aria-label="{{ i18n_t('common.theme.darker') }}" data-i18n-aria-label="common.theme.darker">
       <span class="ah-swatch-fill darker"></span>
       <svg class="ah-swatch-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"></path></svg>
     </button>
@@ -4799,15 +4799,15 @@ document.addEventListener('DOMContentLoaded',()=>{
       <span class="ah-swatch-fill amoled"></span>
       <svg class="ah-swatch-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"></path></svg>
     </button>
-    <button type="button" class="ah-theme-sync-icon-btn" id="ah-theme-sync-icon" aria-label="Синхронизировать с системой" title="Синхронизировать с системой">
+    <button type="button" class="ah-theme-sync-icon-btn" id="ah-theme-sync-icon" aria-label="{{ i18n_t('common.theme.sync_system') }}" data-i18n-aria-label="common.theme.sync_system" title="{{ i18n_t('common.theme.sync_system') }}" data-i18n-title="common.theme.sync_system">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35A8 8 0 1 0 19.5 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M17 3v5h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
   </div>
 
   <div class="ah-appearance-toggle-row">
     <div class="ah-appearance-toggle-copy">
-      <b>Тёмная боковая панель</b>
-      <span>Список серверов и панель друзей остаются тёмными, даже если выбрана светлая тема.</span>
+      <b data-i18n="common.theme.dark_sidebar"><!--i18n:common.theme.dark_sidebar-->{{ i18n_t('common.theme.dark_sidebar') }}</b>
+      <span data-i18n="common.theme.dark_sidebar_desc"><!--i18n:common.theme.dark_sidebar_desc-->{{ i18n_t('common.theme.dark_sidebar_desc') }}</span>
     </div>
     <label class="ah-privacy-switch">
       <input type="checkbox" id="ah-theme-dark-sidebar">
@@ -4817,8 +4817,8 @@ document.addEventListener('DOMContentLoaded',()=>{
 
   <div class="ah-appearance-toggle-row">
     <div class="ah-appearance-toggle-copy">
-      <b>Синхронизировать тему на моих устройствах</b>
-      <span>Применять выбранную тему везде, где вы вошли в AlexiHub.</span>
+      <b data-i18n="common.theme.sync_devices"><!--i18n:common.theme.sync_devices-->{{ i18n_t('common.theme.sync_devices') }}</b>
+      <span data-i18n="common.theme.sync_devices_desc"><!--i18n:common.theme.sync_devices_desc-->{{ i18n_t('common.theme.sync_devices_desc') }}</span>
     </div>
     <label class="ah-privacy-switch">
       <input type="checkbox" id="ah-theme-sync-devices" checked>
@@ -5046,8 +5046,8 @@ document.addEventListener('DOMContentLoaded',()=>{
             <div class="ah-custom-bio-wrap"><textarea id="ah-profile-bio-input" class="ah-custom-bio-input" name="bio" maxlength="280" placeholder="{{ i18n_t('common.profile.bio_placeholder') }}" data-i18n-placeholder="common.profile.bio_placeholder">{{ account.bio or '' }}</textarea><div id="ah-profile-bio-preview" hidden>{{ account.bio or '' }}</div></div>
             <div class="ah-profile-private-row" id="ah-profile-private-row">
               <div class="ah-profile-private-copy">
-                <b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10V8a6 6 0 0 1 12 0v2"></path><rect x="4" y="10" width="16" height="11" rx="2.5"></rect></svg>Приватний профіль</b>
-                <p>Профіль буде видно лише вашим друзям і учасникам спільних серверів. Інші користувачі не побачать біографію, список друзів і серверів.</p>
+                <b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10V8a6 6 0 0 1 12 0v2"></path><rect x="4" y="10" width="16" height="11" rx="2.5"></rect></svg><!--i18n:common.text.private_profile-->{{ i18n_t('common.text.private_profile') }}</b>
+                <p data-i18n="profile.private.desc"><!--i18n:profile.private.desc-->{{ i18n_t('profile.private.desc') }}</p>
               </div>
               <label class="ah-privacy-switch">
                 <input type="checkbox" id="ah-profile-private-input" name="is_private" value="true"{% if account.is_private %} checked{% endif %}>
@@ -5418,7 +5418,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     const file = input && input.files && input.files[0];
     if(!file || !String(file.type || '').startsWith('image/')) return;
     if(file.size > MAX_ANIMATED_BYTES){
-      notify('Файл завеликий. Максимум 12 МБ.');
+      notify(window.AlexiHubI18n.t('common.upload.too_large_12mb'));
       input.value = '';
       return;
     }
@@ -9763,7 +9763,7 @@ html[data-theme="light"] .ahp-panel{box-shadow:0 18px 50px rgba(15,17,21,.22)}
     var last = data.last_message || {};
     var snippet = row.querySelector('.dm-snippet');
     if (snippet) {
-      snippet.textContent = String(last.content || (last.voice_url ? '🎤 Голосове повідомлення' : (last.image_url ? 'Attachment' : ''))).slice(0, 90);
+      snippet.textContent = String(last.content || (last.voice_url ? '🎤 '+window.AlexiHubI18n.t('common.voice.message') : (last.image_url ? 'Attachment' : ''))).slice(0, 90);
     }
 
     row.classList.toggle('active', accountId === activeDmAccountId);
@@ -11338,13 +11338,13 @@ document.addEventListener('DOMContentLoaded', async function(){
         <span class="ah-tag-preview-chip" id="ah-tag-preview-chip" hidden></span>
       </div>
       <div class="ah-tag-preview-stats" id="ah-tag-preview-stats" hidden>
-        <span><i class="ah-tag-preview-dot"></i><b id="ah-tag-preview-online">0</b>&nbsp;в мережі</span>
-        <span><i class="ah-tag-preview-dot muted"></i><b id="ah-tag-preview-members">0</b>&nbsp;учасників</span>
+        <span><i class="ah-tag-preview-dot"></i><b id="ah-tag-preview-online">0</b>&nbsp;<!--i18n:common.tag_preview.online-->{{ i18n_t('common.tag_preview.online') }}</span>
+        <span><i class="ah-tag-preview-dot muted"></i><b id="ah-tag-preview-members">0</b>&nbsp;<!--i18n:common.tag_preview.members-->{{ i18n_t('common.tag_preview.members') }}</span>
       </div>
     </div>
   </div>
   <p class="ah-tag-preview-desc" id="ah-tag-preview-desc" hidden></p>
-  <a class="ah-tag-preview-action" id="ah-tag-preview-action" href="#" hidden>Перейти на сервер</a>
+  <a class="ah-tag-preview-action" id="ah-tag-preview-action" href="#" hidden data-i18n="common.tag_preview.go_to_server"><!--i18n:common.tag_preview.go_to_server-->{{ i18n_t('common.tag_preview.go_to_server') }}</a>
 </div>
 <script>
 (function(){
@@ -11391,7 +11391,7 @@ document.addEventListener('DOMContentLoaded', async function(){
     var desc=el.getAttribute('data-tag-description')||'';
     var invite=el.getAttribute('data-tag-invite')||(serverId?('/community/servers/'+serverId):'');
 
-    nameEl.textContent=name||text||'Сервер';
+    nameEl.textContent=name||text||window.AlexiHubI18n.t('common.server.default_custom');
     chipEl.hidden=!text;
     chipEl.textContent=text?(glyph+' '+text):'';
 
@@ -11727,7 +11727,7 @@ document.addEventListener('DOMContentLoaded', async function(){
       window.openModal('leave-server-modal');
       return;
     }
-    if (!confirm(t('server.ctx.leave_confirm', 'Покинути «' + state.serverName + '»?'))) return;
+    if (!confirm(window.AlexiHubI18n.t('server.ctx.leave_confirm', {server: state.serverName}))) return;
     var form = document.createElement('form');
     form.method = 'post';
     form.action = '/community/servers/' + id + '/leave';
@@ -11738,7 +11738,7 @@ document.addEventListener('DOMContentLoaded', async function(){
 
   function copyServerId(id, dot) {
     var val = String(id);
-    var done = function () { toast(t('common.feedback.copied', 'Скопировано')); };
+    var done = function () { toast(t('common.feedback.copied', window.AlexiHubI18n.t('common.feedback.copied'))); };
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(val).then(done).catch(function () { fallbackCopy(val, done); });
     } else {
@@ -11930,7 +11930,7 @@ document.addEventListener('DOMContentLoaded', async function(){
       label: t('common.text.confidential_settings', 'Налаштування конфіденційності'),
       onClick: function () {
         closeMenu();
-        if (typeof window.showActionToast === 'function') window.showActionToast(t('server.stub.privacy', 'Розділ у розробці'));
+        if (typeof window.showActionToast === 'function') window.showActionToast(t('server.stub.privacy', window.AlexiHubI18n.t('dm.ctx.stub')));
       }
     }));
 
@@ -12055,7 +12055,7 @@ document.addEventListener('DOMContentLoaded', async function(){
   function copyText(value) {
     var val = String(value || '');
     if (!val) return;
-    var done = function () { toast(t('common.feedback.copied', 'Скопировано')); };
+    var done = function () { toast(t('common.feedback.copied', window.AlexiHubI18n.t('common.feedback.copied'))); };
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(val).then(done).catch(function () { fallbackCopy(val, done); });
     } else {
@@ -12594,7 +12594,7 @@ document.addEventListener('DOMContentLoaded', async function(){
 
   function buildAppsSubmenu() {
     var panel = document.createElement('div');
-    panel.appendChild(makeItem({ label: t('dm.ctx.stub', 'Раздел в разработке'), disabled: true }));
+    panel.appendChild(makeItem({ label: t('dm.ctx.stub', window.AlexiHubI18n.t('dm.ctx.stub')), disabled: true }));
     return panel;
   }
 
@@ -12606,7 +12606,7 @@ document.addEventListener('DOMContentLoaded', async function(){
       return panel;
     }
     dots.forEach(function (dot) {
-      var name = dot.getAttribute('title') || t('common.text.the_server', 'Сервер');
+      var name = dot.getAttribute('title') || t('common.text.the_server', window.AlexiHubI18n.t('common.server.default_custom'));
       var it = makeItem({ label: name });
       it.addEventListener('click', function () {
         toast(t('dm.ctx.invited', 'Приглашение отправлено') + (username ? ' @' + username : ''));
@@ -12662,7 +12662,7 @@ document.addEventListener('DOMContentLoaded', async function(){
 
     menu.appendChild(makeItem({
       label: t('home.action.start_a_voice_call', 'Начать звонок'),
-      onClick: function () { closeMenu(); toast(t('home.stub.voice_call', 'Раздел в разработке')); }
+      onClick: function () { closeMenu(); toast(t('home.stub.voice_call', window.AlexiHubI18n.t('dm.ctx.stub'))); }
     }));
 
     menu.appendChild(makeItem({
@@ -12704,7 +12704,7 @@ document.addEventListener('DOMContentLoaded', async function(){
     }));
 
     menu.appendChild(makeItem({
-      label: t('common.actions.block', 'Заблокировать'),
+      label: t('common.actions.block', window.AlexiHubI18n.t('common.actions.block')),
       danger: true,
       onClick: function () { closeMenu(); blockAccount(row, username); }
     }));
@@ -14049,9 +14049,9 @@ html[data-theme="light"][data-dark-sidebar] .dm-sidebar .dm-row .avatar{backgrou
     var grid=document.getElementById('ah-color-themes-grid');
     if(!grid||grid.dataset.built)return;
     grid.dataset.built='1';
-    var html='<button type="button" class="ah-color-theme-tile wand" aria-label="Создать тему" onclick="window.showSettingsTab?.(\'subscriptions\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4V2m0 14v-2M8 9h2M20 9h2M17.8 11.8 19 13M15 9h.01M17.8 6.2 19 5M3 21l9-9M12.2 6.2 11 5"/></svg></button>';
+    var html='<button type="button" class="ah-color-theme-tile wand" aria-label="'+window.AlexiHubI18n.t('profile.theme.create')+'" onclick="window.showSettingsTab?.(\'subscriptions\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4V2m0 14v-2M8 9h2M20 9h2M17.8 11.8 19 13M15 9h.01M17.8 6.2 19 5M3 21l9-9M12.2 6.2 11 5"/></svg></button>';
     COLOR_THEMES.forEach(function(t,i){
-      html+='<button type="button" class="ah-color-theme-tile" style="background:'+t.c+'" aria-label="Тема '+(i+1)+' (Plus)" onclick="settingsToast(\'Доступно с подпиской Plus\')"><span class="lock"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 9h-1V7a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2Zm-7-2a2 2 0 1 1 4 0v2h-4V7Z"/></svg></span></button>';
+      html+='<button type="button" class="ah-color-theme-tile" style="background:'+t.c+'" aria-label="'+window.AlexiHubI18n.t('home.text.theme')+' '+(i+1)+' (Plus)" onclick="settingsToast(window.AlexiHubI18n.t(\'profile.theme.plus_only\'))"><span class="lock"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 9h-1V7a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2Zm-7-2a2 2 0 1 1 4 0v2h-4V7Z"/></svg></span></button>';
     });
     grid.innerHTML=html;
   }
@@ -14214,12 +14214,12 @@ html[data-theme="light"][data-dark-sidebar] .dm-row:hover .dm-name,html[data-the
   if(window.AhVoiceToText)return;
   var ICON='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 5h16v2H4zm0 4h16v2H4zm0 4h10v2H4zm0 4h13v2H4z"/></svg>';
   var ERRORS={
-    stt_not_configured:'Розпізнавання не налаштоване на сервері (потрібен GROQ_API_KEY або OPENAI_API_KEY).',
-    audio_unavailable:'Не вдалося отримати аудіофайл цього повідомлення.',
-    stt_failed:'Сервіс розпізнавання не відповів. Спробуй ще раз пізніше.',
-    not_authenticated:'Потрібно увійти в акаунт.',
-    forbidden:'Немає доступу до цього повідомлення.',
-    not_found:'Повідомлення не знайдено.'
+    stt_not_configured:window.AlexiHubI18n.t('stt.not_configured'),
+    audio_unavailable:window.AlexiHubI18n.t('stt.audio_failed'),
+    stt_failed:window.AlexiHubI18n.t('stt.service_down'),
+    not_authenticated:window.AlexiHubI18n.t('stt.login_required'),
+    forbidden:window.AlexiHubI18n.t('stt.no_access'),
+    not_found:window.AlexiHubI18n.t('stt.not_found')
   };
 
   function transcribe(id){
@@ -14229,7 +14229,7 @@ html[data-theme="light"][data-dark-sidebar] .dm-row:hover .dm-name,html[data-the
       method:'POST',body:fd,credentials:'same-origin'
     }).then(function(r){
       return r.json().catch(function(){return {};}).then(function(j){
-        if(!r.ok||!j||!j.ok)throw new Error(ERRORS[j&&j.error]||('помилка сервера ('+r.status+')'));
+        if(!r.ok||!j||!j.ok)throw new Error(ERRORS[j&&j.error]||(window.AlexiHubI18n.t('stt.server_error')+' ('+r.status+')'));
         return String(j.text||'').trim();
       });
     });
@@ -14253,18 +14253,18 @@ html[data-theme="light"][data-dark-sidebar] .dm-row:hover .dm-name,html[data-the
     var id=row&&(row.dataset.messageId||row.dataset.id||'');
     box=boxOf(wrap);box.hidden=false;
     if(!/^\d+$/.test(id||'')){
-      box.className='ah-stt-text err';box.textContent='Повідомлення ще надсилається, спробуй за мить.';return;
+      box.className='ah-stt-text err';box.textContent=window.AlexiHubI18n.t('stt.still_sending');return;
     }
-    box.className='ah-stt-text status';box.textContent='Розпізнавання…';
+    box.className='ah-stt-text status';box.textContent=window.AlexiHubI18n.t('stt.recognizing');
     btn.classList.add('busy');
     transcribe(id).then(function(text){
       btn.classList.remove('busy');
       if(text){box.className='ah-stt-text';box.textContent=text;btn.classList.add('done');}
-      else{box.className='ah-stt-text status';box.textContent='Мовлення не розпізнано.';}
+      else{box.className='ah-stt-text status';box.textContent=window.AlexiHubI18n.t('stt.no_speech');}
     }).catch(function(err){
       btn.classList.remove('busy');
       box.className='ah-stt-text err';
-      box.textContent=(err&&err.message)||'Не вдалося розпізнати.';
+      box.textContent=(err&&err.message)||window.AlexiHubI18n.t('stt.failed');
     });
   }
 
@@ -14274,7 +14274,7 @@ html[data-theme="light"][data-dark-sidebar] .dm-row:hover .dm-name,html[data-the
       var w=list[i];w.setAttribute('data-ah-stt','1');
       var b=document.createElement('button');
       b.type='button';b.className='ah-stt-btn';
-      b.title='Перетворити на текст';b.setAttribute('aria-label','Перетворити голосове повідомлення на текст');
+      b.title=window.AlexiHubI18n.t('stt.to_text');b.setAttribute('aria-label',window.AlexiHubI18n.t('stt.voice_to_text'));
       b.innerHTML=ICON;
       var a=w.querySelector('audio');
       if(a)w.insertBefore(b,a);else w.appendChild(b);
@@ -14310,7 +14310,7 @@ html[data-theme="light"] .ah-reply-action:hover{background:#e3e5e8;color:#111318
   function label(){
     try{var t=window.AlexiHubI18n&&window.AlexiHubI18n.t&&window.AlexiHubI18n.t('common.text.respond');
       if(t&&t!=='common.text.respond')return t;}catch(e){}
-    return 'Відповісти';
+    return window.AlexiHubI18n.t('common.reply');
   }
   function enhance(){
     var rows=document.querySelectorAll(CFG.rows);
@@ -14618,12 +14618,12 @@ html[data-theme="light"] .ah-reply-action:hover{background:#e3e5e8;color:#111318
     if(!shell||!form||document.getElementById('ah-pc-panel'))return;
     card=shell.querySelector('.ah-custom-profile-card');
     panel=document.createElement('aside');panel.id='ah-pc-panel';panel.className='ah-pc-panel';panel.setAttribute('aria-hidden','true');
-    panel.innerHTML='<button type="button" class="ah-pc-back" aria-label="Закрити"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>'+
-      '<div class="ah-pc-head"><b>Тема профілю</b><p>Так може виглядати ваш профіль із власними кольорами. Її побачать усі.</p></div>'+
-      '<div class="ah-pc-sec"><h4>Кольори теми</h4><div class="ah-pc-strip"><label class="ah-pc-dot ah-pc-dot-top" title="Верхній колір"><input type="color" id="ah-pc-in1" aria-label="Верхній колір"></label><label class="ah-pc-dot ah-pc-dot-bot" title="Нижній колір"><input type="color" id="ah-pc-in2" aria-label="Нижній колір"></label></div></div>'+
-      '<div class="ah-pc-sec"><h4>Готові теми</h4><div class="ah-pc-presets">'+PRESETS.map(function(x){return '<button type="button" class="ah-pc-preset" data-p="'+x[0]+'" data-a="'+x[1]+'" style="background:linear-gradient(180deg,'+x[0]+','+x[1]+')" aria-label="Тема"></button>'}).join('')+'</div></div>'+
-      '<button type="button" class="ah-pc-reset">Скинути кольори</button>';
-    var handle=document.createElement('button');handle.type='button';handle.className='ah-pc-handle';handle.setAttribute('aria-label','Тема профілю');handle.setAttribute('aria-expanded','false');handle.title='Тема профілю';
+    panel.innerHTML='<button type="button" class="ah-pc-back" aria-label="'+window.AlexiHubI18n.t('common.actions.close')+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>'+
+      '<div class="ah-pc-head"><b>'+window.AlexiHubI18n.t('home.text.theme_of_profile')+'</b><p>'+window.AlexiHubI18n.t('profile.theme.desc')+'</p></div>'+
+      '<div class="ah-pc-sec"><h4>'+window.AlexiHubI18n.t('profile.theme.colors')+'</h4><div class="ah-pc-strip"><label class="ah-pc-dot ah-pc-dot-top" title="'+window.AlexiHubI18n.t('profile.theme.top_color')+'"><input type="color" id="ah-pc-in1" aria-label="'+window.AlexiHubI18n.t('profile.theme.top_color')+'"></label><label class="ah-pc-dot ah-pc-dot-bot" title="'+window.AlexiHubI18n.t('profile.theme.bottom_color')+'"><input type="color" id="ah-pc-in2" aria-label="'+window.AlexiHubI18n.t('profile.theme.bottom_color')+'"></label></div></div>'+
+      '<div class="ah-pc-sec"><h4>'+window.AlexiHubI18n.t('profile.theme.presets')+'</h4><div class="ah-pc-presets">'+PRESETS.map(function(x){return '<button type="button" class="ah-pc-preset" data-p="'+x[0]+'" data-a="'+x[1]+'" style="background:linear-gradient(180deg,'+x[0]+','+x[1]+')" aria-label="'+window.AlexiHubI18n.t('home.text.theme')+'"></button>'}).join('')+'</div></div>'+
+      '<button type="button" class="ah-pc-reset">'+window.AlexiHubI18n.t('profile.theme.reset')+'</button>';
+    var handle=document.createElement('button');handle.type='button';handle.className='ah-pc-handle';handle.setAttribute('aria-label',window.AlexiHubI18n.t('home.text.theme_of_profile'));handle.setAttribute('aria-expanded','false');handle.title=window.AlexiHubI18n.t('home.text.theme_of_profile');
     handle.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
     shell.appendChild(panel);shell.appendChild(handle);
     h1=document.createElement('input');h1.type='hidden';h1.name='profile_color_primary';h1.disabled=true;
@@ -15002,12 +15002,12 @@ html body .ah-settings-nav{min-height:48px}
   var topbar=$('.topbar');
   if(topbar){
     var mb=document.createElement('button');
-    mb.type='button';mb.className='ah-m-menu-btn';mb.setAttribute('aria-label','Меню');
+    mb.type='button';mb.className='ah-m-menu-btn';mb.setAttribute('aria-label',window.AlexiHubI18n.t('common.mobile.menu'));
     mb.innerHTML='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg>';
     mb.addEventListener('click',function(){apply(state==='left'?'closed':'left')});
     topbar.insertBefore(mb,topbar.firstChild);
     var sc=document.createElement('button');
-    sc.type='button';sc.className='ah-m-search-close';sc.setAttribute('aria-label','Закрити пошук');sc.innerHTML='&times;';
+    sc.type='button';sc.className='ah-m-search-close';sc.setAttribute('aria-label',window.AlexiHubI18n.t('common.mobile.close_search'));sc.innerHTML='&times;';
     topbar.appendChild(sc);
     var sInput=document.getElementById('message-search');
     function endSearch(){topbar.classList.remove('ah-m-searching')}
@@ -15087,9 +15087,9 @@ html body .ah-settings-nav{min-height:48px}
   var shell=$('.ah-settings-shell'),bd=document.getElementById('ah-user-settings');
   if(shell&&bd){
     var side=$('.ah-settings-sidebar',shell),top=$('.ah-settings-top',shell);
-    var back=document.createElement('button');back.type='button';back.className='ah-m-set-back';back.setAttribute('aria-label','Назад');back.innerHTML='&#8249;';
+    var back=document.createElement('button');back.type='button';back.className='ah-m-set-back';back.setAttribute('aria-label',window.AlexiHubI18n.t('common.actions.back'));back.innerHTML='&#8249;';
     if(top)top.insertBefore(back,top.firstChild);
-    var cl=document.createElement('button');cl.type='button';cl.className='ah-m-set-close';cl.setAttribute('aria-label','Закрити');cl.innerHTML='&times;';
+    var cl=document.createElement('button');cl.type='button';cl.className='ah-m-set-close';cl.setAttribute('aria-label',window.AlexiHubI18n.t('common.actions.close'));cl.innerHTML='&times;';
     if(side)side.insertBefore(cl,side.firstChild);
     back.addEventListener('click',function(){shell.classList.remove('ah-m-set-page')});
     cl.addEventListener('click',function(){if(typeof window.closeUserSettings==='function')window.closeUserSettings()});
@@ -15429,13 +15429,13 @@ html[data-theme="light"] .ah-date-island{background:rgba(255,255,255,.88);border
   var LANG=((document.documentElement.getAttribute('lang')||'uk').slice(0,2)).toLowerCase();
   if(LANG!=='ru'&&LANG!=='en')LANG='uk';
   var T={
-    uk:{title:'Створення опитування',question:'Питання',qph:'Яке питання ви хочете задати?',answers:'Відповіді',aph:'Введіть відповідь',add:'Додати ще одну відповідь',term:'Термін',multi:'Дозволити кілька відповідей',publish:'Публікація',close:'Закрити',
+    uk:{title:'Створення опитування',question:'Питання',qph:'Яке питання ви хочете задати?',answers:'Відповіді',aph:'Введіть відповідь',add:'Додати ще одну відповідь',term:'Термін',multi:'Дозволити кілька відповідей',publish:'Публікація',close:window.AlexiHubI18n.t('common.actions.close'),
       pickOne:'Оберіть одну відповідь',pickMany:'Оберіть кілька відповідей',ended:'Опитування завершено',left:'Залишилось',lessMin:'менше хвилини',
       min:'хв',hour:'год',day:'дн',votes:['голос','голоси','голосів'],noVotes:'Ще немає голосів',removeVote:'Видалити голос',
       h1:'1 год',h4:'4 год',h8:'8 год',h24:'24 год',h72:'3 дні',h168:'1 тиждень',h336:'2 тижні',
       errGeneric:'Не вдалося створити опитування',errRate:'Надто швидко. Спробуйте за мить.',errBlocked:'Не вдалося надіслати: користувач недоступний.',errVote:'Не вдалося проголосувати',errEnded:'Опитування вже завершено',errLong:'Забагато символів',errQuestion:'Введіть питання',errOptions:'Потрібно мінімум 2 відповіді',
       pollLabel:'Опитування'},
-    ru:{title:'Создание опроса',question:'Вопрос',qph:'Какой вопрос вы хотите задать?',answers:'Ответы',aph:'Введите ответ',add:'Добавить ещё один ответ',term:'Срок',multi:'Разрешить несколько ответов',publish:'Публикация',close:'Закрыть',
+    ru:{title:'Создание опроса',question:'Вопрос',qph:'Какой вопрос вы хотите задать?',answers:'Ответы',aph:'Введите ответ',add:'Добавить ещё один ответ',term:'Срок',multi:'Разрешить несколько ответов',publish:'Публикация',close:window.AlexiHubI18n.t('common.actions.close'),
       pickOne:'Выберите один ответ',pickMany:'Выберите несколько ответов',ended:'Опрос завершён',left:'Осталось',lessMin:'меньше минуты',
       min:'мин',hour:'ч',day:'дн',votes:['голос','голоса','голосов'],noVotes:'Пока нет голосов',removeVote:'Удалить голос',
       h1:'1 ч',h4:'4 ч',h8:'8 ч',h24:'24 ч',h72:'3 дня',h168:'1 неделя',h336:'2 недели',
