@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.248.12",
+      "date": "2026-10-07",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update English locale with new keys and values."
+      ],
+      "source_sha": "7e62234c88e6c5c182a9655d781e4fd8893c2e5f"
+    },
+    {
       "version": "1.248.11",
       "date": "2026-10-07",
       "title": "Виправлення та стабільність",
