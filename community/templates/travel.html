@@ -1476,9 +1476,9 @@
   }
   function pad(x){return(x<10?'0':'')+x}
   function describe(e){
-    if(!e)return'';if(e.until===-1)return'Поки не увімкнете';
+    if(!e)return'';if(e.until===-1)returnwindow.AlexiHubI18n.t('common.mute.until_enabled');
     var d=new Date(e.until),now=new Date(),hm=pad(d.getHours())+':'+pad(d.getMinutes());
-    return d.toDateString()===now.toDateString()?'До '+hm:'До '+pad(d.getDate())+'.'+pad(d.getMonth()+1)+' '+hm;
+    return d.toDateString()===now.toDateString()?window.AlexiHubI18n.t('common.mute.until_prefix')+' '+hm:window.AlexiHubI18n.t('common.mute.until_prefix')+' '+pad(d.getDate())+'.'+pad(d.getMonth()+1)+' '+hm;
   }
   function schedule(){
     clearTimeout(timer);var m=read(),next=0;
@@ -1731,16 +1731,16 @@
     var el=document.createElement('div');
     el.id='ah-voice-dock';
     el.setAttribute('role','region');
-    el.setAttribute('aria-label','Голосове повідомлення');
+    el.setAttribute('aria-label',window.AlexiHubI18n.t('common.voice.message'));
     el.innerHTML='<div class="ahvd-card"><div class="ahvd-main">'
-      +'<button type="button" class="ahvd-btn ahvd-prev" title="Попереднє" aria-label="Попереднє">'+I.prev+'</button>'
-      +'<button type="button" class="ahvd-btn ahvd-play" title="Відтворити / пауза" aria-label="Відтворити / пауза">'+I.play+'</button>'
-      +'<button type="button" class="ahvd-btn ahvd-next" title="Наступне" aria-label="Наступне">'+I.next+'</button>'
+      +'<button type="button" class="ahvd-btn ahvd-prev" title="'+window.AlexiHubI18n.t('common.voice.prev')+'" aria-label="'+window.AlexiHubI18n.t('common.voice.prev')+'">'+I.prev+'</button>'
+      +'<button type="button" class="ahvd-btn ahvd-play" title="'+window.AlexiHubI18n.t('common.voice.play_pause')+'" aria-label="'+window.AlexiHubI18n.t('common.voice.play_pause')+'">'+I.play+'</button>'
+      +'<button type="button" class="ahvd-btn ahvd-next" title="'+window.AlexiHubI18n.t('common.voice.next')+'" aria-label="'+window.AlexiHubI18n.t('common.voice.next')+'">'+I.next+'</button>'
       +'<div class="ahvd-info"><b class="ahvd-author"></b><span class="ahvd-when"></span></div>'
       +'<span class="ahvd-time">00:00</span>'
-      +'<div class="ahvd-vol"><button type="button" class="ahvd-btn ahvd-mute" title="Звук" aria-label="Звук">'+I.vol+'</button><input class="ahvd-range" type="range" min="0" max="1" step="0.05" aria-label="Гучність"></div>'
-      +'<button type="button" class="ahvd-rate" title="Швидкість" aria-label="Швидкість">1x</button>'
-      +'<button type="button" class="ahvd-btn ahvd-close" title="Закрити" aria-label="Закрити">'+I.close+'</button>'
+      +'<div class="ahvd-vol"><button type="button" class="ahvd-btn ahvd-mute" title="'+window.AlexiHubI18n.t('common.voice.sound')+'" aria-label="'+window.AlexiHubI18n.t('common.voice.sound')+'">'+I.vol+'</button><input class="ahvd-range" type="range" min="0" max="1" step="0.05" aria-label="'+window.AlexiHubI18n.t('common.voice.volume')+'"></div>'
+      +'<button type="button" class="ahvd-rate" title="'+window.AlexiHubI18n.t('common.voice.speed')+'" aria-label="'+window.AlexiHubI18n.t('common.voice.speed')+'">1x</button>'
+      +'<button type="button" class="ahvd-btn ahvd-close" title="'+window.AlexiHubI18n.t('common.actions.close')+'" aria-label="'+window.AlexiHubI18n.t('common.actions.close')+'">'+I.close+'</button>'
       +'</div><div class="ahvd-bar"><div class="ahvd-fill"></div></div></div>';
     document.body.appendChild(el);
     var q=function(s){return el.querySelector(s);};
@@ -1784,7 +1784,7 @@
     if(!ui)return;
     var v=view();
     ui.el.classList.toggle('playing',v.playing);
-    ui.author.textContent=meta.author||'Голосове повідомлення';
+    ui.author.textContent=meta.author||window.AlexiHubI18n.t('common.voice.message');
     ui.when.textContent=meta.when||'';
     ui.rate.textContent=(prefs.rate===1?'1':String(prefs.rate))+'x';
     ui.rate.classList.toggle('fast',prefs.rate!==1);
@@ -1850,7 +1850,7 @@
   function mediaSession(){
     if(!('mediaSession' in navigator))return;
     try{
-      navigator.mediaSession.metadata=new MediaMetadata({title:'Голосове повідомлення',artist:meta.author||'',album:meta.when||''});
+      navigator.mediaSession.metadata=new MediaMetadata({title:window.AlexiHubI18n.t('common.voice.message'),artist:meta.author||'',album:meta.when||''});
       navigator.mediaSession.setActionHandler('play',toggle);
       navigator.mediaSession.setActionHandler('pause',toggle);
       navigator.mediaSession.setActionHandler('previoustrack',prev);
@@ -2764,12 +2764,12 @@ document.addEventListener('DOMContentLoaded',()=>{
 <h1><!--i18n:settings.appearance-->{{ i18n_t('settings.appearance') }}</h1>
 <div class="ah-settings-section ah-appearance-section">
 
-  <div class="ah-appearance-block-title">Тема</div>
+  <div class="ah-appearance-block-title" data-i18n="home.text.theme"><!--i18n:home.text.theme-->{{ i18n_t('home.text.theme') }}</div>
 
   <div class="ah-appearance-toggle-row">
     <div class="ah-appearance-toggle-copy">
-      <b>Как тема устройства</b>
-      <span>Такой же режим, как на вашем устройстве.</span>
+      <b data-i18n="common.theme.device_title"><!--i18n:common.theme.device_title-->{{ i18n_t('common.theme.device_title') }}</b>
+      <span data-i18n="common.theme.device_desc"><!--i18n:common.theme.device_desc-->{{ i18n_t('common.theme.device_desc') }}</span>
     </div>
     <label class="ah-privacy-switch">
       <input type="checkbox" id="ah-theme-sync-system">
@@ -2777,17 +2777,17 @@ document.addEventListener('DOMContentLoaded',()=>{
     </label>
   </div>
 
-  <div class="ah-appearance-subtitle">Темы по умолчанию</div>
-  <div class="ah-theme-swatch-row" id="ah-theme-swatch-row" role="radiogroup" aria-label="Темы по умолчанию">
-    <button type="button" class="ah-theme-swatch-btn" data-swatch="light" role="radio" aria-label="Светлая">
+  <div class="ah-appearance-subtitle" data-i18n="common.theme.defaults"><!--i18n:common.theme.defaults-->{{ i18n_t('common.theme.defaults') }}</div>
+  <div class="ah-theme-swatch-row" id="ah-theme-swatch-row" role="radiogroup" aria-label="{{ i18n_t('common.theme.defaults') }}" data-i18n-aria-label="common.theme.defaults">
+    <button type="button" class="ah-theme-swatch-btn" data-swatch="light" role="radio" aria-label="{{ i18n_t('common.theme.light') }}" data-i18n-aria-label="common.theme.light">
       <span class="ah-swatch-fill light"></span>
       <svg class="ah-swatch-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"></path></svg>
     </button>
-    <button type="button" class="ah-theme-swatch-btn" data-swatch="dark" role="radio" aria-label="Тёмная">
+    <button type="button" class="ah-theme-swatch-btn" data-swatch="dark" role="radio" aria-label="{{ i18n_t('common.theme.dark') }}" data-i18n-aria-label="common.theme.dark">
       <span class="ah-swatch-fill dark"></span>
       <svg class="ah-swatch-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"></path></svg>
     </button>
-    <button type="button" class="ah-theme-swatch-btn" data-swatch="darker" role="radio" aria-label="Тёмнее">
+    <button type="button" class="ah-theme-swatch-btn" data-swatch="darker" role="radio" aria-label="{{ i18n_t('common.theme.darker') }}" data-i18n-aria-label="common.theme.darker">
       <span class="ah-swatch-fill darker"></span>
       <svg class="ah-swatch-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"></path></svg>
     </button>
@@ -2795,15 +2795,15 @@ document.addEventListener('DOMContentLoaded',()=>{
       <span class="ah-swatch-fill amoled"></span>
       <svg class="ah-swatch-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"></path></svg>
     </button>
-    <button type="button" class="ah-theme-sync-icon-btn" id="ah-theme-sync-icon" aria-label="Синхронизировать с системой" title="Синхронизировать с системой">
+    <button type="button" class="ah-theme-sync-icon-btn" id="ah-theme-sync-icon" aria-label="{{ i18n_t('common.theme.sync_system') }}" data-i18n-aria-label="common.theme.sync_system" title="{{ i18n_t('common.theme.sync_system') }}" data-i18n-title="common.theme.sync_system">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35A8 8 0 1 0 19.5 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M17 3v5h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
   </div>
 
   <div class="ah-appearance-toggle-row">
     <div class="ah-appearance-toggle-copy">
-      <b>Тёмная боковая панель</b>
-      <span>Список серверов и панель друзей остаются тёмными, даже если выбрана светлая тема.</span>
+      <b data-i18n="common.theme.dark_sidebar"><!--i18n:common.theme.dark_sidebar-->{{ i18n_t('common.theme.dark_sidebar') }}</b>
+      <span data-i18n="common.theme.dark_sidebar_desc"><!--i18n:common.theme.dark_sidebar_desc-->{{ i18n_t('common.theme.dark_sidebar_desc') }}</span>
     </div>
     <label class="ah-privacy-switch">
       <input type="checkbox" id="ah-theme-dark-sidebar">
@@ -2813,8 +2813,8 @@ document.addEventListener('DOMContentLoaded',()=>{
 
   <div class="ah-appearance-toggle-row">
     <div class="ah-appearance-toggle-copy">
-      <b>Синхронизировать тему на моих устройствах</b>
-      <span>Применять выбранную тему везде, где вы вошли в AlexiHub.</span>
+      <b data-i18n="common.theme.sync_devices"><!--i18n:common.theme.sync_devices-->{{ i18n_t('common.theme.sync_devices') }}</b>
+      <span data-i18n="common.theme.sync_devices_desc"><!--i18n:common.theme.sync_devices_desc-->{{ i18n_t('common.theme.sync_devices_desc') }}</span>
     </div>
     <label class="ah-privacy-switch">
       <input type="checkbox" id="ah-theme-sync-devices" checked>
@@ -2975,8 +2975,8 @@ document.addEventListener('DOMContentLoaded',()=>{
             <div class="ah-custom-bio-wrap"><textarea id="ah-profile-bio-input" class="ah-custom-bio-input" name="bio" maxlength="280" placeholder="{{ i18n_t('common.profile.bio_placeholder') }}" data-i18n-placeholder="common.profile.bio_placeholder">{{ account.bio or '' }}</textarea><div id="ah-profile-bio-preview" hidden>{{ account.bio or '' }}</div></div>
             <div class="ah-profile-private-row" id="ah-profile-private-row">
               <div class="ah-profile-private-copy">
-                <b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10V8a6 6 0 0 1 12 0v2"></path><rect x="4" y="10" width="16" height="11" rx="2.5"></rect></svg>Приватний профіль</b>
-                <p>Профіль буде видно лише вашим друзям і учасникам спільних серверів. Інші користувачі не побачать біографію, список друзів і серверів.</p>
+                <b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10V8a6 6 0 0 1 12 0v2"></path><rect x="4" y="10" width="16" height="11" rx="2.5"></rect></svg><!--i18n:common.text.private_profile-->{{ i18n_t('common.text.private_profile') }}</b>
+                <p data-i18n="profile.private.desc"><!--i18n:profile.private.desc-->{{ i18n_t('profile.private.desc') }}</p>
               </div>
               <label class="ah-privacy-switch">
                 <input type="checkbox" id="ah-profile-private-input" name="is_private" value="true"{% if account.is_private %} checked{% endif %}>
@@ -3347,7 +3347,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     const file = input && input.files && input.files[0];
     if(!file || !String(file.type || '').startsWith('image/')) return;
     if(file.size > MAX_ANIMATED_BYTES){
-      notify('Файл завеликий. Максимум 12 МБ.');
+      notify(window.AlexiHubI18n.t('common.upload.too_large_12mb'));
       input.value = '';
       return;
     }
@@ -7218,7 +7218,7 @@ html[data-theme="light"] #ah-nitro-tooltip-portal.tier-basic{
       window.openModal('leave-server-modal');
       return;
     }
-    if (!confirm(t('server.ctx.leave_confirm', 'Покинути «' + state.serverName + '»?'))) return;
+    if (!confirm(window.AlexiHubI18n.t('server.ctx.leave_confirm', {server: state.serverName}))) return;
     var form = document.createElement('form');
     form.method = 'post';
     form.action = '/community/servers/' + id + '/leave';
@@ -7229,7 +7229,7 @@ html[data-theme="light"] #ah-nitro-tooltip-portal.tier-basic{
 
   function copyServerId(id, dot) {
     var val = String(id);
-    var done = function () { toast(t('common.feedback.copied', 'Скопійовано')); };
+    var done = function () { toast(t('common.feedback.copied', window.AlexiHubI18n.t('common.feedback.copied'))); };
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(val).then(done).catch(function () { fallbackCopy(val, done); });
     } else {
@@ -7421,7 +7421,7 @@ html[data-theme="light"] #ah-nitro-tooltip-portal.tier-basic{
       label: t('common.text.confidential_settings', 'Налаштування конфіденційності'),
       onClick: function () {
         closeMenu();
-        if (typeof window.showActionToast === 'function') window.showActionToast(t('server.stub.privacy', 'Розділ у розробці'));
+        if (typeof window.showActionToast === 'function') window.showActionToast(t('server.stub.privacy', window.AlexiHubI18n.t('dm.ctx.stub')));
       }
     }));
 
@@ -7596,9 +7596,9 @@ html.ah-theme-anim *,html.ah-theme-anim *::before,html.ah-theme-anim *::after{tr
     var grid=document.getElementById('ah-color-themes-grid');
     if(!grid||grid.dataset.built)return;
     grid.dataset.built='1';
-    var html='<button type="button" class="ah-color-theme-tile wand" aria-label="Создать тему" onclick="window.showSettingsTab?.(\'subscriptions\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4V2m0 14v-2M8 9h2M20 9h2M17.8 11.8 19 13M15 9h.01M17.8 6.2 19 5M3 21l9-9M12.2 6.2 11 5"/></svg></button>';
+    var html='<button type="button" class="ah-color-theme-tile wand" aria-label="'+window.AlexiHubI18n.t('profile.theme.create')+'" onclick="window.showSettingsTab?.(\'subscriptions\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4V2m0 14v-2M8 9h2M20 9h2M17.8 11.8 19 13M15 9h.01M17.8 6.2 19 5M3 21l9-9M12.2 6.2 11 5"/></svg></button>';
     COLOR_THEMES.forEach(function(t,i){
-      html+='<button type="button" class="ah-color-theme-tile" style="background:'+t.c+'" aria-label="Тема '+(i+1)+' (Plus)" onclick="settingsToast(\'Доступно с подпиской Plus\')"><span class="lock"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 9h-1V7a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2Zm-7-2a2 2 0 1 1 4 0v2h-4V7Z"/></svg></span></button>';
+      html+='<button type="button" class="ah-color-theme-tile" style="background:'+t.c+'" aria-label="'+window.AlexiHubI18n.t('home.text.theme')+' '+(i+1)+' (Plus)" onclick="settingsToast(window.AlexiHubI18n.t(\'profile.theme.plus_only\'))"><span class="lock"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 9h-1V7a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2Zm-7-2a2 2 0 1 1 4 0v2h-4V7Z"/></svg></span></button>';
     });
     grid.innerHTML=html;
   }
@@ -7810,12 +7810,12 @@ html.ah-theme-anim *,html.ah-theme-anim *::before,html.ah-theme-anim *::after{tr
     if(!shell||!form||document.getElementById('ah-pc-panel'))return;
     card=shell.querySelector('.ah-custom-profile-card');
     panel=document.createElement('aside');panel.id='ah-pc-panel';panel.className='ah-pc-panel';panel.setAttribute('aria-hidden','true');
-    panel.innerHTML='<button type="button" class="ah-pc-back" aria-label="Закрити"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>'+
-      '<div class="ah-pc-head"><b>Тема профілю</b><p>Так може виглядати ваш профіль із власними кольорами. Її побачать усі.</p></div>'+
-      '<div class="ah-pc-sec"><h4>Кольори теми</h4><div class="ah-pc-strip"><label class="ah-pc-dot ah-pc-dot-top" title="Верхній колір"><input type="color" id="ah-pc-in1" aria-label="Верхній колір"></label><label class="ah-pc-dot ah-pc-dot-bot" title="Нижній колір"><input type="color" id="ah-pc-in2" aria-label="Нижній колір"></label></div></div>'+
-      '<div class="ah-pc-sec"><h4>Готові теми</h4><div class="ah-pc-presets">'+PRESETS.map(function(x){return '<button type="button" class="ah-pc-preset" data-p="'+x[0]+'" data-a="'+x[1]+'" style="background:linear-gradient(180deg,'+x[0]+','+x[1]+')" aria-label="Тема"></button>'}).join('')+'</div></div>'+
-      '<button type="button" class="ah-pc-reset">Скинути кольори</button>';
-    var handle=document.createElement('button');handle.type='button';handle.className='ah-pc-handle';handle.setAttribute('aria-label','Тема профілю');handle.setAttribute('aria-expanded','false');handle.title='Тема профілю';
+    panel.innerHTML='<button type="button" class="ah-pc-back" aria-label="'+window.AlexiHubI18n.t('common.actions.close')+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>'+
+      '<div class="ah-pc-head"><b>'+window.AlexiHubI18n.t('home.text.theme_of_profile')+'</b><p>'+window.AlexiHubI18n.t('profile.theme.desc')+'</p></div>'+
+      '<div class="ah-pc-sec"><h4>'+window.AlexiHubI18n.t('profile.theme.colors')+'</h4><div class="ah-pc-strip"><label class="ah-pc-dot ah-pc-dot-top" title="'+window.AlexiHubI18n.t('profile.theme.top_color')+'"><input type="color" id="ah-pc-in1" aria-label="'+window.AlexiHubI18n.t('profile.theme.top_color')+'"></label><label class="ah-pc-dot ah-pc-dot-bot" title="'+window.AlexiHubI18n.t('profile.theme.bottom_color')+'"><input type="color" id="ah-pc-in2" aria-label="'+window.AlexiHubI18n.t('profile.theme.bottom_color')+'"></label></div></div>'+
+      '<div class="ah-pc-sec"><h4>'+window.AlexiHubI18n.t('profile.theme.presets')+'</h4><div class="ah-pc-presets">'+PRESETS.map(function(x){return '<button type="button" class="ah-pc-preset" data-p="'+x[0]+'" data-a="'+x[1]+'" style="background:linear-gradient(180deg,'+x[0]+','+x[1]+')" aria-label="'+window.AlexiHubI18n.t('home.text.theme')+'"></button>'}).join('')+'</div></div>'+
+      '<button type="button" class="ah-pc-reset">'+window.AlexiHubI18n.t('profile.theme.reset')+'</button>';
+    var handle=document.createElement('button');handle.type='button';handle.className='ah-pc-handle';handle.setAttribute('aria-label',window.AlexiHubI18n.t('home.text.theme_of_profile'));handle.setAttribute('aria-expanded','false');handle.title=window.AlexiHubI18n.t('home.text.theme_of_profile');
     handle.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
     shell.appendChild(panel);shell.appendChild(handle);
     h1=document.createElement('input');h1.type='hidden';h1.name='profile_color_primary';h1.disabled=true;
