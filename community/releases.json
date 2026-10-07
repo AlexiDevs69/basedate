@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.248.10",
+      "date": "2026-10-07",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update Russian localization strings in ru.json."
+      ],
+      "source_sha": "1227d632b46e84e5fe95fdf7a1432478d7a6d08a"
+    },
+    {
       "version": "1.248.9",
       "date": "2026-10-07",
       "title": "Оновлення AlexiHub",
