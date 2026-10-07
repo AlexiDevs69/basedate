@@ -2413,16 +2413,16 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
     var el=document.createElement('div');
     el.id='ah-voice-dock';
     el.setAttribute('role','region');
-    el.setAttribute('aria-label','Голосове повідомлення');
+    el.setAttribute('aria-label',window.AlexiHubI18n.t('common.voice.message'));
     el.innerHTML='<div class="ahvd-card"><div class="ahvd-main">'
-      +'<button type="button" class="ahvd-btn ahvd-prev" title="Попереднє" aria-label="Попереднє">'+I.prev+'</button>'
-      +'<button type="button" class="ahvd-btn ahvd-play" title="Відтворити / пауза" aria-label="Відтворити / пауза">'+I.play+'</button>'
-      +'<button type="button" class="ahvd-btn ahvd-next" title="Наступне" aria-label="Наступне">'+I.next+'</button>'
+      +'<button type="button" class="ahvd-btn ahvd-prev" title="'+window.AlexiHubI18n.t('common.voice.prev')+'" aria-label="'+window.AlexiHubI18n.t('common.voice.prev')+'">'+I.prev+'</button>'
+      +'<button type="button" class="ahvd-btn ahvd-play" title="'+window.AlexiHubI18n.t('common.voice.play_pause')+'" aria-label="'+window.AlexiHubI18n.t('common.voice.play_pause')+'">'+I.play+'</button>'
+      +'<button type="button" class="ahvd-btn ahvd-next" title="'+window.AlexiHubI18n.t('common.voice.next')+'" aria-label="'+window.AlexiHubI18n.t('common.voice.next')+'">'+I.next+'</button>'
       +'<div class="ahvd-info"><b class="ahvd-author"></b><span class="ahvd-when"></span></div>'
       +'<span class="ahvd-time">00:00</span>'
-      +'<div class="ahvd-vol"><button type="button" class="ahvd-btn ahvd-mute" title="Звук" aria-label="Звук">'+I.vol+'</button><input class="ahvd-range" type="range" min="0" max="1" step="0.05" aria-label="Гучність"></div>'
-      +'<button type="button" class="ahvd-rate" title="Швидкість" aria-label="Швидкість">1x</button>'
-      +'<button type="button" class="ahvd-btn ahvd-close" title="Закрити" aria-label="Закрити">'+I.close+'</button>'
+      +'<div class="ahvd-vol"><button type="button" class="ahvd-btn ahvd-mute" title="'+window.AlexiHubI18n.t('common.voice.sound')+'" aria-label="'+window.AlexiHubI18n.t('common.voice.sound')+'">'+I.vol+'</button><input class="ahvd-range" type="range" min="0" max="1" step="0.05" aria-label="'+window.AlexiHubI18n.t('common.voice.volume')+'"></div>'
+      +'<button type="button" class="ahvd-rate" title="'+window.AlexiHubI18n.t('common.voice.speed')+'" aria-label="'+window.AlexiHubI18n.t('common.voice.speed')+'">1x</button>'
+      +'<button type="button" class="ahvd-btn ahvd-close" title="'+window.AlexiHubI18n.t('common.actions.close')+'" aria-label="'+window.AlexiHubI18n.t('common.actions.close')+'">'+I.close+'</button>'
       +'</div><div class="ahvd-bar"><div class="ahvd-fill"></div></div></div>';
     document.body.appendChild(el);
     var q=function(s){return el.querySelector(s);};
@@ -2466,7 +2466,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
     if(!ui)return;
     var v=view();
     ui.el.classList.toggle('playing',v.playing);
-    ui.author.textContent=meta.author||'Голосове повідомлення';
+    ui.author.textContent=meta.author||window.AlexiHubI18n.t('common.voice.message');
     ui.when.textContent=meta.when||'';
     ui.rate.textContent=(prefs.rate===1?'1':String(prefs.rate))+'x';
     ui.rate.classList.toggle('fast',prefs.rate!==1);
@@ -2532,7 +2532,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
   function mediaSession(){
     if(!('mediaSession' in navigator))return;
     try{
-      navigator.mediaSession.metadata=new MediaMetadata({title:'Голосове повідомлення',artist:meta.author||'',album:meta.when||''});
+      navigator.mediaSession.metadata=new MediaMetadata({title:window.AlexiHubI18n.t('common.voice.message'),artist:meta.author||'',album:meta.when||''});
       navigator.mediaSession.setActionHandler('play',toggle);
       navigator.mediaSession.setActionHandler('pause',toggle);
       navigator.mediaSession.setActionHandler('previoustrack',prev);
@@ -2695,9 +2695,9 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
   }
   function pad(x){return(x<10?'0':'')+x}
   function describe(e){
-    if(!e)return'';if(e.until===-1)return'Поки не увімкнете';
+    if(!e)return'';if(e.until===-1)returnwindow.AlexiHubI18n.t('common.mute.until_enabled');
     var d=new Date(e.until),now=new Date(),hm=pad(d.getHours())+':'+pad(d.getMinutes());
-    return d.toDateString()===now.toDateString()?'До '+hm:'До '+pad(d.getDate())+'.'+pad(d.getMonth()+1)+' '+hm;
+    return d.toDateString()===now.toDateString()?window.AlexiHubI18n.t('common.mute.until_prefix')+' '+hm:window.AlexiHubI18n.t('common.mute.until_prefix')+' '+pad(d.getDate())+'.'+pad(d.getMonth()+1)+' '+hm;
   }
   function schedule(){
     clearTimeout(timer);var m=read(),next=0;
@@ -3033,12 +3033,12 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
       // Пороги рівнів вогника -- від більшого до меншого, редагується тут одним місцем.
       // Кольори живуть у CSS (.ah-tier-1 / .ah-tier-2 / .ah-tier-3).
       var TIERS = [
-        { min: 100, cls: 'ah-tier-5', label: 'золоте полум\'я' },
-        { min: 50,  cls: 'ah-tier-4', label: 'аметист' },
-        { min: 30,  cls: 'ah-tier-3', label: 'біле полум\'я' },
-        { min: 20,  cls: 'ah-tier-2', label: 'блакитне полум\'я' },
-        { min: 10,  cls: 'ah-tier-1', label: 'жар' },
-        { min: 1,   cls: '',          label: 'вогник' }
+        { min: 100, cls: 'ah-tier-5', label: window.AlexiHubI18n.t('streak.tier.gold_flame') },
+        { min: 50,  cls: 'ah-tier-4', label: window.AlexiHubI18n.t('streak.tier.amethyst') },
+        { min: 30,  cls: 'ah-tier-3', label: window.AlexiHubI18n.t('streak.tier.white_flame') },
+        { min: 20,  cls: 'ah-tier-2', label: window.AlexiHubI18n.t('streak.tier.blue_flame') },
+        { min: 10,  cls: 'ah-tier-1', label: window.AlexiHubI18n.t('streak.tier.ember') },
+        { min: 1,   cls: '',          label: window.AlexiHubI18n.t('streak.tier.flame') }
       ];
       var lastTierCls = null, tierPopReady = false, tierPopTimer = null;
 
@@ -3073,12 +3073,12 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
           streak: state.streak, todayQualified: state.todayQualified, tier: tier, tiers: TIERS
         }}));
 
-        var level = tier && tier.label ? ' Рівень: ' + tier.label + '.' : '';
+        var level = tier && tier.label ? ' ' + window.AlexiHubI18n.t('streak.badge.level', {level: tier.label}) : '';
         badge.title = lit
           ? (state.todayQualified
-              ? 'Вогник горить ' + state.streak + ' д. — сьогодні вже підтримано двома різними акаунтами.' + level
-              : 'Вогник горить ' + state.streak + ' д. Щоб не згас, потрібні повідомлення від 2 різних акаунтів сьогодні.' + level)
-          : 'Напишіть у каналі повідомлення від 2 різних акаунтів сьогодні, щоб запалити вогник.';
+              ? window.AlexiHubI18n.t('streak.badge.lit_supported', {days: state.streak}) + level
+              : window.AlexiHubI18n.t('streak.badge.lit_needs', {days: state.streak}) + level)
+          : window.AlexiHubI18n.t('streak.badge.unlit');
       }
 
       // Called from handleServerRealtimeData() whenever the server pushes a
@@ -3171,7 +3171,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
       menu.className = 'ah-streak-menu';
       menu.id = 'ah-streak-menu';
       menu.setAttribute('role', 'dialog');
-      menu.setAttribute('aria-label', 'Статистика вогника');
+      menu.setAttribute('aria-label', window.AlexiHubI18n.t('streak.menu.title'));
       menu.innerHTML =
         '<div class="ah-streak-menu-head">' +
           '<span class="ah-streak-flame" aria-hidden="true">' + FLAME_SVG + '</span>' +
@@ -3179,21 +3179,21 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
           '<span class="ah-streak-menu-level" id="ah-streak-menu-level"></span></span>' +
         '</div>' +
         '<div class="ah-streak-divider"></div>' +
-        '<div class="ah-streak-section"><span>Активність каналу</span><span id="ah-streak-range"></span></div>' +
+        '<div class="ah-streak-section"><span>'+window.AlexiHubI18n.t('streak.menu.channel_activity')+'</span><span id="ah-streak-range"></span></div>' +
         '<div class="ah-streak-chart" id="ah-streak-chart"></div>' +
         '<div class="ah-streak-axis" id="ah-streak-axis"></div>' +
         '<div class="ah-streak-divider"></div>' +
         '<div id="ah-streak-stats"></div>' +
         '<div class="ah-streak-divider"></div>' +
-        '<button type="button" class="menu-like" id="ah-streak-help"><span>Як працює вогник</span>' +
+        '<button type="button" class="menu-like" id="ah-streak-help"><span>'+window.AlexiHubI18n.t('streak.menu.how_it_works')+'</span>' +
           '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 1 1 5.83 1c0 2-3 2-3 4"/><path d="M12 17h.01"/></svg>' +
         '</button>' +
-        '<div class="ah-streak-foot">Підсвічені стовпчики — дні, коли писали щонайменше два різні акаунти. Рахується з завантаженої історії каналу.</div>';
+        '<div class="ah-streak-foot">'+window.AlexiHubI18n.t('streak.menu.footer')+'</div>';
       document.body.appendChild(menu);
 
       menu.addEventListener('click', function(event){ event.stopPropagation(); });
       menu.querySelector('#ah-streak-help').addEventListener('click', function(){
-        var text = 'Вогник росте на +1 за кожен день, коли в каналі пишуть щонайменше два різні акаунти. Пропущений день — вогник гасне.';
+        var text = window.AlexiHubI18n.t('streak.help.text');
         if (typeof showActionToast === 'function') showActionToast(text);
         close();
       });
@@ -3212,18 +3212,18 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
       if (state.tier && state.tier.cls) menu.classList.add(state.tier.cls);
 
       menu.querySelector('#ah-streak-menu-days').textContent = days > 0
-        ? days + ' ' + plural(days, 'день', 'дні', 'днів') + ' поспіль'
-        : 'Вогник згас';
+        ? days + ' ' + plural(days, window.AlexiHubI18n.t('streak.unit.day.one'), window.AlexiHubI18n.t('streak.unit.day.few'), window.AlexiHubI18n.t('streak.unit.day.many')) + ' ' + window.AlexiHubI18n.t('streak.menu.in_a_row')
+        : window.AlexiHubI18n.t('streak.menu.out');
 
       var next = null;
       for (var i = 0; i < tiers.length; i++) if (tiers[i].min > days && (!next || tiers[i].min < next.min)) next = tiers[i];
       var levelEl = menu.querySelector('#ah-streak-menu-level');
       if (days > 0) {
         var left = next ? (next.min - days) : 0;
-        levelEl.innerHTML = 'рівень: <b>' + (state.tier ? state.tier.label : 'вогник') + '</b>' +
-          (next ? ' · до «' + next.label + '» ще ' + left + ' ' + plural(left, 'день', 'дні', 'днів') : ' · максимум');
+        levelEl.innerHTML = window.AlexiHubI18n.t('streak.level.label') + ' <b>' + (state.tier ? state.tier.label : window.AlexiHubI18n.t('streak.tier.flame')) + '</b>' +
+          (next ? ' · ' + window.AlexiHubI18n.t('streak.level.next', {tier: next.label, left: left, unit: plural(left, window.AlexiHubI18n.t('streak.unit.day.one'), window.AlexiHubI18n.t('streak.unit.day.few'), window.AlexiHubI18n.t('streak.unit.day.many'))}) : ' · ' + window.AlexiHubI18n.t('streak.level.max'));
       } else {
-        levelEl.textContent = 'потрібні повідомлення від двох різних акаунтів';
+        levelEl.textContent = window.AlexiHubI18n.t('streak.level.need');
       }
 
       var data = collect();
@@ -3245,8 +3245,8 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
         bar.style.height = Math.max(3, Math.round(cell.count / max * 62)) + 'px';
         col.appendChild(bar);
         col.title = cell.date.toLocaleDateString(locale(), { day: 'numeric', month: 'long' }) + ' — ' +
-          cell.count + ' ' + plural(cell.count, 'повідомлення', 'повідомлення', 'повідомлень') +
-          ', ' + cell.unique + ' ' + plural(cell.unique, 'учасник', 'учасники', 'учасників');
+          cell.count + ' ' + plural(cell.count, window.AlexiHubI18n.t('streak.unit.message.one'), window.AlexiHubI18n.t('streak.unit.message.few'), window.AlexiHubI18n.t('streak.unit.message.many')) +
+          ', ' + cell.unique + ' ' + plural(cell.unique, window.AlexiHubI18n.t('streak.unit.member.one'), window.AlexiHubI18n.t('streak.unit.member.few'), window.AlexiHubI18n.t('streak.unit.member.many'));
         chart.appendChild(col);
 
         var tick = document.createElement('span');
@@ -3255,19 +3255,19 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
         axis.appendChild(tick);
       });
 
-      menu.querySelector('#ah-streak-range').textContent = WINDOW_DAYS + ' днів';
+      menu.querySelector('#ah-streak-range').textContent = window.AlexiHubI18n.t('streak.range_days', {days: WINDOW_DAYS});
 
       var todayCell = data.days[data.days.length - 1];
       var rows = [
-        ['Повідомлень за ' + WINDOW_DAYS + ' днів', String(data.total), ''],
-        ['Активних учасників', String(data.people), ''],
-        ['Найактивніший день', best && best.count
+        [window.AlexiHubI18n.t('streak.stats.messages_for', {days: WINDOW_DAYS}), String(data.total), ''],
+        [window.AlexiHubI18n.t('streak.stats.active_members'), String(data.people), ''],
+        [window.AlexiHubI18n.t('streak.stats.busiest_day'), best && best.count
           ? best.date.toLocaleDateString(locale(), { day: 'numeric', month: 'short' }) + ' · ' + best.count
           : '—', '']
       ];
       rows.push(state.todayQualified
-        ? ['Сьогодні', 'вогник підтримано', 'is-ok']
-        : ['Сьогодні', todayCell.unique + ' з 2 акаунтів', 'is-wait']);
+        ? [window.AlexiHubI18n.t('common.text.today'), window.AlexiHubI18n.t('streak.today.kept_alive'), 'is-ok']
+        : [window.AlexiHubI18n.t('common.text.today'), todayCell.unique + ' ' + window.AlexiHubI18n.t('streak.today.of_two'), 'is-wait']);
 
       menu.querySelector('#ah-streak-stats').innerHTML = rows.map(function(r){
         return '<div class="ah-streak-row ' + r[2] + '"><span>' + r[0] + '</span><b>' + r[1] + '</b></div>';
@@ -3413,7 +3413,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
     {%- endmacro %}
     <div class="sidebar-scroll server-channel-tree">
       {% if server.description %}<div class="server-desc">{{ server.description }}</div>{% endif %}
-      <a href="/community/servers/{{ server.id }}" class="chan-link"><svg style="width:16px;height:16px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 5H3"/><path d="M15 12H3"/><path d="M9 19H3"/><circle cx="17" cy="17" r="3"/><path d="m21 21-1.9-1.9"/></svg><span>Просмотр каналов</span></a>
+      <a href="/community/servers/{{ server.id }}" class="chan-link"><svg style="width:16px;height:16px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 5H3"/><path d="M15 12H3"/><path d="M9 19H3"/><circle cx="17" cy="17" r="3"/><path d="m21 21-1.9-1.9"/></svg><span data-i18n="server.cv.browse_channels"><!--i18n:server.cv.browse_channels-->{{ i18n_t('server.cv.browse_channels') }}</span></a>
       <div class="sidebar-label-row"><div class="sidebar-label"><!--i18n:common.text.kanali-->{{ i18n_t('common.text.kanali') }}</div>{% if can_manage %}<button type="button" class="sidebar-plus" onclick="openChannelCreateModal()" title="{{ i18n_t('common.aria.the_colludes_of_the_canal') }}" data-i18n-title="common.aria.the_colludes_of_the_canal">+</button>{% endif %}</div>
       {% for ch in channels if not ch.category_id %}{{ server_channel_row(ch, channel.id) }}{% endfor %}
       {% for category in categories %}
@@ -3426,7 +3426,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
       </section>
       {% endfor %}
     </div>
-    <div class="sidebar-scroll">{% if server.description %}<div class="server-desc">{{ server.description }}</div>{% endif %}<a href="/community/servers/{{ server.id }}" class="chan-link"><svg style="width:16px;height:16px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 5H3"/><path d="M15 12H3"/><path d="M9 19H3"/><circle cx="17" cy="17" r="3"/><path d="m21 21-1.9-1.9"/></svg><span>Просмотр каналов</span></a><div class="sidebar-label-row"><div class="sidebar-label"><!--i18n:common.text.kanali-->{{ i18n_t('common.text.kanali') }}</div>{% if can_manage %}<button type="button" class="sidebar-plus" onclick="openModal('channel-modal')" title="{{ i18n_t('common.aria.the_colludes_of_the_canal') }}" data-i18n-title="common.aria.the_colludes_of_the_canal">+</button>{% endif %}</div>{% for ch in channels %}<div class="chan-row {{ 'active' if ch.id == channel.id else '' }}" data-channel-id="{{ ch.id }}"><a href="/community/servers/{{ server.id }}/channel/{{ ch.id }}" data-mention-channel-key="{{ server.id }}:{{ ch.id }}" class="chan-link {{ 'active' if ch.id == channel.id else '' }}"><span class="chan-symbol">#</span><span class="chan-name">{{ ch.name }}</span>{% set cc = mention_counts.channel_by_id.get((server.id|string) ~ ':' ~ (ch.id|string), 0) %}<span class="ah-mention-count" {% if not cc %}hidden{% endif %}>{{ '99+' if cc > 99 else cc }}</span></a><div class="chan-actions"><button type="button" class="chan-action-btn" data-channel-id="{{ ch.id }}" data-channel-name="{{ ch.name }}" onclick="openChannelInviteModal(event, this)" title="{{ i18n_t('common.aria.yuncture') }}" data-i18n-title="common.aria.yuncture"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></button>{% if can_manage %}<a class="chan-action-btn" href="/community/servers/{{ server.id }}/channel/{{ ch.id }}/settings" onclick="event.stopPropagation()" title="{{ i18n_t('common.aria.channel_settings') }}" data-i18n-title="common.aria.channel_settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.33 1.82 2 2 0 1 1-3.34 0A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.82-.33 2 2 0 1 1 0-3.34A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .33-1.82 2 2 0 1 1 3.34 0A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 .6 1 1.65 1.65 0 0 0 1.82.33 2 2 0 1 1 0 3.34A1.65 1.65 0 0 0 19.4 15Z"/></svg></a>{% endif %}</div></div>{% endfor %}</div>
+    <div class="sidebar-scroll">{% if server.description %}<div class="server-desc">{{ server.description }}</div>{% endif %}<a href="/community/servers/{{ server.id }}" class="chan-link"><svg style="width:16px;height:16px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 5H3"/><path d="M15 12H3"/><path d="M9 19H3"/><circle cx="17" cy="17" r="3"/><path d="m21 21-1.9-1.9"/></svg><span data-i18n="server.cv.browse_channels"><!--i18n:server.cv.browse_channels-->{{ i18n_t('server.cv.browse_channels') }}</span></a><div class="sidebar-label-row"><div class="sidebar-label"><!--i18n:common.text.kanali-->{{ i18n_t('common.text.kanali') }}</div>{% if can_manage %}<button type="button" class="sidebar-plus" onclick="openModal('channel-modal')" title="{{ i18n_t('common.aria.the_colludes_of_the_canal') }}" data-i18n-title="common.aria.the_colludes_of_the_canal">+</button>{% endif %}</div>{% for ch in channels %}<div class="chan-row {{ 'active' if ch.id == channel.id else '' }}" data-channel-id="{{ ch.id }}"><a href="/community/servers/{{ server.id }}/channel/{{ ch.id }}" data-mention-channel-key="{{ server.id }}:{{ ch.id }}" class="chan-link {{ 'active' if ch.id == channel.id else '' }}"><span class="chan-symbol">#</span><span class="chan-name">{{ ch.name }}</span>{% set cc = mention_counts.channel_by_id.get((server.id|string) ~ ':' ~ (ch.id|string), 0) %}<span class="ah-mention-count" {% if not cc %}hidden{% endif %}>{{ '99+' if cc > 99 else cc }}</span></a><div class="chan-actions"><button type="button" class="chan-action-btn" data-channel-id="{{ ch.id }}" data-channel-name="{{ ch.name }}" onclick="openChannelInviteModal(event, this)" title="{{ i18n_t('common.aria.yuncture') }}" data-i18n-title="common.aria.yuncture"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></button>{% if can_manage %}<a class="chan-action-btn" href="/community/servers/{{ server.id }}/channel/{{ ch.id }}/settings" onclick="event.stopPropagation()" title="{{ i18n_t('common.aria.channel_settings') }}" data-i18n-title="common.aria.channel_settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.33 1.82 2 2 0 1 1-3.34 0A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.82-.33 2 2 0 1 1 0-3.34A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .33-1.82 2 2 0 1 1 3.34 0A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 .6 1 1.65 1.65 0 0 0 1.82.33 2 2 0 1 1 0 3.34A1.65 1.65 0 0 0 19.4 15Z"/></svg></a>{% endif %}</div></div>{% endfor %}</div>
     <div class="account-panel mini-profile-trigger" data-mini-username="{{ account.username|e }}" data-mini-display="{{ account.display_name or account.username }}" data-mini-avatar="{{ account.avatar_url or '' }}" data-mini-banner="{{ account.banner_url or '' }}" data-mini-status="{{ account.account_status or 'online' }}" data-mini-role="{{ account.role_label or 'online' }}" data-mini-effect="{{ account.name_effect or 'none' }}" data-mini-font="{{ account.name_font or 'default' }}" data-mini-c1="{{ account.role_color_start or '#f5576c' }}" data-mini-c2="{{ account.role_color_end or '#7367f0' }}" data-mini-profile="/community/profile/{{ account.username }}" data-mini-bio="{{ account.bio or '' }}" data-mini-created="{{ account.created_at.strftime('%d.%m.%Y') if account.created_at else '' }}"><span class="account-avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}');"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}</span><span class="account-meta"><span class="visual-name account-name name-{{ account.name_effect or 'none' }} font-{{ account.name_font or 'default' }}" style="--name-c1: {{ account.role_color_start or '#f5576c' }}; --name-c2: {{ account.role_color_end or '#7367f0' }};">{{ account.display_name or account.username }}</span><span class="account-status">{{ i18n_t('status.' ~ (account.account_status or 'online')) }}</span><small class="account-username">@{{ account.username }}</small></span><span class="account-actions"><button class="voice-control" data-audio-kind="mic" type="button" onclick="event.stopPropagation();toggleAudioControl(this,'mic')" title="{{ i18n_t('common.aria.mute') }}" data-i18n-title="common.aria.mute"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button><button class="voice-control" data-audio-kind="headphones" type="button" onclick="event.stopPropagation();toggleAudioControl(this,'headphones')" title="{{ i18n_t('common.aria.deafen') }}" data-i18n-title="common.aria.deafen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg></button><button type="button" onclick="event.stopPropagation();openUserSettings()" title="{{ i18n_t('common.aria.settings') }}" data-i18n-title="common.aria.settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.4 1.08V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.08-.4H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6A1.65 1.65 0 0 0 10.4 3V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 16 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.15.32.36.6.6 1 .26.25.64.4 1.08.4H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51.6z"/></svg></button></span></div>
   </aside>
 
@@ -3476,11 +3476,11 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
     {% endfor %}
     {% if members|length %}
       <div class="members-group" id="members-online-group">
-        <div class="members-title members-group-label" id="members-online-label">В сети — <span class="members-group-count">{{ online_members|length }}</span></div>
+        <div class="members-title members-group-label" id="members-online-label"><!--i18n:server.members.online_label-->{{ i18n_t('server.members.online_label') }} <span class="members-group-count">{{ online_members|length }}</span></div>
         {% for item in online_members %}{{ member_row(item) }}{% endfor %}
       </div>
       <div class="members-group" id="members-offline-group"{% if not offline_members|length %} hidden{% endif %}>
-        <div class="members-title members-group-label" id="members-offline-label">Не в сети — <span class="members-group-count">{{ offline_members|length }}</span></div>
+        <div class="members-title members-group-label" id="members-offline-label"><!--i18n:server.members.offline_label-->{{ i18n_t('server.members.offline_label') }} <span class="members-group-count">{{ offline_members|length }}</span></div>
         {% for item in offline_members %}{{ member_row(item) }}{% endfor %}
       </div>
     {% else %}
@@ -3517,7 +3517,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
           </div>
           {% endif %}
           <div class="message-content" id="content-{{ item.message.id }}"><span class="message-content-text">{{ item.message.content }}</span><span class="message-edited {{ '' if item.message.edited_at else 'hidden' }}" id="edited-{{ item.message.id }}"><!--i18n:common.label.modified-->{{ i18n_t('common.label.modified') }}</span></div>
-          {% if item.message.image_url %}{% set msg_imgs = item.message.image_url.split('\n')|map('trim')|select|list %}{% if msg_imgs|length > 1 %}<div class="message-image-group ah-carousel"><div class="ah-carousel-track" tabindex="0">{% for img_url in msg_imgs %}<div class="ah-carousel-slide"><img src="{{ img_url }}" class="message-image" alt="" decoding="async" draggable="false"></div>{% endfor %}</div><div class="ah-carousel-dots">{% for img_url in msg_imgs %}<button type="button" class="ah-carousel-dot{% if loop.first %} active{% endif %}" aria-label="{{ loop.index }}"></button>{% endfor %}</div></div>{% elif msg_imgs %}<div class="message-image-group"><img src="{{ msg_imgs[0] }}" class="message-image" alt="" decoding="async"></div>{% endif %}{% endif %}{% if item.message.voice_url %}{% set _vsecs = (item.message.voice_duration or 0)|int %}<div class="ah-voice-message"><button type="button" class="ah-voice-play" onclick="ahToggleVoicePlay(this)" aria-label="Відтворити голосове повідомлення"><svg class="ah-voice-play-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><svg class="ah-voice-pause-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg></button><div class="ah-voice-track"><div class="ah-voice-progress"></div></div><span class="ah-voice-duration">{{ '%d:%02d'|format(_vsecs // 60, _vsecs % 60) }}</span><audio class="ah-voice-audio" preload="none" src="{{ item.message.voice_url }}"></audio></div>{% endif %}
+          {% if item.message.image_url %}{% set msg_imgs = item.message.image_url.split('\n')|map('trim')|select|list %}{% if msg_imgs|length > 1 %}<div class="message-image-group ah-carousel"><div class="ah-carousel-track" tabindex="0">{% for img_url in msg_imgs %}<div class="ah-carousel-slide"><img src="{{ img_url }}" class="message-image" alt="" decoding="async" draggable="false"></div>{% endfor %}</div><div class="ah-carousel-dots">{% for img_url in msg_imgs %}<button type="button" class="ah-carousel-dot{% if loop.first %} active{% endif %}" aria-label="{{ loop.index }}"></button>{% endfor %}</div></div>{% elif msg_imgs %}<div class="message-image-group"><img src="{{ msg_imgs[0] }}" class="message-image" alt="" decoding="async"></div>{% endif %}{% endif %}{% if item.message.voice_url %}{% set _vsecs = (item.message.voice_duration or 0)|int %}<div class="ah-voice-message"><button type="button" class="ah-voice-play" onclick="ahToggleVoicePlay(this)" aria-label="{{ i18n_t('voice.play_message') }}" data-i18n-aria-label="voice.play_message"><svg class="ah-voice-play-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><svg class="ah-voice-pause-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg></button><div class="ah-voice-track"><div class="ah-voice-progress"></div></div><span class="ah-voice-duration">{{ '%d:%02d'|format(_vsecs // 60, _vsecs % 60) }}</span><audio class="ah-voice-audio" preload="none" src="{{ item.message.voice_url }}"></audio></div>{% endif %}
 
           {% if is_mine and not is_forwarded %}
           <form id="edit-form-{{ item.message.id }}" class="edit-form" method="post" action="/community/servers/{{ server.id }}/channel/{{ channel.id }}/message/{{ item.message.id }}/edit">
@@ -3684,11 +3684,11 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
 
 
 
-  <div id="invite-modal" class="modal-backdrop"><div class="modal-card invite-card"><div class="modal-head"><div class="invite-title-block"><h2 id="invite-modal-title">{{ i18n_t('server.invite.title', server=server.name) }}</h2><p id="invite-modal-subtitle"><!--i18n:common.text.participants_will_be_on_the_server-->{{ i18n_t('common.text.participants_will_be_on_the_server') }}</p></div><button class="modal-close" type="button" onclick="closeModal('invite-modal')">×</button></div><div class="invite-link-section" style="padding:0 22px 14px;"><div style="font-size:12px;color:var(--text-secondary,#9aa0a6);margin-bottom:8px;">Или отправьте другу ссылку-приглашение на сервер</div><div style="display:flex;gap:8px;"><input id="invite-link-url-input" type="text" readonly value="" placeholder="Загрузка ссылки…" onclick="this.select()" style="flex:1;min-width:0;background:var(--input-bg,#1e1f22);border:1px solid var(--border,#26272b);border-radius:6px;padding:8px 10px;color:var(--text-primary,#f2f3f5);font-size:13px;"><button type="button" id="invite-link-copy-btn" class="modal-btn" onclick="copyServerInviteLink()">Копировать</button></div><div style="margin-top:8px;font-size:12px;color:var(--text-secondary,#9aa0a6);">Ваша ссылка-приглашение перестанет действовать через 30 дней. <a href="#" onclick="regenerateServerInviteLink(event)" style="color:#00C4B4;text-decoration:none;">Изменить ссылку-приглашение.</a></div></div><div class="invite-search-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="text" placeholder="{{ i18n_t('common.placeholder.finding_friends') }}" data-i18n-placeholder="common.placeholder.finding_friends" oninput="filterInviteFriends(this.value)"></div>{% if friends %}<div class="friends-list discord-invite-list">{% for friend in friends %}<form class="friend-invite-row" data-invite-search="{{ friend.username }} {{ friend.display_name or '' }}" method="post" action="/community/servers/{{ server.id }}/invite"><input type="hidden" name="username" value="{{ friend.username }}"><input type="hidden" name="redirect_to" value="{{ request.url.path }}"><input type="hidden" name="channel_id" value="" class="invite-channel-id-input"><span class="friend-invite-avatar" {% if friend.avatar_url %}style="background-image:url('{{ friend.avatar_url }}');"{% endif %}>{% if not friend.avatar_url %}{{ friend.username[:1]|upper }}{% endif %}</span><span class="friend-invite-meta"><span class="friend-invite-name">{{ friend.display_name or friend.username }}</span><span class="friend-invite-handle">{{ friend.username }}</span></span><button type="submit"><!--i18n:common.aria.yuncture-->{{ i18n_t('common.aria.yuncture') }}</button></form>{% endfor %}</div>{% else %}<div class="empty-note" style="padding:0 22px 18px;"><!--i18n:common.text.don_t_have_friends_for_a_quick_inwit-->{{ i18n_t('common.text.don_t_have_friends_for_a_quick_inwit') }}</div>{% endif %}<form class="manual-invite discord-manual" method="post" action="/community/servers/{{ server.id }}/invite"><input type="hidden" name="redirect_to" value="{{ request.url.path }}"><input type="hidden" name="channel_id" value="" class="invite-channel-id-input"><label><!--i18n:common.text.or_send_a_request_link_to_the_server-->{{ i18n_t('common.text.or_send_a_request_link_to_the_server') }}</label><div class="invite-link-row"><input name="username" placeholder="{{ i18n_t('common.placeholder.friend_s_username') }}" data-i18n-placeholder="common.placeholder.friend_s_username" required><button class="modal-btn" type="submit"><!--i18n:common.action.submit-->{{ i18n_t('common.action.submit') }}</button></div></form></div></div>
+  <div id="invite-modal" class="modal-backdrop"><div class="modal-card invite-card"><div class="modal-head"><div class="invite-title-block"><h2 id="invite-modal-title">{{ i18n_t('server.invite.title', server=server.name) }}</h2><p id="invite-modal-subtitle"><!--i18n:common.text.participants_will_be_on_the_server-->{{ i18n_t('common.text.participants_will_be_on_the_server') }}</p></div><button class="modal-close" type="button" onclick="closeModal('invite-modal')">×</button></div><div class="invite-link-section" style="padding:0 22px 14px;"><div style="font-size:12px;color:var(--text-secondary,#9aa0a6);margin-bottom:8px;" data-i18n="server.invite.send_link_hint"><!--i18n:server.invite.send_link_hint-->{{ i18n_t('server.invite.send_link_hint') }}</div><div style="display:flex;gap:8px;"><input id="invite-link-url-input" type="text" readonly value="" placeholder="{{ i18n_t('server.invite.loading_link') }}" data-i18n-placeholder="server.invite.loading_link" onclick="this.select()" style="flex:1;min-width:0;background:var(--input-bg,#1e1f22);border:1px solid var(--border,#26272b);border-radius:6px;padding:8px 10px;color:var(--text-primary,#f2f3f5);font-size:13px;"><button type="button" id="invite-link-copy-btn" class="modal-btn" onclick="copyServerInviteLink()" data-i18n="common.action.copy"><!--i18n:common.action.copy-->{{ i18n_t('common.action.copy') }}</button></div><div style="margin-top:8px;font-size:12px;color:var(--text-secondary,#9aa0a6);"><!--i18n:server.invite.expires-->{{ i18n_t('server.invite.expires') }} <a href="#" onclick="regenerateServerInviteLink(event)" style="color:#00C4B4;text-decoration:none;" data-i18n="server.invite.edit_link"><!--i18n:server.invite.edit_link-->{{ i18n_t('server.invite.edit_link') }}</a></div></div><div class="invite-search-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="text" placeholder="{{ i18n_t('common.placeholder.finding_friends') }}" data-i18n-placeholder="common.placeholder.finding_friends" oninput="filterInviteFriends(this.value)"></div>{% if friends %}<div class="friends-list discord-invite-list">{% for friend in friends %}<form class="friend-invite-row" data-invite-search="{{ friend.username }} {{ friend.display_name or '' }}" method="post" action="/community/servers/{{ server.id }}/invite"><input type="hidden" name="username" value="{{ friend.username }}"><input type="hidden" name="redirect_to" value="{{ request.url.path }}"><input type="hidden" name="channel_id" value="" class="invite-channel-id-input"><span class="friend-invite-avatar" {% if friend.avatar_url %}style="background-image:url('{{ friend.avatar_url }}');"{% endif %}>{% if not friend.avatar_url %}{{ friend.username[:1]|upper }}{% endif %}</span><span class="friend-invite-meta"><span class="friend-invite-name">{{ friend.display_name or friend.username }}</span><span class="friend-invite-handle">{{ friend.username }}</span></span><button type="submit"><!--i18n:common.aria.yuncture-->{{ i18n_t('common.aria.yuncture') }}</button></form>{% endfor %}</div>{% else %}<div class="empty-note" style="padding:0 22px 18px;"><!--i18n:common.text.don_t_have_friends_for_a_quick_inwit-->{{ i18n_t('common.text.don_t_have_friends_for_a_quick_inwit') }}</div>{% endif %}<form class="manual-invite discord-manual" method="post" action="/community/servers/{{ server.id }}/invite"><input type="hidden" name="redirect_to" value="{{ request.url.path }}"><input type="hidden" name="channel_id" value="" class="invite-channel-id-input"><label><!--i18n:common.text.or_send_a_request_link_to_the_server-->{{ i18n_t('common.text.or_send_a_request_link_to_the_server') }}</label><div class="invite-link-row"><input name="username" placeholder="{{ i18n_t('common.placeholder.friend_s_username') }}" data-i18n-placeholder="common.placeholder.friend_s_username" required><button class="modal-btn" type="submit"><!--i18n:common.action.submit-->{{ i18n_t('common.action.submit') }}</button></div></form></div></div>
   {% if not can_manage %}
   <div id="leave-server-modal" class="modal-backdrop">
     <div class="modal-card leave-modal-card">
-      <div class="modal-head"><h2>Покинуть '{{ server.name }}'</h2><button class="modal-close" type="button" onclick="closeModal('leave-server-modal')">×</button></div>
+      <div class="modal-head"><h2>{{ i18n_t('server.leave.title', server=server.name) }}</h2><button class="modal-close" type="button" onclick="closeModal('leave-server-modal')">×</button></div>
       <div class="leave-modal-body">{% set confirm_raw = i18n_t('server.leave.confirm', server=server.name) %}{% if server.name and (server.name in confirm_raw) %}{% set parts = confirm_raw.split(server.name, 1) %}{{ parts[0] }}<strong>{{ server.name }}</strong>{{ parts[1] }}{% else %}{{ confirm_raw }}{% endif %}</div>
       <form method="post" action="/community/servers/{{ server.id }}/leave" class="leave-modal-actions">
         <button type="button" class="leave-modal-cancel" onclick="closeModal('leave-server-modal')"><!--i18n:common.actions.cancel-->{{ i18n_t('common.actions.cancel') }}</button>
@@ -3815,7 +3815,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
     /* Voice message player: play/pause + click/drag to seek. Global on purpose (used by inline onclick). */
     function ahVoiceLabel(sec){
       var n=Math.max(0,parseInt(sec||0,10)||0);
-      return '🎤 Голосове повідомлення'+(n?' · '+ahVoiceFmt(n):'');
+      return '🎤 '+window.AlexiHubI18n.t('common.voice.message')+(n?' · '+ahVoiceFmt(n):'');
     }
     function ahVoiceEsc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
     function ahVoiceFmt(sec){
@@ -3827,7 +3827,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
       // reject script-ish URLs, accept whatever upload-voice returns (absolute or relative)
       if(!url||/^\s*(javascript|data|vbscript):/i.test(url))return '';
       var secs=Math.max(0,parseInt(voiceDuration||0,10)||0);
-      return '<div class="ah-voice-message"><button type="button" class="ah-voice-play" onclick="ahToggleVoicePlay(this)" aria-label="Відтворити голосове повідомлення"><svg class="ah-voice-play-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><svg class="ah-voice-pause-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg></button><div class="ah-voice-track"><div class="ah-voice-progress"></div></div><span class="ah-voice-duration">'+ahVoiceEsc(ahVoiceFmt(secs))+'</span><audio class="ah-voice-audio" preload="none" src="'+ahVoiceEsc(url)+'"></audio></div>';
+      return '<div class="ah-voice-message"><button type="button" class="ah-voice-play" onclick="ahToggleVoicePlay(this)" aria-label="'+window.AlexiHubI18n.t('voice.play_message')+'"><svg class="ah-voice-play-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><svg class="ah-voice-pause-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg></button><div class="ah-voice-track"><div class="ah-voice-progress"></div></div><span class="ah-voice-duration">'+ahVoiceEsc(ahVoiceFmt(secs))+'</span><audio class="ah-voice-audio" preload="none" src="'+ahVoiceEsc(url)+'"></audio></div>';
     }
     function ahToggleVoicePlay(btn){
       var wrap=btn.closest('.ah-voice-message');
@@ -3980,17 +3980,17 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
       var copyBtn = document.getElementById('invite-link-copy-btn');
       if (!input) return;
       input.value = '';
-      input.placeholder = 'Загрузка ссылки…';
+      input.placeholder = window.AlexiHubI18n.t('server.invite.loading_link');
       if (copyBtn) copyBtn.disabled = true;
       var qs = AH_INVITE_CURRENT_CHANNEL_ID ? ('?channel_id=' + encodeURIComponent(AH_INVITE_CURRENT_CHANNEL_ID)) : '';
       fetch('/community/servers/' + AH_INVITE_SERVER_ID + '/invites/link/active' + qs)
         .then(function(r){ return r.json(); })
         .then(function(data){
-          if (!data || !data.ok) { input.placeholder = 'Не удалось создать ссылку'; return; }
+          if (!data || !data.ok) { input.placeholder = window.AlexiHubI18n.t('server.invite.create_failed'); return; }
           input.value = data.url;
           if (copyBtn) copyBtn.disabled = false;
         })
-        .catch(function(){ input.placeholder = 'Не удалось создать ссылку'; });
+        .catch(function(){ input.placeholder = window.AlexiHubI18n.t('server.invite.create_failed'); });
     }
     function copyServerInviteLink() {
       var input = document.getElementById('invite-link-url-input');
@@ -4004,14 +4004,14 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
       var copyBtn = document.getElementById('invite-link-copy-btn');
       if (copyBtn) {
         var original = copyBtn.textContent;
-        copyBtn.textContent = 'Скопировано!';
+        copyBtn.textContent = window.AlexiHubI18n.t('common.copied_bang');
         setTimeout(function(){ copyBtn.textContent = original; }, 1500);
       }
     }
     function regenerateServerInviteLink(event) {
       if (event) event.preventDefault();
       var input = document.getElementById('invite-link-url-input');
-      if (input) { input.value = ''; input.placeholder = 'Создание новой ссылки…'; }
+      if (input) { input.value = ''; input.placeholder = window.AlexiHubI18n.t('server.invite.creating'); }
       var qs = AH_INVITE_CURRENT_CHANNEL_ID ? ('?channel_id=' + encodeURIComponent(AH_INVITE_CURRENT_CHANNEL_ID)) : '';
       fetch('/community/servers/' + AH_INVITE_SERVER_ID + '/invites/link' + qs, { method: 'POST' })
         .then(function(r){ return r.json(); })
@@ -4995,7 +4995,7 @@ function openChannelInviteModal(event, btn) {
         } else {
           var defaultSuffix = window.AlexiHubI18n.t("dm.text.preferring");
           if (!defaultSuffix || !/^\s/.test(defaultSuffix) || /preferring|typing/i.test(defaultSuffix)) {
-            defaultSuffix = ' друкує...';
+            defaultSuffix = ' ' + window.AlexiHubI18n.t('dm.text.preferring');
           }
           html = boldName + defaultSuffix;
         }
@@ -5240,7 +5240,7 @@ function openChannelInviteModal(event, btn) {
     async function startVoiceHold() {
       if (voiceHolding || composerSendMode() !== 'voice' || pendingServerSend) return;
       if (!navigator.mediaDevices || !window.MediaRecorder) {
-        if (window.showActionToast) showActionToast('Мікрофон не підтримується цим браузером');
+        if (window.showActionToast) showActionToast(window.AlexiHubI18n.t('voice.mic_unsupported'));
         return;
       }
       voiceHolding = true;
@@ -5276,7 +5276,7 @@ function openChannelInviteModal(event, btn) {
       } catch (e) {
         voiceHolding = false;
         if (composerSendBtn) composerSendBtn.classList.remove('holding');
-        if (window.showActionToast) showActionToast('Немає доступу до мікрофона');
+        if (window.showActionToast) showActionToast(window.AlexiHubI18n.t('voice.mic_denied'));
       }
     }
 
@@ -5306,7 +5306,7 @@ function openChannelInviteModal(event, btn) {
         data = await res.json();
       } catch (e) {}
       if (!data || !data.ok || !data.url) {
-        if (window.showActionToast) showActionToast('Не вдалося надіслати голосове повідомлення');
+        if (window.showActionToast) showActionToast(window.AlexiHubI18n.t('voice.send_failed'));
         return;
       }
       var duration = data.duration || durationSec;
@@ -6059,12 +6059,12 @@ document.addEventListener('DOMContentLoaded',()=>{
 <h1><!--i18n:settings.appearance-->{{ i18n_t('settings.appearance') }}</h1>
 <div class="ah-settings-section ah-appearance-section">
 
-  <div class="ah-appearance-block-title">Тема</div>
+  <div class="ah-appearance-block-title" data-i18n="home.text.theme"><!--i18n:home.text.theme-->{{ i18n_t('home.text.theme') }}</div>
 
   <div class="ah-appearance-toggle-row">
     <div class="ah-appearance-toggle-copy">
-      <b>Как тема устройства</b>
-      <span>Такой же режим, как на вашем устройстве.</span>
+      <b data-i18n="common.theme.device_title"><!--i18n:common.theme.device_title-->{{ i18n_t('common.theme.device_title') }}</b>
+      <span data-i18n="common.theme.device_desc"><!--i18n:common.theme.device_desc-->{{ i18n_t('common.theme.device_desc') }}</span>
     </div>
     <label class="ah-privacy-switch">
       <input type="checkbox" id="ah-theme-sync-system">
@@ -6072,17 +6072,17 @@ document.addEventListener('DOMContentLoaded',()=>{
     </label>
   </div>
 
-  <div class="ah-appearance-subtitle">Темы по умолчанию</div>
-  <div class="ah-theme-swatch-row" id="ah-theme-swatch-row" role="radiogroup" aria-label="Темы по умолчанию">
-    <button type="button" class="ah-theme-swatch-btn" data-swatch="light" role="radio" aria-label="Светлая">
+  <div class="ah-appearance-subtitle" data-i18n="common.theme.defaults"><!--i18n:common.theme.defaults-->{{ i18n_t('common.theme.defaults') }}</div>
+  <div class="ah-theme-swatch-row" id="ah-theme-swatch-row" role="radiogroup" aria-label="{{ i18n_t('common.theme.defaults') }}" data-i18n-aria-label="common.theme.defaults">
+    <button type="button" class="ah-theme-swatch-btn" data-swatch="light" role="radio" aria-label="{{ i18n_t('common.theme.light') }}" data-i18n-aria-label="common.theme.light">
       <span class="ah-swatch-fill light"></span>
       <svg class="ah-swatch-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"></path></svg>
     </button>
-    <button type="button" class="ah-theme-swatch-btn" data-swatch="dark" role="radio" aria-label="Тёмная">
+    <button type="button" class="ah-theme-swatch-btn" data-swatch="dark" role="radio" aria-label="{{ i18n_t('common.theme.dark') }}" data-i18n-aria-label="common.theme.dark">
       <span class="ah-swatch-fill dark"></span>
       <svg class="ah-swatch-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"></path></svg>
     </button>
-    <button type="button" class="ah-theme-swatch-btn" data-swatch="darker" role="radio" aria-label="Тёмнее">
+    <button type="button" class="ah-theme-swatch-btn" data-swatch="darker" role="radio" aria-label="{{ i18n_t('common.theme.darker') }}" data-i18n-aria-label="common.theme.darker">
       <span class="ah-swatch-fill darker"></span>
       <svg class="ah-swatch-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"></path></svg>
     </button>
@@ -6090,15 +6090,15 @@ document.addEventListener('DOMContentLoaded',()=>{
       <span class="ah-swatch-fill amoled"></span>
       <svg class="ah-swatch-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"></path></svg>
     </button>
-    <button type="button" class="ah-theme-sync-icon-btn" id="ah-theme-sync-icon" aria-label="Синхронизировать с системой" title="Синхронизировать с системой">
+    <button type="button" class="ah-theme-sync-icon-btn" id="ah-theme-sync-icon" aria-label="{{ i18n_t('common.theme.sync_system') }}" data-i18n-aria-label="common.theme.sync_system" title="{{ i18n_t('common.theme.sync_system') }}" data-i18n-title="common.theme.sync_system">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35A8 8 0 1 0 19.5 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M17 3v5h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
   </div>
 
   <div class="ah-appearance-toggle-row">
     <div class="ah-appearance-toggle-copy">
-      <b>Тёмная боковая панель</b>
-      <span>Список серверов и панель друзей остаются тёмными, даже если выбрана светлая тема.</span>
+      <b data-i18n="common.theme.dark_sidebar"><!--i18n:common.theme.dark_sidebar-->{{ i18n_t('common.theme.dark_sidebar') }}</b>
+      <span data-i18n="common.theme.dark_sidebar_desc"><!--i18n:common.theme.dark_sidebar_desc-->{{ i18n_t('common.theme.dark_sidebar_desc') }}</span>
     </div>
     <label class="ah-privacy-switch">
       <input type="checkbox" id="ah-theme-dark-sidebar">
@@ -6108,8 +6108,8 @@ document.addEventListener('DOMContentLoaded',()=>{
 
   <div class="ah-appearance-toggle-row">
     <div class="ah-appearance-toggle-copy">
-      <b>Синхронизировать тему на моих устройствах</b>
-      <span>Применять выбранную тему везде, где вы вошли в AlexiHub.</span>
+      <b data-i18n="common.theme.sync_devices"><!--i18n:common.theme.sync_devices-->{{ i18n_t('common.theme.sync_devices') }}</b>
+      <span data-i18n="common.theme.sync_devices_desc"><!--i18n:common.theme.sync_devices_desc-->{{ i18n_t('common.theme.sync_devices_desc') }}</span>
     </div>
     <label class="ah-privacy-switch">
       <input type="checkbox" id="ah-theme-sync-devices" checked>
@@ -6576,7 +6576,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     const file = input && input.files && input.files[0];
     if(!file || !String(file.type || '').startsWith('image/')) return;
     if(file.size > MAX_ANIMATED_BYTES){
-      notify('Файл завеликий. Максимум 12 МБ.');
+      notify(window.AlexiHubI18n.t('common.upload.too_large_12mb'));
       input.value = '';
       return;
     }
@@ -12380,13 +12380,13 @@ document.addEventListener('alexihub:block-status-changed',event=>{const detail=e
         <span class="ah-tag-preview-chip" id="ah-tag-preview-chip" hidden></span>
       </div>
       <div class="ah-tag-preview-stats" id="ah-tag-preview-stats" hidden>
-        <span><i class="ah-tag-preview-dot"></i><b id="ah-tag-preview-online">0</b>&nbsp;в сети</span>
-        <span><i class="ah-tag-preview-dot muted"></i><b id="ah-tag-preview-members">0</b>&nbsp;учасників</span>
+        <span><i class="ah-tag-preview-dot"></i><b id="ah-tag-preview-online">0</b>&nbsp;<!--i18n:common.tag_preview.online-->{{ i18n_t('common.tag_preview.online') }}</span>
+        <span><i class="ah-tag-preview-dot muted"></i><b id="ah-tag-preview-members">0</b>&nbsp;<!--i18n:common.tag_preview.members-->{{ i18n_t('common.tag_preview.members') }}</span>
       </div>
     </div>
   </div>
   <p class="ah-tag-preview-desc" id="ah-tag-preview-desc" hidden></p>
-  <a class="ah-tag-preview-action" id="ah-tag-preview-action" href="#" hidden>Перейти на сервер</a>
+  <a class="ah-tag-preview-action" id="ah-tag-preview-action" href="#" hidden data-i18n="common.tag_preview.go_to_server"><!--i18n:common.tag_preview.go_to_server-->{{ i18n_t('common.tag_preview.go_to_server') }}</a>
 </div>
 <script>
 (function(){
@@ -12433,7 +12433,7 @@ document.addEventListener('alexihub:block-status-changed',event=>{const detail=e
     var desc=el.getAttribute('data-tag-description')||'';
     var invite=el.getAttribute('data-tag-invite')||(serverId?('/community/servers/'+serverId):'');
 
-    nameEl.textContent=name||text||'Сервер';
+    nameEl.textContent=name||text||window.AlexiHubI18n.t('common.server.default_custom');
     chipEl.hidden=!text;
     chipEl.textContent=text?(glyph+' '+text):'';
 
@@ -13113,7 +13113,7 @@ document.addEventListener('alexihub:block-status-changed',event=>{const detail=e
       window.openModal('leave-server-modal');
       return;
     }
-    if (!confirm(t('server.ctx.leave_confirm', 'Покинути «' + state.serverName + '»?'))) return;
+    if (!confirm(window.AlexiHubI18n.t('server.ctx.leave_confirm', {server: state.serverName}))) return;
     var form = document.createElement('form');
     form.method = 'post';
     form.action = '/community/servers/' + id + '/leave';
@@ -13124,7 +13124,7 @@ document.addEventListener('alexihub:block-status-changed',event=>{const detail=e
 
   function copyServerId(id, dot) {
     var val = String(id);
-    var done = function () { toast(t('common.feedback.copied', 'Скопійовано')); };
+    var done = function () { toast(t('common.feedback.copied', window.AlexiHubI18n.t('common.feedback.copied'))); };
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(val).then(done).catch(function () { fallbackCopy(val, done); });
     } else {
@@ -13316,7 +13316,7 @@ document.addEventListener('alexihub:block-status-changed',event=>{const detail=e
       label: t('common.text.confidential_settings', 'Налаштування конфіденційності'),
       onClick: function () {
         closeMenu();
-        if (typeof window.showActionToast === 'function') window.showActionToast(t('server.stub.privacy', 'Розділ у розробці'));
+        if (typeof window.showActionToast === 'function') window.showActionToast(t('server.stub.privacy', window.AlexiHubI18n.t('dm.ctx.stub')));
       }
     }));
 
@@ -13494,9 +13494,9 @@ html.ah-theme-anim *,html.ah-theme-anim *::before,html.ah-theme-anim *::after{tr
     var grid=document.getElementById('ah-color-themes-grid');
     if(!grid||grid.dataset.built)return;
     grid.dataset.built='1';
-    var html='<button type="button" class="ah-color-theme-tile wand" aria-label="Создать тему" onclick="window.showSettingsTab?.(\'subscriptions\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4V2m0 14v-2M8 9h2M20 9h2M17.8 11.8 19 13M15 9h.01M17.8 6.2 19 5M3 21l9-9M12.2 6.2 11 5"/></svg></button>';
+    var html='<button type="button" class="ah-color-theme-tile wand" aria-label="'+window.AlexiHubI18n.t('profile.theme.create')+'" onclick="window.showSettingsTab?.(\'subscriptions\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4V2m0 14v-2M8 9h2M20 9h2M17.8 11.8 19 13M15 9h.01M17.8 6.2 19 5M3 21l9-9M12.2 6.2 11 5"/></svg></button>';
     COLOR_THEMES.forEach(function(t,i){
-      html+='<button type="button" class="ah-color-theme-tile" style="background:'+t.c+'" aria-label="Тема '+(i+1)+' (Plus)" onclick="settingsToast(\'Доступно с подпиской Plus\')"><span class="lock"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 9h-1V7a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2Zm-7-2a2 2 0 1 1 4 0v2h-4V7Z"/></svg></span></button>';
+      html+='<button type="button" class="ah-color-theme-tile" style="background:'+t.c+'" aria-label="'+window.AlexiHubI18n.t('home.text.theme')+' '+(i+1)+' (Plus)" onclick="settingsToast(window.AlexiHubI18n.t(\'profile.theme.plus_only\'))"><span class="lock"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 9h-1V7a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2Zm-7-2a2 2 0 1 1 4 0v2h-4V7Z"/></svg></span></button>';
     });
     grid.innerHTML=html;
   }
@@ -14112,17 +14112,17 @@ html[data-theme="light"] body .ah-v3-mini.ah-profile-theme #ah-v3-status{border-
   if(window.AhVoiceToText)return;
   var ICON='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 5h16v2H4zm0 4h16v2H4zm0 4h10v2H4zm0 4h13v2H4z"/></svg>';
   var ERRORS={
-    stt_not_configured:'Розпізнавання не налаштоване на сервері (потрібен GROQ_API_KEY або OPENAI_API_KEY).',
-    audio_unavailable:'Не вдалося отримати аудіофайл цього повідомлення.',
-    stt_failed:'Сервіс розпізнавання не відповів. Спробуй ще раз пізніше.',
-    not_authenticated:'Потрібно увійти в акаунт.',
-    forbidden:'Немає доступу до цього повідомлення.',
-    not_found:'Повідомлення не знайдено.'
+    stt_not_configured:window.AlexiHubI18n.t('stt.not_configured'),
+    audio_unavailable:window.AlexiHubI18n.t('stt.audio_failed'),
+    stt_failed:window.AlexiHubI18n.t('stt.service_down'),
+    not_authenticated:window.AlexiHubI18n.t('stt.login_required'),
+    forbidden:window.AlexiHubI18n.t('stt.no_access'),
+    not_found:window.AlexiHubI18n.t('stt.not_found')
   };
 
   function endpoint(id){
     var m=location.pathname.match(/\/servers\/(\d+)\/channel\/(\d+)/);
-    if(!m)throw new Error('Не вдалося визначити канал.');
+    if(!m)throw new Error(window.AlexiHubI18n.t('server.channel_unknown'));
     return '/community/servers/'+m[1]+'/channel/'+m[2]+'/message/'+encodeURIComponent(id)+'/transcribe';
   }
   function transcribe(id){
@@ -14130,7 +14130,7 @@ html[data-theme="light"] body .ah-v3-mini.ah-profile-theme #ah-v3-status{border-
     fd.append('lang',(document.documentElement.lang||'').toLowerCase().slice(0,2));
     return fetch(endpoint(id),{method:'POST',body:fd,credentials:'same-origin'}).then(function(r){
       return r.json().catch(function(){return {};}).then(function(j){
-        if(!r.ok||!j||!j.ok)throw new Error(ERRORS[j&&j.error]||('помилка сервера ('+r.status+')'));
+        if(!r.ok||!j||!j.ok)throw new Error(ERRORS[j&&j.error]||(window.AlexiHubI18n.t('stt.server_error')+' ('+r.status+')'));
         return String(j.text||'').trim();
       });
     });
@@ -14154,18 +14154,18 @@ html[data-theme="light"] body .ah-v3-mini.ah-profile-theme #ah-v3-status{border-
     var id=row&&(row.dataset.messageId||row.dataset.id||'');
     box=boxOf(wrap);box.hidden=false;
     if(!/^\d+$/.test(id||'')){
-      box.className='ah-stt-text err';box.textContent='Повідомлення ще надсилається, спробуй за мить.';return;
+      box.className='ah-stt-text err';box.textContent=window.AlexiHubI18n.t('stt.still_sending');return;
     }
-    box.className='ah-stt-text status';box.textContent='Розпізнавання…';
+    box.className='ah-stt-text status';box.textContent=window.AlexiHubI18n.t('stt.recognizing');
     btn.classList.add('busy');
     transcribe(id).then(function(text){
       btn.classList.remove('busy');
       if(text){box.className='ah-stt-text';box.textContent=text;btn.classList.add('done');}
-      else{box.className='ah-stt-text status';box.textContent='Мовлення не розпізнано.';}
+      else{box.className='ah-stt-text status';box.textContent=window.AlexiHubI18n.t('stt.no_speech');}
     }).catch(function(err){
       btn.classList.remove('busy');
       box.className='ah-stt-text err';
-      box.textContent=(err&&err.message)||'Не вдалося розпізнати.';
+      box.textContent=(err&&err.message)||window.AlexiHubI18n.t('stt.failed');
     });
   }
 
@@ -14175,7 +14175,7 @@ html[data-theme="light"] body .ah-v3-mini.ah-profile-theme #ah-v3-status{border-
       var w=list[i];w.setAttribute('data-ah-stt','1');
       var b=document.createElement('button');
       b.type='button';b.className='ah-stt-btn';
-      b.title='Перетворити на текст';b.setAttribute('aria-label','Перетворити голосове повідомлення на текст');
+      b.title=window.AlexiHubI18n.t('stt.to_text');b.setAttribute('aria-label',window.AlexiHubI18n.t('stt.voice_to_text'));
       b.innerHTML=ICON;
       var a=w.querySelector('audio');
       if(a)w.insertBefore(b,a);else w.appendChild(b);
@@ -14210,7 +14210,7 @@ html[data-theme="light"] .ah-reply-action:hover{background:#e3e5e8;color:#111318
   function label(){
     try{var t=window.AlexiHubI18n&&window.AlexiHubI18n.t&&window.AlexiHubI18n.t('common.text.respond');
       if(t&&t!=='common.text.respond')return t;}catch(e){}
-    return 'Відповісти';
+    return window.AlexiHubI18n.t('common.reply');
   }
   function enhance(){
     var rows=document.querySelectorAll(CFG.rows);
@@ -14501,12 +14501,12 @@ html[data-theme="light"] .ah-reply-action:hover{background:#e3e5e8;color:#111318
     if(!shell||!form||document.getElementById('ah-pc-panel'))return;
     card=shell.querySelector('.ah-custom-profile-card');
     panel=document.createElement('aside');panel.id='ah-pc-panel';panel.className='ah-pc-panel';panel.setAttribute('aria-hidden','true');
-    panel.innerHTML='<button type="button" class="ah-pc-back" aria-label="Закрити"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>'+
-      '<div class="ah-pc-head"><b>Тема профілю</b><p>Так може виглядати ваш профіль із власними кольорами. Її побачать усі.</p></div>'+
-      '<div class="ah-pc-sec"><h4>Кольори теми</h4><div class="ah-pc-strip"><label class="ah-pc-dot ah-pc-dot-top" title="Верхній колір"><input type="color" id="ah-pc-in1" aria-label="Верхній колір"></label><label class="ah-pc-dot ah-pc-dot-bot" title="Нижній колір"><input type="color" id="ah-pc-in2" aria-label="Нижній колір"></label></div></div>'+
-      '<div class="ah-pc-sec"><h4>Готові теми</h4><div class="ah-pc-presets">'+PRESETS.map(function(x){return '<button type="button" class="ah-pc-preset" data-p="'+x[0]+'" data-a="'+x[1]+'" style="background:linear-gradient(180deg,'+x[0]+','+x[1]+')" aria-label="Тема"></button>'}).join('')+'</div></div>'+
-      '<button type="button" class="ah-pc-reset">Скинути кольори</button>';
-    var handle=document.createElement('button');handle.type='button';handle.className='ah-pc-handle';handle.setAttribute('aria-label','Тема профілю');handle.setAttribute('aria-expanded','false');handle.title='Тема профілю';
+    panel.innerHTML='<button type="button" class="ah-pc-back" aria-label="'+window.AlexiHubI18n.t('common.actions.close')+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>'+
+      '<div class="ah-pc-head"><b>'+window.AlexiHubI18n.t('home.text.theme_of_profile')+'</b><p>'+window.AlexiHubI18n.t('profile.theme.desc')+'</p></div>'+
+      '<div class="ah-pc-sec"><h4>'+window.AlexiHubI18n.t('profile.theme.colors')+'</h4><div class="ah-pc-strip"><label class="ah-pc-dot ah-pc-dot-top" title="'+window.AlexiHubI18n.t('profile.theme.top_color')+'"><input type="color" id="ah-pc-in1" aria-label="'+window.AlexiHubI18n.t('profile.theme.top_color')+'"></label><label class="ah-pc-dot ah-pc-dot-bot" title="'+window.AlexiHubI18n.t('profile.theme.bottom_color')+'"><input type="color" id="ah-pc-in2" aria-label="'+window.AlexiHubI18n.t('profile.theme.bottom_color')+'"></label></div></div>'+
+      '<div class="ah-pc-sec"><h4>'+window.AlexiHubI18n.t('profile.theme.presets')+'</h4><div class="ah-pc-presets">'+PRESETS.map(function(x){return '<button type="button" class="ah-pc-preset" data-p="'+x[0]+'" data-a="'+x[1]+'" style="background:linear-gradient(180deg,'+x[0]+','+x[1]+')" aria-label="'+window.AlexiHubI18n.t('home.text.theme')+'"></button>'}).join('')+'</div></div>'+
+      '<button type="button" class="ah-pc-reset">'+window.AlexiHubI18n.t('profile.theme.reset')+'</button>';
+    var handle=document.createElement('button');handle.type='button';handle.className='ah-pc-handle';handle.setAttribute('aria-label',window.AlexiHubI18n.t('home.text.theme_of_profile'));handle.setAttribute('aria-expanded','false');handle.title=window.AlexiHubI18n.t('home.text.theme_of_profile');
     handle.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
     shell.appendChild(panel);shell.appendChild(handle);
     h1=document.createElement('input');h1.type='hidden';h1.name='profile_color_primary';h1.disabled=true;
@@ -14973,13 +14973,13 @@ html[data-theme="light"] .ah-date-island{background:rgba(255,255,255,.88);border
   var LANG=((document.documentElement.getAttribute('lang')||'uk').slice(0,2)).toLowerCase();
   if(LANG!=='ru'&&LANG!=='en')LANG='uk';
   var T={
-    uk:{title:'Створення опитування',question:'Питання',qph:'Яке питання ви хочете задати?',answers:'Відповіді',aph:'Введіть відповідь',add:'Додати ще одну відповідь',term:'Термін',multi:'Дозволити кілька відповідей',publish:'Публікація',close:'Закрити',
+    uk:{title:'Створення опитування',question:'Питання',qph:'Яке питання ви хочете задати?',answers:'Відповіді',aph:'Введіть відповідь',add:'Додати ще одну відповідь',term:'Термін',multi:'Дозволити кілька відповідей',publish:'Публікація',close:window.AlexiHubI18n.t('common.actions.close'),
       pickOne:'Оберіть одну відповідь',pickMany:'Оберіть кілька відповідей',ended:'Опитування завершено',left:'Залишилось',lessMin:'менше хвилини',
       min:'хв',hour:'год',day:'дн',votes:['голос','голоси','голосів'],noVotes:'Ще немає голосів',removeVote:'Видалити голос',
       h1:'1 год',h4:'4 год',h8:'8 год',h24:'24 год',h72:'3 дні',h168:'1 тиждень',h336:'2 тижні',
       errGeneric:'Не вдалося створити опитування',errRate:'Надто швидко. Спробуйте за мить.',errBlocked:'Не вдалося надіслати: користувач недоступний.',errVote:'Не вдалося проголосувати',errEnded:'Опитування вже завершено',errLong:'Забагато символів',errQuestion:'Введіть питання',errOptions:'Потрібно мінімум 2 відповіді',
       pollLabel:'Опитування'},
-    ru:{title:'Создание опроса',question:'Вопрос',qph:'Какой вопрос вы хотите задать?',answers:'Ответы',aph:'Введите ответ',add:'Добавить ещё один ответ',term:'Срок',multi:'Разрешить несколько ответов',publish:'Публикация',close:'Закрыть',
+    ru:{title:'Создание опроса',question:'Вопрос',qph:'Какой вопрос вы хотите задать?',answers:'Ответы',aph:'Введите ответ',add:'Добавить ещё один ответ',term:'Срок',multi:'Разрешить несколько ответов',publish:'Публикация',close:window.AlexiHubI18n.t('common.actions.close'),
       pickOne:'Выберите один ответ',pickMany:'Выберите несколько ответов',ended:'Опрос завершён',left:'Осталось',lessMin:'меньше минуты',
       min:'мин',hour:'ч',day:'дн',votes:['голос','голоса','голосов'],noVotes:'Пока нет голосов',removeVote:'Удалить голос',
       h1:'1 ч',h4:'4 ч',h8:'8 ч',h24:'24 ч',h72:'3 дня',h168:'1 неделя',h336:'2 недели',
