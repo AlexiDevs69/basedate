@@ -2374,16 +2374,16 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
     var el=document.createElement('div');
     el.id='ah-voice-dock';
     el.setAttribute('role','region');
-    el.setAttribute('aria-label','Голосове повідомлення');
+    el.setAttribute('aria-label',window.AlexiHubI18n.t('common.voice.message'));
     el.innerHTML='<div class="ahvd-card"><div class="ahvd-main">'
-      +'<button type="button" class="ahvd-btn ahvd-prev" title="Попереднє" aria-label="Попереднє">'+I.prev+'</button>'
-      +'<button type="button" class="ahvd-btn ahvd-play" title="Відтворити / пауза" aria-label="Відтворити / пауза">'+I.play+'</button>'
-      +'<button type="button" class="ahvd-btn ahvd-next" title="Наступне" aria-label="Наступне">'+I.next+'</button>'
+      +'<button type="button" class="ahvd-btn ahvd-prev" title="'+window.AlexiHubI18n.t('common.voice.prev')+'" aria-label="'+window.AlexiHubI18n.t('common.voice.prev')+'">'+I.prev+'</button>'
+      +'<button type="button" class="ahvd-btn ahvd-play" title="'+window.AlexiHubI18n.t('common.voice.play_pause')+'" aria-label="'+window.AlexiHubI18n.t('common.voice.play_pause')+'">'+I.play+'</button>'
+      +'<button type="button" class="ahvd-btn ahvd-next" title="'+window.AlexiHubI18n.t('common.voice.next')+'" aria-label="'+window.AlexiHubI18n.t('common.voice.next')+'">'+I.next+'</button>'
       +'<div class="ahvd-info"><b class="ahvd-author"></b><span class="ahvd-when"></span></div>'
       +'<span class="ahvd-time">00:00</span>'
-      +'<div class="ahvd-vol"><button type="button" class="ahvd-btn ahvd-mute" title="Звук" aria-label="Звук">'+I.vol+'</button><input class="ahvd-range" type="range" min="0" max="1" step="0.05" aria-label="Гучність"></div>'
-      +'<button type="button" class="ahvd-rate" title="Швидкість" aria-label="Швидкість">1x</button>'
-      +'<button type="button" class="ahvd-btn ahvd-close" title="Закрити" aria-label="Закрити">'+I.close+'</button>'
+      +'<div class="ahvd-vol"><button type="button" class="ahvd-btn ahvd-mute" title="'+window.AlexiHubI18n.t('common.voice.sound')+'" aria-label="'+window.AlexiHubI18n.t('common.voice.sound')+'">'+I.vol+'</button><input class="ahvd-range" type="range" min="0" max="1" step="0.05" aria-label="'+window.AlexiHubI18n.t('common.voice.volume')+'"></div>'
+      +'<button type="button" class="ahvd-rate" title="'+window.AlexiHubI18n.t('common.voice.speed')+'" aria-label="'+window.AlexiHubI18n.t('common.voice.speed')+'">1x</button>'
+      +'<button type="button" class="ahvd-btn ahvd-close" title="'+window.AlexiHubI18n.t('common.actions.close')+'" aria-label="'+window.AlexiHubI18n.t('common.actions.close')+'">'+I.close+'</button>'
       +'</div><div class="ahvd-bar"><div class="ahvd-fill"></div></div></div>';
     document.body.appendChild(el);
     var q=function(s){return el.querySelector(s);};
@@ -2427,7 +2427,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
     if(!ui)return;
     var v=view();
     ui.el.classList.toggle('playing',v.playing);
-    ui.author.textContent=meta.author||'Голосове повідомлення';
+    ui.author.textContent=meta.author||window.AlexiHubI18n.t('common.voice.message');
     ui.when.textContent=meta.when||'';
     ui.rate.textContent=(prefs.rate===1?'1':String(prefs.rate))+'x';
     ui.rate.classList.toggle('fast',prefs.rate!==1);
@@ -2493,7 +2493,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
   function mediaSession(){
     if(!('mediaSession' in navigator))return;
     try{
-      navigator.mediaSession.metadata=new MediaMetadata({title:'Голосове повідомлення',artist:meta.author||'',album:meta.when||''});
+      navigator.mediaSession.metadata=new MediaMetadata({title:window.AlexiHubI18n.t('common.voice.message'),artist:meta.author||'',album:meta.when||''});
       navigator.mediaSession.setActionHandler('play',toggle);
       navigator.mediaSession.setActionHandler('pause',toggle);
       navigator.mediaSession.setActionHandler('previoustrack',prev);
@@ -2656,9 +2656,9 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
   }
   function pad(x){return(x<10?'0':'')+x}
   function describe(e){
-    if(!e)return'';if(e.until===-1)return'Поки не увімкнете';
+    if(!e)return'';if(e.until===-1)returnwindow.AlexiHubI18n.t('common.mute.until_enabled');
     var d=new Date(e.until),now=new Date(),hm=pad(d.getHours())+':'+pad(d.getMinutes());
-    return d.toDateString()===now.toDateString()?'До '+hm:'До '+pad(d.getDate())+'.'+pad(d.getMonth()+1)+' '+hm;
+    return d.toDateString()===now.toDateString()?window.AlexiHubI18n.t('common.mute.until_prefix')+' '+hm:window.AlexiHubI18n.t('common.mute.until_prefix')+' '+pad(d.getDate())+'.'+pad(d.getMonth()+1)+' '+hm;
   }
   function schedule(){
     clearTimeout(timer);var m=read(),next=0;
@@ -2789,7 +2789,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
         {% if ch.channel_type != 'voice' %}<span class="cv-row-sub">{{ ch.description if ch.description else i18n_t('server_home.text.open_chat') }}</span>{% endif %}
       </span>
       {% if ch.channel_type != 'voice' %}
-      <button type="button" class="cv-row-preview-btn" data-preview-channel-id="{{ ch.id }}" data-preview-channel-name="{{ ch.name }}" data-preview-server-id="{{ server.id }}">Просмотр</button>
+      <button type="button" class="cv-row-preview-btn" data-preview-channel-id="{{ ch.id }}" data-preview-channel-name="{{ ch.name }}" data-preview-server-id="{{ server.id }}" data-i18n="home.action.viewing"><!--i18n:home.action.viewing-->{{ i18n_t('home.action.viewing') }}</button>
       {% endif %}
       <label class="cv-row-check" onclick="event.stopPropagation()" title="{{ i18n_t('common.aria.channel_settings') }}" data-i18n-title="common.aria.channel_settings">
         <input type="checkbox" class="cv-check" data-channel-id="{{ ch.id }}" checked onclick="event.stopPropagation()" onchange="cvToggleChannelVisibility(this)">
@@ -2798,7 +2798,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
     {%- endmacro %}
     <div class="sidebar-scroll server-channel-tree">
       {% if server.description %}<div class="server-desc">{{ server.description }}</div>{% endif %}
-      <a href="/community/servers/{{ server.id }}" class="chan-link active" id="cv-nav-channels" onclick="return cvShowTab('channels', event)"><svg class="cv-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 5H3"/><path d="M15 12H3"/><path d="M9 19H3"/><circle cx="17" cy="17" r="3"/><path d="m21 21-1.9-1.9"/></svg><span>Просмотр каналов</span></a><a href="/community/servers/{{ server.id }}#members" class="chan-link" id="cv-nav-members" onclick="return cvShowTab('members', event)"><svg class="cv-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Участники</span></a>
+      <a href="/community/servers/{{ server.id }}" class="chan-link active" id="cv-nav-channels" onclick="return cvShowTab('channels', event)"><svg class="cv-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 5H3"/><path d="M15 12H3"/><path d="M9 19H3"/><circle cx="17" cy="17" r="3"/><path d="m21 21-1.9-1.9"/></svg><span data-i18n="server.cv.browse_channels"><!--i18n:server.cv.browse_channels-->{{ i18n_t('server.cv.browse_channels') }}</span></a><a href="/community/servers/{{ server.id }}#members" class="chan-link" id="cv-nav-members" onclick="return cvShowTab('members', event)"><svg class="cv-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span data-i18n="server_settings.action.participants"><!--i18n:server_settings.action.participants-->{{ i18n_t('server_settings.action.participants') }}</span></a>
       <div class="sidebar-label-row"><div class="sidebar-label"><!--i18n:common.text.kanali-->{{ i18n_t('common.text.kanali') }}</div>{% if can_manage %}<button type="button" class="sidebar-plus" onclick="openChannelCreateModal()" title="{{ i18n_t('common.aria.the_colludes_of_the_canal') }}" data-i18n-title="common.aria.the_colludes_of_the_canal">+</button>{% endif %}</div>
       {% for ch in channels if not ch.category_id %}{{ server_channel_row(ch) }}{% endfor %}
       {% for category in categories %}
@@ -2811,7 +2811,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
       </section>
       {% endfor %}
     </div>
-    <div class="sidebar-scroll">{% if server.description %}<div class="server-desc">{{ server.description }}</div>{% endif %}<a href="/community/servers/{{ server.id }}" class="chan-link active" id="cv-nav-channels" onclick="return cvShowTab('channels', event)"><svg class="cv-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 5H3"/><path d="M15 12H3"/><path d="M9 19H3"/><circle cx="17" cy="17" r="3"/><path d="m21 21-1.9-1.9"/></svg><span>Просмотр каналов</span></a><a href="/community/servers/{{ server.id }}#members" class="chan-link" id="cv-nav-members" onclick="return cvShowTab('members', event)"><svg class="cv-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Участники</span></a><div class="sidebar-label-row"><div class="sidebar-label"><!--i18n:common.text.kanali-->{{ i18n_t('common.text.kanali') }}</div>{% if can_manage %}<button type="button" class="sidebar-plus" onclick="openModal('channel-modal')" title="{{ i18n_t('common.aria.the_colludes_of_the_canal') }}" data-i18n-title="common.aria.the_colludes_of_the_canal">+</button>{% endif %}</div>{% for ch in channels %}<div class="chan-row " data-channel-id="{{ ch.id }}"><a href="/community/servers/{{ server.id }}/channel/{{ ch.id }}" data-mention-channel-key="{{ server.id }}:{{ ch.id }}" class="chan-link "><span class="chan-symbol">#</span><span class="chan-name">{{ ch.name }}</span>{% set cc = mention_counts.channel_by_id.get((server.id|string) ~ ':' ~ (ch.id|string), 0) %}<span class="ah-mention-count" {% if not cc %}hidden{% endif %}>{{ '99+' if cc > 99 else cc }}</span></a><div class="chan-actions"><button type="button" class="chan-action-btn" data-channel-id="{{ ch.id }}" data-channel-name="{{ ch.name }}" onclick="openChannelInviteModal(event, this)" title="{{ i18n_t('common.aria.yuncture') }}" data-i18n-title="common.aria.yuncture"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></button>{% if can_manage %}<a class="chan-action-btn" href="/community/servers/{{ server.id }}/channel/{{ ch.id }}/settings" onclick="event.stopPropagation()" title="{{ i18n_t('common.aria.channel_settings') }}" data-i18n-title="common.aria.channel_settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.33 1.82 2 2 0 1 1-3.34 0A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.82-.33 2 2 0 1 1 0-3.34A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .33-1.82 2 2 0 1 1 3.34 0A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 .6 1 1.65 1.65 0 0 0 1.82.33 2 2 0 1 1 0 3.34A1.65 1.65 0 0 0 19.4 15Z"/></svg></a>{% endif %}</div></div>{% endfor %}</div>
+    <div class="sidebar-scroll">{% if server.description %}<div class="server-desc">{{ server.description }}</div>{% endif %}<a href="/community/servers/{{ server.id }}" class="chan-link active" id="cv-nav-channels" onclick="return cvShowTab('channels', event)"><svg class="cv-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 5H3"/><path d="M15 12H3"/><path d="M9 19H3"/><circle cx="17" cy="17" r="3"/><path d="m21 21-1.9-1.9"/></svg><span data-i18n="server.cv.browse_channels"><!--i18n:server.cv.browse_channels-->{{ i18n_t('server.cv.browse_channels') }}</span></a><a href="/community/servers/{{ server.id }}#members" class="chan-link" id="cv-nav-members" onclick="return cvShowTab('members', event)"><svg class="cv-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span data-i18n="server_settings.action.participants"><!--i18n:server_settings.action.participants-->{{ i18n_t('server_settings.action.participants') }}</span></a><div class="sidebar-label-row"><div class="sidebar-label"><!--i18n:common.text.kanali-->{{ i18n_t('common.text.kanali') }}</div>{% if can_manage %}<button type="button" class="sidebar-plus" onclick="openModal('channel-modal')" title="{{ i18n_t('common.aria.the_colludes_of_the_canal') }}" data-i18n-title="common.aria.the_colludes_of_the_canal">+</button>{% endif %}</div>{% for ch in channels %}<div class="chan-row " data-channel-id="{{ ch.id }}"><a href="/community/servers/{{ server.id }}/channel/{{ ch.id }}" data-mention-channel-key="{{ server.id }}:{{ ch.id }}" class="chan-link "><span class="chan-symbol">#</span><span class="chan-name">{{ ch.name }}</span>{% set cc = mention_counts.channel_by_id.get((server.id|string) ~ ':' ~ (ch.id|string), 0) %}<span class="ah-mention-count" {% if not cc %}hidden{% endif %}>{{ '99+' if cc > 99 else cc }}</span></a><div class="chan-actions"><button type="button" class="chan-action-btn" data-channel-id="{{ ch.id }}" data-channel-name="{{ ch.name }}" onclick="openChannelInviteModal(event, this)" title="{{ i18n_t('common.aria.yuncture') }}" data-i18n-title="common.aria.yuncture"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></button>{% if can_manage %}<a class="chan-action-btn" href="/community/servers/{{ server.id }}/channel/{{ ch.id }}/settings" onclick="event.stopPropagation()" title="{{ i18n_t('common.aria.channel_settings') }}" data-i18n-title="common.aria.channel_settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.33 1.82 2 2 0 1 1-3.34 0A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.82-.33 2 2 0 1 1 0-3.34A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .33-1.82 2 2 0 1 1 3.34 0A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 .6 1 1.65 1.65 0 0 0 1.82.33 2 2 0 1 1 0 3.34A1.65 1.65 0 0 0 19.4 15Z"/></svg></a>{% endif %}</div></div>{% endfor %}</div>
     <div class="account-panel mini-profile-trigger" data-mini-username="{{ account.username|e }}" data-mini-display="{{ account.display_name or account.username }}" data-mini-avatar="{{ account.avatar_url or '' }}" data-mini-banner="{{ account.banner_url or '' }}" data-mini-status="{{ account.account_status or 'online' }}" data-mini-role="{{ account.role_label or 'online' }}" data-mini-effect="{{ account.name_effect or 'none' }}" data-mini-font="{{ account.name_font or 'default' }}" data-mini-c1="{{ account.role_color_start or '#f5576c' }}" data-mini-c2="{{ account.role_color_end or '#7367f0' }}" data-mini-profile="/community/profile/{{ account.username }}" data-mini-bio="{{ account.bio or '' }}" data-mini-created="{{ account.created_at.strftime('%d.%m.%Y') if account.created_at else '' }}"><span class="account-avatar" {% if account.avatar_url %}style="background-image:url('{{ account.avatar_url }}');"{% endif %}>{% if not account.avatar_url %}{{ account.username[:1]|upper }}{% endif %}</span><span class="account-meta"><span class="visual-name account-name name-{{ account.name_effect or 'none' }} font-{{ account.name_font or 'default' }}" style="--name-c1: {{ account.role_color_start or '#f5576c' }}; --name-c2: {{ account.role_color_end or '#7367f0' }};">{{ account.display_name or account.username }}</span><span class="account-status">{{ i18n_t('status.' ~ (account.account_status or 'online')) }}</span><small class="account-username">@{{ account.username }}</small></span><span class="account-actions"><button class="voice-control" data-audio-kind="mic" type="button" onclick="event.stopPropagation();toggleAudioControl(this,'mic')" title="{{ i18n_t('common.aria.mute') }}" data-i18n-title="common.aria.mute"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button><button type="button" class="account-action-chevron" onclick="event.stopPropagation();showActionToast(window.AlexiHubI18n.t('home.stub.appearance'))" title="{{ i18n_t('common.aria.mute') }}" data-i18n-title="common.aria.mute"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></button><button class="voice-control" data-audio-kind="headphones" type="button" onclick="event.stopPropagation();toggleAudioControl(this,'headphones')" title="{{ i18n_t('common.aria.deafen') }}" data-i18n-title="common.aria.deafen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg></button><button type="button" class="account-action-chevron" onclick="event.stopPropagation();showActionToast(window.AlexiHubI18n.t('home.stub.appearance'))" title="{{ i18n_t('common.aria.deafen') }}" data-i18n-title="common.aria.deafen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></button><button type="button" onclick="event.stopPropagation();openUserSettings()" title="{{ i18n_t('common.aria.settings') }}" data-i18n-title="common.aria.settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.4 1.08V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.08-.4H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6A1.65 1.65 0 0 0 10.4 3V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 16 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.15.32.36.6.6 1 .26.25.64.4 1.08.4H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51.6z"/></svg></button></span></div>
   </aside>
   {% macro member_row(item) %}
@@ -2843,11 +2843,11 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
     {% endfor %}
     {% if members|length %}
       <div class="members-group" id="members-online-group">
-        <div class="members-title members-group-label" id="members-online-label">В сети — <span class="members-group-count">{{ online_members|length }}</span></div>
+        <div class="members-title members-group-label" id="members-online-label"><!--i18n:server.members.online_label-->{{ i18n_t('server.members.online_label') }} <span class="members-group-count">{{ online_members|length }}</span></div>
         {% for item in online_members %}{{ member_row(item) }}{% endfor %}
       </div>
       <div class="members-group" id="members-offline-group"{% if not offline_members|length %} hidden{% endif %}>
-        <div class="members-title members-group-label" id="members-offline-label">Не в сети — <span class="members-group-count">{{ offline_members|length }}</span></div>
+        <div class="members-title members-group-label" id="members-offline-label"><!--i18n:server.members.offline_label-->{{ i18n_t('server.members.offline_label') }} <span class="members-group-count">{{ offline_members|length }}</span></div>
         {% for item in offline_members %}{{ member_row(item) }}{% endfor %}
       </div>
     {% else %}
@@ -2859,17 +2859,17 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
     <div class="cv-page" id="cv-tab-channels">
       <div class="cv-topbar">
         <svg class="cv-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 5H3"/><path d="M15 12H3"/><path d="M9 19H3"/><circle cx="17" cy="17" r="3"/><path d="m21 21-1.9-1.9"/></svg>
-        <span>Просмотр каналов</span>
+        <span data-i18n="server.cv.browse_channels"><!--i18n:server.cv.browse_channels-->{{ i18n_t('server.cv.browse_channels') }}</span>
       </div>
       <div class="cv-search-row">
         <div class="cv-search">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-          <input type="text" oninput="cvFilterChannels(this.value)" placeholder="Поиск каналов">
+          <input type="text" oninput="cvFilterChannels(this.value)" placeholder="{{ i18n_t('server.cv.search_channels') }}" data-i18n-placeholder="server.cv.search_channels">
         </div>
         {% if can_manage %}
         <button type="button" class="cv-create-btn" onclick="openChannelCreateModal()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-          <span>Создать</span>
+          <span data-i18n="common.action.create"><!--i18n:common.action.create-->{{ i18n_t('common.action.create') }}</span>
         </button>
         {% endif %}
       </div>
@@ -2880,7 +2880,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
         {% if uncategorized_channels %}
         <section class="cv-group" data-cv-group>
           <div class="cv-group-head">
-            <span class="cv-group-title">Без категории</span>
+            <span class="cv-group-title" data-i18n="server.cv.no_category"><!--i18n:server.cv.no_category-->{{ i18n_t('server.cv.no_category') }}</span>
           </div>
           <div class="cv-rows">
             {% for ch in uncategorized_channels %}{{ cv_channel_row(ch) }}{% endfor %}
@@ -2896,7 +2896,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
           <div class="cv-group-head">
             <span class="cv-group-title">{{ category.name }}</span>
             <label class="cv-switch-label">
-              <span class="cv-switch-text">Подписаться на категорию</span>
+              <span class="cv-switch-text" data-i18n="server.cv.follow_category"><!--i18n:server.cv.follow_category-->{{ i18n_t('server.cv.follow_category') }}</span>
               <span class="cv-switch">
                 <input type="checkbox">
                 <span class="cv-switch-track"><span class="cv-switch-thumb"></span></span>
@@ -2921,34 +2921,34 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
       <div class="cv-preview-head">
         <span class="cv-row-hash">#</span>
         <span class="cv-preview-head-name" id="cv-preview-head-name"></span>
-        <button type="button" class="cv-preview-close" onclick="cvCloseChannelPreview()" title="Закрыть">
+        <button type="button" class="cv-preview-close" onclick="cvCloseChannelPreview()" title="{{ i18n_t('common.actions.close') }}" data-i18n-title="common.actions.close">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
         </button>
       </div>
       <div class="cv-preview-body">
-        <div class="cv-preview-loading" id="cv-preview-loading">Загрузка…</div>
-        <iframe id="cv-preview-iframe" src="about:blank" title="Просмотр канала"></iframe>
+        <div class="cv-preview-loading" id="cv-preview-loading" data-i18n="common.loading"><!--i18n:common.loading-->{{ i18n_t('common.loading') }}</div>
+        <iframe id="cv-preview-iframe" src="about:blank" title="{{ i18n_t('server.cv.channel_preview') }}" data-i18n-title="server.cv.channel_preview"></iframe>
       </div>
     </aside>
 
     <div class="mv-page" id="cv-tab-members" style="display:none">
       <div class="cv-topbar">
         <svg class="cv-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        <span>Участники</span>
+        <span data-i18n="server_settings.action.participants"><!--i18n:server_settings.action.participants-->{{ i18n_t('server_settings.action.participants') }}</span>
       </div>
 
       <div class="mv-panel">
         <div class="mv-panel-head">
-          <span class="mv-panel-title">Недавние участники</span>
+          <span class="mv-panel-title" data-i18n="server.mv.recent_members"><!--i18n:server.mv.recent_members-->{{ i18n_t('server.mv.recent_members') }}</span>
           <div class="mv-search">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-            <input type="text" id="mv-search-input" oninput="mvFilterMembers(this.value)" placeholder="Поиск по имени пользователя или тегу">
+            <input type="text" id="mv-search-input" oninput="mvFilterMembers(this.value)" placeholder="{{ i18n_t('server.mv.search_members') }}" data-i18n-placeholder="server.mv.search_members">
           </div>
           <button type="button" class="mv-btn" id="mv-sort-btn" onclick="mvCycleSort()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/></svg>
-            <span id="mv-sort-label">Сортировать</span>
+            <span id="mv-sort-label" data-i18n="home.text.sort"><!--i18n:home.text.sort-->{{ i18n_t('home.text.sort') }}</span>
           </button>
-          <button type="button" class="mv-btn mv-btn-clear" onclick="openPruneModal()">Очистить</button>
+          <button type="button" class="mv-btn mv-btn-clear" onclick="openPruneModal()" data-i18n="server.prune.action"><!--i18n:server.prune.action-->{{ i18n_t('server.prune.action') }}</button>
         </div>
         <div class="mv-table-wrap">
           <table class="mv-table">
@@ -2965,12 +2965,12 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
             <thead>
               <tr>
                 <th><input type="checkbox" class="mv-check" id="mv-check-all" onchange="mvToggleAll(this)"></th>
-                <th>Имя</th>
-                <th class="mv-th-sortable" onclick="mvCycleSort()"><span class="mv-th-inner">В числе участников с<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="2" x2="6" y1="14" y2="14"/><line x1="10" x2="14" y1="8" y2="8"/><line x1="18" x2="22" y1="16" y2="16"/></svg></span></th>
-                <th class="mv-th-sortable" onclick="mvCycleSort()"><span class="mv-th-inner">В AlexiHub с<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="2" x2="6" y1="14" y2="14"/><line x1="10" x2="14" y1="8" y2="8"/><line x1="18" x2="22" y1="16" y2="16"/></svg></span></th>
-                <th class="mv-th-sortable" onclick="mvCycleSort()"><span class="mv-th-inner">Способ вступления<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="2" x2="6" y1="14" y2="14"/><line x1="10" x2="14" y1="8" y2="8"/><line x1="18" x2="22" y1="16" y2="16"/></svg></span></th>
-                <th class="mv-th-sortable" onclick="mvCycleSort()"><span class="mv-th-inner">Роли<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="2" x2="6" y1="14" y2="14"/><line x1="10" x2="14" y1="8" y2="8"/><line x1="18" x2="22" y1="16" y2="16"/></svg></span></th>
-                <th class="mv-th-sortable" onclick="mvCycleSort()"><span class="mv-th-inner">Сигналы<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="2" x2="6" y1="14" y2="14"/><line x1="10" x2="14" y1="8" y2="8"/><line x1="18" x2="22" y1="16" y2="16"/></svg></span></th>
+                <th data-i18n="server_settings.text.name"><!--i18n:server_settings.text.name-->{{ i18n_t('server_settings.text.name') }}</th>
+                <th class="mv-th-sortable" onclick="mvCycleSort()"><span class="mv-th-inner"><!--i18n:server.mv.col_member_since-->{{ i18n_t('server.mv.col_member_since') }}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="2" x2="6" y1="14" y2="14"/><line x1="10" x2="14" y1="8" y2="8"/><line x1="18" x2="22" y1="16" y2="16"/></svg></span></th>
+                <th class="mv-th-sortable" onclick="mvCycleSort()"><span class="mv-th-inner"><!--i18n:server.mv.col_alexihub_since-->{{ i18n_t('server.mv.col_alexihub_since') }}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="2" x2="6" y1="14" y2="14"/><line x1="10" x2="14" y1="8" y2="8"/><line x1="18" x2="22" y1="16" y2="16"/></svg></span></th>
+                <th class="mv-th-sortable" onclick="mvCycleSort()"><span class="mv-th-inner"><!--i18n:server.mv.col_join_method-->{{ i18n_t('server.mv.col_join_method') }}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="2" x2="6" y1="14" y2="14"/><line x1="10" x2="14" y1="8" y2="8"/><line x1="18" x2="22" y1="16" y2="16"/></svg></span></th>
+                <th class="mv-th-sortable" onclick="mvCycleSort()"><span class="mv-th-inner"><!--i18n:server.mv.col_roles-->{{ i18n_t('server.mv.col_roles') }}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="2" x2="6" y1="14" y2="14"/><line x1="10" x2="14" y1="8" y2="8"/><line x1="18" x2="22" y1="16" y2="16"/></svg></span></th>
+                <th class="mv-th-sortable" onclick="mvCycleSort()"><span class="mv-th-inner"><!--i18n:server.mv.col_signals-->{{ i18n_t('server.mv.col_signals') }}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="2" x2="6" y1="14" y2="14"/><line x1="10" x2="14" y1="8" y2="8"/><line x1="18" x2="22" y1="16" y2="16"/></svg></span></th>
                 <th></th>
               </tr>
             </thead>
@@ -2991,15 +2991,15 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
                 </td>
                 <td class="mv-muted">—</td>
                 <td class="mv-muted">{{ m.created_at.strftime('%d.%m.%Y') if m.created_at else '—' }}</td>
-                <td class="mv-muted">Неизвестно</td>
+                <td class="mv-muted" data-i18n="common.unknown"><!--i18n:common.unknown-->{{ i18n_t('common.unknown') }}</td>
                 <td><span class="mv-role-pill"><span class="mv-role-dot" style="background:{{ m.role_color_start or '#5865f2' }}"></span>{{ i18n_t('common.role.' ~ item.member.role) }}</span></td>
                 <td></td>
                 <td>
                   <div class="mv-row-actions">
-                    <a class="mv-row-action-btn" href="/community/profile/{{ m.username }}" title="Профиль">
+                    <a class="mv-row-action-btn" href="/community/profile/{{ m.username }}" title="{{ i18n_t('common.profile') }}" data-i18n-title="common.profile">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
                     </a>
-                    <button type="button" class="mv-row-action-btn ah-member-more-btn" data-member-id="{{ m.id }}" data-member-username="{{ m.username|e }}" data-member-display="{{ (m.display_name or m.username)|e }}" data-member-profile="/community/profile/{{ m.username }}" data-member-owner="{{ '1' if m.id == server.owner_id else '0' }}" data-member-self="{{ '1' if m.id == account.id else '0' }}" onclick="window.ahOpenMemberMenu(event, this)" title="Ещё">
+                    <button type="button" class="mv-row-action-btn ah-member-more-btn" data-member-id="{{ m.id }}" data-member-username="{{ m.username|e }}" data-member-display="{{ (m.display_name or m.username)|e }}" data-member-profile="/community/profile/{{ m.username }}" data-member-owner="{{ '1' if m.id == server.owner_id else '0' }}" data-member-self="{{ '1' if m.id == account.id else '0' }}" onclick="window.ahOpenMemberMenu(event, this)" title="{{ i18n_t('common.more') }}" data-i18n-title="common.more">
                       <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
                     </button>
                   </div>
@@ -3007,12 +3007,12 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
               </tr>
               {% endif %}
               {% else %}
-              <tr><td colspan="8" class="empty-note">Нет участников</td></tr>
+              <tr><td colspan="8" class="empty-note" data-i18n="common.text.no_participants"><!--i18n:common.text.no_participants-->{{ i18n_t('common.text.no_participants') }}</td></tr>
               {% endfor %}
             </tbody>
           </table>
         </div>
-        <div class="mv-footer">Показаны <b>{{ members|length }}</b> участников</div>
+        <div class="mv-footer"><!--i18n:server.mv.shown-->{{ i18n_t('server.mv.shown') }} <b>{{ members|length }}</b> <!--i18n:common.tag_preview.members-->{{ i18n_t('common.tag_preview.members') }}</div>
       </div>
     </div>
   </main>
@@ -3183,10 +3183,10 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
 
     var mvSortState = -1;
     var mvSortModes = [
-      { label: 'Имя (А-Я)', cmp: function (a, b) { return a.getAttribute('data-mv-name').localeCompare(b.getAttribute('data-mv-name')); } },
-      { label: 'Имя (Я-А)', cmp: function (a, b) { return b.getAttribute('data-mv-name').localeCompare(a.getAttribute('data-mv-name')); } },
-      { label: 'Дата регистрации (новые)', cmp: function (a, b) { return parseFloat(b.getAttribute('data-mv-created')) - parseFloat(a.getAttribute('data-mv-created')); } },
-      { label: 'Дата регистрации (старые)', cmp: function (a, b) { return parseFloat(a.getAttribute('data-mv-created')) - parseFloat(b.getAttribute('data-mv-created')); } }
+      { label: window.AlexiHubI18n.t('server.mv.sort_name_asc'), cmp: function (a, b) { return a.getAttribute('data-mv-name').localeCompare(b.getAttribute('data-mv-name')); } },
+      { label: window.AlexiHubI18n.t('server.mv.sort_name_desc'), cmp: function (a, b) { return b.getAttribute('data-mv-name').localeCompare(a.getAttribute('data-mv-name')); } },
+      { label: window.AlexiHubI18n.t('server.mv.sort_created_new'), cmp: function (a, b) { return parseFloat(b.getAttribute('data-mv-created')) - parseFloat(a.getAttribute('data-mv-created')); } },
+      { label: window.AlexiHubI18n.t('server.mv.sort_created_old'), cmp: function (a, b) { return parseFloat(a.getAttribute('data-mv-created')) - parseFloat(b.getAttribute('data-mv-created')); } }
     ];
     function mvCycleSort() {
       mvSortState = (mvSortState + 1) % mvSortModes.length;
@@ -3241,7 +3241,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
       if (!panel) return;
       var map = prRoleRowsMap();
       var roles = Object.keys(map).filter(function (r) { return r !== '__none__'; }).sort(function (a, b) { return a.localeCompare(b, 'ru'); });
-      if (!roles.length) { panel.innerHTML = '<div class="pr-role-empty">Нет доступных ролей</div>'; return; }
+      if (!roles.length) { panel.innerHTML = '<div class="pr-role-empty">'+window.AlexiHubI18n.t('server.prune.no_roles')+'</div>'; return; }
       panel.innerHTML = roles.map(function (r) {
         var checked = prSelectedRoles.indexOf(r) !== -1 ? 'checked' : '';
         var safe = r.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -3262,7 +3262,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
       var label = document.getElementById('pr-role-trigger-label');
       if (!label) return;
       var hasValue = prSelectedRoles.length > 0;
-      label.textContent = hasValue ? prSelectedRoles.join(', ') : 'Выберите...';
+      label.textContent = hasValue ? prSelectedRoles.join(', ') : window.AlexiHubI18n.t('server.prune.select_roles');
       label.classList.toggle('pr-has-value', hasValue);
     }
 
@@ -3284,10 +3284,10 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
 
     function prPluralHuman(n) {
       var mod100 = n % 100, mod10 = n % 10;
-      if (mod100 >= 11 && mod100 <= 14) return 'человек';
-      if (mod10 === 1) return 'человек';
-      if (mod10 >= 2 && mod10 <= 4) return 'человека';
-      return 'человек';
+      if (mod100 >= 11 && mod100 <= 14) return window.AlexiHubI18n.t('server.prune.person.many');
+      if (mod10 === 1) return window.AlexiHubI18n.t('server.prune.person.one');
+      if (mod10 >= 2 && mod10 <= 4) return window.AlexiHubI18n.t('server.prune.person.few');
+      return window.AlexiHubI18n.t('server.prune.person.many');
     }
 
     function prEligibleRows() {
@@ -3310,7 +3310,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
       if (countEl) countEl.textContent = count;
       if (wordEl) wordEl.textContent = prPluralHuman(count);
       if (daysEl) daysEl.textContent = days;
-      if (extraEl) extraEl.textContent = prSelectedRoles.length ? (', а также участников с ролями: ' + prSelectedRoles.join(', ')) : '';
+      if (extraEl) extraEl.textContent = prSelectedRoles.length ? (window.AlexiHubI18n.t('server.prune.extra_roles', {roles: prSelectedRoles.join(', ')})) : '';
       if (submitBtn) submitBtn.classList.toggle('pr-empty', count === 0);
     }
 
@@ -3318,7 +3318,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
       var eligible = prEligibleRows();
       var count = eligible.length;
       closeModal('prune-modal');
-      if (!count) { showActionToast && showActionToast('Нет участников, подходящих под условия чистки'); return; }
+      if (!count) { showActionToast && showActionToast(window.AlexiHubI18n.t('server.prune.nobody')); return; }
       eligible.forEach(function (row) {
         row.style.transition = 'opacity .25s ease, transform .25s ease';
         row.style.opacity = '0';
@@ -3328,7 +3328,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
           mvUpdateFooterCount();
         }, 250);
       });
-      showActionToast && showActionToast('Исключено участников: ' + count);
+      showActionToast && showActionToast(window.AlexiHubI18n.t('server.prune.removed', {count: count}));
     }
 
     function mvUpdateFooterCount() {
@@ -3446,7 +3446,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
   {% if not can_manage %}
   <div id="leave-server-modal" class="modal-backdrop">
     <div class="modal-card leave-modal-card">
-      <div class="modal-head"><h2>Покинуть '{{ server.name }}'</h2><button class="modal-close" type="button" onclick="closeModal('leave-server-modal')">×</button></div>
+      <div class="modal-head"><h2>{{ i18n_t('server.leave.title', server=server.name) }}</h2><button class="modal-close" type="button" onclick="closeModal('leave-server-modal')">×</button></div>
       <div class="leave-modal-body">{% set confirm_raw = i18n_t('server.leave.confirm', server=server.name) %}{% if server.name and (server.name in confirm_raw) %}{% set parts = confirm_raw.split(server.name, 1) %}{{ parts[0] }}<strong>{{ server.name }}</strong>{{ parts[1] }}{% else %}{{ confirm_raw }}{% endif %}</div>
       <form method="post" action="/community/servers/{{ server.id }}/leave" class="leave-modal-actions">
         <button type="button" class="leave-modal-cancel" onclick="closeModal('leave-server-modal')"><!--i18n:common.actions.cancel-->{{ i18n_t('common.actions.cancel') }}</button>
@@ -3525,28 +3525,28 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
   <div id="prune-modal" class="modal-backdrop">
     <div class="modal-card pr-card">
       <div class="modal-head">
-        <h2>Чистка участников — {{ server.name }}</h2>
+        <h2>{{ i18n_t('server.prune.title', server=server.name) }}</h2>
         <button class="modal-close" type="button" onclick="closeModal('prune-modal')">×</button>
       </div>
       <div class="pr-block">
-        <div class="pr-block-label">Последний раз был</div>
-        <label class="pr-radio-row"><input type="radio" name="pr-days" value="7" checked onchange="prUpdateSummary()"> более 7 дней назад</label>
-        <label class="pr-radio-row"><input type="radio" name="pr-days" value="30" onchange="prUpdateSummary()"> более 30 дней назад</label>
+        <div class="pr-block-label" data-i18n="server.prune.last_seen"><!--i18n:server.prune.last_seen-->{{ i18n_t('server.prune.last_seen') }}</div>
+        <label class="pr-radio-row"><input type="radio" name="pr-days" value="7" checked onchange="prUpdateSummary()"> <!--i18n:server.prune.older_7-->{{ i18n_t('server.prune.older_7') }}</label>
+        <label class="pr-radio-row"><input type="radio" name="pr-days" value="30" onchange="prUpdateSummary()"> <!--i18n:server.prune.older_30-->{{ i18n_t('server.prune.older_30') }}</label>
       </div>
       <div class="pr-block">
-        <div class="pr-block-label">Включить также участников со следующими ролями</div>
+        <div class="pr-block-label" data-i18n="server.prune.include_roles"><!--i18n:server.prune.include_roles-->{{ i18n_t('server.prune.include_roles') }}</div>
         <div class="pr-role-select" id="pr-role-select">
           <button type="button" class="pr-role-trigger" id="pr-role-trigger" onclick="prToggleRoleDropdown(event)">
-            <span class="pr-role-trigger-label" id="pr-role-trigger-label">Выберите...</span>
+            <span class="pr-role-trigger-label" id="pr-role-trigger-label" data-i18n="server.prune.select_roles"><!--i18n:server.prune.select_roles-->{{ i18n_t('server.prune.select_roles') }}</span>
             <svg class="pr-role-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
           </button>
           <div class="pr-role-panel" id="pr-role-panel"></div>
         </div>
       </div>
-      <p class="pr-summary" id="pr-summary">Чистка выгонит <b id="pr-count">0</b> <span id="pr-count-word">человек</span>, которые не появлялись на сервере <b id="pr-days-label">7</b> дней. Чистка коснётся только участников, не имеющих ролей<span id="pr-extra-roles"></span>.</p>
+      <p class="pr-summary" id="pr-summary"><!--i18n:server.prune.sum_a-->{{ i18n_t('server.prune.sum_a') }} <b id="pr-count">0</b> <span id="pr-count-word"><!--i18n:server.prune.person.many-->{{ i18n_t('server.prune.person.many') }}</span><!--i18n:server.prune.sum_b-->{{ i18n_t('server.prune.sum_b') }} <b id="pr-days-label">7</b> <!--i18n:server.prune.sum_c-->{{ i18n_t('server.prune.sum_c') }}<span id="pr-extra-roles"></span>.</p>
       <div class="modal-actions">
-        <button type="button" class="modal-btn secondary" onclick="closeModal('prune-modal')">Отмена</button>
-        <button type="button" class="modal-btn" id="pr-submit-btn" onclick="prExecutePrune()">Очистить</button>
+        <button type="button" class="modal-btn secondary" onclick="closeModal('prune-modal')" data-i18n="common.actions.cancel"><!--i18n:common.actions.cancel-->{{ i18n_t('common.actions.cancel') }}</button>
+        <button type="button" class="modal-btn" id="pr-submit-btn" onclick="prExecutePrune()" data-i18n="server.prune.action"><!--i18n:server.prune.action-->{{ i18n_t('server.prune.action') }}</button>
       </div>
     </div>
   </div>
@@ -3555,7 +3555,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
 
   <!-- Панель "Открыть с доступом модератора" — доступна только владельцу сервера -->
   <div id="ah-mod-panel" class="ah-mod-panel" aria-hidden="true">
-    <button type="button" id="ah-mod-panel-close" class="ah-mod-panel-close" title="Закрыть (ESC)">×</button>
+    <button type="button" id="ah-mod-panel-close" class="ah-mod-panel-close" title="{{ i18n_t('common.action.mod_close_esc') }}" data-i18n-title="common.action.mod_close_esc">×</button>
     <div class="ah-mod-panel-head">
       <div class="ah-mod-panel-avatar-wrap">
         <div id="ah-mod-avatar" class="ah-mod-panel-avatar"></div>
@@ -3570,47 +3570,47 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
       </div>
     </div>
     <div class="ah-mod-panel-tabs">
-      <button type="button" class="ah-mod-tab" data-mod-tab="messages" data-tooltip="Сообщения"><span class="ah-mod-tab-badge"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.5 3C7.25 3 3 6.7 3 11.2c0 2.55 1.35 4.82 3.47 6.32-.1.98-.46 2.4-1.47 3.62 0 0 2.15-.02 4.1-1.28.98.27 2.02.42 3.4.42 5.25 0 9.5-3.7 9.5-8.2S17.75 3 12.5 3Z"/></svg></span></button>
-      <button type="button" class="ah-mod-tab" data-mod-tab="user" data-tooltip="Пользователь"><span class="ah-mod-tab-badge"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="10.6" cy="7.6" r="3.35"/><path d="M4.2 19.3c.55-4 3.5-6.35 7.2-6.1 1.55.1 2.85.6 3.85 1.35a5 5 0 0 0-1.05 3.05c0 .65.13 1.27.38 1.83l.1.2H4.15Z"/><rect x="15.3" y="15.5" width="6.4" height="1.8" rx=".9"/></svg></span></button>
-      <button type="button" class="ah-mod-tab" data-mod-tab="actions" data-tooltip="Действия модератора"><span class="ah-mod-tab-badge"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="13" y="4" width="7" height="4.4" rx="1.2" transform="rotate(-45 16.5 6.2)"/><rect x="5" y="11.1" width="11" height="2.2" rx="1.1" transform="rotate(-45 10.5 12.2)"/><rect x="1.5" y="18.3" width="8" height="3" rx="1.2"/></svg></span></button>
-      <button type="button" class="ah-mod-tab" data-mod-tab="audit" data-tooltip="Журнал аудита"><span class="ah-mod-tab-badge"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="11" cy="12" r="8.6"/><path d="M11 6.6v5.6l3.3 2.05" fill="none" stroke="#1e1f22" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M16.4 14 20.3 21H12.5Z"/><rect x="16" y="16.3" width="1" height="2.6" fill="#1e1f22"/><rect x="16" y="19.3" width="1" height="1" fill="#1e1f22"/></svg></span></button>
-      <button type="button" class="ah-mod-tab" data-mod-tab="id" data-tooltip="Копировать ID"><span class="ah-mod-tab-badge active">ID</span></button>
+      <button type="button" class="ah-mod-tab" data-mod-tab="messages" data-tooltip="{{ i18n_t('streak.unit.message.few') }}"><span class="ah-mod-tab-badge"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.5 3C7.25 3 3 6.7 3 11.2c0 2.55 1.35 4.82 3.47 6.32-.1.98-.46 2.4-1.47 3.62 0 0 2.15-.02 4.1-1.28.98.27 2.02.42 3.4.42 5.25 0 9.5-3.7 9.5-8.2S17.75 3 12.5 3Z"/></svg></span></button>
+      <button type="button" class="ah-mod-tab" data-mod-tab="user" data-tooltip="{{ i18n_t('server.mod.tab_user') }}"><span class="ah-mod-tab-badge"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="10.6" cy="7.6" r="3.35"/><path d="M4.2 19.3c.55-4 3.5-6.35 7.2-6.1 1.55.1 2.85.6 3.85 1.35a5 5 0 0 0-1.05 3.05c0 .65.13 1.27.38 1.83l.1.2H4.15Z"/><rect x="15.3" y="15.5" width="6.4" height="1.8" rx=".9"/></svg></span></button>
+      <button type="button" class="ah-mod-tab" data-mod-tab="actions" data-tooltip="{{ i18n_t('server.mod.tab_actions') }}"><span class="ah-mod-tab-badge"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="13" y="4" width="7" height="4.4" rx="1.2" transform="rotate(-45 16.5 6.2)"/><rect x="5" y="11.1" width="11" height="2.2" rx="1.1" transform="rotate(-45 10.5 12.2)"/><rect x="1.5" y="18.3" width="8" height="3" rx="1.2"/></svg></span></button>
+      <button type="button" class="ah-mod-tab" data-mod-tab="audit" data-tooltip="{{ i18n_t('server.mod.tab_audit') }}"><span class="ah-mod-tab-badge"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="11" cy="12" r="8.6"/><path d="M11 6.6v5.6l3.3 2.05" fill="none" stroke="#1e1f22" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M16.4 14 20.3 21H12.5Z"/><rect x="16" y="16.3" width="1" height="2.6" fill="#1e1f22"/><rect x="16" y="19.3" width="1" height="1" fill="#1e1f22"/></svg></span></button>
+      <button type="button" class="ah-mod-tab" data-mod-tab="id" data-tooltip="{{ i18n_t('server.mod.copy_id') }}"><span class="ah-mod-tab-badge active">ID</span></button>
     </div>
     <div class="ah-mod-panel-body">
       <div class="ah-mod-views" id="ah-mod-views">
         <div class="ah-mod-view ah-mod-view-main" id="ah-mod-view-main">
           <div class="ah-mod-section-head">
-            <span class="ah-mod-section-head-title"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 12.2a4.6 4.6 0 1 0 0-9.2 4.6 4.6 0 0 0 0 9.2Z"/><path d="M4 20.4c.5-4.3 3.8-7 8.4-7 .8 0 1.6.08 2.3.24a4.6 4.6 0 0 0-1.2 3.6c.05.9.35 1.7.85 2.36a1 1 0 0 1-.75 1.2c-.5.1-1 .2-1.5.2H4Z"/><path d="M17.3 14.6v-1.1a1.9 1.9 0 1 1 3.8 0v1.1" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><rect x="16.2" y="14.4" width="6" height="5" rx="1.1"/></svg><span>Доступ модератора</span></span>
+            <span class="ah-mod-section-head-title"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 12.2a4.6 4.6 0 1 0 0-9.2 4.6 4.6 0 0 0 0 9.2Z"/><path d="M4 20.4c.5-4.3 3.8-7 8.4-7 .8 0 1.6.08 2.3.24a4.6 4.6 0 0 0-1.2 3.6c.05.9.35 1.7.85 2.36a1 1 0 0 1-.75 1.2c-.5.1-1 .2-1.5.2H4Z"/><path d="M17.3 14.6v-1.1a1.9 1.9 0 1 1 3.8 0v1.1" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><rect x="16.2" y="14.4" width="6" height="5" rx="1.1"/></svg><span data-i18n="server.mod.access"><!--i18n:server.mod.access-->{{ i18n_t('server.mod.access') }}</span></span>
             <div class="ah-mod-section-head-actions">
-              <button type="button" class="ah-mod-refresh-btn" title="Обновить"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg></button>
+              <button type="button" class="ah-mod-refresh-btn" title="{{ i18n_t('common.refresh') }}" data-i18n-title="common.refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg></button>
               <span class="ah-mod-esc-hint" id="ah-mod-esc-main">ESC</span>
             </div>
           </div>
 
           <div class="ah-mod-block">
-            <div class="ah-mod-block-title">Активность сервера</div>
+            <div class="ah-mod-block-title" data-i18n="server.mod.activity"><!--i18n:server.mod.activity-->{{ i18n_t('server.mod.activity') }}</div>
             <div class="ah-mod-card">
             <button type="button" class="ah-mod-stat-row" data-stat="messages">
               <span class="ah-mod-stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
-              <span class="ah-mod-stat-label">Сообщения</span>
+              <span class="ah-mod-stat-label" data-i18n="streak.unit.message.few"><!--i18n:streak.unit.message.few-->{{ i18n_t('streak.unit.message.few') }}</span>
               <span id="ah-mod-stat-messages" class="ah-mod-stat-value">0</span>
               <svg class="ah-mod-stat-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
             </button>
             <button type="button" class="ah-mod-stat-row">
               <span class="ah-mod-stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
-              <span class="ah-mod-stat-label">Ссылки</span>
+              <span class="ah-mod-stat-label" data-i18n="server.mod.links"><!--i18n:server.mod.links-->{{ i18n_t('server.mod.links') }}</span>
               <span id="ah-mod-stat-links" class="ah-mod-stat-value">0</span>
               <svg class="ah-mod-stat-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
             </button>
             <button type="button" class="ah-mod-stat-row">
               <span class="ah-mod-stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></span>
-              <span class="ah-mod-stat-label">Медиаконтент</span>
+              <span class="ah-mod-stat-label" data-i18n="server.mod.media"><!--i18n:server.mod.media-->{{ i18n_t('server.mod.media') }}</span>
               <span id="ah-mod-stat-media" class="ah-mod-stat-value">0</span>
               <svg class="ah-mod-stat-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
             </button>
             <button type="button" class="ah-mod-stat-row">
               <span class="ah-mod-stat-icon"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2 4 5v6c0 5.55 3.84 10.74 8 12 4.16-1.26 8-6.45 8-12V5z"/><circle cx="12" cy="9.3" r="2" fill="#232428"/><path d="M8.1 15.3c.55-2.3 1.95-3.5 3.9-3.5s3.35 1.2 3.9 3.5" fill="#232428"/></svg></span>
-              <span class="ah-mod-stat-label">Журнал аудита</span>
+              <span class="ah-mod-stat-label" data-i18n="server.mod.tab_audit"><!--i18n:server.mod.tab_audit-->{{ i18n_t('server.mod.tab_audit') }}</span>
               <span id="ah-mod-stat-audit" class="ah-mod-stat-value">0</span>
               <svg class="ah-mod-stat-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
             </button>
@@ -3619,35 +3619,35 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
 
           <div class="ah-mod-block">
             <div class="ah-mod-block-title-row">
-              <span>Права для модератора</span>
-              <button type="button" class="ah-mod-all-perms">ВСЕ (<span id="ah-mod-perm-count">0</span>)<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></button>
+              <span data-i18n="server.mod.permissions"><!--i18n:server.mod.permissions-->{{ i18n_t('server.mod.permissions') }}</span>
+              <button type="button" class="ah-mod-all-perms"><!--i18n:server.mod.all-->{{ i18n_t('server.mod.all') }} (<span id="ah-mod-perm-count">0</span>)<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></button>
             </div>
             <div id="ah-mod-perm-grid" class="ah-mod-perm-grid"></div>
           </div>
 
           <div class="ah-mod-block">
-            <div class="ah-mod-block-title">Роли</div>
+            <div class="ah-mod-block-title" data-i18n="server.mv.col_roles"><!--i18n:server.mv.col_roles-->{{ i18n_t('server.mv.col_roles') }}</div>
             <div class="ah-mod-card ah-mod-roles-card">
-              <button type="button" class="ah-mod-role-add" title="Добавить роль"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+              <button type="button" class="ah-mod-role-add" title="{{ i18n_t('server.mod.add_role') }}" data-i18n-title="server.mod.add_role"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
             </div>
           </div>
 
           <div class="ah-mod-block">
-            <div class="ah-mod-block-title">Учётная запись</div>
+            <div class="ah-mod-block-title" data-i18n="settings.account"><!--i18n:settings.account-->{{ i18n_t('settings.account') }}</div>
             <div class="ah-mod-card">
             <div class="ah-mod-account-row">
               <span class="ah-mod-account-icon"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2 4 5v6c0 5.55 3.84 10.74 8 12 4.16-1.26 8-6.45 8-12V5z"/><circle cx="12" cy="9.3" r="2" fill="#232428"/><path d="M8.1 15.3c.55-2.3 1.95-3.5 3.9-3.5s3.35 1.2 3.9 3.5" fill="#232428"/></svg></span>
-              <span>Уровень проверки подтверждён</span>
+              <span data-i18n="server.mod.verified"><!--i18n:server.mod.verified-->{{ i18n_t('server.mod.verified') }}</span>
               <svg class="ah-mod-account-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
             </div>
             <div class="ah-mod-account-row">
               <span class="ah-mod-account-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18"/><path d="M8 3v4M16 3v4"/></svg></span>
-              <span>Дата регистрации в AlexiHub</span>
+              <span data-i18n="server.mod.registered"><!--i18n:server.mod.registered-->{{ i18n_t('server.mod.registered') }}</span>
               <span id="ah-mod-created" class="ah-mod-account-value">—</span>
             </div>
             <div class="ah-mod-account-row">
               <span class="ah-mod-account-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22V4a1 1 0 0 1 1-1h11l3 3-3 3H5"/><path d="M4 15h12"/></svg></span>
-              <span>Дата присоединения к серверу</span>
+              <span data-i18n="server.mod.joined"><!--i18n:server.mod.joined-->{{ i18n_t('server.mod.joined') }}</span>
               <span id="ah-mod-joined" class="ah-mod-account-value">—</span>
             </div>
             </div>
@@ -3658,7 +3658,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
           <div class="ah-mod-section-head">
             <button type="button" class="ah-mod-back-btn" id="ah-mod-messages-back">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
-              <span>Назад</span>
+              <span data-i18n="common.actions.back"><!--i18n:common.actions.back-->{{ i18n_t('common.actions.back') }}</span>
             </button>
             <span class="ah-mod-esc-hint" id="ah-mod-esc-messages">ESC</span>
           </div>
@@ -4394,12 +4394,12 @@ document.addEventListener('DOMContentLoaded',()=>{
 <h1><!--i18n:settings.appearance-->{{ i18n_t('settings.appearance') }}</h1>
 <div class="ah-settings-section ah-appearance-section">
 
-  <div class="ah-appearance-block-title">Тема</div>
+  <div class="ah-appearance-block-title" data-i18n="home.text.theme"><!--i18n:home.text.theme-->{{ i18n_t('home.text.theme') }}</div>
 
   <div class="ah-appearance-toggle-row">
     <div class="ah-appearance-toggle-copy">
-      <b>Как тема устройства</b>
-      <span>Такой же режим, как на вашем устройстве.</span>
+      <b data-i18n="common.theme.device_title"><!--i18n:common.theme.device_title-->{{ i18n_t('common.theme.device_title') }}</b>
+      <span data-i18n="common.theme.device_desc"><!--i18n:common.theme.device_desc-->{{ i18n_t('common.theme.device_desc') }}</span>
     </div>
     <label class="ah-privacy-switch">
       <input type="checkbox" id="ah-theme-sync-system">
@@ -4407,17 +4407,17 @@ document.addEventListener('DOMContentLoaded',()=>{
     </label>
   </div>
 
-  <div class="ah-appearance-subtitle">Темы по умолчанию</div>
-  <div class="ah-theme-swatch-row" id="ah-theme-swatch-row" role="radiogroup" aria-label="Темы по умолчанию">
-    <button type="button" class="ah-theme-swatch-btn" data-swatch="light" role="radio" aria-label="Светлая">
+  <div class="ah-appearance-subtitle" data-i18n="common.theme.defaults"><!--i18n:common.theme.defaults-->{{ i18n_t('common.theme.defaults') }}</div>
+  <div class="ah-theme-swatch-row" id="ah-theme-swatch-row" role="radiogroup" aria-label="{{ i18n_t('common.theme.defaults') }}" data-i18n-aria-label="common.theme.defaults">
+    <button type="button" class="ah-theme-swatch-btn" data-swatch="light" role="radio" aria-label="{{ i18n_t('common.theme.light') }}" data-i18n-aria-label="common.theme.light">
       <span class="ah-swatch-fill light"></span>
       <svg class="ah-swatch-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"></path></svg>
     </button>
-    <button type="button" class="ah-theme-swatch-btn" data-swatch="dark" role="radio" aria-label="Тёмная">
+    <button type="button" class="ah-theme-swatch-btn" data-swatch="dark" role="radio" aria-label="{{ i18n_t('common.theme.dark') }}" data-i18n-aria-label="common.theme.dark">
       <span class="ah-swatch-fill dark"></span>
       <svg class="ah-swatch-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"></path></svg>
     </button>
-    <button type="button" class="ah-theme-swatch-btn" data-swatch="darker" role="radio" aria-label="Тёмнее">
+    <button type="button" class="ah-theme-swatch-btn" data-swatch="darker" role="radio" aria-label="{{ i18n_t('common.theme.darker') }}" data-i18n-aria-label="common.theme.darker">
       <span class="ah-swatch-fill darker"></span>
       <svg class="ah-swatch-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"></path></svg>
     </button>
@@ -4425,15 +4425,15 @@ document.addEventListener('DOMContentLoaded',()=>{
       <span class="ah-swatch-fill amoled"></span>
       <svg class="ah-swatch-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"></path></svg>
     </button>
-    <button type="button" class="ah-theme-sync-icon-btn" id="ah-theme-sync-icon" aria-label="Синхронизировать с системой" title="Синхронизировать с системой">
+    <button type="button" class="ah-theme-sync-icon-btn" id="ah-theme-sync-icon" aria-label="{{ i18n_t('common.theme.sync_system') }}" data-i18n-aria-label="common.theme.sync_system" title="{{ i18n_t('common.theme.sync_system') }}" data-i18n-title="common.theme.sync_system">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35A8 8 0 1 0 19.5 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M17 3v5h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
   </div>
 
   <div class="ah-appearance-toggle-row">
     <div class="ah-appearance-toggle-copy">
-      <b>Тёмная боковая панель</b>
-      <span>Список серверов и панель друзей остаются тёмными, даже если выбрана светлая тема.</span>
+      <b data-i18n="common.theme.dark_sidebar"><!--i18n:common.theme.dark_sidebar-->{{ i18n_t('common.theme.dark_sidebar') }}</b>
+      <span data-i18n="common.theme.dark_sidebar_desc"><!--i18n:common.theme.dark_sidebar_desc-->{{ i18n_t('common.theme.dark_sidebar_desc') }}</span>
     </div>
     <label class="ah-privacy-switch">
       <input type="checkbox" id="ah-theme-dark-sidebar">
@@ -4443,8 +4443,8 @@ document.addEventListener('DOMContentLoaded',()=>{
 
   <div class="ah-appearance-toggle-row">
     <div class="ah-appearance-toggle-copy">
-      <b>Синхронизировать тему на моих устройствах</b>
-      <span>Применять выбранную тему везде, где вы вошли в AlexiHub.</span>
+      <b data-i18n="common.theme.sync_devices"><!--i18n:common.theme.sync_devices-->{{ i18n_t('common.theme.sync_devices') }}</b>
+      <span data-i18n="common.theme.sync_devices_desc"><!--i18n:common.theme.sync_devices_desc-->{{ i18n_t('common.theme.sync_devices_desc') }}</span>
     </div>
     <label class="ah-privacy-switch">
       <input type="checkbox" id="ah-theme-sync-devices" checked>
@@ -4911,7 +4911,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     const file = input && input.files && input.files[0];
     if(!file || !String(file.type || '').startsWith('image/')) return;
     if(file.size > MAX_ANIMATED_BYTES){
-      notify('Файл завеликий. Максимум 12 МБ.');
+      notify(window.AlexiHubI18n.t('common.upload.too_large_12mb'));
       input.value = '';
       return;
     }
@@ -6954,7 +6954,7 @@ html[data-theme="light"] #ah-nitro-tooltip-portal[class]{
     var last = data.last_message || {};
     var snippet = row.querySelector('.dm-snippet');
     if (snippet) {
-      snippet.textContent = String(last.content || (last.voice_url ? '🎤 Голосове повідомлення' : (last.image_url ? 'Attachment' : ''))).slice(0, 90);
+      snippet.textContent = String(last.content || (last.voice_url ? '🎤 '+window.AlexiHubI18n.t('common.voice.message') : (last.image_url ? 'Attachment' : ''))).slice(0, 90);
     }
 
     row.classList.toggle('active', accountId === activeDmAccountId);
@@ -7431,30 +7431,30 @@ html[data-theme="light"] #ah-nitro-tooltip-portal[class]{
       </div>
       <div class="ah-block-title-wrap">
         <h2 id="ah-block-confirm-title"></h2>
-        <p>Перекрыть возможность прямого контакта и ограничить доступ к вашим данным</p>
+        <p>${window.AlexiHubI18n.t('block.dialog.subtitle')}</p>
       </div>
       <div class="ah-block-points">
         <div class="ah-block-point">
           <span class="ah-block-point-icon ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="m8.2 12.3 2.6 2.6 5-5.2"/></svg></span>
-          <div><b>Запретить личные сообщения</b><span>Если хотите, вы можете сделать старые сообщения видимыми</span></div>
+          <div><b>${window.AlexiHubI18n.t('block.dialog.no_dm')}</b><span>${window.AlexiHubI18n.t('block.dialog.no_dm_hint')}</span></div>
         </div>
         <div class="ah-block-point">
           <span class="ah-block-point-icon ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="m8.2 12.3 2.6 2.6 5-5.2"/></svg></span>
-          <div><b>Ограничьте доступ к своему профилю и действиям</b><span>Он не увидит ваших общих друзей, описание профиля или статус</span></div>
+          <div><b>${window.AlexiHubI18n.t('block.dialog.limit_profile')}</b><span>${window.AlexiHubI18n.t('block.dialog.limit_profile_hint')}</span></div>
         </div>
         <div class="ah-block-point">
           <span class="ah-block-point-icon warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span>
-          <div><b>Этот пользователь может взаимодействовать с вами в групповых чатах и на серверах</b><span>Если вы присоединитесь к тому же голосовому каналу, в котором общается он, мы вам сообщим</span></div>
+          <div><b>${window.AlexiHubI18n.t('block.dialog.still_interact')}</b><span>${window.AlexiHubI18n.t('block.dialog.still_interact_hint')}</span></div>
         </div>
       </div>
       <div class="ah-block-too-much">
-        <span>Это слишком?</span>
+        <span>${window.AlexiHubI18n.t('block.dialog.too_much')}</span>
         <div class="ah-block-ignore-box">
-          <div><b>Вместо этого игнорировать</b><span>Отдохните от этого пользователя — мы ему не скажем!</span></div>
-          <button type="button" class="ah-block-ignore-btn" data-block-ignore>Показать подробности</button>
+          <div><b>${window.AlexiHubI18n.t('block.dialog.ignore_instead')}</b><span>${window.AlexiHubI18n.t('block.dialog.ignore_hint')}</span></div>
+          <button type="button" class="ah-block-ignore-btn" data-block-ignore>${window.AlexiHubI18n.t('block.dialog.show_details')}</button>
         </div>
       </div>
-      <a class="ah-block-guide-link" data-block-guide>Ознакомиться с руководством по функциям</a>
+      <a class="ah-block-guide-link" data-block-guide>${window.AlexiHubI18n.t('block.dialog.guide')}</a>
       <div class="ah-block-dialog-actions">
         <button type="button" class="ah-block-cancel">${esc(c.cancel)}</button>
         <button type="button" class="ah-block-confirm">${esc(c.block)}</button>
@@ -7471,7 +7471,7 @@ html[data-theme="light"] #ah-nitro-tooltip-portal[class]{
     const title=document.getElementById('ah-block-confirm-title');
     const avatarEl=document.getElementById('ah-block-confirm-avatar');
     const avatarFallback=document.getElementById('ah-block-confirm-avatar-fallback');
-    if(title) title.textContent='Заблокировать '+display+'?';
+    if(title) title.textContent=window.AlexiHubI18n.t('server.mod.block_title', {name: display});
     if(avatarEl) avatarEl.style.backgroundImage=avatar?`url('${avatar}')`:'none';
     if(avatarFallback) avatarFallback.textContent=avatar?'':display.slice(0,1).toUpperCase();
     modal?.classList.add('open'); modal?.setAttribute('aria-hidden','false');
@@ -7565,7 +7565,7 @@ html[data-theme="light"] #ah-nitro-tooltip-portal[class]{
       return;
     }
     if(!event.target.closest('#ah-profile-action-menu')) closeProfileMenu();
-    if(event.target.closest('[data-block-ignore]')||event.target.closest('[data-block-guide]')){event.preventDefault();notify('Раздел в разработке');return;}
+    if(event.target.closest('[data-block-ignore]')||event.target.closest('[data-block-guide]')){event.preventDefault();notify(window.AlexiHubI18n.t('dm.ctx.stub'));return;}
     if(event.target.closest('.ah-block-cancel')||event.target===document.getElementById('ah-block-modal')) return closeConfirm();
     const confirm=event.target.closest('.ah-block-confirm');
     if(confirm){const username=selectedUser?.username||usernameFromMini();if(!username)return;confirm.disabled=true;confirm.textContent=text().blocking;try{await blockUser(username);closeConfirm();document.getElementById('ah-v3-mini')?.classList.remove('open');}catch(e){notify(e.message||text().actionError);}finally{confirm.disabled=false;confirm.textContent=text().block;}return;}
@@ -8609,13 +8609,13 @@ html[data-theme="light"] #ah-nitro-tooltip-portal[class]{
         <span class="ah-tag-preview-chip" id="ah-tag-preview-chip" hidden></span>
       </div>
       <div class="ah-tag-preview-stats" id="ah-tag-preview-stats" hidden>
-        <span><i class="ah-tag-preview-dot"></i><b id="ah-tag-preview-online">0</b>&nbsp;в сети</span>
-        <span><i class="ah-tag-preview-dot muted"></i><b id="ah-tag-preview-members">0</b>&nbsp;учасників</span>
+        <span><i class="ah-tag-preview-dot"></i><b id="ah-tag-preview-online">0</b>&nbsp;<!--i18n:common.tag_preview.online-->{{ i18n_t('common.tag_preview.online') }}</span>
+        <span><i class="ah-tag-preview-dot muted"></i><b id="ah-tag-preview-members">0</b>&nbsp;<!--i18n:common.tag_preview.members-->{{ i18n_t('common.tag_preview.members') }}</span>
       </div>
     </div>
   </div>
   <p class="ah-tag-preview-desc" id="ah-tag-preview-desc" hidden></p>
-  <a class="ah-tag-preview-action" id="ah-tag-preview-action" href="#" hidden>Перейти на сервер</a>
+  <a class="ah-tag-preview-action" id="ah-tag-preview-action" href="#" hidden data-i18n="common.tag_preview.go_to_server"><!--i18n:common.tag_preview.go_to_server-->{{ i18n_t('common.tag_preview.go_to_server') }}</a>
 </div>
 <script>
 (function(){
@@ -8662,7 +8662,7 @@ html[data-theme="light"] #ah-nitro-tooltip-portal[class]{
     var desc=el.getAttribute('data-tag-description')||'';
     var invite=el.getAttribute('data-tag-invite')||(serverId?('/community/servers/'+serverId):'');
 
-    nameEl.textContent=name||text||'Сервер';
+    nameEl.textContent=name||text||window.AlexiHubI18n.t('common.server.default_custom');
     chipEl.hidden=!text;
     chipEl.textContent=text?(glyph+' '+text):'';
 
@@ -9321,7 +9321,7 @@ html[data-theme="light"] #ah-nitro-tooltip-portal[class]{
       '<input type="text" placeholder="' + t('common.placeholder.friend_s_username', 'Ім’я користувача') + '" style="width:100%;height:38px;border-radius:8px;border:1px solid #3b3d45;background:#111214;color:#fff;padding:0 12px;outline:none;font:inherit;">' +
       '<div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;">' +
       '<button type="button" data-act="cancel" style="border:0;border-radius:8px;background:#4e5058;color:#fff;font-weight:800;padding:9px 14px;cursor:pointer;">' + t('common.actions.cancel', 'Скасувати') + '</button>' +
-      '<button type="button" data-act="send" style="border:0;border-radius:8px;background:#5865f2;color:#fff;font-weight:800;padding:9px 14px;cursor:pointer;">' + t('common.aria.yuncture', 'Надіслати') + '</button>' +
+      '<button type="button" data-act="send" style="border:0;border-radius:8px;background:#5865f2;color:#fff;font-weight:800;padding:9px 14px;cursor:pointer;">' + t('common.aria.yuncture', window.AlexiHubI18n.t('common.action.submit')) + '</button>' +
       '</div>';
     backdrop.appendChild(card);
     document.body.appendChild(backdrop);
@@ -9352,7 +9352,7 @@ html[data-theme="light"] #ah-nitro-tooltip-portal[class]{
       window.openModal('leave-server-modal');
       return;
     }
-    if (!confirm(t('server.ctx.leave_confirm', 'Покинути «' + state.serverName + '»?'))) return;
+    if (!confirm(window.AlexiHubI18n.t('server.ctx.leave_confirm', {server: state.serverName}))) return;
     var form = document.createElement('form');
     form.method = 'post';
     form.action = '/community/servers/' + id + '/leave';
@@ -9363,7 +9363,7 @@ html[data-theme="light"] #ah-nitro-tooltip-portal[class]{
 
   function copyServerId(id, dot) {
     var val = String(id);
-    var done = function () { toast(t('common.feedback.copied', 'Скопійовано')); };
+    var done = function () { toast(t('common.feedback.copied', window.AlexiHubI18n.t('common.feedback.copied'))); };
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(val).then(done).catch(function () { fallbackCopy(val, done); });
     } else {
@@ -9555,7 +9555,7 @@ html[data-theme="light"] #ah-nitro-tooltip-portal[class]{
       label: t('common.text.confidential_settings', 'Налаштування конфіденційності'),
       onClick: function () {
         closeMenu();
-        if (typeof window.showActionToast === 'function') window.showActionToast(t('server.stub.privacy', 'Розділ у розробці'));
+        if (typeof window.showActionToast === 'function') window.showActionToast(t('server.stub.privacy', window.AlexiHubI18n.t('dm.ctx.stub')));
       }
     }));
 
@@ -9638,34 +9638,34 @@ html[data-theme="light"] #ah-nitro-tooltip-portal[class]{
     owner: {
       total: 53,
       chips: [
-        { label: 'Управлять каналами', info: true },
-        { label: 'Управлять ролями', info: true },
-        { label: 'Создавать средства выражения эмоций' },
-        { label: 'Управлять выражениями' },
-        { label: 'Управлять вебхуками (webhooks)' },
-        { label: 'Управлять сервером', info: true },
-        { label: 'Выгоняйте, одобряйте или отклоняйте участников', info: true },
-        { label: 'Банить участников', info: true },
-        { label: 'Отправить участников подумать о своём поведении', info: true },
-        { label: 'Упоминание @everyone, @here и всех ролей' },
-        { label: 'Управлять сообщениями', info: true },
-        { label: 'Управление ветками и публикациями', info: true },
-        { label: 'Создавать события' },
-        { label: 'Управление событиями' },
-        { label: 'Администратор', info: true }
+        { label: window.AlexiHubI18n.t('server.perm.manage_channels'), info: true },
+        { label: window.AlexiHubI18n.t('server.perm.manage_roles'), info: true },
+        { label: window.AlexiHubI18n.t('server.perm.create_expressions') },
+        { label: window.AlexiHubI18n.t('server.perm.manage_expressions') },
+        { label: window.AlexiHubI18n.t('server.perm.manage_webhooks') },
+        { label: window.AlexiHubI18n.t('server.perm.manage_server'), info: true },
+        { label: window.AlexiHubI18n.t('server.perm.kick_approve'), info: true },
+        { label: window.AlexiHubI18n.t('server.perm.ban'), info: true },
+        { label: window.AlexiHubI18n.t('server.perm.timeout'), info: true },
+        { label: window.AlexiHubI18n.t('server.perm.mention_all') },
+        { label: window.AlexiHubI18n.t('server.perm.manage_messages'), info: true },
+        { label: window.AlexiHubI18n.t('server.perm.manage_threads'), info: true },
+        { label: window.AlexiHubI18n.t('server.perm.create_events') },
+        { label: window.AlexiHubI18n.t('server.perm.manage_events') },
+        { label: window.AlexiHubI18n.t('common.role.admin'), info: true }
       ]
     },
     elevated: {
       total: 28,
       chips: [
-        { label: 'Управлять каналами', info: true },
-        { label: 'Выгоняйте, одобряйте или отклоняйте участников', info: true },
-        { label: 'Банить участников', info: true },
-        { label: 'Отправить участников подумать о своём поведении', info: true },
-        { label: 'Управлять сообщениями', info: true },
-        { label: 'Управление ветками и публикациями', info: true },
-        { label: 'Создавать события' },
-        { label: 'Управление событиями' }
+        { label: window.AlexiHubI18n.t('server.perm.manage_channels'), info: true },
+        { label: window.AlexiHubI18n.t('server.perm.kick_approve'), info: true },
+        { label: window.AlexiHubI18n.t('server.perm.ban'), info: true },
+        { label: window.AlexiHubI18n.t('server.perm.timeout'), info: true },
+        { label: window.AlexiHubI18n.t('server.perm.manage_messages'), info: true },
+        { label: window.AlexiHubI18n.t('server.perm.manage_threads'), info: true },
+        { label: window.AlexiHubI18n.t('server.perm.create_events') },
+        { label: window.AlexiHubI18n.t('server.perm.manage_events') }
       ]
     },
     member: { total: 0, chips: [] }
@@ -9815,14 +9815,14 @@ html[data-theme="light"] #ah-nitro-tooltip-portal[class]{
     if (!channels || !channels.length) {
       var empty = document.createElement('div');
       empty.className = 'ah-mod-messages-empty';
-      empty.textContent = 'Сообщений не найдено.';
+      empty.textContent = window.AlexiHubI18n.t('server.mod.msgs_empty');
       list.appendChild(empty);
       return;
     }
     channels.forEach(function (chan) {
       var head = document.createElement('div');
       head.className = 'ah-mod-msg-channel-head';
-      head.innerHTML = channelIconHtml(chan) + '<span>' + escapeHtml(chan.channel_name || 'канал') + '</span>';
+      head.innerHTML = channelIconHtml(chan) + '<span>' + escapeHtml(chan.channel_name || window.AlexiHubI18n.t('server.mod.channel_fallback')) + '</span>';
       list.appendChild(head);
       (chan.messages || []).forEach(function (msg) { list.appendChild(renderMessageCard(msg)); });
     });
@@ -9836,7 +9836,7 @@ html[data-theme="light"] #ah-nitro-tooltip-portal[class]{
       list.innerHTML = '';
       var loading = document.createElement('div');
       loading.className = 'ah-mod-messages-empty';
-      loading.textContent = 'Загрузка…';
+      loading.textContent = window.AlexiHubI18n.t('common.loading');
       list.appendChild(loading);
     }
     if (!memberId || typeof CV_SERVER_ID === 'undefined') return;
@@ -9847,7 +9847,7 @@ html[data-theme="light"] #ah-nitro-tooltip-portal[class]{
         if (requestId !== messagesRequestSeq) return;
         if (!data || !data.ok) {
           var l = $('ah-mod-messages-list');
-          if (l) l.innerHTML = '<div class="ah-mod-messages-empty">Не удалось загрузить сообщения.</div>';
+          if (l) l.innerHTML = '<div class="ah-mod-messages-empty">'+window.AlexiHubI18n.t('server.mod.msgs_load_failed')+'</div>';
           return;
         }
         renderMessagesList(data.channels);
@@ -9855,7 +9855,7 @@ html[data-theme="light"] #ah-nitro-tooltip-portal[class]{
       .catch(function () {
         if (requestId !== messagesRequestSeq) return;
         var l = $('ah-mod-messages-list');
-        if (l) l.innerHTML = '<div class="ah-mod-messages-empty">Не удалось загрузить сообщения.</div>';
+        if (l) l.innerHTML = '<div class="ah-mod-messages-empty">'+window.AlexiHubI18n.t('server.mod.msgs_load_failed')+'</div>';
       });
   }
 
@@ -9887,7 +9887,7 @@ html[data-theme="light"] #ah-nitro-tooltip-portal[class]{
     if (!set.chips.length) {
       var empty = document.createElement('div');
       empty.className = 'ah-mod-perm-empty';
-      empty.textContent = 'У этого участника нет специальных прав уровня сервера.';
+      empty.textContent = window.AlexiHubI18n.t('server.mod.no_perms');
       grid.appendChild(empty);
       return;
     }
@@ -10016,17 +10016,17 @@ html[data-theme="light"] #ah-nitro-tooltip-portal[class]{
   var refreshBtn = document.querySelector('.ah-mod-refresh-btn');
   if (refreshBtn) refreshBtn.addEventListener('click', function () {
     if (currentStatsMemberId) loadActivityStats(currentStatsMemberId);
-    if (typeof window.showActionToast === 'function') window.showActionToast('Обновлено');
+    if (typeof window.showActionToast === 'function') window.showActionToast(window.AlexiHubI18n.t('common.updated'));
   });
 
   var allPermsBtn = document.querySelector('.ah-mod-all-perms');
   if (allPermsBtn) allPermsBtn.addEventListener('click', function () {
-    if (typeof window.showActionToast === 'function') window.showActionToast('Раздел в разработке');
+    if (typeof window.showActionToast === 'function') window.showActionToast(window.AlexiHubI18n.t('dm.ctx.stub'));
   });
 
   var roleAddBtn = document.querySelector('.ah-mod-role-add');
   if (roleAddBtn) roleAddBtn.addEventListener('click', function () {
-    if (typeof window.showActionToast === 'function') window.showActionToast('Раздел в разработке');
+    if (typeof window.showActionToast === 'function') window.showActionToast(window.AlexiHubI18n.t('dm.ctx.stub'));
   });
 
   document.querySelectorAll('.ah-mod-stat-row').forEach(function (row) {
@@ -10035,7 +10035,7 @@ html[data-theme="light"] #ah-nitro-tooltip-portal[class]{
         openMessagesView(currentStatsMemberId);
         return;
       }
-      if (typeof window.showActionToast === 'function') window.showActionToast('Раздел в разработке');
+      if (typeof window.showActionToast === 'function') window.showActionToast(window.AlexiHubI18n.t('dm.ctx.stub'));
     });
   });
 
@@ -10067,7 +10067,7 @@ html[data-theme="light"] #ah-nitro-tooltip-portal[class]{
         if (currentPanelUsername) {
           (window.__ahGo||function(u){location.href=u})('/community/dm/' + encodeURIComponent(currentPanelUsername));
         } else if (typeof window.showActionToast === 'function') {
-          window.showActionToast('Раздел в разработке');
+          window.showActionToast(window.AlexiHubI18n.t('dm.ctx.stub'));
         }
         return;
       }
@@ -10075,10 +10075,10 @@ html[data-theme="light"] #ah-nitro-tooltip-portal[class]{
       if (tab.dataset.modTab === 'id') {
         if (!currentPanelMemberId) return;
         var onCopied = function () {
-          if (typeof window.showActionToast === 'function') window.showActionToast('ID скопирован');
+          if (typeof window.showActionToast === 'function') window.showActionToast(window.AlexiHubI18n.t('privacy.blocking.copied'));
         };
         var onFailed = function () {
-          if (typeof window.showActionToast === 'function') window.showActionToast('Не удалось скопировать ID');
+          if (typeof window.showActionToast === 'function') window.showActionToast(window.AlexiHubI18n.t('common.message.ided_to_copy_id'));
         };
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(currentPanelMemberId).then(onCopied).catch(function () {
@@ -10091,7 +10091,7 @@ html[data-theme="light"] #ah-nitro-tooltip-portal[class]{
       }
 
       if (typeof window.showActionToast === 'function') {
-        window.showActionToast('Раздел в разработке');
+        window.showActionToast(window.AlexiHubI18n.t('dm.ctx.stub'));
       }
     });
   });
@@ -10131,7 +10131,7 @@ html[data-theme="light"] #ah-nitro-tooltip-portal[class]{
   }
 
   function stubToast() {
-    var msg = 'Раздел в разработке';
+    var msg = window.AlexiHubI18n.t('dm.ctx.stub');
     try {
       if (window.AlexiHubI18n && typeof window.AlexiHubI18n.t === 'function') {
         var v = window.AlexiHubI18n.t('server.stub.member_actions');
@@ -10233,12 +10233,12 @@ html[data-theme="light"] #ah-nitro-tooltip-portal[class]{
     var restricted = data.isSelf || !hasAccess;
 
     menu.appendChild(makeItem({
-      label: 'Профиль',
+      label: window.AlexiHubI18n.t('server.ctx_menu.profile'),
       onClick: function (e) { closeMenu(); openFullProfileFor(data, e); }
     }));
 
     menu.appendChild(makeItem({
-      label: 'Написать сообщение',
+      label: window.AlexiHubI18n.t('privacy.blocking.message'),
       restricted: restricted,
       onClick: function () {
         closeMenu();
@@ -10249,10 +10249,10 @@ html[data-theme="light"] #ah-nitro-tooltip-portal[class]{
 
     menu.appendChild(divider());
 
-    menu.appendChild(makeItem({ label: 'Изменить никнейм', restricted: restricted, onClick: function () { closeMenu(); stubToast(); } }));
-    menu.appendChild(makeItem({ label: 'Игнорировать', restricted: restricted, onClick: function () { closeMenu(); stubToast(); } }));
+    menu.appendChild(makeItem({ label: window.AlexiHubI18n.t('server.ctx_menu.change_nick'), restricted: restricted, onClick: function () { closeMenu(); stubToast(); } }));
+    menu.appendChild(makeItem({ label: window.AlexiHubI18n.t('common.action.ignorate'), restricted: restricted, onClick: function () { closeMenu(); stubToast(); } }));
     menu.appendChild(makeItem({
-      label: 'Заблокировать',
+      label: window.AlexiHubI18n.t('common.actions.block'),
       danger: true,
       restricted: restricted ? true : undefined,
       onClick: function () {
@@ -10268,11 +10268,11 @@ html[data-theme="light"] #ah-nitro-tooltip-portal[class]{
 
     menu.appendChild(divider());
 
-    menu.appendChild(makeItem({ label: 'Роли', chevron: true, restricted: restricted, onClick: function () { closeMenu(); stubToast(); } }));
+    menu.appendChild(makeItem({ label: window.AlexiHubI18n.t('server.mv.col_roles'), chevron: true, restricted: restricted, onClick: function () { closeMenu(); stubToast(); } }));
 
     if (window.AH_IS_SERVER_OWNER) {
       menu.appendChild(makeItem({
-        label: 'Открыть с доступом модератора',
+        label: window.AlexiHubI18n.t('server.ctx_menu.open_mod'),
         onClick: function () {
           closeMenu();
           if (window.AhModPanel && typeof window.AhModPanel.open === 'function') {
@@ -10286,13 +10286,13 @@ html[data-theme="light"] #ah-nitro-tooltip-portal[class]{
 
     if (!data.isOwner && !data.isSelf) {
       menu.appendChild(makeItem({
-        label: 'Отправить ' + data.display + ' в тайм-аут',
+        label: window.AlexiHubI18n.t('server.ctx_menu.timeout_user', {name: data.display}),
         danger: true,
         restricted: !hasAccess ? true : undefined,
         onClick: function () { closeMenu(); stubToast(); }
       }));
       menu.appendChild(makeItem({
-        label: 'Выгнать ' + data.display,
+        label: window.AlexiHubI18n.t('server.ctx_menu.kick_user', {name: data.display}),
         danger: true,
         restricted: !hasAccess ? true : undefined,
         onClick: function () { closeMenu(); stubToast(); }
@@ -10302,11 +10302,11 @@ html[data-theme="light"] #ah-nitro-tooltip-portal[class]{
     menu.appendChild(divider());
 
     menu.appendChild(makeItem({
-      label: 'Копировать ID пользователя',
+      label: window.AlexiHubI18n.t('dm.ctx.copy_user_id'),
       leftBadge: 'ID',
       onClick: function () {
         if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(String(data.id)).catch(function () {});
-        toast('Скопировано');
+        toast(window.AlexiHubI18n.t('common.feedback.copied'));
         closeMenu();
       }
     }));
@@ -10461,9 +10461,9 @@ html.ah-theme-anim *,html.ah-theme-anim *::before,html.ah-theme-anim *::after{tr
     var grid=document.getElementById('ah-color-themes-grid');
     if(!grid||grid.dataset.built)return;
     grid.dataset.built='1';
-    var html='<button type="button" class="ah-color-theme-tile wand" aria-label="Создать тему" onclick="window.showSettingsTab?.(\'subscriptions\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4V2m0 14v-2M8 9h2M20 9h2M17.8 11.8 19 13M15 9h.01M17.8 6.2 19 5M3 21l9-9M12.2 6.2 11 5"/></svg></button>';
+    var html='<button type="button" class="ah-color-theme-tile wand" aria-label="'+window.AlexiHubI18n.t('profile.theme.create')+'" onclick="window.showSettingsTab?.(\'subscriptions\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4V2m0 14v-2M8 9h2M20 9h2M17.8 11.8 19 13M15 9h.01M17.8 6.2 19 5M3 21l9-9M12.2 6.2 11 5"/></svg></button>';
     COLOR_THEMES.forEach(function(t,i){
-      html+='<button type="button" class="ah-color-theme-tile" style="background:'+t.c+'" aria-label="Тема '+(i+1)+' (Plus)" onclick="settingsToast(\'Доступно с подпиской Plus\')"><span class="lock"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 9h-1V7a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2Zm-7-2a2 2 0 1 1 4 0v2h-4V7Z"/></svg></span></button>';
+      html+='<button type="button" class="ah-color-theme-tile" style="background:'+t.c+'" aria-label="'+window.AlexiHubI18n.t('home.text.theme')+' '+(i+1)+' (Plus)" onclick="settingsToast(window.AlexiHubI18n.t(\'profile.theme.plus_only\'))"><span class="lock"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 9h-1V7a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2Zm-7-2a2 2 0 1 1 4 0v2h-4V7Z"/></svg></span></button>';
     });
     grid.innerHTML=html;
   }
@@ -10933,12 +10933,12 @@ html[data-theme="light"] body .ah-v3-mini.ah-profile-theme #ah-v3-status{border-
     if(!shell||!form||document.getElementById('ah-pc-panel'))return;
     card=shell.querySelector('.ah-custom-profile-card');
     panel=document.createElement('aside');panel.id='ah-pc-panel';panel.className='ah-pc-panel';panel.setAttribute('aria-hidden','true');
-    panel.innerHTML='<button type="button" class="ah-pc-back" aria-label="Закрити"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>'+
-      '<div class="ah-pc-head"><b>Тема профілю</b><p>Так може виглядати ваш профіль із власними кольорами. Її побачать усі.</p></div>'+
-      '<div class="ah-pc-sec"><h4>Кольори теми</h4><div class="ah-pc-strip"><label class="ah-pc-dot ah-pc-dot-top" title="Верхній колір"><input type="color" id="ah-pc-in1" aria-label="Верхній колір"></label><label class="ah-pc-dot ah-pc-dot-bot" title="Нижній колір"><input type="color" id="ah-pc-in2" aria-label="Нижній колір"></label></div></div>'+
-      '<div class="ah-pc-sec"><h4>Готові теми</h4><div class="ah-pc-presets">'+PRESETS.map(function(x){return '<button type="button" class="ah-pc-preset" data-p="'+x[0]+'" data-a="'+x[1]+'" style="background:linear-gradient(180deg,'+x[0]+','+x[1]+')" aria-label="Тема"></button>'}).join('')+'</div></div>'+
-      '<button type="button" class="ah-pc-reset">Скинути кольори</button>';
-    var handle=document.createElement('button');handle.type='button';handle.className='ah-pc-handle';handle.setAttribute('aria-label','Тема профілю');handle.setAttribute('aria-expanded','false');handle.title='Тема профілю';
+    panel.innerHTML='<button type="button" class="ah-pc-back" aria-label="'+window.AlexiHubI18n.t('common.actions.close')+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>'+
+      '<div class="ah-pc-head"><b>'+window.AlexiHubI18n.t('home.text.theme_of_profile')+'</b><p>'+window.AlexiHubI18n.t('profile.theme.desc')+'</p></div>'+
+      '<div class="ah-pc-sec"><h4>'+window.AlexiHubI18n.t('profile.theme.colors')+'</h4><div class="ah-pc-strip"><label class="ah-pc-dot ah-pc-dot-top" title="'+window.AlexiHubI18n.t('profile.theme.top_color')+'"><input type="color" id="ah-pc-in1" aria-label="'+window.AlexiHubI18n.t('profile.theme.top_color')+'"></label><label class="ah-pc-dot ah-pc-dot-bot" title="'+window.AlexiHubI18n.t('profile.theme.bottom_color')+'"><input type="color" id="ah-pc-in2" aria-label="'+window.AlexiHubI18n.t('profile.theme.bottom_color')+'"></label></div></div>'+
+      '<div class="ah-pc-sec"><h4>'+window.AlexiHubI18n.t('profile.theme.presets')+'</h4><div class="ah-pc-presets">'+PRESETS.map(function(x){return '<button type="button" class="ah-pc-preset" data-p="'+x[0]+'" data-a="'+x[1]+'" style="background:linear-gradient(180deg,'+x[0]+','+x[1]+')" aria-label="'+window.AlexiHubI18n.t('home.text.theme')+'"></button>'}).join('')+'</div></div>'+
+      '<button type="button" class="ah-pc-reset">'+window.AlexiHubI18n.t('profile.theme.reset')+'</button>';
+    var handle=document.createElement('button');handle.type='button';handle.className='ah-pc-handle';handle.setAttribute('aria-label',window.AlexiHubI18n.t('home.text.theme_of_profile'));handle.setAttribute('aria-expanded','false');handle.title=window.AlexiHubI18n.t('home.text.theme_of_profile');
     handle.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
     shell.appendChild(panel);shell.appendChild(handle);
     h1=document.createElement('input');h1.type='hidden';h1.name='profile_color_primary';h1.disabled=true;
