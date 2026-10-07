@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.248.11",
+      "date": "2026-10-07",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update Ukrainian locale with new translations."
+      ],
+      "source_sha": "42ef2c83cd8027bbcc0ea0dbfe1cf9f784920280"
+    },
+    {
       "version": "1.248.10",
       "date": "2026-10-07",
       "title": "Виправлення та стабільність",
