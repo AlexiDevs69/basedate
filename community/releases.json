@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.254.0",
+      "date": "2026-10-09",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: new message banner and jump to present features."
+      ],
+      "source_sha": "7f29c8fe55081b5bb01e1ea4346179448cf72778"
+    },
+    {
       "version": "1.253.1",
       "date": "2026-10-09",
       "title": "Оновлення AlexiHub",
