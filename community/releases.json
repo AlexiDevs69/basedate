@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.252.1",
+      "date": "2026-10-08",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance server rail and layout in travel.html."
+      ],
+      "source_sha": "29cb6168c3cffd40a0122cf4fe5c05235e01ccc8"
+    },
+    {
       "version": "1.252.0",
       "date": "2026-10-08",
       "title": "Нові можливості AlexiHub",
