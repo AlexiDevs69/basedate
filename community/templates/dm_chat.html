@@ -16221,8 +16221,9 @@ html[data-theme="light"] .ah-date-island{background:rgba(255,255,255,.88);border
       if(!r)return;
       var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches;
       var target=(div&&div.parentNode)?div:r;
-      target.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'});
-      box.scrollTop=Math.max(0,box.scrollTop);
+      var gap=el.offsetHeight+14;
+      var delta=target.getBoundingClientRect().top-box.getBoundingClientRect().top-gap;
+      box.scrollTo({top:Math.max(0,box.scrollTop+delta),behavior:reduce?'auto':'smooth'});
       r.classList.remove('ah-nm-flash');void r.offsetWidth;r.classList.add('ah-nm-flash');
       setTimeout(function(){r.classList.remove('ah-nm-flash');},1700);
     });
@@ -16234,6 +16235,84 @@ html[data-theme="light"] .ah-date-island{background:rgba(255,255,255,.88);border
     document.addEventListener('visibilitychange',function(){if(!document.hidden&&titleOn)setTitle(0);if(unread.length)render();check();});
     document.addEventListener('alexihub:language-changed',function(){if(unread.length)render();});
     window.AlexiHubNewMsgBanner={clear:function(){clearAll(true);},count:function(){return unread.length;}};
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+
+<style id="ah-jump-present-style">
+.ah-jp-bar{position:absolute;left:0;right:0;bottom:var(--ah-jp-bottom,76px);z-index:127;height:32px;display:flex;align-items:stretch;background:var(--accent,#00C4B4);color:#03211e;font-size:12.5px;font-weight:800;box-shadow:0 -6px 18px rgba(0,0,0,.25);opacity:0;visibility:hidden;transform:translateY(8px);pointer-events:none;transition:opacity .18s ease,transform .22s cubic-bezier(.22,.8,.28,1),visibility 0s linear .22s}
+.ah-jp-bar.show{opacity:1;visibility:visible;transform:none;pointer-events:auto;transition:opacity .18s ease,transform .22s cubic-bezier(.22,.8,.28,1),visibility 0s}
+.ah-jp-bar button{all:unset;box-sizing:border-box;cursor:pointer;flex:1 1 auto;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 14px;color:inherit;font:inherit}
+.ah-jp-bar button:hover{background:rgba(0,0,0,.1)}
+.ah-jp-bar button:focus-visible{outline:2px solid #03211e;outline-offset:-3px}
+.ah-jp-bar .ah-jp-l{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.ah-jp-bar .ah-jp-r{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;flex:0 0 auto}
+.ah-jp-bar svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+@media(max-width:620px){.ah-jp-bar{font-size:12px}.ah-jp-bar button{padding:0 11px;gap:8px}}
+@media(prefers-reduced-motion:reduce){.ah-jp-bar,.ah-jp-bar.show{transition:opacity .12s linear}}
+</style>
+<script id="ah-jump-present-js">
+(function(){
+  if(window.__ahJumpPresent)return;
+  window.__ahJumpPresent=true;
+  function init(){
+    var box=document.getElementById('messages');
+    var main=box&&box.closest('.main');
+    if(!box||!main)return;
+    function lang(){var l=String(document.documentElement.lang||'uk').toLowerCase();return l.indexOf('ru')===0?'ru':l.indexOf('en')===0?'en':'uk';}
+    var TXT={
+      uk:['Ви переглядаєте старі повідомлення','Перейти до останніх повідомлень'],
+      ru:['Вы просматриваете старые сообщения','Перейти к последним сообщениям'],
+      en:["You're viewing older messages",'Jump to present']
+    };
+    var el=document.createElement('div');
+    el.className='ah-jp-bar';
+    el.setAttribute('role','region');
+    el.innerHTML='<button type="button"><span class="ah-jp-l"></span><span class="ah-jp-r"><span class="ah-jp-t"></span><svg viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></span></button>';
+    main.appendChild(el);
+    var btn=el.querySelector('button'),l=el.querySelector('.ah-jp-l'),t=el.querySelector('.ah-jp-t');
+    var shown=false,raf=0,lastLang='';
+    function setText(){
+      var g=lang();if(g===lastLang)return;lastLang=g;
+      l.textContent=TXT[g][0];t.textContent=TXT[g][1];
+      el.setAttribute('aria-label',TXT[g][0]);
+    }
+    function place(){
+      var c=main.querySelector('.composer-wrap');
+      var mb=main.getBoundingClientRect().bottom;
+      var v=c?Math.round(mb-c.getBoundingClientRect().top):76;
+      main.style.setProperty('--ah-jp-bottom',(v>0?v:76)+'px');
+    }
+    function far(){
+      var dist=box.scrollHeight-box.scrollTop-box.clientHeight;
+      return dist>Math.max(400,box.clientHeight);
+    }
+    function update(){
+      raf=0;
+      var f=far();
+      if(f){setText();place();}
+      if(f!==shown){shown=f;el.classList.toggle('show',f);}
+    }
+    function sched(){if(!raf)raf=requestAnimationFrame(update);}
+    btn.addEventListener('click',function(){
+      var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches;
+      box.scrollTo({top:box.scrollHeight,behavior:reduce?'auto':'smooth'});
+      setTimeout(function(){
+        if(box.scrollHeight-box.scrollTop-box.clientHeight>4)box.scrollTop=box.scrollHeight;
+        sched();
+      },520);
+    });
+    box.addEventListener('scroll',sched,{passive:true});
+    window.addEventListener('resize',sched,{passive:true});
+    if(window.ResizeObserver){
+      var c=main.querySelector('.composer-wrap');
+      var ro=new ResizeObserver(sched);
+      ro.observe(box);if(c)ro.observe(c);
+    }
+    new MutationObserver(sched).observe(box,{childList:true});
+    document.addEventListener('alexihub:language-changed',function(){lastLang='';if(shown){setText();}});
+    sched();
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
