@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.252.2",
+      "date": "2026-10-09",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update brand logo dimensions and SVG structure."
+      ],
+      "source_sha": "c87c7aa37bf42f5eaf70a1e352a1c2a8cd314874"
+    },
+    {
       "version": "1.252.1",
       "date": "2026-10-08",
       "title": "Виправлення та стабільність",
