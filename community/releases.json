@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.253.0",
+      "date": "2026-10-09",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: new message banner functionality in dm_chat.html."
+      ],
+      "source_sha": "5975089f2018b532a80fcd2181268a17fe29f8e6"
+    },
+    {
       "version": "1.252.3",
       "date": "2026-10-09",
       "title": "Виправлення та стабільність",
