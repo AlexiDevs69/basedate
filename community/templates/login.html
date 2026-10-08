@@ -16,8 +16,8 @@ html,body{min-height:100%}
 body{margin:0;min-height:100vh;min-height:100dvh;overflow-x:hidden;color:var(--text);font-family:var(--font);background:linear-gradient(180deg,#0d2733 0%,#125062 62%,#1b7583 100%)}
 #cats{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:block}
 .brand{position:fixed;top:30px;left:36px;z-index:3;display:inline-flex;align-items:center;gap:10px;color:#fff;font-size:21px;font-weight:900;letter-spacing:-.01em;text-decoration:none}
-.brand-mark{width:31px;height:25px;display:grid;place-items:center;border-radius:9px;background:rgba(255,255,255,.96);color:#4f5deb;box-shadow:0 8px 24px rgba(17,20,80,.25)}
-.brand-mark svg{width:21px;height:21px;display:block}
+.brand-mark{width:40px;height:26px;display:grid;place-items:center;filter:drop-shadow(0 4px 10px rgba(0,0,0,.28))}
+.brand-mark svg{width:40px;height:26px;display:block}
 .page{position:relative;z-index:2;min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:84px 20px 120px}
 .auth-card{width:min(var(--w),100%);padding:34px 32px;border-radius:8px;background:var(--panel);border:1px solid #23495a;box-shadow:0 6px 0 rgba(6,20,27,.7),0 24px 50px rgba(0,0,0,.35)}
 .heading{margin:0;text-align:center;font-size:26px;line-height:1.25;font-weight:900}
@@ -62,7 +62,7 @@ a:hover{text-decoration:underline}
 </head>
 <body>
   <canvas id="cats" aria-hidden="true"></canvas>
-  <a class="brand" href="/community" aria-label="AlexiHub home"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M7.2 7.7c2.9-1.4 6.7-1.4 9.6 0 1.2 2 1.9 4.2 2.1 6.6-1.3 1.7-3 2.8-4.9 3.3l-.9-1.2c.8-.2 1.5-.6 2.1-1-2 .9-4.3 1.1-6.4.5-2.1-.6-3.8-2-4.8-3.9.3-1.5.8-2.9 1.6-4.3h1.6Z" fill="currentColor"/><circle cx="9.3" cy="12.1" r="1.1" fill="#fff"/><circle cx="14.7" cy="12.1" r="1.1" fill="#fff"/></svg></span><span>AlexiHub</span></a>
+  <a class="brand" href="/community" aria-label="AlexiHub home"><span class="brand-mark" aria-hidden="true"><svg viewBox="-30 200 1260 775" aria-hidden="true"><defs><mask id="lm" maskUnits="userSpaceOnUse" x="-30" y="200" width="1260" height="775"><path d="M0 350L200 250L600 475L1000 250L1200 350V822L1000 925L600 698L200 925L0 822ZM200 468L407 587L200 705ZM1000 468L793 587L1000 705Z" fill="#fff" stroke="#fff" stroke-width="44" stroke-linejoin="round" fill-rule="evenodd"/></mask></defs><g mask="url(#lm)"><path d="M0 350L200 250L600 475L1000 250L1200 350V822L1000 925L600 698L200 925L0 822ZM200 468L407 587L200 705ZM1000 468L793 587L1000 705Z" fill="#e4e7ea" stroke="#e4e7ea" stroke-width="44" stroke-linejoin="round" fill-rule="evenodd"/><g fill="#bcc2c8"><path d="M600 475L793 587L600 698L407 587Z"/><path d="M0 822L200 705V925Z"/><path d="M1000 705L1200 822L1000 925Z"/></g></g></svg></span><span>AlexiHub</span></a>
 
   <main class="page">
     <section class="auth-card" aria-labelledby="login-title">
