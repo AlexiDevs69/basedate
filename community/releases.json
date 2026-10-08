@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.253.1",
+      "date": "2026-10-09",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: scrolling behavior in dm_chat.html."
+      ],
+      "source_sha": "35fa34279f79f6119cad3c5fd98a49d5d7d2f913"
+    },
+    {
       "version": "1.253.0",
       "date": "2026-10-09",
       "title": "Нові можливості AlexiHub",
