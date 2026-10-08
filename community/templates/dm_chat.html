@@ -241,6 +241,63 @@
   var topStale = false;  // верхня сторінка застаріла (напр. змінився список серверів)
   var topHiddenAt = 0;
 
+  // ---- Постійна рейка серверів (як у Discord) ----
+  // Рейка верхньої сторінки не перезавантажується: фрейми обрізаються праворуч від неї,
+  // а стан (активний пункт, лічильники, список серверів) синхронізується з активним фреймом.
+  var railClip = 0;
+  function railEl(d){ try{ return d.querySelector('.server-rail'); }catch(e){ return null; } }
+  function measureRail(){
+    railClip = 0;
+    var r = railEl(document); if(!r) return 0;
+    try{
+      var b = r.getBoundingClientRect();
+      if(b.width > 0 && b.left <= 1 && b.height >= window.innerHeight * 0.6) railClip = Math.round(b.right);
+    }catch(e){}
+    return railClip;
+  }
+  // вирізаємо лише верхню частину смуги рейки; нижні 76px (панель користувача) лишаємо фрейму
+  function applyClip(el){
+    el.style.clipPath = railClip ? 'polygon(' + railClip + 'px 0,100% 0,100% 100%,0 100%,0 calc(100% - 76px),' + railClip + 'px calc(100% - 76px))' : '';
+  }
+  function applyClipAll(){ measureRail(); Object.keys(frames).forEach(function(k){ applyClip(frames[k].el); }); }
+  window.addEventListener('resize', applyClipAll);
+  function routeRailHref(key){
+    if(key === '/community' || /^\/community\/dm\//.test(key)) return '/community';
+    var m = /^(\/community\/servers\/\d+)/.exec(key);
+    return m ? m[1] : key;
+  }
+  function setRailActive(key){
+    var r = railEl(document); if(!r) return;
+    var want = routeRailHref(key);
+    [].forEach.call(r.querySelectorAll('a.server-dot'), function(a){
+      var h = (a.getAttribute('href') || '').replace(/\/+$/, '') || '/';
+      a.classList.toggle('active', h === want);
+    });
+  }
+  function mirrorRail(src){
+    var s = railEl(src), d = railEl(document); if(!s || !d) return;
+    var dmap = {}, seen = {};
+    [].forEach.call(d.querySelectorAll('a.server-dot'), function(a){ dmap[a.getAttribute('href')] = a; });
+    [].forEach.call(s.querySelectorAll('a.server-dot'), function(a){
+      var h = a.getAttribute('href'); seen[h] = 1;
+      var t = dmap[h];
+      if(!t){
+        if(/^\/community\/servers\/\d+$/.test(h)){          // новий сервер у списку
+          var c = document.importNode(a, true); c.classList.remove('active');
+          d.insertBefore(c, d.querySelector('a.server-dot.plus'));
+        }
+        return;
+      }
+      var sb = a.querySelector('.ah-mention-count'), tb = t.querySelector('.ah-mention-count');
+      if(sb && tb){
+        if(tb.textContent !== sb.textContent) tb.textContent = sb.textContent;
+        var sh = sb.hasAttribute('hidden');
+        if(sh !== tb.hasAttribute('hidden')){ if(sh) tb.setAttribute('hidden', ''); else tb.removeAttribute('hidden'); }
+      }
+    });
+    Object.keys(dmap).forEach(function(h){ if(!seen[h] && /^\/community\/servers\/\d+$/.test(h)) dmap[h].remove(); });
+  }
+
   function showBar(){
     if(!bar){
       bar = document.createElement('div');
@@ -281,6 +338,7 @@
   function destroy(rec){
     rec.dead = true;
     try{ if(rec.mo) rec.mo.disconnect(); }catch(e){}
+    try{ if(rec.rmo) rec.rmo.disconnect(); }catch(e){}
     if(frames[rec.key] === rec) delete frames[rec.key];
     if(active === rec) active = null;
     if(rec.el.parentNode) rec.el.parentNode.removeChild(rec.el);
@@ -312,11 +370,13 @@
 
   function createFrame(p, hover){
     trim(1);
+    if(!railClip) measureRail();
     var el = document.createElement('iframe');
     el.setAttribute('aria-hidden', 'true');
     el.tabIndex = -1;
     var bg = ''; try{ bg = getComputedStyle(document.body).backgroundColor; }catch(e){}
     el.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;border:0;margin:0;padding:0;z-index:2147483000;visibility:hidden;pointer-events:none;background:' + (bg || '#1e1f22');
+    applyClip(el);
     var rec = {key:p.key, full:p.full, el:el, ready:false, hover:!!hover, visited:false, used:Date.now(), dead:false};
     frames[p.key] = rec;
     var keepWin = window, keepEl = null;
@@ -357,6 +417,19 @@
     if(fp.key !== rec.key) rekey(rec, fp.key);
     rec.full = fp.key + fp.search + fp.hash;
     if(active !== rec) setActive(win, false);
+    try{   // дзеркалимо стан рейки активного фрейму в рейку верхньої сторінки
+      var fr = railEl(win.document);
+      if(fr){
+        if(rec.rmo) rec.rmo.disconnect();
+        var tmr = null;
+        rec.rmo = new win.MutationObserver(function(){
+          if(active !== rec || rec.dead) return;
+          clearTimeout(tmr);
+          tmr = setTimeout(function(){ if(active === rec && !rec.dead){ try{ mirrorRail(win.document); }catch(e){} } }, 60);
+        });
+        rec.rmo.observe(fr, {subtree:true, childList:true, attributes:true, characterData:true});
+      }
+    }catch(e){}
     try{   // заголовок (напр. лічильник непрочитаного) оновлюється й у активному фреймі
       var tt = win.document.querySelector('title');
       if(tt){
@@ -389,6 +462,8 @@
     if(prev){ prev.el.style.visibility = 'hidden'; prev.el.style.pointerEvents = 'none'; prev.el.setAttribute('aria-hidden', 'true'); }
     if(rec){ rec.el.style.visibility = 'visible'; rec.el.style.pointerEvents = 'auto'; rec.el.removeAttribute('aria-hidden'); rec.visited = true; rec.hover = false; rec.used = Date.now(); }
     active = rec;
+    setRailActive(rec ? rec.key : topKey);
+    if(rec){ try{ mirrorRail(rec.el.contentWindow.document); }catch(e){} }
     setActive(prevWin, false);
     setActive(nextWin, true);
     try{ nextWin.focus(); }catch(e){}
@@ -419,7 +494,7 @@
   }
 
   function cancelPending(){
-    if(pending){ clearTimeout(pending.timer); pending = null; hideBar(); }
+    if(pending){ clearTimeout(pending.timer); pending = null; hideBar(); setRailActive(active ? active.key : topKey); }
   }
   function beginPending(p, rec, popped){
     cancelPending();
@@ -427,6 +502,7 @@
       var pp = pending; pending = null; hideBar();
       if(pp) location.href = pp.p.full;
     }, LOAD_TIMEOUT)};
+    setRailActive(p.key);
     showBar();
   }
 
