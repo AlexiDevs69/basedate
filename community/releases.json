@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.251.0",
+      "date": "2026-10-08",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: server rail feature with updated styles."
+      ],
+      "source_sha": "42a853b0ede2d76768dcdf289f6a8fcce96f9262"
+    },
+    {
       "version": "1.250.0",
       "date": "2026-10-08",
       "title": "Нові можливості AlexiHub",
