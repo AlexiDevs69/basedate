@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.249.0",
+      "date": "2026-10-08",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: server rail feature in home template."
+      ],
+      "source_sha": "108af9127ac59c7784ff5b3bf2cb8f8751b2b63d"
+    },
+    {
       "version": "1.248.12",
       "date": "2026-10-07",
       "title": "Виправлення та стабільність",
