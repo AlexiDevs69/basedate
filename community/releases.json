@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.250.0",
+      "date": "2026-10-08",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: server rail synchronization in dm_chat.html."
+      ],
+      "source_sha": "88ad5e9ca5f8b7b043b7c6c110ba19c95b371cf2"
+    },
+    {
       "version": "1.249.0",
       "date": "2026-10-08",
       "title": "Нові можливості AlexiHub",
