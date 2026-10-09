@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.254.2",
+      "date": "2026-10-10",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено продуктивність: new message banner with animations and logic."
+      ],
+      "source_sha": "5d1ff7b3bd0517b44476dbb2036c80a71028986c"
+    },
+    {
       "version": "1.254.1",
       "date": "2026-10-10",
       "title": "Оновлення AlexiHub",
