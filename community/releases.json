@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.254.1",
+      "date": "2026-10-10",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: chat message notification and lightbox scripts."
+      ],
+      "source_sha": "aca89d93405a0480971edcc17b147c848167359e"
+    },
+    {
       "version": "1.254.0",
       "date": "2026-10-09",
       "title": "Нові можливості AlexiHub",
