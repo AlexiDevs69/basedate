@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.255.2",
+      "date": "2026-10-11",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update composer upload preview in HTML template."
+      ],
+      "source_sha": "2631b875a8a6833e845444a307ab7cc1857512c3"
+    },
+    {
       "version": "1.255.1",
       "date": "2026-10-10",
       "title": "Виправлення та стабільність",
