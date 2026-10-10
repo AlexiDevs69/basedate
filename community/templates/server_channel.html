@@ -1590,7 +1590,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
 
 
 /* Bigger Discord-like attachment preview before sending (supports multiple images) */
-.composer-upload-preview{display:none!important;margin:0 8px 8px!important;border-top:0!important;background:#202127!important;border:1px solid #31343c!important;border-radius:12px!important;padding:10px!important;align-items:flex-start!important;flex-wrap:wrap!important;gap:10px!important;max-width:100%!important;box-shadow:0 8px 26px rgba(0,0,0,.22)!important;}
+.composer-upload-preview{display:none!important;margin:0 0 8px 0!important;border-top:0!important;background:#202127!important;border:1px solid #31343c!important;border-radius:12px!important;padding:10px!important;align-items:flex-start!important;flex-wrap:wrap!important;gap:10px!important;max-width:100%!important;box-shadow:0 8px 26px rgba(0,0,0,.22)!important;}
 .composer-upload-preview.open{display:flex!important}
 .composer-upload-item{position:relative!important;flex:0 0 auto!important;}
 .composer-upload-item img{display:block!important;width:76px!important;height:76px!important;border-radius:10px!important;object-fit:cover!important;background:#111!important;border:1px solid rgba(255,255,255,.08)!important}
@@ -3614,6 +3614,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
         <button type="button" onclick="clearReply()" aria-label="{{ i18n_t('common.aria.cancel_reply') }}" data-i18n-aria-label="common.aria.cancel_reply">×</button>
         <input id="reply-to-id" type="hidden" name="reply_to_id" value="">
       </div>
+      <div id="composer-upload-preview" class="composer-upload-preview"></div>
       <div class="composer-box discord-composer">
         <div class="composer-row">
           <button id="composer-plus-btn" class="composer-plus-btn" type="button" onclick="toggleComposerPlus(event)" title="{{ i18n_t('server_channel.aria.add') }}" data-i18n-title="server_channel.aria.add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg></button>
@@ -3639,7 +3640,6 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
             <svg class="composer-mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
           </button>
         </div>
-        <div id="composer-upload-preview" class="composer-upload-preview"></div>
       </div>
     </form>
   </main>
