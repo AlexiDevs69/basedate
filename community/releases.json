@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.255.4",
+      "date": "2026-10-11",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update mobile channel layout and functionality."
+      ],
+      "source_sha": "560aa5fc1fef984a7dd8cbbcb8c5f752c71344f5"
+    },
+    {
       "version": "1.255.3",
       "date": "2026-10-11",
       "title": "Виправлення та стабільність",
