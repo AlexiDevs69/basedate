@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.255.1",
+      "date": "2026-10-10",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance image handling with spoiler functionality."
+      ],
+      "source_sha": "047544afcf8dd6b22952d88dc5ac33efe7883194"
+    },
+    {
       "version": "1.255.0",
       "date": "2026-10-10",
       "title": "Нові можливості AlexiHub",
