@@ -16782,5 +16782,318 @@ html[data-theme="light"] .ah-qs-foot kbd{background:#e3e5e8;color:#2e3338}
 })();
 </script>
 
+<style id="ah-channel-mobile-css">
+/* ======================================================================
+   CHANNEL MOBILE SHELL (<=820px) - Discord-style:
+   chat = full screen; swipe right = servers + channels; swipe left = members;
+   long-press a message = bottom sheet; composer = + [ pill with icons ] (send).
+   ====================================================================== */
+.ah-m-search-close,#ah-m-scrim,.ah-m-set-back,.ah-m-set-close{display:none}
+@keyframes ahMSheetUp{from{transform:translate3d(0,100%,0)}to{transform:none}}
+@media (max-width:820px){
+:root{--ah-m-rail:64px;--ah-m-side:min(calc(100vw - 124px),300px);--ah-m-rw:min(calc(100vw - 52px),340px);--ah-m-ease:cubic-bezier(.22,.8,.28,1);--ah-m-top:52px;--ah-m-pill:#2b2d31;--ah-m-ico:#b5bac1}
+html[data-theme="light"]{--ah-m-pill:#e3e5e8;--ah-m-ico:#4e5058}
+html,body{overscroll-behavior:none}
+
+/* ---- left drawer: server rail + channel list slide in together ---- */
+html body .server-rail{display:flex!important;flex-direction:column;align-items:center;position:fixed!important;top:0!important;bottom:0!important;left:0!important;width:var(--ah-m-rail)!important;min-width:var(--ah-m-rail)!important;z-index:1210!important;visibility:hidden;padding:calc(12px + env(safe-area-inset-top)) 8px calc(12px + env(safe-area-inset-bottom))!important;gap:10px!important;overflow-y:auto;
+  transform:translate3d(calc((1 - var(--ah-l,0)) * -1 * (var(--ah-m-rail) + var(--ah-m-side))),0,0);
+  transition:transform .28s var(--ah-m-ease),visibility 0s linear .28s;will-change:transform;overscroll-behavior:contain}
+html body .server-sidebar{display:flex!important;flex-direction:column!important;position:fixed!important;top:0!important;bottom:0!important;left:var(--ah-m-rail)!important;width:var(--ah-m-side)!important;min-width:0!important;z-index:1210!important;visibility:hidden;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)!important;box-shadow:8px 0 30px rgba(0,0,0,.35);
+  transform:translate3d(calc((1 - var(--ah-l,0)) * -1 * (var(--ah-m-rail) + var(--ah-m-side))),0,0);
+  transition:transform .28s var(--ah-m-ease),visibility 0s linear .28s;will-change:transform;overscroll-behavior:contain}
+html.ah-m-l-on body .server-rail,html.ah-m-l-on body .server-sidebar{visibility:visible;transition:transform .28s var(--ah-m-ease),visibility 0s}
+html body .server-dot{width:46px!important;height:46px!important;flex:0 0 auto!important}
+html body .server-sidebar .chan-row{min-height:42px}
+
+/* ---- right drawer: members ---- */
+html body .members-sidebar,html body.members-hidden .members-sidebar{display:block!important;position:fixed!important;top:0!important;bottom:0!important;right:0!important;left:auto!important;width:var(--ah-m-rw)!important;z-index:1210!important;visibility:hidden;padding:calc(16px + env(safe-area-inset-top)) 12px calc(16px + env(safe-area-inset-bottom))!important;box-shadow:-8px 0 30px rgba(0,0,0,.35);overscroll-behavior:contain;
+  transform:translate3d(calc((1 - var(--ah-r,0)) * 100%),0,0);
+  transition:transform .28s var(--ah-m-ease),visibility 0s linear .28s;will-change:transform}
+html.ah-m-r-on body .members-sidebar{visibility:visible;transition:transform .28s var(--ah-m-ease),visibility 0s}
+
+/* ---- scrim ---- */
+#ah-m-scrim{display:block;position:fixed;inset:0;z-index:1190;background:#000;opacity:calc(max(var(--ah-l,0),var(--ah-r,0)) * .62);pointer-events:none;transition:opacity .28s var(--ah-m-ease);-webkit-tap-highlight-color:transparent}
+html.ah-m-l-on #ah-m-scrim,html.ah-m-r-on #ah-m-scrim{pointer-events:auto}
+html.ah-m-drag .server-rail,html.ah-m-drag .server-sidebar,html.ah-m-drag .members-sidebar,html.ah-m-drag #ah-m-scrim{transition:none!important}
+
+/* ---- chat column: full screen, follows the visual viewport (keyboard) ---- */
+html body .chat-main,html body .main{position:fixed!important;left:0!important;right:0!important;top:var(--ah-vt,0px)!important;width:100%!important;height:var(--ah-vh,100dvh)!important;max-height:var(--ah-vh,100dvh)!important;min-height:0!important;margin:0!important;padding-top:calc(var(--ah-m-top) + env(safe-area-inset-top))!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
+html body .channel-header{display:none!important}
+
+/* ---- top bar: "# channel >" on the left, search + members on the right ---- */
+html body .topbar.discord-channel-topbar{display:flex!important;position:fixed!important;top:var(--ah-vt,0px)!important;left:0!important;right:0!important;width:auto!important;height:calc(var(--ah-m-top) + env(safe-area-inset-top))!important;min-height:0!important;padding:env(safe-area-inset-top) 6px 0 4px!important;align-items:center!important;justify-content:space-between!important;gap:4px;z-index:140!important}
+html body .discord-title-left{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:6px;padding-left:12px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+html body .discord-title-left .ah-streak-badge,html body .discord-channel-topic,html body .discord-live-pill{display:none!important}
+html body .discord-hash{font-size:22px;font-weight:600;opacity:.55;line-height:1}
+html body .discord-channel-name{font-size:17px!important;font-weight:800!important;max-width:none!important;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html body .discord-channel-name::after{content:"\203A";margin-left:7px;opacity:.45;font-weight:700}
+html body .discord-channel-tools{flex:none;display:flex;align-items:center;gap:2px}
+html body .discord-channel-tools>button:not(.members-toggle-btn){display:none!important}
+html body .discord-channel-tools .members-toggle-btn{display:grid!important;place-items:center;width:40px!important;height:40px!important;border-radius:12px!important}
+html body .discord-channel-tools .discord-search{display:grid!important;order:-1;place-items:center;position:relative;width:40px!important;height:40px!important;min-width:0!important;margin:0!important;padding:0!important;border:0!important;border-radius:12px!important;background:transparent!important}
+html body .discord-search input{position:absolute;opacity:0;pointer-events:none;width:0;height:0;padding:0;border:0}
+html body .topbar.ah-m-searching .discord-title-left,html body .topbar.ah-m-searching .members-toggle-btn{display:none!important}
+html body .topbar.ah-m-searching .discord-channel-tools{flex:1 1 auto;min-width:0}
+html body .topbar.ah-m-searching .discord-channel-tools .discord-search{display:flex!important;align-items:center;gap:8px;flex:1 1 auto;width:100%!important;height:40px!important;padding:0 14px!important;border-radius:20px!important;background:var(--ah-m-pill)!important}
+html body .topbar.ah-m-searching .discord-search input{position:static;opacity:1;pointer-events:auto;flex:1;width:auto;min-width:0;height:40px;font-size:16px;background:transparent;border:0;outline:0;color:inherit}
+html body .topbar.ah-m-searching .ah-m-search-close{display:grid;place-items:center;flex:none;width:40px;height:40px;border:0;border-radius:12px;background:transparent;color:inherit;font-size:26px;line-height:1;cursor:pointer}
+
+/* ---- messages: Discord cozy layout, no hover chrome ---- */
+html body .messages{flex:1 1 auto!important;min-height:0!important;padding:8px 0 6px!important;overflow-y:auto!important;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+html body .message{padding:5px 12px!important;gap:12px!important;border-radius:0!important;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+html body .message + .message{margin-top:0!important}
+html body .message:hover{background:transparent!important}
+html body .message.ah-m-pressing{background:rgba(88,101,242,.18)!important}
+html body .message .avatar{width:40px!important;height:40px!important;flex:0 0 40px}
+html body .message-head{flex-wrap:nowrap!important}
+html body .message-content{font-size:16px!important;line-height:1.375!important}
+html body .message-actions{display:none!important}
+html body .message textarea,html body .message input{-webkit-user-select:text;user-select:text}
+
+/* ---- composer: (+) [ message ........ icons ] (send) ---- */
+html body .composer-wrap{position:relative!important;left:auto!important;right:auto!important;bottom:auto!important;width:100%!important;flex:0 0 auto!important;padding:6px 12px calc(8px + env(safe-area-inset-bottom))!important;z-index:35}
+html.ah-m-kb body .composer-wrap{padding-bottom:8px!important}
+html body .typing-indicator{min-height:18px!important;padding:0 6px 4px!important;font-size:12px!important}
+html body .composer-box.discord-composer{background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;padding:0!important;min-height:0!important}
+html body .composer-box.discord-composer .composer-row{display:flex!important;align-items:flex-end!important;gap:0!important;padding:0!important;min-height:0!important}
+html body .composer-plus-btn{flex:0 0 40px!important;width:40px!important;height:40px!important;border-radius:50%!important;margin:0 8px 0 0!important;background:var(--ah-m-pill)!important;color:var(--ah-m-ico)!important}
+html body .composer-plus-btn svg{width:22px;height:22px}
+html body .composer-textarea{flex:1 1 auto!important;min-width:0!important;min-height:40px!important;max-height:130px!important;margin:0!important;padding:10px 4px 10px 16px!important;font-size:16px!important;line-height:20px!important;background:var(--ah-m-pill)!important;border-radius:20px 0 0 20px!important}
+html body .composer-tools{align-self:stretch!important;display:flex!important;align-items:flex-end!important;gap:0!important;margin:0!important;padding:0 6px 0 0!important;background:var(--ah-m-pill)!important;border-radius:0 20px 20px 0!important}
+html body .composer-tools .hide-mobile{display:none!important}
+html body .composer-tools .composer-icon-btn{width:36px!important;height:40px!important;border-radius:0!important;background:transparent!important;color:var(--ah-m-ico)!important}
+html body .composer-box .send-btn{flex:0 0 40px!important;width:40px!important;height:40px!important;border-radius:50%!important;margin:0 0 0 8px!important}
+
+/* ---- message menu -> bottom sheet ---- */
+html body .message-context-menu{left:0!important;right:0!important;top:auto!important;bottom:0!important;width:100%!important;max-height:80dvh;overflow-y:auto;border-radius:20px 20px 0 0!important;border-left:0!important;border-right:0!important;border-bottom:0!important;padding:10px 12px calc(14px + env(safe-area-inset-bottom))!important;z-index:50000}
+html body .message-context-menu.open{display:block;animation:ahMSheetUp .24s var(--ah-m-ease) both}
+html body .message-context-menu::before{content:"";display:block;width:38px;height:4px;border-radius:2px;background:rgba(255,255,255,.28);margin:0 auto 10px}
+html body .message-context-menu .ctx-item{min-height:50px;font-size:15px}
+body:has(.message-context-menu.open)::after{content:"";position:fixed;inset:0;z-index:49990;background:rgba(0,0,0,.55)}
+
+/* ---- mini profile popover -> bottom sheet ---- */
+html body .ah-v3-mini.open{left:0!important;right:0!important;top:auto!important;bottom:0!important;width:100%!important;max-width:none!important;max-height:88dvh;overflow-y:auto!important;border-radius:22px 22px 0 0!important;border-left:0!important;border-right:0!important;border-bottom:0!important;padding-bottom:env(safe-area-inset-bottom);transform:none!important;animation:ahMSheetUp .24s var(--ah-m-ease) both!important}
+body:has(.ah-v3-mini.open)::before{content:"";position:fixed;inset:0;z-index:2147482900;background:rgba(0,0,0,.55)}
+
+/* ---- pickers use the full width ---- */
+html body .ah-media-picker{left:8px!important;right:8px!important;width:auto!important;bottom:calc(64px + env(safe-area-inset-bottom))!important;max-height:min(520px,calc(var(--ah-vh,100dvh) - 140px))}
+html body .composer-plus-menu{max-width:calc(100vw - 24px)}
+
+/* ---- settings: list first, then page with a back button ---- */
+html body .ah-settings-backdrop{padding:0!important;align-items:stretch!important}
+html body .ah-settings-shell{display:block!important;position:relative;width:100%!important;max-width:none!important;height:var(--ah-vh,100dvh)!important;max-height:none!important;border-radius:0!important;border:0!important;overflow:hidden!important}
+html body .ah-settings-sidebar{display:flex!important;flex-direction:column;position:absolute;inset:0;width:100%!important;overflow-y:auto;border:0!important;padding:calc(56px + env(safe-area-inset-top)) 14px calc(28px + env(safe-area-inset-bottom))!important}
+html body .ah-settings-main{position:absolute;inset:0;width:100%!important;height:100%!important}
+html body .ah-settings-shell.ah-m-set-page .ah-settings-sidebar{display:none!important}
+html body .ah-settings-shell:not(.ah-m-set-page) .ah-settings-main{display:none!important}
+html body .ah-settings-shell .ah-settings-top{padding-top:env(safe-area-inset-top)}
+html body .ah-settings-shell.ah-m-set-page .ah-m-set-back{display:grid;place-items:center;flex:none;width:38px;height:38px;margin-right:6px;border:0;border-radius:12px;background:transparent;color:inherit;font-size:30px;line-height:1;padding:0 0 3px}
+html body .ah-settings-shell:not(.ah-m-set-page) .ah-m-set-close{display:grid;place-items:center;position:absolute;z-index:3;top:calc(8px + env(safe-area-inset-top));right:10px;width:40px;height:40px;border:0;border-radius:12px;background:rgba(255,255,255,.08);color:inherit;font-size:26px;line-height:1}
+html body .ah-settings-nav{min-height:48px}
+}
+</style>
+<script id="ah-channel-mobile-js">
+(function(){
+  'use strict';
+  if(window.__ahChannelMobile)return;window.__ahChannelMobile=true;
+  var root=document.documentElement,mq=window.matchMedia('(max-width:820px)');
+  var state='closed',L=0,R=0,g=null,suppressUntil=0,lp=null;
+  function mob(){return mq.matches}
+  function $(s,c){return (c||document).querySelector(s)}
+  function lang(){var l=String(document.documentElement.lang||'uk').toLowerCase();return l.indexOf('ru')===0?'ru':l.indexOf('en')===0?'en':'uk'}
+  var TX={uk:{sc:'Закрити пошук',back:'Назад',close:'Закрити'},ru:{sc:'Закрыть поиск',back:'Назад',close:'Закрыть'},en:{sc:'Close search',back:'Back',close:'Close'}};
+  function t(k){return TX[lang()][k]}
+
+  /* ---------- drawers state ---------- */
+  function setVars(l,r){L=l;R=r;root.style.setProperty('--ah-l',l.toFixed(3));root.style.setProperty('--ah-r',r.toFixed(3))}
+  function apply(next){
+    state=next;
+    root.classList.remove('ah-m-drag');
+    root.classList.toggle('ah-m-l-on',next==='left');
+    root.classList.toggle('ah-m-r-on',next==='right');
+    setVars(next==='left'?1:0,next==='right'?1:0);
+    if(next!=='closed'){var a=document.activeElement;if(a&&/^(INPUT|TEXTAREA)$/.test(a.tagName))a.blur()}
+  }
+  window.ahMobileDrawer={open:function(w){apply(w==='right'?'right':'left')},close:function(){apply('closed')},state:function(){return state}};
+
+  /* ---------- guards ---------- */
+  var OVERLAYS='.ah-settings-backdrop.open,.ah-v3-overlay.open,.ah-v3-mini.open,.modal-backdrop.open,.ah-profile-customizer-backdrop.open,.ah-image-editor-backdrop.open,.self-profile-backdrop.open,.message-context-menu.open,.ah-server-modal-backdrop.open,.ah-global-console-backdrop.open,.ah-release-backdrop.open,.ah-lb.open,.ah-qs.open';
+  function overlayOpen(){return !!document.querySelector(OVERLAYS)}
+  function hScrollable(el){
+    while(el&&el!==document.body&&el.nodeType===1){
+      var cs=getComputedStyle(el);
+      if((cs.overflowX==='auto'||cs.overflowX==='scroll')&&el.scrollWidth>el.clientWidth+2)return true;
+      el=el.parentElement;
+    }
+    return false;
+  }
+  function blocked(x){
+    if(!x||!x.closest)return true;
+    if(x.closest('input,textarea,select,[contenteditable="true"],audio,video,.ah-media-picker,.message-context-menu,.ah-v3-mini,.composer-plus-menu'))return true;
+    if(overlayOpen())return true;
+    return hScrollable(x);
+  }
+
+  /* ---------- swipe gestures ---------- */
+  function widths(){
+    var rail=$('.server-rail'),side=$('.server-sidebar'),mem=$('.members-sidebar');
+    return {l:Math.max(200,(rail?rail.offsetWidth:64)+(side?side.offsetWidth:240)),r:Math.max(200,mem?mem.offsetWidth:320)};
+  }
+  document.addEventListener('touchstart',function(e){
+    g=null;
+    if(!mob()||e.touches.length!==1)return;
+    if(state==='closed'&&blocked(e.target))return;
+    if(state!=='closed'&&overlayOpen())return;
+    var p=e.touches[0];
+    g={x:p.clientX,y:p.clientY,start:state,lock:null,mode:null,w:null,lastX:p.clientX,lastT:e.timeStamp,v:0};
+  },{passive:true});
+  document.addEventListener('touchmove',function(e){
+    if(!g||g.lock==='y')return;
+    var p=e.touches[0],dx=p.clientX-g.x,dy=p.clientY-g.y;
+    if(g.lock===null){
+      if(Math.abs(dx)<9&&Math.abs(dy)<9)return;
+      if(Math.abs(dx)<Math.abs(dy)*1.3){g.lock='y';return}
+      if(g.start==='closed')g.mode=dx>0?'left':'right';
+      else if(g.start==='left'&&dx<0)g.mode='left';
+      else if(g.start==='right'&&dx>0)g.mode='right';
+      else{g.lock='y';return}
+      g.lock='x';g.w=widths();
+      root.classList.add('ah-m-drag');
+      root.classList.toggle('ah-m-l-on',g.mode==='left');
+      root.classList.toggle('ah-m-r-on',g.mode==='right');
+      g.x=p.clientX-(dx>0?Math.min(dx,9):Math.max(dx,-9));
+      dx=p.clientX-g.x;
+    }
+    if(e.cancelable)e.preventDefault();
+    var q;
+    if(g.mode==='left'){q=(g.start==='left'?1:0)+dx/g.w.l;q=Math.max(0,Math.min(1,q));setVars(q,0)}
+    else{q=(g.start==='right'?1:0)-dx/g.w.r;q=Math.max(0,Math.min(1,q));setVars(0,q)}
+    var dt=e.timeStamp-g.lastT;
+    if(dt>0){var inst=(g.mode==='left'?1:-1)*(p.clientX-g.lastX)/dt;g.v=g.v*.6+inst*.4}
+    g.lastX=p.clientX;g.lastT=e.timeStamp;
+  },{passive:false});
+  function endGesture(){
+    if(!g)return;
+    var gg=g;g=null;
+    if(gg.lock!=='x')return;
+    suppressUntil=Date.now()+350;
+    var p=gg.mode==='left'?L:R,open;
+    if(gg.v>.45)open=true;else if(gg.v<-.45)open=false;else open=p>.5;
+    apply(open?gg.mode:'closed');
+  }
+  document.addEventListener('touchend',endGesture,{passive:true});
+  document.addEventListener('touchcancel',endGesture,{passive:true});
+
+  /* ---------- scrim, search, taps ---------- */
+  var scrim=document.createElement('div');scrim.id='ah-m-scrim';
+  document.body.appendChild(scrim);
+  scrim.addEventListener('click',function(){apply('closed')});
+
+  var topbar=$('.topbar.discord-channel-topbar')||$('.topbar');
+  var sInput=topbar&&$('.discord-search input',topbar);
+  if(topbar){
+    var sc=document.createElement('button');
+    sc.type='button';sc.className='ah-m-search-close';sc.setAttribute('aria-label',t('sc'));sc.innerHTML='&times;';
+    topbar.appendChild(sc);
+    sc.addEventListener('click',function(){
+      if(sInput){sInput.value='';sInput.dispatchEvent(new Event('input',{bubbles:true}));sInput.blur()}
+      topbar.classList.remove('ah-m-searching');
+    });
+  }
+  document.addEventListener('click',function(e){
+    if(Date.now()<suppressUntil){e.preventDefault();e.stopPropagation();return}
+    if(!mob())return;
+    var x=e.target;if(!x||!x.closest)return;
+    var mb=x.closest('.members-toggle-btn');
+    if(mb){e.preventDefault();e.stopImmediatePropagation();apply(state==='right'?'closed':'right');return}
+    var ds=x.closest('.discord-search');
+    if(ds&&topbar&&topbar.contains(ds)&&!topbar.classList.contains('ah-m-searching')){
+      e.preventDefault();e.stopImmediatePropagation();
+      topbar.classList.add('ah-m-searching');
+      if(sInput)setTimeout(function(){sInput.focus()},30);
+      return;
+    }
+    var tl=x.closest('.discord-title-left');
+    if(tl&&!x.closest('button,a')){apply(state==='left'?'closed':'left');return}
+  },true);
+  document.addEventListener('click',function(e){
+    if(state==='closed')return;
+    var a=e.target.closest&&e.target.closest('.server-sidebar a[href^="#"],.members-sidebar a[href^="#"]');
+    if(a)apply('closed');
+  });
+  window.addEventListener('pageshow',function(){apply('closed')});
+  window.addEventListener('keydown',function(e){if(e.key==='Escape'&&state!=='closed')apply('closed')});
+  var onMq=function(){if(!mob()){apply('closed');root.style.removeProperty('--ah-vh');root.style.removeProperty('--ah-vt');root.classList.remove('ah-m-kb')}else vv()};
+  if(mq.addEventListener)mq.addEventListener('change',onMq);else if(mq.addListener)mq.addListener(onMq);
+
+  /* ---------- long-press on a message -> action sheet ---------- */
+  function clearPress(){document.querySelectorAll('.message.ah-m-pressing').forEach(function(m){m.classList.remove('ah-m-pressing')})}
+  function cancelLp(){if(lp){clearTimeout(lp.timer);lp=null}}
+  document.addEventListener('touchstart',function(e){
+    cancelLp();
+    if(!mob()||e.touches.length!==1||state!=='closed'||overlayOpen())return;
+    var msg=e.target.closest&&e.target.closest('#messages .message');
+    if(!msg||e.target.closest('a,button,audio,video,input,textarea,.edit-form,.ah-spoiler-img,.message-image,img'))return;
+    var p=e.touches[0];
+    lp={msg:msg,x:p.clientX,y:p.clientY,timer:setTimeout(function(){
+      var m=lp&&lp.msg;lp=null;if(!m)return;
+      var btn=m.querySelector('.message-more-btn');
+      if(!btn||typeof window.openMessageMenu!=='function')return;
+      clearPress();m.classList.add('ah-m-pressing');
+      suppressUntil=Date.now()+700;
+      if(navigator.vibrate)try{navigator.vibrate(12)}catch(_){}
+      window.openMessageMenu({preventDefault:function(){},stopPropagation:function(){},currentTarget:btn});
+    },430)};
+  },{passive:true});
+  document.addEventListener('touchmove',function(e){
+    if(!lp)return;var p=e.touches[0];
+    if(Math.abs(p.clientX-lp.x)>10||Math.abs(p.clientY-lp.y)>10)cancelLp();
+  },{passive:true});
+  document.addEventListener('touchend',cancelLp,{passive:true});
+  document.addEventListener('touchcancel',cancelLp,{passive:true});
+  document.addEventListener('contextmenu',function(e){
+    if(mob()&&e.target.closest&&e.target.closest('#messages .message')&&!e.target.closest('input,textarea'))e.preventDefault();
+  });
+  var cm=document.getElementById('message-context-menu');
+  if(cm)new MutationObserver(function(){if(!cm.classList.contains('open'))clearPress()}).observe(cm,{attributes:true,attributeFilter:['class']});
+
+  /* ---------- keyboard / visual viewport ---------- */
+  var lastVh=0;
+  function vv(){
+    if(!mob())return;
+    var v=window.visualViewport,h=v?v.height:window.innerHeight,top=v?v.offsetTop:0;
+    var msgs=document.getElementById('messages');
+    var wasBottom=msgs?(msgs.scrollHeight-msgs.scrollTop-msgs.clientHeight<90):false;
+    root.style.setProperty('--ah-vh',Math.round(h)+'px');
+    root.style.setProperty('--ah-vt',Math.round(top)+'px');
+    root.classList.toggle('ah-m-kb',(window.innerHeight-h)>120);
+    if(msgs&&wasBottom&&Math.abs(h-lastVh)>40)requestAnimationFrame(function(){msgs.scrollTop=msgs.scrollHeight});
+    lastVh=h;
+  }
+  if(window.visualViewport){visualViewport.addEventListener('resize',vv);visualViewport.addEventListener('scroll',vv)}
+  window.addEventListener('resize',vv);window.addEventListener('orientationchange',function(){setTimeout(vv,200)});
+  vv();
+
+  /* ---------- settings: list -> page ---------- */
+  var shell=$('.ah-settings-shell'),bd=document.getElementById('ah-user-settings');
+  if(shell&&bd){
+    var side=$('.ah-settings-sidebar',shell),top=$('.ah-settings-top',shell);
+    var back=document.createElement('button');back.type='button';back.className='ah-m-set-back';back.setAttribute('aria-label',t('back'));back.innerHTML='&#8249;';
+    if(top)top.insertBefore(back,top.firstChild);
+    var cl=document.createElement('button');cl.type='button';cl.className='ah-m-set-close';cl.setAttribute('aria-label',t('close'));cl.innerHTML='&times;';
+    if(side)side.insertBefore(cl,side.firstChild);
+    back.addEventListener('click',function(){shell.classList.remove('ah-m-set-page')});
+    cl.addEventListener('click',function(){if(typeof window.closeUserSettings==='function')window.closeUserSettings()});
+    document.addEventListener('click',function(e){
+      if(!mob())return;
+      var n=e.target.closest&&e.target.closest('.ah-settings-nav[data-settings-tab],.ah-account-subnav-btn');
+      if(n&&shell.contains(n))setTimeout(function(){shell.classList.add('ah-m-set-page')},0);
+    });
+    new MutationObserver(function(){if(bd.classList.contains('open'))shell.classList.remove('ah-m-set-page')}).observe(bd,{attributes:true,attributeFilter:['class']});
+  }
+})();
+</script>
+
 </body>
 </html>
