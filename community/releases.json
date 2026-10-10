@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.255.0",
+      "date": "2026-10-10",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: spoiler functionality for composer images."
+      ],
+      "source_sha": "1091618bc6fc90eb61a59075be25e2d2ebb4ec0b"
+    },
+    {
       "version": "1.254.2",
       "date": "2026-10-10",
       "title": "Оновлення AlexiHub",
