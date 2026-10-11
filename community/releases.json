@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.256.0",
+      "date": "2026-10-11",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: mobile styles and JS for travel page."
+      ],
+      "source_sha": "5033e77ec2264a43e9c5adf004ded61b44555053"
+    },
+    {
       "version": "1.255.8",
       "date": "2026-10-11",
       "title": "Виправлення та стабільність",
