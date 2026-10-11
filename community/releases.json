@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.255.6",
+      "date": "2026-10-11",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance mobile layout and navigation in home template."
+      ],
+      "source_sha": "39095eba1747e34687013f32ce3a68f34bf6bde9"
+    },
+    {
       "version": "1.255.5",
       "date": "2026-10-11",
       "title": "Виправлення та стабільність",
