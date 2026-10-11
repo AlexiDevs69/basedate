@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.255.8",
+      "date": "2026-10-11",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update server_channel.html for mobile styling."
+      ],
+      "source_sha": "c9d394415b4e1b7631041182ba2193297c6f7874"
+    },
+    {
       "version": "1.255.7",
       "date": "2026-10-11",
       "title": "Виправлення та стабільність",
