@@ -11394,7 +11394,6 @@ document.addEventListener('DOMContentLoaded', async function(){
 })();
 </script>
 {% include "profile_board_runtime.html" %}
-{% include "mobile_runtime.html" %}
 <style>
 .ah-tag-clickable{cursor:pointer}
 .ah-tag-clickable:hover{background:#3b3d44!important}
@@ -15031,7 +15030,7 @@ html body .ah-settings-nav{min-height:48px}
   /* ---------- swipe gestures ---------- */
   function widths(){
     var rail=$('.server-rail'),side=$('.dm-sidebar'),right=$('.right');
-    return {l:Math.max(200,(rail?rail.offsetWidth:64)+(side?side.offsetWidth:240)),r:Math.max(200,right?right.offsetWidth:320)};
+    var sl=side?(parseFloat(getComputedStyle(side).left)||0):64;return {l:Math.max(200,sl+(side?side.offsetWidth:240)),r:Math.max(200,right?right.offsetWidth:320)};
   }
   document.addEventListener('touchstart',function(e){
     g=null;
@@ -17251,10 +17250,82 @@ html[data-theme="light"] .ah-qs-foot kbd{background:#e3e5e8;color:#2e3338}
 </script>
 
 <style id="ah-dm-mobile-clean-css">
-/* mobile: no hamburger, no extra header buttons (pin, add-friend) - Discord-like header */
+/* mobile: no extra header buttons (pin, add-friend) - Discord-like header */
 @media (max-width:820px){
 html body .app:not(#ah-m) .top-actions #dm-pin-trigger-btn,
 html body .app:not(#ah-m) .top-actions button[onclick*="dm.stub.friendship"]{display:none!important}
+}
+</style>
+<style id="ah-dm-mobile-discord-css">
+/* ======================================================================
+   MOBILE = DISCORD LOOK (<=820px). Builds on #ah-mobile-shell (drawer logic);
+   this block only restyles: header, drawer, DM list, composer, messages.
+   The old mobile_runtime.html (second drawer + floating hamburger) is gone.
+   ====================================================================== */
+@media (max-width:820px){
+:root{--ah-m-rail:64px;--ah-m-side:min(calc(100vw - 112px),340px);--dc-r:22px}
+
+/* ---- header: flat, back arrow + avatar + name, thin divider ---- */
+html body .app:not(#ah-m) .topbar{background:var(--main)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;border-bottom:1px solid rgba(255,255,255,.06)!important;box-shadow:none!important;min-height:calc(52px + env(safe-area-inset-top))!important}
+html body .app:not(#ah-m) .top-title{gap:8px!important;font-size:17px!important;font-weight:800!important;letter-spacing:-.01em}
+html body .app:not(#ah-m) .top-title .avatar{width:32px!important;height:32px!important}
+html body .app:not(#ah-m) .top-actions button{background:transparent!important;border-radius:50%!important;color:var(--text)!important}
+html body .app:not(#ah-m) .top-actions button:active,.ah-m-menu-btn:active{background:rgba(255,255,255,.1)!important}
+.ah-m-menu-btn{border-radius:50%!important;width:40px!important;height:40px!important}
+
+/* ---- drawer: dark rail + rounded-corner DM panel, wider, with a peek of the chat ---- */
+html body .app:not(#ah-m) .server-rail{background:var(--rail)!important;border:0!important;gap:8px!important;padding-bottom:calc(76px + env(safe-area-inset-bottom))!important}
+html body .app:not(#ah-m) .server-dot{width:48px!important;height:48px!important;border-radius:50%!important;transition:border-radius .15s ease,background .15s ease}
+html body .app:not(#ah-m) .server-dot.active{border-radius:16px!important}
+html body .app:not(#ah-m) .dm-sidebar{background-color:var(--side)!important;
+  background-image:radial-gradient(circle at 100% 100%,transparent calc(var(--dc-r) - 1px),var(--rail) var(--dc-r));background-size:var(--dc-r) var(--dc-r);background-repeat:no-repeat;background-position:0 0;
+  border:0!important;box-shadow:none!important;padding-top:env(safe-area-inset-top)}
+html body .app:not(#ah-m) .dm-sidebar .search-wrap{padding:12px 12px 8px!important;border:0!important;background:transparent!important}
+html body .app:not(#ah-m) .dm-sidebar .search{height:40px!important;border-radius:20px!important;background:var(--rail)!important;border:0!important;padding:0 16px!important;font-size:15px!important}
+html body .app:not(#ah-m) .dm-home-nav{padding:4px 10px!important;gap:2px}
+html body .app:not(#ah-m) .dm-home-nav .nav-item{min-height:50px!important;border-radius:12px!important;font-size:16px!important;font-weight:700!important;gap:14px!important}
+html body .app:not(#ah-m) .dm-sidebar .section{padding:16px 16px 6px!important;font-size:12px!important}
+html body .app:not(#ah-m) .dm-sidebar .dm-list{padding:0 8px calc(84px + env(safe-area-inset-bottom))!important}
+html body .app:not(#ah-m) .dm-sidebar .dm-row{min-height:56px!important;border-radius:12px!important;gap:12px!important;padding:8px 10px!important}
+html body .app:not(#ah-m) .dm-sidebar .dm-row .avatar{width:40px!important;height:40px!important;flex:0 0 40px!important;font-size:15px}
+html body .app:not(#ah-m) .dm-sidebar .dm-row .dm-name{font-size:16px!important;font-weight:650!important}
+html body .app:not(#ah-m) .dm-sidebar .dm-row.active{background:var(--hover)!important}
+
+/* bottom bar of the drawer: "You" tab - avatar, name, status, settings */
+html body .app:not(#ah-m) .dm-sidebar .user-panel{background:var(--rail)!important;border:0!important;border-radius:0!important;box-shadow:none!important;left:calc(-1 * var(--ah-m-rail))!important;right:auto!important;width:calc(var(--ah-m-rail) + var(--ah-m-side))!important;bottom:0!important;padding:10px 14px calc(10px + env(safe-area-inset-bottom))!important;min-height:calc(64px + env(safe-area-inset-bottom))}
+html body .app:not(#ah-m) .dm-sidebar .user-actions .voice-control,
+html body .app:not(#ah-m) .dm-sidebar .user-actions .user-action-chevron{display:none!important}
+html body .app:not(#ah-m) .dm-sidebar .user-actions button{width:40px!important;height:40px!important;border-radius:50%!important}
+#ah-m-scrim{background:#000}
+
+/* ---- messages ---- */
+html body .app:not(#ah-m) .messages{padding:8px 0 6px!important;background:var(--main)}
+html body .app:not(#ah-m) .dm-start{padding:20px 14px 14px!important;margin:0 0 6px!important}
+html body .app:not(#ah-m) .dm-start .avatar{width:80px!important;height:80px!important;font-size:28px!important}
+html body .app:not(#ah-m) .dm-start h1{font-size:26px!important}
+html body .app:not(#ah-m) .msg{gap:12px!important;padding:6px 14px!important;border-radius:0!important}
+html body .app:not(#ah-m) .msg-avatar{width:40px!important;height:40px!important;flex:0 0 40px!important}
+html body .app:not(#ah-m) .msg-head{flex-wrap:nowrap!important;align-items:baseline!important;gap:8px!important}
+html body .app:not(#ah-m) .msg-head b,html body .app:not(#ah-m) .msg-author{font-size:16px!important;font-weight:700!important}
+html body .app:not(#ah-m) .msg-time{font-size:12px!important;color:var(--muted2)!important}
+html body .app:not(#ah-m) .msg-text{font-size:16px!important;line-height:1.38!important}
+
+/* ---- composer: (+) circle | pill [text  emoji sticker] | mic/send circle ---- */
+html body .app:not(#ah-m) .composer-wrap{background:var(--main)!important;background-image:none!important;border:0!important;padding:6px 10px calc(8px + env(safe-area-inset-bottom))!important}
+html body .app:not(#ah-m) .composer{display:grid!important;grid-template-columns:40px minmax(0,1fr) auto auto 40px;column-gap:0;align-items:end;position:relative;background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;border-radius:0!important;min-height:40px}
+html body .app:not(#ah-m) .composer::before{content:"";grid-column:2 / 5;grid-row:1;align-self:stretch;margin:0 8px;border-radius:20px;background:var(--panel2);z-index:0;min-height:40px}
+html body .app:not(#ah-m) .composer>*{grid-row:1;position:relative;z-index:1}
+html body .app:not(#ah-m) .composer>.ah-tw-mirror,html body .app:not(#ah-m) .composer>#dm-record-timer,html body .app:not(#ah-m) .composer>.ah-dm-nitro-gift-btn{position:absolute!important;grid-row:auto}
+html body .app:not(#ah-m) .composer .dm-plus-btn{grid-column:1;width:40px!important;height:40px!important;border-radius:50%!important;background:var(--panel2)!important;font-size:26px!important;align-self:end}
+html body .app:not(#ah-m) .composer textarea{grid-column:2;margin:0 0 0 8px!important;padding:10px 6px 10px 14px!important;min-height:40px!important;max-height:140px;line-height:20px!important;background:transparent!important;border:0!important;box-shadow:none!important;color:var(--text)!important;align-self:end}
+html body .app:not(#ah-m) .composer .ah-dm-open-emojis{grid-column:3}
+html body .app:not(#ah-m) .composer .ah-dm-open-stickers{grid-column:4;margin-right:8px}
+html body .app:not(#ah-m) .composer .composer-icon-btn{width:36px!important;height:40px!important;border-radius:50%!important;align-self:end}
+html body .app:not(#ah-m) .composer .dm-send-btn{grid-column:5;width:40px!important;height:40px!important;border-radius:50%!important;align-self:end}
+html body .app:not(#ah-m) .typing{padding-left:14px!important}
+html[data-theme="light"] body .app:not(#ah-m) .topbar{border-bottom-color:rgba(0,0,0,.08)!important}
+html[data-theme="light"] body .app:not(#ah-m) .dm-sidebar .search{background:#e3e5e8!important}
+html[data-theme="light"] body .app:not(#ah-m) .composer .composer-icon-btn{color:#4e5058!important}
 }
 </style>
 </body>
