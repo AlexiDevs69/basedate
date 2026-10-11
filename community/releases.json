@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.255.7",
+      "date": "2026-10-11",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Integrate mobile styles and scripts into server home."
+      ],
+      "source_sha": "eab02fea2afd20f4171d9c79607c1e6e92bfe245"
+    },
+    {
       "version": "1.255.6",
       "date": "2026-10-11",
       "title": "Виправлення та стабільність",
