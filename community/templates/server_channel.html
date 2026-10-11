@@ -12423,7 +12423,6 @@ document.addEventListener('alexihub:block-status-changed',event=>{const detail=e
 })();
 </script>
 {% include "profile_board_runtime.html" %}
-{% include "mobile_runtime.html" %}
 <style>
 .ah-tag-clickable{cursor:pointer}
 .ah-tag-clickable:hover{background:#3b3d44!important}
@@ -17095,5 +17094,33 @@ html body .ah-settings-nav{min-height:48px}
 })();
 </script>
 
+<style id="ah-channel-mobile-discord-css">
+/* Discord polish for the channel mobile shell (matches DM / home / server pages) */
+@media (max-width:820px){
+:root{--ah-m-side:min(calc(100vw - 112px),340px);--dc-r:22px}
+html body .server-rail{background:#070707!important;border:0!important;gap:8px!important;padding:calc(12px + env(safe-area-inset-top)) 8px calc(76px + env(safe-area-inset-bottom))!important;overflow-y:auto;overflow-x:hidden}
+html body .server-dot{width:48px!important;height:48px!important;border-radius:50%!important;transition:border-radius .15s ease,background .15s ease}
+html body .server-dot.active{border-radius:16px!important}
+html body .server-dot>span{border-radius:inherit}
+html body .server-sidebar{border:0!important;box-shadow:none!important;overflow:visible!important;background-color:#101010!important;
+  background-image:radial-gradient(circle at 100% 100%,transparent calc(var(--dc-r) - 1px),#070707 var(--dc-r));background-size:var(--dc-r) var(--dc-r);background-repeat:no-repeat;background-position:0 0}
+html body .server-head{height:56px!important;padding:0 10px 0 14px!important}
+html body .server-sidebar .sidebar-scroll{overflow-y:auto!important;padding:10px 10px calc(84px + env(safe-area-inset-bottom))!important}
+html body .server-sidebar .chan-link{min-height:44px!important;font-size:16px!important;font-weight:650;border-radius:12px!important;padding:0 12px!important}
+html body .server-sidebar .chan-actions{display:none!important}
+html body .server-sidebar .account-panel{position:absolute!important;background:#070707!important;border:0!important;border-radius:0!important;box-shadow:none!important;left:calc(-1 * var(--ah-m-rail))!important;right:auto!important;width:calc(var(--ah-m-rail) + var(--ah-m-side))!important;bottom:0!important;padding:10px 14px calc(10px + env(safe-area-inset-bottom))!important;min-height:calc(64px + env(safe-area-inset-bottom));z-index:150!important}
+html body .server-sidebar .account-panel .voice-control,
+html body .server-sidebar .account-panel .account-action-chevron{display:none!important}
+html body .server-sidebar .account-panel button{width:40px!important;height:40px!important;border-radius:50%!important}
+html body .members-sidebar,html body.members-hidden .members-sidebar{width:var(--ah-m-rw)!important;box-shadow:none!important;background:#101010!important;border:0!important}
+html body .topbar.discord-channel-topbar{background:var(--main,#141414)!important;border-bottom:1px solid rgba(255,255,255,.06)!important;box-shadow:none!important}
+html body .discord-channel-tools .members-toggle-btn,html body .discord-channel-tools .discord-search{border-radius:50%!important}
+.ah-m-menu-btn{border-radius:50%!important}
+html[data-theme="light"] body .server-sidebar{background-color:#f2f3f5!important}
+html[data-theme="light"] body .members-sidebar{background:#f2f3f5!important}
+html[data-theme="light"] body .server-sidebar .account-panel{background:#e3e5e8!important}
+html[data-theme="light"] body .topbar.discord-channel-topbar{border-bottom-color:rgba(0,0,0,.08)!important}
+}
+</style>
 </body>
 </html>
