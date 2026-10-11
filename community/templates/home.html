@@ -11064,7 +11064,249 @@ html[data-theme="light"] #ah-nitro-tooltip-portal[class]{
 })();
 </script>
 {% include "profile_board_runtime.html" %}
-{% include "mobile_runtime.html" %}
+<style id="ah-home-mobile-css">
+/* ======================================================================
+   MOBILE = DISCORD LOOK (<=820px) for Home / Friends / Plus / Shop.
+   Replaces the old mobile_runtime.html (its floating hamburger + second
+   drawer system). One drawer: server rail + DM list, opened with the
+   hamburger in every top bar, an edge swipe, or Esc/scrim to close.
+   ====================================================================== */
+.ah-h-menu-btn,#ah-h-scrim,.ah-h-set-back,.ah-h-set-close{display:none}
+@keyframes ahHSheetUp{from{transform:translate3d(0,100%,0)}to{transform:none}}
+@media (max-width:820px){
+:root{--ah-h-rail:64px;--ah-h-side:min(calc(100vw - 112px),340px);--ah-h-ease:cubic-bezier(.22,.8,.28,1);--dc-r:22px}
+html,body{overscroll-behavior:none}
+
+/* ---- shell: one column, content full screen ---- */
+html body .app:not(#ah-m){display:block!important;grid-template-columns:none!important;position:fixed!important;inset:0!important;width:100%!important;height:var(--ah-vh,100dvh)!important;min-height:0!important;max-height:var(--ah-vh,100dvh)!important;overflow:hidden!important;touch-action:pan-y pinch-zoom}
+html body .app:not(#ah-m)>.main{display:flex!important;flex-direction:column;width:100%!important;height:100%!important;max-height:100%!important;min-height:0!important;margin:0!important;overflow:hidden!important}
+html body .app:not(#ah-m)>.right{display:none!important}
+
+/* ---- drawer: dark rail + rounded DM panel ---- */
+html body .app:not(#ah-m) .server-rail,
+html body .app:not(#ah-m) .dm-sidebar{display:flex!important;flex-direction:column;position:fixed!important;top:0!important;bottom:0!important;z-index:1210!important;visibility:hidden;
+  transform:translate3d(calc((1 - var(--ah-l,0)) * -1 * (var(--ah-h-rail) + var(--ah-h-side))),0,0);
+  transition:transform .28s var(--ah-h-ease),visibility 0s linear .28s;will-change:transform;overscroll-behavior:contain}
+html body .app:not(#ah-m) .server-rail{left:0!important;width:var(--ah-h-rail)!important;min-width:var(--ah-h-rail)!important;align-items:center;background:var(--rail)!important;border:0!important;gap:8px!important;padding:calc(12px + env(safe-area-inset-top)) 8px calc(76px + env(safe-area-inset-bottom))!important;overflow-y:auto;overflow-x:hidden}
+html body .app:not(#ah-m) .dm-sidebar{left:var(--ah-h-rail)!important;width:var(--ah-h-side)!important;min-width:0!important;padding-top:env(safe-area-inset-top);border:0!important;box-shadow:none!important;background-color:var(--side)!important;
+  background-image:radial-gradient(circle at 100% 100%,transparent calc(var(--dc-r) - 1px),var(--rail) var(--dc-r));background-size:var(--dc-r) var(--dc-r);background-repeat:no-repeat;background-position:0 0}
+html.ah-h-l-on body .app:not(#ah-m) .server-rail,
+html.ah-h-l-on body .app:not(#ah-m) .dm-sidebar{visibility:visible;transition:transform .28s var(--ah-h-ease),visibility 0s}
+html body .app:not(#ah-m) .server-dot{width:48px!important;height:48px!important;flex:0 0 auto!important;border-radius:50%!important;transition:border-radius .15s ease,background .15s ease}
+html body .app:not(#ah-m) .server-dot.active{border-radius:16px!important}
+html body .app:not(#ah-m) .server-sep{width:32px!important;flex:0 0 auto}
+html body .app:not(#ah-m) .dm-sidebar .search-wrap{padding:12px 12px 8px!important;border:0!important;background:transparent!important}
+html body .app:not(#ah-m) .dm-sidebar .search{height:40px!important;border-radius:20px!important;background:var(--rail)!important;border:0!important;padding:0 16px!important;font-size:16px!important}
+html body .app:not(#ah-m) .dm-home-nav{padding:4px 10px!important;gap:2px}
+html body .app:not(#ah-m) .dm-home-nav .nav-item{min-height:50px!important;border-radius:12px!important;font-size:16px!important;font-weight:700!important;gap:14px!important}
+html body .app:not(#ah-m) .dm-sidebar .section{padding:16px 16px 6px!important;font-size:12px!important}
+html body .app:not(#ah-m) .dm-sidebar .dm-list{padding:0 8px calc(84px + env(safe-area-inset-bottom))!important}
+html body .app:not(#ah-m) .dm-sidebar .dm-row{min-height:56px!important;border-radius:12px!important;gap:12px!important;padding:8px 10px!important}
+html body .app:not(#ah-m) .dm-sidebar .dm-row .avatar{width:40px!important;height:40px!important;flex:0 0 40px!important;font-size:15px}
+html body .app:not(#ah-m) .dm-sidebar .dm-row .dm-name{font-size:16px!important;font-weight:650!important}
+html body .app:not(#ah-m) .dm-sidebar .user-panel{position:absolute!important;background:var(--rail)!important;border:0!important;border-radius:0!important;box-shadow:none!important;left:calc(-1 * var(--ah-h-rail))!important;right:auto!important;width:calc(var(--ah-h-rail) + var(--ah-h-side))!important;bottom:0!important;padding:10px 14px calc(10px + env(safe-area-inset-bottom))!important;min-height:calc(64px + env(safe-area-inset-bottom))}
+html body .app:not(#ah-m) .dm-sidebar .user-actions .voice-control,
+html body .app:not(#ah-m) .dm-sidebar .user-actions .user-action-chevron{display:none!important}
+html body .app:not(#ah-m) .dm-sidebar .user-actions button{width:40px!important;height:40px!important;border-radius:50%!important}
+
+/* ---- scrim ---- */
+#ah-h-scrim{display:block;position:fixed;inset:0;z-index:1190;background:#000;opacity:calc(var(--ah-l,0) * .62);pointer-events:none;transition:opacity .28s var(--ah-h-ease);-webkit-tap-highlight-color:transparent}
+html.ah-h-l-on #ah-h-scrim{pointer-events:auto}
+html.ah-h-drag .server-rail,html.ah-h-drag .dm-sidebar,html.ah-h-drag #ah-h-scrim{transition:none!important}
+
+/* ---- top bars (friends / Plus / shop): flat, hamburger first ---- */
+.ah-h-menu-btn{display:grid;place-items:center;flex:none;width:40px;height:40px;border:0;border-radius:50%;background:transparent;color:var(--text,#f4f4f5);cursor:pointer;-webkit-tap-highlight-color:transparent;padding:0}
+.ah-h-menu-btn:active{background:rgba(255,255,255,.1)}
+html body .app:not(#ah-m) .friend-topbar,
+html body .app:not(#ah-m) .ah-nitro-home-topbar,
+html body .app:not(#ah-m) .ah-store-topbar{height:auto!important;min-height:calc(52px + env(safe-area-inset-top))!important;flex:0 0 auto!important;padding:env(safe-area-inset-top) 6px 0 4px!important;gap:4px!important;background:var(--main)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;border-bottom:1px solid rgba(255,255,255,.06)!important;box-shadow:none!important;justify-content:flex-start!important;overflow:visible!important}
+html body .app:not(#ah-m) .friend-topbar{flex-wrap:wrap!important}
+html body .app:not(#ah-m) .friend-title{flex:1 1 auto;border-right:0!important;padding-right:0!important;font-size:17px;gap:8px}
+html body .app:not(#ah-m) .friend-topbar .top-actions{flex:none;gap:2px!important;margin-left:0!important}
+html body .app:not(#ah-m) .friend-topbar .top-actions button{width:40px!important;height:40px!important;border-radius:50%!important;background:transparent!important}
+html body .app:not(#ah-m) .friend-tabs{order:3;flex:1 0 100%!important;padding:2px 6px 10px;gap:8px!important;overflow-x:auto;scrollbar-width:none}
+html body .app:not(#ah-m) .friend-tabs::-webkit-scrollbar{display:none}
+html body .app:not(#ah-m) .friend-tab{height:34px!important;border-radius:17px!important;padding:0 14px!important;background:var(--panel2)!important;font-size:14px}
+html body .app:not(#ah-m) .friend-tab.active{background:#3a3c43!important}
+html body .app:not(#ah-m) .friend-tab.add{background:var(--accent)!important}
+html body .app:not(#ah-m) .friend-content{padding:10px 12px calc(24px + env(safe-area-inset-bottom))!important;overscroll-behavior:contain}
+html body .app:not(#ah-m) .ah-nitro-wordmark{flex:1 1 auto;min-width:0}
+html body .app:not(#ah-m) .ah-nitro-home-actions{margin-left:auto}
+html body .app:not(#ah-m) .ah-nitro-home-actions .ah-gift-top-button span{display:none!important}
+html body .app:not(#ah-m) .ah-nitro-home-actions .ah-gift-top-button{width:40px;height:40px;padding:0;border-radius:50%;background:transparent}
+html body .app:not(#ah-m) .ah-nitro-home-actions{gap:2px}
+html body .app:not(#ah-m) .ah-nitro-home-scroll:focus,html body .app:not(#ah-m) .ah-store-scroll:focus{outline:none!important}
+html body .app:not(#ah-m) .ah-nitro-home-actions .ah-icon-button{width:40px;height:40px;border-radius:50%;background:transparent}
+html body .app:not(#ah-m) .ah-store-topbar{flex-wrap:wrap!important}
+html body .app:not(#ah-m) .ah-store-brand{flex:1 1 auto;font-size:17px}
+html body .app:not(#ah-m) .ah-store-brand span{display:inline!important}
+html body .app:not(#ah-m) .ah-store-tabs{order:3;flex:1 0 100%!important;padding:2px 6px 10px;gap:6px!important;overflow-x:auto;scrollbar-width:none}
+html body .app:not(#ah-m) .ah-store-tabs::-webkit-scrollbar{display:none}
+html body .app:not(#ah-m) .ah-store-search{flex:0 1 150px;min-width:0}
+html body .app:not(#ah-m) .ah-store-tab{white-space:nowrap;flex:0 0 auto;height:36px!important}
+html body .app:not(#ah-m) .ah-store-browse-dropdown{flex:0 0 auto}
+html body .app:not(#ah-m) .ah-store-season-chip{display:none!important}
+html body .app:not(#ah-m) .ah-nitro-home-scroll,
+html body .app:not(#ah-m) .ah-store-scroll{padding-bottom:calc(24px + env(safe-area-inset-bottom))!important;overscroll-behavior:contain}
+
+/* ---- mini profile popover -> bottom sheet ---- */
+html body .ah-v3-mini.open{left:0!important;right:0!important;top:auto!important;bottom:0!important;width:100%!important;max-width:none!important;max-height:88dvh;overflow-y:auto!important;border-radius:22px 22px 0 0!important;border-left:0!important;border-right:0!important;border-bottom:0!important;padding-bottom:env(safe-area-inset-bottom);transform:none!important;animation:ahHSheetUp .24s var(--ah-h-ease) both}
+body:has(.ah-v3-mini.open)::before{content:"";position:fixed;inset:0;z-index:2147482900;background:rgba(0,0,0,.55)}
+
+/* ---- settings: list first, then page with a back button ---- */
+html body .ah-settings-backdrop{padding:0!important;align-items:stretch!important}
+html body .ah-settings-shell{display:block!important;position:relative;width:100%!important;max-width:none!important;height:var(--ah-vh,100dvh)!important;max-height:none!important;border-radius:0!important;border:0!important;overflow:hidden!important}
+html body .ah-settings-sidebar{display:flex!important;flex-direction:column;position:absolute;inset:0;width:100%!important;overflow-y:auto;border:0!important;padding:calc(56px + env(safe-area-inset-top)) 14px calc(28px + env(safe-area-inset-bottom))!important}
+html body .ah-settings-main{position:absolute;inset:0;width:100%!important;height:100%!important}
+html body .ah-settings-shell.ah-h-set-page .ah-settings-sidebar{display:none!important}
+html body .ah-settings-shell:not(.ah-h-set-page) .ah-settings-main{display:none!important}
+html body .ah-settings-shell .ah-settings-top{padding-top:env(safe-area-inset-top)}
+html body .ah-settings-shell.ah-h-set-page .ah-h-set-back{display:grid;place-items:center;flex:none;width:38px;height:38px;margin-right:6px;border:0;border-radius:50%;background:transparent;color:inherit;font-size:30px;line-height:1;padding:0 0 3px}
+html body .ah-settings-shell:not(.ah-h-set-page) .ah-h-set-close{display:grid;place-items:center;position:absolute;z-index:3;top:calc(8px + env(safe-area-inset-top));right:10px;width:40px;height:40px;border:0;border-radius:50%;background:rgba(255,255,255,.08);color:inherit;font-size:26px;line-height:1}
+html body .ah-settings-nav{min-height:48px}
+
+html[data-theme="light"] body .app:not(#ah-m) .friend-topbar,
+html[data-theme="light"] body .app:not(#ah-m) .ah-nitro-home-topbar,
+html[data-theme="light"] body .app:not(#ah-m) .ah-store-topbar{border-bottom-color:rgba(0,0,0,.08)!important}
+html[data-theme="light"] body .app:not(#ah-m) .dm-sidebar .search{background:#e3e5e8!important}
+}
+</style>
+<script id="ah-home-mobile-js">
+(function(){
+  'use strict';
+  if(window.__ahHomeMobile)return;window.__ahHomeMobile=true;
+  var root=document.documentElement,mq=window.matchMedia('(max-width:820px)');
+  var L=0,open=false,g=null,suppressUntil=0;
+  function mob(){return mq.matches}
+  function $(s,c){return (c||document).querySelector(s)}
+  function t(k,fb){try{var v=window.AlexiHubI18n&&window.AlexiHubI18n.t&&window.AlexiHubI18n.t(k);return v&&v!==k?v:fb}catch(_){return fb}}
+
+  function setL(v){L=v;root.style.setProperty('--ah-l',v.toFixed(3))}
+  function apply(next){
+    open=!!next;
+    root.classList.remove('ah-h-drag');
+    root.classList.toggle('ah-h-l-on',open);
+    setL(open?1:0);
+    if(open){var a=document.activeElement;if(a&&/^(INPUT|TEXTAREA)$/.test(a.tagName))a.blur()}
+    syncBtns();
+  }
+  window.ahMobileDrawer={open:function(){apply(true)},close:function(){apply(false)},state:function(){return open?'left':'closed'}};
+
+  /* ---------- hamburger in every top bar ---------- */
+  var btns=[];
+  function addMenuBtn(bar){
+    if(!bar||bar.querySelector(':scope > .ah-h-menu-btn'))return;
+    var b=document.createElement('button');
+    b.type='button';b.className='ah-h-menu-btn';b.setAttribute('aria-expanded','false');
+    b.setAttribute('aria-label',t('common.aria.home_navigation','Open navigation'));
+    b.innerHTML='<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>';
+    b.addEventListener('click',function(){apply(!open)});
+    bar.insertBefore(b,bar.firstChild);btns.push(b);
+  }
+  function syncBtns(){btns.forEach(function(b){b.setAttribute('aria-expanded',open?'true':'false')});
+    ['.server-rail','.dm-sidebar'].forEach(function(s){var el=$(s);if(el)el.setAttribute('aria-hidden',mob()&&!open?'true':'false')})}
+  ['.friend-topbar','.ah-nitro-home-topbar','.ah-store-topbar'].forEach(function(s){addMenuBtn($(s))});
+
+  /* ---------- guards ---------- */
+  var OVERLAYS='.ah-settings-backdrop.open,.ah-v3-overlay.open,.ah-v3-mini.open,.modal-backdrop.open,.ah-profile-customizer-backdrop.open,.ah-image-editor-backdrop.open,.self-profile-backdrop.open,.ah-server-modal-backdrop.open,.ah-global-console-backdrop.open,.ah-release-backdrop.open,.ah-inbox-panel.open';
+  function overlayOpen(){return !!document.querySelector(OVERLAYS)}
+  function hScrollable(el){
+    while(el&&el!==document.body&&el.nodeType===1){
+      var cs=getComputedStyle(el);
+      if((cs.overflowX==='auto'||cs.overflowX==='scroll')&&el.scrollWidth>el.clientWidth+2)return true;
+      el=el.parentElement;
+    }
+    return false;
+  }
+  function blocked(el){
+    if(!el||!el.closest)return true;
+    if(el.closest('input,textarea,select,[contenteditable="true"],audio,video,.ah-benefit-carousel,.ah-store-tabs,.friend-tabs,.stories-rail,[data-no-mobile-swipe]'))return true;
+    if(overlayOpen())return true;
+    return hScrollable(el);
+  }
+
+  /* ---------- swipe: drag right opens, drag left closes ---------- */
+  function width(){var s=$('.dm-sidebar');var sl=s?(parseFloat(getComputedStyle(s).left)||0):64;return Math.max(200,sl+(s?s.offsetWidth:240))}
+  document.addEventListener('touchstart',function(e){
+    g=null;
+    if(!mob()||e.touches.length!==1)return;
+    if(!open&&blocked(e.target))return;
+    if(open&&overlayOpen())return;
+    var p=e.touches[0];
+    g={x:p.clientX,y:p.clientY,start:open,lock:null,w:null,lastX:p.clientX,lastT:e.timeStamp,v:0};
+  },{passive:true});
+  document.addEventListener('touchmove',function(e){
+    if(!g||g.lock==='y')return;
+    var p=e.touches[0],dx=p.clientX-g.x,dy=p.clientY-g.y;
+    if(g.lock===null){
+      if(Math.abs(dx)<9&&Math.abs(dy)<9)return;
+      if(Math.abs(dx)<Math.abs(dy)*1.3){g.lock='y';return}
+      if((!g.start&&dx<0)||(g.start&&dx>0)){g.lock='y';return}
+      g.lock='x';g.w=width();
+      root.classList.add('ah-h-drag');root.classList.add('ah-h-l-on');
+      g.x=p.clientX-(dx>0?Math.min(dx,9):Math.max(dx,-9));
+      dx=p.clientX-g.x;
+    }
+    if(e.cancelable)e.preventDefault();
+    var v=(g.start?1:0)+dx/g.w;v=Math.max(0,Math.min(1,v));setL(v);
+    var dt=e.timeStamp-g.lastT;
+    if(dt>0)g.v=g.v*.6+((p.clientX-g.lastX)/dt)*.4;
+    g.lastX=p.clientX;g.lastT=e.timeStamp;
+  },{passive:false});
+  function endGesture(){
+    if(!g)return;var gg=g;g=null;
+    if(gg.lock!=='x')return;
+    suppressUntil=Date.now()+350;
+    var o;if(gg.v>.45)o=true;else if(gg.v<-.45)o=false;else o=L>.5;
+    apply(o);
+  }
+  document.addEventListener('touchend',endGesture,{passive:true});
+  document.addEventListener('touchcancel',endGesture,{passive:true});
+
+  /* ---------- scrim + close on navigation ---------- */
+  var scrim=document.createElement('div');scrim.id='ah-h-scrim';
+  (document.querySelector('.app')||document.body).appendChild(scrim);
+  scrim.addEventListener('click',function(){apply(false)});
+  document.addEventListener('click',function(e){
+    if(Date.now()<suppressUntil){e.preventDefault();e.stopPropagation();return}
+    if(!mob()||!open)return;
+    var el=e.target.closest&&e.target.closest('.dm-sidebar [data-home-view],.dm-sidebar .dm-row,.dm-sidebar .nav-item,.server-rail a');
+    if(el)apply(false);
+  },true);
+  window.addEventListener('pageshow',function(){apply(false)});
+  window.addEventListener('keydown',function(e){if(e.key==='Escape'&&open)apply(false)});
+  var onMq=function(){if(!mob()){apply(false);root.style.removeProperty('--ah-vh')}else vv()};
+  if(mq.addEventListener)mq.addEventListener('change',onMq);else if(mq.addListener)mq.addListener(onMq);
+
+  /* ---------- keyboard / visual viewport ---------- */
+  function vv(){
+    if(!mob())return;
+    var v=window.visualViewport,h=v?v.height:window.innerHeight;
+    root.style.setProperty('--ah-vh',Math.round(h)+'px');
+  }
+  if(window.visualViewport){visualViewport.addEventListener('resize',vv)}
+  window.addEventListener('resize',vv);window.addEventListener('orientationchange',function(){setTimeout(vv,200)});
+  vv();syncBtns();
+
+  /* ---------- settings: list -> page ---------- */
+  var shell=$('.ah-settings-shell'),bd=document.getElementById('ah-user-settings');
+  if(shell&&bd){
+    var side=$('.ah-settings-sidebar',shell),top=$('.ah-settings-top',shell);
+    var back=document.createElement('button');back.type='button';back.className='ah-h-set-back';back.setAttribute('aria-label',t('common.actions.back','Back'));back.innerHTML='&#8249;';
+    if(top)top.insertBefore(back,top.firstChild);
+    var cl=document.createElement('button');cl.type='button';cl.className='ah-h-set-close';cl.setAttribute('aria-label',t('common.actions.close','Close'));cl.innerHTML='&times;';
+    if(side)side.insertBefore(cl,side.firstChild);
+    back.addEventListener('click',function(){shell.classList.remove('ah-h-set-page')});
+    cl.addEventListener('click',function(){if(typeof window.closeUserSettings==='function')window.closeUserSettings()});
+    document.addEventListener('click',function(e){
+      if(!mob())return;
+      var n=e.target.closest&&e.target.closest('.ah-settings-nav[data-settings-tab],.ah-account-subnav-btn');
+      if(n&&shell.contains(n))setTimeout(function(){shell.classList.add('ah-h-set-page')},0);
+    });
+    new MutationObserver(function(){if(bd.classList.contains('open'))shell.classList.remove('ah-h-set-page')}).observe(bd,{attributes:true,attributeFilter:['class']});
+  }
+})();
+</script>
 <style>
 .ah-tag-clickable{cursor:pointer}
 .ah-tag-clickable:hover{background:#3b3d44!important}
