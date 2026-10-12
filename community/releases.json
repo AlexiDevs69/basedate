@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.256.3",
+      "date": "2026-10-12",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update z-index values in home.html styles."
+      ],
+      "source_sha": "8cc60e55fde55cbfce01e9d05b0371331598139d"
+    },
+    {
       "version": "1.256.2",
       "date": "2026-10-12",
       "title": "Виправлення та стабільність",
