@@ -2342,7 +2342,7 @@
 .ah-server-modal-backdrop{
   position:fixed;
   inset:0;
-  z-index:2147482500;
+  z-index:2147483100;
   display:none;
   align-items:center;
   justify-content:center;
@@ -11528,7 +11528,7 @@ html[data-theme="light"] body .app:not(#ah-m) .dm-sidebar .search{background:#e3
   /* ---------- styles ---------- */
 
   var css = ''
-    + '.ahctx-menu{position:fixed;z-index:99999;min-width:268px;max-width:310px;background:#27272c;border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:6px;box-shadow:0 18px 50px rgba(0,0,0,.5);font-family:Inter,system-ui,sans-serif;color:#f5f5f6;font-size:14.5px;display:none;user-select:none;}'
+    + '.ahctx-menu{position:fixed;z-index:2147483200;min-width:268px;max-width:310px;background:#27272c;border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:6px;box-shadow:0 18px 50px rgba(0,0,0,.5);font-family:Inter,system-ui,sans-serif;color:#f5f5f6;font-size:14.5px;display:none;user-select:none;}'
     + '.ahctx-menu.open{display:block;animation:ahctxPop .12s ease-out;}'
     + '@keyframes ahctxPop{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}'
     + '.ahctx-item{position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;border-radius:6px;cursor:pointer;font-weight:700;line-height:1.2;}'
@@ -11553,7 +11553,7 @@ html[data-theme="light"] body .app:not(#ah-m) .dm-sidebar .search{background:#e3
     + '.ahctx-item:hover .ahctx-idbadge,.ahctx-item.open-sub .ahctx-idbadge{background:rgba(255,255,255,.25);color:#fff;}'
     + '.ahctx-divider{height:1px;background:rgba(255,255,255,.08);margin:6px 4px;}'
     + '.ahctx-sep-label{padding:6px 8px 2px;font-size:11px;font-weight:800;letter-spacing:.02em;color:#949ba4;text-transform:uppercase;}'
-    + '.ahctx-sub-panel{position:fixed;z-index:100000;min-width:230px;max-width:290px;background:#27272c;border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:6px;box-shadow:0 18px 50px rgba(0,0,0,.5);font-family:Inter,system-ui,sans-serif;color:#f5f5f6;font-size:14.5px;display:none;}'
+    + '.ahctx-sub-panel{position:fixed;z-index:2147483300;min-width:230px;max-width:290px;background:#27272c;border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:6px;box-shadow:0 18px 50px rgba(0,0,0,.5);font-family:Inter,system-ui,sans-serif;color:#f5f5f6;font-size:14.5px;display:none;}'
     + '.ahctx-sub-panel.open{display:block;animation:ahctxPop .12s ease-out;}'
     + '.ahctx-sub-panel .ahctx-item{cursor:pointer;}'
     + '.ahctx-sub-panel .ahctx-item:hover{background:#3b3d45;color:#fff;}'
@@ -11686,7 +11686,7 @@ html[data-theme="light"] body .app:not(#ah-m) .dm-sidebar .search{background:#e3
     // Легка резервна форма запрошення для будь-якого сервера в рейці —
     // використовує той самий контракт API, що й вбудована форма запрошень.
     var backdrop = document.createElement('div');
-    backdrop.style.cssText = 'position:fixed;inset:0;z-index:100050;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;';
+    backdrop.style.cssText = 'position:fixed;inset:0;z-index:2147483250;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;';
     var card = document.createElement('div');
     card.style.cssText = 'width:340px;background:#1e1f24;border:1px solid #313338;border-radius:14px;padding:18px;box-shadow:0 30px 90px rgba(0,0,0,.6);';
     card.innerHTML =
