@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.256.4",
+      "date": "2026-10-12",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update z-index values for modal and context menu."
+      ],
+      "source_sha": "f17fc5a6c963fb3815cde0ce82188fa901d63471"
+    },
+    {
       "version": "1.256.3",
       "date": "2026-10-12",
       "title": "Виправлення та стабільність",
