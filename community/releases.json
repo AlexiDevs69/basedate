@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.256.6",
+      "date": "2026-10-12",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update z-index values in travel.html."
+      ],
+      "source_sha": "17c791bada6a5b64f5aaf77f1b4dea9a96f9812e"
+    },
+    {
       "version": "1.256.5",
       "date": "2026-10-12",
       "title": "Виправлення та стабільність",
