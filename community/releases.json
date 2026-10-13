@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.259.0",
+      "date": "2026-10-13",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: mobile profile mini sheet styles and scripts."
+      ],
+      "source_sha": "0a5819253ec150560e7427de8208ec0ed1c470ae"
+    },
+    {
       "version": "1.258.1",
       "date": "2026-10-13",
       "title": "Виправлення та стабільність",
