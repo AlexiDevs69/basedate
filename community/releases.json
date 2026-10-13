@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.258.0",
+      "date": "2026-10-13",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: mobile user profile card styles and scripts."
+      ],
+      "source_sha": "9a4614e78feff15481453cb0da9ef46395c3bb89"
+    },
+    {
       "version": "1.257.0",
       "date": "2026-10-13",
       "title": "Нові можливості AlexiHub",
