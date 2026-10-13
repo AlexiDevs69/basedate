@@ -17122,5 +17122,90 @@ html[data-theme="light"] body .server-sidebar .account-panel{background:#e3e5e8!
 html[data-theme="light"] body .topbar.discord-channel-topbar{border-bottom-color:rgba(0,0,0,.08)!important}
 }
 </style>
+<style id="ah-profile-mini-sheet-css">
+/* MOBILE: user profile card (tap on avatar / name / member) = Discord bottom sheet */
+#ah-v3-mini-scrim{display:none}
+@keyframes ahv3sheetUp{from{transform:translate3d(0,100%,0)}to{transform:none}}
+@keyframes ahv3scrimIn{from{opacity:0}to{opacity:1}}
+@media (max-width:820px){
+body:has(.ah-v3-mini.open)::before{display:none!important}
+html body .ah-v3-mini .ah-v3-banner::after{display:none!important}
+#ah-v3-mini-scrim{position:fixed;inset:0;z-index:2147482950;background:rgba(0,0,0,.62);-webkit-tap-highlight-color:transparent;animation:ahv3scrimIn .2s ease both}
+html body #ah-v3-mini-scrim.open{display:block}
+html body .ah-v3-mini{left:0!important;right:0!important;top:auto!important;bottom:0!important;width:100%!important;max-width:none!important;
+  max-height:calc(100dvh - 56px - env(safe-area-inset-top,0px))!important;overflow-x:hidden!important;overflow-y:auto!important;overscroll-behavior:contain;
+  border:0!important;border-radius:24px 24px 0 0!important;background:#111214!important;box-shadow:0 -12px 40px rgba(0,0,0,.5)!important;
+  transform-origin:bottom center;animation:ahv3sheetUp .26s cubic-bezier(.22,.8,.28,1) backwards!important}
+html body .ah-v3-mini.ah-sheet-drag{animation:none!important;transition:none!important}
+html body .ah-v3-mini.ah-sheet-back{animation:none!important;transition:transform .22s cubic-bezier(.22,.8,.28,1)!important}
+html body .ah-v3-mini .ah-v3-banner{height:140px!important}
+html body .ah-v3-mini .ah-v3-banner::before{content:"";position:absolute;top:9px;left:50%;width:44px;height:5px;margin-left:-22px;border-radius:3px;background:rgba(255,255,255,.92);box-shadow:0 1px 4px rgba(0,0,0,.3);z-index:4}
+html body .ah-v3-mini .ah-v3-body{background:#111214!important;padding:0 16px calc(24px + env(safe-area-inset-bottom,0px))!important}
+html body .ah-v3-mini .ah-v3-avatar{width:88px!important;height:88px!important;margin-top:-42px!important;border:6px solid #111214!important;overflow:visible!important;font-size:30px!important}
+html body .ah-v3-mini .ah-v3-status{right:-3px!important;bottom:-3px!important;width:26px!important;height:26px!important;border:5px solid #111214!important}
+html body .ah-v3-mini .ah-v3-name-row{margin-top:8px!important;gap:8px!important;flex-wrap:wrap}
+html body .ah-v3-mini .ah-v3-name{margin-top:0!important;font-size:24px!important;line-height:1.15!important;font-weight:800!important;letter-spacing:-.01em!important;white-space:normal!important;overflow-wrap:anywhere}
+html body .ah-v3-mini .ah-v3-tag{margin-top:0!important}
+html body .ah-v3-mini .ah-v3-handle{margin-top:3px!important;font-size:14px!important;font-weight:500!important;white-space:normal!important}
+/* avatar goes LEFT over the banner (Discord), name + @handle under it - overrides the desktop "avatar right" grid */
+html body .ah-v3-mini .ah-v3-body{display:grid!important;grid-template-columns:minmax(0,1fr)!important;column-gap:0!important}
+html body .ah-v3-mini .ah-v3-body>*{grid-column:1!important;grid-row:auto!important}
+html body .ah-v3-mini .ah-v3-avatar{justify-self:start!important;align-self:start!important;margin:-42px 0 0 0!important}
+html body .ah-v3-mini .ah-v3-name-row{padding-top:0!important;margin:8px 0 0!important;align-self:start!important}
+html body .ah-v3-mini .ah-v3-handle{align-self:start!important}
+html body .ah-v3-mini .ah-v3-badges{justify-self:start!important}
+html body .ah-v3-mini .ah-v3-actions{gap:10px!important;margin-top:16px!important}
+html body .ah-v3-mini .ah-v3-actions a,html body .ah-v3-mini .ah-v3-actions button{height:48px!important;border-radius:12px!important;background:#232428!important;color:#f2f3f5!important;font-size:15px!important;font-weight:700!important;border:1px solid rgba(255,255,255,.04)!important}
+html body .ah-v3-mini .ah-v3-actions a:active,html body .ah-v3-mini .ah-v3-actions button:active{background:#2e3035!important}
+html[data-theme="light"] body .ah-v3-mini,html[data-theme="light"] body .ah-v3-mini .ah-v3-body{background:#f2f3f5!important}
+html[data-theme="light"] body .ah-v3-mini .ah-v3-avatar{border-color:#f2f3f5!important}
+html[data-theme="light"] body .ah-v3-mini .ah-v3-status{border-color:#f2f3f5!important}
+html[data-theme="light"] body .ah-v3-mini .ah-v3-name{color:#060607!important}
+html[data-theme="light"] body .ah-v3-mini .ah-v3-actions a,html[data-theme="light"] body .ah-v3-mini .ah-v3-actions button{background:#e3e5e8!important;color:#1b1c20!important}
+}
+</style>
+<script id="ah-profile-mini-sheet-js">
+(function(){
+  var mq=window.matchMedia('(max-width:820px)');
+  var mini=document.getElementById('ah-v3-mini');if(!mini)return;
+  var scrim=document.createElement('div');scrim.id='ah-v3-mini-scrim';document.body.appendChild(scrim);
+  function sync(){scrim.classList.toggle('open',mini.classList.contains('open')&&mq.matches)}
+  new MutationObserver(sync).observe(mini,{attributes:true,attributeFilter:['class']});sync();
+  function close(){document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))}
+  scrim.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();close()});
+  /* drag the sheet down to close (when scrolled to top) */
+  var g=null;
+  mini.addEventListener('touchstart',function(e){
+    g=null;if(!mq.matches||!mini.classList.contains('open')||e.touches.length!==1||mini.scrollTop>0)return;
+    var t=e.touches[0];g={x:t.clientX,y:t.clientY,dy:0,lock:null,h:mini.offsetHeight||400,lastY:t.clientY,lastT:e.timeStamp,v:0};
+  },{passive:true});
+  mini.addEventListener('touchmove',function(e){
+    if(!g||g.lock==='n')return;
+    var t=e.touches[0],dy=t.clientY-g.y,dx=t.clientX-g.x;
+    if(g.lock===null){
+      if(Math.abs(dy)<8&&Math.abs(dx)<8)return;
+      if(dy<=0||Math.abs(dx)>Math.abs(dy)){g.lock='n';return}
+      g.lock='y';mini.classList.remove('ah-sheet-back');mini.classList.add('ah-sheet-drag');
+    }
+    if(e.cancelable)e.preventDefault();
+    g.dy=Math.max(0,dy);mini.style.transform='translate3d(0,'+g.dy+'px,0)';
+    scrim.style.opacity=String(Math.max(0,1-g.dy/g.h));
+    var dt=e.timeStamp-g.lastT;if(dt>0)g.v=g.v*.6+((t.clientY-g.lastY)/dt)*.4;
+    g.lastY=t.clientY;g.lastT=e.timeStamp;
+  },{passive:false});
+  function end(){
+    if(!g)return;var gg=g;g=null;if(gg.lock!=='y')return;
+    var shut=gg.v>.5||gg.dy>gg.h*.28;
+    mini.classList.remove('ah-sheet-drag');mini.classList.add('ah-sheet-back');
+    mini.style.transform=shut?'translate3d(0,100%,0)':'';scrim.style.opacity=shut?'0':'';
+    setTimeout(function(){
+      mini.classList.remove('ah-sheet-back');mini.style.transform='';scrim.style.opacity='';
+      if(shut)close();
+    },230);
+  }
+  mini.addEventListener('touchend',end,{passive:true});
+  mini.addEventListener('touchcancel',end,{passive:true});
+})();
+</script>
 </body>
 </html>
