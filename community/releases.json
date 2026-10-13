@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.256.7",
+      "date": "2026-10-13",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update mobile profile sheet functionality and styles."
+      ],
+      "source_sha": "adf8d3b56a8b21b54992860ad83efe8c0ddf694e"
+    },
+    {
       "version": "1.256.6",
       "date": "2026-10-12",
       "title": "Виправлення та стабільність",
