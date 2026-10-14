@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.259.1",
+      "date": "2026-10-14",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Modify profile interaction for mobile view."
+      ],
+      "source_sha": "26c57a2608f98d0917ddc2e61f5d1de8ef0525a3"
+    },
+    {
       "version": "1.259.0",
       "date": "2026-10-13",
       "title": "Нові можливості AlexiHub",
