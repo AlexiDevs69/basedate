@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.259.10",
+      "date": "2026-10-18",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance profile tap handling and mobile styles."
+      ],
+      "source_sha": "2d1e6a26c58181f9a9c973fff341c1636a889f74"
+    },
+    {
       "version": "1.259.9",
       "date": "2026-10-18",
       "title": "Виправлення та стабільність",
