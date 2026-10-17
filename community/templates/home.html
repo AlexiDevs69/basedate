@@ -164,9 +164,17 @@
   function closestLink(e){
     return (e.target && e.target.closest) ? e.target.closest('a[href]') : null;
   }
+  // Тап по аватарці/імені користувача відкриває профіль, а не веде за посиланням:
+  // для нього не можна передзавантажувати сторінку (зайвий прихований фрейм = лаг на телефоні).
+  function isProfileTap(e){
+    var t = e.target; if(!t || !t.closest) return false;
+    if(t.closest('.dm-list a.dm-row[href*="/community/dm/"], .dm-list a.dm-item[href*="/community/dm/"]')) return !!t.closest('.avatar,.dm-avatar,.dm-name');
+    return !!t.closest('[data-mini-username],.mini-profile-trigger,.profile-click,.member-row,.msg-avatar,.msg-name,.account-panel,.user-panel');
+  }
   function routeOf(e){
     var a = closestLink(e);
     if(!a || (a.target && a.target !== '_self')) return null;
+    if(isProfileTap(e)) return null;
     var p = parse(a.getAttribute('href'));
     return (p && p.key !== hereKey()) ? p : null;
   }
@@ -247,6 +255,8 @@
   function railEl(d){ try{ return d.querySelector('.server-rail'); }catch(e){ return null; } }
   function measureRail(){
     railClip = 0;
+    /* phones: the rail is an off-canvas drawer, not a persistent column - never leave a strip of the old page showing */
+    try{ if(window.matchMedia && window.matchMedia('(max-width:820px)').matches) return 0; }catch(e){}
     var r = railEl(document); if(!r) return 0;
     try{
       var b = r.getBoundingClientRect();
@@ -15832,5 +15842,16 @@ html[data-theme="light"] body .ah-v3-full-menu.open{background:#f2f3f5!important
 })();
 </script>
 
+
+<style id="ah-profile-perf-css">
+/* phones: no live backdrop blur behind profile / settings / modal overlays (very expensive on iOS, shows as a 1-2s freeze while they open) */
+@media (max-width:820px){
+html body .ah-v3-overlay,html body .ah-v3-mini,html body .self-profile-backdrop,html body .alex-full-backdrop,
+html body .ah-settings-backdrop,html body .ah-settings-top,html body .ah-profile-customizer-backdrop,html body .ah-image-editor-backdrop,
+html body .ah-server-modal-backdrop,html body .ah-block-modal,html body .ah-unfriend-backdrop,html body .ah-release-backdrop,
+html body .ah-global-console-backdrop,html body .ah-nitro-gift-modal-bg,html body .ah-profile-theme-picker{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+html body .ah-v3-overlay.open .ah-v3-full,html body .ah-v3-mini.open{will-change:transform}
+}
+</style>
 </body>
 </html>
