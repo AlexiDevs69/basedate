@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.260.2",
+      "date": "2026-10-18",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance mobile profile customizer with new features."
+      ],
+      "source_sha": "e6c6db972f62faaf5ff55650a1a04eee4c68c0be"
+    },
+    {
       "version": "1.260.1",
       "date": "2026-10-18",
       "title": "Виправлення та стабільність",
