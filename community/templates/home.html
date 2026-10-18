@@ -5635,6 +5635,11 @@ document.addEventListener('DOMContentLoaded',()=>{
 <div id="ah-profile-customizer" class="ah-profile-customizer-backdrop" aria-hidden="true">
   <div class="ah-profile-customizer-shell" role="dialog" aria-modal="true" aria-label="{{ i18n_t('common.aria.profile_setting_up') }}" data-i18n-aria-label="common.aria.profile_setting_up">
     <button class="ah-profile-customizer-close" type="button" onclick="closeProfileCustomizer()" aria-label="{{ i18n_t('common.actions.close') }}" data-i18n-aria-label="common.actions.close">×</button>
+    <div class="ah-pm-head">
+      <button id="ah-pm-x" class="ah-pm-x" type="button" aria-label="{{ i18n_t('common.actions.close') }}"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      <div class="ah-pm-title">{{ i18n_t('settings.profile') }}</div>
+      <button id="ah-pm-save" class="ah-pm-save" type="button">{{ i18n_t('common.action.save') }}</button>
+    </div>
     <form id="ah-profile-edit-form" class="ah-profile-customizer-form" method="post" action="/community/settings" enctype="multipart/form-data">
       <input type="hidden" name="next_url" value="{{ request.url.path }}">
       <input type="hidden" name="avatar_url" value="{{ account.avatar_url or '' }}">
@@ -5644,6 +5649,11 @@ document.addEventListener('DOMContentLoaded',()=>{
       <input id="ah-avatar-file" class="ah-hidden-file" type="file" name="avatar_file" accept="image/png,image/jpeg,image/webp,image/gif">
       <input id="ah-banner-file" class="ah-hidden-file" type="file" name="banner_file" accept="image/png,image/jpeg,image/webp,image/gif">
 
+      <div class="ah-pm-tabs" role="tablist">
+        <button class="ah-pm-tab active" type="button" data-pm-tab="main">{{ i18n_t('common.text.the_main_profile') }}</button>
+        <button class="ah-pm-tab" type="button" data-pm-tab="friends">{{ i18n_t('ui.friends') }} <i id="ah-pm-cnt-friends">0</i></button>
+        <button class="ah-pm-tab" type="button" data-pm-tab="servers">{{ i18n_t('settings.servers') }} <i id="ah-pm-cnt-servers">0</i></button>
+      </div>
       <section class="ah-profile-customizer-preview">
         <article class="ah-custom-profile-card">
           <label class="ah-custom-profile-banner" id="ah-profile-preview-banner" for="ah-banner-file" {% if account.banner_url %}style="background-image:url('{{ account.banner_url }}')"{% endif %}><span class="edit">✎</span></label>
@@ -5680,6 +5690,11 @@ document.addEventListener('DOMContentLoaded',()=>{
               <div id="ah-custom-profile-badges" class="ah-custom-profile-badges" aria-label="{{ i18n_t('common.aria.treasing_profile_badges') }}" data-i18n-aria-label="common.aria.treasing_profile_badges"></div>
             </div>
 
+            <div class="ah-pm-card">
+              <div class="ah-pm-field"><label id="ah-pm-lbl-name" for="ah-pm-name">Display name</label><input id="ah-pm-name" type="text" maxlength="32" autocomplete="off" value="{{ account.display_name or account.username }}"><button id="ah-pm-clear" class="ah-pm-clear" type="button" aria-label="{{ i18n_t('common.actions.close') }}"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+              <div class="ah-pm-field"><label id="ah-pm-lbl-pron" for="ah-pm-pron">Pronouns</label><input id="ah-pm-pron" type="text" maxlength="40" autocomplete="off" value="{{ account.pronouns or '' }}" placeholder="{{ i18n_t('common.placeholder.here_she_her') }}"></div>
+              <div class="ah-pm-field"><label id="ah-pm-lbl-bio" for="ah-pm-bio">Bio</label><span id="ah-pm-count" class="ah-pm-count"></span><textarea id="ah-pm-bio" maxlength="280" placeholder="{{ i18n_t('common.profile.bio_placeholder') }}">{{ account.bio or '' }}</textarea></div>
+            </div>
             <div class="ah-custom-profile-actions"><button class="primary" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 5.75A3.75 3.75 0 0 1 8.25 2h7.5a3.75 3.75 0 0 1 3.75 3.75v6.5A3.75 3.75 0 0 1 15.75 16H10l-4.2 3.15c-.66.5-1.6.02-1.55-.8L4.5 16.1V5.75Z"></path></svg><span><!--i18n:common.text.a_message-->{{ i18n_t('common.text.a_message') }}</span></button><button class="icon" type="button" aria-label="{{ i18n_t('ui.friends') }}" data-i18n-aria-label="ui.friends" data-title="{{ i18n_t('ui.friends') }}" data-i18n-title="ui.friends"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm7.25-1.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM2.5 20a7 7 0 0 1 14 0m.5-6.25 1.75 1.75L22 12.25"></path></svg></button><button class="icon" type="button" aria-label="{{ i18n_t('common.aria.other') }}" data-i18n-aria-label="common.aria.other" data-title="{{ i18n_t('common.aria.more') }}" data-i18n-title="common.aria.more"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.75"></circle><circle cx="12" cy="12" r="1.75"></circle><circle cx="19" cy="12" r="1.75"></circle></svg></button></div>
             <div class="ah-custom-bio-wrap"><textarea id="ah-profile-bio-input" class="ah-custom-bio-input" name="bio" maxlength="280" placeholder="{{ i18n_t('common.profile.bio_placeholder') }}" data-i18n-placeholder="common.profile.bio_placeholder">{{ account.bio or '' }}</textarea><div id="ah-profile-bio-preview" hidden>{{ account.bio or '' }}</div></div>
             <div class="ah-profile-private-row" id="ah-profile-private-row">
@@ -5692,6 +5707,7 @@ document.addEventListener('DOMContentLoaded',()=>{
                 <span class="ah-privacy-switch-track"></span>
               </label>
             </div>
+            <div class="ah-pm-list"><button id="ah-pm-theme" class="ah-pm-row" type="button"><span class="ah-pm-row-ico"></span><span>{{ i18n_t('home.text.theme_of_profile') }}</span><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div>
             <div class="ah-custom-profile-info"><b><!--i18n:common.text.registered-->{{ i18n_t('common.text.registered') }}</b><strong id="ah-profile-created-at" data-created-at="{{ account.created_at.isoformat() if account.created_at else '' }}">{{ account.created_at.strftime('%d.%m.%Y') if account.created_at else '—' }}</strong></div>
           </div>
         </article>
@@ -15493,6 +15509,187 @@ html[data-theme="light"][data-dark-sidebar] .dm-row:hover .dm-name,html[data-the
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initCard);else initCard();
 })();
 </script>
+
+<style id="ah-profile-edit-mobile-css">
+/* Phone-only Discord-style profile editor (bottom sheet). Desktop keeps the windowed editor. */
+.ah-pm-head,.ah-pm-tabs,.ah-pm-card,.ah-pm-list{display:none}
+@media(max-width:680px){
+  .ah-profile-customizer-backdrop{padding:0!important;place-items:end stretch!important;background:rgba(0,0,0,.62)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+  .ah-profile-customizer-backdrop.open{animation:ahPmUp .26s cubic-bezier(.2,.8,.2,1) both}
+  @keyframes ahPmUp{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+  .ah-profile-customizer-shell{width:100%!important;height:calc(100dvh - 14px - env(safe-area-inset-top,0px))!important;max-height:none!important;border:0!important;border-radius:20px 20px 0 0!important;overflow:hidden!important;display:flex;flex-direction:column;background:#1b1c20;left:0!important}
+  .ah-profile-customizer-close{display:none!important}
+  /* header */
+  .ah-pm-head{display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:8px;flex:0 0 auto;height:56px;padding:0 12px 0 8px;position:relative;z-index:3}
+  .ah-pm-x{width:40px;height:40px;border:0;border-radius:50%;background:rgba(255,255,255,.07);color:#e3e5e8;display:grid;place-items:center;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .ah-pm-x svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round}
+  .ah-pm-title{text-align:center;color:#fff;font-size:17px;font-weight:800;letter-spacing:-.01em}
+  .ah-pm-save{height:36px;min-width:84px;padding:0 16px;border:0;border-radius:18px;background:rgba(255,255,255,.07);color:#8e929b;font:inherit;font-size:14px;font-weight:800;cursor:pointer;transition:background .15s,color .15s;-webkit-tap-highlight-color:transparent}
+  .ah-pm-save.on{background:#5865f2;color:#fff}
+  /* form scrolls under the header */
+  .ah-profile-customizer-form{display:block!important;flex:1 1 auto;height:auto!important;min-height:0;overflow-y:auto!important;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+  /* tabs */
+  .ah-pm-tabs{display:flex;gap:22px;padding:0 16px;border-bottom:1px solid rgba(255,255,255,.08);overflow-x:auto;scrollbar-width:none;position:sticky;top:0;z-index:2;background:inherit}
+  .ah-pm-tabs::-webkit-scrollbar{display:none}
+  .ah-pm-tab{flex:0 0 auto;height:44px;padding:0;border:0;border-bottom:2px solid transparent;background:transparent;color:#9aa0aa;font:inherit;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;-webkit-tap-highlight-color:transparent}
+  .ah-pm-tab.active{color:#fff;border-bottom-color:#fff}
+  .ah-pm-tab i{font-style:normal;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:rgba(255,255,255,.1);font-size:11px;display:grid;place-items:center;color:#c9ccd2}
+  .ah-profile-customizer-form[data-mtab="main"] .ah-profile-customizer-collections{display:none}
+  .ah-profile-customizer-form:not([data-mtab="main"]) .ah-profile-customizer-preview{display:none}
+  .ah-pm-tabs{background:#1b1c20}.ah-profile-customizer-shell.ah-colored .ah-pm-tabs{background:color-mix(in srgb,var(--ah-pc1) 26%,#0b0c10)}
+  /* banner + avatar + identity */
+  .ah-profile-customizer-preview{padding:0!important;overflow:visible!important;background:transparent!important}
+  .ah-custom-profile-card{border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;min-height:0!important;overflow:visible!important}
+  .ah-custom-profile-banner{height:156px!important;border-radius:0!important}
+  .ah-custom-profile-banner:after{background:linear-gradient(to bottom,transparent 55%,rgba(0,0,0,.28))!important}
+  .ah-custom-profile-banner .edit{right:12px!important;top:12px!important;width:34px!important;height:34px!important;border-radius:50%!important;font-size:15px}
+  .ah-custom-profile-body{padding:0 16px 8px!important}
+  .ah-custom-profile-avatar{width:96px!important;height:96px!important;margin-top:-48px!important;border:6px solid var(--ah-pm-bg,#1b1c20)!important;font-size:34px!important}
+  .ah-profile-customizer-shell.ah-colored{--ah-pm-bg:color-mix(in srgb,var(--ah-pc1) 26%,#0b0c10)}
+  .ah-custom-profile-avatar:after{opacity:1!important;right:-4px!important;top:auto!important;bottom:-2px!important;width:30px!important;height:30px!important;border:4px solid var(--ah-pm-bg,#1b1c20)!important;background:#2b2d31!important;font-size:12px!important}
+  .ah-custom-profile-status{display:none!important}
+  .ah-custom-profile-ident{margin-top:10px!important}
+  .ah-display-name-view{pointer-events:none;font-size:28px!important;min-height:38px!important;margin-left:0!important;padding:0!important;letter-spacing:-.03em!important}
+  .ah-display-name-view svg{display:none}
+  .ah-profile-live-name.ah-display-name-editor{margin-top:0!important}
+  .ah-custom-profile-meta{margin-top:6px!important;flex-wrap:wrap!important;gap:8px!important;font-size:13px!important}
+  .ah-custom-profile-meta .dot,.ah-pronouns-editor{display:none!important}
+  .ah-server-tag-trigger{height:26px!important;font-size:11px!important;max-width:220px!important}
+  .ah-custom-profile-actions,.ah-custom-bio-wrap{display:none!important}
+  /* labelled fields card */
+  .ah-pm-card{display:block;margin:18px 0 0;padding:4px 14px;border-radius:14px;background:rgba(255,255,255,.055)}
+  .ah-pm-field{position:relative;padding:11px 0 10px}
+  .ah-pm-field+.ah-pm-field{border-top:1px solid rgba(255,255,255,.07)}
+  .ah-pm-field label{display:block;margin:0 0 4px;color:#a3a7b1;font-size:12px;font-weight:700}
+  .ah-pm-field input,.ah-pm-field textarea{display:block;width:100%;box-sizing:border-box;padding:0;border:0;border-radius:0;background:transparent;color:#f2f3f5;font:500 16px/1.35 var(--font-sans,Inter,system-ui,sans-serif);outline:0;resize:none;-webkit-appearance:none;appearance:none}
+  .ah-pm-field input::placeholder,.ah-pm-field textarea::placeholder{color:#7d828d}
+  .ah-pm-field input{height:24px;padding-right:30px}
+  .ah-pm-field textarea{min-height:64px}
+  .ah-pm-clear{position:absolute;right:-6px;bottom:6px;width:34px;height:34px;border:0;background:transparent;color:#a3a7b1;display:none;place-items:center;padding:0;cursor:pointer}
+  .ah-pm-clear.show{display:grid}
+  .ah-pm-clear svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round}
+  .ah-pm-count{position:absolute;right:0;top:11px;color:#7d828d;font-size:11px;font-weight:700}
+  /* list rows */
+  .ah-profile-private-row{margin:12px 0 0!important;padding:12px 14px!important;border:0!important;border-radius:14px;background:rgba(255,255,255,.055)}
+  .ah-pm-list{display:block;margin-top:12px}
+  .ah-pm-row{width:100%;min-height:54px;padding:0 14px;border:0;border-radius:14px;background:rgba(255,255,255,.055);color:#f2f3f5;font:inherit;font-size:15px;font-weight:700;text-align:left;display:flex;align-items:center;gap:12px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .ah-pm-row-ico{width:26px;height:26px;border-radius:50%;flex:0 0 26px;background:linear-gradient(180deg,var(--ah-pc1,#5865f2),var(--ah-pc2,#9b5cf6));box-shadow:inset 0 0 0 2px rgba(255,255,255,.28)}
+  .ah-pm-row span:nth-child(2){flex:1;min-width:0}
+  .ah-pm-row svg{width:18px;height:18px;fill:none;stroke:#8e929b;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+  .ah-custom-profile-info{margin-top:18px!important;padding:0 4px}
+  /* collections as plain tab content */
+  .ah-profile-customizer-collections{padding:14px 16px 0!important;min-height:0!important;overflow:visible!important;background:transparent!important;display:block!important}
+  .ah-profile-collection-tabs{display:none!important}
+  .ah-profile-collection-body{overflow:visible!important;padding-top:0!important}
+  .ah-profile-collection-panel{height:auto!important;max-height:none!important;overflow:visible!important}
+  /* unsaved bar sits above the sheet bottom */
+  .ah-profile-unsaved-bar{bottom:calc(10px + env(safe-area-inset-bottom,0px))!important}
+  /* theme panel = bottom sheet over the editor */
+  .ah-profile-customizer-shell .ah-pc-handle{display:none!important}
+  .ah-profile-customizer-shell .ah-pc-panel{left:0!important;right:0!important;top:auto!important;bottom:0!important;width:auto!important;max-height:78%;border:0!important;border-top:1px solid #35373d!important;border-radius:20px 20px 0 0!important;padding:22px 18px calc(22px + env(safe-area-inset-bottom,0px))!important;transform:translateY(105%)!important;box-shadow:0 -14px 40px rgba(0,0,0,.5);z-index:20!important}
+  .ah-profile-customizer-shell.ah-pc-open .ah-pc-panel{transform:none!important}
+  .ah-pc-head b{margin-left:34px!important}
+  .ah-pc-back{top:14px!important;left:14px!important}
+  .ah-pc-presets{grid-template-columns:repeat(4,1fr)}
+}
+</style>
+
+<script id="ah-profile-edit-mobile-js">
+(function(){
+  if(window.__ahProfileEditMobile) return; window.__ahProfileEditMobile = true;
+  var mq = window.matchMedia ? window.matchMedia('(max-width:680px)') : {matches:false};
+  var modal = document.getElementById('ah-profile-customizer');
+  var form = document.getElementById('ah-profile-edit-form');
+  if(!modal || !form) return;
+  var shell = modal.querySelector('.ah-profile-customizer-shell');
+  var bar = document.getElementById('ah-profile-unsaved-bar');
+  var save = document.getElementById('ah-pm-save');
+  var DICT = {
+    uk:{name:'Відображуване ім’я',pron:'Займенники',bio:'Про себе'},
+    ru:{name:'Отображаемое имя',pron:'Местоимения',bio:'О себе'},
+    en:{name:'Display name',pron:'Pronouns',bio:'Bio'}
+  };
+  function lang(){
+    var l = (document.documentElement.lang || (navigator.language||'en')).toLowerCase().slice(0,2);
+    return DICT[l] ? l : 'en';
+  }
+  var PAIRS = [
+    ['ah-pm-name','ah-display-name-input'],
+    ['ah-pm-pron','ah-pronouns-input'],
+    ['ah-pm-bio','ah-profile-bio-input']
+  ];
+  function real(id){ return document.getElementById(id); }
+  function syncCount(){
+    var b = document.getElementById('ah-pm-bio'), c = document.getElementById('ah-pm-count');
+    if(b && c) c.textContent = b.value.length + '/' + (b.maxLength>0?b.maxLength:280);
+    var n = document.getElementById('ah-pm-name'), x = document.getElementById('ah-pm-clear');
+    if(n && x) x.classList.toggle('show', !!n.value && document.activeElement === n);
+  }
+  function toMirror(){
+    PAIRS.forEach(function(p){ var m = real(p[0]), r = real(p[1]); if(m && r && m.value !== r.value) m.value = r.value; });
+    syncCount();
+  }
+  function fire(el){ el.dispatchEvent(new Event('input',{bubbles:true})); }
+  PAIRS.forEach(function(p){
+    var m = real(p[0]); if(!m) return;
+    m.addEventListener('input',function(){
+      var r = real(p[1]); if(!r) return;
+      r.value = m.value; fire(r); syncCount();
+    });
+  });
+  var nameM = real('ah-pm-name');
+  if(nameM){
+    nameM.addEventListener('focus',syncCount);
+    nameM.addEventListener('blur',function(){ setTimeout(syncCount,120); });
+  }
+  var clearBtn = real('ah-pm-clear');
+  if(clearBtn) clearBtn.addEventListener('mousedown',function(e){ e.preventDefault(); });
+  if(clearBtn) clearBtn.addEventListener('click',function(){
+    if(!nameM) return; nameM.value=''; nameM.dispatchEvent(new Event('input',{bubbles:true})); nameM.focus();
+  });
+  function applyLabels(){
+    var d = DICT[lang()];
+    [['ah-pm-lbl-name','name'],['ah-pm-lbl-pron','pron'],['ah-pm-lbl-bio','bio']].forEach(function(x){
+      var e = real(x[0]); if(e) e.textContent = d[x[1]];
+    });
+  }
+  function setTab(t){
+    form.setAttribute('data-mtab',t);
+    document.querySelectorAll('.ah-pm-tab').forEach(function(b){ b.classList.toggle('active',b.dataset.pmTab===t); });
+    if(t!=='main' && typeof window.showProfileCustomizerTab==='function') window.showProfileCustomizerTab(t);
+    var sc = form; if(sc) sc.scrollTop = 0;
+  }
+  document.querySelectorAll('.ah-pm-tab').forEach(function(b){ b.addEventListener('click',function(){ setTab(b.dataset.pmTab); }); });
+  function counts(){
+    var f = document.querySelectorAll('#ah-profile-friends-list [data-profile-list-item="friend"]').length;
+    var s = document.querySelectorAll('#ah-profile-servers-list [data-profile-list-item="server"]').length;
+    var a = real('ah-pm-cnt-friends'), c = real('ah-pm-cnt-servers');
+    if(a) a.textContent = f; if(c) c.textContent = s;
+  }
+  var x = real('ah-pm-x');
+  if(x) x.addEventListener('click',function(){ if(typeof window.closeProfileCustomizer==='function') window.closeProfileCustomizer(); });
+  if(save) save.addEventListener('click',function(){
+    if(!save.classList.contains('on')) return;
+    if(form.requestSubmit) form.requestSubmit(); else form.submit();
+  });
+  var theme = real('ah-pm-theme');
+  if(theme) theme.addEventListener('click',function(){
+    var h = shell.querySelector('.ah-pc-handle'); if(h) h.click();
+  });
+  function syncSave(){ if(save && bar) save.classList.toggle('on', bar.classList.contains('show')); }
+  if(bar && window.MutationObserver) new MutationObserver(syncSave).observe(bar,{attributes:true,attributeFilter:['class']});
+  var reset = real('ah-profile-reset');
+  if(reset) reset.addEventListener('click',function(){ setTimeout(function(){ toMirror(); syncSave(); },30); });
+  form.addEventListener('reset',function(){ setTimeout(toMirror,30); });
+  /* re-prepare every time the editor opens */
+  if(window.MutationObserver) new MutationObserver(function(){
+    if(modal.classList.contains('open')){ applyLabels(); toMirror(); counts(); setTab('main'); syncSave(); }
+  }).observe(modal,{attributes:true,attributeFilter:['class']});
+  applyLabels(); toMirror(); counts();
+  setTimeout(counts,600);
+})();
+</script>
+
 
 <style id="ah-mini-profile-right-avatar">
 /* === Mini profile: avatar on the right, name at avatar level, caret toggles badges === */
