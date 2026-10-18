@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.260.5",
+      "date": "2026-10-18",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update mutual server label formatting and styles."
+      ],
+      "source_sha": "3447f372fcc7b3ab891cadb3df1c8d34f531f4f7"
+    },
+    {
       "version": "1.260.4",
       "date": "2026-10-18",
       "title": "Виправлення та стабільність",
