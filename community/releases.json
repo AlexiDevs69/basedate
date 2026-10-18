@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.262.0",
+      "date": "2026-10-18",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: mobile styles for profile board in server_channel.html."
+      ],
+      "source_sha": "35ff7680d2d7e25df0cf034ea31cc05a9fc9aa6a"
+    },
+    {
       "version": "1.261.1",
       "date": "2026-10-18",
       "title": "Виправлення та стабільність",
