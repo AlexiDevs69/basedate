@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.260.3",
+      "date": "2026-10-18",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance mobile profile editor with new features."
+      ],
+      "source_sha": "433c7693b4cf25c6f4a560d333bdfa751a5f2252"
+    },
+    {
       "version": "1.260.2",
       "date": "2026-10-18",
       "title": "Виправлення та стабільність",
