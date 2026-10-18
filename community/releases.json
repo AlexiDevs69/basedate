@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.260.1",
+      "date": "2026-10-18",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance mobile profile editor with new styles and scripts."
+      ],
+      "source_sha": "35e51c90cccaaedd6ad8fa5a9cdb77284ce8a8bd"
+    },
+    {
       "version": "1.260.0",
       "date": "2026-10-18",
       "title": "Нові можливості AlexiHub",
