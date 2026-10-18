@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.261.1",
+      "date": "2026-10-18",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance mobile layout for profile board."
+      ],
+      "source_sha": "28ba7c6d13b0e7a104250926899c329cb7274903"
+    },
+    {
       "version": "1.261.0",
       "date": "2026-10-18",
       "title": "Нові можливості AlexiHub",
