@@ -8658,6 +8658,34 @@ html[data-theme="light"] body #ah-v3-full-message,html[data-theme="light"] body 
 html[data-theme="light"] body .ah-v3-full-menu.open{background:#f2f3f5!important}
 }
 </style>
+
+<style id="ah-profile-full-board-css">
+/* MOBILE full profile + "Board" tab (profile_board_runtime): keep banner on top, tabs as a real tab bar, content under the tabs */
+@media (max-width:820px){
+html body .ah-v3-overlay.open{align-items:flex-end!important;justify-content:center!important;padding:0!important;overflow:hidden!important}
+html body .ah-v3-overlay.open>.ah-v3-full{display:flex!important;flex-direction:column!important;width:100%!important;max-width:none!important;height:auto!important;
+  min-height:calc(100dvh - 56px - env(safe-area-inset-top,0px))!important;max-height:calc(100dvh - 56px - env(safe-area-inset-top,0px))!important;
+  border:0!important;border-radius:24px 24px 0 0!important;grid-template-columns:none!important;overflow-x:hidden!important;overflow-y:auto!important}
+/* tabs sit right above the content they switch */
+html body .ah-v3-full-tabs{order:9!important;display:flex!important;align-items:flex-end!important;gap:22px!important;height:44px!important;margin:24px 16px 0!important;padding:0!important;
+  border:0!important;border-bottom:1px solid rgba(255,255,255,.1)!important;overflow-x:auto;scrollbar-width:none}
+html body .ah-v3-full-tabs::-webkit-scrollbar{display:none}
+html body .ah-v3-full-tabs .ah-profile-board-tab{flex:0 0 auto;height:44px!important;padding:0!important;font-size:14px!important;font-weight:700!important;color:#9aa0aa!important;
+  border:0!important;border-bottom:2px solid transparent!important;background:transparent!important;-webkit-tap-highlight-color:transparent}
+html body .ah-v3-full-tabs .ah-profile-board-tab.active{color:#fff!important;border-bottom-color:#fff!important}
+/* tab content */
+html body #ah-profile-board-panel{order:10!important;margin:16px 16px 0!important;padding:0!important}
+html body #ah-v3-mutual-list{order:10!important}
+html body #ah-v3-mutual-list.ah-profile-board-panel:not(.active){display:none!important}
+html body #ah-v3-mutual-list.ah-profile-board-panel.active:has(.ah-v3-mutual-empty){display:grid!important}
+html body .ah-profile-board-head{margin:0 0 12px!important}
+html body .ah-profile-board-head-copy b{font-size:15px!important}
+html body .ah-profile-board-empty,html body .ah-profile-board-loading,html body .ah-profile-board-error{min-height:120px!important;border-radius:14px!important;padding:18px!important}
+html body .ah-profile-board-grid{grid-template-columns:minmax(0,1fr)!important;gap:12px!important}
+html body .ah-profile-board-card{min-height:0!important}
+}
+</style>
+
 <script id="ah-profile-full-sheet-js">
 (function(){
   var mq=window.matchMedia('(max-width:820px)');
