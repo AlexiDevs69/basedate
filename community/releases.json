@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.264.0",
+      "date": "2026-10-21",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: chat style toggle for bubble messages."
+      ],
+      "source_sha": "54792aebb889a77ec8257c90722af8ec41255643"
+    },
+    {
       "version": "1.263.0",
       "date": "2026-10-18",
       "title": "Нові можливості AlexiHub",
