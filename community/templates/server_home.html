@@ -4539,6 +4539,19 @@ document.addEventListener('DOMContentLoaded',()=>{
   </div>
 
 </div>
+<div class="ah-settings-section ah-appearance-section ah-chat-style-section">
+  <div class="ah-appearance-block-title" data-cs="title">Chat</div>
+  <div class="ah-appearance-toggle-row">
+    <div class="ah-appearance-toggle-copy">
+      <b data-cs="name">Chat style: bubbles</b>
+      <span data-cs="desc">Show messages in personal chats as bubbles.</span>
+    </div>
+    <label class="ah-privacy-switch">
+      <input type="checkbox" id="ah-chat-bubbles-toggle">
+      <span class="ah-privacy-switch-track"></span>
+    </label>
+  </div>
+</div>
 </section>
       <section class="ah-settings-page" data-settings-page="notifications"><h1><!--i18n:settings.notifications-->{{ i18n_t('settings.notifications') }}</h1><div class="ah-settings-placeholder"><!--i18n:common.text.section_of_the_stub_speakutions_desktop_notifications_mute_servers-->{{ i18n_t('common.text.section_of_the_stub_speakutions_desktop_notifications_mute_servers') }}</div></section>
       <section class="ah-settings-page" data-settings-page="language">
@@ -11900,5 +11913,40 @@ html body .ah-global-console-backdrop,html body .ah-nitro-gift-modal-bg,html bod
 html body .ah-v3-overlay.open .ah-v3-full,html body .ah-v3-mini.open{will-change:transform}
 }
 </style>
+<script id="ah-chat-style-toggle-js">
+(function(){
+  if(window.__ahChatStyleToggle) return; window.__ahChatStyleToggle = true;
+  var T = {
+    uk:['Чат','Стиль чату: бульбашки','Повідомлення в особистих чатах у вигляді бульбашок, як у месенджерах. Вимкніть, щоб бачити компактний список, як у Діскорді.'],
+    ru:['Чат','Стиль чата: пузырьки','Сообщения в личных чатах в виде пузырьков, как в мессенджерах. Выключите, чтобы видеть компактный список, как в Дискорде.'],
+    en:['Chat','Chat style: bubbles','Show messages in personal chats as bubbles, like a messenger. Turn off for the compact list, like Discord.']
+  };
+  var cb = document.getElementById('ah-chat-bubbles-toggle');
+  if(!cb) return;
+  var l = (document.documentElement.lang || navigator.language || 'en').toLowerCase().slice(0,2);
+  var d = T[l] || T.en;
+  var root = cb.closest('.ah-chat-style-section');
+  if(root){
+    var a = root.querySelector('[data-cs="title"]'), b = root.querySelector('[data-cs="name"]'), c = root.querySelector('[data-cs="desc"]');
+    if(a) a.textContent = d[0]; if(b) b.textContent = d[1]; if(c) c.textContent = d[2];
+  }
+  function get(){
+    if(window.AlexiHubChatStyle) return window.AlexiHubChatStyle.get();
+    try{ var v = localStorage.getItem('ahChatStyle'); if(v === 'bubbles' || v === 'flat') return v; }catch(e){}
+    return (window.matchMedia && window.matchMedia('(max-width:820px)').matches) ? 'bubbles' : 'flat';
+  }
+  function sync(){ cb.checked = get() === 'bubbles'; }
+  sync();
+  cb.addEventListener('change', function(){
+    var v = cb.checked ? 'bubbles' : 'flat';
+    if(window.AlexiHubChatStyle) window.AlexiHubChatStyle.set(v);
+    else { try{ localStorage.setItem('ahChatStyle', v); }catch(e){} }
+  });
+  window.addEventListener('storage', function(e){ if(e.key === 'ahChatStyle') sync(); });
+  /* re-sync every time the settings window is opened */
+  var modal = document.getElementById('ah-user-settings');
+  if(modal && window.MutationObserver) new MutationObserver(function(){ if(modal.classList.contains('open')) sync(); }).observe(modal, {attributes:true, attributeFilter:['class']});
+})();
+</script>
 </body>
 </html>
