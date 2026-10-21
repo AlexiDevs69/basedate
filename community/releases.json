@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.268.1",
+      "date": "2026-10-21",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update chat bubble styles for responsiveness."
+      ],
+      "source_sha": "05f940d85ea5cc63ca486bb263e05945e68ce65c"
+    },
+    {
       "version": "1.268.0",
       "date": "2026-10-21",
       "title": "Нові можливості AlexiHub",
