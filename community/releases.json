@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.266.0",
+      "date": "2026-10-21",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: chat style toggle functionality to settings."
+      ],
+      "source_sha": "3ef842077d0882480c45451f3c5644acb3c99e3a"
+    },
+    {
       "version": "1.265.0",
       "date": "2026-10-21",
       "title": "Нові можливості AlexiHub",
