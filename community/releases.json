@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.268.0",
+      "date": "2026-10-21",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: chat style toggle feature in travel.html."
+      ],
+      "source_sha": "966c888eb89b85b7738bc7d0356e6a8e2ffa20f7"
+    },
+    {
       "version": "1.267.0",
       "date": "2026-10-21",
       "title": "Нові можливості AlexiHub",
