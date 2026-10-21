@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.265.0",
+      "date": "2026-10-21",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: chat style toggle feature to home template."
+      ],
+      "source_sha": "c1fcea474a5e692181ade7f47c1299b5966d1410"
+    },
+    {
       "version": "1.264.0",
       "date": "2026-10-21",
       "title": "Нові можливості AlexiHub",
