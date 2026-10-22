@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.269.0",
+      "date": "2026-10-22",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: voice message UI enhancements."
+      ],
+      "source_sha": "42db6c4a09ce1df6c6a3bd25a9794e5c58d1753c"
+    },
+    {
       "version": "1.268.2",
       "date": "2026-10-22",
       "title": "Виправлення та стабільність",
