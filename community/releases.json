@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.269.2",
+      "date": "2026-10-23",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance swipe icon styles and functionality."
+      ],
+      "source_sha": "a347055526c1e7f72eaaecc97703d25de2b54949"
+    },
+    {
       "version": "1.269.1",
       "date": "2026-10-23",
       "title": "Виправлення та стабільність",
