@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.269.1",
+      "date": "2026-10-23",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update dm_chat.html."
+      ],
+      "source_sha": "b6a98b57c3efa519cac83d7f373dc3786a0dec0f"
+    },
+    {
       "version": "1.269.0",
       "date": "2026-10-22",
       "title": "Нові можливості AlexiHub",
