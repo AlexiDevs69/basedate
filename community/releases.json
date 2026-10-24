@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.271.0",
+      "date": "2026-10-24",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: Discord-style user profile and server rail features."
+      ],
+      "source_sha": "aa0ebce1090114ac964db1613b1e1f1b620d1019"
+    },
+    {
       "version": "1.270.2",
       "date": "2026-10-24",
       "title": "Виправлення та стабільність",
