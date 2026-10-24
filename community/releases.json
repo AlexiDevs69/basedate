@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.271.1",
+      "date": "2026-10-25",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update greeting from 'Hello' to 'Goodbye'."
+      ],
+      "source_sha": "4aca8c74afc535078f946845d96db23329ef6416"
+    },
+    {
       "version": "1.271.0",
       "date": "2026-10-24",
       "title": "Нові можливості AlexiHub",
