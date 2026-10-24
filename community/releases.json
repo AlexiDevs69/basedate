@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.270.0",
+      "date": "2026-10-24",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: responsive styles and scripts for DM sidebar."
+      ],
+      "source_sha": "9ed9bb1af388839d8c1b74d0a06187bdfd9cc99a"
+    },
+    {
       "version": "1.269.3",
       "date": "2026-10-24",
       "title": "Виправлення та стабільність",
