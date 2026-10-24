@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.270.1",
+      "date": "2026-10-24",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance server channel layout with responsive styles."
+      ],
+      "source_sha": "338a85bde0365dcf71c38ec8e5b5fcc3a4b7b9a0"
+    },
+    {
       "version": "1.270.0",
       "date": "2026-10-24",
       "title": "Нові можливості AlexiHub",
