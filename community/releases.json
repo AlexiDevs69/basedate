@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.270.2",
+      "date": "2026-10-24",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance server home styles for mobile and PC."
+      ],
+      "source_sha": "31f9fc5ff1e372e45d4f762bfc5450c4355121e9"
+    },
+    {
       "version": "1.270.1",
       "date": "2026-10-24",
       "title": "Виправлення та стабільність",
