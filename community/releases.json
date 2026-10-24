@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.269.3",
+      "date": "2026-10-24",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance home.html with responsive styles and scripts."
+      ],
+      "source_sha": "5e82fd4911c74512c4401814f91a502d12c03983"
+    },
+    {
       "version": "1.269.2",
       "date": "2026-10-23",
       "title": "Виправлення та стабільність",
