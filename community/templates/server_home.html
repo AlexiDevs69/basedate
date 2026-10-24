@@ -11948,5 +11948,90 @@ html body .ah-v3-overlay.open .ah-v3-full,html body .ah-v3-mini.open{will-change
   if(modal && window.MutationObserver) new MutationObserver(function(){ if(modal.classList.contains('open')) sync(); }).observe(modal, {attributes:true, attributeFilter:['class']});
 })();
 </script>
+
+<style id="ah-mobile-perf-css">
+/* Mobile performance: no per-name GPU layers, no endlessly repainting gradients, no live backdrop blur on always-visible bars */
+@media (max-width:820px),(hover:none) and (pointer:coarse){
+  .visual-name{transform:none!important;will-change:auto!important;backface-visibility:visible!important}
+  .name-gradient,.name-glow{animation:none!important;background-position:50% center!important;filter:none!important}
+  .font-pixel,.font-bubble,.font-puffy,.font-neon,.font-cyber{filter:none!important}
+  .ah-spoiler-text,.ah-rich-spoiler:not(.revealed){animation:none!important}
+  .ah-streak-flame.ah-flame-pulse svg{animation:none!important}
+  .channel-header,.ah-date-island,.ah-settings-top,#ah-voice-dock .ahvd-card,.server-head.has-server-banner::before,
+  .ah-v3-overlay,html body .ah-v3-overlay,.modal-backdrop,.self-profile-backdrop,.alex-full-backdrop,.ah-settings-backdrop,
+  .ah-server-modal-backdrop,.ah-block-modal,.ah-release-backdrop,.ah-profile-theme-picker,.ah-profile-customizer-backdrop,
+  .delete-message-backdrop,.ah-event-backdrop,.ah-image-editor-backdrop,#ah-global-poll,.ah-global-console-backdrop,#ah-message-rate-limit{
+    -webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+  .ah-date-island{background:rgba(30,31,36,.94)}
+}
+</style>
+
+<style id="ah-dh-shared-css">
+/* Discord-style drawer chrome shared by all phone pages: squircle rail, rounded panel, floating account card */
+@media (max-width:820px){
+  :root{--ah-dh-rail:#0f1012;--ah-dh-panel:#17181b;--ah-dh-card:#232428}
+  html body .server-rail{background:var(--ah-dh-rail)!important;border:0!important}
+  html body .server-rail .server-dot,html body .server-rail .server-dot.active,html body .server-rail .server-dot.home-dot{border-radius:16px!important}
+  html body .server-rail .server-dot.plus:not(.active){background:#232428!important}
+  html body .server-rail .server-sep{height:2px;border-radius:2px;background:#26272b}
+  html body .dm-sidebar,html body .side,html body .server-sidebar{background-color:var(--ah-dh-panel)!important;border-radius:26px 0 0 0}
+  html body .dm-sidebar .user-panel,html body .side .user-panel,html body .server-sidebar .account-panel{background:var(--ah-dh-card)!important;border-radius:20px!important;height:62px!important;box-shadow:0 8px 28px rgba(0,0,0,.5)!important;border:0!important;margin-bottom:8px!important}
+  html body .dm-sidebar .user-panel>.avatar,html body .side .user-panel>.avatar,html body .server-sidebar .account-panel>.avatar,html body .server-sidebar .account-panel .account-avatar{width:44px!important;height:44px!important;box-shadow:0 0 0 2px var(--ah-dh-card),0 0 0 4px var(--accent,#3ddc97);overflow:visible;margin-right:14px!important;margin-left:4px!important;flex:0 0 44px}
+}
+</style>
+
+<style id="ah-pc-rail-css">
+/* PC: Discord-like squircle server rail */
+@media (min-width:821px){
+  html body .server-rail .server-dot,html body .server-rail .server-dot.active,html body .server-rail .server-dot.home-dot,html body .server-rail .server-dot:hover{border-radius:16px!important}
+  html body .server-rail .server-dot>span:not(.ah-mention-count){border-radius:inherit}
+}
+</style>
+
+<style id="ah-srv-tip-css">
+/* Discord-style hover card for server rail icons (PC only) */
+#ah-srv-tip{position:fixed;z-index:100000;left:0;top:0;pointer-events:none;opacity:0;transform:translateX(-4px) scale(.96);transform-origin:left center;transition:opacity .12s ease,transform .12s ease;max-width:280px;background:#111214;color:#f2f3f5;border-radius:8px;padding:8px 12px;box-shadow:0 8px 16px rgba(0,0,0,.45);font-family:inherit}
+#ah-srv-tip.show{opacity:1;transform:none}
+#ah-srv-tip::before{content:"";position:absolute;left:-5px;top:50%;margin-top:-6px;border:6px solid transparent;border-left:0;border-right:6px solid #111214}
+#ah-srv-tip .t{font-size:16px;font-weight:600;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#ah-srv-tip .s{display:none;margin-top:2px;font-size:12px;line-height:16px;color:#b5bac1;font-weight:500}
+#ah-srv-tip.has-sub .s{display:flex;align-items:center;gap:6px}
+#ah-srv-tip .s i{display:inline-block;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#f23f42;color:#fff;font:700 11px/16px inherit;font-style:normal;text-align:center;box-sizing:border-box}
+@media (max-width:820px),(hover:none){ #ah-srv-tip{display:none!important}}
+</style>
+<script id="ah-srv-tip-js">
+(function(){
+  if(window.__ahSrvTip)return;window.__ahSrvTip=1;
+  var mq=window.matchMedia&&window.matchMedia('(min-width:821px) and (hover:hover)');
+  var tip=document.createElement('div');tip.id='ah-srv-tip';tip.setAttribute('role','tooltip');
+  tip.innerHTML='<div class="t"></div><div class="s"></div>';
+  var T=tip.firstChild,S=tip.lastChild,cur=null,tm=0;
+  function mount(){if(!tip.parentNode)document.body.appendChild(tip);}
+  function hide(){clearTimeout(tm);cur=null;tip.classList.remove('show');}
+  function show(dot){
+    if(mq&&!mq.matches)return;
+    var name=dot.getAttribute('data-ah-title');
+    if(dot.hasAttribute('title')){name=dot.getAttribute('title')||name;dot.setAttribute('data-ah-title',name||'');if(!dot.hasAttribute('aria-label'))dot.setAttribute('aria-label',name||'');dot.removeAttribute('title');}
+    if(!name)return;
+    mount();cur=dot;T.textContent=name;
+    var n='';dot.querySelectorAll('.server-mention-badge').forEach(function(b){var v=(b.textContent||'').trim();if(!n&&!b.hidden&&v&&v!=='0')n=v;});
+    if(n&&dot.getAttribute('data-mention-server-id')){S.innerHTML='';var i=document.createElement('i');i.textContent=n;S.appendChild(i);S.appendChild(document.createTextNode(document.documentElement.lang==='en'?'new mentions':'нові згадки'));tip.classList.add('has-sub');}
+    else{S.innerHTML='';tip.classList.remove('has-sub');}
+    var r=dot.getBoundingClientRect();
+    tip.style.left=Math.round(r.right+16)+'px';
+    var h=tip.offsetHeight;
+    tip.style.top=Math.max(8,Math.min(innerHeight-h-8,Math.round(r.top+r.height/2-h/2)))+'px';
+    clearTimeout(tm);tm=setTimeout(function(){if(cur===dot)tip.classList.add('show');},60);
+  }
+  document.addEventListener('mouseover',function(e){
+    var d=e.target.closest&&e.target.closest('.server-rail .server-dot');
+    if(d){if(d!==cur)show(d);}else if(cur)hide();
+  },true);
+  document.addEventListener('mouseleave',hide,true);
+  document.addEventListener('click',function(e){if(cur)hide();},true);
+  document.addEventListener('scroll',function(){if(cur)hide();},true);
+  document.addEventListener('contextmenu',hide,true);
+})();
+</script>
 </body>
 </html>
