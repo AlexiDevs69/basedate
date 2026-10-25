@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.272.0",
+      "date": "2026-10-25",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: Discord-like profile styling and functionality."
+      ],
+      "source_sha": "de673e0a3542ca593593dc7a44ada10bfda36664"
+    },
+    {
       "version": "1.271.10",
       "date": "2026-10-25",
       "title": "Виправлення та стабільність",
