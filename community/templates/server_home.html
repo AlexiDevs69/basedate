@@ -11979,5 +11979,117 @@ html body .ah-v3-overlay.open .ah-v3-full,html body .ah-v3-mini.open{will-change
   html body .dm-sidebar .user-panel>.avatar,html body .side .user-panel>.avatar,html body .server-sidebar .account-panel>.avatar,html body .server-sidebar .account-panel .account-avatar{width:44px!important;height:44px!important;box-shadow:0 0 0 2px var(--ah-dh-card),0 0 0 4px var(--accent,#3ddc97);overflow:visible;margin-right:14px!important;margin-left:4px!important;flex:0 0 44px}
 }
 </style>
+
+
+
+
+
+<style id="ah-full-dc-css">
+.ah-dc-meta-title{margin-bottom:4px;font-size:12px;font-weight:700;color:#f2f3f5}
+.ah-dc-meta-val{display:flex;align-items:center;gap:8px;color:#dbdee1;font-size:14px}
+.ah-dc-meta-val svg{width:16px;height:16px;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:.8}
+/* Discord-like full profile: blurred banner backdrop, tinted left card, tabs on the right (PC) */
+.ah-dc-pane{display:none}
+@media (min-width:821px){
+  html body .ah-v3-overlay{background:rgba(0,0,0,.72)!important;padding:20px!important}
+  html body .ah-v3-overlay .ah-v3-full{width:min(1120px,calc(100vw - 40px))!important;height:min(88vh,820px)!important;max-height:none!important;border-radius:14px!important;border:1px solid rgba(255,255,255,.08)!important;grid-template-columns:400px minmax(0,1fr)!important;grid-template-rows:auto minmax(0,1fr)!important;background:#101012!important;box-shadow:0 24px 80px rgba(0,0,0,.7)!important;overflow:hidden!important}
+  html body .ah-v3-overlay .ah-v3-full::before{content:"";position:absolute;inset:-60px;background:var(--ah-fbg,linear-gradient(135deg,var(--ah-c1,#5865f2),var(--ah-c2,#9b5cf6))) center/cover no-repeat;filter:blur(34px) saturate(1.3);opacity:.5;z-index:0;pointer-events:none}
+  html body .ah-v3-overlay .ah-v3-full::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(12,12,14,.42),rgba(12,12,14,.8));z-index:0;pointer-events:none}
+  html body .ah-v3-overlay .ah-v3-full-topbar{position:relative;z-index:2}
+  html body .ah-v3-overlay .ah-v3-close{top:16px!important;right:16px!important;width:34px!important;height:34px!important;border-radius:8px!important;background:rgba(0,0,0,.45)!important;z-index:6!important;font-size:20px!important}
+  html body .ah-v3-overlay .ah-v3-close:hover{background:rgba(255,255,255,.14)!important}
+
+  /* left profile card */
+  html body .ah-v3-overlay .ah-v3-full-left{position:relative!important;z-index:1;grid-row:2;margin:0!important;padding:20px 0 20px 20px!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;min-height:0!important;overflow-x:hidden!important;overflow-y:auto!important;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.18) transparent}
+  html body .ah-v3-overlay .ah-v3-full-profile-card{border-radius:12px!important;border:1px solid rgba(255,255,255,.08)!important;background:linear-gradient(180deg,color-mix(in srgb,var(--ah-c1,#5865f2) 52%,#15161a) 0,color-mix(in srgb,var(--ah-c1,#5865f2) 20%,#15161a) 52%,#15161a 100%)!important;box-shadow:0 8px 28px rgba(0,0,0,.35)!important}
+  html body .ah-v3-overlay .ah-v3-full-banner{height:136px!important}
+  html body .ah-v3-overlay .ah-v3-full-avatar{width:112px!important;height:112px!important;border-width:7px!important;border-color:color-mix(in srgb,var(--ah-c1,#5865f2) 50%,#15161a)!important;font-size:38px!important}
+  html body .ah-v3-overlay .ah-v3-full-avatar .presence{width:26px!important;height:26px!important;border-width:5px!important;right:2px!important;bottom:6px!important;border-color:color-mix(in srgb,var(--ah-c1,#5865f2) 50%,#15161a)!important}
+  html body .ah-v3-overlay .ah-v3-full-name-row{margin-top:10px!important}
+  html body .ah-v3-overlay .ah-v3-full-name{font-size:26px!important;line-height:1.15!important;margin-top:0!important;letter-spacing:0!important}
+  html body .ah-v3-overlay .ah-v3-full-handle{font-size:14px!important;color:#dbdee1!important;margin-top:4px!important}
+
+  /* actions: add friend (wide, tinted) + icon buttons */
+  html body .ah-v3-overlay .ah-v3-full-actions{gap:8px!important;margin-top:16px!important}
+  html body .ah-v3-overlay .ah-v3-friend-action{order:0;height:36px!important}
+  html body .ah-v3-overlay .ah-v3-friend-action.state-none,html body .ah-v3-overlay .ah-v3-friend-action.state-pending_received{background:color-mix(in srgb,var(--ah-c1,#5865f2) 78%,#000)!important;padding:0 14px!important;font-size:14px!important;font-weight:600!important;border-radius:8px!important;gap:8px}
+  html body .ah-v3-overlay .ah-v3-friend-action.state-none:hover{background:color-mix(in srgb,var(--ah-c1,#5865f2) 62%,#000)!important}
+  html body .ah-v3-overlay #ah-v3-full-message{order:1;width:36px!important;min-width:36px!important;height:36px!important;padding:0!important;border-radius:8px!important;background:rgba(255,255,255,.12)!important}
+  html body .ah-v3-overlay #ah-v3-full-message span{display:none!important}
+  html body .ah-v3-overlay #ah-v3-full-message svg{width:18px!important;height:18px!important}
+  html body .ah-v3-overlay #ah-v3-full-message:hover{background:rgba(255,255,255,.2)!important}
+  html body .ah-v3-overlay .ah-v3-full-icon-button{order:2;width:36px!important;height:36px!important;border-radius:8px!important;background:rgba(255,255,255,.12)!important}
+  html body .ah-v3-overlay .ah-v3-full-icon-button:hover{background:rgba(255,255,255,.2)!important}
+  html body .ah-v3-overlay .ah-v3-full-icon-button svg{width:20px!important;height:20px!important}
+
+  /* about / member since */
+  html body .ah-v3-overlay .ah-v3-full-about-block{margin-top:20px!important}
+  html body .ah-v3-overlay .ah-v3-full-section-title,html body .ah-v3-overlay .ah-dc-meta-title{margin-bottom:6px!important;color:#f2f3f5!important;font-size:12px!important;font-weight:700!important;text-transform:none!important;letter-spacing:0!important}
+  html body .ah-v3-overlay #ah-v3-full-about{color:#dbdee1!important;font-size:14px!important;line-height:1.4!important}
+  html body .ah-v3-overlay .ah-v3-full-meta{margin-top:20px!important;font-size:14px!important;color:#dbdee1!important}
+
+  /* right column */
+  html body .ah-v3-overlay .ah-v3-full-right{position:relative!important;z-index:1;grid-row:2;background:transparent!important;padding:26px 28px 22px 26px!important}
+  html body .ah-v3-overlay .ah-v3-full-tabs{height:44px!important;gap:22px!important;border-bottom:1px solid rgba(255,255,255,.12)!important;margin-right:44px}
+  html body .ah-v3-overlay .ah-v3-full-tabs>span,html body .ah-v3-overlay .ah-v3-full-tabs>button{height:44px!important;font-size:14px!important;font-weight:600!important;color:#b5bac1!important;cursor:pointer;transition:color .12s;font-family:inherit}
+  html body .ah-v3-overlay .ah-v3-full-tabs>span:hover,html body .ah-v3-overlay .ah-v3-full-tabs>button:hover{color:#f2f3f5!important}
+  html body .ah-v3-overlay .ah-v3-full-tabs>span.active,html body .ah-v3-overlay .ah-v3-full-tabs>button.active{color:#fff!important}
+  html body .ah-v3-overlay .ah-v3-mutual-list{padding-top:18px!important;padding-right:6px!important}
+  html body .ah-v3-overlay .ah-v3-mutual-row{background:rgba(255,255,255,.055)!important;border-radius:12px!important;padding:10px 12px!important;margin:0!important;min-height:64px}
+  html body .ah-v3-overlay .ah-v3-mutual-row:hover{background:rgba(255,255,255,.1)!important;transform:none!important}
+  html body .ah-v3-overlay .ah-v3-mutual-empty{min-height:240px;border-radius:12px;background:rgba(255,255,255,.04)}
+  /* activity pane */
+  html body .ah-v3-overlay .ah-v3-full-right.ah-dc-act .ah-v3-mutual-list,html body .ah-v3-overlay .ah-v3-full-right.ah-dc-act #ah-profile-board-panel{display:none!important}
+  html body .ah-v3-overlay .ah-v3-full-right.ah-dc-act .ah-dc-pane{display:block}
+  .ah-dc-pane{padding-top:18px;overflow:auto}
+  .ah-dc-pane h4{margin:0 0 10px;font-size:12px;font-weight:700;color:#f2f3f5}
+  .ah-dc-card{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:12px;background:rgba(255,255,255,.055);color:#dbdee1}
+  .ah-dc-card i{display:grid;place-items:center;width:52px;height:52px;border-radius:10px;background:rgba(255,255,255,.08);font-style:normal;font-size:22px;flex:0 0 auto}
+  .ah-dc-card b{display:block;font-size:15px;font-weight:700;color:#f2f3f5}
+  .ah-dc-card small{display:block;margin-top:2px;font-size:13px;color:#b5bac1}
+}
+</style>
+<script id="ah-full-dc-js">
+(function(){
+  var ov=document.getElementById('ah-v3-overlay');
+  if(!ov||ov.__ahDc)return;ov.__ahDc=1;
+  var full=ov.querySelector('.ah-v3-full'),right=ov.querySelector('.ah-v3-full-right'),tabs=ov.querySelector('.ah-v3-full-tabs');
+  if(!full||!right||!tabs)return;
+  var L=(document.documentElement.lang||'uk').slice(0,2).toLowerCase();
+  var T={uk:{act:'Активність',recent:'Недавня активність',none:'Поки що немає активності',noneSub:'Тут з’являтиметься те, чим користувач зараз займається'},
+         ru:{act:'Активность',recent:'Недавняя активность',none:'Пока нет активности',noneSub:'Здесь появится то, чем пользователь сейчас занят'},
+         en:{act:'Activity',recent:'Recent Activity',none:'No activity yet',noneSub:'What the user is up to will show up here'}}[L]||{act:'Активність',recent:'Недавня активність',none:'Поки що немає активності',noneSub:'Тут з’являтиметься те, чим користувач зараз займається'};
+  var actTab=document.createElement('span');actTab.id='ah-dc-act-tab';actTab.textContent=T.act;tabs.insertBefore(actTab,tabs.firstChild);
+  var pane=document.createElement('div');pane.className='ah-dc-pane';
+  pane.innerHTML='<h4></h4><div class="ah-dc-card"><i>🎮</i><div><b></b><small></small></div></div>';
+  pane.querySelector('h4').textContent=T.recent;pane.querySelector('b').textContent=T.none;pane.querySelector('small').textContent=T.noneSub;
+  right.appendChild(pane);
+  function pick(act){
+    right.classList.toggle('ah-dc-act',!!act);
+    if(act){Array.prototype.forEach.call(tabs.children,function(c){c.classList.toggle('active',c===actTab);});}
+    else actTab.classList.remove('active');
+  }
+  tabs.addEventListener('click',function(e){
+    var s=e.target.closest&&e.target.closest('span,button');if(!s||s.parentNode!==tabs)return;
+    if(s===actTab)pick(true);else pick(false);
+  },true);
+  var CAL='<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>';
+  function sync(){
+    if(!ov.classList.contains('open'))return;
+    var b=document.getElementById('ah-v3-full-banner');
+    if(b&&b.style.backgroundImage)full.style.setProperty('--ah-fbg',b.style.backgroundImage);
+    var m=document.getElementById('ah-v3-full-meta');
+    if(m&&!m.querySelector('.ah-dc-meta-val')){
+      var t=(m.textContent||'').trim(),i=t.indexOf(': ');
+      if(i>0){var k=t.slice(0,i),v=t.slice(i+2);m.textContent='';
+        var a=document.createElement('div');a.className='ah-dc-meta-title';a.textContent=k;
+        var c=document.createElement('div');c.className='ah-dc-meta-val';c.innerHTML=CAL;c.appendChild(document.createTextNode(v));
+        m.appendChild(a);m.appendChild(c);}
+    }
+    pick(false);
+  }
+  new MutationObserver(sync).observe(ov,{attributes:true,attributeFilter:['class']});
+})();
+</script>
 </body>
 </html>
