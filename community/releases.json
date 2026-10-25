@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.275.0",
+      "date": "2026-10-25",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: full profile view styles and scripts."
+      ],
+      "source_sha": "895bb71725eea5274f1165d9862cf17ee71a9072"
+    },
+    {
       "version": "1.274.0",
       "date": "2026-10-25",
       "title": "Нові можливості AlexiHub",
