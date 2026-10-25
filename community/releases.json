@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.273.0",
+      "date": "2026-10-25",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: styles and scripts for full profile overlay."
+      ],
+      "source_sha": "01d08d960373c9e334b1423d39d734a716c119c7"
+    },
+    {
       "version": "1.272.0",
       "date": "2026-10-25",
       "title": "Нові можливості AlexiHub",
