@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.276.13",
+      "date": "2026-10-26",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Clean up travel.html by removing unused styles and scripts."
+      ],
+      "source_sha": "0259b1f2c2302d72b42ddde46020dbdef19ad20a"
+    },
+    {
       "version": "1.276.12",
       "date": "2026-10-26",
       "title": "Оновлення AlexiHub",
