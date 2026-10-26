@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.276.17",
+      "date": "2026-10-26",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Remove mobile profile sheet code from dm_chat.html."
+      ],
+      "source_sha": "8a482bbe80a162b9fc8c41b8b40a6c6afcd8c4ca"
+    },
+    {
       "version": "1.276.16",
       "date": "2026-10-26",
       "title": "Виправлення та стабільність",
