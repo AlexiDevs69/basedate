@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.276.16",
+      "date": "2026-10-26",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Delete mobile profile sheet from home template."
+      ],
+      "source_sha": "0b9a509740657c7f6c9adcd06f461ca0d4b8261c"
+    },
+    {
       "version": "1.276.15",
       "date": "2026-10-26",
       "title": "Виправлення та стабільність",
