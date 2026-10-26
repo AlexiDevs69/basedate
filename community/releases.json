@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.276.14",
+      "date": "2026-10-26",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Clean up unused styles and scripts in server_home.html."
+      ],
+      "source_sha": "28ca6e795f6542bfedfeedea0e2616b4f8a6e533"
+    },
+    {
       "version": "1.276.13",
       "date": "2026-10-26",
       "title": "Виправлення та стабільність",
