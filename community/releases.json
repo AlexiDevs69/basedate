@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.276.12",
+      "date": "2026-10-26",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: mobile profile sheet and remove old styles."
+      ],
+      "source_sha": "61e3efdc99aac1a2e7fa2c1427f613c9bdb27583"
+    },
+    {
       "version": "1.276.11",
       "date": "2026-10-26",
       "title": "Оновлення AlexiHub",
