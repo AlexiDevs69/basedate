@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.281.0",
+      "date": "2026-10-27",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: mobile sheet for user profile interactions."
+      ],
+      "source_sha": "3c058be129c73a2340624579dd5873c64fa3ebe0"
+    },
+    {
       "version": "1.280.0",
       "date": "2026-10-27",
       "title": "Нові можливості AlexiHub",
