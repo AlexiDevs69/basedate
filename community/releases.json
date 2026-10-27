@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.277.0",
+      "date": "2026-10-27",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: mobile user profile sheet."
+      ],
+      "source_sha": "7c9035507bb2ebd16cb666b3db06e2c7fffae96f"
+    },
+    {
       "version": "1.276.17",
       "date": "2026-10-26",
       "title": "Виправлення та стабільність",
