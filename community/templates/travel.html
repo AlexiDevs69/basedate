@@ -8898,6 +8898,11 @@ html body .ah-v3-overlay.open .ah-v3-full,html body .ah-v3-mini.open{will-change
   /* identity */
   #ah-you .ahy-name{margin:10px 16px 0;font-size:22px;line-height:1.15;font-weight:800;letter-spacing:-.02em;overflow-wrap:anywhere}
   #ah-you .ahy-handle{margin:3px 16px 0;font-size:14px;font-weight:600;color:var(--ahy-muted);overflow-wrap:anywhere}
+  /* header layout = desktop mini profile: avatar on the RIGHT (half over the banner), name + @handle on the LEFT at avatar level */
+  #ah-you .ahy-head{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:10px;align-items:start;padding:0 16px;position:relative;z-index:1}
+  #ah-you .ahy-head > .ahy-top{grid-column:2;grid-row:1 / span 2;justify-self:end;padding:0;margin:-44px 0 0 0}
+  #ah-you .ahy-head > .ahy-name{grid-column:1;grid-row:1;align-self:end;margin:0;padding-top:10px;min-width:0}
+  #ah-you .ahy-head > .ahy-handle{grid-column:1;grid-row:2;align-self:start;margin:3px 0 0;min-width:0}
   #ah-you .ahy-edit{
     display:flex;align-items:center;justify-content:center;gap:8px;width:calc(100% - 32px);height:40px;margin:16px 16px 0;
     border:0;border-radius:10px;background:var(--ahy-accent);color:#fff;font-size:15px;font-weight:600;cursor:pointer;
@@ -8975,12 +8980,13 @@ html body .ah-v3-overlay.open .ah-v3-full,html body .ah-v3-mini.open{will-change
         <button type="button" class="ahy-close" id="ahy-close"><svg fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><use href="#ahy-i-close"/></svg></button>
       </div>
 
-      <div class="ahy-top">
-        <div class="ahy-avatar" id="ahy-avatar"><span id="ahy-initial"></span><i class="ahy-dot ahy-avstatus" id="ahy-avstatus" data-s="online"></i></div>
+      <div class="ahy-head">
+        <div class="ahy-top">
+          <div class="ahy-avatar" id="ahy-avatar"><span id="ahy-initial"></span><i class="ahy-dot ahy-avstatus" id="ahy-avstatus" data-s="online"></i></div>
+        </div>
+        <div class="ahy-name" id="ahy-name"></div>
+        <div class="ahy-handle" id="ahy-handle"></div>
       </div>
-
-      <div class="ahy-name" id="ahy-name"></div>
-      <div class="ahy-handle" id="ahy-handle"></div>
 
       <button type="button" class="ahy-edit" id="ahy-edit"><svg fill="currentColor"><use href="#ahy-i-edit"/></svg><span id="ahy-edit-label"></span></button>
 
