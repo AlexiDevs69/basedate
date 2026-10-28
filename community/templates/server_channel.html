@@ -148,6 +148,20 @@
   var RESUME_MS = 45 * 1000;       // після такої паузи "будимо" сторінку (focus / ah:resume)
   var api = null;
 
+  // PHONE / TOUCH: no hidden-iframe page cache. Each cached iframe is a full copy of this huge page
+  // (all scripts, observers, timers) running on the SAME main thread as the visible page, so loading
+  // or keeping them freezes scrolling / profile sheets on phones. Use plain native navigation instead.
+  var PHONE = false;
+  try{
+    PHONE = !!(window.matchMedia && (window.matchMedia('(max-width:820px)').matches ||
+      window.matchMedia('(hover:none) and (pointer:coarse)').matches));
+  }catch(e){}
+  if(PHONE && !IN_FRAME){
+    window.__ahInvalidate = function(){};
+    window.__ahGo = function(url){ try{ location.href = url; }catch(e){} };
+    return;
+  }
+
   function parse(href){
     try{
       var u = new URL(href, location.href);
@@ -14300,7 +14314,7 @@ html[data-theme="light"] body .ah-v3-mini.ah-profile-theme #ah-v3-status{border-
   function init(){
     enhance();
     document.addEventListener('click',onClick);
-    if(window.MutationObserver)new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true});
+    if(window.MutationObserver)new MutationObserver(function(recs){var P=window.__ahPerf;if(P&&!P.touchesMessages(recs))return;schedule();}).observe(document.body,{childList:true,subtree:true});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
   window.AhVoiceToText={transcribe:transcribe};
@@ -14356,7 +14370,7 @@ html[data-theme="light"] .ah-reply-action:hover{background:#e3e5e8;color:#111318
   function init(){
     enhance();
     document.addEventListener('click',onClick,true);
-    if(window.MutationObserver)new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true});
+    if(window.MutationObserver)new MutationObserver(function(recs){var P=window.__ahPerf;if(P&&!P.touchesMessages(recs))return;schedule();}).observe(document.body,{childList:true,subtree:true});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
@@ -15695,7 +15709,8 @@ html[data-theme="light"] .ah-date-island{background:rgba(255,255,255,.88);border
 
   // Hydrate rows that are added later (realtime messages, history loading).
   var pending=false;
-  var observer=new MutationObserver(function(){
+  var observer=new MutationObserver(function(recs){
+    var P=window.__ahPerf;if(P&&!P.touchesMessages(recs))return;
     if(pending)return;
     pending=true;
     setTimeout(function(){pending=false;hydrate(document)},60);
@@ -16464,15 +16479,21 @@ html[data-theme="light"] .ah-date-island{background:rgba(255,255,255,.88);border
       });
     });
   }
+  /* at most 2 GIF/WebP decodes at a time (many animated avatars decoded in parallel = jank + memory spike on phones) */
+  var gfActive=0,gfWait=[];
+  function gfAcquire(){return new Promise(function(res){if(gfActive<2){gfActive++;res();}else gfWait.push(res);});}
+  function gfRelease(){var n=gfWait.shift();if(n)n();else gfActive--;}
   function getFrozen(url,kind){
     if(cache[url])return cache[url];
-    cache[url]=fetch(url,{credentials:'same-origin'}).then(function(r){
-      if(!r.ok)throw 0;
-      return r.blob();
-    }).then(function(b){
-      if(kind==='sniff')return sniff(b).then(function(ok){return ok?firstFrame(b):null;});
-      return firstFrame(b);
-    }).catch(function(){return null;});
+    cache[url]=gfAcquire().then(function(){
+      return fetch(url,{credentials:'same-origin'}).then(function(r){
+        if(!r.ok)throw 0;
+        return r.blob();
+      }).then(function(b){
+        if(kind==='sniff')return sniff(b).then(function(ok){return ok?firstFrame(b):null;});
+        return firstFrame(b);
+      }).catch(function(){return null;}).then(function(v){gfRelease();return v;});
+    });
     return cache[url];
   }
 
@@ -18143,6 +18164,17 @@ html.ah-recording #dm-record-timer,html.ah-recording #composer-record-timer{visi
   }
   #ah-you .ahy-badge[hidden]{display:none}
 
+  /* server tag + profile badges (same data as the desktop mini profile) */
+  #ah-you .ahy-chips{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 16px 0}
+  #ah-you .ahy-chips[hidden],#ah-you .ahy-tag[hidden],#ah-you .ahy-badges[hidden]{display:none}
+  #ah-you .ahy-tag{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px;max-width:100%;border-radius:8px;background:var(--ahy-card);border:1px solid var(--ahy-line);font-size:13px;font-weight:800;line-height:1;white-space:nowrap}
+  #ah-you .ahy-tag b{flex:0 0 auto;color:#df67ec;font-size:13px}
+  #ah-you .ahy-tag span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+  #ah-you .ahy-badges{display:inline-flex;align-items:center;gap:12px;height:28px;padding:0 12px;border-radius:8px;background:var(--ahy-card);border:1px solid var(--ahy-line)}
+  #ah-you .ahy-badges>*{margin:0!important;top:0!important;vertical-align:middle!important;width:20px!important;height:20px!important}
+  #ah-you .ahy-badges svg{width:20px!important;height:20px!important}
+  #ah-you .ahy-badges .ah-nitro-medal{width:20px!important;height:20px!important}
+
   @media (prefers-reduced-motion:reduce){
     #ah-you .ahy-scrim,#ah-you .ahy-sheet{transition:none}
   }
@@ -18175,6 +18207,11 @@ html.ah-recording #dm-record-timer,html.ah-recording #composer-record-timer{visi
         </div>
         <div class="ahy-name" id="ahy-name"></div>
         <div class="ahy-handle" id="ahy-handle"></div>
+      </div>
+
+      <div class="ahy-chips" id="ahy-chips" hidden>
+        <span class="ahy-tag" id="ahy-tag" hidden><b></b><span></span></span>
+        <div class="ahy-badges" id="ahy-badges" role="group" aria-label="Badges" hidden></div>
       </div>
 
       <button type="button" class="ahy-edit" id="ahy-edit"><svg fill="currentColor"><use href="#ahy-i-edit"/></svg><span id="ahy-edit-label"></span></button>
@@ -18319,10 +18356,69 @@ html.ah-recording #dm-record-timer,html.ah-recording #composer-record-timer{visi
     }catch(e){ plusAt = 0; }
   }
 
+  /* ---------- server tag + badges (verified / Plus / gifter), pronouns ---------- */
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function verifiedBadge(){
+    var title = T('common.text.bed_alexihub_participant_alexihub', 'Verified');
+    return '<span class="ah-verified-profile-badge" data-title="' + esc(title) + '" title="' + esc(title) + '" tabindex="0" aria-label="' + esc(title) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor"><path d="M14.68 3.03a5.02 5.02 0 0 0-5.43 6.55L3.53 15.3a2.45 2.45 0 0 0 3.47 3.47l5.73-5.72a5.02 5.02 0 0 0 6.53-5.45l-2.72 2.72-2.85-.76-.76-2.85 2.75-2.68Z"/><path d="m4.14 4.08 1.4-1.4 3.03 2.14-.63.63 2.37 2.37-1.82 1.82-2.37-2.37-.63.63-2.15-3.02.8-.8Z"/><path d="m11.45 12.88 1.83-1.83 7.13 7.13a1.29 1.29 0 0 1-1.83 1.82l-7.13-7.12Z"/></g></svg></span>';
+  }
+  function plusBadgeHtml(){
+    var title = T('common.text.a_subscription', '') + 'AlexiHub Plus';
+    return '<span class="ah-nitro-profile-badge tier-basic" title="' + esc(title) + '" data-title="' + esc(title) + '" data-nitro-tier="basic" tabindex="0" aria-label="' + esc(title) + '"><span class="ah-nitro-medal"></span></span>';
+  }
+  function gifterBadge(g){
+    var tier = ['legend','philanthropist','icon'].indexOf(String(g.tier || '')) > -1 ? String(g.tier) : 'legend';
+    var names = {legend:T('common.text.legend','Legend'), philanthropist:T('common.text.the_philanthropist','Philanthropist'), icon:T('common.text.icon','Icon')};
+    var title = String(g.title || (T('common.text.gifts_level', '') + names[tier] + '»'));
+    return '<span class="ah-gifter-profile-badge gifter-tier-' + esc(tier) + '" data-gifter-tier="' + esc(tier) + '" data-gifter-count="' + Number(g.count || 0) + '" data-title="' + esc(title) + '" tabindex="0" aria-label="' + esc(title) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="ah-gift-box" d="M5 12.2h14v8.3H5z"/><path class="ah-gift-lid" d="M3.7 8.3h16.6v4.4H3.7z"/><path class="ah-gift-ribbon" d="M12 8.5v12M12 8.5c-1.5-3.7-5.6-3.6-5.4-.8.1 1.6 2.1 2.1 5.4.8Zm0 0c1.5-3.7 5.6-3.6 5.4-.8-.1 1.6-2.1 2.1-5.4.8Z"/><path class="ah-gift-spark" d="m19.5 4 .55 1.45L21.5 6l-1.45.55L19.5 8l-.55-1.45L17.5 6l1.45-.55Z"/></svg></span>';
+  }
+  var extras = null, extrasAt = 0, extrasPanel = null;
+  function renderExtras(){
+    var chips = $('ahy-chips'), tagEl = $('ahy-tag'), badgesEl = $('ahy-badges'); if(!chips || !tagEl || !badgesEl) return;
+    var tag = null, html = '', pronouns = '';
+    if(extras){
+      var b = extras.badges || {}, sub = b.nitro || {};
+      if(b.verified) html += verifiedBadge();
+      if(sub.active) html += plusBadgeHtml();
+      if(sub.gifting && sub.gifting.active) html += gifterBadge(sub.gifting);
+      var list = (extras.boosts && Array.isArray(extras.boosts.servers)) ? extras.boosts.servers : (Array.isArray(extras.servers) ? extras.servers : []);
+      for(var i = 0; i < list.length; i++){
+        var sv = list[i];
+        if(sv && sv.tag && sv.tag.active && sv.tag_selected){
+          tag = {glyph:String(sv.tag.icon_glyph || sv.tag.glyph || '◆'), text:String(sv.tag.text || sv.tag.tag_text || ''), title:String(sv.name || '')};
+          break;
+        }
+      }
+      pronouns = String((extras.profile && extras.profile.pronouns) || '').trim().slice(0, 40);
+    }
+    if(!tag && extrasPanel && extrasPanel.dataset && extrasPanel.dataset.miniTagText){
+      tag = {glyph:extrasPanel.dataset.miniTagGlyph || '◆', text:extrasPanel.dataset.miniTagText, title:''};
+    }
+    if(tag && tag.text){
+      tagEl.querySelector('b').textContent = tag.glyph; tagEl.querySelector('span').textContent = tag.text;
+      tagEl.title = tag.title || ''; tagEl.hidden = false;
+    } else tagEl.hidden = true;
+    if(badgesEl.dataset.html !== html){ badgesEl.innerHTML = html; badgesEl.dataset.html = html; }
+    badgesEl.hidden = !html;
+    chips.hidden = tagEl.hidden && badgesEl.hidden;
+    var uname = (extrasPanel && extrasPanel.dataset && extrasPanel.dataset.miniUsername) || '';
+    if(uname) el.handle.textContent = '@' + uname + (pronouns ? ' · ' + pronouns : '');
+  }
+  function loadExtras(panel){
+    extrasPanel = panel; renderExtras();
+    if(Date.now() - extrasAt < 30000) return; extrasAt = Date.now();
+    try{
+      fetch('/community/api/profile/customizer', {credentials:'same-origin', headers:{Accept:'application/json'}, cache:'no-store'})
+        .then(function(r){ return r.json(); })
+        .then(function(data){ if(!data || !data.ok) throw 0; extras = data; renderExtras(); })
+        .catch(function(){ extrasAt = 0; });
+    }catch(e){ extrasAt = 0; }
+  }
+
   /* ---------- open / close ---------- */
   var isOpen = false, lastFocus = null;
   function open(panel){
-    fill(panel); loadPlus();
+    fill(panel); loadPlus(); loadExtras(panel);
     lastFocus = document.activeElement;
     isOpen = true; root.classList.add('open'); root.setAttribute('aria-hidden', 'false');
     el.scroll.scrollTop = 0;
@@ -18434,5 +18530,11 @@ html.ah-recording #dm-record-timer,html.ah-recording #composer-record-timer{visi
 })();
 </script>
 <!-- AH-YOU-SHEET:END -->
+<style id="ah-phone-perf-final-css">
+/* phones / touch: no live backdrop blur anywhere (very expensive on mobile GPUs: freezes scroll + sheets) */
+@media (max-width:820px),(hover:none) and (pointer:coarse){
+:root:root:root *,:root:root:root *::before,:root:root:root *::after{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+}
+</style>
 </body>
 </html>
