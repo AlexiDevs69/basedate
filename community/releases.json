@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.281.13",
+      "date": "2026-10-28",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update header layout to grid for profile section."
+      ],
+      "source_sha": "78a207749182b7346bfb18743f6a1dd808942d60"
+    },
+    {
       "version": "1.281.12",
       "date": "2026-10-28",
       "title": "Виправлення та стабільність",
