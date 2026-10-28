@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.281.5",
+      "date": "2026-10-28",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update travel.html."
+      ],
+      "source_sha": "4b3af6f79cb64005c7e4d0ef696e5c40ce9d41f3"
+    },
+    {
       "version": "1.281.4",
       "date": "2026-10-28",
       "title": "Оновлення AlexiHub",
