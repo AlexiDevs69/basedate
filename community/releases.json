@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.281.17",
+      "date": "2026-10-29",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance mobile support and badge rendering."
+      ],
+      "source_sha": "0cb5b087ea458cc77023d0e028d2f8589f1b0331"
+    },
+    {
       "version": "1.281.16",
       "date": "2026-10-29",
       "title": "Виправлення та стабільність",
