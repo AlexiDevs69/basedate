@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.281.12",
+      "date": "2026-10-28",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update header layout for desktop mini profile."
+      ],
+      "source_sha": "01a36a36a94a8bef0b11a93d2ccd9425881b2a2b"
+    },
+    {
       "version": "1.281.11",
       "date": "2026-10-28",
       "title": "Виправлення та стабільність",
