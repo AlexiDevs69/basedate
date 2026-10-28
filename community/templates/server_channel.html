@@ -18014,53 +18014,76 @@ html.ah-recording #dm-record-timer,html.ah-recording #composer-record-timer{visi
 
   #ah-you{
     display:block;position:fixed;inset:0;z-index:20000;visibility:hidden;pointer-events:none;
-    --ahy-accent:#5865f2;--ahy-bg:var(--main,#141414);--ahy-card:var(--panel,#1c1c1c);--ahy-text:var(--text,#f4f4f5);
-    --ahy-muted:var(--muted,#9ca3af);--ahy-line:var(--border,#2f3634);--ahy-c1:#5865f2;--ahy-c2:#9b5cf6;
+    --ahy-accent:#5865f2;--ahy-bg:#101012;--ahy-card:#1c1c1e;--ahy-bar:#1d1d1f;--ahy-peek:#212123;
+    --ahy-text:#f2f3f5;--ahy-muted:#a3a3ab;--ahy-line:#28282b;--ahy-c1:#000;--ahy-c2:#000;
+    --ahy-top:calc(max(env(safe-area-inset-top,0px),10px) + 14px);
     font-family:var(--font,'Inter',system-ui,sans-serif);color:var(--ahy-text);-webkit-tap-highlight-color:transparent;
+  }
+  html[data-theme="light"] #ah-you{
+    --ahy-bg:#ffffff;--ahy-card:#f2f3f5;--ahy-bar:#f2f3f5;--ahy-peek:#dfe1e5;
+    --ahy-text:#060607;--ahy-muted:#5d6068;--ahy-line:#e1e3e7;
   }
   #ah-you.open{visibility:visible;pointer-events:auto}
   #ah-you *{box-sizing:border-box}
-  #ah-you button{font:inherit;color:inherit;margin:0}
+  #ah-you button{font:inherit;color:inherit;margin:0;outline:none}
+  #ah-you .ahy-sheet:focus{outline:none}
+  #ah-you button:focus-visible{outline:2px solid var(--ahy-accent);outline-offset:2px}
 
   #ah-you .ahy-scrim{position:absolute;inset:0;background:rgba(0,0,0,.62);opacity:0;transition:opacity .26s ease}
   #ah-you.open .ahy-scrim{opacity:1}
 
+  /* the sheet itself; the "peek" strip behind its top edge is the stacked-sheet look */
   #ah-you .ahy-sheet{
-    position:absolute;left:0;right:0;bottom:0;top:max(env(safe-area-inset-top,0px),10px);
-    background:var(--ahy-bg);border-radius:20px 20px 0 0;overflow:hidden;
+    position:absolute;left:0;right:0;bottom:0;top:var(--ahy-top);
     transform:translate3d(0,100%,0);transition:transform .3s cubic-bezier(.22,.8,.28,1);will-change:transform;
+  }
+  #ah-you .ahy-sheet:before{
+    content:"";position:absolute;z-index:-1;left:18px;right:18px;top:-11px;height:30px;border-radius:16px 16px 0 0;background:var(--ahy-peek);
   }
   #ah-you.open .ahy-sheet{transform:none}
   #ah-you.ahy-drag .ahy-sheet{transition:none}
 
   #ah-you .ahy-scroll{
     position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;
-    padding-bottom:calc(112px + env(safe-area-inset-bottom,0px));
+    background:var(--ahy-bg);border-radius:18px 18px 0 0;
+    padding-bottom:calc(116px + env(safe-area-inset-bottom,0px));
   }
 
   /* banner + close */
-  #ah-you .ahy-banner{position:relative;height:148px;background:linear-gradient(135deg,var(--ahy-c1),var(--ahy-c2));background-size:cover;background-position:center}
-  #ah-you .ahy-banner:after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.18),transparent 45%,rgba(0,0,0,.22))}
+  #ah-you .ahy-banner{
+    position:relative;height:132px;border-radius:18px 18px 0 0;background-color:#000;
+    background-image:linear-gradient(135deg,var(--ahy-c1),var(--ahy-c2));background-size:cover;background-position:center;
+  }
+  #ah-you .ahy-banner:after{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(to bottom,rgba(0,0,0,.3),transparent 55%)}
   #ah-you .ahy-close{
-    position:absolute;z-index:2;top:12px;left:12px;width:38px;height:38px;border:0;border-radius:50%;padding:0;
-    display:grid;place-items:center;background:rgba(0,0,0,.45);color:#fff;cursor:pointer;
-    -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+    position:absolute;z-index:2;top:10px;left:10px;width:40px;height:40px;border:0;border-radius:50%;padding:0;
+    display:grid;place-items:center;background:transparent;color:#fff;cursor:pointer;
   }
-  #ah-you .ahy-close:active{background:rgba(0,0,0,.65)}
-  #ah-you .ahy-close svg{width:20px;height:20px}
+  #ah-you .ahy-close:active{background:rgba(255,255,255,.16)}
+  #ah-you .ahy-close svg{width:22px;height:22px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}
 
-  /* avatar + status pill */
-  #ah-you .ahy-top{display:flex;align-items:flex-end;gap:10px;padding:0 16px;margin-top:-46px;position:relative;z-index:1}
+  /* avatar + status "thought bubble" */
+  #ah-you .ahy-top{display:flex;align-items:flex-start;gap:7px;padding:0 16px 0 11px;margin-top:-42px;position:relative;z-index:1}
   #ah-you .ahy-avatar{
-    position:relative;flex:0 0 auto;width:92px;height:92px;border-radius:50%;border:6px solid var(--ahy-bg);
-    background:var(--panel2,#232323) center/cover no-repeat;display:grid;place-items:center;
-    font-size:34px;font-weight:800;color:var(--ahy-text);
+    position:relative;flex:0 0 auto;width:84px;height:84px;border-radius:50%;border:5px solid var(--ahy-bg);
+    background:var(--ahy-card) center/cover no-repeat;display:grid;place-items:center;
+    font-size:30px;font-weight:800;color:var(--ahy-text);
   }
-  #ah-you .ahy-avatar .ahy-avstatus{position:absolute;right:-5px;bottom:-3px;width:28px;height:28px;border-radius:50%;border:5px solid var(--ahy-bg)}
+  #ah-you .ahy-avatar .ahy-avstatus{
+    position:absolute;right:-4px;bottom:-4px;width:28px;height:28px;border-radius:50%;border:4px solid var(--ahy-bg);overflow:hidden;
+  }
+  #ah-you .ahy-avstatus:after{content:"";position:absolute;display:none;background:var(--ahy-bg)}
+  #ah-you .ahy-avstatus[data-s="dnd"]:after{display:block;left:50%;top:50%;width:10px;height:3px;margin:-1.5px 0 0 -5px;border-radius:2px}
+  #ah-you .ahy-avstatus[data-s="idle"]:after{display:block;left:-3px;top:-3px;width:11px;height:11px;border-radius:50%}
+  #ah-you .ahy-avstatus[data-s="invisible"]:after,#ah-you .ahy-avstatus[data-s="offline"]:after{display:block;left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%}
+
   #ah-you .ahy-pill{
-    display:flex;align-items:center;gap:8px;min-width:0;max-width:calc(100% - 110px);height:40px;margin-bottom:6px;padding:0 14px 0 12px;
-    border:0;border-radius:20px;background:var(--ahy-card);color:var(--ahy-muted);cursor:pointer;font-size:14px;font-weight:600;
+    position:relative;display:flex;align-items:center;gap:8px;min-width:0;max-width:calc(100% - 96px);height:38px;margin-top:34px;padding:0 12px;
+    border:0;border-radius:14px;background:var(--ahy-card);color:var(--ahy-muted);cursor:pointer;font-size:14px;font-weight:600;
   }
+  #ah-you .ahy-pill:before,#ah-you .ahy-pill:after{content:"";position:absolute;border-radius:50%;background:var(--ahy-card)}
+  #ah-you .ahy-pill:before{left:12px;top:-10px;width:20px;height:20px}
+  #ah-you .ahy-pill:after{left:0;top:-15px;width:10px;height:10px}
   #ah-you .ahy-pill span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   #ah-you .ahy-pill svg{flex:0 0 auto;width:16px;height:16px;transition:transform .2s}
   #ah-you .ahy-pill[aria-expanded="true"] svg{transform:rotate(180deg)}
@@ -18073,25 +18096,27 @@ html.ah-recording #dm-record-timer,html.ah-recording #composer-record-timer{visi
   #ah-you [data-s="invisible"],#ah-you [data-s="offline"]{background:#80848e}
 
   /* identity */
-  #ah-you .ahy-name{margin:14px 16px 0;font-size:28px;line-height:1.15;font-weight:800;letter-spacing:-.02em;overflow-wrap:anywhere}
-  #ah-you .ahy-handle{margin:3px 16px 0;font-size:15px;color:var(--ahy-muted);overflow-wrap:anywhere}
+  #ah-you .ahy-name{margin:12px 16px 0;font-size:22px;line-height:1.2;font-weight:700;letter-spacing:-.01em;overflow-wrap:anywhere}
+  #ah-you .ahy-handle{margin:2px 16px 0;font-size:14px;color:var(--ahy-muted);overflow-wrap:anywhere}
   #ah-you .ahy-edit{
-    display:flex;align-items:center;justify-content:center;gap:8px;width:calc(100% - 32px);height:48px;margin:18px 16px 4px;
-    border:0;border-radius:12px;background:var(--ahy-accent);color:#fff;font-size:16px;font-weight:700;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:8px;width:calc(100% - 32px);height:40px;margin:16px 16px 0;
+    border:0;border-radius:10px;background:var(--ahy-accent);color:#fff;font-size:15px;font-weight:600;cursor:pointer;
   }
   #ah-you .ahy-edit:active{filter:brightness(.88)}
-  #ah-you .ahy-edit svg{width:19px;height:19px}
+  #ah-you .ahy-edit svg{width:18px;height:18px}
 
-  /* cards */
-  #ah-you .ahy-card{margin:12px 16px 0;background:var(--ahy-card);border-radius:16px;overflow:hidden}
-  #ah-you .ahy-card[hidden]{display:none}
-  #ah-you .ahy-text{padding:16px;font-size:15px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere}
-  #ah-you .ahy-row{display:flex;align-items:center;gap:12px;padding:14px 16px}
-  #ah-you .ahy-row svg{flex:0 0 auto;width:22px;height:22px;color:var(--ahy-muted)}
-  #ah-you .ahy-cap{font-size:13px;color:var(--ahy-muted);font-weight:600}
+  /* cards + plain sections */
+  #ah-you .ahy-card{margin:12px 16px 0;background:var(--ahy-card);border-radius:12px;overflow:hidden}
+  #ah-you .ahy-card[hidden],#ah-you .ahy-sec[hidden]{display:none}
+  #ah-you .ahy-text{padding:14px 16px;font-size:15px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere}
+  #ah-you .ahy-sec{margin:18px 16px 0;padding-bottom:16px;border-bottom:1px solid var(--ahy-line)}
+  #ah-you .ahy-sec-t{font-size:15px;font-weight:500;color:var(--ahy-text)}
+  #ah-you .ahy-sec-row{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:16px;color:var(--ahy-text);overflow-wrap:anywhere}
+  #ah-you .ahy-sec-row svg{flex:0 0 auto;width:20px;height:20px;color:var(--ahy-muted)}
+  #ah-you .ahy-cap{font-size:13px;color:var(--ahy-muted);font-weight:500}
   #ah-you .ahy-val{margin-top:2px;font-size:16px;font-weight:600}
 
-  #ah-you .ahy-st-head{width:100%;display:flex;align-items:center;gap:12px;padding:14px 16px;border:0;background:transparent;cursor:pointer;text-align:left}
+  #ah-you .ahy-st-head{width:100%;display:flex;align-items:center;gap:12px;padding:13px 16px;border:0;background:transparent;cursor:pointer;text-align:left}
   #ah-you .ahy-st-head .ahy-grow{flex:1 1 auto;min-width:0}
   #ah-you .ahy-st-head svg{width:18px;height:18px;color:var(--ahy-muted);transition:transform .2s}
   #ah-you .ahy-st-head[aria-expanded="true"] svg{transform:rotate(180deg)}
@@ -18100,28 +18125,27 @@ html.ah-recording #dm-record-timer,html.ah-recording #composer-record-timer{visi
   #ah-you .ahy-opt{width:100%;display:flex;align-items:center;gap:12px;padding:12px 16px;border:0;background:transparent;text-align:left;cursor:pointer}
   #ah-you .ahy-opt:active{background:rgba(127,127,127,.14)}
   #ah-you .ahy-opt .ahy-grow{flex:1 1 auto;min-width:0}
-  #ah-you .ahy-opt b{display:block;font-size:15px;font-weight:700}
+  #ah-you .ahy-opt b{display:block;font-size:15px;font-weight:600}
   #ah-you .ahy-opt small{display:block;margin-top:1px;font-size:12.5px;color:var(--ahy-muted);line-height:1.3}
   #ah-you .ahy-opt .ahy-check{width:20px;height:20px;color:var(--ahy-accent);opacity:0}
   #ah-you .ahy-opt.on .ahy-check{opacity:1}
 
   /* floating bottom bar: Quests · Shop · Plus · Settings */
   #ah-you .ahy-bar{
-    position:absolute;z-index:3;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);
-    width:min(calc(100% - 24px),460px);display:grid;grid-template-columns:repeat(4,1fr);gap:2px;padding:6px;
-    background:color-mix(in srgb,var(--ahy-card) 90%,transparent);border:1px solid var(--ahy-line);border-radius:24px;
-    -webkit-backdrop-filter:blur(18px) saturate(1.3);backdrop-filter:blur(18px) saturate(1.3);box-shadow:0 10px 30px rgba(0,0,0,.45);
+    position:absolute;z-index:3;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);
+    width:min(calc(100% - 48px),420px);display:grid;grid-template-columns:repeat(4,1fr);padding:8px 6px;
+    background:var(--ahy-bar);border:1px solid var(--ahy-line);border-radius:20px;box-shadow:0 8px 28px rgba(0,0,0,.5);
   }
   #ah-you .ahy-bi{
-    position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:0;height:56px;
-    border:0;border-radius:18px;background:transparent;cursor:pointer;color:var(--ahy-text);
+    position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:0;height:50px;
+    border:0;border-radius:14px;background:transparent;cursor:pointer;color:var(--ahy-text);
   }
   #ah-you .ahy-bi:active{background:rgba(127,127,127,.2)}
-  #ah-you .ahy-bi svg{width:24px;height:24px}
-  #ah-you .ahy-bi span{max-width:100%;padding:0 1px;font-size:11px;font-weight:600;line-height:1;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #ah-you .ahy-bi svg{width:26px;height:26px}
+  #ah-you .ahy-bi span{max-width:100%;padding:0 1px;font-size:12px;font-weight:600;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #ah-you .ahy-badge{
-    position:absolute;top:4px;left:calc(50% + 6px);min-width:18px;height:16px;padding:0 5px;border-radius:8px;background:var(--ahy-accent);color:#fff;
-    font-size:10px;font-weight:800;line-height:16px;text-align:center;
+    position:absolute;top:-1px;left:calc(50% + 10px);min-width:18px;height:16px;padding:0 5px;border-radius:8px;background:var(--ahy-accent);color:#fff;
+    box-shadow:0 0 0 2px var(--ahy-bar);font-size:10px;font-weight:800;line-height:16px;text-align:center;
   }
   #ah-you .ahy-badge[hidden]{display:none}
 
@@ -18134,18 +18158,18 @@ html.ah-recording #dm-record-timer,html.ah-recording #composer-record-timer{visi
 <div id="ah-you" role="dialog" aria-modal="true" aria-hidden="true">
   <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
     <symbol id="ahy-i-close" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
-    <symbol id="ahy-i-edit" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></symbol>
+    <symbol id="ahy-i-edit" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25Zm17.71-10.21a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83Z"/></symbol>
     <symbol id="ahy-i-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
     <symbol id="ahy-i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
     <symbol id="ahy-i-cal" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="16" rx="3"/><path d="M8 2.5v4M16 2.5v4M3 10h18"/></symbol>
-    <symbol id="ahy-i-quest" viewBox="0 0 24 24"><path d="m12 2 2.5 5.1L20 8l-4 3.9.9 5.5L12 14.8 7.1 17.4 8 11.9 4 8l5.5-.9Z"/><path d="M5 21h14"/></symbol>
-    <symbol id="ahy-i-shop" viewBox="0 0 24 24"><path d="M4 10h16v10H4z"/><path d="M2.5 7 4 3h16l1.5 4A3 3 0 0 1 16 9a3 3 0 0 1-4 0 3 3 0 0 1-4 0 3 3 0 0 1-5.5-2Z"/><path d="M9 20v-6h6v6"/></symbol>
-    <symbol id="ahy-i-plus" viewBox="0 0 24 24"><path d="M4.5 8.5h4l2.1-3h4.8l2.1 3h2a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-15a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2Z"/><path d="M8.5 12.2a3.7 3.7 0 0 0 7 0"/><circle cx="8" cy="11" r=".65" fill="currentColor" stroke="none"/><circle cx="16" cy="11" r=".65" fill="currentColor" stroke="none"/></symbol>
-    <symbol id="ahy-i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.4 1.08V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.08-.4H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></symbol>
+    <symbol id="ahy-i-quest" viewBox="0 0 24 24"><path d="m12 1.8 2.7 5.4 6 .9-4.4 4.2 1 6L12 15.4l-5.3 2.9 1-6L3.3 8.1l6-.9Z"/><rect x="5" y="20" width="14" height="2.4" rx="1.2"/></symbol>
+    <symbol id="ahy-i-shop" viewBox="0 0 24 24"><path d="M3.4 2.8h17.2l1.6 5.6a3.6 3.6 0 0 1-6.4 2.2 3.6 3.6 0 0 1-5.6 0 3.6 3.6 0 0 1-5.6 0A3.6 3.6 0 0 1 1.8 8.4Z"/><path fill-rule="evenodd" d="M4.2 13.4h15.6V20a1.6 1.6 0 0 1-1.6 1.6H5.8A1.6 1.6 0 0 1 4.2 20Zm5.2 8.2v-5.4a1 1 0 0 1 1-1h3.2a1 1 0 0 1 1 1v5.4Z"/></symbol>
+    <symbol id="ahy-i-plus" viewBox="0 0 24 24"><path d="M4.6 7.6h3.6l1.9-2.8h3.8l1.9 2.8h3.6A2.4 2.4 0 0 1 21.8 10v7.4a2.4 2.4 0 0 1-2.4 2.4H4.6a2.4 2.4 0 0 1-2.4-2.4V10a2.4 2.4 0 0 1 2.4-2.4Z"/><circle cx="8" cy="11.6" r="1.1" style="fill:var(--ahy-bar)"/><circle cx="16" cy="11.6" r="1.1" style="fill:var(--ahy-bar)"/><path d="M8.4 14.6a3.7 3.7 0 0 0 7.2 0" style="fill:none;stroke:var(--ahy-bar);stroke-width:1.7;stroke-linecap:round"/></symbol>
+    <symbol id="ahy-i-gear" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.4 1.08V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.08-.4H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1ZM12 8.8a3.2 3.2 0 1 0 0 6.4 3.2 3.2 0 0 0 0-6.4Z"/></symbol>
   </svg>
 
   <div class="ahy-scrim" data-ahy-close></div>
-  <div class="ahy-sheet" id="ahy-sheet">
+  <div class="ahy-sheet" id="ahy-sheet" tabindex="-1">
     <div class="ahy-scroll" id="ahy-scroll">
       <div class="ahy-banner" id="ahy-banner">
         <button type="button" class="ahy-close" id="ahy-close"><svg fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><use href="#ahy-i-close"/></svg></button>
@@ -18159,13 +18183,13 @@ html.ah-recording #dm-record-timer,html.ah-recording #composer-record-timer{visi
       <div class="ahy-name" id="ahy-name"></div>
       <div class="ahy-handle" id="ahy-handle"></div>
 
-      <button type="button" class="ahy-edit" id="ahy-edit"><svg fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><use href="#ahy-i-edit"/></svg><span id="ahy-edit-label"></span></button>
+      <button type="button" class="ahy-edit" id="ahy-edit"><svg fill="currentColor"><use href="#ahy-i-edit"/></svg><span id="ahy-edit-label"></span></button>
 
       <div class="ahy-card" id="ahy-about-card" hidden><div class="ahy-text" id="ahy-about"></div></div>
 
-      <div class="ahy-card" id="ahy-reg-card" hidden>
-        <div class="ahy-row"><svg fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><use href="#ahy-i-cal"/></svg>
-          <div><div class="ahy-cap" id="ahy-reg-cap"></div><div class="ahy-val" id="ahy-reg-val"></div></div></div>
+      <div class="ahy-sec" id="ahy-reg-card" hidden>
+        <div class="ahy-sec-t" id="ahy-reg-cap"></div>
+        <div class="ahy-sec-row"><svg fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><use href="#ahy-i-cal"/></svg><span id="ahy-reg-val"></span></div>
       </div>
 
       <div class="ahy-card" id="ahy-status-card">
@@ -18179,10 +18203,10 @@ html.ah-recording #dm-record-timer,html.ah-recording #composer-record-timer{visi
     </div>
 
     <nav class="ahy-bar" id="ahy-bar">
-      <button type="button" class="ahy-bi" data-ahy-go="quests"><svg fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><use href="#ahy-i-quest"/></svg><span data-lbl="quests"></span></button>
-      <button type="button" class="ahy-bi" data-ahy-go="store"><svg fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><use href="#ahy-i-shop"/></svg><span data-lbl="store"></span></button>
-      <button type="button" class="ahy-bi" data-ahy-go="nitro"><svg fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><use href="#ahy-i-plus"/></svg><span>Plus</span><b class="ahy-badge" id="ahy-plus-badge" hidden></b></button>
-      <button type="button" class="ahy-bi" data-ahy-go="settings"><svg fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><use href="#ahy-i-gear"/></svg><span data-lbl="settings"></span></button>
+      <button type="button" class="ahy-bi" data-ahy-go="quests"><svg fill="currentColor"><use href="#ahy-i-quest"/></svg><span data-lbl="quests"></span></button>
+      <button type="button" class="ahy-bi" data-ahy-go="store"><svg fill="currentColor"><use href="#ahy-i-shop"/></svg><span data-lbl="store"></span></button>
+      <button type="button" class="ahy-bi" data-ahy-go="nitro"><svg fill="currentColor"><use href="#ahy-i-plus"/></svg><span>Plus</span><b class="ahy-badge" id="ahy-plus-badge" hidden></b></button>
+      <button type="button" class="ahy-bi" data-ahy-go="settings"><svg fill="currentColor"><use href="#ahy-i-gear"/></svg><span data-lbl="settings"></span></button>
     </nav>
   </div>
 </div>
@@ -18269,8 +18293,8 @@ html.ah-recording #dm-record-timer,html.ah-recording #composer-record-timer{visi
     el.handle.textContent = username ? '@' + username : '';
     el.avatar.style.backgroundImage = d.miniAvatar ? cssUrl(d.miniAvatar) : '';
     el.initial.textContent = d.miniAvatar ? '' : (username.charAt(0) || '?').toUpperCase();
-    root.style.setProperty('--ahy-c1', safeColor(d.miniC1, '#5865f2'));
-    root.style.setProperty('--ahy-c2', safeColor(d.miniC2, '#9b5cf6'));
+    root.style.setProperty('--ahy-c1', safeColor(d.miniC1, '#000'));
+    root.style.setProperty('--ahy-c2', safeColor(d.miniC2, '#000'));
     el.banner.style.backgroundImage = d.miniBanner ? cssUrl(d.miniBanner) : '';
     var bio = (d.miniBio || '').trim();
     el.about.textContent = bio; el.aboutCard.hidden = !bio;
@@ -18309,7 +18333,7 @@ html.ah-recording #dm-record-timer,html.ah-recording #composer-record-timer{visi
     lastFocus = document.activeElement;
     isOpen = true; root.classList.add('open'); root.setAttribute('aria-hidden', 'false');
     el.scroll.scrollTop = 0;
-    try{ el.close.focus({preventScroll:true}); }catch(e){}
+    try{ el.sheet.focus({preventScroll:true}); }catch(e){}
   }
   function close(){
     if(!isOpen) return;
