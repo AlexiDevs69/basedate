@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.281.18",
+      "date": "2026-10-29",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: server_channel.html for performance and device handling."
+      ],
+      "source_sha": "4b09ea5e546dd19895fddee001ff88149d14e564"
+    },
+    {
       "version": "1.281.17",
       "date": "2026-10-29",
       "title": "Виправлення та стабільність",
