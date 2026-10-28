@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.281.16",
+      "date": "2026-10-29",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance mobile performance and update MutationObserver."
+      ],
+      "source_sha": "3e8fe8c2455bc9835d55668c67478c72f8aa601d"
+    },
+    {
       "version": "1.281.15",
       "date": "2026-10-28",
       "title": "Виправлення та стабільність",
