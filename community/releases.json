@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.281.8",
+      "date": "2026-10-28",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: avatar and status styles in server_home.html."
+      ],
+      "source_sha": "58d8461cd194b79217349bd2be4d5f5710465a00"
+    },
+    {
       "version": "1.281.7",
       "date": "2026-10-28",
       "title": "Оновлення AlexiHub",
