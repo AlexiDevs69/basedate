@@ -18062,31 +18062,20 @@ html.ah-recording #dm-record-timer,html.ah-recording #composer-record-timer{visi
   #ah-you .ahy-close:active{background:rgba(255,255,255,.16)}
   #ah-you .ahy-close svg{width:22px;height:22px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}
 
-  /* avatar + status "thought bubble" */
-  #ah-you .ahy-top{display:flex;align-items:flex-start;gap:7px;padding:0 16px 0 11px;margin-top:-42px;position:relative;z-index:1}
+  /* avatar: same placement as the desktop mini profile (half over the banner, status badge bottom-right) */
+  #ah-you .ahy-top{padding:0 16px;margin-top:-44px;position:relative;z-index:1}
   #ah-you .ahy-avatar{
-    position:relative;flex:0 0 auto;width:84px;height:84px;border-radius:50%;border:5px solid var(--ahy-bg);
+    position:relative;width:88px;height:88px;border-radius:50%;border:6px solid var(--ahy-bg);
     background:var(--ahy-card) center/cover no-repeat;display:grid;place-items:center;
     font-size:30px;font-weight:800;color:var(--ahy-text);
   }
   #ah-you .ahy-avatar .ahy-avstatus{
-    position:absolute;right:-4px;bottom:-4px;width:28px;height:28px;border-radius:50%;border:4px solid var(--ahy-bg);overflow:hidden;
+    position:absolute;right:-3px;bottom:-3px;width:28px;height:28px;border-radius:50%;border:5px solid var(--ahy-bg);overflow:hidden;
   }
   #ah-you .ahy-avstatus:after{content:"";position:absolute;display:none;background:var(--ahy-bg)}
-  #ah-you .ahy-avstatus[data-s="dnd"]:after{display:block;left:50%;top:50%;width:10px;height:3px;margin:-1.5px 0 0 -5px;border-radius:2px}
-  #ah-you .ahy-avstatus[data-s="idle"]:after{display:block;left:-3px;top:-3px;width:11px;height:11px;border-radius:50%}
-  #ah-you .ahy-avstatus[data-s="invisible"]:after,#ah-you .ahy-avstatus[data-s="offline"]:after{display:block;left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%}
-
-  #ah-you .ahy-pill{
-    position:relative;display:flex;align-items:center;gap:8px;min-width:0;max-width:calc(100% - 96px);height:38px;margin-top:34px;padding:0 12px;
-    border:0;border-radius:14px;background:var(--ahy-card);color:var(--ahy-muted);cursor:pointer;font-size:14px;font-weight:600;
-  }
-  #ah-you .ahy-pill:before,#ah-you .ahy-pill:after{content:"";position:absolute;border-radius:50%;background:var(--ahy-card)}
-  #ah-you .ahy-pill:before{left:12px;top:-10px;width:20px;height:20px}
-  #ah-you .ahy-pill:after{left:0;top:-15px;width:10px;height:10px}
-  #ah-you .ahy-pill span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  #ah-you .ahy-pill svg{flex:0 0 auto;width:16px;height:16px;transition:transform .2s}
-  #ah-you .ahy-pill[aria-expanded="true"] svg{transform:rotate(180deg)}
+  #ah-you .ahy-avstatus[data-s="dnd"]:after{display:block;left:50%;top:50%;width:9px;height:3px;margin:-1.5px 0 0 -4.5px;border-radius:2px}
+  #ah-you .ahy-avstatus[data-s="idle"]:after{display:block;left:-3px;top:-3px;width:10px;height:10px;border-radius:50%}
+  #ah-you .ahy-avstatus[data-s="invisible"]:after,#ah-you .ahy-avstatus[data-s="offline"]:after{display:block;left:50%;top:50%;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%}
 
   /* status dots (self-contained colours) */
   #ah-you .ahy-dot{display:inline-block;flex:0 0 auto;width:12px;height:12px;border-radius:50%;background:#80848e}
@@ -18096,8 +18085,8 @@ html.ah-recording #dm-record-timer,html.ah-recording #composer-record-timer{visi
   #ah-you [data-s="invisible"],#ah-you [data-s="offline"]{background:#80848e}
 
   /* identity */
-  #ah-you .ahy-name{margin:12px 16px 0;font-size:22px;line-height:1.2;font-weight:700;letter-spacing:-.01em;overflow-wrap:anywhere}
-  #ah-you .ahy-handle{margin:2px 16px 0;font-size:14px;color:var(--ahy-muted);overflow-wrap:anywhere}
+  #ah-you .ahy-name{margin:10px 16px 0;font-size:22px;line-height:1.15;font-weight:800;letter-spacing:-.02em;overflow-wrap:anywhere}
+  #ah-you .ahy-handle{margin:3px 16px 0;font-size:14px;font-weight:600;color:var(--ahy-muted);overflow-wrap:anywhere}
   #ah-you .ahy-edit{
     display:flex;align-items:center;justify-content:center;gap:8px;width:calc(100% - 32px);height:40px;margin:16px 16px 0;
     border:0;border-radius:10px;background:var(--ahy-accent);color:#fff;font-size:15px;font-weight:600;cursor:pointer;
@@ -18177,7 +18166,6 @@ html.ah-recording #dm-record-timer,html.ah-recording #composer-record-timer{visi
 
       <div class="ahy-top">
         <div class="ahy-avatar" id="ahy-avatar"><span id="ahy-initial"></span><i class="ahy-dot ahy-avstatus" id="ahy-avstatus" data-s="online"></i></div>
-        <button type="button" class="ahy-pill" id="ahy-pill" aria-expanded="false"><i class="ahy-dot" id="ahy-pill-dot" data-s="online"></i><span id="ahy-pill-label"></span><svg fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#ahy-i-chev"/></svg></button>
       </div>
 
       <div class="ahy-name" id="ahy-name"></div>
@@ -18224,7 +18212,7 @@ html.ah-recording #dm-record-timer,html.ah-recording #composer-record-timer{visi
   var $ = function(id){ return document.getElementById(id); };
   var el = {
     sheet:$('ahy-sheet'), scroll:$('ahy-scroll'), banner:$('ahy-banner'), avatar:$('ahy-avatar'), initial:$('ahy-initial'),
-    avStatus:$('ahy-avstatus'), pill:$('ahy-pill'), pillDot:$('ahy-pill-dot'), pillLabel:$('ahy-pill-label'),
+    avStatus:$('ahy-avstatus'),
     name:$('ahy-name'), handle:$('ahy-handle'), edit:$('ahy-edit'), editLabel:$('ahy-edit-label'),
     aboutCard:$('ahy-about-card'), about:$('ahy-about'), regCard:$('ahy-reg-card'), regCap:$('ahy-reg-cap'), regVal:$('ahy-reg-val'),
     stHead:$('ahy-st-head'), stDot:$('ahy-st-dot'), stCap:$('ahy-st-cap'), stVal:$('ahy-st-val'), stList:$('ahy-st-list'),
@@ -18264,8 +18252,7 @@ html.ah-recording #dm-record-timer,html.ah-recording #composer-record-timer{visi
   var current = 'online';
   function setStatusUI(k){
     current = k;
-    [el.avStatus, el.pillDot, el.stDot].forEach(function(n){ n.setAttribute('data-s', k); });
-    el.pillLabel.textContent = statusLabel(k);
+    [el.avStatus, el.stDot].forEach(function(n){ n.setAttribute('data-s', k); });
     el.stVal.textContent = statusLabel(k);
     [].forEach.call(el.stList.children, function(b){ b.classList.toggle('on', b.getAttribute('data-k') === k); });
   }
@@ -18345,7 +18332,6 @@ html.ah-recording #dm-record-timer,html.ah-recording #composer-record-timer{visi
     var open = (typeof on === 'boolean') ? on : !el.stList.classList.contains('open');
     el.stList.classList.toggle('open', open);
     el.stHead.setAttribute('aria-expanded', open ? 'true' : 'false');
-    el.pill.setAttribute('aria-expanded', open ? 'true' : 'false');
     return open;
   }
   function closeDrawer(){ try{ if(window.ahMobileDrawer && window.ahMobileDrawer.close) window.ahMobileDrawer.close(); }catch(e){} }
@@ -18385,7 +18371,6 @@ html.ah-recording #dm-record-timer,html.ah-recording #composer-record-timer{visi
     if(t.closest('[data-ahy-close]') || t.closest('#ahy-close')){ close(); return; }
     var go = t.closest('[data-ahy-go]'); if(go){ act(go.getAttribute('data-ahy-go')); return; }
     if(t.closest('#ahy-edit')){ act('edit'); return; }
-    if(t.closest('#ahy-pill')){ if(toggleStatus()) el.stHead.scrollIntoView({block:'center', behavior:'smooth'}); return; }
     if(t.closest('#ahy-st-head')){ toggleStatus(); return; }
     var opt = t.closest('.ahy-opt');
     if(opt){
