@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.281.19",
+      "date": "2026-10-29",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено продуктивність: mobile support and badge rendering."
+      ],
+      "source_sha": "244c305be8cc184e4088aea8a981d9a02445a315"
+    },
+    {
       "version": "1.281.18",
       "date": "2026-10-29",
       "title": "Оновлення AlexiHub",
