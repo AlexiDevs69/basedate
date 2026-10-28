@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.281.20",
+      "date": "2026-10-29",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance mobile navigation and profile badge rendering."
+      ],
+      "source_sha": "2af65420a4be718d91a8a53fe0cdd845a8dad5f4"
+    },
+    {
       "version": "1.281.19",
       "date": "2026-10-29",
       "title": "Оновлення AlexiHub",
