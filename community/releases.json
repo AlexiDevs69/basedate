@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.281.1",
+      "date": "2026-10-28",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update styles and theming in home.html."
+      ],
+      "source_sha": "7718970664a1b645ee43510a4305152434f7cbab"
+    },
+    {
       "version": "1.281.0",
       "date": "2026-10-27",
       "title": "Нові можливості AlexiHub",
