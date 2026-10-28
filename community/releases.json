@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.281.15",
+      "date": "2026-10-28",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update desktop profile header layout."
+      ],
+      "source_sha": "cd2ab0ab8dfe894b7c70d9a54ef9669fa1d4a668"
+    },
+    {
       "version": "1.281.14",
       "date": "2026-10-28",
       "title": "Оновлення AlexiHub",
