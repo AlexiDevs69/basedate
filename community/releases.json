@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.282.0",
+      "date": "2026-10-30",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: members sidebar with navigation buttons."
+      ],
+      "source_sha": "f5cce736d6738883d57b534b0171f41a134c063c"
+    },
+    {
       "version": "1.281.25",
       "date": "2026-10-30",
       "title": "Оновлення AlexiHub",
