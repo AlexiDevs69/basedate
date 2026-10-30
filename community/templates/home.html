@@ -16381,16 +16381,43 @@ html body .ah-v3-overlay.open .ah-v3-full,html body .ah-v3-mini.open{will-change
   }
   #ah-you .ahy-badge[hidden]{display:none}
 
-  /* server tag + profile badges (same data as the desktop mini profile) */
-  #ah-you .ahy-chips{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 16px 0}
+  /* server tag + profile badges: on the @handle line, like the Discord profile (avatar placement unchanged) */
+  #ah-you .ahy-head > .ahy-idrow{grid-column:1;grid-row:2;align-self:start;margin:4px 0 0;min-width:0;display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
+  #ah-you .ahy-idrow .ahy-handle{margin:0;min-width:0;max-width:100%}
+  #ah-you .ahy-chips{display:contents}
   #ah-you .ahy-chips[hidden],#ah-you .ahy-tag[hidden],#ah-you .ahy-badges[hidden]{display:none}
-  #ah-you .ahy-tag{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px;max-width:100%;border-radius:8px;background:var(--ahy-card);border:1px solid var(--ahy-line);font-size:13px;font-weight:800;line-height:1;white-space:nowrap}
+  #ah-you .ahy-tag{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 9px;max-width:100%;border-radius:9px;background:var(--ahy-card);font-size:13px;font-weight:700;line-height:1;white-space:nowrap}
   #ah-you .ahy-tag b{flex:0 0 auto;color:#df67ec;font-size:13px}
   #ah-you .ahy-tag span{min-width:0;overflow:hidden;text-overflow:ellipsis}
-  #ah-you .ahy-badges{display:inline-flex;align-items:center;gap:12px;height:28px;padding:0 12px;border-radius:8px;background:var(--ahy-card);border:1px solid var(--ahy-line)}
-  #ah-you .ahy-badges>*{margin:0!important;top:0!important;vertical-align:middle!important;width:20px!important;height:20px!important}
-  #ah-you .ahy-badges svg{width:20px!important;height:20px!important}
-  #ah-you .ahy-badges .ah-nitro-medal{width:20px!important;height:20px!important}
+  #ah-you .ahy-badges{display:inline-flex;align-items:center;gap:10px;height:26px;padding:0 11px;border-radius:13px;background:var(--ahy-card)}
+  #ah-you .ahy-badges>*{margin:0!important;top:0!important;vertical-align:middle!important;width:18px!important;height:18px!important}
+  #ah-you .ahy-badges svg{width:18px!important;height:18px!important}
+  #ah-you .ahy-badges .ah-nitro-medal{width:18px!important;height:18px!important}
+
+  /* friends row (real friends list, avatars stacked) */
+  #ah-you .ahy-friends{display:flex;align-items:center;gap:10px;width:calc(100% - 32px);height:54px;margin:12px 16px 0;padding:0 14px;border:0;border-radius:12px;background:var(--ahy-card);color:var(--ahy-text);cursor:pointer;text-align:left}
+  #ah-you .ahy-friends[hidden]{display:none}
+  #ah-you .ahy-friends:active{filter:brightness(.92)}
+  #ah-you .ahy-fr-t{flex:1 1 auto;min-width:0;font-size:15px;font-weight:700}
+  #ah-you .ahy-fr-stack{display:flex;flex:0 0 auto;padding-left:8px}
+  #ah-you .ahy-fr-av{width:28px;height:28px;margin-left:-8px;border-radius:50%;border:2px solid var(--ahy-card);background:#3a3c43 center/cover no-repeat;display:grid;place-items:center;overflow:hidden;font-size:12px;font-weight:800;color:#fff}
+  #ah-you .ahy-friends>svg{flex:0 0 auto;width:20px;height:20px;color:var(--ahy-muted)}
+
+  /* Discord-like look: @handle + server tag + badges on one row under the name (below the avatar, avatar placement unchanged) */
+  #ah-you .ahy-banner{height:148px}
+  #ah-you .ahy-head > .ahy-top{grid-row:1}
+  #ah-you .ahy-head > .ahy-name{padding-top:0;font-size:25px;font-weight:800;letter-spacing:-.02em;line-height:1.15}
+  #ah-you .ahy-head > .ahy-idrow{grid-column:1 / -1;grid-row:2;margin:4px 0 0;gap:8px 10px}
+  #ah-you .ahy-idrow .ahy-handle{font-size:15px;font-weight:600;color:var(--ahy-muted);overflow-wrap:anywhere}
+  #ah-you .ahy-tag{height:32px;padding:0 11px;border-radius:12px;font-size:15px;font-weight:700}
+  #ah-you .ahy-tag b{font-size:15px}
+  #ah-you .ahy-badges{height:32px;padding:0 12px;gap:11px;border-radius:12px}
+  #ah-you .ahy-badges>*,#ah-you .ahy-badges svg,#ah-you .ahy-badges .ah-nitro-medal{width:22px!important;height:22px!important}
+  #ah-you .ahy-edit{height:48px;margin-top:16px;border-radius:12px;font-size:16px;font-weight:600}
+  #ah-you .ahy-card{border-radius:16px}
+  #ah-you .ahy-friends{height:56px;border-radius:16px}
+  #ah-you .ahy-sec{margin-top:20px;padding-bottom:18px}
+  #ah-you .ahy-bar{border-radius:18px}
 
   @media (prefers-reduced-motion:reduce){
     #ah-you .ahy-scrim,#ah-you .ahy-sheet{transition:none}
@@ -16403,6 +16430,7 @@ html body .ah-v3-overlay.open .ah-v3-full,html body .ah-v3-mini.open{will-change
     <symbol id="ahy-i-close" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
     <symbol id="ahy-i-edit" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25Zm17.71-10.21a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83Z"/></symbol>
     <symbol id="ahy-i-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="ahy-i-chev-r" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
     <symbol id="ahy-i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
     <symbol id="ahy-i-cal" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="16" rx="3"/><path d="M8 2.5v4M16 2.5v4M3 10h18"/></symbol>
     <symbol id="ahy-i-quest" viewBox="0 0 24 24"><path d="m12 1.8 2.7 5.4 6 .9-4.4 4.2 1 6L12 15.4l-5.3 2.9 1-6L3.3 8.1l6-.9Z"/><rect x="5" y="20" width="14" height="2.4" rx="1.2"/></symbol>
@@ -16423,12 +16451,13 @@ html body .ah-v3-overlay.open .ah-v3-full,html body .ah-v3-mini.open{will-change
           <div class="ahy-avatar" id="ahy-avatar"><span id="ahy-initial"></span><i class="ahy-dot ahy-avstatus" id="ahy-avstatus" data-s="online"></i></div>
         </div>
         <div class="ahy-name" id="ahy-name"></div>
-        <div class="ahy-handle" id="ahy-handle"></div>
-      </div>
-
-      <div class="ahy-chips" id="ahy-chips" hidden>
-        <span class="ahy-tag" id="ahy-tag" hidden><b></b><span></span></span>
-        <div class="ahy-badges" id="ahy-badges" role="group" aria-label="Badges" hidden></div>
+        <div class="ahy-idrow">
+          <div class="ahy-handle" id="ahy-handle"></div>
+          <div class="ahy-chips" id="ahy-chips" hidden>
+            <span class="ahy-tag" id="ahy-tag" hidden><b></b><span></span></span>
+            <div class="ahy-badges" id="ahy-badges" role="group" aria-label="Badges" hidden></div>
+          </div>
+        </div>
       </div>
 
       <button type="button" class="ahy-edit" id="ahy-edit"><svg fill="currentColor"><use href="#ahy-i-edit"/></svg><span id="ahy-edit-label"></span></button>
@@ -16439,6 +16468,8 @@ html body .ah-v3-overlay.open .ah-v3-full,html body .ah-v3-mini.open{will-change
         <div class="ahy-sec-t" id="ahy-reg-cap"></div>
         <div class="ahy-sec-row"><svg fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><use href="#ahy-i-cal"/></svg><span id="ahy-reg-val"></span></div>
       </div>
+
+      <button type="button" class="ahy-friends" id="ahy-friends" hidden><span class="ahy-fr-t" id="ahy-fr-t"></span><span class="ahy-fr-stack" id="ahy-fr-stack"></span><svg fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#ahy-i-chev-r"/></svg></button>
 
       <div class="ahy-card" id="ahy-status-card">
         <button type="button" class="ahy-st-head" id="ahy-st-head" aria-expanded="false">
@@ -16620,6 +16651,27 @@ html body .ah-v3-overlay.open .ah-v3-full,html body .ah-v3-mini.open{will-change
     chips.hidden = tagEl.hidden && badgesEl.hidden;
     var uname = (extrasPanel && extrasPanel.dataset && extrasPanel.dataset.miniUsername) || '';
     if(uname) el.handle.textContent = '@' + uname + (pronouns ? ' · ' + pronouns : '');
+    renderFriends();
+  }
+  var frSig = '';
+  function renderFriends(){
+    var btn = $('ahy-friends'), stack = $('ahy-fr-stack'); if(!btn || !stack) return;
+    var list = (extras && Array.isArray(extras.friends)) ? extras.friends.filter(function(x){ return x && x.username; }) : [];
+    if(!list.length){ btn.hidden = true; return; }
+    $('ahy-fr-t').textContent = T('ui.friends', 'Friends');
+    var shown = list.slice(0, 5);
+    var sig = shown.map(function(x){ return x.username + '|' + (x.avatar_url || ''); }).join(',');
+    if(sig !== frSig){
+      frSig = sig; stack.textContent = '';
+      shown.forEach(function(fr){
+        var a = document.createElement('span'); a.className = 'ahy-fr-av';
+        var u = String(fr.avatar_url || '');
+        if(/^(https?:\/\/|\/|data:image\/)/i.test(u)) a.style.backgroundImage = cssUrl(u);
+        else a.textContent = (String(fr.display_name || fr.username).trim().charAt(0) || '?').toUpperCase();
+        stack.appendChild(a);
+      });
+    }
+    btn.hidden = false;
   }
   function loadExtras(panel){
     extrasPanel = panel; renderExtras();
@@ -16669,7 +16721,7 @@ html body .ah-v3-overlay.open .ah-v3-full,html body .ah-v3-mini.open{will-change
     if(what === 'quests'){
       if(typeof window.showActionToast === 'function') window.showActionToast(T('common.stub.tasks_soon', 'Quests are coming soon'));
     }
-    else if(what === 'store' || what === 'nitro') goHome(what);
+    else if(what === 'store' || what === 'nitro' || what === 'friends') goHome(what);
     else if(what === 'settings'){ close(); closeDrawer(); if(typeof window.openUserSettings === 'function') window.openUserSettings(); }
     else if(what === 'edit'){ close(); closeDrawer(); if(typeof window.openProfileCustomizer === 'function') window.openProfileCustomizer(); }
   }
@@ -16690,6 +16742,7 @@ html body .ah-v3-overlay.open .ah-v3-full,html body .ah-v3-mini.open{will-change
     if(t.closest('[data-ahy-close]') || t.closest('#ahy-close')){ close(); return; }
     var go = t.closest('[data-ahy-go]'); if(go){ act(go.getAttribute('data-ahy-go')); return; }
     if(t.closest('#ahy-edit')){ act('edit'); return; }
+    if(t.closest('#ahy-friends')){ act('friends'); return; }
     if(t.closest('#ahy-st-head')){ toggleStatus(); return; }
     var opt = t.closest('.ahy-opt');
     if(opt){
