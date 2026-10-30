@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.281.22",
+      "date": "2026-10-30",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: profile layout and styling."
+      ],
+      "source_sha": "e0bbcf7bd15311d55d3e67127f5eae8090c12db1"
+    },
+    {
       "version": "1.281.21",
       "date": "2026-10-30",
       "title": "Оновлення AlexiHub",
