@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.281.21",
+      "date": "2026-10-30",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: DM chat template for improved layout."
+      ],
+      "source_sha": "1c76a621d65999ee50e97f1a43bfbb4916c66140"
+    },
+    {
       "version": "1.281.20",
       "date": "2026-10-29",
       "title": "Виправлення та стабільність",
