@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.281.24",
+      "date": "2026-10-30",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update server_home.html."
+      ],
+      "source_sha": "d52bd68f3ba55ad03cce050eb04cbc219cbf5915"
+    },
+    {
       "version": "1.281.23",
       "date": "2026-10-30",
       "title": "Оновлення AlexiHub",
