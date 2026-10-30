@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.281.25",
+      "date": "2026-10-30",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: profile and friends UI components."
+      ],
+      "source_sha": "595e5de953077faa69d922685e040a16b65f970d"
+    },
+    {
       "version": "1.281.24",
       "date": "2026-10-30",
       "title": "Виправлення та стабільність",
