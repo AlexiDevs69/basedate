@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.287.0",
+      "date": "2026-11-01",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: navigation buttons and styles for mobile view."
+      ],
+      "source_sha": "9980b9a78e985b884eaa9dbf5d7c926b0c556f51"
+    },
+    {
       "version": "1.286.0",
       "date": "2026-11-01",
       "title": "Нові можливості AlexiHub",
