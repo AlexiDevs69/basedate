@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.287.7",
+      "date": "2026-11-01",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Виправлено: HTML structure by adding missing newline."
+      ],
+      "source_sha": "a8a90c53afec452e0172c538e29a522bcd814c7c"
+    },
+    {
       "version": "1.287.6",
       "date": "2026-11-01",
       "title": "Виправлення та стабільність",
