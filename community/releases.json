@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.287.6",
+      "date": "2026-11-01",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update button highlighting in server_channel.html."
+      ],
+      "source_sha": "61eab74612a6ee36cde9bef1139eb4d70c86cfd8"
+    },
+    {
       "version": "1.287.5",
       "date": "2026-11-01",
       "title": "Виправлення та стабільність",
