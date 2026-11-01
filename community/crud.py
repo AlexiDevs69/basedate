@@ -4940,6 +4940,102 @@ async def unpin_dm_message(db: AsyncSession, thread_id: int, message_id: int) ->
     return bool(row)
 
 
+# ----------------------------------------------------------------------------
+# DM search (mobile search screen): "Media" and "Pinned" tabs.
+# ----------------------------------------------------------------------------
+
+def _like_escape(value: str) -> str:
+    return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
+async def search_dm_items(db: AsyncSession, account_id: int, kind: str, query: str = "", limit: int = 24) -> list[dict]:
+    """Items for the DM search screen, newest first, limited to threads the
+    account takes part in.
+
+    kind == "media": one item per image of every DM message that has an image
+                     (``image_url`` may hold several urls separated by "\\n").
+    kind == "pins":  pinned DM messages.
+    query:           optional case-insensitive filter by message text or by
+                     the other participant's username / display name.
+    """
+    from sqlalchemy import case
+
+    limit = max(1, min(int(limit or 24), 100))
+    account_id = int(account_id)
+    q = (query or "").strip()[:80]
+
+    other_id = case(
+        (DirectThread.user_low_id == account_id, DirectThread.user_high_id),
+        else_=DirectThread.user_low_id,
+    )
+    other = aliased(Account)
+
+    stmt = (
+        select(DirectMessage, DirectThread.id, other)
+        .join(DirectThread, DirectThread.id == DirectMessage.thread_id)
+        .join(other, other.id == other_id)
+        .where(or_(DirectThread.user_low_id == account_id, DirectThread.user_high_id == account_id))
+    )
+    pin_created: dict[int, object] = {}
+    if kind == "pins":
+        await ensure_pin_tables(db)
+        pin_rows = (await db.execute(text("""
+            SELECT p.message_id, p.created_at
+            FROM community_direct_message_pins p
+            JOIN community_direct_threads t ON t.id = p.thread_id
+            WHERE t.user_low_id = :me OR t.user_high_id = :me
+            ORDER BY p.created_at DESC
+            LIMIT 500
+        """), {"me": account_id})).mappings().all()
+        pin_created = {int(r["message_id"]): r["created_at"] for r in pin_rows}
+        if not pin_created:
+            return []
+        stmt = stmt.where(DirectMessage.id.in_(list(pin_created.keys())))
+    else:
+        stmt = stmt.where(DirectMessage.image_url.is_not(None), DirectMessage.image_url != "")
+
+    if q:
+        pattern = f"%{_like_escape(q)}%"
+        stmt = stmt.where(or_(
+            DirectMessage.content.ilike(pattern, escape="\\"),
+            other.username.ilike(pattern, escape="\\"),
+            other.display_name.ilike(pattern, escape="\\"),
+        ))
+    stmt = stmt.order_by(DirectMessage.created_at.desc(), DirectMessage.id.desc())
+    # Media messages can carry several images, so read a few extra rows.
+    stmt = stmt.limit(limit if kind == "pins" else limit * 2)
+
+    items: list[dict] = []
+    for message, thread_id, peer in (await db.execute(stmt)).all():
+        base = {
+            "message_id": int(message.id),
+            "thread_id": int(thread_id),
+            "username": peer.username,
+            "display_name": (getattr(peer, "display_name", None) or peer.username),
+            "avatar_url": getattr(peer, "avatar_url", None) or "",
+            "created_at": message.created_at.isoformat() if getattr(message, "created_at", None) else None,
+            "link": f"/community/dm/{peer.username}#dm-message-{int(message.id)}",
+        }
+        if kind == "pins":
+            pinned_at = pin_created.get(int(message.id))
+            items.append({
+                **base,
+                "text": message.content or ("🖼 Фото" if message.image_url else ("🎤 Голосове" if getattr(message, "voice_url", None) else "")),
+                "pinned_at": (pinned_at.isoformat() if hasattr(pinned_at, "isoformat") else str(pinned_at)) if pinned_at else None,
+            })
+        else:
+            for url in (message.image_url or "").split("\n"):
+                url = url.strip()
+                if not url:
+                    continue
+                items.append({**base, "url": url, "thumb": url, "text": message.content or ""})
+                if len(items) >= limit:
+                    break
+        if len(items) >= limit:
+            break
+    return items
+
+
 async def _build_server_pin_payload(db: AsyncSession, *, message: ServerMessage, pinned_by_id: int | None, created_at) -> dict:
     author = await get_account_by_id(db, message.author_id)
     pinned_by = await get_account_by_id(db, pinned_by_id) if pinned_by_id else None
