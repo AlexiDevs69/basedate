@@ -37,9 +37,12 @@
   }
 
   // Браузер дозволяє звук лише після дії користувача: "будимо" аудіо на першому кліку/натисканні (без жодного звуку)
+  var unlockT=0;
   function unlock(){
-    if(ctx && ctx.state==='running') return;
-    tryResume(getCtx());
+    if(ctx){ if(ctx.state!=='running') tryResume(ctx); return; }
+    /* creating an AudioContext takes 100+ ms on phones: never do it inside the very first tap (that tap is often the one that closes a drawer) */
+    if(unlockT) return;
+    unlockT=setTimeout(function(){ unlockT=0; tryResume(getCtx()); },1800);
   }
   ['pointerdown','keydown','touchstart','click'].forEach(function(ev){
     document.addEventListener(ev,unlock,{capture:true,passive:true});
@@ -11234,7 +11237,14 @@ html[data-theme="light"] body .app:not(#ah-m) .dm-sidebar .search{background:#e3
   function $(s,c){return (c||document).querySelector(s)}
   function t(k,fb){try{var v=window.AlexiHubI18n&&window.AlexiHubI18n.t&&window.AlexiHubI18n.t(k);return v&&v!==k?v:fb}catch(_){return fb}}
 
-  function setL(v){L=v;root.style.setProperty('--ah-l',v.toFixed(3))}
+  var vT=null;
+  /* progress var lives on the 3 drawer elements, not on <html>: a root custom property restyles the whole page on every open/close/drag frame */
+  function setL(v){
+    L=v;
+    if(!vT||vT.length<3)vT=[$('.server-rail'),$('.dm-sidebar'),document.getElementById('ah-h-scrim')].filter(Boolean);
+    var vs=v.toFixed(3);
+    for(var i=0;i<vT.length;i++)vT[i].style.setProperty('--ah-l',vs);
+  }
   function apply(next){
     open=!!next;
     root.classList.remove('ah-h-drag');
@@ -16479,6 +16489,8 @@ html body .ah-v3-overlay.open .ah-v3-full,html body .ah-v3-mini.open{will-change
         </button>
         <div class="ahy-st-list" id="ahy-st-list"></div>
       </div>
+
+      <button type="button" class="ahy-friends ahi-setrow" id="ahi-setrow" data-ahy-go="settings"><svg fill="currentColor"><use href="#ahy-i-gear"/></svg><span class="ahy-fr-t" data-lbl="settings"></span><svg fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#ahy-i-chev-r"/></svg></button>
     </div>
 
     <nav class="ahy-bar" id="ahy-bar">
@@ -16800,6 +16812,135 @@ html body .ah-v3-overlay.open .ah-v3-full,html body .ah-v3-mini.open{will-change
 })();
 </script>
 <!-- AH-YOU-SHEET:END -->
+<!-- AH-ISLAND:BEGIN (phones: one floating bottom island = Quests · Shop · Plus · Settings · You) -->
+<style id="ah-island-css">
+@property --ah-l{syntax:'<number>';inherits:false;initial-value:0}
+#ah-island{display:none}
+@media (max-width:820px){
+  :root{--ah-h-side:calc(100vw - var(--ah-h-rail))}
+  :root{--ahi-bar:#232428;--ahi-line:#2f3035;--ahi-text:#f2f3f5;--ahi-muted:#a8abb3;--ahi-on:#d3d6ff;--ahi-pill:rgba(88,101,242,.30)}
+  html[data-theme="light"]{--ahi-bar:#f2f3f5;--ahi-line:#dcdfe4;--ahi-text:#1b1c20;--ahi-muted:#5d6068;--ahi-on:#3b46d1;--ahi-pill:rgba(88,101,242,.16)}
+
+  #ah-island{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));position:fixed;z-index:1230;left:50%;bottom:calc(12px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);
+    width:min(calc(100% - 24px),440px);padding:7px 6px;background:var(--ahi-bar);border:1px solid var(--ahi-line);border-radius:24px;box-shadow:0 8px 28px rgba(0,0,0,.5);
+    color:var(--ahi-muted);-webkit-tap-highlight-color:transparent;font-family:var(--font,'Inter',system-ui,sans-serif)}
+  html[data-theme="light"] #ah-island{box-shadow:0 8px 24px rgba(15,17,21,.18)}
+  #ah-island .ahi-b{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:0;height:50px;margin:0;padding:0;border:0;border-radius:16px;background:transparent;color:inherit;font:inherit;cursor:pointer;outline:none;-webkit-tap-highlight-color:transparent}
+  #ah-island .ahi-b:active{background:rgba(127,127,127,.2)}
+  #ah-island .ahi-b.active{background:var(--ahi-pill);color:var(--ahi-on)}
+  #ah-island .ahi-b svg{width:25px;height:25px;fill:currentColor;flex:0 0 auto}
+  #ah-island .ahi-b .ahi-l{max-width:100%;padding:0 1px;font-size:11px;font-weight:600;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #ah-island .ahi-me{color:var(--ahi-text)}
+  #ah-island .ahi-av{position:relative;display:grid;place-items:center;flex:0 0 auto;width:34px;height:34px;border-radius:50%;background:#2b2d31 center/cover no-repeat;color:#fff;font-size:15px;font-weight:800;line-height:1}
+  #ah-island .ahi-st{position:absolute;right:-3px;bottom:-3px;width:14px;height:14px;border-radius:50%;border:3px solid var(--ahi-bar);background:#23a55a;box-sizing:border-box}
+  #ah-island .ahi-st[data-s="idle"]{background:#f0b232}
+  #ah-island .ahi-st[data-s="dnd"]{background:#f23f43}
+  #ah-island .ahi-st[data-s="invisible"],#ah-island .ahi-st[data-s="offline"]{background:#80848e}
+  #ah-island .ahi-st[data-s="dnd"]::after{content:"";position:absolute;left:50%;top:50%;width:6px;height:2px;margin:-1px 0 0 -3px;border-radius:1px;background:var(--ahi-bar)}
+  #ah-island .ahi-badge{position:absolute;top:-1px;left:calc(50% + 10px);min-width:18px;height:16px;padding:0 5px;border-radius:8px;background:#5865f2;color:#fff;box-shadow:0 0 0 2px var(--ahi-bar);font-size:10px;font-weight:800;line-height:16px;text-align:center;box-sizing:border-box}
+  #ah-island .ahi-badge[hidden]{display:none}
+  html.ahi-kb #ah-island,
+  body:has(.ah-settings-backdrop.open,.ah-v3-overlay.open,.ah-v3-mini.open,.modal-backdrop.open,.ah-profile-customizer-backdrop.open,.ah-image-editor-backdrop.open,.self-profile-backdrop.open,.ah-server-modal-backdrop.open,.ah-global-console-backdrop.open,.ah-release-backdrop.open,.ah-inbox-panel.open) #ah-island{display:none}
+
+  /* the island replaces: the account card + the Friends/Plus/Shop/Quests chips in the drawer, and the bar inside the "You" sheet */
+  html body .app:not(#ah-m) .dm-sidebar .user-panel,
+  html body .app:not(#ah-m) .dm-sidebar .home-nav,
+  html body .app:not(#ah-m) .dm-sidebar .dm-home-nav{display:none!important}
+  #ah-you .ahy-bar{display:none!important}
+  /* the island stays on top of the "You" sheet (it replaces the bar that used to live inside it) */
+  #ah-you .ahy-scroll{padding-bottom:calc(104px + env(safe-area-inset-bottom,0px))}
+  #ah-you .ahi-setrow{display:flex}
+  html.ah-h-l-on #ah-island .ahi-b.active{background:transparent;color:inherit}
+  html.ah-h-l-on #ah-island .ahi-b[data-ahi="chats"]{background:var(--ahi-pill);color:var(--ahi-on)}
+  #ah-you .ahi-setrow{margin-top:12px}
+  #ah-you .ahi-setrow>svg:first-child{color:var(--ahy-text)}
+  html:has(#ah-you.open) #ah-island{z-index:20010}
+  html:has(#ah-you.open) #ah-island .ahi-me{background:var(--ahi-pill)}
+  /* keep content clear of the island */
+  html body .app:not(#ah-m) .friend-content{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))!important}
+  html body .app:not(#ah-m) .ah-nitro-home-scroll,
+  html body .app:not(#ah-m) .ah-store-scroll{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))!important}
+}
+</style>
+<nav id="ah-island" aria-label="">
+  <button type="button" class="ahi-b" data-ahi="chats"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 3h15A2.5 2.5 0 0 1 22 5.5v9a2.5 2.5 0 0 1-2.5 2.5H11l-5 4v-4H4.5A2.5 2.5 0 0 1 2 14.5v-9A2.5 2.5 0 0 1 4.5 3Z"/></svg><span class="ahi-l" data-lbl="chats"></span></button>
+  <button type="button" class="ahi-b" data-ahi="quests"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#ahy-i-quest"/></svg><span class="ahi-l" data-lbl="quests"></span></button>
+  <button type="button" class="ahi-b" data-ahi="store" data-home-view="store"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#ahy-i-shop"/></svg><span class="ahi-l" data-lbl="store"></span></button>
+  <button type="button" class="ahi-b" data-ahi="nitro" data-home-view="nitro"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#ahy-i-plus"/></svg><span class="ahi-l">Plus</span><b class="ahi-badge" id="ahi-plus-badge" hidden></b></button>
+  <button type="button" class="ahi-b ahi-me" data-ahi="me"><span class="ahi-av" id="ahi-av"><span id="ahi-init"></span><i class="ahi-st" id="ahi-st" data-s="online"></i></span></button>
+</nav>
+<script id="ah-island-js">
+(function(){
+  'use strict';
+  if(window.__ahIsland)return;window.__ahIsland=true;
+  var isl=document.getElementById('ah-island');if(!isl)return;
+  var mq=window.matchMedia('(max-width:820px)');
+  var panel=document.querySelector('.dm-sidebar .user-panel[data-mini-username]')||document.querySelector('.user-panel[data-mini-username]');
+  function T(k,fb){try{var v=window.AlexiHubI18n&&window.AlexiHubI18n.t&&window.AlexiHubI18n.t(k);return v&&v!==k?String(v):fb}catch(_){return fb}}
+  function labels(){
+    var lg=String(document.documentElement.lang||'uk').toLowerCase();var CH=lg.indexOf('ru')===0?'Чаты':lg.indexOf('en')===0?'Chats':'Чати';
+    var m={chats:['common.text.chats',CH],quests:['common.text.quests','Quests'],store:['common.text.shop','Shop']};
+    [].forEach.call(isl.querySelectorAll('[data-lbl]'),function(n){var d=m[n.getAttribute('data-lbl')];if(d)n.textContent=T(d[0],d[1])});
+    var me=isl.querySelector('.ahi-me'),nm=panel&&panel.dataset?(panel.dataset.miniDisplay||panel.dataset.miniUsername||''):'';
+    if(me)me.setAttribute('aria-label',nm);
+    isl.setAttribute('aria-label',T('common.aria.home_navigation','Navigation'));
+  }
+  labels();document.addEventListener('DOMContentLoaded',labels);window.addEventListener('load',labels);
+
+  /* avatar + presence follow the (hidden) account card */
+  var av=document.getElementById('ahi-av'),init=document.getElementById('ahi-init'),st=document.getElementById('ahi-st');
+  function syncMe(){
+    if(!panel)return;
+    var u=(panel.dataset.miniAvatar||'').trim();
+    if(!u){var a=panel.querySelector('.avatar');var bg=a&&a.style&&a.style.backgroundImage;if(bg&&bg!=='none')u=bg.replace(/^url\(["']?/,'').replace(/["']?\)$/,'')}
+    av.style.backgroundImage=u?'url("'+u.replace(/["\\\n\r]/g,'')+'")':'';
+    init.textContent=u?'':((panel.dataset.miniUsername||'?').charAt(0)||'?').toUpperCase();
+    var ps=document.getElementById('my-avatar-status'),m=ps&&/status-(online|idle|dnd|invisible|offline)/.exec(ps.className||'');
+    st.setAttribute('data-s',m?m[1]:(panel.dataset.miniStatus||'online'));
+  }
+  syncMe();
+  if(window.MutationObserver&&panel){
+    var mo=new MutationObserver(syncMe);
+    mo.observe(panel,{attributes:true,attributeFilter:['data-mini-avatar','data-mini-status','data-mini-username']});
+    var pa=panel.querySelector('.avatar');if(pa)mo.observe(pa,{attributes:true,attributeFilter:['style']});
+    var ps=document.getElementById('my-avatar-status');if(ps)mo.observe(ps,{attributes:true,attributeFilter:['class']});
+  }
+
+  /* Plus badge mirrors the one in the "You" sheet (filled by its own loader) */
+  var sb=document.getElementById('ahy-plus-badge'),ib=document.getElementById('ahi-plus-badge');
+  function syncBadge(){if(!sb||!ib)return;ib.textContent=sb.textContent;ib.hidden=sb.hidden||!sb.textContent.trim()}
+  syncBadge();
+  if(window.MutationObserver&&sb)new MutationObserver(syncBadge).observe(sb,{attributes:true,childList:true,characterData:true,subtree:true,attributeFilter:['hidden']});
+
+  function closeDrawer(){try{if(window.ahMobileDrawer)window.ahMobileDrawer.close()}catch(e){}}
+  function view(v){
+    var nav=document.querySelector('.dm-sidebar [data-home-view="'+v+'"]')||document.querySelector('[data-home-view="'+v+'"]');
+    if(typeof window.switchHomeView==='function'&&location.pathname.replace(/\/+$/,'')==='/community')window.switchHomeView(v,nav);
+    else location.href='/community#'+v;
+  }
+  isl.addEventListener('click',function(e){
+    var b=e.target.closest&&e.target.closest('[data-ahi]');if(!b)return;
+    var a=b.getAttribute('data-ahi');
+    var Y=window.ahYouSheet;
+    if(a==='me'){if(Y&&panel){if(Y.isOpen())Y.close();else Y.open(panel)}return}
+    if(Y&&Y.isOpen())Y.close();
+    if(a==='chats'){try{var D=window.ahMobileDrawer;if(D)(D.state()==='left'?D.close():D.open())}catch(_){}return}
+    closeDrawer();
+    if(a==='quests'){if(typeof window.showActionToast==='function')window.showActionToast(T('common.stub.tasks_soon','Quests are coming soon'))}
+    else if(a==='store'||a==='nitro')view(a);
+  });
+
+  /* hide while the on-screen keyboard is up */
+  function kb(){
+    if(!mq.matches){document.documentElement.classList.remove('ahi-kb');return}
+    var v=window.visualViewport;
+    document.documentElement.classList.toggle('ahi-kb',!!v&&v.height<window.innerHeight-120);
+  }
+  if(window.visualViewport)visualViewport.addEventListener('resize',kb);
+  window.addEventListener('resize',kb);kb();
+})();
+</script>
+<!-- AH-ISLAND:END -->
 <style id="ah-phone-perf-final-css">
 /* phones / touch: no live backdrop blur anywhere (very expensive on mobile GPUs: freezes scroll + sheets) */
 @media (max-width:820px),(hover:none) and (pointer:coarse){
