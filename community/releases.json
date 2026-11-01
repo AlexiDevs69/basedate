@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.284.1",
+      "date": "2026-11-01",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance audio context handling and mobile navigation."
+      ],
+      "source_sha": "9375ed532ec4b74175c534dad76492ead5aa5e0e"
+    },
+    {
       "version": "1.284.0",
       "date": "2026-11-01",
       "title": "Нові можливості AlexiHub",
