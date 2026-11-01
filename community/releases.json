@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.285.0",
+      "date": "2026-11-01",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: navigation island for quick access."
+      ],
+      "source_sha": "6e7e23882ef2bb2d99f8c0a71807630082bf7999"
+    },
+    {
       "version": "1.284.4",
       "date": "2026-11-01",
       "title": "Виправлення та стабільність",
