@@ -19085,6 +19085,8 @@ html.ah-recording #dm-record-timer,html.ah-recording #composer-record-timer{visi
   html:has(#ah-you.open) #ah-island{z-index:20010}
   html:has(#ah-you.open) #ah-island .ahi-b.active{background:transparent;color:inherit}
   html:has(#ah-you.open) #ah-island .ahi-me{background:var(--ahi-pill);color:var(--ahi-on)}
+  /* only one highlighted button at a time: while the You sheet is open, Chats loses its highlight even if the list is open behind it */
+  html:has(#ah-you.open) #ah-island .ahi-b[data-ahi="chats"]{background:transparent;color:inherit}
   /* the island replaces the account card and the Friends/Plus/Shop/Quests chips in the drawer */
   html body .app:not(#ah-m) .dm-sidebar .user-panel,
   html body .app:not(#ah-m) .dm-sidebar .home-nav,
