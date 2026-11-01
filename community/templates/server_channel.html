@@ -38,9 +38,12 @@
   }
 
   // Браузер дозволяє звук лише після дії користувача: "будимо" аудіо на першому кліку/натисканні (без жодного звуку)
+  var unlockT=0;
   function unlock(){
-    if(ctx && ctx.state==='running') return;
-    tryResume(getCtx());
+    if(ctx){ if(ctx.state!=='running') tryResume(ctx); return; }
+    /* creating an AudioContext takes 100+ ms on phones: never do it inside the very first tap (that tap is often the one that closes a drawer) */
+    if(unlockT) return;
+    unlockT=setTimeout(function(){ unlockT=0; tryResume(getCtx()); },1800);
   }
   ['pointerdown','keydown','touchstart','click'].forEach(function(ev){
     document.addEventListener(ev,unlock,{capture:true,passive:true});
@@ -18755,5 +18758,10 @@ html body .discord-hash{padding:10px 6px;margin:-10px -6px}
   aside.addEventListener('touchcancel',endDrag,{passive:true});
 })();
 </script>
+<style id="ah-drawer-prop-css">
+/* drawer progress vars do not inherit: changing them restyles only the drawer element itself, not its (huge) subtree */
+@property --ah-l{syntax:'<number>';inherits:false;initial-value:0}
+@property --ah-r{syntax:'<number>';inherits:false;initial-value:0}
+</style>
 </body>
 </html>
