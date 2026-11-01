@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.295.0",
+      "date": "2026-11-01",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: mobile DM search functionality and styles."
+      ],
+      "source_sha": "f01e3e7da06e126c5e9e5c2969202b91fe824896"
+    },
+    {
       "version": "1.294.0",
       "date": "2026-11-01",
       "title": "Нові можливості AlexiHub",
