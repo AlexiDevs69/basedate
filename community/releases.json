@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.286.0",
+      "date": "2026-11-01",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: navigation island for user interactions."
+      ],
+      "source_sha": "e9f1e77bc046d28a747c815b2c32197bebf576fe"
+    },
+    {
       "version": "1.285.0",
       "date": "2026-11-01",
       "title": "Нові можливості AlexiHub",
