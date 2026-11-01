@@ -12776,6 +12776,8 @@ html body .discord-channel-name::after{content:"\203A";margin-left:7px;opacity:.
   html:has(#ah-you.open) #ah-island{z-index:20010}
   html:has(#ah-you.open) #ah-island .ahi-b.active{background:transparent;color:inherit}
   html:has(#ah-you.open) #ah-island .ahi-me{background:var(--ahi-pill);color:var(--ahi-on)}
+  /* only one highlighted button at a time: while the You sheet is open, Chats loses its highlight even if the list is open behind it */
+  html:has(#ah-you.open) #ah-island .ahi-b[data-ahi="chats"]{background:transparent;color:inherit}
   /* the island replaces the account card in the channel list */
   html body .server-sidebar .account-panel{display:none!important}
   /* lists and page content run to the very bottom and scroll under the island */
