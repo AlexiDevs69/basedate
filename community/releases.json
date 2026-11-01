@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.290.0",
+      "date": "2026-11-01",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: add friends feature in DM chat."
+      ],
+      "source_sha": "c97f38c573c05298f35702ba9aad5cd733783485"
+    },
+    {
       "version": "1.289.0",
       "date": "2026-11-01",
       "title": "Нові можливості AlexiHub",
