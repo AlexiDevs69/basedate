@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.287.2",
+      "date": "2026-11-01",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Виправлено: missing newline at end of dm_chat.html."
+      ],
+      "source_sha": "0595c9e6ca950ae7f1ee6e0a7efa6e1a586ea715"
+    },
+    {
       "version": "1.287.1",
       "date": "2026-11-01",
       "title": "Виправлення та стабільність",
