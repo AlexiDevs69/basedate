@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.287.4",
+      "date": "2026-11-01",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Виправлено: HTML closing tag for server_channel.html."
+      ],
+      "source_sha": "2b7c9e41de8d3b5b54c1ffb77ce6147ab9ecd138"
+    },
+    {
       "version": "1.287.3",
       "date": "2026-11-01",
       "title": "Оновлення AlexiHub",
