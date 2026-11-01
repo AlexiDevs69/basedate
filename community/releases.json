@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.284.3",
+      "date": "2026-11-01",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: audio context unlocking mechanism."
+      ],
+      "source_sha": "f04f7b4815c043843e45473def55466afbf5a34a"
+    },
+    {
       "version": "1.284.2",
       "date": "2026-11-01",
       "title": "Оновлення AlexiHub",
