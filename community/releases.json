@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.292.0",
+      "date": "2026-11-01",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: API endpoint for searching DM items."
+      ],
+      "source_sha": "43e67d8ef2d1d3a68116d2f3d0df695bcfa99e3c"
+    },
+    {
       "version": "1.291.0",
       "date": "2026-11-01",
       "title": "Нові можливості AlexiHub",
