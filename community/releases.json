@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.287.8",
+      "date": "2026-11-01",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update dm_chat.html to adjust button highlight behavior."
+      ],
+      "source_sha": "810c414c452c36e72d5820b897f1b273b27c9449"
+    },
+    {
       "version": "1.287.7",
       "date": "2026-11-01",
       "title": "Виправлення та стабільність",
