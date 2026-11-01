@@ -5285,6 +5285,32 @@ async def api_vote_poll(poll_id: int, request: Request, db: AsyncSession = Depen
     return JSONResponse({"ok": True, "poll": poll})
 
 
+@router.get("/api/dm/search")
+async def api_search_dm_items(
+    request: Request,
+    type: str = "media",
+    q: str = "",
+    limit: int = 24,
+    db: AsyncSession = Depends(get_db),
+):
+    """Data for the mobile DM search screen (tabs "Media" and "Pinned").
+    Must stay above /api/dm/{username}/... routes."""
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in", "items": []}, status_code=401)
+    kind = (type or "").strip().lower()
+    if kind not in ("media", "pins"):
+        return JSONResponse({"ok": False, "error": "bad_type", "items": []}, status_code=400)
+    if _guess_limited(account.id, "dm_search", 90, 60):
+        return JSONResponse({"ok": False, "error": "rate_limited", "items": []}, status_code=429)
+    try:
+        limit = max(1, min(int(limit), 100))
+    except (TypeError, ValueError):
+        limit = 24
+    items = await crud.search_dm_items(db, int(account.id), kind, q, limit)
+    return JSONResponse({"ok": True, "items": items})
+
+
 @router.get("/api/dm/{username}/pins")
 async def api_list_dm_pins(username: str, request: Request, db: AsyncSession = Depends(get_db)):
     account = await current_account(request, db)
