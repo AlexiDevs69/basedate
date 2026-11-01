@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.287.1",
+      "date": "2026-11-01",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update styles for active state in home template."
+      ],
+      "source_sha": "a6b39b47d8b9c5ea4a7977de14108dfa8ad7a189"
+    },
+    {
       "version": "1.287.0",
       "date": "2026-11-01",
       "title": "Нові можливості AlexiHub",
