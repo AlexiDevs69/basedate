@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.284.0",
+      "date": "2026-11-01",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: unlock timeout for AudioContext."
+      ],
+      "source_sha": "881fb0c8afe8e6a7c382d19346a7d3702196e52f"
+    },
+    {
       "version": "1.283.2",
       "date": "2026-10-31",
       "title": "Оновлення AlexiHub",
