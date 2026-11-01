@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.291.0",
+      "date": "2026-11-01",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: friends feature for mobile interface."
+      ],
+      "source_sha": "de10b56558545d2aa24da1179296af6a2cd28641"
+    },
+    {
       "version": "1.290.0",
       "date": "2026-11-01",
       "title": "Нові можливості AlexiHub",
