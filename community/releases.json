@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.288.0",
+      "date": "2026-11-01",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: floating bottom navigation island."
+      ],
+      "source_sha": "e772c95a51781a931ced01a8b958c1446c4a4bc0"
+    },
+    {
       "version": "1.287.8",
       "date": "2026-11-01",
       "title": "Виправлення та стабільність",
