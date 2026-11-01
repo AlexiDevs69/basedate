@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.293.0",
+      "date": "2026-11-01",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: DM search functionality for media and pins."
+      ],
+      "source_sha": "2222909e6e09bf8f3e76f99ee13930e1819027a9"
+    },
+    {
       "version": "1.292.0",
       "date": "2026-11-01",
       "title": "Нові можливості AlexiHub",
