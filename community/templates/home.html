@@ -16949,5 +16949,162 @@ html body .ah-v3-overlay.open .ah-v3-full,html body .ah-v3-mini.open{will-change
 :root:root:root *,:root:root:root *::before,:root:root:root *::after{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 }
 </style>
+<!-- AH-NEWMSG:BEGIN (мобільне меню «Нове повідомлення» — відкривається синім «+» у шухляді ЛС) -->
+<script type="application/json" id="ah-nm-data">[{% if friends is defined and friends %}{% for f in friends %}{"u":{{ f.username|tojson }},"d":{{ (f.display_name or f.username)|tojson }},"a":{{ (f.avatar_url or '')|tojson }},"s":{{ (f.account_status or 'offline')|tojson }}}{{ ',' if not loop.last }}{% endfor %}{% endif %}]</script>
+<style id="ah-nm-css">
+#ah-nm{display:none;position:fixed;inset:0;z-index:20020;flex-direction:column;
+  --nm-bg:#1b1c1f;--nm-card:#232428;--nm-line:#313238;--nm-text:#f2f3f5;--nm-muted:#a8abb3;--nm-field:#17181b;--nm-accent:var(--accent,#5865f2);
+  background:var(--nm-bg);color:var(--nm-text);font-family:var(--font,'Inter',system-ui,sans-serif);-webkit-tap-highlight-color:transparent}
+html[data-theme="light"] #ah-nm{--nm-bg:#ffffff;--nm-card:#f2f3f5;--nm-line:#dcdfe4;--nm-text:#1b1c20;--nm-muted:#5d6068;--nm-field:#f2f3f5}
+#ah-nm.open{display:flex;animation:ahNmUp .26s cubic-bezier(.22,.8,.28,1)}
+@keyframes ahNmUp{from{transform:translate3d(0,40px,0);opacity:0}to{transform:none;opacity:1}}
+#ah-nm *{box-sizing:border-box}
+#ah-nm button,#ah-nm input{font:inherit;color:inherit;margin:0;outline:none}
+#ah-nm .nm-head{flex:0 0 auto;display:grid;grid-template-columns:48px 1fr 48px;align-items:center;padding:calc(env(safe-area-inset-top,0px) + 10px) 12px 10px}
+#ah-nm .nm-x{width:44px;height:44px;border:0;border-radius:50%;background:transparent;display:grid;place-items:center;cursor:pointer;padding:0}
+#ah-nm .nm-x:active{background:rgba(127,127,127,.2)}
+#ah-nm .nm-x svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round}
+#ah-nm .nm-title{text-align:center;font-size:20px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#ah-nm .nm-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:6px 16px calc(28px + env(safe-area-inset-bottom,0px));width:100%;max-width:640px;margin:0 auto}
+#ah-nm .nm-search{width:100%;height:54px;border:1px solid var(--nm-line);border-radius:14px;background:var(--nm-field);padding:0 16px;font-size:16px}
+#ah-nm .nm-search::placeholder{color:var(--nm-muted)}
+#ah-nm .nm-card{margin-top:16px;border-radius:18px;background:var(--nm-card);overflow:hidden}
+#ah-nm .nm-row{display:flex;align-items:center;gap:14px;width:100%;min-height:62px;padding:10px 16px;border:0;background:transparent;text-align:left;cursor:pointer;text-decoration:none;color:inherit}
+#ah-nm .nm-row:active{background:rgba(127,127,127,.14)}
+#ah-nm .nm-row+.nm-row,#ah-nm .nm-addform+.nm-row,#ah-nm .nm-row+.nm-addform{border-top:1px solid var(--nm-line)}
+#ah-nm .nm-row[disabled]{opacity:.5;cursor:default}
+#ah-nm .nm-row[disabled]:active{background:transparent}
+#ah-nm .nm-ico{width:26px;height:26px;flex:0 0 26px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#ah-nm .nm-txt{flex:1 1 auto;min-width:0;font-size:17px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#ah-nm .nm-chev{width:20px;height:20px;flex:0 0 20px;stroke:var(--nm-muted);fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+#ah-nm .nm-soon{flex:0 0 auto;padding:3px 9px;border-radius:10px;background:rgba(127,127,127,.22);color:var(--nm-muted);font-size:12px;font-weight:700}
+#ah-nm .nm-addform{padding:4px 16px 16px}
+#ah-nm .nm-addform[hidden]{display:none}
+#ah-nm .nm-addrow{display:flex;gap:8px}
+#ah-nm .nm-nick{flex:1 1 auto;min-width:0;height:46px;border:1px solid var(--nm-line);border-radius:12px;background:var(--nm-field);padding:0 14px;font-size:16px}
+#ah-nm .nm-send{flex:0 0 auto;height:46px;padding:0 16px;border:0;border-radius:12px;background:var(--nm-accent);color:#fff;font-weight:700;font-size:15px;cursor:pointer}
+#ah-nm .nm-send[disabled]{opacity:.6}
+#ah-nm .nm-msg{min-height:0;margin-top:8px;font-size:14px;font-weight:600}
+#ah-nm .nm-msg.ok{color:#23a55a}
+#ah-nm .nm-msg.err{color:#f23f43}
+#ah-nm .nm-label{margin:22px 4px 10px;font-size:17px;font-weight:600;color:var(--nm-muted)}
+#ah-nm .nm-letter{margin:18px 4px 10px;font-size:17px;font-weight:600;color:var(--nm-muted)}
+#ah-nm .nm-fr{display:flex;align-items:center;gap:14px;min-height:62px;padding:8px 16px;text-decoration:none;color:inherit;cursor:pointer}
+#ah-nm .nm-fr:active{background:rgba(127,127,127,.14)}
+#ah-nm .nm-fr+.nm-fr{border-top:1px solid var(--nm-line)}
+#ah-nm .nm-av{position:relative;flex:0 0 46px;width:46px;height:46px;border-radius:50%;background:#2b2d31 center/cover no-repeat;display:grid;place-items:center;color:#fff;font-size:18px;font-weight:800}
+#ah-nm .nm-st{position:absolute;right:-2px;bottom:-2px;width:16px;height:16px;border-radius:50%;border:3px solid var(--nm-card);background:#80848e}
+#ah-nm .nm-st[data-s="online"]{background:#23a55a}
+#ah-nm .nm-st[data-s="idle"]{background:#f0b232}
+#ah-nm .nm-st[data-s="dnd"]{background:#f23f43}
+#ah-nm .nm-who{flex:1 1 auto;min-width:0}
+#ah-nm .nm-who b{display:block;font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#ah-nm .nm-who span{display:block;margin-top:2px;font-size:14px;color:var(--nm-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#ah-nm .nm-empty{padding:26px 8px;text-align:center;color:var(--nm-muted);font-size:15px}
+</style>
+<script id="ah-nm-js">
+(function(){
+  if(window.__ahNewMsg)return;window.__ahNewMsg=true;
+  var L=(document.documentElement.lang||'uk').slice(0,2).toLowerCase();
+  var TT={
+    uk:{title:'Нове повідомлення',to:'Кому: Знайдіть друзів',group:'Нова група',soon:'Скоро',add:'Додати друга',friends:'Друзі',nick:'Нікнейм друга',send:'Надіслати запит',sent:'Запит надіслано',fail:'Не вдалося надіслати запит',none:'Нікого не знайдено',nofr:'Поки що немає друзів — додайте першого',close:'Закрити'},
+    ru:{title:'Новое сообщение',to:'Кому: Найдите друзей',group:'Новая группа',soon:'Скоро',add:'Добавить друга',friends:'Друзья',nick:'Никнейм друга',send:'Отправить запрос',sent:'Запрос отправлен',fail:'Не удалось отправить запрос',none:'Никого не найдено',nofr:'Пока нет друзей — добавьте первого',close:'Закрыть'},
+    en:{title:'New message',to:'To: Find friends',group:'New group',soon:'Soon',add:'Add friend',friends:'Friends',nick:'Friend\u2019s username',send:'Send request',sent:'Request sent',fail:'Couldn\u2019t send request',none:'No one found',nofr:'No friends yet \u2014 add your first one',close:'Close'}
+  };
+  var T=TT[L]||TT.uk;
+  var data=[];
+  try{var raw=document.getElementById('ah-nm-data');data=JSON.parse((raw&&raw.textContent)||'[]')||[]}catch(e){data=[]}
+  var NS='http://www.w3.org/2000/svg';
+  function svg(cls,paths){var s=document.createElementNS(NS,'svg');s.setAttribute('viewBox','0 0 24 24');s.setAttribute('class',cls);s.setAttribute('aria-hidden','true');paths.forEach(function(d){var p=document.createElementNS(NS,'path');p.setAttribute('d',d);s.appendChild(p)});return s}
+  function el(tag,cls,txt){var n=document.createElement(tag);if(cls)n.className=cls;if(txt!=null)n.textContent=txt;return n}
+
+  var root=el('div');root.id='ah-nm';root.setAttribute('role','dialog');root.setAttribute('aria-modal','true');root.setAttribute('aria-label',T.title);
+
+  var head=el('div','nm-head');
+  var x=el('button','nm-x');x.type='button';x.setAttribute('aria-label',T.close);x.appendChild(svg('',['M6 6l12 12','M18 6L6 18']));
+  head.appendChild(x);head.appendChild(el('div','nm-title',T.title));head.appendChild(el('span'));
+
+  var sc=el('div','nm-scroll');
+  var q=el('input','nm-search');q.type='text';q.placeholder=T.to;q.setAttribute('autocomplete','off');q.setAttribute('autocapitalize','off');q.setAttribute('spellcheck','false');q.setAttribute('aria-label',T.to);
+
+  var card=el('div','nm-card');
+  var grp=el('button','nm-row');grp.type='button';grp.disabled=true;
+  grp.appendChild(svg('nm-ico',['M16 21v-1.5a4.5 4.5 0 0 0-4.5-4.5h-3A4.5 4.5 0 0 0 4 19.5V21','M10 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z','M19 8v6','M16 11h6']));
+  grp.appendChild(el('span','nm-txt',T.group));grp.appendChild(el('span','nm-soon',T.soon));
+  var addb=el('button','nm-row');addb.type='button';
+  addb.appendChild(svg('nm-ico',['M16 21v-1.5a4.5 4.5 0 0 0-4.5-4.5h-3A4.5 4.5 0 0 0 4 19.5V21','M10 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z','M19 8v6','M16 11h6']));
+  addb.appendChild(el('span','nm-txt',T.add));addb.appendChild(svg('nm-chev',['M9 6l6 6-6 6']));
+  var form=el('form','nm-addform');form.hidden=true;
+  var arow=el('div','nm-addrow');
+  var nick=el('input','nm-nick');nick.type='text';nick.placeholder=T.nick;nick.setAttribute('autocomplete','off');nick.setAttribute('autocapitalize','off');nick.setAttribute('spellcheck','false');
+  var send=el('button','nm-send',T.send);send.type='submit';
+  arow.appendChild(nick);arow.appendChild(send);
+  var msg=el('div','nm-msg');
+  form.appendChild(arow);form.appendChild(msg);
+  card.appendChild(grp);card.appendChild(addb);card.appendChild(form);
+
+  var label=el('div','nm-label',T.friends);
+  var list=el('div');
+
+  sc.appendChild(q);sc.appendChild(card);sc.appendChild(label);sc.appendChild(list);
+  root.appendChild(head);root.appendChild(sc);
+  document.body.appendChild(root);
+
+  function render(term){
+    list.textContent='';
+    term=(term||'').toLowerCase().trim();
+    var items=data.filter(function(f){return !term||((f.d||'')+' '+(f.u||'')).toLowerCase().indexOf(term)>-1});
+    items.sort(function(a,b){return String(a.d||a.u).localeCompare(String(b.d||b.u),undefined,{sensitivity:'base'})});
+    if(!items.length){list.appendChild(el('div','nm-empty',data.length?T.none:T.nofr));return}
+    var cur=null,box=null;
+    items.forEach(function(f){
+      var name=String(f.d||f.u||'');
+      var ch=(name.trim().charAt(0)||'#').toUpperCase();
+      if(ch!==cur){cur=ch;list.appendChild(el('div','nm-letter',ch));box=el('div','nm-card');box.style.marginTop='0';list.appendChild(box)}
+      var a=el('a','nm-fr');a.href='/community/dm/'+encodeURIComponent(f.u);
+      var av=el('span','nm-av');
+      if(f.a){av.style.backgroundImage='url('+JSON.stringify(String(f.a))+')'}else{av.textContent=ch}
+      var st=el('span','nm-st');st.setAttribute('data-s',f.s||'offline');av.appendChild(st);
+      var who=el('span','nm-who');who.appendChild(el('b','',name));who.appendChild(el('span','','@'+f.u));
+      a.appendChild(av);a.appendChild(who);box.appendChild(a);
+    });
+  }
+  render('');
+  q.addEventListener('input',function(){render(q.value)});
+
+  addb.addEventListener('click',function(){
+    form.hidden=!form.hidden;
+    if(!form.hidden){setTimeout(function(){try{nick.focus()}catch(e){}},30)}
+  });
+  form.addEventListener('submit',function(e){
+    e.preventDefault();
+    var u=(nick.value||'').trim().replace(/^@+/,'');
+    if(!u)return;
+    send.disabled=true;msg.className='nm-msg';msg.textContent='';
+    fetch('/community/api/friends/request/'+encodeURIComponent(u),{method:'POST',credentials:'same-origin'})
+      .then(function(r){return r.json().catch(function(){return{}}).then(function(d){return{ok:r.ok,d:d}})})
+      .then(function(res){
+        if(!res.ok)throw new Error((res.d&&res.d.error)||T.fail);
+        msg.className='nm-msg ok';msg.textContent=T.sent;nick.value='';
+      })
+      .catch(function(err){msg.className='nm-msg err';msg.textContent=(err&&err.message)||T.fail})
+      .then(function(){send.disabled=false});
+  });
+
+  function open(){root.classList.add('open');q.value='';render('');form.hidden=true;msg.textContent='';msg.className='nm-msg';sc.scrollTop=0}
+  function close(){root.classList.remove('open')}
+  x.addEventListener('click',close);
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&root.classList.contains('open'))close()});
+
+  /* take over the blue "+" in the drawer header before its old handler runs */
+  document.addEventListener('click',function(e){
+    var b=e.target&&e.target.closest&&e.target.closest('.ah-dh-plus');
+    if(!b)return;
+    e.preventDefault();e.stopImmediatePropagation();open();
+  },true);
+  window.ahNewMessage={open:open,close:close};
+})();
+</script>
+<!-- AH-NEWMSG:END -->
 </body>
 </html>
