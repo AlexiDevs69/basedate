@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.289.0",
+      "date": "2026-11-01",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: mobile menu for new message functionality."
+      ],
+      "source_sha": "9b453de1fa2f1067b38ec7d74c629441800103b3"
+    },
+    {
       "version": "1.288.1",
       "date": "2026-11-01",
       "title": "Виправлення та стабільність",
