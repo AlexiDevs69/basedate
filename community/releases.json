@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.284.4",
+      "date": "2026-11-01",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance audio context unlock mechanism."
+      ],
+      "source_sha": "1a3f63c5258e365128070305e8109688c8be1252"
+    },
+    {
       "version": "1.284.3",
       "date": "2026-11-01",
       "title": "Оновлення AlexiHub",
