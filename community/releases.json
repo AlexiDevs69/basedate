@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.299.0",
+      "date": "2026-11-02",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: voice room management and disconnection logic."
+      ],
+      "source_sha": "e4df698c86cbb44a39b3199eaf0adba1978b3db6"
+    },
+    {
       "version": "1.298.0",
       "date": "2026-11-02",
       "title": "Нові можливості AlexiHub",
