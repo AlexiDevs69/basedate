@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.301.1",
+      "date": "2026-11-02",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Delete community/static/voice-room-client.js."
+      ],
+      "source_sha": "af2c3a4b6ee1c4aab2f70641404c4337548992ab"
+    },
+    {
       "version": "1.301.0",
       "date": "2026-11-02",
       "title": "Нові можливості AlexiHub",
