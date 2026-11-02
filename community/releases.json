@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.296.0",
+      "date": "2026-11-02",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: voice room HTML template."
+      ],
+      "source_sha": "c2be08a001bf71e1818c2bce48ab02264a690de9"
+    },
+    {
       "version": "1.295.3",
       "date": "2026-11-02",
       "title": "Виправлення та стабільність",
