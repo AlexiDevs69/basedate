@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.298.0",
+      "date": "2026-11-02",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: voice room functionality with WebRTC support."
+      ],
+      "source_sha": "61ac8b474e3b185a932ac407f4cb725ea23bd285"
+    },
+    {
       "version": "1.297.0",
       "date": "2026-11-02",
       "title": "Нові можливості AlexiHub",
