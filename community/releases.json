@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.300.3",
+      "date": "2026-11-02",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update channel links and add voice channel support."
+      ],
+      "source_sha": "9f915240b5b75cd957f84307022b8b2e47be4508"
+    },
+    {
       "version": "1.300.2",
       "date": "2026-11-02",
       "title": "Оновлення AlexiHub",
