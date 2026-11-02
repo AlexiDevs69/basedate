@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.297.0",
+      "date": "2026-11-02",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: VoiceRoom class for WebRTC voice functionality."
+      ],
+      "source_sha": "2469738b0d8c35d7d849f51dd420fa71bcace476"
+    },
+    {
       "version": "1.296.0",
       "date": "2026-11-02",
       "title": "Нові можливості AlexiHub",
