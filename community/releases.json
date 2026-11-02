@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.295.3",
+      "date": "2026-11-02",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance voice channel integration in server home."
+      ],
+      "source_sha": "21e42639de12f45da16f6c287aa063a0b8b1d851"
+    },
+    {
       "version": "1.295.2",
       "date": "2026-11-02",
       "title": "Оновлення AlexiHub",
