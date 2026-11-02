@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.300.4",
+      "date": "2026-11-02",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: voice room handling and update management logic."
+      ],
+      "source_sha": "440aab072d164edcb86e53fce1a72f07131f5192"
+    },
+    {
       "version": "1.300.3",
       "date": "2026-11-02",
       "title": "Виправлення та стабільність",
