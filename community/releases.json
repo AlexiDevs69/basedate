@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.300.1",
+      "date": "2026-11-02",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Update voice room title and improve layout."
+      ],
+      "source_sha": "1132ffc841aec5e68b724dc05e54d038c52c0821"
+    },
+    {
       "version": "1.300.0",
       "date": "2026-11-02",
       "title": "Нові можливості AlexiHub",
