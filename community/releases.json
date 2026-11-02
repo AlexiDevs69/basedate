@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.301.3",
+      "date": "2026-11-02",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Delete community/voice_rooms.py."
+      ],
+      "source_sha": "7b98b377f245ed3603b3b70b6d9ea8e7e9c851f7"
+    },
+    {
       "version": "1.301.2",
       "date": "2026-11-02",
       "title": "Виправлення та стабільність",
