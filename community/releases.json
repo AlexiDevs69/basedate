@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.301.2",
+      "date": "2026-11-02",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Rename voice-room.html to voice_room.html."
+      ],
+      "source_sha": "de60f829ae9a136ae433d9c331b85456b802f610"
+    },
+    {
       "version": "1.301.1",
       "date": "2026-11-02",
       "title": "Виправлення та стабільність",
