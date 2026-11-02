@@ -48,6 +48,19 @@ from sqlalchemy.exc import DBAPIError, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from community import auth, calls, crud
+from community.voice_rooms import (
+    CLOSE_FORBIDDEN as VOICE_CLOSE_FORBIDDEN,
+    CLOSE_IDLE as VOICE_CLOSE_IDLE,
+    CLOSE_MOVED as VOICE_CLOSE_MOVED,
+    IDLE_TIMEOUT_SECONDS as VOICE_IDLE_TIMEOUT,
+    MAX_WS_TEXT_BYTES as VOICE_MAX_WS_TEXT_BYTES,
+    RECHECK_SECONDS as VOICE_RECHECK_SECONDS,
+    VOICE_CHANNEL_TYPES,
+    connection_limiters as voice_connection_limiters,
+    ice_servers_for as voice_ice_servers_for,
+    public_profile as voice_public_profile,
+    voice_rooms,
+)
 from config import get_settings
 from database import AsyncSessionLocal, get_db
 
@@ -902,6 +915,7 @@ async def community_schema_startup() -> None:
             logging.getLogger(__name__).exception("message meta columns check failed; will retry lazily")
         await crud.ensure_server_boost_tables(db)
         await crud.ensure_store_studio_tables(db)
+        await crud.ensure_voice_tables(db)
 
 
 # --- Lightweight realtime layer --------------------------------------------
@@ -3261,7 +3275,7 @@ async def server_channel_settings_submit(
 
     if name.strip():
         await crud.update_server_channel(db, server_id, channel_id, name.strip(), description.strip())
-    safe_redirect = redirect_to if redirect_to.startswith("/community/") else f"/community/servers/{server_id}/channel/{channel_id}/settings"
+    safe_redirect = _safe_next_url(redirect_to, f"/community/servers/{server_id}/channel/{channel_id}/settings")
     return RedirectResponse(url=safe_redirect, status_code=303)
 
 
@@ -3278,7 +3292,8 @@ async def server_channel_delete_submit(
     if not await crud.can_manage_server(db, server_id, account.id):
         return RedirectResponse(url=f"/community/servers/{server_id}/channel/{channel_id}", status_code=303)
 
-    await crud.delete_server_channel(db, server_id, channel_id)
+    if await crud.delete_server_channel(db, server_id, channel_id):
+        await voice_rooms.disconnect_channel(server_id, channel_id, reason="channel_deleted")
     return RedirectResponse(url=f"/community/servers/{server_id}", status_code=303)
 
 
@@ -3518,6 +3533,8 @@ async def api_delete_server(server_id: int, request: Request, db: AsyncSession =
     if int(server.owner_id) != int(account.id):
         return JSONResponse({"ok": False, "error": "owner_only"}, status_code=403)
     removed = await crud.delete_server(db, server_id)
+    if removed:
+        await voice_rooms.disconnect_server(server_id, reason="server_deleted")
     return JSONResponse({"ok": bool(removed)})
 
 
@@ -4023,6 +4040,7 @@ async def api_moderate_server_member(
 
     if action in {"kick", "ban"}:
         await realtime_channels.disconnect_server_account(server_id, target_id)
+        await voice_rooms.disconnect_account(target_id, server_id=server_id, reason="removed_from_server")
     return JSONResponse({"ok": True, "result": result, "action": action, "target_id": target_id})
 
 
@@ -4081,7 +4099,11 @@ async def server_leave_submit(
     account = await current_account(request, db)
     if not account:
         return RedirectResponse(url="/community/login", status_code=303)
-    await crud.leave_server(db, server_id, account.id)
+    if await crud.leave_server(db, server_id, account.id):
+        # Live sockets only re-check membership on send/sync; without this the
+        # user kept receiving new channel messages after leaving.
+        await realtime_channels.disconnect_server_account(server_id, account.id)
+        await voice_rooms.disconnect_account(account.id, server_id=server_id, reason="left_server")
     return RedirectResponse(url="/community", status_code=303)
 
 
@@ -5855,10 +5877,17 @@ async def ws_server_channel(websocket: WebSocket, server_id: int, channel_id: in
                     # inject a custom suffix live without ever saving it, so
                     # it needs the same server-side backstop, not just the
                     # Settings UI's client-side lock.
-                    if clean_typing_text and not await crud.has_active_nitro(db, account_id):
-                        clean_typing_text = ""
-                    elif clean_typing_text:
-                        clean_typing_text, typing_emojis = await crud.sanitize_typing_text_emojis(db, account_id, clean_typing_text)
+                    if clean_typing_text:
+                        # Short-lived session: never reuse the connect-time `db`,
+                        # which would silently open a new transaction and keep
+                        # a pooled connection checked out for the whole socket.
+                        async with AsyncSessionLocal() as typing_db:
+                            if not await crud.has_active_nitro(typing_db, account_id):
+                                clean_typing_text = ""
+                            else:
+                                clean_typing_text, typing_emojis = await crud.sanitize_typing_text_emojis(
+                                    typing_db, account_id, clean_typing_text
+                                )
                     typing_profile = {
                         **profile,
                         "typing_text": clean_typing_text,
@@ -6297,10 +6326,17 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
                     # inject a custom suffix live without ever saving it, so
                     # it needs the same server-side backstop, not just the
                     # Settings UI's client-side lock.
-                    if clean_typing_text and not await crud.has_active_nitro(db, account_id):
-                        clean_typing_text = ""
-                    elif clean_typing_text:
-                        clean_typing_text, typing_emojis = await crud.sanitize_typing_text_emojis(db, account_id, clean_typing_text)
+                    if clean_typing_text:
+                        # Short-lived session: never reuse the connect-time `db`,
+                        # which would silently open a new transaction and keep
+                        # a pooled connection checked out for the whole socket.
+                        async with AsyncSessionLocal() as typing_db:
+                            if not await crud.has_active_nitro(typing_db, account_id):
+                                clean_typing_text = ""
+                            else:
+                                clean_typing_text, typing_emojis = await crud.sanitize_typing_text_emojis(
+                                    typing_db, account_id, clean_typing_text
+                                )
                     typing_profile = {
                         **profile,
                         "typing_text": clean_typing_text,
@@ -6446,7 +6482,11 @@ async def ws_dm_thread(websocket: WebSocket, thread_id: int):
             pass
     finally:
         calls.handle_disconnect(account_id)
-        await account_realtime.disconnect(int(account_id), websocket)
+        # This socket was registered in realtime_channels (key (0, thread_id)),
+        # not in account_realtime. Disconnecting the wrong manager leaked the
+        # socket: is_account_connected() kept returning True, so new @mentions
+        # were silently auto-marked as read after the user closed the DM.
+        await realtime_channels.disconnect(key, account_id, websocket, profile)
 
 
 @router.post("/presence/status")
@@ -6550,6 +6590,7 @@ async def api_settings_change_password(request: Request, db: AsyncSession = Depe
         await asyncio.gather(
             realtime_channels.close_account(updated.id),
             account_realtime.close_account(updated.id),
+            voice_rooms.disconnect_account(updated.id, reason="session_revoked"),
         )
     return JSONResponse({
         "ok": True,
@@ -6626,6 +6667,7 @@ async def api_settings_revoke_sessions(request: Request, db: AsyncSession = Depe
     await asyncio.gather(
         realtime_channels.close_account(updated.id),
         account_realtime.close_account(updated.id),
+        voice_rooms.disconnect_account(updated.id, reason="session_revoked"),
     )
     return JSONResponse({"ok": True, "message": "Інші сесії завершено."})
 
@@ -7656,3 +7698,384 @@ async def api_rich_preview(
         except Exception:
             await cache_db.rollback()
     return JSONResponse({"ok": True, "cached": False, "preview": preview})
+
+
+# ============================================================================
+# Voice rooms -- Discord-style "voice" / "stage" channels.
+# Room state + signaling: community/voice_rooms.py. Media is peer-to-peer
+# WebRTC (full mesh); the backend only relays signaling and enforces access.
+#
+#   WS    /community/ws/servers/{server_id}/voice/{channel_id}
+#   GET   /community/api/voice/ice-servers
+#   GET   /community/api/voice/me
+#   GET   /community/api/servers/{server_id}/voice-states
+#   PATCH /community/api/servers/{server_id}/channels/{channel_id}/voice-settings
+# ============================================================================
+
+_VOICE_AUDIENCE_TTL_SECONDS = 15.0
+_voice_audience_cache: dict[tuple[int, int], tuple[float, list[int]]] = {}
+_VOICE_MANAGER_ROLES = {"owner", "admin"}
+_VOICE_MOD_ACTIONS = {
+    "server_mute", "server_deaf", "disconnect", "move", "stage_invite", "stage_audience",
+}
+
+
+async def _voice_channel_audience(server_id: int, channel_id: int) -> list[int]:
+    """Who may see this channel's participant list (cached briefly so that a
+    burst of mute toggles does not hit PostgreSQL every time)."""
+    key = (int(server_id), int(channel_id))
+    now = time.monotonic()
+    cached = _voice_audience_cache.get(key)
+    if cached and now - cached[0] < _VOICE_AUDIENCE_TTL_SECONDS:
+        return cached[1]
+    async with AsyncSessionLocal() as db:
+        channel = await crud.get_server_channel(db, key[0], key[1])
+        ids = await crud.list_server_channel_audience_ids(db, key[0], channel) if channel else []
+    if len(_voice_audience_cache) > 5000:
+        _voice_audience_cache.clear()
+    _voice_audience_cache[key] = (now, ids)
+    return ids
+
+
+async def _voice_notify_server(server_id: int, channel_id: int, payload: dict) -> None:
+    ids = await _voice_channel_audience(server_id, channel_id)
+    for start in range(0, len(ids), 100):
+        await asyncio.gather(
+            *(account_realtime.send_to_account(uid, payload) for uid in ids[start:start + 100]),
+            return_exceptions=True,
+        )
+
+
+voice_rooms.set_notifier(_voice_notify_server)
+
+
+async def _voice_access(db: AsyncSession, websocket: WebSocket, account_id: int, server_id: int, channel_id: int):
+    """(account, channel, role) when the account may be in this voice room, else None.
+    Re-run periodically for live sockets, so kick/ban/revoked session/channel
+    made private or deleted all take effect within VOICE_RECHECK_SECONDS."""
+    account = await crud.get_account_by_id(db, account_id)
+    if not account or not _ws_session_matches_account(websocket, account):
+        return None
+    role = await crud.get_server_role(db, server_id, account_id)
+    if role is None or await crud.is_server_banned(db, server_id, account_id):
+        return None
+    channel = await crud.get_server_channel(db, server_id, channel_id)
+    if not channel or str(channel.channel_type or "text") not in VOICE_CHANNEL_TYPES:
+        return None
+    if not await crud.can_access_server_channel(db, server_id, channel, account_id):
+        return None
+    return account, channel, role
+
+
+async def _voice_moderate(actor, data: dict) -> str | None:
+    """Apply one moderation action. Returns an error code or None on success."""
+    action = str(data.get("action") or "").strip().lower()
+    if action not in _VOICE_MOD_ACTIONS:
+        return "bad_action"
+    try:
+        target_id = int(data.get("target") or 0)
+    except (TypeError, ValueError):
+        return "bad_target"
+    if not target_id:
+        return "bad_target"
+    server_id = actor.server_id
+    async with AsyncSessionLocal() as db:
+        actor_role = await crud.get_server_role(db, server_id, actor.account_id)
+        if actor_role not in _VOICE_MANAGER_ROLES:
+            return "forbidden"
+        target = await voice_rooms.get_participant(target_id)
+        if target is None or target.server_id != server_id:
+            return "target_not_in_voice"
+        if target_id != actor.account_id:
+            target_role = await crud.get_server_role(db, server_id, target_id)
+            # Nobody moderates the owner; only the owner moderates admins.
+            if target_role == "owner" or (target_role == "admin" and actor_role != "owner"):
+                return "insufficient_role"
+        dest_id = 0
+        if action == "move":
+            try:
+                dest_id = int(data.get("channel_id") or 0)
+            except (TypeError, ValueError):
+                return "bad_channel"
+            dest = await crud.get_server_channel(db, server_id, dest_id) if dest_id else None
+            if (
+                not dest
+                or str(dest.channel_type or "text") not in VOICE_CHANNEL_TYPES
+                or dest_id == target.channel_id
+            ):
+                return "bad_channel"
+            if not await crud.can_access_server_channel(db, server_id, dest, target_id):
+                return "target_no_access"
+
+    if action in {"server_mute", "server_deaf"}:
+        value = data.get("value")
+        if not isinstance(value, bool):
+            return "bad_value"
+        return None if await voice_rooms.moderate_flag(target, action, value) else "target_not_in_voice"
+    if action == "disconnect":
+        await voice_rooms.kick(target, payload={
+            "type": "voice_kicked", "reason": "moderator", "by": actor.account_id,
+        }, reason="moderator")
+        return None
+    if action == "move":
+        await voice_rooms.kick(target, code=VOICE_CLOSE_MOVED, payload={
+            "type": "voice_move", "server_id": server_id, "channel_id": dest_id, "by": actor.account_id,
+        }, reason="moved")
+        return None
+    # stage_invite / stage_audience
+    if not target.is_stage:
+        return "not_stage"
+    ok = await voice_rooms.set_stage_speaker(target, action == "stage_invite")
+    return None if ok else "target_not_in_voice"
+
+
+@router.websocket("/ws/servers/{server_id}/voice/{channel_id}")
+async def ws_server_voice(websocket: WebSocket, server_id: int, channel_id: int):
+    """Voice room socket.
+
+    Client -> server:
+      {"type": "ping"}
+      {"type": "state", "self_mute": bool, "self_deaf": bool, "video": bool, "screen": bool}
+      {"type": "speaking", "value": bool}
+      {"type": "signal", "to": <account_id>, "to_session": "...", "kind": "offer|answer|ice|renegotiate|restart_ice", "data": {...}}
+      {"type": "raise_hand", "value": bool}            (stage)
+      {"type": "leave_speakers"}                        (stage)
+      {"type": "mod", "action": "server_mute|server_deaf|disconnect|move|stage_invite|stage_audience",
+       "target": <account_id>, "value": bool, "channel_id": <dest for move>}
+      {"type": "leave"}
+
+    Server -> client:
+      voice_ready, participant_joined, participant_left, participant_updated,
+      speaking, signal, mod_result, voice_error, voice_replaced, voice_kicked,
+      voice_move, rate_limited, pong
+    """
+    account_id = _ws_account_id(websocket)
+    if not account_id:
+        await websocket.close(code=1008)
+        return
+
+    async with AsyncSessionLocal() as db:
+        access = await _voice_access(db, websocket, account_id, server_id, channel_id)
+        if not access:
+            await websocket.close(code=1008)
+            return
+        account, channel, role = access
+        user_limit = await crud.get_voice_channel_user_limit(db, channel_id)
+        profile = voice_public_profile(account)
+        channel_info = {
+            "id": int(channel.id),
+            "server_id": int(server_id),
+            "name": channel.name,
+            "type": str(channel.channel_type),
+            "user_limit": user_limit,
+        }
+
+    await websocket.accept()
+    participant, error = await voice_rooms.join(
+        server_id,
+        channel_id,
+        account_id,
+        websocket,
+        profile,
+        is_stage=str(channel.channel_type) == "stage",
+        is_manager=role in _VOICE_MANAGER_ROLES,
+        user_limit=user_limit,
+    )
+    if participant is None:
+        try:
+            await websocket.send_json({"type": "voice_error", "error": error or "join_failed", "channel": channel_info})
+            await websocket.close(code=4005 if error == "room_full" else VOICE_CLOSE_FORBIDDEN)
+        except Exception:
+            pass
+        return
+
+    limiters = voice_connection_limiters()
+    last_seen = last_check = time.monotonic()
+    leave_reason = "left"
+    try:
+        await websocket.send_json({
+            "type": "voice_ready",
+            "session_id": participant.session_id,
+            "self": participant.public(),
+            "participants": await voice_rooms.room_snapshot(server_id, channel_id),
+            "channel": channel_info,
+            "ice_servers": voice_ice_servers_for(account_id),
+            "can_moderate": role in _VOICE_MANAGER_ROLES,
+            "heartbeat_seconds": 15,
+        })
+        while True:
+            try:
+                raw = await asyncio.wait_for(websocket.receive_text(), timeout=10.0)
+            except asyncio.TimeoutError:
+                raw = None
+            now = time.monotonic()
+            if raw is not None:
+                last_seen = now
+            elif now - last_seen > VOICE_IDLE_TIMEOUT:
+                leave_reason = "timeout"
+                await websocket.close(code=VOICE_CLOSE_IDLE)
+                break
+
+            if now - last_check >= VOICE_RECHECK_SECONDS:
+                last_check = now
+                async with AsyncSessionLocal() as db:
+                    access = await _voice_access(db, websocket, account_id, server_id, channel_id)
+                if not access:
+                    leave_reason = "forbidden"
+                    await voice_rooms.kick(participant, code=VOICE_CLOSE_FORBIDDEN, payload={
+                        "type": "voice_kicked", "reason": "access_lost",
+                    }, reason="access_lost")
+                    break
+                participant.is_manager = access[2] in _VOICE_MANAGER_ROLES
+
+            if not await voice_rooms.is_current(participant):
+                break  # replaced by another tab, kicked or moved
+            if raw is None:
+                continue
+            if len(raw) > VOICE_MAX_WS_TEXT_BYTES:
+                continue
+            try:
+                data = json.loads(raw)
+            except ValueError:
+                continue
+            if not isinstance(data, dict):
+                continue
+            event_type = str(data.get("type") or "").strip().lower()
+
+            if event_type in {"leave", "disconnect", "close"}:
+                break
+
+            if event_type == "signal":
+                if not limiters["signal"].allow():
+                    await websocket.send_json({"type": "rate_limited", "scope": "signal"})
+                    continue
+                signal_error = await voice_rooms.relay_signal(participant, data)
+                if signal_error:
+                    await websocket.send_json({
+                        "type": "signal_error", "error": signal_error, "to": data.get("to"),
+                    })
+                continue
+
+            if event_type == "speaking":
+                if limiters["speaking"].allow():
+                    await voice_rooms.speaking(participant, bool(data.get("value")))
+                continue
+
+            if event_type == "state":
+                if not limiters["state"].allow():
+                    await websocket.send_json({"type": "rate_limited", "scope": "state"})
+                    continue
+                await voice_rooms.update_self_state(participant, data)
+                continue
+
+            if event_type == "raise_hand":
+                if limiters["state"].allow():
+                    await voice_rooms.set_hand(participant, bool(data.get("value")))
+                continue
+
+            if event_type == "leave_speakers":
+                if limiters["state"].allow():
+                    await voice_rooms.leave_stage_speakers(participant)
+                continue
+
+            if event_type == "mod":
+                if not limiters["mod"].allow():
+                    await websocket.send_json({"type": "rate_limited", "scope": "mod"})
+                    continue
+                mod_error = await _voice_moderate(participant, data)
+                await websocket.send_json({
+                    "type": "mod_result",
+                    "action": data.get("action"),
+                    "target": data.get("target"),
+                    "ok": mod_error is None,
+                    "error": mod_error,
+                })
+                continue
+
+            if event_type == "ping":
+                if limiters["other"].allow():
+                    await websocket.send_json({"type": "pong"})
+                continue
+    except WebSocketDisconnect:
+        pass
+    except Exception:
+        try:
+            await websocket.close(code=1011)
+        except Exception:
+            pass
+    finally:
+        await voice_rooms.leave(participant, reason=leave_reason)
+
+
+@router.get("/api/voice/ice-servers")
+async def api_voice_ice_servers(request: Request, db: AsyncSession = Depends(get_db)):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    return JSONResponse({"ok": True, "ice_servers": voice_ice_servers_for(int(account.id))})
+
+
+@router.get("/api/voice/me")
+async def api_voice_me(request: Request, db: AsyncSession = Depends(get_db)):
+    """Current voice session of the logged-in user (to restore the voice panel)."""
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    participant = await voice_rooms.get_participant(int(account.id))
+    if participant is None:
+        return JSONResponse({"ok": True, "voice": None})
+    return JSONResponse({"ok": True, "voice": {
+        "server_id": participant.server_id,
+        "channel_id": participant.channel_id,
+        "state": participant.public(),
+    }})
+
+
+@router.get("/api/servers/{server_id}/voice-states")
+async def api_server_voice_states(server_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    """Who is sitting in which voice channel -- only channels the viewer can see."""
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    if not await crud.is_server_member(db, server_id, account.id):
+        return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
+    can_manage = await crud.can_manage_server(db, server_id, account.id)
+    visible = {
+        int(channel.id): channel
+        for channel in await crud.list_server_channels(db, server_id, include_private=can_manage)
+        if str(channel.channel_type or "text") in VOICE_CHANNEL_TYPES
+    }
+    snapshot = await voice_rooms.server_snapshot(server_id)
+    channels = {}
+    for channel_id, channel in visible.items():
+        channels[str(channel_id)] = {
+            "user_limit": await crud.get_voice_channel_user_limit(db, channel_id),
+            "participants": snapshot.get(channel_id, []),
+        }
+    return JSONResponse({"ok": True, "channels": channels})
+
+
+@router.patch("/api/servers/{server_id}/channels/{channel_id}/voice-settings")
+async def api_server_voice_settings(
+    server_id: int,
+    channel_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    account = await current_account(request, db)
+    if not account:
+        return JSONResponse({"ok": False, "error": "not_logged_in"}, status_code=401)
+    if not await crud.can_manage_server(db, server_id, account.id):
+        return JSONResponse({"ok": False, "error": "forbidden"}, status_code=403)
+    channel = await crud.get_server_channel(db, server_id, channel_id)
+    if not channel or str(channel.channel_type or "text") not in VOICE_CHANNEL_TYPES:
+        return JSONResponse({"ok": False, "error": "not_found"}, status_code=404)
+    body = await _json_dict(request)
+    try:
+        user_limit = int(body.get("user_limit") or 0)
+    except (TypeError, ValueError):
+        return JSONResponse({"ok": False, "error": "bad_user_limit"}, status_code=400)
+    if user_limit < 0 or user_limit > crud.VOICE_USER_LIMIT_MAX:
+        return JSONResponse({"ok": False, "error": "bad_user_limit"}, status_code=400)
+    saved = await crud.set_voice_channel_user_limit(db, channel_id, user_limit)
+    return JSONResponse({"ok": True, "user_limit": saved})
