@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Голосова кімната</title>
+<style>
+:root{--bg:#000;--btn:#1e1f22;--btn2:#2b2d31;--btn3:#383a40;--txt:#f2f3f5;--mut:#b5bac1;--red:#da373c;--grn:#23a55a}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--txt);font:14px/1.3 "Segoe UI",system-ui,sans-serif;overflow:hidden}
+button{font:inherit;color:inherit;border:0;cursor:pointer}
+body{display:flex;flex-direction:column}
+header{height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;color:var(--mut);font-weight:600}
+header b{color:var(--txt);margin-left:8px}
+header div{display:flex;align-items:center}
+#stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;gap:8px;padding:0 16px}
+#main,#strip{width:min(100%,1100px);display:grid;gap:8px}
+#main{flex:1;min-height:0;grid-auto-rows:minmax(0,1fr)}
+#strip{height:110px;grid-auto-flow:column;grid-auto-columns:170px;justify-content:center}
+#strip:empty{display:none}
+.tile{position:relative;border-radius:8px;overflow:hidden;background:var(--c,#385152);display:grid;place-items:center;min-height:0;cursor:pointer}
+.tile video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;background:#000}
+.tile.hasv video{display:block}.tile.scr video{object-fit:contain}.tile video.mir{transform:scaleX(-1)}
+.tile.hasv .av{display:none}
+.av{width:clamp(48px,16vmin,110px);aspect-ratio:1;border-radius:50%;overflow:hidden;background:rgba(255,255,255,.12);display:grid;place-items:center;font-size:clamp(20px,7vmin,44px);font-weight:700}
+.av img{width:100%;height:100%;object-fit:cover}
+.tile::after{content:"";position:absolute;inset:0;border-radius:8px;pointer-events:none;box-shadow:inset 0 0 0 0 var(--grn);transition:box-shadow .12s}
+.tile.speak::after{box-shadow:inset 0 0 0 3px var(--grn)}
+.nm{position:absolute;left:12px;bottom:12px;max-width:calc(100% - 24px);display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.62);padding:4px 8px;border-radius:6px;font-weight:600;z-index:1}
+.nm span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nm svg{width:16px;height:16px;flex:none;color:#f23f43}
+#strip .nm{left:6px;bottom:6px;padding:2px 6px;font-size:12px}
+#promo{background:linear-gradient(#3a0d3c,#0a0010 80%);cursor:default;text-align:center;padding:16px}
+#promo svg{width:min(240px,50%);max-height:55%}
+#promo p{margin:8px 0 0;color:#d9c7e6}
+#aud{display:none;gap:8px;flex-wrap:wrap;justify-content:center;padding:4px;color:var(--mut)}
+#aud i{font-style:normal;background:var(--btn);padding:4px 10px;border-radius:14px}
+#inv{background:var(--btn);padding:10px 14px;border-radius:8px;font-weight:600;display:flex;gap:8px;align-items:center;margin:6px 0}
+#inv:hover,.cb:hover{background:var(--btn2)}
+footer{height:84px;position:relative;display:flex;align-items:center;justify-content:center;gap:12px}
+.grp{display:flex;gap:4px;background:var(--btn);padding:6px;border-radius:12px;border:1px solid #2a2b30}
+.cb{width:44px;height:40px;border-radius:8px;background:transparent;display:grid;place-items:center}
+.cb.bad{background:#3a1c1e;color:#f23f43}.cb.on{background:var(--grn)}
+.cb.end{background:var(--red);width:64px;height:52px;border-radius:12px}.cb.end:hover{background:#a12828}
+.fl{position:absolute;bottom:22px}.fl.l{left:16px}.fl.r{right:16px}
+.fl .cb{background:transparent;color:var(--mut)}
+#ov{position:fixed;inset:0;background:rgba(0,0,0,.86);display:grid;place-items:center;z-index:10}
+#ov .card{background:#111214;border:1px solid #2a2b30;border-radius:12px;padding:28px;width:min(420px,92vw);text-align:center}
+#ov h2{margin:0 0 8px}#ov p{color:var(--mut);margin:0 0 20px}
+.primary{background:var(--grn);color:#fff;padding:11px 24px;border-radius:8px;font-weight:600}
+.primary:hover{filter:brightness(1.1)}.primary:disabled{opacity:.4;cursor:default}
+#menu{position:fixed;z-index:20;background:#111214;border:1px solid #2a2b30;border-radius:8px;padding:6px;min-width:200px;display:none}
+#menu button{display:block;width:100%;text-align:left;background:none;padding:8px 10px;border-radius:5px}
+#menu button:hover{background:var(--btn3)}#menu .d{color:#f23f43}
+#toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:var(--btn3);padding:9px 16px;border-radius:8px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:30}
+#toast.s{opacity:1}
+button:focus-visible{outline:2px solid #5865f2;outline-offset:2px}
+@media(max-width:640px){#strip{grid-auto-columns:120px;height:90px}.fl{display:none}}
+</style>
+</head>
+<body>
+<header><div id="hl"></div><div id="hr"></div></header>
+<div id="stage">
+  <div id="main"></div>
+  <div id="strip"></div>
+  <div id="aud"></div>
+  <button id="inv"></button>
+</div>
+<footer>
+  <div class="fl l"><button class="cb" id="inv2" title="Запросити"></button></div>
+  <div class="grp"><button class="cb" id="mic" title="Мікрофон"></button><button class="cb" id="deaf" title="Вимкнути звук"></button><button class="cb" id="cam" title="Камера"></button></div>
+  <div class="grp"><button class="cb" id="scr" title="Демонстрація екрана"></button><button class="cb" id="hand" title="Підняти руку" style="display:none">✋</button></div>
+  <button class="cb end" id="end" title="Вийти"></button>
+  <div class="fl r"><button class="cb" id="fs" title="На весь екран"></button></div>
+</footer>
+
+<div id="promo" class="tile" hidden>
+  <svg viewBox="0 0 120 100" aria-hidden="true"><path d="M38 14h44v26a22 22 0 0 1-44 0z" fill="#8b7cf6"/><path d="M38 20H24c0 16 6 26 18 28M82 20h14c0 16-6 26-18 28" fill="none" stroke="#6a5bd8" stroke-width="6"/><rect x="54" y="62" width="12" height="16" fill="#6a5bd8"/><rect x="40" y="78" width="40" height="8" rx="3" fill="#5a4bc8"/><path d="m60 20 4 9 10 1-7.500 6.500 2.500 9.500-9-5-9 5 2.500-9.500L46 30l10-1z" fill="#3b2a9c"/></svg>
+  <p>Тут поки тільки ти. Запроси друзів у розмову.</p>
+</div>
+<div id="ov"><div class="card"><h2 id="ovt"></h2><p id="ovp"></p><button class="primary" id="ovb"></button></div></div>
+<div id="menu"></div><div id="toast"></div>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const IC={
+ mic:"M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.9V21h2v-3.1A7 7 0 0 0 19 11z",
+ head:"M12 3a9 9 0 0 0-9 9v7a2 2 0 0 0 2 2h3v-8H5v-1a7 7 0 0 1 14 0v1h-3v8h3a2 2 0 0 0 2-2v-7a9 9 0 0 0-9-9z",
+ cam:"M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.500l4 4v-11z",
+ scr:"M21 3H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5v2h8v-2h5a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm0 14H3V5h18z",
+ end:"M12 9c-1.600 0-3.150.25-4.600.72v3.100c0 .39-.23.74-.56.9-.98.49-1.870 1.120-2.660 1.850-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.080a.956.956 0 0 1-.29-.7c0-.28.11-.53.29-.71C3.340 8.780 7.460 7 12 7s8.660 1.780 11.710 4.670c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.480 2.480c-.18.18-.43.29-.71.29-.27 0-.52-.11-.7-.28a11.270 11.270 0 0 0-2.670-1.850.996.996 0 0 1-.56-.9v-3.100C15.150 9.250 13.600 9 12 9z",
+ add:"M15 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2zm9 4c-2.700 0-8 1.300-8 4v2h16v-2c0-2.700-5.300-4-8-4z",
+ fs:"M7 14H5v5h5v-2H7zm-2-4h2V7h3V5H5zm12 7h-3v2h5v-5h-2zM14 5v2h3v3h2V5z",
+ spk:"M3 9v6h4l5 5V4L7 9zm13.500 3A4.500 4.500 0 0 0 14 8v8a4.500 4.500 0 0 0 2.500-4z"
+};
+const ic=(n,off,sz=20)=>`<svg viewBox="0 0 24 24" width="${sz}" height="${sz}" fill="currentColor"><path d="${IC[n]}"/>${off?'<path d="M4 3.500 20.500 20" stroke="currentColor" stroke-width="2.400" fill="none"/>':""}</svg>`;
+const q=new URLSearchParams(location.search);
+let serverId=+q.get("server")||0, channelId=+q.get("channel")||0, room=null, pin=null;
+
+function toast(t){const e=$("#toast");e.textContent=t;e.classList.add("s");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove("s"),2600)}
+function overlay(title,text,btn,fn){$("#ovt").textContent=title;$("#ovp").textContent=text;const b=$("#ovb");b.textContent=btn;b.disabled=!fn;b.onclick=fn;$("#ov").style.display="grid"}
+
+class Room{
+ constructor(){this.peers=new Map();this.parts=new Map();this.speaking=new Set();this.pend=[];this.kinds={};this.selfMute=false;this.deaf=false;this.prevMute=false;this.selfSpeak=false}
+ get me(){return this.parts.get(this.selfId)||{}}
+ canSpeak(){return this.me.can_speak!==false}
+ send(m){if(this.ws&&this.ws.readyState===1)this.ws.send(JSON.stringify(m))}
+ sig(to,session,kind,data){this.send({type:"signal",to,to_session:session,kind,data})}
+ async join(){
+  try{this.mic=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}})}
+  catch(e){this.mic=null;this.selfMute=true;toast("Мікрофон недоступний — ти лише слухаєш")}
+  const ws=this.ws=new WebSocket(`${location.protocol==="https:"?"wss":"ws"}://${location.host}/community/ws/servers/${serverId}/voice/${channelId}`);
+  ws.onmessage=e=>{try{this.onMsg(JSON.parse(e.data))}catch(x){console.warn(x)}};
+  ws.onclose=e=>this.teardown(e.code);
+  this.hb=setInterval(()=>this.send({type:"ping"}),15000);
+  if(this.mic)this.detect();
+ }
+ leave(){this.endReason="left";this.send({type:"leave"});this.ws&&this.ws.close()}
+ onMsg(m){
+  switch(m.type){
+   case "voice_ready":
+    this.ready=true;this.selfId=m.self.account_id;this.ice=m.ice_servers||[];this.chan=m.channel;this.canMod=!!m.can_moderate;
+    m.participants.forEach(p=>this.parts.set(p.account_id,p));
+    if(this.selfMute)this.pushState();
+    m.participants.forEach(p=>p.account_id!==this.selfId&&this.peer(p.account_id,p.session_id));
+    $("#ov").style.display="none";$("#hand").style.display=this.chan.type==="stage"?"":"none";
+    this.applyMic();render();bar();break;
+   case "participant_joined":
+    this.parts.set(m.participant.account_id,m.participant);
+    this.pend.splice(0).forEach(x=>this.onSignal(x));render();break;
+   case "participant_updated":{
+    const p=m.participant;this.parts.set(p.account_id,p);
+    const pe=this.peers.get(p.account_id);pe&&this.mutePeer(pe);
+    if(p.account_id===this.selfId)this.applyMic();
+    render();bar();break}
+   case "participant_left":
+    this.parts.delete(m.account_id);this.speaking.delete(m.account_id);this.closePeer(m.account_id);render();break;
+   case "speaking":m.value?this.speaking.add(m.account_id):this.speaking.delete(m.account_id);updSpeak();break;
+   case "signal":this.onSignal(m);break;
+   case "voice_move":this.moveTo=m.channel_id;break;
+   case "voice_kicked":case "voice_replaced":this.endReason=m.reason||m.type;break;
+   case "voice_error":this.endReason=m.error;break;
+   case "mod_result":if(!m.ok)toast("Не вдалося: "+(m.error||"помилка"));break;
+   case "rate_limited":toast("Забагато дій, зачекай секунду");break;
+  }
+ }
+ peer(id,session){
+  let p=this.peers.get(id);if(p)return p;
+  const pc=new RTCPeerConnection({iceServers:this.ice});
+  p={id,pc,session,making:false,ignore:false,polite:this.selfId>id,streams:new Map(),meta:{}};
+  this.peers.set(id,p);
+  if(this.mic)this.mic.getTracks().forEach(t=>pc.addTrack(t,this.mic));else pc.addTransceiver("audio",{direction:"recvonly"});
+  if(this.camTrack)pc.addTrack(this.camTrack,this.camStream);
+  if(this.scrTrack)pc.addTrack(this.scrTrack,this.scrStream);
+  pc.onnegotiationneeded=async()=>{try{p.making=true;await pc.setLocalDescription();this.sig(id,p.session,"offer",{description:pc.localDescription})}catch(e){console.warn(e)}finally{p.making=false}};
+  pc.onicecandidate=({candidate})=>candidate&&this.sig(id,p.session,"ice",{candidate});
+  pc.oniceconnectionstatechange=()=>{if(pc.iceConnectionState==="failed")pc.restartIce()};
+  pc.ontrack=({track,streams})=>{
+   const s=streams[0]||new MediaStream([track]);
+   if(track.kind==="audio"){p.audio=p.audio||new Audio();p.audio.srcObject=s;this.mutePeer(p);p.audio.play().catch(()=>{})}
+   else{p.streams.set(s.id,s);s.onremovetrack=()=>{if(!s.getVideoTracks().length){p.streams.delete(s.id);render()}};render()}
+  };
+  this.sendMeta(id,session);
+  return p;
+ }
+ sendMeta(id,session){this.sig(id,session,"renegotiate",{meta:this.kinds})}
+ async onSignal(m){
+  const k=this.parts.get(m.from);
+  if(!k||k.session_id!==m.from_session){this.pend.push(m);if(this.pend.length>60)this.pend.shift();return}
+  const p=this.peer(m.from,m.from_session),pc=p.pc,d=m.data||{};
+  try{
+   if(m.kind==="renegotiate"){p.meta=d.meta||{};render();return}
+   if(m.kind==="offer"||m.kind==="answer"){
+    const desc=d.description;
+    const clash=desc.type==="offer"&&(p.making||pc.signalingState!=="stable");
+    p.ignore=!p.polite&&clash;if(p.ignore)return;
+    await pc.setRemoteDescription(desc);
+    if(desc.type==="offer"){await pc.setLocalDescription();this.sig(m.from,m.from_session,"answer",{description:pc.localDescription})}
+   }else if(m.kind==="ice"&&d.candidate){
+    try{await pc.addIceCandidate(d.candidate)}catch(e){if(!p.ignore)throw e}
+   }
+  }catch(e){console.warn("signal",e)}
+ }
+ closePeer(id){const p=this.peers.get(id);if(!p)return;p.pc.close();if(p.audio)p.audio.srcObject=null;this.peers.delete(id)}
+ /* --- state --- */
+ applyMic(){this.mic&&this.mic.getAudioTracks().forEach(t=>t.enabled=!this.selfMute&&this.canSpeak())}
+ mutePeer(p){if(p.audio)p.audio.muted=this.deaf||(this.parts.get(p.id)||{}).can_speak===false}
+ pushState(){this.send({type:"state",self_mute:this.selfMute,self_deaf:this.deaf,video:!!this.camTrack,screen:!!this.scrTrack})}
+ toggleMute(){
+  if(!this.mic)return toast("Мікрофон недоступний");
+  if(!this.canSpeak())return toast("Тобі не можна говорити в цій кімнаті");
+  if(this.deaf){this.setDeaf(false);this.selfMute=false}else this.selfMute=!this.selfMute;
+  this.applyMic();this.pushState();bar();
+ }
+ setDeaf(v){
+  if(v){this.prevMute=this.selfMute;this.selfMute=true}else this.selfMute=this.mic?this.prevMute:true;
+  this.deaf=v;this.peers.forEach(p=>this.mutePeer(p));this.applyMic();this.pushState();bar();
+ }
+ async toggleMedia(kind){
+  const key=kind==="cam"?"cam":"scr";
+  if(this[key+"Track"]){this.stopMedia(key);return this.afterMedia()}
+  if(!this.canSpeak())return toast("Слухачі не можуть вмикати відео");
+  try{
+   const s=kind==="cam"?await navigator.mediaDevices.getUserMedia({video:{width:640,height:360,frameRate:24}})
+     :await navigator.mediaDevices.getDisplayMedia({video:{frameRate:15}});
+   const t=s.getVideoTracks()[0];this[key+"Stream"]=s;this[key+"Track"]=t;
+   this.kinds[s.id]=kind==="cam"?"camera":"screen";
+   if(kind!=="cam")t.onended=()=>{if(this.scrTrack===t){this.stopMedia("scr");this.afterMedia()}};
+   this.peers.forEach(p=>p.pc.addTrack(t,s));
+  }catch(e){return toast(kind==="cam"?"Камера недоступна":"Демонстрацію скасовано")}
+  this.afterMedia();
+ }
+ stopMedia(key){
+  const t=this[key+"Track"],s=this[key+"Stream"];if(!t)return;
+  t.stop();this.peers.forEach(p=>{const sd=p.pc.getSenders().find(x=>x.track===t);if(sd)p.pc.removeTrack(sd)});
+  delete this.kinds[s.id];this[key+"Track"]=this[key+"Stream"]=null;
+ }
+ afterMedia(){this.pushState();this.peers.forEach(p=>this.sendMeta(p.id,p.session));render();bar()}
+ detect(){
+  const ac=this.ac=new AudioContext(),an=ac.createAnalyser();an.fftSize=512;
+  ac.createMediaStreamSource(this.mic).connect(an);
+  const buf=new Uint8Array(an.fftSize);let on=false,quiet=0;
+  this.spk=setInterval(()=>{
+   an.getByteTimeDomainData(buf);let pk=0;for(const v of buf)pk=Math.max(pk,Math.abs(v-128));
+   const loud=this.mic.getAudioTracks().some(t=>t.enabled)&&pk>12,now=performance.now();
+   if(loud)quiet=now;const nx=loud||now-quiet<300;
+   if(nx!==on){on=nx;this.selfSpeak=on;this.send({type:"speaking",value:on});updSpeak()}
+  },100);
+ }
+ teardown(code){
+  clearInterval(this.hb);clearInterval(this.spk);
+  [...this.peers.keys()].forEach(id=>this.closePeer(id));
+  [this.mic,this.camStream,this.scrStream].forEach(s=>s&&s.getTracks().forEach(t=>t.stop()));
+  this.ac&&this.ac.close().catch(()=>{});
+  if(this.moveTo){channelId=this.moveTo;const u=new URL(location.href);u.searchParams.set("channel",channelId);history.replaceState(null,"",u);return start()}
+  const r=this.endReason||(this.ready?"lost":"noaccess");
+  const T={left:"Ти вийшов з кімнати",voice_replaced:"Ти зайшов у голос з іншого місця",moderator:"Тебе відключив модератор",room_full:"Кімната заповнена",
+   access_lost:"Доступ до каналу втрачено",removed_from_server:"Тебе прибрали з сервера",channel_deleted:"Канал видалено",session_revoked:"Сесію завершено",
+   timeout:"Зʼєднання втрачено",lost:"Зʼєднання втрачено",noaccess:"Не вдалося підключитись. Перевір, що ти увійшов в акаунт і маєш доступ до цього каналу."};
+  overlay("Розмову завершено",T[r]||"Зʼєднання закрито ("+r+")","Приєднатися знову",start);
+ }
+}
+
+/* ---------- UI ---------- */
+const tiles=new Map();
+function mkTile(key){
+ let t=tiles.get(key);if(t)return t;
+ t=document.createElement("div");t.className="tile";
+ t.innerHTML='<video autoplay playsinline muted></video><div class="av"></div><div class="nm"></div>';
+ t.onclick=()=>{pin=pin===key?null:key;render()};
+ tiles.set(key,t);return t;
+}
+const isSpk=id=>room&&(id===room.selfId?room.selfSpeak&&!room.selfMute:room.speaking.has(id));
+function updSpeak(){tiles.forEach((t,k)=>t.classList.toggle("speak",k[0]==="u"&&isSpk(+k.slice(1))))}
+function fill(t,s){
+ const p=s.p,pr=p.profile||{},v=t.firstChild,name=pr.display_name||pr.username||"?";
+ t.style.setProperty("--c",`hsl(${(p.account_id*67)%360} 18% 25%)`);
+ t.classList.toggle("scr",s.kind==="screen");t.classList.toggle("hasv",!!s.stream);
+ if(v.srcObject!==s.stream)v.srcObject=s.stream||null;
+ if(s.stream&&v.paused)v.play().catch(()=>{});
+ v.classList.toggle("mir",s.self&&s.kind==="user");
+ const av=t.children[1],k=(pr.avatar_url||"")+"|"+name;
+ if(av.dataset.k!==k){av.dataset.k=k;const l=esc([...name][0]||"?").toUpperCase();
+  av.innerHTML=pr.avatar_url?`<img src="${esc(pr.avatar_url)}" data-l="${l}" alt="" onerror="this.parentNode.textContent=this.dataset.l">`:l}
+ t.children[2].innerHTML=(s.kind==="screen"?"🖥 ":"")+(p.hand_raised?"✋ ":"")+(p.self_mute||p.server_mute?ic("mic",1,16):"")+(p.self_deaf||p.server_deaf?ic("head",1,16):"")+`<span>${esc(name)}${s.kind==="screen"?" · екран":""}</span>`;
+ t.dataset.id=p.account_id;
+}
+function place(box,els){els.forEach((el,i)=>{if(box.children[i]!==el)box.insertBefore(el,box.children[i]||null)});while(box.children.length>els.length)box.lastChild.remove()}
+function cols(n){return n<=2?1:n<=4?2:n<=6?3:Math.ceil(Math.sqrt(n))}
+function render(){
+ const r=room;if(!r||!r.ready)return;
+ const stage=r.chan.type==="stage",specs=[],aud=[];
+ for(const p of r.parts.values()){
+  if(stage&&p.suppressed){aud.push(p);continue}
+  const id=p.account_id,self=id===r.selfId;let cam=null,scr=null;
+  if(self){cam=r.camStream;scr=r.scrStream}
+  else{const pe=r.peers.get(id);if(pe)for(const[sid,s]of pe.streams){if(pe.meta[sid]==="screen")scr=s;else cam=s}}
+  specs.push({key:"u"+id,p,self,kind:"user",stream:p.video?cam:null});
+  if(p.screen&&scr)specs.push({key:"s"+id,p,self,kind:"screen",stream:scr});
+ }
+ if(pin&&!specs.some(s=>s.key===pin))pin=null;
+ const keys=new Set(specs.map(s=>s.key));
+ tiles.forEach((t,k)=>{if(!keys.has(k)){t.remove();tiles.delete(k)}});
+ const mainS=pin?specs.filter(s=>s.key===pin):specs,stripS=pin?specs.filter(s=>s.key!==pin):[];
+ const mk=s=>{const t=mkTile(s.key);fill(t,s);return t};
+ const solo=!pin&&specs.filter(s=>s.kind==="user").length<=1&&!stage;
+ const mEls=mainS.map(mk);if(solo){$("#promo").hidden=false;mEls.push($("#promo"))}else $("#promo").hidden=true;
+ const main=$("#main");main.style.gridTemplateColumns=`repeat(${cols(mEls.length)},minmax(0,1fr))`;
+ place(main,mEls);place($("#strip"),stripS.map(mk));
+ const a=$("#aud");a.style.display=aud.length?"flex":"none";
+ a.innerHTML=aud.map(p=>`<i data-id="${p.account_id}">${p.hand_raised?"✋ ":""}${esc((p.profile||{}).display_name||"?")}</i>`).join("");
+ $("#hl").innerHTML=`${ic("spk",0,18)}<b>${esc(r.chan.name||"Лобі")}</b>`;
+ $("#hr").textContent=r.parts.size+" в кімнаті";
+ $("#inv").style.display=solo?"flex":"none";
+ updSpeak();
+}
+function bar(){
+ const r=room;if(!r)return;
+ const muted=r.selfMute||!r.canSpeak();
+ $("#mic").innerHTML=ic("mic",muted);$("#mic").classList.toggle("bad",muted);
+ $("#deaf").innerHTML=ic("head",r.deaf);$("#deaf").classList.toggle("bad",r.deaf);
+ $("#cam").innerHTML=ic("cam",!r.camTrack);$("#cam").classList.toggle("on",!!r.camTrack);
+ $("#scr").innerHTML=ic("scr");$("#scr").classList.toggle("on",!!r.scrTrack);
+ $("#hand").classList.toggle("on",!!r.me.hand_raised);
+ $("#hand").style.display=r.chan&&r.chan.type==="stage"&&r.me.suppressed?"":"none";
+}
+function invite(){
+ const u=new URL(location.href);u.search="";u.searchParams.set("server",serverId);u.searchParams.set("channel",channelId);
+ (navigator.clipboard?navigator.clipboard.writeText(u.href):Promise.reject()).then(()=>toast("Посилання скопійовано"),()=>prompt("Скопіюй посилання:",u.href));
+}
+function menu(e,id){
+ const r=room;if(!r||!r.canMod||id===r.selfId)return;const p=r.parts.get(id);if(!p)return;e.preventDefault();
+ const it=[[p.server_mute?"Зняти серверний мют":"Серверний мют",{action:"server_mute",value:!p.server_mute}],
+  [p.server_deaf?"Зняти серверне глушіння":"Серверне глушіння",{action:"server_deaf",value:!p.server_deaf}]];
+ if(r.chan.type==="stage")it.push([p.suppressed?"Запросити на сцену":"Перевести в слухачі",{action:p.suppressed?"stage_invite":"stage_audience"}]);
+ it.push(["Відключити",{action:"disconnect"},1]);
+ const m=$("#menu");m.innerHTML="";
+ it.forEach(([t,msg,d])=>{const b=document.createElement("button");b.textContent=t;if(d)b.className="d";b.onclick=()=>{r.send({type:"mod",target:id,...msg});m.style.display="none"};m.append(b)});
+ m.style.display="block";m.style.left=Math.min(e.clientX,innerWidth-220)+"px";m.style.top=Math.min(e.clientY,innerHeight-m.offsetHeight-8)+"px";
+}
+document.addEventListener("contextmenu",e=>{const t=e.target.closest("[data-id]");if(t)menu(e,+t.dataset.id)});
+document.addEventListener("click",e=>{if(!e.target.closest("#menu"))$("#menu").style.display="none"});
+
+function start(){
+ if(room&&room.ws&&room.ws.readyState<2){try{room.ws.close()}catch(e){}}
+ tiles.forEach(t=>t.remove());tiles.clear();pin=null;
+ room=new Room();overlay("Підключення…","","…",null);
+ room.join().catch(e=>{console.error(e);overlay("Помилка",String(e&&e.message||e),"Спробувати знову",start)});
+}
+$("#mic").innerHTML=ic("mic");$("#deaf").innerHTML=ic("head");$("#cam").innerHTML=ic("cam",1);$("#scr").innerHTML=ic("scr");
+$("#end").innerHTML=ic("end",0,24);$("#inv2").innerHTML=ic("add");$("#fs").innerHTML=ic("fs");
+$("#inv").innerHTML=ic("add",0,18)+"Запросити в голосовий чат";
+$("#mic").onclick=()=>room&&room.toggleMute();
+$("#deaf").onclick=()=>room&&room.setDeaf(!room.deaf);
+$("#cam").onclick=()=>room&&room.toggleMedia("cam");
+$("#scr").onclick=()=>room&&room.toggleMedia("scr");
+$("#hand").onclick=()=>room&&room.send({type:"raise_hand",value:!room.me.hand_raised});
+$("#end").onclick=()=>room&&room.leave();
+$("#inv").onclick=$("#inv2").onclick=invite;
+$("#fs").onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();
+addEventListener("beforeunload",()=>room&&room.ws&&room.ws.close());
+if(!serverId||!channelId)overlay("Не вказано кімнату","Відкрий сторінку з параметрами ?server=ID&channel=ID",".",null);
+else overlay("Голосова кімната","Приєднатися до голосового каналу?","Приєднатися",start);
+</script>
+</body>
+</html>
