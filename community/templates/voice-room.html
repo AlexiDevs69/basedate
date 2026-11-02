@@ -3,15 +3,18 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Голосова кімната</title>
+<title>{{ voice_boot.channel_name }} · Голос</title>
 <style>
 :root{--bg:#000;--btn:#1e1f22;--btn2:#2b2d31;--btn3:#383a40;--txt:#f2f3f5;--mut:#b5bac1;--red:#da373c;--grn:#23a55a}
 *{box-sizing:border-box}
-html,body{height:100%;margin:0;background:var(--bg);color:var(--txt);font:14px/1.3 "Segoe UI",system-ui,sans-serif;overflow:hidden}
+html,body{height:100%;height:100dvh;margin:0;background:var(--bg);color:var(--txt);font:14px/1.3 "Segoe UI",system-ui,sans-serif;overflow:hidden}
 button{font:inherit;color:inherit;border:0;cursor:pointer}
 body{display:flex;flex-direction:column}
 header{height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;color:var(--mut);font-weight:600}
 header b{color:var(--txt);margin-left:8px}
+header .bk{color:var(--mut);text-decoration:none;font-size:26px;line-height:1;padding:0 12px 3px 0;margin-right:2px}header .bk:hover{color:var(--txt)}
+header .sv{margin-left:10px;font-weight:500;opacity:.8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:40vw}
+#ov a{display:inline-block;margin-top:14px;color:var(--mut);text-decoration:none;font-weight:600}#ov a:hover{color:var(--txt)}
 header div{display:flex;align-items:center}
 #stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;gap:8px;padding:0 16px}
 #main,#strip{width:min(100%,1100px);display:grid;gap:8px}
@@ -30,6 +33,7 @@ header div{display:flex;align-items:center}
 .nm span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .nm svg{width:16px;height:16px;flex:none;color:#f23f43}
 #strip .nm{left:6px;bottom:6px;padding:2px 6px;font-size:12px}
+#promo[hidden]{display:none}
 #promo{background:linear-gradient(#3a0d3c,#0a0010 80%);cursor:default;text-align:center;padding:16px}
 #promo svg{width:min(240px,50%);max-height:55%}
 #promo p{margin:8px 0 0;color:#d9c7e6}
@@ -55,7 +59,7 @@ footer{height:84px;position:relative;display:flex;align-items:center;justify-con
 #toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:var(--btn3);padding:9px 16px;border-radius:8px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:30}
 #toast.s{opacity:1}
 button:focus-visible{outline:2px solid #5865f2;outline-offset:2px}
-@media(max-width:640px){#strip{grid-auto-columns:120px;height:90px}.fl{display:none}}
+@media(max-width:640px){ #strip{grid-auto-columns:120px;height:90px}.fl{display:none}}
 </style>
 </head>
 <body>
@@ -78,9 +82,10 @@ button:focus-visible{outline:2px solid #5865f2;outline-offset:2px}
   <svg viewBox="0 0 120 100" aria-hidden="true"><path d="M38 14h44v26a22 22 0 0 1-44 0z" fill="#8b7cf6"/><path d="M38 20H24c0 16 6 26 18 28M82 20h14c0 16-6 26-18 28" fill="none" stroke="#6a5bd8" stroke-width="6"/><rect x="54" y="62" width="12" height="16" fill="#6a5bd8"/><rect x="40" y="78" width="40" height="8" rx="3" fill="#5a4bc8"/><path d="m60 20 4 9 10 1-7.500 6.500 2.500 9.500-9-5-9 5 2.500-9.500L46 30l10-1z" fill="#3b2a9c"/></svg>
   <p>Тут поки тільки ти. Запроси друзів у розмову.</p>
 </div>
-<div id="ov"><div class="card"><h2 id="ovt"></h2><p id="ovp"></p><button class="primary" id="ovb"></button></div></div>
+<div id="ov"><div class="card"><h2 id="ovt"></h2><p id="ovp"></p><button class="primary" id="ovb"></button><br><a id="ovback" href="#">← До сервера</a></div></div>
 <div id="menu"></div><div id="toast"></div>
 
+<script>window.__AH_VOICE={{ voice_boot|tojson }};</script>
 <script>
 "use strict";
 const $=s=>document.querySelector(s);
@@ -97,7 +102,10 @@ const IC={
 };
 const ic=(n,off,sz=20)=>`<svg viewBox="0 0 24 24" width="${sz}" height="${sz}" fill="currentColor"><path d="${IC[n]}"/>${off?'<path d="M4 3.500 20.500 20" stroke="currentColor" stroke-width="2.400" fill="none"/>':""}</svg>`;
 const q=new URLSearchParams(location.search);
-let serverId=+q.get("server")||0, channelId=+q.get("channel")||0, room=null, pin=null;
+const BOOT=window.__AH_VOICE||{};
+const PROMO=$("#promo");
+let serverId=+BOOT.server_id||+q.get("server")||0, channelId=+BOOT.channel_id||+q.get("channel")||0, room=null, pin=null;
+$("#ovback").href=BOOT.back_url||"/community";
 
 function toast(t){const e=$("#toast");e.textContent=t;e.classList.add("s");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove("s"),2600)}
 function overlay(title,text,btn,fn){$("#ovt").textContent=title;$("#ovp").textContent=text;const b=$("#ovb");b.textContent=btn;b.disabled=!fn;b.onclick=fn;$("#ov").style.display="grid"}
@@ -133,7 +141,7 @@ class Room{
    case "participant_updated":{
     const p=m.participant;this.parts.set(p.account_id,p);
     const pe=this.peers.get(p.account_id);pe&&this.mutePeer(pe);
-    if(p.account_id===this.selfId)this.applyMic();
+    if(p.account_id===this.selfId){this.applyMic();this.peers.forEach(x=>this.mutePeer(x))}
     render();bar();break}
    case "participant_left":
     this.parts.delete(m.account_id);this.speaking.delete(m.account_id);this.closePeer(m.account_id);render();break;
@@ -186,7 +194,7 @@ class Room{
  closePeer(id){const p=this.peers.get(id);if(!p)return;p.pc.close();if(p.audio)p.audio.srcObject=null;this.peers.delete(id)}
  /* --- state --- */
  applyMic(){this.mic&&this.mic.getAudioTracks().forEach(t=>t.enabled=!this.selfMute&&this.canSpeak())}
- mutePeer(p){if(p.audio)p.audio.muted=this.deaf||(this.parts.get(p.id)||{}).can_speak===false}
+ mutePeer(p){if(p.audio)p.audio.muted=this.deaf||!!this.me.server_deaf||(this.parts.get(p.id)||{}).can_speak===false}
  pushState(){this.send({type:"state",self_mute:this.selfMute,self_deaf:this.deaf,video:!!this.camTrack,screen:!!this.scrTrack})}
  toggleMute(){
   if(!this.mic)return toast("Мікрофон недоступний");
@@ -236,6 +244,7 @@ class Room{
   this.ac&&this.ac.close().catch(()=>{});
   if(this.moveTo){channelId=this.moveTo;const u=new URL(location.href);u.searchParams.set("channel",channelId);history.replaceState(null,"",u);return start()}
   const r=this.endReason||(this.ready?"lost":"noaccess");
+  if(r==="left"&&BOOT.back_url){location.href=BOOT.back_url;return}
   const T={left:"Ти вийшов з кімнати",voice_replaced:"Ти зайшов у голос з іншого місця",moderator:"Тебе відключив модератор",room_full:"Кімната заповнена",
    access_lost:"Доступ до каналу втрачено",removed_from_server:"Тебе прибрали з сервера",channel_deleted:"Канал видалено",session_revoked:"Сесію завершено",
    timeout:"Зʼєднання втрачено",lost:"Зʼєднання втрачено",noaccess:"Не вдалося підключитись. Перевір, що ти увійшов в акаунт і маєш доступ до цього каналу."};
@@ -286,12 +295,12 @@ function render(){
  const mainS=pin?specs.filter(s=>s.key===pin):specs,stripS=pin?specs.filter(s=>s.key!==pin):[];
  const mk=s=>{const t=mkTile(s.key);fill(t,s);return t};
  const solo=!pin&&specs.filter(s=>s.kind==="user").length<=1&&!stage;
- const mEls=mainS.map(mk);if(solo){$("#promo").hidden=false;mEls.push($("#promo"))}else $("#promo").hidden=true;
+ const mEls=mainS.map(mk);if(solo){PROMO.hidden=false;mEls.push(PROMO)}else PROMO.hidden=true;
  const main=$("#main");main.style.gridTemplateColumns=`repeat(${cols(mEls.length)},minmax(0,1fr))`;
  place(main,mEls);place($("#strip"),stripS.map(mk));
  const a=$("#aud");a.style.display=aud.length?"flex":"none";
  a.innerHTML=aud.map(p=>`<i data-id="${p.account_id}">${p.hand_raised?"✋ ":""}${esc((p.profile||{}).display_name||"?")}</i>`).join("");
- $("#hl").innerHTML=`${ic("spk",0,18)}<b>${esc(r.chan.name||"Лобі")}</b>`;
+ $("#hl").innerHTML=`<a class="bk" href="${esc(BOOT.back_url||"/community")}" title="До сервера">‹</a>${ic("spk",0,18)}<b>${esc(r.chan.name||"Лобі")}</b>${BOOT.server_name?`<span class="sv">· ${esc(BOOT.server_name)}</span>`:""}`;
  $("#hr").textContent=r.parts.size+" в кімнаті";
  $("#inv").style.display=solo?"flex":"none";
  updSpeak();
@@ -342,7 +351,7 @@ $("#inv").onclick=$("#inv2").onclick=invite;
 $("#fs").onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();
 addEventListener("beforeunload",()=>room&&room.ws&&room.ws.close());
 if(!serverId||!channelId)overlay("Не вказано кімнату","Відкрий сторінку з параметрами ?server=ID&channel=ID",".",null);
-else overlay("Голосова кімната","Приєднатися до голосового каналу?","Приєднатися",start);
+else overlay(BOOT.channel_name||"Голосова кімната",(BOOT.server_name?BOOT.server_name+" · ":"")+"Приєднатися до голосового каналу?","Приєднатися",start);
 </script>
 </body>
 </html>
