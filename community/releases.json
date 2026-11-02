@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.300.2",
+      "date": "2026-11-02",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: channel link generation in server_home.html."
+      ],
+      "source_sha": "124732cefaa1186a98898dfdfff45a1cc300ed7f"
+    },
+    {
       "version": "1.300.1",
       "date": "2026-11-02",
       "title": "Виправлення та стабільність",
