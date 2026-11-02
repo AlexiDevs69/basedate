@@ -2861,10 +2861,9 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
       <span class="server-boost-strip-head"><b id="server-boost-strip-label">{{ i18n_t('server.boost.max_level') if boost_status.maxed else i18n_t('server.boost.next_level', level=boost_status.next_level) }}</b><span><!--i18n:common.text.s_busts-->{{ i18n_t('common.text.s_busts') }} <strong id="server-boost-strip-count">{{ boost_status.total_boosts }}{% if boost_status.next_required %}/{{ boost_status.next_required }}{% endif %}</strong> ›</span></span>
       <span class="server-boost-strip-track"><i id="server-boost-strip-fill" style="width:{{ boost_status.progress_percent }}%"></i></span>
     </button>
-    {% macro voice_room_href(ch) -%}/community/voice-room?server={{ server.id }}&amp;channel={{ ch.id }}{%- endmacro %}
     {% macro server_channel_row(ch, active_channel_id=0) -%}
-    <div class="chan-row {{ 'active' if ch.id == active_channel_id else '' }}" data-channel-id="{{ ch.id }}" data-channel-type="{{ ch.channel_type }}">
-      <a href="{% if ch.channel_type == 'voice' %}{{ voice_room_href(ch) }}{% else %}/community/servers/{{ server.id }}/channel/{{ ch.id }}{% endif %}" data-mention-channel-key="{{ server.id }}:{{ ch.id }}" data-channel-type="{{ ch.channel_type }}" {% if ch.channel_type == 'voice' %}onclick="return ahJoinVoice(event, {{ ch.id }}, this)"{% endif %} class="chan-link {{ 'active' if ch.id == active_channel_id else '' }}">
+    <div class="chan-row {{ 'active' if ch.id == active_channel_id else '' }}" data-channel-id="{{ ch.id }}">
+      <a href="/community/servers/{{ server.id }}/{{ 'voice' if ch.channel_type == 'voice' else 'channel' }}/{{ ch.id }}" data-mention-channel-key="{{ server.id }}:{{ ch.id }}" class="chan-link {{ 'active' if ch.id == active_channel_id else '' }}">
         <span class="chan-symbol">{{ '🔊' if ch.channel_type == 'voice' else '#' }}</span>
         <span class="chan-name">{{ ch.name }}</span>
         {% if ch.is_private %}<span class="channel-private-lock" title="{{ i18n_t('common.aria.a_private_channel') }}" data-i18n-title="common.aria.a_private_channel">🔒</span>{% endif %}
@@ -2876,9 +2875,10 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
         {% if can_manage %}<a class="chan-action-btn" href="/community/servers/{{ server.id }}/channel/{{ ch.id }}/settings" onclick="event.stopPropagation()" title="{{ i18n_t('common.aria.channel_settings') }}" data-i18n-title="common.aria.channel_settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.33 1.82 2 2 0 1 1-3.34 0A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.82-.33 2 2 0 1 1 0-3.34A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .33-1.82 2 2 0 1 1 3.34 0A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06-.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 .6 1 1.65 1.65 0 0 0 1.82.33 2 2 0 1 1 0 3.34A1.65 1.65 0 0 0 19.4 15Z"/></svg></a>{% endif %}
       </div>
     </div>
+    {% if ch.channel_type == 'voice' %}<div class="ah-vc-users" data-vc="{{ ch.id }}"></div>{% endif %}
     {%- endmacro %}
     {% macro cv_channel_row(ch) -%}
-    <a class="cv-row" href="{% if ch.channel_type == 'voice' %}{{ voice_room_href(ch) }}{% else %}/community/servers/{{ server.id }}/channel/{{ ch.id }}{% endif %}" data-cv-name="{{ ch.name|lower }}" data-channel-type="{{ ch.channel_type }}" {% if ch.channel_type == 'voice' %}onclick="return ahJoinVoice(event, {{ ch.id }}, this)"{% endif %}>
+    <a class="cv-row" href="/community/servers/{{ server.id }}/{{ 'voice' if ch.channel_type == 'voice' else 'channel' }}/{{ ch.id }}" data-cv-name="{{ ch.name|lower }}">
       <span class="cv-row-icon">
         {%- if ch.channel_type == 'voice' -%}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15 9a4 4 0 0 1 0 6"/><path d="M18 6a8 8 0 0 1 0 12"/></svg>
@@ -3550,7 +3550,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
         <div id="channel-category-context" class="discord-category-context"></div>
         <input id="channel-create-category-id" type="hidden" name="category_id" value="">
         <label class="discord-field-label" for="channel-create-name"><!--i18n:common.text.nart_of_the_channel-->{{ i18n_t('common.text.nart_of_the_channel') }}</label>
-        <div class="discord-input-wrap"><span id="channel-create-prefix" class="discord-input-prefix">#</span><input id="channel-create-name" class="discord-name-input" name="name" maxlength="64" placeholder="{{ i18n_t('common.placeholder.a_new_channel') }}" data-i18n-placeholder="common.placeholder.a_new_channel" required oninput="syncServerCreateButtons()"><span class="discord-input-emoji">☺</span></div>
+        <div class="discord-input-wrap"><span class="discord-input-prefix">#</span><input id="channel-create-name" class="discord-name-input" name="name" maxlength="64" placeholder="{{ i18n_t('common.placeholder.a_new_channel') }}" data-i18n-placeholder="common.placeholder.a_new_channel" required oninput="syncServerCreateButtons()"><span class="discord-input-emoji">☺</span></div>
         <label class="discord-privacy-row">
           <span class="discord-privacy-copy"><span class="discord-privacy-title"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg><!--i18n:common.aria.a_private_channel-->{{ i18n_t('common.aria.a_private_channel') }}</span><small><!--i18n:common.text.only_the_owner_and_administrators_of_the_server_will_be-->{{ i18n_t('common.text.only_the_owner_and_administrators_of_the_server_will_be') }}</small></span>
           <input class="discord-switch-input" type="checkbox" name="is_private" value="true"><span class="discord-switch"></span>
@@ -3562,66 +3562,6 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
   {% endif %}
 
 
-  <style id="ah-voice-channels-css">
-    .discord-input-prefix svg{width:20px;height:20px;display:block}
-  </style>
-  <script id="ah-voice-channels-js">
-  (function(){
-    'use strict';
-    var ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15 9a4 4 0 0 1 0 6"/><path d="M18 6a8 8 0 0 1 0 12"/></svg>';
-    var WIN_NAME = 'ah-voice-room', voiceWin = null, curChannel = null;
-
-    /* Клік по голосовому каналу -> відкрити кімнату у вікні (чат лишається поруч) */
-    window.ahJoinVoice = function(ev, channelId, el){
-      if (ev && (ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.button === 1)) return true;
-      var url = el && el.href;
-      if (!url) return true;
-      if (voiceWin && !voiceWin.closed && curChannel === channelId) { voiceWin.focus(); return false; }
-      var w = 1100, h = 720;
-      var left = Math.max(0, Math.round(screen.width / 2 - w / 2));
-      var top = Math.max(0, Math.round(screen.height / 2 - h / 2));
-      var win = window.open(url, WIN_NAME, 'popup=yes,width=' + w + ',height=' + h + ',left=' + left + ',top=' + top);
-      if (!win) { location.href = url; return false; }
-      voiceWin = win; curChannel = channelId;
-      win.focus();
-      return false;
-    };
-
-    /* «#» або динамік перед назвою залежно від типу */
-    window.syncChannelTypePrefix = function(){
-      var pre = document.getElementById('channel-create-prefix');
-      var sel = document.querySelector('#channel-create-form input[name="channel_type"]:checked');
-      if (!pre) return;
-      if (sel && sel.value === 'voice') { if (!pre.querySelector('svg')) pre.innerHTML = ICON; }
-      else pre.textContent = '#';
-    };
-    document.addEventListener('change', function(e){
-      if (e.target && e.target.name === 'channel_type') window.syncChannelTypePrefix();
-    });
-
-    /* Голосовий канал створюємо без переходу на текстову сторінку: надсилаємо форму і оновлюємо список */
-    document.addEventListener('submit', function(e){
-      var f = e.target;
-      if (!f || f.id !== 'channel-create-form') return;
-      var t = f.querySelector('input[name="channel_type"]:checked');
-      if (!t || t.value !== 'voice') return;
-      e.preventDefault();
-      var btn = document.getElementById('channel-create-submit');
-      if (btn) btn.disabled = true;
-      fetch(f.action, {
-        method: 'POST',
-        body: new URLSearchParams(new FormData(f)),
-        credentials: 'same-origin'
-      }).then(function(r){
-        if (r.status >= 400 && !r.redirected) throw new Error('http ' + r.status);
-        location.reload();
-      }).catch(function(){
-        if (btn) btn.disabled = false;
-        if (window.showActionToast) window.showActionToast('Не вдалося створити голосовий канал');
-      });
-    });
-  })();
-  </script>
   <div id="invite-modal" class="modal-backdrop"><div class="modal-card invite-card"><div class="modal-head"><div class="invite-title-block"><h2 id="invite-modal-title">{{ i18n_t('server.invite.title', server=server.name) }}</h2><p id="invite-modal-subtitle"><!--i18n:common.text.participants_will_be_on_the_server-->{{ i18n_t('common.text.participants_will_be_on_the_server') }}</p></div><button class="modal-close" type="button" onclick="closeModal('invite-modal')">×</button></div><div class="invite-search-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="text" placeholder="{{ i18n_t('common.placeholder.finding_friends') }}" data-i18n-placeholder="common.placeholder.finding_friends" oninput="filterInviteFriends(this.value)"></div>{% if friends %}<div class="friends-list discord-invite-list">{% for friend in friends %}<form class="friend-invite-row" data-invite-search="{{ friend.username }} {{ friend.display_name or '' }}" method="post" action="/community/servers/{{ server.id }}/invite"><input type="hidden" name="username" value="{{ friend.username }}"><input type="hidden" name="redirect_to" value="{{ request.url.path }}"><input type="hidden" name="channel_id" value="" class="invite-channel-id-input"><span class="friend-invite-avatar" {% if friend.avatar_url %}style="background-image:url('{{ friend.avatar_url }}');"{% endif %}>{% if not friend.avatar_url %}{{ friend.username[:1]|upper }}{% endif %}</span><span class="friend-invite-meta"><span class="friend-invite-name">{{ friend.display_name or friend.username }}</span><span class="friend-invite-handle">{{ friend.username }}</span></span><button type="submit"><!--i18n:common.aria.yuncture-->{{ i18n_t('common.aria.yuncture') }}</button></form>{% endfor %}</div>{% else %}<div class="empty-note" style="padding:0 22px 18px;"><!--i18n:common.text.don_t_have_friends_for_a_quick_inwit-->{{ i18n_t('common.text.don_t_have_friends_for_a_quick_inwit') }}</div>{% endif %}<form class="manual-invite discord-manual" method="post" action="/community/servers/{{ server.id }}/invite"><input type="hidden" name="redirect_to" value="{{ request.url.path }}"><input type="hidden" name="channel_id" value="" class="invite-channel-id-input"><label><!--i18n:common.text.or_send_a_request_link_to_the_server-->{{ i18n_t('common.text.or_send_a_request_link_to_the_server') }}</label><div class="invite-link-row"><input name="username" placeholder="{{ i18n_t('common.placeholder.friend_s_username') }}" data-i18n-placeholder="common.placeholder.friend_s_username" required><button class="modal-btn" type="submit"><!--i18n:common.action.submit-->{{ i18n_t('common.action.submit') }}</button></div></form></div></div>
   {% if not can_manage %}
   <div id="leave-server-modal" class="modal-backdrop">
@@ -3876,7 +3816,6 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
       if (!modal) return;
       var form = document.getElementById('channel-create-form');
       if (form) form.reset();
-      if (window.syncChannelTypePrefix) window.syncChannelTypePrefix();
       var idInput = document.getElementById('channel-create-category-id');
       var context = document.getElementById('channel-category-context');
       if (idInput) idInput.value = categoryId ? String(categoryId) : '';
@@ -12927,5 +12866,66 @@ html body .discord-channel-name::after{content:"\203A";margin-left:7px;opacity:.
 })();
 </script>
 <!-- AH-ISLAND:END -->
+<!-- AH-VOICELIST:BEGIN (учасники голосових каналів під назвою каналу; оновлюється з /api/servers/ID/voice-state) -->
+<style id="ah-vc-css">
+.ah-vc-users{display:flex;flex-direction:column;gap:1px;margin:0 0 4px 26px;padding:0 6px 0 12px}
+.ah-vc-users:empty{display:none}
+.ah-vc-u{display:flex;align-items:center;gap:8px;min-height:28px;padding:2px 6px;border-radius:6px;color:#9ca3af;font-size:14px;font-weight:600;min-width:0}
+.ah-vc-u:hover{background:rgba(127,127,127,.14);color:#e6e8ec}
+.ah-vc-av{flex:0 0 22px;width:22px;height:22px;border-radius:50%;background:#2b2d31 center/cover no-repeat;color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center}
+.ah-vc-n{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ah-vc-ic{flex:0 0 auto;display:inline-flex;gap:3px;color:#f23f43}
+.ah-vc-ic svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.ah-vc-live{flex:0 0 auto;margin-left:6px;padding:1px 6px;border-radius:5px;background:#23a55a;color:#fff;font-size:10px;font-weight:800;letter-spacing:.04em}
+html[data-theme="light"] .ah-vc-u{color:#5d6068}
+html[data-theme="light"] .ah-vc-u:hover{color:#1b1c20}
+</style>
+<script id="ah-vc-js">
+(function(){
+  var inFrame=false;try{inFrame=window.self!==window.top}catch(e){inFrame=true}
+  if(inFrame||window.__ahVcList)return;window.__ahVcList=true;
+  var SID={{ server.id|tojson }};
+  var NS='http://www.w3.org/2000/svg';
+  function icon(paths){var s=document.createElementNS(NS,'svg');s.setAttribute('viewBox','0 0 24 24');paths.forEach(function(d){var p=document.createElementNS(NS,'path');p.setAttribute('d',d);s.appendChild(p)});return s}
+  var MIC_OFF=['M2 2l20 20','M9 9v2a3 3 0 0 0 5.1 2.1','M15 9.3V5a3 3 0 0 0-5.7-1.3','M19 11a7 7 0 0 1-.9 3.4','M5 11a7 7 0 0 0 11 5.7','M12 18v3'];
+  var DEAF_OFF=['M2 2l20 20','M3 14v-2a9 9 0 0 1 14.5-7','M21 12v2','M18 19a2 2 0 0 1-2 2h-1v-6h1','M6 15H5a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h1z'];
+  function paint(map){
+    var boxes=document.querySelectorAll('.ah-vc-users[data-vc]');
+    boxes.forEach(function(box){
+      var list=map[box.getAttribute('data-vc')]||[];
+      var sig=JSON.stringify(list);
+      if(box.__sig===sig)return;box.__sig=sig;
+      box.textContent='';
+      list.forEach(function(u){
+        var row=document.createElement('div');row.className='ah-vc-u';
+        var av=document.createElement('span');av.className='ah-vc-av';
+        if(u.avatar_url&&/^(https?:)?\/\//.test(u.avatar_url)||/^\/(?!\/)/.test(u.avatar_url||'')){av.style.backgroundImage='url('+JSON.stringify(String(u.avatar_url))+')'}
+        else{av.textContent=(String(u.display_name||u.username||'?').trim().charAt(0)||'?').toUpperCase()}
+        var n=document.createElement('span');n.className='ah-vc-n';n.textContent=u.display_name||u.username||'';
+        var ic=document.createElement('span');ic.className='ah-vc-ic';
+        if(u.self_deaf||u.server_deaf)ic.appendChild(icon(DEAF_OFF));
+        else if(u.self_mute||u.server_mute)ic.appendChild(icon(MIC_OFF));
+        row.appendChild(av);row.appendChild(n);row.appendChild(ic);
+        if(u.video||u.screen){var lv=document.createElement('span');lv.className='ah-vc-live';lv.textContent=u.screen?'LIVE':'VIDEO';row.appendChild(lv)}
+        box.appendChild(row);
+      });
+    });
+  }
+  var busy=false,stopped=false,timer=0;
+  function tick(){
+    if(stopped||busy||document.hidden||!document.querySelector('.ah-vc-users[data-vc]'))return;
+    busy=true;
+    fetch('/community/api/servers/'+SID+'/voice-state',{credentials:'same-origin',headers:{Accept:'application/json'}})
+      .then(function(r){if(r.status===401||r.status===403){stopped=true;throw 0}if(!r.ok)throw 0;return r.json()})
+      .then(function(d){paint((d&&d.channels)||{})})
+      .catch(function(){}).then(function(){busy=false});
+  }
+  function start(){tick();timer=setInterval(tick,6000)}
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)tick()});
+  window.addEventListener('pageshow',tick);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+})();
+</script>
+<!-- AH-VOICELIST:END -->
 </body>
 </html>
