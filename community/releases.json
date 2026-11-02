@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.295.2",
+      "date": "2026-11-02",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено продуктивність: mobile menu for 'New Message' feature."
+      ],
+      "source_sha": "552ec6d923cde595e11e77d17a1df9afdddd0df6"
+    },
+    {
       "version": "1.295.1",
       "date": "2026-11-02",
       "title": "Оновлення AlexiHub",
