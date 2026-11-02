@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.300.0",
+      "date": "2026-11-02",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: voice channel settings and user limit functions."
+      ],
+      "source_sha": "83937e72230a5774031bcdb9b23538f0b2cab71a"
+    },
+    {
       "version": "1.299.0",
       "date": "2026-11-02",
       "title": "Нові можливості AlexiHub",
