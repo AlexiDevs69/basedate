@@ -10024,3 +10024,88 @@ async def vote_poll(db: AsyncSession, poll_id: int, account_id: int, option_id: 
     await db.commit()
     payloads = await _poll_payloads(db, [poll], account_id)
     return (payloads[0] if payloads else None), None
+
+
+# ============================================================================
+# Voice rooms (Discord-style voice / stage channels).
+# Live room state is RAM-only (community/voice_rooms.py); only per-channel
+# settings are persisted. A separate table instead of a new ORM column on
+# ServerChannel, so existing select(ServerChannel) queries can never break on
+# a database where the column has not been added yet.
+# ============================================================================
+
+_VOICE_TABLES_READY = False
+VOICE_USER_LIMIT_MAX = 99
+
+
+async def ensure_voice_tables(db: AsyncSession) -> None:
+    global _VOICE_TABLES_READY
+    if _VOICE_TABLES_READY:
+        return
+    await db.execute(text("""
+        CREATE TABLE IF NOT EXISTS community_voice_channel_settings (
+            channel_id INTEGER PRIMARY KEY
+                REFERENCES community_server_channels(id) ON DELETE CASCADE,
+            user_limit INTEGER NOT NULL DEFAULT 0,
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+    """))
+    await db.commit()
+    _VOICE_TABLES_READY = True
+
+
+async def get_voice_channel_user_limit(db: AsyncSession, channel_id: int) -> int:
+    await ensure_voice_tables(db)
+    row = (await db.execute(text(
+        "SELECT user_limit FROM community_voice_channel_settings WHERE channel_id = :c"
+    ), {"c": int(channel_id)})).first()
+    return max(0, int(row[0] or 0)) if row else 0
+
+
+async def set_voice_channel_user_limit(db: AsyncSession, channel_id: int, user_limit: int) -> int:
+    await ensure_voice_tables(db)
+    clean = max(0, min(int(user_limit or 0), VOICE_USER_LIMIT_MAX))
+    await db.execute(text("""
+        INSERT INTO community_voice_channel_settings (channel_id, user_limit, updated_at)
+        VALUES (:c, :l, NOW())
+        ON CONFLICT (channel_id) DO UPDATE SET user_limit = EXCLUDED.user_limit, updated_at = NOW()
+    """), {"c": int(channel_id), "l": clean})
+    await db.commit()
+    return clean
+
+
+async def get_server_role(db: AsyncSession, server_id: int, account_id: int) -> str | None:
+    """'owner' | 'admin' | 'member' | None (not a member). The server row's
+    owner_id is authoritative for ownership."""
+    server = await get_server_by_id(db, server_id)
+    if server and int(server.owner_id) == int(account_id):
+        return "owner"
+    member = await get_server_member(db, server_id, account_id)
+    if not member:
+        return None
+    return "admin" if member.role == "admin" else ("owner" if member.role == "owner" else "member")
+
+
+async def is_server_channel_private(db: AsyncSession, server_id: int, channel: ServerChannel) -> bool:
+    if bool(channel.is_private):
+        return True
+    if channel.category_id:
+        category = await get_server_category(db, server_id, int(channel.category_id))
+        if category and bool(category.is_private):
+            return True
+    return False
+
+
+async def list_server_channel_audience_ids(db: AsyncSession, server_id: int, channel: ServerChannel) -> list[int]:
+    """Account ids allowed to see a channel -- mirrors can_access_server_channel():
+    every member for public channels, only owner/admins for private ones."""
+    private = await is_server_channel_private(db, server_id, channel)
+    query = select(ServerMember.account_id).where(ServerMember.server_id == int(server_id))
+    if private:
+        query = query.where(ServerMember.role.in_(("owner", "admin")))
+    ids = {int(value) for value in (await db.execute(query)).scalars().all()}
+    if private:
+        server = await get_server_by_id(db, server_id)
+        if server:
+            ids.add(int(server.owner_id))
+    return sorted(ids)
