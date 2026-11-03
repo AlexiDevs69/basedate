@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.301.5",
+      "date": "2026-11-03",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance voice room styles and functionality."
+      ],
+      "source_sha": "97e24d25ef2323df109fbaad679ff873a6a6e199"
+    },
+    {
       "version": "1.301.4",
       "date": "2026-11-03",
       "title": "Виправлення та стабільність",
