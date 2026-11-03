@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.302.3",
+      "date": "2026-11-04",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance server channel template with new buttons."
+      ],
+      "source_sha": "c723e2a3e71bcf3d2313afc6237ea70fb34efa17"
+    },
+    {
       "version": "1.302.2",
       "date": "2026-11-04",
       "title": "Виправлення та стабільність",
