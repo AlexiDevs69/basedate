@@ -20,33 +20,61 @@ header div{display:flex;align-items:center}
 #main{flex:1;min-height:0;grid-auto-rows:minmax(0,1fr)}
 #strip{height:110px;grid-auto-flow:column;grid-auto-columns:170px;justify-content:center}
 #strip:empty{display:none}
-.tile{position:relative;border-radius:8px;overflow:hidden;background:var(--c,#385152);display:grid;place-items:center;min-height:0;cursor:pointer}
+/* in-call background: same polar glow as the lobby, but lower and softer so names/buttons stay readable */
+body{background:
+ linear-gradient(90deg,rgba(0,0,0,.28) 0,rgba(0,0,0,0) 38%,rgba(0,0,0,0) 62%,rgba(0,0,0,.28) 100%),
+ radial-gradient(48% 34% at 24% 104%,rgba(130,255,214,.24) 0%,rgba(130,255,214,0) 100%),
+ radial-gradient(48% 34% at 76% 106%,rgba(176,196,255,.24) 0%,rgba(176,196,255,0) 100%),
+ radial-gradient(100% 52% at 50% 116%,rgba(244,251,255,.80) 0%,rgba(205,233,255,.55) 30%,rgba(120,172,238,.24) 60%,rgba(64,104,196,.07) 85%,rgba(64,104,196,0) 100%),
+ linear-gradient(180deg,#0d0f2e 0%,#121a46 38%,#182860 70%,#1f3a75 100%)}
+:root{--avs:clamp(72px,22vmin,150px)}
+/* tiles are transparent: avatars float on the glow. Only video / screen-share tiles get a solid surface */
+.tile{position:relative;border-radius:18px;background:transparent;display:grid;place-items:center;min-height:0;cursor:pointer}
+.tile.hasv{overflow:hidden;background:#05071a}
+#strip .tile{--avs:56px}
 .tile video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;background:#000}
 .tile.hasv video{display:block}.tile.scr video{object-fit:contain}.tile video.mir{transform:scaleX(-1)}
 .tile.hasv .av{display:none}
-.av{width:clamp(48px,16vmin,110px);aspect-ratio:1;border-radius:50%;overflow:hidden;background:rgba(255,255,255,.12);display:grid;place-items:center;font-size:clamp(20px,7vmin,44px);font-weight:700}
+.av{position:relative;z-index:1;width:var(--avs);aspect-ratio:1;border-radius:50%;overflow:hidden;display:grid;place-items:center;font-size:calc(var(--avs)*.4);font-weight:700;color:#fff;
+ background:linear-gradient(145deg,hsl(var(--h,220) 42% 42%),hsl(var(--h,220) 45% 26%));
+ box-shadow:0 0 0 0 rgba(234,245,255,0),0 8px 24px rgba(4,8,40,.35);
+ transition:transform .35s ease-out,box-shadow .4s ease-out}
 .av img{width:100%;height:100%;object-fit:cover}
-.tile::after{content:"";position:absolute;inset:0;border-radius:8px;pointer-events:none;box-shadow:inset 0 0 0 0 var(--grn);transition:box-shadow .12s}
-.tile.speak::after{box-shadow:inset 0 0 0 3px var(--grn)}
-.nm{position:absolute;left:12px;bottom:12px;max-width:calc(100% - 24px);display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.62);padding:4px 8px;border-radius:6px;font-weight:600;z-index:1}
+/* soft light behind the avatar while someone talks; --lv (0..1) is the live voice level set from JS */
+.tile::before{content:"";position:absolute;left:50%;top:50%;width:calc(var(--avs)*2.9);height:calc(var(--avs)*2.9);border-radius:50%;pointer-events:none;
+ background:radial-gradient(circle,rgba(238,248,255,.6) 0%,rgba(196,227,255,.24) 38%,rgba(196,227,255,0) 70%);
+ opacity:0;transform:translate(-50%,-50%) scale(.8);transition:opacity .4s ease-out,transform .4s ease-out}
+.tile.hasv::before{display:none}
+.tile.speak::before{opacity:calc(.55 + var(--lv,0)*.45);transform:translate(-50%,-50%) scale(calc(.9 + var(--lv,0)*.4));transition:opacity .12s linear,transform .12s linear}
+.tile.speak .av{transform:scale(calc(1.02 + var(--lv,0)*.1));
+ box-shadow:0 0 calc(22px + var(--lv,0)*44px) calc(2px + var(--lv,0)*10px) rgba(234,245,255,calc(.28 + var(--lv,0)*.5)),0 8px 24px rgba(4,8,40,.35);
+ transition:transform .1s linear,box-shadow .12s linear}
+/* video / screen tiles: soft white inner glow instead of a coloured ring */
+.tile::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;box-shadow:inset 0 0 0 0 rgba(255,255,255,0);transition:box-shadow .25s ease-out}
+.tile.hasv.speak::after{box-shadow:inset 0 0 0 2px rgba(255,255,255,.75),inset 0 0 36px rgba(214,235,255,.4)}
+@media(prefers-reduced-motion:reduce){.tile.speak .av{transform:none}.tile.speak::before{transform:translate(-50%,-50%)}}
+.nm{position:absolute;left:12px;bottom:12px;max-width:calc(100% - 24px);display:flex;align-items:center;gap:6px;background:rgba(8,12,40,.55);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);padding:4px 8px;border-radius:8px;font-weight:600;z-index:1}
+/* no video: the name sits right under the avatar, not in a far corner of an empty tile */
+.tile:not(.hasv) .nm{left:50%;bottom:auto;top:calc(50% + var(--avs)*.5 + 14px);transform:translateX(-50%);background:transparent;-webkit-backdrop-filter:none;backdrop-filter:none;padding:0;font-size:15px;text-shadow:0 1px 10px rgba(4,8,40,.7)}
 .nm span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .nm svg{width:16px;height:16px;flex:none;color:#f23f43}
 #strip .nm{left:6px;bottom:6px;padding:2px 6px;font-size:12px}
+#strip .tile:not(.hasv) .nm{left:50%;bottom:auto;top:calc(50% + var(--avs)*.5 + 6px);padding:0}
 #promo[hidden]{display:none}
-#promo{background:linear-gradient(#3a0d3c,#0a0010 80%);cursor:default;text-align:center;padding:16px}
-#promo svg{width:min(240px,50%);max-height:55%}
-#promo p{margin:8px 0 0;color:#d9c7e6}
+#promo{background:transparent;cursor:default;text-align:center;padding:16px}
+#promo svg{width:min(240px,50%);max-height:55%;filter:hue-rotate(-55deg)}
+#promo p{margin:8px 0 0;color:#cfe0ff;text-shadow:0 1px 10px rgba(4,8,40,.7)}
 #aud{display:none;gap:8px;flex-wrap:wrap;justify-content:center;padding:4px;color:var(--mut)}
 #aud i{font-style:normal;background:var(--btn);padding:4px 10px;border-radius:14px}
-#inv{background:var(--btn);padding:10px 14px;border-radius:8px;font-weight:600;display:flex;gap:8px;align-items:center;margin:6px 0}
+#inv{background:rgba(10,14,48,.55);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.1);padding:10px 14px;border-radius:8px;font-weight:600;display:flex;gap:8px;align-items:center;margin:6px 0}
 #inv:hover,.cb:hover{background:var(--btn2)}
 footer{height:84px;position:relative;display:flex;align-items:center;justify-content:center;gap:12px}
-.grp{display:flex;gap:4px;background:var(--btn);padding:6px;border-radius:12px;border:1px solid #2a2b30}
+.grp{display:flex;gap:4px;background:rgba(10,14,48,.55);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);padding:6px;border-radius:14px;border:1px solid rgba(255,255,255,.1)}
 .cb{width:44px;height:40px;border-radius:8px;background:transparent;display:grid;place-items:center}
 .cb.bad{background:#3a1c1e;color:#f23f43}.cb.on{background:var(--grn)}
 .cb.end{background:var(--red);width:64px;height:52px;border-radius:12px}.cb.end:hover{background:#a12828}
 .fl{position:absolute;bottom:22px}.fl.l{left:16px}.fl.r{right:16px}
-.fl .cb{background:transparent;color:var(--mut)}
+.fl .cb{background:rgba(10,14,48,.55);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.1);color:#dbdee1}
 /* ---- lobby (pre-join / between calls): Discord-style blue glow ---- */
 /* polar-light glow: icy white rising from the bottom edge, mint + lavender ribbons.
    The glow stays below ~60% of the height, so the text in the middle sits on dark blue (contrast >= 5:1). */
@@ -286,9 +314,9 @@ class Room{
   this.spk=setInterval(()=>{
    an.getByteTimeDomainData(buf);let pk=0;for(const v of buf)pk=Math.max(pk,Math.abs(v-128));
    const loud=this.mic.getAudioTracks().some(t=>t.enabled)&&pk>12,now=performance.now();
-   if(loud)quiet=now;const nx=loud||now-quiet<300;
+   this.selfLevel=loud?Math.min(1,Math.sqrt(pk/128)*1.5):0;if(loud)quiet=now;const nx=loud||now-quiet<300;
    if(nx!==on){on=nx;this.selfSpeak=on;this.send({type:"speaking",value:on});updSpeak()}
-  },100);
+  },50);
  }
  teardown(code){
   clearInterval(this.hb);clearInterval(this.spk);
@@ -316,9 +344,22 @@ function mkTile(key){
 }
 const isSpk=id=>room&&(id===room.selfId?room.selfSpeak&&!room.selfMute:room.speaking.has(id));
 function updSpeak(){tiles.forEach((t,k)=>t.classList.toggle("speak",k[0]==="u"&&isSpk(+k.slice(1))))}
+/* voice level 0..1: own mic from the analyser, others from the WebRTC receiver (no server traffic) */
+function levelOf(id){
+ const r=room;if(!r||!r.ready)return 0;
+ if(id===r.selfId)return(r.selfMute||!r.canSpeak())?0:(r.selfLevel||0);
+ if(!r.speaking.has(id))return 0;
+ try{
+  const pe=r.peers.get(id),rx=pe&&(pe.rx||(pe.rx=pe.pc.getReceivers().find(x=>x.track&&x.track.kind==="audio")));
+  const s=rx&&rx.getSynchronizationSources&&rx.getSynchronizationSources()[0];
+  if(s&&typeof s.audioLevel==="number")return Math.min(1,Math.sqrt(s.audioLevel)*1.6);
+ }catch(_){}
+ return .45;
+}
+setInterval(()=>tiles.forEach((t,k)=>{if(k[0]==="u")t.style.setProperty("--lv",t.classList.contains("speak")?levelOf(+k.slice(1)).toFixed(2):"0")}),60);
 function fill(t,s){
  const p=s.p,pr=p.profile||{},v=t.firstChild,name=pr.display_name||pr.username||"?";
- t.style.setProperty("--c",`hsl(${(p.account_id*67)%360} 18% 25%)`);
+ t.style.setProperty("--h",(p.account_id*67)%360);
  t.classList.toggle("scr",s.kind==="screen");t.classList.toggle("hasv",!!s.stream);
  if(v.srcObject!==s.stream)v.srcObject=s.stream||null;
  if(s.stream&&v.paused)v.play().catch(()=>{});
