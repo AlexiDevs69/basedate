@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.301.7",
+      "date": "2026-11-03",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance voice channel UI with SVG icons and styles."
+      ],
+      "source_sha": "98260e9abbb10380ba323289a656eff5ab5d8006"
+    },
+    {
       "version": "1.301.6",
       "date": "2026-11-03",
       "title": "Виправлення та стабільність",
