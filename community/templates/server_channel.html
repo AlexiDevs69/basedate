@@ -3455,6 +3455,8 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
     <span>{{ server.name }}</span><span class="server-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
   </button>
   <button type="button" class="server-head-invite-btn" onclick="openServerInviteModal(event)" title="{{ i18n_t('common.text.ysusp_to_the_server') }}" data-i18n-title="common.text.ysusp_to_the_server"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></button>
+  <button type="button" class="ah-m-search" onclick="ahMSearch(event)"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><span>{{ i18n_t('server.cv.search_channels') }}</span></button>
+  <button type="button" class="ah-m-ev" onclick="window.openEventList&&window.openEventList()" aria-label="{{ i18n_t('common.text.events_020d3b2') }}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg></button>
   <div id="server-menu" class="server-menu discord-server-menu">
     <button type="button" class="menu-item menu-muted" onclick="openServerBoostCenter()"><span><!--i18n:common.text.servan_bones_of_the_server-->{{ i18n_t('common.text.servan_bones_of_the_server') }}</span><span class="menu-ico"><svg class="menu-svg" viewBox="0 0 24 24"><path d="M12 2l6 6-6 14L6 8l6-6z"/><path d="M6 8h12"/></svg></span></button>
     <div class="menu-divider"></div>
@@ -3488,6 +3490,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
       <span class="server-boost-strip-head"><b id="server-boost-strip-label">{{ i18n_t('server.boost.max_level') if boost_status.maxed else i18n_t('server.boost.next_level', level=boost_status.next_level) }}</b><span><!--i18n:common.text.s_busts-->{{ i18n_t('common.text.s_busts') }} <strong id="server-boost-strip-count">{{ boost_status.total_boosts }}{% if boost_status.next_required %}/{{ boost_status.next_required }}{% endif %}</strong> ›</span></span>
       <span class="server-boost-strip-track"><i id="server-boost-strip-fill" style="width:{{ boost_status.progress_percent }}%"></i></span>
     </button>
+    <div class="ah-m-top"><button type="button" class="ah-m-boost" onclick="openServerBoostCenter()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8 20 7.4v9.2l-8 4.6-8-4.6V7.4z"/><path d="m8.6 12.2 2.4 2.4 4.4-4.6"/></svg><span>{{ i18n_t('common.text.servan_bones_of_the_server') }}</span></button></div>
     {% macro server_channel_row(ch, active_channel_id=0) -%}
     <div class="chan-row {{ 'active' if ch.id == active_channel_id else '' }}" data-channel-id="{{ ch.id }}">
       <a href="/community/servers/{{ server.id }}/{{ 'voice' if ch.channel_type == 'voice' else 'channel' }}/{{ ch.id }}" data-mention-channel-key="{{ server.id }}:{{ ch.id }}" class="chan-link {{ 'active' if ch.id == active_channel_id else '' }}">
@@ -18993,6 +18996,7 @@ html[data-theme="light"] .ah-vc-ic.srv{color:#d83c3e}
       reconcile(box,list);
     });
     tickTimers();
+    try{document.dispatchEvent(new CustomEvent('ah-voice-roster',{detail:map}))}catch(_){}
   }
 
   /* ---- live channel: server pushes every change; HTTP polling only while the socket is down ---- */
@@ -19027,5 +19031,166 @@ html[data-theme="light"] .ah-vc-ic.srv{color:#d83c3e}
 })();
 </script>
 <!-- AH-VOICELIST:END -->
+<!-- AH-MOBILE-DISCORD:BEGIN (phones: channel list drawer styled like the Discord app; geometry measured from a reference screenshot) -->
+<style id="ah-mdc-css">
+.ah-m-search,.ah-m-ev,.ah-m-top,#ah-m-vcard,#ah-m-pip,.ah-m-vcb{display:none}
+@media (max-width:820px){
+:root{--ah-s-rail:68px;--ah-m-rail:68px;--dc-r:24px;--dm-rail:#121214;--dm-panel:#1a191f;--dm-line:#28272d;--dm-mut:#9a999f;--dm-txt:#a3a2a8;--dm-hi:#f2f2f4;--dm-hl:#2f2e35;--dm-btn:#29282e;--dm-green:#5eb479;--dm-card:#232227}
+html[data-theme="light"]{--dm-rail:#e3e5e8;--dm-panel:#f2f3f5;--dm-line:#d7d9de;--dm-mut:#5d6068;--dm-txt:#4e5058;--dm-hi:#060607;--dm-hl:#d9dbe0;--dm-btn:#e3e5e8;--dm-green:#1f8f4f;--dm-card:#ffffff}
+
+/* ---------- server rail ---------- */
+html body .server-rail{background:var(--dm-rail)!important;gap:11px!important;padding:calc(12px + env(safe-area-inset-top,0px)) 0 calc(96px + env(safe-area-inset-bottom,0px))!important}
+html body .server-dot{width:46px!important;height:46px!important;border-radius:15px!important}
+html body .server-dot.active{border-radius:15px!important}
+html body .server-dot.home-dot{background-color:#222226!important;color:#a3a2a8!important}
+html body .server-dot.plus{background-color:#222226!important}
+html body .rail-sep{display:block!important;width:32px!important;height:2px!important;flex:0 0 2px!important;margin:-3px 0!important;border-radius:2px;background:var(--dm-line)!important}
+html body .server-dot{position:relative}
+html body .server-dot.active::before{left:-11px!important;width:5px!important;height:38px!important;border-radius:0 5px 5px 0!important}
+html body .server-dot:not(.active):has(.server-mention-badge:not([hidden]))::before{content:"";position:absolute;left:-11px;width:5px;height:9px;border-radius:0 5px 5px 0;background:var(--dm-hi)}
+html body .ah-m-vcb{position:absolute;right:-7px;top:-7px;width:23px;height:23px;border-radius:50%;background:#23a55a;border:3px solid var(--dm-rail);display:grid;place-items:center;color:#fff;pointer-events:none;z-index:2}
+html body .ah-m-vcb svg{width:11px;height:11px;fill:currentColor}
+
+/* ---------- panel: rounded top-left corner, status-bar strip in the rail colour ---------- */
+html body .server-sidebar{background-color:var(--dm-panel)!important;
+  background-image:radial-gradient(circle at 100% 100%,transparent calc(var(--dc-r) - 1px),var(--dm-rail) var(--dc-r)),linear-gradient(var(--dm-rail),var(--dm-rail))!important;
+  background-size:var(--dc-r) var(--dc-r),100% env(safe-area-inset-top,0px)!important;
+  background-position:0 env(safe-area-inset-top,0px),0 0!important;background-repeat:no-repeat!important}
+
+/* ---------- header: name, then [search][invite][events] ---------- */
+html body .server-head{position:relative;display:flex!important;flex-wrap:wrap;align-items:center;gap:8px 12px;height:auto!important;padding:14px 16px 12px!important;background:transparent!important;border:0!important}
+html body .server-head::after{content:"";position:absolute;left:16px;right:16px;bottom:0;height:1px;background:var(--dm-line)}
+html body .server-head-btn{order:1;flex:1 0 100%;height:24px!important;padding:0!important;justify-content:flex-start!important;gap:8px;font-size:17px!important;font-weight:700!important;line-height:24px;color:var(--dm-hi)!important;background:transparent!important}
+html body .server-head-btn>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html body .server-head-btn .server-arrow{flex:0 0 auto;display:grid;place-items:center;color:var(--dm-mut)}
+html body .server-head-btn .server-arrow svg{width:13px;height:13px;transform:rotate(-90deg);stroke-width:3}
+html body .ah-m-search,html body .server-head-invite-btn,html body .ah-m-ev{height:30px!important;border:0;border-radius:11px!important;background:var(--dm-btn)!important;color:var(--dm-hi)!important;align-items:center;justify-content:center;cursor:pointer}
+html body .ah-m-search{order:2;flex:1 1 0;min-width:0;display:flex;gap:7px;padding:0 10px;font:600 15px/1 var(--font,system-ui,sans-serif)}
+html body .ah-m-search svg,html body .ah-m-ev svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
+html body .server-head-invite-btn{order:3;flex:0 0 30px!important;width:30px!important;display:flex!important}
+html body .server-head-invite-btn svg{width:20px!important;height:20px!important}
+html body .ah-m-ev{order:4;flex:0 0 30px;width:30px;display:flex;padding:0}
+html body .server-menu{top:auto!important}
+
+/* ---------- boosts row between two dividers ---------- */
+html body .server-boost-strip{display:none!important}
+html body .ah-m-top{display:block;margin:0 16px;padding:8px 0;border-bottom:1px solid var(--dm-line)}
+html body .ah-m-boost{display:flex;align-items:center;gap:7px;width:100%;height:36px;margin:0;padding:0;border:0;border-radius:10px;background:transparent;color:var(--dm-mut);font:500 15px/1 var(--font,system-ui,sans-serif);text-align:left;cursor:pointer}
+html body .ah-m-boost svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto;margin:0 1px 0 0}
+html body .ah-m-boost:active{background:rgba(255,255,255,.05)}
+
+/* ---------- channel tree ---------- */
+html body .server-sidebar .sidebar-scroll{padding:0 8px calc(96px + env(safe-area-inset-bottom,0px))!important}
+html body .server-sidebar .sidebar-label-row{margin:0!important}
+html body .server-sidebar .sidebar-label{display:none}
+html body .server-sidebar .sidebar-label-row,html body .server-sidebar a.chan-link[id^="cv-nav-"],html body .server-sidebar .sidebar-scroll>a.chan-link,html body .server-sidebar .server-category-add{display:none!important}
+html body .server-sidebar .ah-event-sidebar-entry{display:none!important}
+html body .server-sidebar .chan-row{min-height:36px!important;margin:.5px 0!important}
+html body .server-sidebar .chan-row .chan-link,html body .server-sidebar a.chan-link[id^="cv-nav-"]{display:flex;align-items:center;gap:1px!important;min-height:36px!important;height:36px;margin:0!important;padding:0 8px 0 10px!important;border-radius:14px!important;font-size:15px!important;font-weight:500!important;line-height:1.2;color:var(--dm-txt)!important}
+html body .server-sidebar a.chan-link[id^="cv-nav-"]{margin:1px 0!important;width:100%}
+html body .server-sidebar a.chan-link[id^="cv-nav-"] svg{width:20px;height:20px;margin:0 6px 0 1px;flex:0 0 auto}
+html body .server-sidebar .chan-row .chan-link.active,html body .server-sidebar .chan-row.active .chan-link{background:var(--dm-hl)!important;color:var(--dm-hi)!important}
+html body .server-sidebar a.chan-link[id^="cv-nav-"].active{background:transparent!important;color:var(--dm-txt)!important}
+html body .server-sidebar .chan-symbol{flex:0 0 22px;width:22px;font-size:20px;color:#8f8e94;display:grid;place-items:center}
+html body .server-sidebar .chan-row.active .chan-symbol{color:var(--dm-hi)}
+html body .server-sidebar .chan-row.vc-live .chan-symbol{color:var(--dm-green)}
+html body .server-sidebar .chan-row.vc-live .chan-link{padding-right:72px!important}
+html body .server-sidebar .chan-actions{display:none!important}
+html body .server-sidebar .chan-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+html body .server-category-block{margin:0}
+html body .server-category-head{display:flex;align-items:center;height:28px;margin:12px 0 4px;padding:0 8px}
+html body .server-category-toggle{display:flex;align-items:center;gap:6px;height:28px;padding:0 8px 0 0;background:transparent;border:0;color:var(--dm-mut);font-size:13px;font-weight:600;letter-spacing:0;text-transform:none}
+html body .server-category-chevron{order:2;font-size:15px;line-height:1;transform:translateY(-3px)}
+html body .server-category-name{text-transform:none;letter-spacing:0}
+
+/* voice: timer + participants like the app */
+html body .ah-vc-timer{right:8px;font:500 13px/1 var(--font,system-ui,sans-serif);font-variant-numeric:tabular-nums;color:var(--dm-green)}
+html body .ah-vc-users{margin:0 0 2px;padding:0 0 0 33px}
+html body .ah-vc-u{min-height:29px;padding:0 8px 0 0;gap:9px;font-size:14px;color:var(--dm-mut);border-radius:8px}
+html body .ah-vc-av{flex:0 0 20px;width:20px;height:20px;font-size:10px}
+html body .ah-vc-ic svg{width:17px;height:17px}
+
+/* light theme touch-ups */
+html[data-theme="light"] body .server-head-btn{background:transparent!important}
+html[data-theme="light"] body .server-dot.plus,html[data-theme="light"] body .server-dot.home-dot:not(.active){background-color:#f2f3f5!important;color:#4e5058!important}
+
+/* ---------- "in voice chat" card (+ floating self tile) above the bottom island ---------- */
+#ah-m-vcard,#ah-m-vcard *,#ah-m-pip,#ah-m-pip *{text-decoration:none!important}
+#ah-m-vcard{position:fixed;z-index:1229;left:34px;right:18px;bottom:calc(88px + env(safe-area-inset-bottom,0px));height:54px;align-items:center;gap:10px;padding:0 10px 0 52px;border-radius:22px;background:var(--dm-card);box-shadow:0 8px 24px rgba(0,0,0,.4);color:var(--dm-hi);text-decoration:none;-webkit-tap-highlight-color:transparent}
+#ah-m-vcard:not([hidden]){display:flex}
+html.ah-s-r-on #ah-m-vcard,html.ah-s-r-on #ah-m-pip,html.ah-m-r-on #ah-m-vcard,html.ah-m-r-on #ah-m-pip{display:none!important}
+#ah-m-vcard .mv-av{position:absolute;left:-16px;top:50%;margin-top:-30px;width:60px;height:60px;border-radius:50%;background:#2b2d31 center/cover no-repeat;display:grid;place-items:center;font-weight:800;font-size:22px;color:#fff;box-shadow:0 0 0 3px var(--dm-panel)}
+#ah-m-vcard .mv-t{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1 1 auto}
+#ah-m-vcard .mv-n{display:flex;align-items:center;gap:6px;font-size:16px;font-weight:700;line-height:1.1;min-width:0}
+#ah-m-vcard .mv-n em{font-style:normal;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#ah-m-vcard .mv-n svg{flex:0 0 auto;width:14px;height:14px;fill:none;stroke:var(--dm-mut);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+#ah-m-vcard .mv-s{display:flex;align-items:center;gap:5px;color:#3ba55d;font-size:12.5px;font-weight:500;line-height:1}
+#ah-m-vcard .mv-s svg{width:14px;height:14px;fill:currentColor}
+#ah-m-vcard .mv-go{flex:0 0 auto;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:var(--dm-mut)}
+#ah-m-vcard .mv-go svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+#ah-m-pip{position:fixed;z-index:1228;right:16px;bottom:calc(88px + 54px + 16px + env(safe-area-inset-bottom,0px));width:114px;height:114px;border-radius:24px;overflow:hidden;background:#8fb89b;box-shadow:0 8px 26px rgba(0,0,0,.45);display:none;place-items:center;-webkit-tap-highlight-color:transparent}
+#ah-m-pip:not([hidden]){display:grid}
+#ah-m-pip .pp-bg{position:absolute;inset:-20px;background:center/cover no-repeat;filter:blur(18px) saturate(.8) brightness(1.15);opacity:.9}
+#ah-m-pip::after{content:"";position:absolute;inset:0;background:rgba(150,200,165,.38)}
+#ah-m-pip .pp-av{position:relative;z-index:1;width:72px;height:72px;border-radius:50%;background:#2b2d31 center/cover no-repeat;display:grid;place-items:center;color:#fff;font-weight:800;font-size:28px}
+/* on the chat page the card and tile live in the open channel drawer only (they would cover the composer) */
+#ah-m-vcard,#ah-m-pip{display:none!important}
+html.ah-m-l-on #ah-m-vcard:not([hidden]){display:flex!important}
+html.ah-m-l-on #ah-m-pip:not([hidden]){display:grid!important}
+html.ah-m-vc body .server-sidebar .sidebar-scroll{padding-bottom:calc(172px + env(safe-area-inset-bottom,0px))!important}
+}
+</style>
+<script id="ah-mdc-js">
+(function(){
+  if(window.__ahMdc)return;window.__ahMdc=true;
+  var ME={{ {'id':account.id,'name':(account.display_name or account.username),'avatar':(account.avatar_url or '')}|tojson }};
+  var SID={{ server.id|tojson }};
+  var LANG=String({{ i18n_language|tojson }}||'').slice(0,2);
+  var TXT=LANG==='uk'?'У голосовому чаті':LANG==='en'?'In voice chat':'В голосовом чате';
+  var card=null;
+  var SPK='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.2 4.6 6.6 8.8H3.4A1.4 1.4 0 0 0 2 10.2v3.6a1.4 1.4 0 0 0 1.4 1.4h3.2l4.6 4.2z"/><path d="M15 9a4.2 4.2 0 0 1 0 6M18.2 6.2a8.2 8.2 0 0 1 0 11.6" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/></svg>';
+  var pip=null;
+  function okUrl(u){return !!u&&(/^(https?:)?\/\//.test(u)||/^\/(?!\/)/.test(u))}
+  function paintAv(n,fallback){
+    if(okUrl(ME.avatar))n.style.backgroundImage='url('+JSON.stringify(String(ME.avatar))+')';
+    else if(fallback)n.textContent=(String(ME.name||'?').trim().charAt(0)||'?').toUpperCase();
+  }
+  function ensure(){
+    if(card)return card;
+    card=document.createElement('a');card.id='ah-m-vcard';card.hidden=true;
+    card.innerHTML='<span class="mv-av"></span><span class="mv-t"><b class="mv-n"><em></em><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></b><span class="mv-s">'+SPK+'<i></i></span></span><span class="mv-go"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></span>';
+    card.querySelector('.mv-n em').textContent=ME.name||'';
+    var st=card.querySelector('.mv-s i');st.textContent=TXT;st.style.fontStyle='normal';
+    paintAv(card.querySelector('.mv-av'),true);
+    pip=document.createElement('a');pip.id='ah-m-pip';pip.hidden=true;
+    pip.innerHTML='<span class="pp-bg"></span><span class="pp-av"></span>';
+    if(okUrl(ME.avatar))pip.querySelector('.pp-bg').style.backgroundImage='url('+JSON.stringify(String(ME.avatar))+')';
+    paintAv(pip.querySelector('.pp-av'),true);
+    document.body.appendChild(pip);document.body.appendChild(card);return card;
+  }
+  /* green speaker badge on this server's icon in the rail while I am in its voice channel */
+  function railBadge(on){
+    var dot=document.querySelector('.server-rail .server-dot.active:not(.home-dot)');if(!dot)return;
+    var b=dot.querySelector('.ah-m-vcb');
+    if(on&&!b){b=document.createElement('i');b.className='ah-m-vcb';b.innerHTML=SPK;dot.appendChild(b)}
+    else if(!on&&b)b.remove();
+  }
+  /* the voice list script announces every roster change; show the card while I am in a channel of this server */
+  document.addEventListener('ah-voice-roster',function(e){
+    var map=(e&&e.detail)||{},cid=null;
+    Object.keys(map).forEach(function(k){(map[k]||[]).forEach(function(u){if(+u.account_id===+ME.id)cid=k})});
+    if(cid==null){if(card){card.hidden=true;pip.hidden=true}railBadge(false);document.documentElement.classList.remove('ah-m-vc');return}
+    var c=ensure();c.href=pip.href='/community/servers/'+SID+'/voice/'+cid;c.hidden=false;pip.hidden=false;railBadge(true);document.documentElement.classList.add('ah-m-vc');
+  });
+  /* the search pill closes the drawer and opens the message search of the top bar */
+  window.ahMSearch=function(ev){
+    if(ev)ev.preventDefault();
+    try{window.ahMobileDrawer&&window.ahMobileDrawer.close()}catch(_){}
+    setTimeout(function(){var s=document.querySelector('.topbar .discord-search');if(s)s.click()},330);
+  };
+})();
+</script>
+<!-- AH-MOBILE-DISCORD:END -->
 </body>
 </html>
