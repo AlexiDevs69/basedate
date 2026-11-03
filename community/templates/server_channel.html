@@ -3491,7 +3491,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
     {% macro server_channel_row(ch, active_channel_id=0) -%}
     <div class="chan-row {{ 'active' if ch.id == active_channel_id else '' }}" data-channel-id="{{ ch.id }}">
       <a href="/community/servers/{{ server.id }}/{{ 'voice' if ch.channel_type == 'voice' else 'channel' }}/{{ ch.id }}" data-mention-channel-key="{{ server.id }}:{{ ch.id }}" class="chan-link {{ 'active' if ch.id == active_channel_id else '' }}">
-        <span class="chan-symbol">{{ '🔊' if ch.channel_type == 'voice' else '#' }}</span>
+        <span class="chan-symbol">{% if ch.channel_type == 'voice' %}<svg class="chan-vc-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M11.2 4.6 6.6 8.8H3.4A1.4 1.4 0 0 0 2 10.2v3.6a1.4 1.4 0 0 0 1.4 1.4h3.2l4.6 4.2z"/><path fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" d="M15 9a4.2 4.2 0 0 1 0 6M18.2 6.2a8.2 8.2 0 0 1 0 11.6"/></svg>{% else %}#{% endif %}</span>
         <span class="chan-name">{{ ch.name }}</span>
         {% if ch.is_private %}<span class="channel-private-lock" title="{{ i18n_t('common.aria.a_private_channel') }}" data-i18n-title="common.aria.a_private_channel">🔒</span>{% endif %}
         {% set cc = mention_counts.channel_by_id.get((server.id|string) ~ ':' ~ (ch.id|string), 0) %}
@@ -18898,19 +18898,36 @@ html body .discord-hash{padding:10px 6px;margin:-10px -6px}
 })();
 </script>
 <!-- AH-ISLAND:END -->
-<!-- AH-VOICELIST:BEGIN (учасники голосових каналів під назвою каналу; оновлюється з /api/servers/ID/voice-state) -->
+<!-- AH-VOICELIST:BEGIN (voice channel look: speaker icon, live timer, participants; pushed live over /ws/servers/ID/voice-watch, HTTP polling is only a fallback) -->
 <style id="ah-vc-css">
-.ah-vc-users{display:flex;flex-direction:column;gap:1px;margin:0 0 4px 26px;padding:0 6px 0 12px}
+/* speaker icon: grey like the # of a text channel, green while someone is in the channel */
+.chan-symbol .chan-vc-ico{width:18px;height:18px;display:block}
+.chan-row .chan-symbol{transition:color .2s ease}
+.chan-row.vc-live .chan-symbol{color:#5eb479}
+.chan-row.vc-live .chan-link{padding-right:86px!important}
+/* how long the call has been running (hidden on hover, where the invite/settings buttons appear) */
+.ah-vc-timer{position:absolute;right:10px;top:50%;transform:translateY(-50%);font:500 12px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;font-variant-numeric:tabular-nums;color:#5eb479;pointer-events:none;transition:opacity .12s ease}
+.chan-row:hover .ah-vc-timer,.chan-row:focus-within .ah-vc-timer{opacity:0}
+/* participants */
+.ah-vc-users{display:flex;flex-direction:column;gap:0;margin:0 0 4px;padding:0 8px 0 32px}
 .ah-vc-users:empty{display:none}
-.ah-vc-u{display:flex;align-items:center;gap:8px;min-height:28px;padding:2px 6px;border-radius:6px;color:#9ca3af;font-size:14px;font-weight:600;min-width:0}
-.ah-vc-u:hover{background:rgba(127,127,127,.14);color:#e6e8ec}
-.ah-vc-av{flex:0 0 22px;width:22px;height:22px;border-radius:50%;background:#2b2d31 center/cover no-repeat;color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center}
+.ah-vc-u{display:flex;align-items:center;gap:8px;min-height:32px;padding:4px 6px;border-radius:6px;color:#81828a;font-size:15px;font-weight:500;min-width:0;cursor:default}
+.ah-vc-u:hover{background:rgba(255,255,255,.06);color:#dbdee1}
+.ah-vc-u.in{animation:ah-vc-in .22s ease-out}
+.ah-vc-u.out{opacity:0;transform:translateX(-6px);transition:opacity .15s ease,transform .15s ease;pointer-events:none}
+@keyframes ah-vc-in{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.ah-vc-u.in{animation:none}.ah-vc-u.out{transition:none}}
+.ah-vc-av{flex:0 0 24px;width:24px;height:24px;border-radius:50%;background:#2b2d31 center/cover no-repeat;color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center}
 .ah-vc-n{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ah-vc-ic{flex:0 0 auto;display:inline-flex;gap:3px;color:#f23f43}
-.ah-vc-ic svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-.ah-vc-live{flex:0 0 auto;margin-left:6px;padding:1px 6px;border-radius:5px;background:#23a55a;color:#fff;font-size:10px;font-weight:800;letter-spacing:.04em}
-html[data-theme="light"] .ah-vc-u{color:#5d6068}
-html[data-theme="light"] .ah-vc-u:hover{color:#1b1c20}
+.ah-vc-ic{flex:0 0 auto;display:inline-flex;gap:4px;color:#81828a}
+.ah-vc-ic.srv{color:#f23f43}
+.ah-vc-ic svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ah-vc-live{flex:0 0 auto;margin-left:2px;padding:1px 6px;border-radius:5px;background:#23a55a;color:#fff;font-size:10px;font-weight:800;letter-spacing:.04em}
+html[data-theme="light"] .chan-row.vc-live .chan-symbol,html[data-theme="light"] .ah-vc-timer{color:#248046}
+html[data-theme="light"] .ah-vc-u{color:#6b6f78}
+html[data-theme="light"] .ah-vc-u:hover{background:rgba(0,0,0,.06);color:#1b1c20}
+html[data-theme="light"] .ah-vc-ic{color:#6b6f78}
+html[data-theme="light"] .ah-vc-ic.srv{color:#d83c3e}
 </style>
 <script id="ah-vc-js">
 (function(){
@@ -18921,29 +18938,76 @@ html[data-theme="light"] .ah-vc-u:hover{color:#1b1c20}
   function icon(paths){var s=document.createElementNS(NS,'svg');s.setAttribute('viewBox','0 0 24 24');paths.forEach(function(d){var p=document.createElementNS(NS,'path');p.setAttribute('d',d);s.appendChild(p)});return s}
   var MIC_OFF=['M2 2l20 20','M9 9v2a3 3 0 0 0 5.1 2.1','M15 9.3V5a3 3 0 0 0-5.7-1.3','M19 11a7 7 0 0 1-.9 3.4','M5 11a7 7 0 0 0 11 5.7','M12 18v3'];
   var DEAF_OFF=['M2 2l20 20','M3 14v-2a9 9 0 0 1 14.5-7','M21 12v2','M18 19a2 2 0 0 1-2 2h-1v-6h1','M6 15H5a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h1z'];
-  function paint(map){
-    var boxes=document.querySelectorAll('.ah-vc-users[data-vc]');
-    boxes.forEach(function(box){
-      var list=map[box.getAttribute('data-vc')]||[];
-      var sig=JSON.stringify(list);
-      if(box.__sig===sig)return;box.__sig=sig;
-      box.textContent='';
-      list.forEach(function(u){
-        var row=document.createElement('div');row.className='ah-vc-u';
-        var av=document.createElement('span');av.className='ah-vc-av';
-        if(u.avatar_url&&/^(https?:)?\/\//.test(u.avatar_url)||/^\/(?!\/)/.test(u.avatar_url||'')){av.style.backgroundImage='url('+JSON.stringify(String(u.avatar_url))+')'}
-        else{av.textContent=(String(u.display_name||u.username||'?').trim().charAt(0)||'?').toUpperCase()}
-        var n=document.createElement('span');n.className='ah-vc-n';n.textContent=u.display_name||u.username||'';
-        var ic=document.createElement('span');ic.className='ah-vc-ic';
-        if(u.self_deaf||u.server_deaf)ic.appendChild(icon(DEAF_OFF));
-        else if(u.self_mute||u.server_mute)ic.appendChild(icon(MIC_OFF));
-        row.appendChild(av);row.appendChild(n);row.appendChild(ic);
-        if(u.video||u.screen){var lv=document.createElement('span');lv.className='ah-vc-live';lv.textContent=u.screen?'LIVE':'VIDEO';row.appendChild(lv)}
-        box.appendChild(row);
-      });
+
+  /* ---- call timer ---- */
+  var started={};                         /* channel id -> epoch ms when the call began (server-side) */
+  function pad(n){return n<10?'0'+n:''+n}
+  function fmt(sec){sec=Math.max(0,Math.floor(sec));var h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=sec%60;return h>0?h+':'+pad(m)+':'+pad(s):m+':'+pad(s)}
+  function rowsOf(cid){return document.querySelectorAll('.chan-row[data-channel-id="'+cid+'"]')}
+  function timerOf(row){var t=row.querySelector('.ah-vc-timer');if(!t){t=document.createElement('span');t.className='ah-vc-timer';t.setAttribute('aria-hidden','true');row.appendChild(t)}return t}
+  function tickTimers(){var now=Date.now();Object.keys(started).forEach(function(cid){rowsOf(cid).forEach(function(r){timerOf(r).textContent=fmt((now-started[cid])/1000)})})}
+
+  /* ---- roster (keyed by account, so only real changes touch the DOM) ---- */
+  function userSig(u){return JSON.stringify([u.display_name,u.username,u.avatar_url,u.self_mute,u.self_deaf,u.server_mute,u.server_deaf,u.video,u.screen])}
+  function buildRow(u){
+    var name=u.display_name||u.username||'';
+    var row=document.createElement('div');row.className='ah-vc-u';row.title=name;
+    var av=document.createElement('span');av.className='ah-vc-av';
+    if(u.avatar_url&&/^(https?:)?\/\//.test(u.avatar_url)||/^\/(?!\/)/.test(u.avatar_url||'')){av.style.backgroundImage='url('+JSON.stringify(String(u.avatar_url))+')'}
+    else{av.textContent=(String(name||'?').trim().charAt(0)||'?').toUpperCase()}
+    var n=document.createElement('span');n.className='ah-vc-n';n.textContent=name;
+    var ic=document.createElement('span');ic.className='ah-vc-ic';
+    if(u.self_deaf||u.server_deaf){ic.appendChild(icon(DEAF_OFF));if(u.server_deaf)ic.classList.add('srv')}
+    else if(u.self_mute||u.server_mute){ic.appendChild(icon(MIC_OFF));if(u.server_mute)ic.classList.add('srv')}
+    row.appendChild(av);row.appendChild(n);row.appendChild(ic);
+    if(u.video||u.screen){var lv=document.createElement('span');lv.className='ah-vc-live';lv.textContent=u.screen?'LIVE':'VIDEO';row.appendChild(lv)}
+    return row;
+  }
+  function reconcile(box,list){
+    var first=!box.__init;box.__init=true;           /* the very first paint must not animate everybody */
+    var map=box.__map||(box.__map=new Map()),seen=new Set();
+    list.forEach(function(u){
+      var id=String(u.account_id),sig=userSig(u),cur=map.get(id);seen.add(id);
+      if(cur&&cur.sig===sig)return;
+      var el=buildRow(u);
+      if(cur){cur.el.replaceWith(el)}
+      else if(!first){el.classList.add('in');el.addEventListener('animationend',function(){el.classList.remove('in')})}
+      map.set(id,{el:el,sig:sig});
+    });
+    map.forEach(function(v,id){if(!seen.has(id)){map.delete(id);v.el.classList.add('out');setTimeout(function(){v.el.remove()},170)}});
+    var ptr=box.firstElementChild;                    /* put rows in server order without moving the ones already in place */
+    list.forEach(function(u){
+      var el=map.get(String(u.account_id)).el;
+      while(ptr&&ptr!==el&&ptr.classList.contains('out'))ptr=ptr.nextElementSibling;
+      if(ptr===el)ptr=ptr.nextElementSibling;else box.insertBefore(el,ptr);
     });
   }
-  var busy=false,stopped=false,timer=0;
+  function paint(map){
+    document.querySelectorAll('.ah-vc-users[data-vc]').forEach(function(box){
+      var cid=box.getAttribute('data-vc'),list=map[cid]||[],live=list.length>0;
+      rowsOf(cid).forEach(function(r){r.classList.toggle('vc-live',live);if(!live){var t=r.querySelector('.ah-vc-timer');if(t)t.remove()}});
+      if(live){
+        var age=+list[0].channel_age,base=isFinite(age)?Date.now()-age*1000:(started[cid]||Date.now());
+        if(!started[cid]||Math.abs(started[cid]-base)>2500)started[cid]=base;
+      }else delete started[cid];
+      reconcile(box,list);
+    });
+    tickTimers();
+  }
+
+  /* ---- live channel: server pushes every change; HTTP polling only while the socket is down ---- */
+  var wsOpen=false,ws=null,retry=0,pingT=0,reconnT=0,stopped=false,busy=false;
+  function connectWS(){
+    if(stopped||!window.WebSocket||(ws&&(ws.readyState===0||ws.readyState===1)))return;
+    var s;
+    try{s=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host+'/community/ws/servers/'+SID+'/voice-watch')}catch(e){scheduleReconnect();return}
+    ws=s;
+    s.onopen=function(){wsOpen=true;retry=0;clearInterval(pingT);pingT=setInterval(function(){try{s.send('{"type":"ping"}')}catch(e){}},25000)};
+    s.onmessage=function(e){var d;try{d=JSON.parse(e.data)}catch(_){return}if(d&&d.type==='voice_state')paint(d.channels||{})};
+    s.onclose=function(){if(ws===s){wsOpen=false;clearInterval(pingT);scheduleReconnect()}};
+    s.onerror=function(){};
+  }
+  function scheduleReconnect(){clearTimeout(reconnT);reconnT=setTimeout(connectWS,Math.min(15000,1000*Math.pow(2,retry++)))}
   function tick(){
     if(stopped||busy||document.hidden||!document.querySelector('.ah-vc-users[data-vc]'))return;
     busy=true;
@@ -18952,9 +19016,13 @@ html[data-theme="light"] .ah-vc-u:hover{color:#1b1c20}
       .then(function(d){paint((d&&d.channels)||{})})
       .catch(function(){}).then(function(){busy=false});
   }
-  function start(){tick();timer=setInterval(tick,6000)}
-  document.addEventListener('visibilitychange',function(){if(!document.hidden)tick()});
-  window.addEventListener('pageshow',tick);
+  function start(){
+    tick();connectWS();
+    setInterval(function(){if(!wsOpen)tick()},5000);
+    setInterval(function(){if(!document.hidden)tickTimers()},1000);
+  }
+  document.addEventListener('visibilitychange',function(){if(!document.hidden){if(!wsOpen)connectWS();tick();tickTimers()}});
+  window.addEventListener('pageshow',function(){if(!wsOpen)connectWS();tick()});
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();
 </script>
