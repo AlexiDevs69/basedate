@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.302.0",
+      "date": "2026-11-03",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: WebSocket for voice channel updates."
+      ],
+      "source_sha": "7e199dc9851556516d88e4aefed2153f93a01f6e"
+    },
+    {
       "version": "1.301.7",
       "date": "2026-11-03",
       "title": "Виправлення та стабільність",
