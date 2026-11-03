@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.302.1",
+      "date": "2026-11-03",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: VoiceHub and Watcher classes for clarity."
+      ],
+      "source_sha": "f9d792dd29791be6fdf1c0dd26214999d984ba1c"
+    },
+    {
       "version": "1.302.0",
       "date": "2026-11-03",
       "title": "Нові можливості AlexiHub",
