@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.302.2",
+      "date": "2026-11-04",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance server header with search and events buttons."
+      ],
+      "source_sha": "a4ef1c5454bab896a16914761c79264828d87e3c"
+    },
+    {
       "version": "1.302.1",
       "date": "2026-11-03",
       "title": "Оновлення AlexiHub",
