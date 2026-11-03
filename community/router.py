@@ -3240,6 +3240,35 @@ async def ws_server_voice(websocket: WebSocket, server_id: int, channel_id: int)
     )
 
 
+@router.websocket("/ws/servers/{server_id}/voice-watch")
+async def ws_server_voice_watch(websocket: WebSocket, server_id: int):
+    """Live voice roster for the server sidebar: pushes who sits in which voice channel on every change."""
+    account_id = _ws_account_id(websocket)
+    if not account_id:
+        await websocket.close(code=1008)
+        return
+
+    async with AsyncSessionLocal() as db:
+        account = await crud.get_account_by_id(db, account_id)
+        ok = bool(
+            account
+            and _ws_session_matches_account(websocket, account)
+            and await crud.is_server_member(db, server_id, account_id)
+        )
+    if not ok:
+        await websocket.close(code=1008)
+        return
+
+    async def can_see(channel_id: int) -> bool:
+        async with AsyncSessionLocal() as db2:
+            if not await crud.is_server_member(db2, server_id, account_id):
+                return False
+            channel = await crud.get_server_channel(db2, server_id, channel_id)
+            return bool(channel and await crud.can_access_server_channel(db2, server_id, channel, account_id))
+
+    await voice.hub.watch(websocket, server_id=server_id, account_id=account_id, can_see=can_see)
+
+
 @router.get("/servers/{server_id}/channel/{channel_id}")
 async def server_channel_view(server_id: int, channel_id: int, request: Request, db: AsyncSession = Depends(get_db)):
     account = await current_account(request, db)
