@@ -6,6 +6,10 @@ room is capped at VOICE_MAX_PARTICIPANTS). This module is only the *signalling
 server*: it keeps who-is-in-which-room in RAM, relays SDP / ICE between peers
 and broadcasts mute / deafen / speaking state.  Nothing here touches the DB.
 
+Besides the call sockets there are *watch* sockets (``VoiceHub.watch``): every open server page
+subscribes to the voice roster of its server and gets a ``voice_state`` push on each change
+(join / leave / mute / deafen / video), so the sidebar updates instantly.
+
 State lives in this process' memory (exactly like ``realtime_channels``), so run
 a single worker, or put sticky sessions in front of several.
 
@@ -39,6 +43,9 @@ MAX_MESSAGE_CHARS = 64 * 1024
 RATE_MAX_MESSAGES = 400      # per RATE_WINDOW seconds (ICE bursts are chatty)
 RATE_WINDOW = 5.0
 SIGNAL_KINDS = {"offer", "answer", "ice", "renegotiate"}
+WATCH_DEBOUNCE = 0.12        # coalesce bursts of changes into one push
+WATCH_IDLE_TIMEOUT = 75.0    # watch clients ping every 25 s
+CAN_SEE_TTL = 60.0           # how long a per-channel access check is cached per watcher
 
 
 def ice_servers(account_id: int) -> list[dict]:
@@ -112,6 +119,20 @@ class Peer:
         return False
 
 
+class Watcher:
+    """A server page that follows the voice roster of one server."""
+    __slots__ = ("ws", "server_id", "account_id", "can_see", "cache", "closed", "lock")
+
+    def __init__(self, ws: WebSocket, server_id: int, account_id: int, can_see: Callable[[int], Awaitable[bool]]):
+        self.ws = ws
+        self.server_id = int(server_id)
+        self.account_id = int(account_id)
+        self.can_see = can_see
+        self.cache: dict[str, tuple[bool, float]] = {}
+        self.closed = False
+        self.lock = asyncio.Lock()
+
+
 Key = tuple[int, int]
 
 
@@ -119,6 +140,10 @@ class VoiceHub:
     def __init__(self) -> None:
         self.rooms: dict[Key, dict[int, Peer]] = {}
         self.by_account: dict[int, tuple[Key, Peer]] = {}
+        self.started: dict[Key, float] = {}   # key -> monotonic time the call began (first person joined)
+        self.watchers: dict[int, set[Watcher]] = {}
+        self._pending: set[int] = set()       # servers with a push already scheduled
+        self._tasks: set[asyncio.Task] = set()
 
     # ------------------------------------------------------------------ io
     async def _send(self, peer: Peer, message: dict) -> None:
@@ -154,11 +179,13 @@ class VoiceHub:
             removed = True
             if not room:
                 self.rooms.pop(key, None)
+                self.started.pop(key, None)   # empty room -> the next call starts a fresh timer
         cur = self.by_account.get(peer.account_id)
         if cur and cur[1] is peer:
             del self.by_account[peer.account_id]
         if removed:
             await self._broadcast(key, {"type": "participant_left", "account_id": peer.account_id})
+            self._changed(key[0])
 
     async def _evict(self, key: Key, peer: Peer, message: dict) -> None:
         await self._send(peer, message)
@@ -169,9 +196,12 @@ class VoiceHub:
     def snapshot(self, server_id: int) -> dict[str, list[dict]]:
         """channel_id -> participants, for the server sidebar."""
         out: dict[str, list[dict]] = {}
+        now = time.monotonic()
         for (sid, cid), room in self.rooms.items():
             if sid != int(server_id) or not room:
                 continue
+            # seconds since the call began; the sidebar turns it into a running timer
+            age = int(max(0.0, now - self.started.get((sid, cid), now)))
             out[str(cid)] = [
                 {
                     "account_id": p.account_id,
@@ -184,10 +214,102 @@ class VoiceHub:
                     "server_deaf": p.server_deaf,
                     "video": p.video,
                     "screen": p.screen,
+                    "channel_age": age,
                 }
                 for p in room.values()
             ]
         return out
+
+    # ------------------------------------------------------------- live sidebar
+    def _changed(self, server_id: int) -> None:
+        """Something in a voice room of this server changed -> push the roster to its watchers (debounced)."""
+        sid = int(server_id)
+        if not self.watchers.get(sid) or sid in self._pending:
+            return
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            return
+        self._pending.add(sid)
+
+        def fire() -> None:
+            task = asyncio.ensure_future(self._publish(sid))
+            self._tasks.add(task)
+            task.add_done_callback(self._tasks.discard)
+
+        loop.call_later(WATCH_DEBOUNCE, fire)
+
+    async def _publish(self, server_id: int) -> None:
+        self._pending.discard(server_id)
+        watchers = list(self.watchers.get(server_id, ()))
+        if watchers:
+            snap = self.snapshot(server_id)
+            await asyncio.gather(*(self._push(w, snap) for w in watchers), return_exceptions=True)
+
+    async def _push(self, w: Watcher, snap: dict[str, list[dict]]) -> None:
+        """Send one watcher only the channels it is allowed to see (access check cached per channel)."""
+        now = time.monotonic()
+        visible: dict[str, list[dict]] = {}
+        for cid, people in snap.items():
+            hit = w.cache.get(cid)
+            if hit is None or now - hit[1] > CAN_SEE_TTL:
+                try:
+                    ok = bool(await w.can_see(int(cid)))
+                except Exception:
+                    ok = False
+                w.cache[cid] = (ok, now)
+            else:
+                ok = hit[0]
+            if ok:
+                visible[cid] = people
+        if w.closed:
+            return
+        try:
+            async with w.lock:
+                if w.ws.client_state == WebSocketState.CONNECTED:
+                    await w.ws.send_text(json.dumps({"type": "voice_state", "channels": visible}, separators=(",", ":")))
+        except Exception:
+            w.closed = True
+
+    async def watch(
+        self,
+        websocket: WebSocket,
+        *,
+        server_id: int,
+        account_id: int,
+        can_see: Callable[[int], Awaitable[bool]],
+    ) -> None:
+        """Subscribe a server page to live voice-roster updates."""
+        await websocket.accept()
+        w = Watcher(websocket, server_id, account_id, can_see)
+        self.watchers.setdefault(w.server_id, set()).add(w)
+        try:
+            await self._push(w, self.snapshot(w.server_id))      # current state right away
+            while not w.closed:
+                try:
+                    raw = await asyncio.wait_for(websocket.receive_text(), WATCH_IDLE_TIMEOUT)
+                except (asyncio.TimeoutError, WebSocketDisconnect):
+                    break
+                if raw and len(raw) < 64 and "ping" in raw:
+                    try:
+                        async with w.lock:
+                            await websocket.send_text('{"type":"pong"}')
+                    except Exception:
+                        break
+        except Exception:
+            pass
+        finally:
+            w.closed = True
+            group = self.watchers.get(w.server_id)
+            if group:
+                group.discard(w)
+                if not group:
+                    self.watchers.pop(w.server_id, None)
+            try:
+                if websocket.client_state == WebSocketState.CONNECTED:
+                    await websocket.close()
+            except Exception:
+                pass
 
     async def close_channel(self, server_id: int, channel_id: int, reason: str = "channel_deleted") -> None:
         key = (int(server_id), int(channel_id))
@@ -231,6 +353,7 @@ class VoiceHub:
 
         me = Peer(websocket, account_id, profile)
         room[me.account_id] = me
+        self.started.setdefault(key, time.monotonic())
         self.by_account[me.account_id] = (key, me)
         await self._send(me, {
             "type": "voice_ready",
@@ -241,6 +364,7 @@ class VoiceHub:
             "participants": [p.public() for p in room.values()],
         })
         await self._broadcast(key, {"type": "participant_joined", "participant": me.public()}, exclude=me.account_id)
+        self._changed(key[0])
 
         last_check = time.monotonic()
         try:
@@ -319,6 +443,7 @@ class VoiceHub:
         me.video = bool(data.get("video"))
         me.screen = bool(data.get("screen"))
         await self._broadcast(key, {"type": "participant_updated", "participant": me.public()}, exclude=me.account_id)
+        self._changed(key[0])
 
     async def _on_mod(self, key: Key, me: Peer, data: dict, can_moderate: bool, may_target) -> None:
         async def reply(ok: bool, error: str = "") -> None:
@@ -346,6 +471,7 @@ class VoiceHub:
         else:
             return await reply(False, "bad_action")
         await self._broadcast(key, {"type": "participant_updated", "participant": target.public()})
+        self._changed(key[0])
         await reply(True)
 
 
