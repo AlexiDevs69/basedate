@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.302.4",
+      "date": "2026-11-04",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Clean up server_channel.html by removing buttons and styles."
+      ],
+      "source_sha": "eaf7caa4591d99090dafd958311ea298d4bade9d"
+    },
+    {
       "version": "1.302.3",
       "date": "2026-11-04",
       "title": "Виправлення та стабільність",
