@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.302.5",
+      "date": "2026-11-04",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: server home UI elements and styles."
+      ],
+      "source_sha": "3bb9ec2989c97b406b743f4492e3ef2e57afee64"
+    },
+    {
       "version": "1.302.4",
       "date": "2026-11-04",
       "title": "Виправлення та стабільність",
