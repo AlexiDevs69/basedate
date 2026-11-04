@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.302.7",
+      "date": "2026-11-05",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: server home template and clean up buttons."
+      ],
+      "source_sha": "d2d246bf2e598fb8de6480e5be53c28e625b6b8d"
+    },
+    {
       "version": "1.302.6",
       "date": "2026-11-05",
       "title": "Оновлення AlexiHub",
