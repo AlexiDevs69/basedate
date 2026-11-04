@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.302.6",
+      "date": "2026-11-05",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: server channel links and remove voice list."
+      ],
+      "source_sha": "133a08ce66f3e50c4294c6237b4e8fd44194ebf5"
+    },
+    {
       "version": "1.302.5",
       "date": "2026-11-04",
       "title": "Оновлення AlexiHub",
