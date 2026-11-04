@@ -3490,8 +3490,8 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
     </button>
     {% macro server_channel_row(ch, active_channel_id=0) -%}
     <div class="chan-row {{ 'active' if ch.id == active_channel_id else '' }}" data-channel-id="{{ ch.id }}">
-      <a href="/community/servers/{{ server.id }}/{{ 'voice' if ch.channel_type == 'voice' else 'channel' }}/{{ ch.id }}" data-mention-channel-key="{{ server.id }}:{{ ch.id }}" class="chan-link {{ 'active' if ch.id == active_channel_id else '' }}">
-        <span class="chan-symbol">{% if ch.channel_type == 'voice' %}<svg class="chan-vc-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M11.2 4.6 6.6 8.8H3.4A1.4 1.4 0 0 0 2 10.2v3.6a1.4 1.4 0 0 0 1.4 1.4h3.2l4.6 4.2z"/><path fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" d="M15 9a4.2 4.2 0 0 1 0 6M18.2 6.2a8.2 8.2 0 0 1 0 11.6"/></svg>{% else %}#{% endif %}</span>
+      <a href="/community/servers/{{ server.id }}/channel/{{ ch.id }}" data-mention-channel-key="{{ server.id }}:{{ ch.id }}" class="chan-link {{ 'active' if ch.id == active_channel_id else '' }}">
+        <span class="chan-symbol">{{ '🔊' if ch.channel_type == 'voice' else '#' }}</span>
         <span class="chan-name">{{ ch.name }}</span>
         {% if ch.is_private %}<span class="channel-private-lock" title="{{ i18n_t('common.aria.a_private_channel') }}" data-i18n-title="common.aria.a_private_channel">🔒</span>{% endif %}
         {% set cc = mention_counts.channel_by_id.get((server.id|string) ~ ':' ~ (ch.id|string), 0) %}
@@ -3502,7 +3502,6 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
         {% if can_manage %}<a class="chan-action-btn" href="/community/servers/{{ server.id }}/channel/{{ ch.id }}/settings" onclick="event.stopPropagation()" title="{{ i18n_t('common.aria.channel_settings') }}" data-i18n-title="common.aria.channel_settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.33 1.82 2 2 0 1 1-3.34 0A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.82-.33 2 2 0 1 1 0-3.34A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06-.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .33-1.82 2 2 0 1 1 3.34 0A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06-.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 .6 1 1.65 1.65 0 0 0 1.82.33 2 2 0 1 1 0 3.34A1.65 1.65 0 0 0 19.4 15Z"/></svg></a>{% endif %}
       </div>
     </div>
-    {% if ch.channel_type == 'voice' %}<div class="ah-vc-users" data-vc="{{ ch.id }}"></div>{% endif %}
     {%- endmacro %}
     <div class="sidebar-scroll server-channel-tree">
       {% if server.description %}<div class="server-desc">{{ server.description }}</div>{% endif %}
@@ -3772,7 +3771,7 @@ body.members-hidden .discord-tool-btn.members-toggle-btn{background:#2e3038!impo
         <label class="discord-field-label"><!--i18n:common.text.channel_type-->{{ i18n_t('common.text.channel_type') }}</label>
         <div class="discord-type-list">
           <label class="discord-type-option"><input type="radio" name="channel_type" value="text" checked><span class="discord-radio"></span><span class="discord-type-icon">#</span><span class="discord-type-copy"><strong><!--i18n:common.text.the_text-->{{ i18n_t('common.text.the_text') }}</strong><small><!--i18n:common.text.send_messages_images_gif_emoji_opinions_and_jokes-->{{ i18n_t('common.text.send_messages_images_gif_emoji_opinions_and_jokes') }}</small></span></label>
-          <label class="discord-type-option"><input type="radio" name="channel_type" value="voice"><span class="discord-radio"></span><span class="discord-type-icon"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15 9a4 4 0 0 1 0 6"/><path d="M18 6a8 8 0 0 1 0 12"/></svg></span><span class="discord-type-copy"><strong><!--i18n:common.text.a_voice-->{{ i18n_t('common.text.a_voice') }}</strong><small><!--i18n:common.text.speak_with_your_voice_or_video_chat_and_use_the-->{{ i18n_t('common.text.speak_with_your_voice_or_video_chat_and_use_the') }}</small></span></label>
+          <label class="discord-type-option disabled" title="{{ i18n_t('common.aria.reference_to_the_voice_channels_will_be_added_later') }}" data-i18n-title="common.aria.reference_to_the_voice_channels_will_be_added_later"><input type="radio" disabled><span class="discord-radio"></span><span class="discord-type-icon"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15 9a4 4 0 0 1 0 6"/><path d="M18 6a8 8 0 0 1 0 12"/></svg></span><span class="discord-type-copy"><strong><!--i18n:common.text.a_voice-->{{ i18n_t('common.text.a_voice') }}</strong><small><!--i18n:common.text.speak_with_your_voice_or_video_chat_and_use_the-->{{ i18n_t('common.text.speak_with_your_voice_or_video_chat_and_use_the') }}</small></span></label>
           <label class="discord-type-option disabled" title="{{ i18n_t('common.aria.ylognements_of_the_forums_later') }}" data-i18n-title="common.aria.ylognements_of_the_forums_later"><input type="radio" disabled><span class="discord-radio"></span><span class="discord-type-icon">☁</span><span class="discord-type-copy"><strong><!--i18n:common.text.forum_forum-->{{ i18n_t('common.text.forum_forum') }}</strong><small><!--i18n:common.text.ully_give_the_site_for_the_conciliar-->{{ i18n_t('common.text.ully_give_the_site_for_the_conciliar') }}</small></span></label>
           <label class="discord-type-option disabled" title="{{ i18n_t('common.aria.send_ads_channels_later') }}" data-i18n-title="common.aria.send_ads_channels_later"><input type="radio" disabled><span class="discord-radio"></span><span class="discord-type-icon">◀</span><span class="discord-type-copy"><strong><!--i18n:common.text.announcement-->{{ i18n_t('common.text.announcement') }}</strong><small><!--i18n:common.text.material_sooshcheniya_for_the_calimates_of_the_server_and_all-->{{ i18n_t('common.text.material_sooshcheniya_for_the_calimates_of_the_server_and_all') }}</small></span></label>
           <label class="discord-type-option disabled" title="{{ i18n_t('common.aria.stagement_channels_add_later') }}" data-i18n-title="common.aria.stagement_channels_add_later"><input type="radio" disabled><span class="discord-radio"></span><span class="discord-type-icon">◉</span><span class="discord-type-copy"><strong><!--i18n:common.text.the_project-->{{ i18n_t('common.text.the_project') }}</strong><small><!--i18n:common.text.host_events_round_tables_and_conferences-->{{ i18n_t('common.text.host_events_round_tables_and_conferences') }}</small></span></label>
@@ -18898,135 +18897,5 @@ html body .discord-hash{padding:10px 6px;margin:-10px -6px}
 })();
 </script>
 <!-- AH-ISLAND:END -->
-<!-- AH-VOICELIST:BEGIN (voice channel look: speaker icon, live timer, participants; pushed live over /ws/servers/ID/voice-watch, HTTP polling is only a fallback) -->
-<style id="ah-vc-css">
-/* speaker icon: grey like the # of a text channel, green while someone is in the channel */
-.chan-symbol .chan-vc-ico{width:18px;height:18px;display:block}
-.chan-row .chan-symbol{transition:color .2s ease}
-.chan-row.vc-live .chan-symbol{color:#5eb479}
-.chan-row.vc-live .chan-link{padding-right:86px!important}
-/* how long the call has been running (hidden on hover, where the invite/settings buttons appear) */
-.ah-vc-timer{position:absolute;right:10px;top:50%;transform:translateY(-50%);font:500 12px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;font-variant-numeric:tabular-nums;color:#5eb479;pointer-events:none;transition:opacity .12s ease}
-.chan-row:hover .ah-vc-timer,.chan-row:focus-within .ah-vc-timer{opacity:0}
-/* participants */
-.ah-vc-users{display:flex;flex-direction:column;gap:0;margin:0 0 4px;padding:0 8px 0 32px}
-.ah-vc-users:empty{display:none}
-.ah-vc-u{display:flex;align-items:center;gap:8px;min-height:32px;padding:4px 6px;border-radius:6px;color:#81828a;font-size:15px;font-weight:500;min-width:0;cursor:default}
-.ah-vc-u:hover{background:rgba(255,255,255,.06);color:#dbdee1}
-.ah-vc-u.in{animation:ah-vc-in .22s ease-out}
-.ah-vc-u.out{opacity:0;transform:translateX(-6px);transition:opacity .15s ease,transform .15s ease;pointer-events:none}
-@keyframes ah-vc-in{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
-@media (prefers-reduced-motion:reduce){.ah-vc-u.in{animation:none}.ah-vc-u.out{transition:none}}
-.ah-vc-av{flex:0 0 24px;width:24px;height:24px;border-radius:50%;background:#2b2d31 center/cover no-repeat;color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center}
-.ah-vc-n{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ah-vc-ic{flex:0 0 auto;display:inline-flex;gap:4px;color:#81828a}
-.ah-vc-ic.srv{color:#f23f43}
-.ah-vc-ic svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.ah-vc-live{flex:0 0 auto;margin-left:2px;padding:1px 6px;border-radius:5px;background:#23a55a;color:#fff;font-size:10px;font-weight:800;letter-spacing:.04em}
-html[data-theme="light"] .chan-row.vc-live .chan-symbol,html[data-theme="light"] .ah-vc-timer{color:#248046}
-html[data-theme="light"] .ah-vc-u{color:#6b6f78}
-html[data-theme="light"] .ah-vc-u:hover{background:rgba(0,0,0,.06);color:#1b1c20}
-html[data-theme="light"] .ah-vc-ic{color:#6b6f78}
-html[data-theme="light"] .ah-vc-ic.srv{color:#d83c3e}
-</style>
-<script id="ah-vc-js">
-(function(){
-  var inFrame=false;try{inFrame=window.self!==window.top}catch(e){inFrame=true}
-  if(inFrame||window.__ahVcList)return;window.__ahVcList=true;
-  var SID={{ server.id|tojson }};
-  var NS='http://www.w3.org/2000/svg';
-  function icon(paths){var s=document.createElementNS(NS,'svg');s.setAttribute('viewBox','0 0 24 24');paths.forEach(function(d){var p=document.createElementNS(NS,'path');p.setAttribute('d',d);s.appendChild(p)});return s}
-  var MIC_OFF=['M2 2l20 20','M9 9v2a3 3 0 0 0 5.1 2.1','M15 9.3V5a3 3 0 0 0-5.7-1.3','M19 11a7 7 0 0 1-.9 3.4','M5 11a7 7 0 0 0 11 5.7','M12 18v3'];
-  var DEAF_OFF=['M2 2l20 20','M3 14v-2a9 9 0 0 1 14.5-7','M21 12v2','M18 19a2 2 0 0 1-2 2h-1v-6h1','M6 15H5a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h1z'];
-
-  /* ---- call timer ---- */
-  var started={};                         /* channel id -> epoch ms when the call began (server-side) */
-  function pad(n){return n<10?'0'+n:''+n}
-  function fmt(sec){sec=Math.max(0,Math.floor(sec));var h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=sec%60;return h>0?h+':'+pad(m)+':'+pad(s):m+':'+pad(s)}
-  function rowsOf(cid){return document.querySelectorAll('.chan-row[data-channel-id="'+cid+'"]')}
-  function timerOf(row){var t=row.querySelector('.ah-vc-timer');if(!t){t=document.createElement('span');t.className='ah-vc-timer';t.setAttribute('aria-hidden','true');row.appendChild(t)}return t}
-  function tickTimers(){var now=Date.now();Object.keys(started).forEach(function(cid){rowsOf(cid).forEach(function(r){timerOf(r).textContent=fmt((now-started[cid])/1000)})})}
-
-  /* ---- roster (keyed by account, so only real changes touch the DOM) ---- */
-  function userSig(u){return JSON.stringify([u.display_name,u.username,u.avatar_url,u.self_mute,u.self_deaf,u.server_mute,u.server_deaf,u.video,u.screen])}
-  function buildRow(u){
-    var name=u.display_name||u.username||'';
-    var row=document.createElement('div');row.className='ah-vc-u';row.title=name;
-    var av=document.createElement('span');av.className='ah-vc-av';
-    if(u.avatar_url&&/^(https?:)?\/\//.test(u.avatar_url)||/^\/(?!\/)/.test(u.avatar_url||'')){av.style.backgroundImage='url('+JSON.stringify(String(u.avatar_url))+')'}
-    else{av.textContent=(String(name||'?').trim().charAt(0)||'?').toUpperCase()}
-    var n=document.createElement('span');n.className='ah-vc-n';n.textContent=name;
-    var ic=document.createElement('span');ic.className='ah-vc-ic';
-    if(u.self_deaf||u.server_deaf){ic.appendChild(icon(DEAF_OFF));if(u.server_deaf)ic.classList.add('srv')}
-    else if(u.self_mute||u.server_mute){ic.appendChild(icon(MIC_OFF));if(u.server_mute)ic.classList.add('srv')}
-    row.appendChild(av);row.appendChild(n);row.appendChild(ic);
-    if(u.video||u.screen){var lv=document.createElement('span');lv.className='ah-vc-live';lv.textContent=u.screen?'LIVE':'VIDEO';row.appendChild(lv)}
-    return row;
-  }
-  function reconcile(box,list){
-    var first=!box.__init;box.__init=true;           /* the very first paint must not animate everybody */
-    var map=box.__map||(box.__map=new Map()),seen=new Set();
-    list.forEach(function(u){
-      var id=String(u.account_id),sig=userSig(u),cur=map.get(id);seen.add(id);
-      if(cur&&cur.sig===sig)return;
-      var el=buildRow(u);
-      if(cur){cur.el.replaceWith(el)}
-      else if(!first){el.classList.add('in');el.addEventListener('animationend',function(){el.classList.remove('in')})}
-      map.set(id,{el:el,sig:sig});
-    });
-    map.forEach(function(v,id){if(!seen.has(id)){map.delete(id);v.el.classList.add('out');setTimeout(function(){v.el.remove()},170)}});
-    var ptr=box.firstElementChild;                    /* put rows in server order without moving the ones already in place */
-    list.forEach(function(u){
-      var el=map.get(String(u.account_id)).el;
-      while(ptr&&ptr!==el&&ptr.classList.contains('out'))ptr=ptr.nextElementSibling;
-      if(ptr===el)ptr=ptr.nextElementSibling;else box.insertBefore(el,ptr);
-    });
-  }
-  function paint(map){
-    document.querySelectorAll('.ah-vc-users[data-vc]').forEach(function(box){
-      var cid=box.getAttribute('data-vc'),list=map[cid]||[],live=list.length>0;
-      rowsOf(cid).forEach(function(r){r.classList.toggle('vc-live',live);if(!live){var t=r.querySelector('.ah-vc-timer');if(t)t.remove()}});
-      if(live){
-        var age=+list[0].channel_age,base=isFinite(age)?Date.now()-age*1000:(started[cid]||Date.now());
-        if(!started[cid]||Math.abs(started[cid]-base)>2500)started[cid]=base;
-      }else delete started[cid];
-      reconcile(box,list);
-    });
-    tickTimers();
-    try{document.dispatchEvent(new CustomEvent('ah-voice-roster',{detail:map}))}catch(_){}
-  }
-
-  /* ---- live channel: server pushes every change; HTTP polling only while the socket is down ---- */
-  var wsOpen=false,ws=null,retry=0,pingT=0,reconnT=0,stopped=false,busy=false;
-  function connectWS(){
-    if(stopped||!window.WebSocket||(ws&&(ws.readyState===0||ws.readyState===1)))return;
-    var s;
-    try{s=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host+'/community/ws/servers/'+SID+'/voice-watch')}catch(e){scheduleReconnect();return}
-    ws=s;
-    s.onopen=function(){wsOpen=true;retry=0;clearInterval(pingT);pingT=setInterval(function(){try{s.send('{"type":"ping"}')}catch(e){}},25000)};
-    s.onmessage=function(e){var d;try{d=JSON.parse(e.data)}catch(_){return}if(d&&d.type==='voice_state')paint(d.channels||{})};
-    s.onclose=function(){if(ws===s){wsOpen=false;clearInterval(pingT);scheduleReconnect()}};
-    s.onerror=function(){};
-  }
-  function scheduleReconnect(){clearTimeout(reconnT);reconnT=setTimeout(connectWS,Math.min(15000,1000*Math.pow(2,retry++)))}
-  function tick(){
-    if(stopped||busy||document.hidden||!document.querySelector('.ah-vc-users[data-vc]'))return;
-    busy=true;
-    fetch('/community/api/servers/'+SID+'/voice-state',{credentials:'same-origin',headers:{Accept:'application/json'}})
-      .then(function(r){if(r.status===401||r.status===403){stopped=true;throw 0}if(!r.ok)throw 0;return r.json()})
-      .then(function(d){paint((d&&d.channels)||{})})
-      .catch(function(){}).then(function(){busy=false});
-  }
-  function start(){
-    tick();connectWS();
-    setInterval(function(){if(!wsOpen)tick()},5000);
-    setInterval(function(){if(!document.hidden)tickTimers()},1000);
-  }
-  document.addEventListener('visibilitychange',function(){if(!document.hidden){if(!wsOpen)connectWS();tick();tickTimers()}});
-  window.addEventListener('pageshow',function(){if(!wsOpen)connectWS();tick()});
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
-})();
-</script>
-<!-- AH-VOICELIST:END -->
 </body>
 </html>
