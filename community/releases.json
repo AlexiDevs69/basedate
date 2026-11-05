@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.303.0",
+      "date": "2026-11-06",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: friends feature and related UI elements."
+      ],
+      "source_sha": "1004969b88c20f864ff5fb7a883941f81004a7b3"
+    },
+    {
       "version": "1.302.7",
       "date": "2026-11-05",
       "title": "Оновлення AlexiHub",
