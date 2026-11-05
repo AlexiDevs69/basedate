@@ -16733,6 +16733,7 @@ html body .ah-v3-overlay.open .ah-v3-full,html body .ah-v3-mini.open{will-change
     if(what === 'quests'){
       if(typeof window.showActionToast === 'function') window.showActionToast(T('common.stub.tasks_soon', 'Quests are coming soon'));
     }
+    else if(what === 'friends' && mq.matches && window.ahFriendsSheet){ close(); window.ahFriendsSheet.open(); }
     else if(what === 'store' || what === 'nitro' || what === 'friends') goHome(what);
     else if(what === 'settings'){ close(); closeDrawer(); if(typeof window.openUserSettings === 'function') window.openUserSettings(); }
     else if(what === 'edit'){ close(); closeDrawer(); if(typeof window.openProfileCustomizer === 'function') window.openProfileCustomizer(); }
@@ -17758,5 +17759,206 @@ html[data-theme="light"] #ah-af{--af-bg:#ffffff;--af-card:#f2f3f5;--af-line:#dcd
 })();
 </script>
 <!-- AH-ADDFRIENDS:END -->
+<!-- AH-FRIENDS:BEGIN (phones: Discord-style "Friends" sheet; opened from the Friends row of the "You" sheet) -->
+<script type="application/json" id="ah-fr-data">{"in":{{ pending_incoming|length if pending_incoming is defined else 0 }},"out":{{ pending_outgoing|length if pending_outgoing is defined else 0 }},"f":[{% if friends is defined and friends %}{% for f in friends %}{"id":{{ f.id|tojson }},"u":{{ f.username|tojson }},"d":{{ (f.display_name or f.username)|tojson }},"a":{{ (f.avatar_url or '')|tojson }},"s":{{ (f.account_status or 'online')|tojson }},"on":{{ 'true' if (online_ids is defined and f.id in online_ids and (f.account_status or 'online') != 'invisible') else 'false' }},"ce":{{ (f.custom_status_emoji or '')|tojson }},"ct":{{ (f.custom_status_text or '')|tojson }},"cx":{{ ((f.custom_status_expires_at|string) if f.custom_status_expires_at else '')|tojson }}}{{ ',' if not loop.last }}{% endfor %}{% endif %}]}</script>
+<style id="ah-fr-css">
+#ah-fr{display:none;position:fixed;inset:0;z-index:20030;-webkit-tap-highlight-color:transparent;
+  --fr-bg:#25242a;--fr-card:#2e2d33;--fr-req:#29282e;--fr-field:#201f25;--fr-line:#38373d;--fr-fline:#302f35;--fr-text:#fff;--fr-sub:#c0bfc5;--fr-letter:#cdccd2;--fr-mut:#9a999f;--fr-link:#757dff;
+  color:var(--fr-text);font-family:var(--font,'Inter',system-ui,sans-serif)}
+html[data-theme="light"] #ah-fr{--fr-bg:#f2f3f5;--fr-card:#fff;--fr-req:#fff;--fr-field:#fff;--fr-line:#e3e5e8;--fr-fline:#d4d7dc;--fr-text:#1b1c20;--fr-sub:#5d6068;--fr-letter:#4e5058;--fr-mut:#6d6f78;--fr-link:#4752c4}
+#ah-fr.open{display:block}
+#ah-fr *{box-sizing:border-box}
+#ah-fr button,#ah-fr input{font:inherit;color:inherit;margin:0;outline:none}
+#ah-fr .fr-back{position:absolute;inset:0;background:rgba(0,0,0,.62);touch-action:none;animation:ahFrFade .2s ease-out}
+#ah-fr .fr-sheet{position:absolute;left:0;right:0;bottom:0;top:max(calc(env(safe-area-inset-top,0px) - 6px),10px);display:flex;flex-direction:column;background:var(--fr-bg);border-radius:22px 22px 0 0;overflow:hidden;animation:ahFrUp .28s cubic-bezier(.22,.8,.28,1)}
+@keyframes ahFrFade{from{opacity:0}to{opacity:1}}
+@keyframes ahFrUp{from{transform:translate3d(0,100%,0)}to{transform:none}}
+@media (prefers-reduced-motion:reduce){
+#ah-fr .fr-back,#ah-fr .fr-sheet{animation:none}}
+#ah-fr .fr-head{flex:0 0 auto;display:flex;align-items:center;height:56px;padding:6px 12px 0 10px}
+#ah-fr .fr-x{flex:0 0 44px;width:44px;height:44px;border:0;border-radius:50%;background:transparent;display:grid;place-items:center;padding:0;cursor:pointer}
+#ah-fr .fr-x:active{background:rgba(127,127,127,.2)}
+#ah-fr .fr-x svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round}
+#ah-fr .fr-title{flex:1 1 auto;min-width:0;text-align:center;font-size:18px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:var(--fr-pl,0);padding-right:var(--fr-pr,0)}
+#ah-fr .fr-add{flex:0 0 auto;max-width:62%;height:44px;padding:0 4px;border:0;background:transparent;color:var(--fr-link);font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+#ah-fr .fr-add:active{opacity:.6}
+#ah-fr .fr-sw{flex:0 0 auto;padding:6px 16px 0}
+#ah-fr .fr-search{display:flex;align-items:center;gap:8px;height:37px;padding:0 12px;border:1px solid var(--fr-fline);border-radius:12px;background:var(--fr-field)}
+#ah-fr .fr-search svg{width:18px;height:18px;flex:0 0 auto;stroke:var(--fr-mut);fill:none;stroke-width:2.2;stroke-linecap:round}
+#ah-fr .fr-search input{flex:1 1 auto;min-width:0;height:100%;border:0;background:transparent;font-size:16px;caret-color:var(--fr-link)}
+#ah-fr .fr-search input::placeholder{color:var(--fr-mut)}
+#ah-fr .fr-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:14px 16px calc(36px + env(safe-area-inset-bottom,0px))}
+#ah-fr .fr-req{display:flex;align-items:center;gap:14px;width:100%;min-height:56px;padding:0 14px 0 17px;border:0;border-radius:14px;background:var(--fr-req);text-align:left;cursor:pointer}
+#ah-fr .fr-req:active,#ah-fr .fr-row:active{filter:brightness(1.12)}
+#ah-fr .fr-req>svg:first-child{width:22px;height:22px;flex:0 0 auto;fill:currentColor}
+#ah-fr .fr-req .fr-rt{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:3px}
+#ah-fr .fr-req b{font-size:17px;font-weight:500;line-height:1.15}
+#ah-fr .fr-req #fr-req-s{font-size:13px;color:var(--fr-sub);line-height:1.15}
+#ah-fr .fr-req .fr-go{width:20px;height:20px;flex:0 0 auto;fill:none;stroke:var(--fr-mut);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+#ah-fr .fr-letter{margin:14px 4px 9px;font-size:18px;font-weight:500;line-height:22px;color:var(--fr-letter)}
+#ah-fr .fr-card{border-radius:14px;background:var(--fr-card);overflow:hidden}
+#ah-fr .fr-row{position:relative;display:flex;align-items:center;gap:12px;width:100%;min-height:53px;padding:0 7px 0 11px;border:0;background:transparent;text-align:left;cursor:pointer;color:inherit}
+#ah-fr .fr-row+.fr-row::before{content:"";position:absolute;left:53px;right:0;top:0;height:1px;background:var(--fr-line)}
+#ah-fr .fr-av{position:relative;flex:0 0 30px;width:30px;height:30px;border-radius:50%;background:#3a3940 center/cover no-repeat;display:grid;place-items:center;font-size:13px;font-weight:700;color:#fff}
+#ah-fr .fr-st{position:absolute;right:-3px;bottom:-3px;width:13px;height:13px;border-radius:50%;border:2.5px solid var(--fr-card);background:#23a55a;box-sizing:border-box}
+#ah-fr .fr-st[data-s="idle"]{background:#f0b232}
+#ah-fr .fr-st[data-s="dnd"]{background:#f23f43}
+#ah-fr .fr-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px;padding:8px 0}
+#ah-fr .fr-name{font-size:17px;font-weight:500;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#ah-fr .fr-sub{font-size:13px;line-height:16px;color:var(--fr-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#ah-fr .fr-msg{flex:0 0 auto;width:42px;height:42px;border:0;border-radius:50%;background:transparent;display:grid;place-items:center;padding:0;cursor:pointer;color:inherit}
+#ah-fr .fr-msg:active{background:rgba(127,127,127,.2)}
+#ah-fr .fr-msg svg{width:22px;height:22px;fill:currentColor}
+#ah-fr .fr-empty{padding:48px 24px;text-align:center;color:var(--fr-sub);font-size:15px;line-height:1.4}
+#ah-fr .fr-empty[hidden]{display:none}
+</style>
+<div id="ah-fr" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="fr-back" data-fr-close></div>
+  <div class="fr-sheet">
+    <div class="fr-head">
+      <button type="button" class="fr-x" data-fr-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14M19 5 5 19"/></svg></button>
+      <div class="fr-title" id="fr-title"></div>
+      <button type="button" class="fr-add" id="fr-add"></button>
+    </div>
+    <div class="fr-sw"><label class="fr-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="fr-q" type="search" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search"></label></div>
+    <div class="fr-scroll" id="fr-scroll">
+      <button type="button" class="fr-req" id="fr-req"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.01 21 23 12 2.01 3 2 10l15 2-15 2z"/></svg><span class="fr-rt"><b id="fr-req-t"></b><span id="fr-req-s"></span></span><svg class="fr-go" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
+      <div id="fr-list"></div>
+      <div class="fr-empty" id="fr-empty" hidden></div>
+    </div>
+  </div>
+</div>
+<script id="ah-fr-js">
+(function(){
+  'use strict';
+  if(window.__ahFriends)return;window.__ahFriends=true;
+  var root=document.getElementById('ah-fr');if(!root)return;
+  var DATA={in:0,out:0,f:[]};
+  try{DATA=JSON.parse(document.getElementById('ah-fr-data').textContent)||DATA}catch(e){}
+  var LG=String(document.documentElement.lang||'uk').toLowerCase().slice(0,2);
+  var L={
+    ru:{title:'Друзья',add:'Добавить друзей',search:'Поиск',req:'Запросы дружбы',rin:'Получено',rout:'Отправлено',none:'Ничего не найдено',empty:'Список друзей пуст',close:'Закрыть',msg:'Написать'},
+    uk:{title:'Друзі',add:'Додати друзів',search:'Пошук',req:'Запити дружби',rin:'Отримано',rout:'Надіслано',none:'Нічого не знайдено',empty:'Список друзів порожній',close:'Закрити',msg:'Написати'},
+    en:{title:'Friends',add:'Add friends',search:'Search',req:'Friend requests',rin:'Received',rout:'Sent',none:'Nothing found',empty:'Your friend list is empty',close:'Close',msg:'Message'}
+  }[LG]||null;
+  if(!L)L={title:'Friends',add:'Add friends',search:'Search',req:'Friend requests',rin:'Received',rout:'Sent',none:'Nothing found',empty:'Your friend list is empty',close:'Close',msg:'Message'};
+  function T(k,fb){try{var v=window.AlexiHubI18n&&window.AlexiHubI18n.t&&window.AlexiHubI18n.t(k);return v&&v!==k?String(v):fb}catch(_){return fb}}
+  var $=function(id){return document.getElementById(id)};
+  $('fr-title').textContent=T('ui.friends',L.title);
+  $('fr-add').textContent=L.add;$('fr-q').placeholder=L.search;
+  $('fr-req-t').textContent=L.req;
+  [].forEach.call(root.querySelectorAll('.fr-x'),function(b){b.setAttribute('aria-label',L.close)});
+
+  /* ---- data -> sorted, grouped list ---- */
+  var coll=(window.Intl&&Intl.Collator)?new Intl.Collator([LG,'ru','uk','en'],{sensitivity:'base',numeric:true}):null;
+  function cmp(a,b){return coll?coll.compare(a,b):(a<b?-1:a>b?1:0)}
+  function nameOf(f){return String(f.d||f.u||'')}
+  function groupOf(f){
+    var ch=(nameOf(f).trim().charAt(0)||'').toUpperCase();
+    if(/[0-9]/.test(ch))return '0';
+    if(ch.toLowerCase()!==ch.toUpperCase())return ch;      /* any alphabet */
+    return '!';
+  }
+  function expired(f){
+    if(!f.cx)return false;
+    var s=String(f.cx).replace(' ','T');if(!/[zZ]|[+-]\d\d:?\d\d$/.test(s))s+='Z';
+    var t=Date.parse(s);return !isNaN(t)&&t<Date.now();
+  }
+  function subOf(f){
+    if(expired(f))return '';
+    var t=(f.ct||'').trim(),e=(f.ce||'').trim();
+    return (e?e+' ':'')+t;
+  }
+  var friends=(DATA.f||[]).slice().sort(function(a,b){return cmp(nameOf(a),nameOf(b))});
+  var groups=[],byKey={};
+  friends.forEach(function(f){var k=groupOf(f);if(!byKey[k]){byKey[k]={k:k,items:[]};groups.push(byKey[k])}byKey[k].items.push(f)});
+  var rank=function(k){return k==='!'?0:k==='0'?1:2};
+  groups.sort(function(a,b){return rank(a.k)-rank(b.k)||cmp(a.k,b.k)});
+
+  var MSG='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 3h15A2.5 2.5 0 0 1 22 5.5v9a2.5 2.5 0 0 1-2.5 2.5H11l-5 4v-4H4.5A2.5 2.5 0 0 1 2 14.5v-9A2.5 2.5 0 0 1 4.5 3Z"/></svg>';
+  var listEl=$('fr-list'),emptyEl=$('fr-empty'),rows=[];
+  function cssUrl(u){return 'url('+JSON.stringify(String(u))+')'}
+  function build(){
+    listEl.textContent='';rows=[];
+    groups.forEach(function(g){
+      var wrap=document.createElement('section');wrap.className='fr-group';
+      var h=document.createElement('div');h.className='fr-letter';h.textContent=g.k;wrap.appendChild(h);
+      var card=document.createElement('div');card.className='fr-card';
+      g.items.forEach(function(f){
+        var row=document.createElement('div');row.className='fr-row';row.setAttribute('role','button');row.tabIndex=0;
+        var av=document.createElement('span');av.className='fr-av';
+        if(f.a&&/^(https?:\/\/|\/|data:image\/)/i.test(f.a))av.style.backgroundImage=cssUrl(f.a);
+        else av.textContent=(nameOf(f).trim().charAt(0)||'?').toUpperCase();
+        if(f.on){var st=document.createElement('i');st.className='fr-st';st.setAttribute('data-s',f.s||'online');av.appendChild(st)}
+        var main=document.createElement('span');main.className='fr-main';
+        var nm=document.createElement('span');nm.className='fr-name';nm.textContent=nameOf(f);main.appendChild(nm);
+        var sub=subOf(f);if(sub){var sb=document.createElement('span');sb.className='fr-sub';sb.textContent=sub;main.appendChild(sb)}
+        var msg=document.createElement('button');msg.type='button';msg.className='fr-msg';msg.setAttribute('aria-label',L.msg+' '+nameOf(f));msg.innerHTML=MSG;
+        row.appendChild(av);row.appendChild(main);row.appendChild(msg);
+        row.__f=f;card.appendChild(row);rows.push({row:row,group:wrap,key:(nameOf(f)+' '+(f.u||'')).toLowerCase()});
+      });
+      wrap.appendChild(card);listEl.appendChild(wrap);
+    });
+    $('fr-req-s').textContent=L.rin+': '+(DATA.in|0)+' \u2022 '+L.rout+': '+(DATA.out|0);
+    emptyEl.hidden=true;
+  }
+  function applyFilter(){
+    var q=$('fr-q').value.trim().toLowerCase(),shown=0,vis=new Set();
+    rows.forEach(function(r){var ok=!q||r.key.indexOf(q)!==-1;r.row.style.display=ok?'':'none';if(ok){shown++;vis.add(r.group)}});
+    [].forEach.call(listEl.children,function(g){g.style.display=vis.has(g)?'':'none'});
+    /* the divider line belongs to every visible row except the first one of its card */
+    groups.forEach(function(){});
+    $('fr-req').style.display=q?'none':'';
+    emptyEl.textContent=friends.length?L.none:L.empty;emptyEl.hidden=shown>0;
+  }
+  build();
+
+  /* ---- navigation ---- */
+  function closeDrawer(){try{if(window.ahMobileDrawer)window.ahMobileDrawer.close()}catch(e){}}
+  function go(url){try{if(typeof window.__ahGo==='function')window.__ahGo(url);else location.href=url}catch(e){location.href=url}}
+  function goFriends(tab){
+    close();closeDrawer();
+    var onHome=location.pathname.replace(/\/+$/,'')==='/community';
+    if(onHome&&typeof window.switchHomeView==='function'){
+      try{window.switchHomeView('friends',document.querySelector('[data-home-view="friends"]'))}catch(e){}
+      setTimeout(function(){try{if(typeof window.showFriendTab==='function')window.showFriendTab(tab)}catch(e){}},60);
+    }else go('/community#friends');
+  }
+
+  /* ---- open / close ---- */
+  var isOpen=false,lastFocus=null;
+  function open(){
+    if(isOpen)return;isOpen=true;lastFocus=document.activeElement;
+    $('fr-q').value='';applyFilter();$('fr-scroll').scrollTop=0;
+    root.classList.add('open');root.setAttribute('aria-hidden','false');
+    /* centre the title on the screen only when the free space allows it; otherwise keep it readable */
+    var tt=root.querySelector('.fr-title'),ts=tt.style;
+    ts.setProperty('--fr-pl','0px');ts.setProperty('--fr-pr','0px');
+    var w=$('fr-add').offsetWidth,diff=w-44,free=tt.clientWidth-tt.scrollWidth;
+    if(Math.abs(diff)<=free){ts.setProperty('--fr-pl',Math.max(0,diff)+'px');ts.setProperty('--fr-pr',Math.max(0,-diff)+'px')}
+  }
+  function close(){
+    if(!isOpen)return;isOpen=false;
+    root.classList.remove('open');root.setAttribute('aria-hidden','true');
+    try{$('fr-q').blur();if(lastFocus&&lastFocus.focus)lastFocus.focus()}catch(e){}
+  }
+  root.addEventListener('click',function(e){
+    var t=e.target;if(!t||!t.closest)return;
+    if(t.closest('[data-fr-close]')){close();return}
+    if(t.closest('#fr-add')){goFriends('add');return}
+    if(t.closest('#fr-req')){goFriends('pending');return}
+    var row=t.closest('.fr-row');
+    if(row&&row.__f){close();go('/community/dm/'+encodeURIComponent(row.__f.u))}
+  });
+  root.addEventListener('keydown',function(e){
+    if(e.key==='Escape'){close();return}
+    if((e.key==='Enter'||e.key===' ')&&e.target&&e.target.classList&&e.target.classList.contains('fr-row')){e.preventDefault();e.target.click()}
+  });
+  $('fr-q').addEventListener('input',applyFilter);
+  document.addEventListener('keydown',function(e){if(isOpen&&e.key==='Escape')close()});
+  window.ahFriendsSheet={open:open,close:close,isOpen:function(){return isOpen}};
+})();
+</script>
+<!-- AH-FRIENDS:END -->
 </body>
 </html>
