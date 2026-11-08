@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.306.0",
+      "date": "2026-11-08",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: error message display in template."
+      ],
+      "source_sha": "23a091cc52e62c24bc33fa11a4bea5f5b1936881"
+    },
+    {
       "version": "1.305.1",
       "date": "2026-11-08",
       "title": "Виправлення та стабільність",
