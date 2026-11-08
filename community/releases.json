@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.307.0",
+      "date": "2026-11-08",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: configuration options for admin and session settings."
+      ],
+      "source_sha": "ac61a80b2e513fd6f3c4df212b4cf672f0f5aa82"
+    },
+    {
       "version": "1.306.0",
       "date": "2026-11-08",
       "title": "Нові можливості AlexiHub",
