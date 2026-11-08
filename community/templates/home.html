@@ -16502,6 +16502,27 @@ html body .ah-v3-overlay.open .ah-v3-full,html body .ah-v3-mini.open{will-change
   </div>
 </div>
 
+<style id="ah-you-theme-css">
+@media (max-width:820px){
+  /* The theme is independent of the app's light/dark mode (exactly like the profile editor and the profile cards):
+     the sheet becomes a gradient of the two chosen colours over a dark base, with light text. */
+  html #ah-you.ah-colored,html[data-theme="light"] #ah-you.ah-colored{
+    --ahy-bg:color-mix(in srgb,var(--ah-pc1) 26%,#0b0c10);
+    --ahy-card:rgba(255,255,255,.07);
+    --ahy-bar:color-mix(in srgb,var(--ah-pc2) 38%,#16171c);
+    --ahy-peek:color-mix(in srgb,var(--ah-pc1) 16%,#0b0c10);
+    --ahy-line:rgba(255,255,255,.1);
+    --ahy-text:#f2f3f5;--ahy-muted:#b9bcc5;
+  }
+  html #ah-you.ah-colored .ahy-scroll,html[data-theme="light"] #ah-you.ah-colored .ahy-scroll{
+    background:linear-gradient(180deg,color-mix(in srgb,var(--ah-pc1) 26%,#0b0c10),color-mix(in srgb,var(--ah-pc2) 26%,#0b0c10));
+  }
+  /* no banner picture -> the banner shows the theme (a picture set by the user is inline and still wins) */
+  html #ah-you.ah-colored .ahy-banner,html[data-theme="light"] #ah-you.ah-colored .ahy-banner{
+    background-image:linear-gradient(135deg,color-mix(in srgb,var(--ah-pc1) 62%,#0d0e12),color-mix(in srgb,var(--ah-pc2) 50%,#0d0e12));
+  }
+}
+</style>
 <script id="ah-you-js">
 (function(){
   'use strict';
@@ -16698,8 +16719,30 @@ html body .ah-v3-overlay.open .ah-v3-full,html body .ah-v3-mini.open{will-change
 
   /* ---------- open / close ---------- */
   var isOpen = false, lastFocus = null;
+  /* ---------- profile theme (the two colours chosen in "Edit profile") ---------- */
+  var themeNow = null;                              /* last known {primary, accent}; painted instantly, refreshed on every open */
+  function hex6(c){ return typeof c === 'string' && /^#[0-9a-f]{6}$/i.test(c) ? c.toLowerCase() : ''; }
+  function paintTheme(c){
+    var p1 = c && hex6(c.primary), p2 = c && hex6(c.accent);
+    if(p1 && p2){
+      if(!root.classList.contains('ah-colored')) root.classList.add('ah-colored');
+      if(root.style.getPropertyValue('--ah-pc1') !== p1) root.style.setProperty('--ah-pc1', p1);
+      if(root.style.getPropertyValue('--ah-pc2') !== p2) root.style.setProperty('--ah-pc2', p2);
+    }else{
+      root.classList.remove('ah-colored'); root.style.removeProperty('--ah-pc1'); root.style.removeProperty('--ah-pc2');
+    }
+  }
+  function loadTheme(){
+    paintTheme(themeNow);
+    try{
+      fetch('/community/api/my-profile-colors', {credentials:'same-origin', cache:'no-store', headers:{Accept:'application/json'}})
+        .then(function(r){ return r.json(); })
+        .then(function(d){ if(!d || !d.ok) throw 0; themeNow = d.profile_colors || null; paintTheme(themeNow); })
+        .catch(function(){});
+    }catch(e){}
+  }
   function open(panel){
-    fill(panel); loadPlus(); loadExtras(panel);
+    fill(panel); loadTheme(); loadPlus(); loadExtras(panel);
     lastFocus = document.activeElement;
     isOpen = true; root.classList.add('open'); root.setAttribute('aria-hidden', 'false');
     el.scroll.scrollTop = 0;
