@@ -9,11 +9,16 @@ On Render, the Start Command is:
 """
 
 import asyncio
+import hmac
+import logging
+import os
+import secrets
+import time
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, Form, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,6 +26,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 import crud
 import lastfm
+from community import auth as community_auth
 from community import crud as community_crud
 from community.router import router as community_router
 from config import get_settings
@@ -28,25 +34,66 @@ from database import get_db, init_db
 from telegram import send_telegram_message
 
 settings = get_settings()
+logger = logging.getLogger("admin")
+
+_DEFAULT_SECRET_KEY = "insecure-dev-secret-change-me"
+_DEFAULT_ADMIN_PASSWORD = "changeme"
 
 app = FastAPI(title="Telegram Bot Admin Dashboard")
 
 # Дозволяє окремо захостованій gateway-сторінці (wake-up preloader) читати
-# відповідь /api/ping через fetch. Онови allow_origins на реальний домен,
-# де лежить gateway/index.html (Render Static Site / Netlify / Cloudflare
-# Pages тощо) -- "*" тут НЕ підходить, бо на цьому ж app ходять сесійні cookie.
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "https://your-gateway-domain.example",  # TODO: заміни на реальний домен gateway
-    ],
-    allow_methods=["GET"],
-    allow_headers=["*"],
-)
+# відповідь /api/ping через fetch. Домени задаються змінною GATEWAY_ORIGINS
+# (через кому). Якщо вона порожня -- крос-доменний доступ вимкнений.
+# "*" тут НЕ підходить, бо на цьому ж app ходять сесійні cookie.
+_gateway_origins = [o.strip() for o in settings.gateway_origins.split(",") if o.strip()]
+if _gateway_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=_gateway_origins,
+        allow_methods=["GET"],
+        allow_headers=["*"],
+    )
 
 # Signs the session cookie so it can't be tampered with client-side.
-# SECRET_KEY must be set to a long random string in production.
-app.add_middleware(SessionMiddleware, secret_key=settings.secret_key)
+# If SECRET_KEY is missing / still the public default anyone could forge a
+# "logged in" cookie, so in that case use a random per-process key instead
+# (everyone is simply logged out after a restart) and complain loudly.
+_session_secret = settings.secret_key
+if not _session_secret or _session_secret == _DEFAULT_SECRET_KEY:
+    _session_secret = secrets.token_hex(32)
+    print(
+        "[security] SECRET_KEY is not set (or is the public default). Using a random "
+        "temporary key: sessions reset on every restart. Set SECRET_KEY to a long random "
+        "string (openssl rand -hex 32).",
+        flush=True,
+    )
+
+_https_only = (
+    settings.session_https_only
+    if settings.session_https_only is not None
+    else bool(os.getenv("RENDER"))
+)
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=_session_secret,
+    same_site="lax",
+    https_only=_https_only,
+)
+
+# Admin POST endpoints live outside /community (which has its own origin
+# guard). Browsers always send Origin on cross-site POSTs, so rejecting a
+# foreign Origin stops CSRF on the admin panel even without form tokens.
+_ADMIN_POST_PREFIXES = ("/login", "/profile", "/broadcast", "/settings", "/community-users", "/gifts")
+
+
+@app.middleware("http")
+async def admin_same_origin_guard(request: Request, call_next):
+    if request.method in {"POST", "PUT", "PATCH", "DELETE"} and request.url.path.startswith(
+        _ADMIN_POST_PREFIXES
+    ):
+        if not community_auth.origin_is_trusted(request):
+            return PlainTextResponse("Cross-site request blocked.", status_code=403)
+    return await call_next(request)
 
 BASE_DIR = Path(__file__).resolve().parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
@@ -60,6 +107,13 @@ app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 @app.on_event("startup")
 async def on_startup() -> None:
+    if _admin_uses_default_password():
+        print(
+            "[security] ADMIN_PASSWORD is the default 'changeme' -- admin login is DISABLED "
+            "until you set ADMIN_PASSWORD_HASH (python scripts/hash_admin_password.py) "
+            "or ADMIN_PASSWORD.",
+            flush=True,
+        )
     if settings.auto_create_tables:
         # Render's port scanner only waits a limited time for
         # "Application startup complete." If Aiven is slow/unreachable right
@@ -91,8 +145,42 @@ async def root_redirect():
 
 
 def is_logged_in(request: Request) -> bool:
-    """Checks the signed session cookie for a valid login flag."""
-    return bool(request.session.get("logged_in"))
+    """
+    Checks the signed session cookie for a valid, non-expired login.
+    The login time is stored server-signed in the cookie, so a stolen cookie
+    stops working after ADMIN_SESSION_HOURS even if the browser keeps it.
+    """
+    if not request.session.get("logged_in"):
+        return False
+    logged_in_at = request.session.get("logged_in_at")
+    max_age = max(settings.admin_session_hours, 1) * 3600
+    if not isinstance(logged_in_at, (int, float)) or time.time() - logged_in_at > max_age:
+        request.session.pop("logged_in", None)
+        request.session.pop("logged_in_at", None)
+        return False
+    return True
+
+
+def _admin_credentials_ok(username: str, password: str) -> bool:
+    """Constant-time check; uses ADMIN_PASSWORD_HASH (bcrypt) when configured."""
+    user_ok = hmac.compare_digest(
+        username.encode("utf-8"), settings.admin_username.encode("utf-8")
+    )
+    if settings.admin_password_hash:
+        pass_ok = community_auth.verify_password(password, settings.admin_password_hash)
+    else:
+        pass_ok = hmac.compare_digest(
+            password.encode("utf-8"), settings.admin_password.encode("utf-8")
+        )
+    return user_ok and pass_ok
+
+
+def _admin_uses_default_password() -> bool:
+    return (
+        not settings.admin_password_hash
+        and settings.admin_password == _DEFAULT_ADMIN_PASSWORD
+        and not settings.allow_insecure_admin
+    )
 
 
 def require_login(request: Request):
@@ -124,12 +212,39 @@ async def login_submit(
     username: str = Form(...),
     password: str = Form(...),
 ):
-    """Validates credentials against ADMIN_USERNAME / ADMIN_PASSWORD env vars."""
-    if username == settings.admin_username and password == settings.admin_password:
+    """Validates credentials against ADMIN_USERNAME + ADMIN_PASSWORD_HASH / ADMIN_PASSWORD."""
+    if _admin_uses_default_password():
+        # Refuse to open the admin panel with the public default password.
+        return templates.TemplateResponse(
+            "login.html",
+            {
+                "request": request,
+                "error": (
+                    "ADMIN_PASSWORD is still the default. Set ADMIN_PASSWORD_HASH "
+                    "(or ADMIN_PASSWORD) in the environment and restart."
+                ),
+            },
+            status_code=403,
+        )
+
+    # Brute-force protection: failed attempts per client IP.
+    limit_key = f"admin-login:{community_auth.client_ip(request)}"
+    if community_auth.rate_limiter.blocked(limit_key, 10, 900):
+        return templates.TemplateResponse(
+            "login.html",
+            {"request": request, "error": "Too many failed attempts. Try again in 15 minutes."},
+            status_code=429,
+        )
+
+    if _admin_credentials_ok(username, password):
+        community_auth.rate_limiter.reset(limit_key)
         request.session["logged_in"] = True
-        request.session["username"] = username
+        request.session["logged_in_at"] = time.time()
+        request.session["username"] = settings.admin_username
         return RedirectResponse(url="/admin", status_code=303)
 
+    community_auth.rate_limiter.record(limit_key, 900)
+    logger.warning("Failed admin login from %s", community_auth.client_ip(request))
     return templates.TemplateResponse(
         "login.html",
         {"request": request, "error": "Invalid username or password."},
@@ -140,7 +255,10 @@ async def login_submit(
 @app.get("/logout")
 async def logout(request: Request):
     """Clears the session and sends the visitor back to the login page."""
-    request.session.clear()
+    # Only drop the admin login; a community account logged in from the same
+    # browser shares this cookie and must stay signed in.
+    for key in ("logged_in", "logged_in_at", "username"):
+        request.session.pop(key, None)
     return RedirectResponse(url="/login", status_code=303)
 
 
@@ -444,6 +562,13 @@ async def community_user_edit_submit(
     role_color_end: str = Form(""),
     is_verified: str | None = Form(None),
     is_banned: str | None = Form(None),
+    # Visual identity. ``None`` = field not in the form body -> keep the
+    # user's current value (see update_account_moderation).
+    name_effect: str | None = Form(None),
+    name_font: str | None = Form(None),
+    name_color_start: str | None = Form(None),
+    name_color_end: str | None = Form(None),
+    profile_card_bg_url: str | None = Form(None),
     db: AsyncSession = Depends(get_db),
 ):
     if not is_logged_in(request):
@@ -456,6 +581,11 @@ async def community_user_edit_submit(
         role_color_start=role_color_start.strip(),
         role_color_end=role_color_end.strip(),
         is_banned=is_banned is not None,
+        name_effect=name_effect,
+        name_font=name_font,
+        name_color_start=name_color_start,
+        name_color_end=name_color_end,
+        profile_card_bg_url=profile_card_bg_url,
     )
     return RedirectResponse(url="/community-users", status_code=303)
 
@@ -530,7 +660,25 @@ async def community_user_delete(account_id: int, request: Request, db: AsyncSess
     if not is_logged_in(request):
         return RedirectResponse(url="/login", status_code=303)
 
-    await community_crud.delete_account(db, account_id)
+    try:
+        await community_crud.delete_account(db, account_id)
+    except Exception:
+        # delete_account() already rolled back, so nothing was removed.
+        logger.exception("Failed to delete community account %s", account_id)
+        accounts, total = await community_crud.get_accounts_page(db, page=1)
+        total_pages = max((total + community_crud.PAGE_SIZE - 1) // community_crud.PAGE_SIZE, 1)
+        return templates.TemplateResponse(
+            "community_users.html",
+            {
+                "request": request,
+                "accounts": accounts,
+                "page": 1,
+                "total_pages": total_pages,
+                "total": total,
+                "error": f"Не вдалося видалити акаунт #{account_id}. Нічого не змінено -- деталі в логах сервера.",
+            },
+            status_code=500,
+        )
     return RedirectResponse(url="/community-users", status_code=303)
 
 
