@@ -426,8 +426,8 @@
           <div class="form-group">
             <label>Кольори ніка</label>
             <div class="form-hint">Нік бере ті самі кольори, що й тег вище. Міняєш “Кольори градієнта тега” — міняється і переливання ніка.</div>
-            <input type="hidden" name="name_color_start" value="">
-            <input type="hidden" name="name_color_end" value="">
+            <input type="hidden" name="name_color_start" value="{{ account.name_color_start or '' }}">
+            <input type="hidden" name="name_color_end" value="{{ account.name_color_end or '' }}">
           </div>
 
           <div class="form-group">
