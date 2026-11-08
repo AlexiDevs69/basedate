@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.305.1",
+      "date": "2026-11-08",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Bind name color inputs to account properties."
+      ],
+      "source_sha": "02974532b38f3b67f098c1b38af1c8f9abb9c474"
+    },
+    {
       "version": "1.305.0",
       "date": "2026-11-08",
       "title": "Нові можливості AlexiHub",
