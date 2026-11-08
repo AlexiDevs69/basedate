@@ -22,6 +22,28 @@ class Settings(BaseSettings):
     admin_username: str = "admin"
     admin_password: str = "changeme"
 
+    # Optional, recommended: bcrypt hash of the admin password. When set it
+    # is used INSTEAD of ADMIN_PASSWORD, so the plain password no longer has
+    # to live in the environment. Generate one with:
+    #     python scripts/hash_admin_password.py
+    admin_password_hash: str = ""
+
+    # How long an admin login stays valid (hours), regardless of cookie age.
+    admin_session_hours: int = 12
+
+    # Escape hatch for LOCAL development only: allows logging in while
+    # ADMIN_PASSWORD is still the built-in "changeme".
+    allow_insecure_admin: bool = False
+
+    # Comma-separated origins that may call GET /api/ping from the browser
+    # (the wake-up gateway page), e.g. "https://gateway.example.com".
+    # Empty = no cross-origin access.
+    gateway_origins: str = ""
+
+    # Mark the session cookie "Secure" (HTTPS only). None = auto: on when
+    # running on Render (RENDER env var is set), off for local http testing.
+    session_https_only: bool | None = None
+
     # Used to cryptographically sign the session cookie. Set this to a long
     # random string in production (e.g. `openssl rand -hex 32`).
     secret_key: str = "insecure-dev-secret-change-me"
