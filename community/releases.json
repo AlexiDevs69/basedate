@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.307.1",
+      "date": "2026-11-08",
+      "title": "Оновлення AlexiHub",
+      "changes": [
+        "Покращено внутрішню реалізацію: middleware and enhance error handling."
+      ],
+      "source_sha": "dfd9cf2689029d7dc7e4d5b105396b7d3e10b72d"
+    },
+    {
       "version": "1.307.0",
       "date": "2026-11-08",
       "title": "Нові можливості AlexiHub",
