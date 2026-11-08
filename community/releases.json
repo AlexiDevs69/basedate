@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.304.2",
+      "date": "2026-11-08",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance theme styling and load profile colors."
+      ],
+      "source_sha": "cd423d944c5b0bc2cc18999eccde16a5d0a4babb"
+    },
+    {
       "version": "1.304.1",
       "date": "2026-11-07",
       "title": "Виправлення та стабільність",
