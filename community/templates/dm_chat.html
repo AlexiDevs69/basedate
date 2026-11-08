@@ -18725,6 +18725,27 @@ html.ah-recording #dm-record-timer,html.ah-recording #composer-record-timer{visi
   </div>
 </div>
 
+<style id="ah-you-theme-css">
+@media (max-width:820px){
+  /* The theme is independent of the app's light/dark mode (exactly like the profile editor and the profile cards):
+     the sheet becomes a gradient of the two chosen colours over a dark base, with light text. */
+  html #ah-you.ah-colored,html[data-theme="light"] #ah-you.ah-colored{
+    --ahy-bg:color-mix(in srgb,var(--ah-pc1) 26%,#0b0c10);
+    --ahy-card:rgba(255,255,255,.07);
+    --ahy-bar:color-mix(in srgb,var(--ah-pc2) 38%,#16171c);
+    --ahy-peek:color-mix(in srgb,var(--ah-pc1) 16%,#0b0c10);
+    --ahy-line:rgba(255,255,255,.1);
+    --ahy-text:#f2f3f5;--ahy-muted:#b9bcc5;
+  }
+  html #ah-you.ah-colored .ahy-scroll,html[data-theme="light"] #ah-you.ah-colored .ahy-scroll{
+    background:linear-gradient(180deg,color-mix(in srgb,var(--ah-pc1) 26%,#0b0c10),color-mix(in srgb,var(--ah-pc2) 26%,#0b0c10));
+  }
+  /* no banner picture -> the banner shows the theme (a picture set by the user is inline and still wins) */
+  html #ah-you.ah-colored .ahy-banner,html[data-theme="light"] #ah-you.ah-colored .ahy-banner{
+    background-image:linear-gradient(135deg,color-mix(in srgb,var(--ah-pc1) 62%,#0d0e12),color-mix(in srgb,var(--ah-pc2) 50%,#0d0e12));
+  }
+}
+</style>
 <script id="ah-you-js">
 (function(){
   'use strict';
@@ -18921,8 +18942,30 @@ html.ah-recording #dm-record-timer,html.ah-recording #composer-record-timer{visi
 
   /* ---------- open / close ---------- */
   var isOpen = false, lastFocus = null;
+  /* ---------- profile theme (the two colours chosen in "Edit profile") ---------- */
+  var themeNow = null;                              /* last known {primary, accent}; painted instantly, refreshed on every open */
+  function hex6(c){ return typeof c === 'string' && /^#[0-9a-f]{6}$/i.test(c) ? c.toLowerCase() : ''; }
+  function paintTheme(c){
+    var p1 = c && hex6(c.primary), p2 = c && hex6(c.accent);
+    if(p1 && p2){
+      if(!root.classList.contains('ah-colored')) root.classList.add('ah-colored');
+      if(root.style.getPropertyValue('--ah-pc1') !== p1) root.style.setProperty('--ah-pc1', p1);
+      if(root.style.getPropertyValue('--ah-pc2') !== p2) root.style.setProperty('--ah-pc2', p2);
+    }else{
+      root.classList.remove('ah-colored'); root.style.removeProperty('--ah-pc1'); root.style.removeProperty('--ah-pc2');
+    }
+  }
+  function loadTheme(){
+    paintTheme(themeNow);
+    try{
+      fetch('/community/api/my-profile-colors', {credentials:'same-origin', cache:'no-store', headers:{Accept:'application/json'}})
+        .then(function(r){ return r.json(); })
+        .then(function(d){ if(!d || !d.ok) throw 0; themeNow = d.profile_colors || null; paintTheme(themeNow); })
+        .catch(function(){});
+    }catch(e){}
+  }
   function open(panel){
-    fill(panel); loadPlus(); loadExtras(panel);
+    fill(panel); loadTheme(); loadPlus(); loadExtras(panel);
     lastFocus = document.activeElement;
     isOpen = true; root.classList.add('open'); root.setAttribute('aria-hidden', 'false');
     el.scroll.scrollTop = 0;
@@ -18956,6 +18999,7 @@ html.ah-recording #dm-record-timer,html.ah-recording #composer-record-timer{visi
     if(what === 'quests'){
       if(typeof window.showActionToast === 'function') window.showActionToast(T('common.stub.tasks_soon', 'Quests are coming soon'));
     }
+    else if(what === 'friends' && mq.matches && window.ahFriendsSheet){ close(); window.ahFriendsSheet.open(); }
     else if(what === 'store' || what === 'nitro' || what === 'friends') goHome(what);
     else if(what === 'settings'){ close(); closeDrawer(); if(typeof window.openUserSettings === 'function') window.openUserSettings(); }
     else if(what === 'edit'){ close(); closeDrawer(); if(typeof window.openProfileCustomizer === 'function') window.openProfileCustomizer(); }
@@ -19781,15 +19825,68 @@ html[data-theme="light"] #ah-af{--af-bg:#ffffff;--af-card:#f2f3f5;--af-line:#dcd
 #ah-af .af-go:active{filter:brightness(.9)}
 #ah-af .af-toast{position:absolute;left:50%;bottom:calc(28px + env(safe-area-inset-bottom,0px));transform:translate(-50%,12px);max-width:calc(100% - 32px);padding:11px 18px;border-radius:14px;background:#111214;color:#fff;font-size:15px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s ease,transform .2s ease}
 #ah-af .af-toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- "Add by username" screen ---------- */
+#ah-au{display:none;position:fixed;left:0;right:0;top:0;height:100%;z-index:20025;flex-direction:column;
+  --au-bg:#25242a;--au-field:#201f25;--au-line:#39383e;--au-label:#b9b8be;--au-ph:#a3a2a8;--au-text:#fff;--au-btn:#5865f2;--au-btn-off:#40448e;--au-btn-off-t:#a4abc8;
+  background:var(--au-bg);color:var(--au-text);font-family:var(--font,'Inter',system-ui,sans-serif);-webkit-tap-highlight-color:transparent}
+html[data-theme="light"] #ah-au{--au-bg:#fff;--au-field:#f2f3f5;--au-line:#d4d7dc;--au-label:#5d6068;--au-ph:#80848e;--au-text:#1b1c20;--au-btn-off:#b6baf7;--au-btn-off-t:#fff}
+#ah-au.open{display:flex;animation:ahAuIn .26s cubic-bezier(.22,.8,.28,1)}
+@keyframes ahAuIn{from{transform:translate3d(100%,0,0)}to{transform:none}}
+@media (prefers-reduced-motion:reduce){
+#ah-au.open{animation:none}
+}
+#ah-au *{box-sizing:border-box}
+#ah-au button,#ah-au input{font:inherit;color:inherit;margin:0;outline:none}
+#ah-au .au-head{flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:max(calc(env(safe-area-inset-top,0px) - 6px),8px) 16px 0 10px;min-height:44px}
+#ah-au .au-back{flex:0 0 44px;width:44px;height:44px;border:0;border-radius:50%;background:transparent;display:grid;place-items:center;padding:0;cursor:pointer}
+#ah-au .au-back:active{background:rgba(127,127,127,.2)}
+#ah-au .au-back svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+#ah-au .au-title{flex:1 1 auto;min-width:0;font-size:clamp(15px,4.4vw,18px);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#ah-au .au-body{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px 0}
+#ah-au .au-label{display:block;margin:0 0 8px;font-size:14px;font-weight:500;line-height:1.3;color:var(--au-label)}
+#ah-au .au-nick{display:block;width:100%;height:49px;padding:0 16px;border:1px solid var(--au-line);border-radius:14px;background:var(--au-field);font-size:16px;color:var(--au-text);caret-color:var(--au-btn);-webkit-appearance:none;appearance:none}
+#ah-au .au-nick::placeholder{color:var(--au-ph)}
+#ah-au .au-nick:focus{border-color:var(--au-btn)}
+#ah-au .au-msg{min-height:20px;margin:10px 4px 0;font-size:14px;line-height:1.35;color:var(--au-label)}
+#ah-au .au-msg.err{color:#f23f43}
+#ah-au .au-foot{flex:0 0 auto;padding:12px 16px calc(13px + env(safe-area-inset-bottom,0px));transform:translate3d(0,calc(var(--ah-kb,0px) * -1),0)}
+html.ah-kb-on #ah-au .au-foot{padding-bottom:13px}
+#ah-au{overscroll-behavior:none;touch-action:manipulation}
+/* the strip freed by the lifted footer must keep the page colour */
+#ah-au .au-body{padding-bottom:var(--ah-kb,0px)}
+#ah-au .au-send{display:block;width:100%;height:47px;border:0;border-radius:14px;background:var(--au-btn);color:#fff;font-size:16px;font-weight:600;cursor:pointer;transition:background .15s,color .15s}
+#ah-au .au-send:active{filter:brightness(.92)}
+#ah-au .au-send:disabled{background:var(--au-btn-off);color:var(--au-btn-off-t);cursor:default;filter:none}
 </style>
+<script id="ah-kb-js">
+(function(){
+  if(window.__ahKb)return;window.__ahKb=true;
+  var root=document.documentElement,last=-1,raf=0;
+  function measure(){
+    raf=0;var v=window.visualViewport;if(!v)return;
+    /* layout viewport height minus the visible part = what the keyboard covers (also covers a panned page) */
+    var kb=Math.round(window.innerHeight-v.height-v.offsetTop);
+    if(kb<100)kb=0;                                  /* browser toolbars are not a keyboard */
+    if(kb===last)return;last=kb;
+    root.style.setProperty('--ah-kb',kb+'px');root.classList.toggle('ah-kb-on',kb>0);
+    if(v.offsetTop>0&&root.classList.contains('ah-au-open')){try{window.scrollTo(0,0)}catch(e){}}
+  }
+  function sched(){if(!raf)raf=requestAnimationFrame(measure)}
+  if(window.visualViewport){window.visualViewport.addEventListener('resize',sched);window.visualViewport.addEventListener('scroll',sched)}
+  window.addEventListener('orientationchange',function(){setTimeout(sched,300)});
+  document.addEventListener('focusout',function(){setTimeout(sched,350)});
+  sched();
+})();
+</script>
 <script id="ah-af-js">
 (function(){
   if(window.ahAddFriends)return;
   var L=(document.documentElement.lang||'uk').slice(0,2).toLowerCase();
   var TT={
-    uk:{title:'Додати друзів',share:'Поділитися',copy:'Копіювати посилання',qr:'QR-код',sms:'Повідомлення',mail:'Пошта',byname:'Додати за нікнеймом',nick:'Нікнейм друга',send:'Надіслати запит',sent:'Запит надіслано',fail:'Не вдалося надіслати запит',reqs:'Запити в друзі',inc:'Вхідні',out:'Надіслані',incs:'Вхідний запит',outs:'Ви надіслали запит',findT:'Знайдіть своїх друзів',findP:'Заходьте на відкриті сервери та спілкуйтеся — знайомі з\u2019являться самі.',findB:'Знайти друзів',copied:'Посилання скопійовано',soon:'Скоро',back:'Назад',accepted:'Запит прийнято',declined:'Запит відхилено',canceled:'Запит скасовано',err:'Не вдалося виконати дію',inv:'Додавайся до мене в AlexiHub:',invs:'Запрошення в AlexiHub'},
-    ru:{title:'Добавить друзей',share:'Поделиться',copy:'Копировать ссылку',qr:'QR-код',sms:'Сообщения',mail:'Почта',byname:'Добавить по имени пользователя',nick:'Никнейм друга',send:'Отправить запрос',sent:'Запрос отправлен',fail:'Не удалось отправить запрос',reqs:'Запросы в друзья',inc:'Входящие',out:'Отправленные',incs:'Входящий запрос',outs:'Вы отправили запрос',findT:'Найдите своих друзей',findP:'Заходите на открытые серверы и общайтесь — знакомые появятся сами.',findB:'Найти друзей',copied:'Ссылка скопирована',soon:'Скоро',back:'Назад',accepted:'Запрос принят',declined:'Запрос отклонён',canceled:'Запрос отменён',err:'Не удалось выполнить действие',inv:'Добавляйся ко мне в AlexiHub:',invs:'Приглашение в AlexiHub'},
-    en:{title:'Add friends',share:'Share',copy:'Copy link',qr:'QR code',sms:'Messages',mail:'Email',byname:'Add by username',nick:'Friend\u2019s username',send:'Send request',sent:'Request sent',fail:'Couldn\u2019t send request',reqs:'Friend requests',inc:'Incoming',out:'Sent',incs:'Incoming request',outs:'You sent a request',findT:'Find your friends',findP:'Join open servers and chat \u2014 people you know will show up.',findB:'Find friends',copied:'Link copied',soon:'Soon',back:'Back',accepted:'Request accepted',declined:'Request declined',canceled:'Request canceled',err:'Something went wrong',inv:'Add me on AlexiHub:',invs:'AlexiHub invite'}
+    uk:{title:'Додати друзів',share:'Поділитися',copy:'Копіювати посилання',qr:'QR-код',sms:'Повідомлення',mail:'Пошта',byname:'Додати за нікнеймом',nick:'Нікнейм друга',send:'Надіслати запит',sent:'Запит надіслано',fail:'Не вдалося надіслати запит',reqs:'Запити в друзі',inc:'Вхідні',out:'Надіслані',incs:'Вхідний запит',outs:'Ви надіслали запит',findT:'Знайдіть своїх друзів',findP:'Заходьте на відкриті сервери та спілкуйтеся — знайомі з\u2019являться самі.',findB:'Знайти друзів',copied:'Посилання скопійовано',soon:'Скоро',back:'Назад',accepted:'Запит прийнято',declined:'Запит відхилено',canceled:'Запит скасовано',err:'Не вдалося виконати дію',inv:'Додавайся до мене в AlexiHub:',invs:'Запрошення в AlexiHub',whom:'Кого ви хочете додати в друзі?',ph:'Введіть ім\u2019я користувача',go:'Надіслати запит дружби',e_nf:'Користувача з таким ім\u2019ям не знайдено',e_self:'Не можна додати самого себе',e_off:'Цей користувач обмежив вхідні запити дружби',e_blk:'Спершу розблокуйте користувача',e_login:'Увійдіть, щоб надсилати запити',nowf:'Ви тепер друзі'},
+    ru:{title:'Добавить друзей',share:'Поделиться',copy:'Копировать ссылку',qr:'QR-код',sms:'Сообщения',mail:'Почта',byname:'Добавить по имени пользователя',nick:'Никнейм друга',send:'Отправить запрос',sent:'Запрос отправлен',fail:'Не удалось отправить запрос',reqs:'Запросы в друзья',inc:'Входящие',out:'Отправленные',incs:'Входящий запрос',outs:'Вы отправили запрос',findT:'Найдите своих друзей',findP:'Заходите на открытые серверы и общайтесь — знакомые появятся сами.',findB:'Найти друзей',copied:'Ссылка скопирована',soon:'Скоро',back:'Назад',accepted:'Запрос принят',declined:'Запрос отклонён',canceled:'Запрос отменён',err:'Не удалось выполнить действие',inv:'Добавляйся ко мне в AlexiHub:',invs:'Приглашение в AlexiHub',whom:'Кого бы вы хотели добавить в друзья?',ph:'Введите имя пользователя',go:'Отправить запрос дружбы',e_nf:'Пользователь с таким именем не найден',e_self:'Нельзя добавить самого себя',e_off:'Этот пользователь ограничил входящие запросы дружбы',e_blk:'Сначала разблокируйте пользователя',e_login:'Войдите, чтобы отправлять запросы',nowf:'Вы теперь друзья'},
+    en:{title:'Add friends',share:'Share',copy:'Copy link',qr:'QR code',sms:'Messages',mail:'Email',byname:'Add by username',nick:'Friend\u2019s username',send:'Send request',sent:'Request sent',fail:'Couldn\u2019t send request',reqs:'Friend requests',inc:'Incoming',out:'Sent',incs:'Incoming request',outs:'You sent a request',findT:'Find your friends',findP:'Join open servers and chat \u2014 people you know will show up.',findB:'Find friends',copied:'Link copied',soon:'Soon',back:'Back',accepted:'Request accepted',declined:'Request declined',canceled:'Request canceled',err:'Something went wrong',inv:'Add me on AlexiHub:',invs:'AlexiHub invite',whom:'Who would you like to add as a friend?',ph:'Enter a username',go:'Send friend request',e_nf:'No user with that username',e_self:'You can\u2019t add yourself',e_off:'This user restricted incoming friend requests',e_blk:'Unblock this user first',e_login:'Log in to send requests',nowf:'You\u2019re friends now'}
   };
   var T=TT[L]||TT.uk;
   var NS='http://www.w3.org/2000/svg';
@@ -19830,14 +19927,22 @@ html[data-theme="light"] #ah-af{--af-bg:#ffffff;--af-card:#f2f3f5;--af-line:#dcd
   var card=el('div','af-card');
   var byb=el('button','af-row');byb.type='button';
   byb.appendChild(el('span','af-at','@'));byb.appendChild(el('span','af-txt',T.byname));byb.appendChild(svg('af-chev',['M9 6l6 6-6 6']));
-  var form=el('form','af-form');form.hidden=true;
-  var arow=el('div','af-addrow');
-  var nick=el('input','af-nick');nick.type='text';nick.placeholder=T.nick;nick.setAttribute('autocomplete','off');nick.setAttribute('autocapitalize','off');nick.setAttribute('spellcheck','false');
-  var send=el('button','af-send',T.send);send.type='submit';
-  arow.appendChild(nick);arow.appendChild(send);
-  var msg=el('div','af-msg');
-  form.appendChild(arow);form.appendChild(msg);
-  card.appendChild(byb);card.appendChild(form);
+  card.appendChild(byb);
+
+  /* --- "Add by username" screen (opens from the row above) --- */
+  var au=el('div','');au.id='ah-au';au.setAttribute('role','dialog');au.setAttribute('aria-modal','true');au.setAttribute('aria-hidden','true');
+  var auHead=el('div','au-head');
+  var auBack=el('button','au-back');auBack.type='button';auBack.setAttribute('aria-label',T.back);auBack.appendChild(svg('',['M19 12H5','M11 6l-6 6 6 6']));
+  auHead.appendChild(auBack);auHead.appendChild(el('div','au-title',T.byname));
+  var auBody=el('div','au-body');
+  var auLabel=el('label','au-label',T.whom);auLabel.setAttribute('for','au-nick');
+  var nick=el('input','au-nick');nick.id='au-nick';nick.type='text';nick.placeholder=T.ph;nick.maxLength=64;
+  nick.setAttribute('autocomplete','off');nick.setAttribute('autocapitalize','off');nick.setAttribute('autocorrect','off');nick.setAttribute('spellcheck','false');nick.setAttribute('enterkeyhint','send');
+  var msg=el('div','au-msg');msg.setAttribute('role','alert');
+  auBody.appendChild(auLabel);auBody.appendChild(nick);auBody.appendChild(msg);
+  var auFoot=el('div','au-foot');
+  var send=el('button','au-send',T.go);send.type='button';send.disabled=true;auFoot.appendChild(send);
+  au.appendChild(auHead);au.appendChild(auBody);au.appendChild(auFoot);document.body.appendChild(au);
 
   var reqb=el('button','af-row');reqb.type='button';
   reqb.appendChild(svg('af-ico',['M16 21v-1.5a4.5 4.5 0 0 0-4.5-4.5h-3A4.5 4.5 0 0 0 4 19.5V21','M10 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z','M19 8v6','M16 11h6']));
@@ -19883,24 +19988,53 @@ html[data-theme="light"] #ah-af{--af-bg:#ffffff;--af-card:#f2f3f5;--af-line:#dcd
   tQr.addEventListener('click',function(){say(T.soon)});
   go.addEventListener('click',function(){location.href='/community/travel'});
 
-  byb.addEventListener('click',function(){
-    form.hidden=!form.hidden;byb.classList.toggle('on',!form.hidden);
-    if(!form.hidden)setTimeout(function(){try{nick.focus()}catch(e){}},30);
-  });
-  form.addEventListener('submit',function(e){
-    e.preventDefault();
-    var u=(nick.value||'').trim().replace(/^@+/,'');
-    if(!u)return;
-    send.disabled=true;msg.className='af-msg';msg.textContent='';
+  var auOpen=false,sending=false;
+  function cleanName(){return (nick.value||'').trim().replace(/^@+/,'')}
+  function syncBtn(){send.disabled=sending||!cleanName()}
+  function openUser(prefill){
+    nick.value=prefill||'';msg.textContent='';msg.className='au-msg';sending=false;syncBtn();
+    au.classList.add('open');au.setAttribute('aria-hidden','false');auOpen=true;
+    document.documentElement.classList.add('ah-au-open');
+    try{nick.focus({preventScroll:true})}catch(e){try{nick.focus()}catch(_){}}
+  }
+  function closeUser(){
+    if(!auOpen)return;auOpen=false;
+    au.classList.remove('open');au.setAttribute('aria-hidden','true');
+    document.documentElement.classList.remove('ah-au-open');
+    try{nick.blur()}catch(e){}
+  }
+  function errText(d){
+    var c=d&&d.error;
+    if(c==='not_found')return T.e_nf;if(c==='cannot_friend_self')return T.e_self;if(c==='friend_requests_disabled')return T.e_off;
+    if(c==='blocked_relationship')return T.e_blk;if(c==='not_logged_in')return T.e_login;
+    return (d&&d.message)||T.fail;
+  }
+  function submitUser(){
+    var u=cleanName();if(!u||sending)return;
+    sending=true;syncBtn();msg.className='au-msg';msg.textContent='';
     fetch('/community/api/friends/request/'+encodeURIComponent(u),{method:'POST',credentials:'same-origin'})
       .then(function(r){return r.json().catch(function(){return{}}).then(function(d){return{ok:r.ok,d:d}})})
       .then(function(res){
-        if(!res.ok)throw new Error((res.d&&res.d.error)||T.fail);
-        msg.className='af-msg ok';msg.textContent=T.sent;nick.value='';
+        if(!res.ok){var er=new Error(errText(res.d));er.shown=true;throw er}
+        var d=res.d||{};
+        if(d.status==='friends')say(T.nowf);
+        else{
+          say(T.sent);
+          if(d.friendship_id!=null&&!pend.out.some(function(p){return String(p.id)===String(d.friendship_id)})){
+            pend.out.push({id:d.friendship_id,u:u,d:u,a:''});updBadge();renderSecs();
+            try{document.dispatchEvent(new CustomEvent('ah-fr-req-new',{detail:{fid:d.friendship_id,kind:'out',person:{u:u,d:u,a:'',on:false},from:'af'}}))}catch(_){}
+          }
+        }
+        closeUser();
       })
-      .catch(function(err){msg.className='af-msg err';msg.textContent=(err&&err.message)||T.fail})
-      .then(function(){send.disabled=false});
-  });
+      .catch(function(err){msg.className='au-msg err';msg.textContent=(err&&err.shown)?err.message:T.fail})
+      .then(function(){sending=false;syncBtn()});
+  }
+  byb.addEventListener('click',function(){openUser('')});
+  auBack.addEventListener('click',closeUser);
+  nick.addEventListener('input',function(){syncBtn();if(msg.textContent){msg.textContent='';msg.className='au-msg'}});
+  nick.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();submitUser()}});
+  send.addEventListener('click',submitUser);
 
   /* --- pending requests (accept / decline / cancel) --- */
   function api(url,body){
@@ -19923,6 +20057,7 @@ html[data-theme="light"] #ah-af{--af-bg:#ffffff;--af-card:#f2f3f5;--af-line:#dcd
       var bs=r.querySelectorAll('button');bs.forEach(function(x){x.disabled=true});
       fn().then(function(msgOk){
         var arr=kind==='in'?pend.in:pend.out;var i=arr.indexOf(p);if(i>-1)arr.splice(i,1);
+        try{document.dispatchEvent(new CustomEvent('ah-fr-req-done',{detail:{id:p.id,kind:kind,accepted:cls==='yes',person:{u:p.u,d:p.d,a:p.a,on:false},from:'af'}}))}catch(_){}
         r.remove();updBadge();renderSecs();say(msgOk);
       }).catch(function(){bs.forEach(function(x){x.disabled=false});say(T.err)});
     });act.appendChild(b)}
@@ -19945,13 +20080,12 @@ html[data-theme="light"] #ah-af{--af-bg:#ffffff;--af-card:#f2f3f5;--af-line:#dcd
   function open(prefill){
     refreshLinks();updBadge();
     root.classList.add('open');sc.scrollTop=0;
-    msg.textContent='';msg.className='af-msg';
-    if(prefill){form.hidden=false;byb.classList.add('on');nick.value=prefill}
-    else{form.hidden=true;byb.classList.remove('on');nick.value=''}
+    closeUser();
+    if(prefill)openUser(prefill);
   }
-  function close(){root.classList.remove('open')}
+  function close(){closeUser();root.classList.remove('open')}
   back.addEventListener('click',close);
-  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&root.classList.contains('open'))close()});
+  document.addEventListener('keydown',function(e){if(e.key!=='Escape')return;if(auOpen)closeUser();else if(root.classList.contains('open'))close()});
 
   /* drawer button "Add friends" -> this screen (phones only; desktop keeps the old page) */
   document.addEventListener('click',function(e){
@@ -19980,9 +20114,410 @@ html[data-theme="light"] #ah-af{--af-bg:#ffffff;--af-card:#f2f3f5;--af-line:#dcd
     if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){setTimeout(fire,0)});else fire();
   }
 
+  document.addEventListener('ah-fr-req-done',function(e){
+    var d=e&&e.detail;if(!d||d.from==='af')return;
+    ['in','out'].forEach(function(k){pend[k]=pend[k].filter(function(p){return String(p.id)!==String(d.id)})});
+    updBadge();renderSecs();
+  });
   window.ahAddFriends={open:open,close:close};
 })();
 </script>
 <!-- AH-ADDFRIENDS:END -->
+<!-- AH-FRIENDS:BEGIN (phones: Discord-style "Friends" sheet; opened from the Friends row of the "You" sheet) -->
+<script type="application/json" id="ah-fr-data">{"in":[{% if pending_incoming is defined and pending_incoming %}{% for p in pending_incoming %}{% set u = p.requester %}{% if u %}{"fid":{{ p.friendship_id|tojson }},"id":{{ u.id|tojson }},"u":{{ u.username|tojson }},"d":{{ (u.display_name or u.username)|tojson }},"a":{{ (u.avatar_url or '')|tojson }},"on":{{ 'true' if (online_ids is defined and u.id in online_ids and (u.account_status or 'online') != 'invisible') else 'false' }}},{% endif %}{% endfor %}{% endif %}null],"out":[{% if pending_outgoing is defined and pending_outgoing %}{% for p in pending_outgoing %}{% set u = p.addressee %}{% if u %}{"fid":{{ p.friendship_id|tojson }},"id":{{ u.id|tojson }},"u":{{ u.username|tojson }},"d":{{ (u.display_name or u.username)|tojson }},"a":{{ (u.avatar_url or '')|tojson }},"on":{{ 'true' if (online_ids is defined and u.id in online_ids and (u.account_status or 'online') != 'invisible') else 'false' }}},{% endif %}{% endfor %}{% endif %}null],"f":[{% if friends is defined and friends %}{% for f in friends %}{"id":{{ f.id|tojson }},"u":{{ f.username|tojson }},"d":{{ (f.display_name or f.username)|tojson }},"a":{{ (f.avatar_url or '')|tojson }},"s":{{ (f.account_status or 'online')|tojson }},"on":{{ 'true' if (online_ids is defined and f.id in online_ids and (f.account_status or 'online') != 'invisible') else 'false' }},"ce":{{ (f.custom_status_emoji or '')|tojson }},"ct":{{ (f.custom_status_text or '')|tojson }},"cx":{{ ((f.custom_status_expires_at|string) if f.custom_status_expires_at else '')|tojson }}}{{ ',' if not loop.last }}{% endfor %}{% endif %}]}</script>
+<style id="ah-fr-css">
+#ah-fr,#ah-rq,#ah-rs{-webkit-tap-highlight-color:transparent;
+  --fr-bg:#25242a;--rq-band:#1a191f;--rq-seg:#29282e;--rq-seg-on:#403f45;--fr-card:#2e2d33;--fr-req:#29282e;--fr-field:#201f25;--fr-line:#38373d;--fr-fline:#302f35;--fr-text:#fff;--fr-sub:#c0bfc5;--fr-letter:#cdccd2;--fr-mut:#9a999f;--fr-link:#757dff;
+  color:var(--fr-text);font-family:var(--font,'Inter',system-ui,sans-serif)}
+#ah-fr{display:none;position:fixed;inset:0;z-index:20030}
+html[data-theme="light"] #ah-fr,html[data-theme="light"] #ah-rq,html[data-theme="light"] #ah-rs{--rq-band:#e8e9ec;--rq-seg:#dcdee2;--rq-seg-on:#fff;--fr-bg:#f2f3f5;--fr-card:#fff;--fr-req:#fff;--fr-field:#fff;--fr-line:#e3e5e8;--fr-fline:#d4d7dc;--fr-text:#1b1c20;--fr-sub:#5d6068;--fr-letter:#4e5058;--fr-mut:#6d6f78;--fr-link:#4752c4}
+#ah-fr.open{display:block}
+#ah-fr *{box-sizing:border-box}
+#ah-fr button,#ah-fr input{font:inherit;color:inherit;margin:0;outline:none}
+#ah-fr .fr-back{position:absolute;inset:0;background:rgba(0,0,0,.62);touch-action:none;animation:ahFrFade .2s ease-out}
+#ah-fr .fr-sheet{position:absolute;left:0;right:0;bottom:0;top:max(calc(env(safe-area-inset-top,0px) - 6px),10px);display:flex;flex-direction:column;background:var(--fr-bg);border-radius:22px 22px 0 0;overflow:hidden;animation:ahFrUp .28s cubic-bezier(.22,.8,.28,1)}
+@keyframes ahFrFade{from{opacity:0}to{opacity:1}}
+@keyframes ahFrUp{from{transform:translate3d(0,100%,0)}to{transform:none}}
+@media (prefers-reduced-motion:reduce){
+#ah-fr .fr-back,#ah-fr .fr-sheet{animation:none}}
+#ah-fr .fr-head{flex:0 0 auto;display:flex;align-items:center;height:56px;padding:6px 12px 0 10px}
+#ah-fr .fr-x{flex:0 0 44px;width:44px;height:44px;border:0;border-radius:50%;background:transparent;display:grid;place-items:center;padding:0;cursor:pointer}
+#ah-fr .fr-x:active{background:rgba(127,127,127,.2)}
+#ah-fr .fr-x svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round}
+#ah-fr .fr-title{flex:1 1 auto;min-width:0;text-align:center;font-size:18px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:var(--fr-pl,0);padding-right:var(--fr-pr,0)}
+#ah-fr .fr-add{flex:0 0 auto;max-width:62%;height:44px;padding:0 4px;border:0;background:transparent;color:var(--fr-link);font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+#ah-fr .fr-add:active{opacity:.6}
+#ah-fr .fr-sw{flex:0 0 auto;padding:6px 16px 0}
+#ah-fr .fr-search{display:flex;align-items:center;gap:8px;height:37px;padding:0 12px;border:1px solid var(--fr-fline);border-radius:12px;background:var(--fr-field)}
+#ah-fr .fr-search svg{width:18px;height:18px;flex:0 0 auto;stroke:var(--fr-mut);fill:none;stroke-width:2.2;stroke-linecap:round}
+#ah-fr .fr-search input{flex:1 1 auto;min-width:0;height:100%;border:0;background:transparent;font-size:16px;caret-color:var(--fr-link)}
+#ah-fr .fr-search input::placeholder{color:var(--fr-mut)}
+#ah-fr .fr-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:14px 16px calc(36px + env(safe-area-inset-bottom,0px) + var(--ah-kb,0px))}
+#ah-fr .fr-req{display:flex;align-items:center;gap:14px;width:100%;min-height:56px;padding:0 14px 0 17px;border:0;border-radius:14px;background:var(--fr-req);text-align:left;cursor:pointer}
+#ah-fr .fr-req:active,#ah-fr .fr-row:active{filter:brightness(1.12)}
+#ah-fr .fr-req>svg:first-child{width:22px;height:22px;flex:0 0 auto;fill:currentColor}
+#ah-fr .fr-req .fr-rt{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:3px}
+#ah-fr .fr-req b{font-size:17px;font-weight:500;line-height:1.15}
+#ah-fr .fr-req #fr-req-s{font-size:13px;color:var(--fr-sub);line-height:1.15}
+#ah-fr .fr-req .fr-go{width:20px;height:20px;flex:0 0 auto;fill:none;stroke:var(--fr-mut);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+#ah-fr .fr-letter{margin:14px 4px 9px;font-size:18px;font-weight:500;line-height:22px;color:var(--fr-letter)}
+#ah-fr .fr-card{border-radius:14px;background:var(--fr-card);overflow:hidden}
+#ah-fr .fr-row{position:relative;display:flex;align-items:center;gap:12px;width:100%;min-height:53px;padding:0 7px 0 11px;border:0;background:transparent;text-align:left;cursor:pointer;color:inherit}
+#ah-fr .fr-row+.fr-row::before{content:"";position:absolute;left:53px;right:0;top:0;height:1px;background:var(--fr-line)}
+#ah-fr .fr-av{position:relative;flex:0 0 30px;width:30px;height:30px;border-radius:50%;background:#3a3940 center/cover no-repeat;display:grid;place-items:center;font-size:13px;font-weight:700;color:#fff}
+#ah-fr .fr-st,#ah-rq .fr-st{position:absolute;right:-3px;bottom:-3px;width:13px;height:13px;border-radius:50%;border:2.5px solid var(--fr-card);background:#23a55a;box-sizing:border-box}
+#ah-fr .fr-st[data-s="idle"],#ah-rq .fr-st[data-s="idle"]{background:#f0b232}
+#ah-fr .fr-st[data-s="dnd"],#ah-rq .fr-st[data-s="dnd"]{background:#f23f43}
+#ah-fr .fr-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px;padding:8px 0}
+#ah-fr .fr-name{font-size:17px;font-weight:500;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#ah-fr .fr-sub{font-size:13px;line-height:16px;color:var(--fr-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#ah-fr .fr-msg{flex:0 0 auto;width:42px;height:42px;border:0;border-radius:50%;background:transparent;display:grid;place-items:center;padding:0;cursor:pointer;color:inherit}
+#ah-fr .fr-msg:active{background:rgba(127,127,127,.2)}
+#ah-fr .fr-msg svg{width:22px;height:22px;fill:currentColor}
+#ah-fr .fr-empty{padding:48px 24px;text-align:center;color:var(--fr-sub);font-size:15px;line-height:1.4}
+#ah-fr .fr-empty[hidden]{display:none}
+
+/* ---------- friend requests page (+ settings page): slide in from the right over the friends sheet ---------- */
+#ah-rq,#ah-rs{position:fixed;left:0;right:0;bottom:0;top:max(calc(env(safe-area-inset-top,0px) - 6px),10px);display:flex;flex-direction:column;background:var(--fr-bg);color:var(--fr-text);border-radius:22px 22px 0 0;overflow:hidden;visibility:hidden;pointer-events:none;transform:translate3d(100%,0,0);transition:transform .27s cubic-bezier(.22,.8,.28,1),visibility 0s linear .27s}
+#ah-rq{z-index:20040}#ah-rs{z-index:20050}
+#ah-rq.open,#ah-rs.open{visibility:visible;pointer-events:auto;transform:none;transition:transform .27s cubic-bezier(.22,.8,.28,1)}
+@media (prefers-reduced-motion:reduce){
+#ah-rq,#ah-rs{transition:none}
+}
+#ah-rq *,#ah-rs *{box-sizing:border-box}
+#ah-rq button,#ah-rs button{font:inherit;color:inherit;margin:0;outline:none;-webkit-tap-highlight-color:transparent}
+.rq-head{flex:0 0 auto;display:flex;align-items:center;height:52px;padding:0 10px;background:var(--fr-bg)}
+.rq-icon{flex:0 0 44px;width:44px;height:44px;border:0;border-radius:50%;background:transparent;display:grid;place-items:center;padding:0;cursor:pointer}
+.rq-icon:active{background:rgba(127,127,127,.2)}
+.rq-icon svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.rq-icon.gear svg{fill:currentColor;stroke:none;width:25px;height:25px}
+.rq-title{flex:1 1 auto;min-width:0;text-align:center;font-size:18px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rq-band{flex:0 0 auto;background:var(--rq-band);padding:8px 16px 15px}
+.rq-seg{display:flex;gap:0;padding:2px;border-radius:12px;background:var(--rq-seg)}
+.rq-tab{flex:1 1 0;min-width:0;height:36px;border:0;border-radius:10px;background:transparent;color:var(--fr-sub);font-size:16px;font-weight:600;white-space:nowrap;cursor:pointer;transition:background .15s,color .15s}
+.rq-tab[aria-selected="true"]{background:var(--rq-seg-on);color:var(--fr-text)}
+.rq-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:2px 16px calc(36px + env(safe-area-inset-bottom,0px))}
+.rq-card{border-radius:14px;background:var(--fr-card);overflow:hidden}
+.rq-row{position:relative;display:flex;align-items:center;gap:9px;min-height:53px;padding:0 4px 0 8px;transition:opacity .2s,transform .2s}
+.rq-row+.rq-row::before{content:"";position:absolute;left:53px;right:0;top:0;height:1px;background:var(--fr-line)}
+.rq-row.gone{opacity:0;transform:translateX(-14px)}
+.rq-av{position:relative;flex:0 0 36px;width:36px;height:36px;border-radius:50%;background:#3a3940 center/cover no-repeat;display:grid;place-items:center;font-size:15px;font-weight:700;color:#fff}
+.rq-who{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px;padding:8px 0}
+.rq-who b{font-size:17px;font-weight:500;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rq-who span{font-size:14px;line-height:16px;color:var(--fr-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rq-act{flex:0 0 auto;display:flex;align-items:center}
+.rq-ab{width:44px;height:44px;border:0;border-radius:50%;background:transparent;display:grid;place-items:center;padding:0;cursor:pointer}
+.rq-ab:active{background:rgba(127,127,127,.2)}
+.rq-ab:disabled{opacity:.35;cursor:default}
+.rq-ab svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round}
+.rq-ab.yes svg{stroke:#3ba55d}
+.rq-empty{padding:64px 28px;text-align:center;color:var(--fr-sub);font-size:15px;line-height:1.45}
+.rq-empty i{display:grid;place-items:center;width:64px;height:64px;margin:0 auto 14px;border-radius:50%;background:var(--rq-seg)}
+.rq-empty i svg{width:30px;height:30px;fill:var(--fr-mut)}
+/* settings page */
+.rs-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:18px 16px calc(36px + env(safe-area-inset-bottom,0px))}
+.rs-lead{margin:0 4px 12px;font-size:15px;line-height:1.4;color:var(--fr-sub)}
+.rs-card{border-radius:14px;background:var(--fr-card);overflow:hidden}
+.rs-row{position:relative;display:flex;align-items:center;gap:14px;width:100%;min-height:62px;padding:10px 14px 10px 16px;border:0;background:transparent;text-align:left;cursor:pointer}
+.rs-row+.rs-row::before{content:"";position:absolute;left:16px;right:0;top:0;height:1px;background:var(--fr-line)}
+.rs-row:disabled{opacity:.6;cursor:default}
+.rs-t{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:3px}
+.rs-t b{font-size:17px;font-weight:500;line-height:1.2}
+.rs-t span{font-size:13px;line-height:1.3;color:var(--fr-sub)}
+.rs-sw{position:relative;flex:0 0 51px;width:51px;height:31px;border-radius:16px;background:#5a5960;transition:background .18s}
+.rs-sw::after{content:"";position:absolute;left:2px;top:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35);transition:transform .18s}
+.rs-row[aria-checked="true"] .rs-sw{background:#23a55a}
+.rs-row[aria-checked="true"] .rs-sw::after{transform:translateX(20px)}
+html[data-theme="light"] .rs-sw{background:#b9bbbe}
+#ah-frt{position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom,0px));z-index:20060;max-width:calc(100% - 40px);padding:11px 16px;border-radius:12px;background:#111214;color:#fff;font:600 14px/1.3 var(--font,system-ui,sans-serif);box-shadow:0 8px 24px rgba(0,0,0,.5);opacity:0;pointer-events:none;transform:translate(-50%,10px);transition:opacity .2s,transform .2s;text-align:center}
+#ah-frt.show{opacity:1;transform:translate(-50%,0)}
+</style>
+<div id="ah-fr" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="fr-back" data-fr-close></div>
+  <div class="fr-sheet">
+    <div class="fr-head">
+      <button type="button" class="fr-x" data-fr-close aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14M19 5 5 19"/></svg></button>
+      <div class="fr-title" id="fr-title"></div>
+      <button type="button" class="fr-add" id="fr-add"></button>
+    </div>
+    <div class="fr-sw"><label class="fr-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="fr-q" type="search" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search"></label></div>
+    <div class="fr-scroll" id="fr-scroll">
+      <button type="button" class="fr-req" id="fr-req"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.01 21 23 12 2.01 3 2 10l15 2-15 2z"/></svg><span class="fr-rt"><b id="fr-req-t"></b><span id="fr-req-s"></span></span><svg class="fr-go" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button>
+      <div id="fr-list"></div>
+      <div class="fr-empty" id="fr-empty" hidden></div>
+    </div>
+  </div>
+</div>
+<div id="ah-rq" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="rq-head">
+    <button type="button" class="rq-icon" id="rq-back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
+    <div class="rq-title" id="rq-title"></div>
+    <button type="button" class="rq-icon gear" id="rq-gear"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg></button>
+  </div>
+  <div class="rq-band"><div class="rq-seg" role="tablist"><button type="button" class="rq-tab" id="rq-tab-in" role="tab" data-k="in"></button><button type="button" class="rq-tab" id="rq-tab-out" role="tab" data-k="out"></button></div></div>
+  <div class="rq-scroll" id="rq-scroll"><div id="rq-list"></div></div>
+</div>
+<div id="ah-rs" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="rq-head">
+    <button type="button" class="rq-icon" id="rs-back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
+    <div class="rq-title" id="rs-title"></div>
+    <span class="rq-icon" aria-hidden="true"></span>
+  </div>
+  <div class="rs-scroll"><p class="rs-lead" id="rs-lead"></p>
+    <div class="rs-card">
+      <button type="button" class="rs-row" role="switch" aria-checked="false" data-f="allow_friend_requests_everyone" disabled><span class="rs-t"><b id="rs-e"></b><span id="rs-ed"></span></span><span class="rs-sw"></span></button>
+      <button type="button" class="rs-row" role="switch" aria-checked="false" data-f="allow_friend_requests_mutual_friends" disabled><span class="rs-t"><b id="rs-m"></b><span id="rs-md"></span></span><span class="rs-sw"></span></button>
+      <button type="button" class="rs-row" role="switch" aria-checked="false" data-f="allow_friend_requests_server_members" disabled><span class="rs-t"><b id="rs-s"></b><span id="rs-sd"></span></span><span class="rs-sw"></span></button>
+    </div>
+  </div>
+</div>
+<div id="ah-frt" role="status"></div>
+<script id="ah-fr-js">
+(function(){
+  'use strict';
+  if(window.__ahFriends)return;window.__ahFriends=true;
+  var root=document.getElementById('ah-fr');if(!root)return;
+  var rqEl=document.getElementById('ah-rq'),rsEl=document.getElementById('ah-rs'),toastEl=document.getElementById('ah-frt');
+  var DATA={in:[],out:[],f:[]};
+  try{DATA=JSON.parse(document.getElementById('ah-fr-data').textContent)||DATA}catch(e){}
+  var REQ={in:(DATA.in||[]).filter(Boolean),out:(DATA.out||[]).filter(Boolean)};
+  var LG=String(document.documentElement.lang||'uk').toLowerCase().slice(0,2);
+  var TX={
+    ru:{title:'Друзья',add:'Добавить друзей',search:'Поиск',req:'Запросы дружбы',rin:'Получено',rout:'Отправлено',none:'Ничего не найдено',empty:'Список друзей пуст',close:'Закрыть',msg:'Написать',back:'Назад',
+        emptyIn:'Входящих запросов нет',emptyOut:'Отправленных запросов нет',accept:'Принять',decline:'Отклонить',cancel:'Отменить запрос',ok1:'Запрос принят',ok2:'Запрос отклонён',ok3:'Запрос отменён',err:'Не удалось выполнить действие',
+        st:'Настройки',lead:'Кто может отправлять вам запросы в друзья',ev:'Все',evd:'Любой пользователь может отправить вам запрос',mu:'Друзья друзей',mud:'Пользователи, у которых есть общие с вами друзья',sm:'Участники серверов',smd:'Люди с общих серверов',saveErr:'Не удалось сохранить настройку',loadErr:'Не удалось загрузить настройки'},
+    uk:{title:'Друзі',add:'Додати друзів',search:'Пошук',req:'Запити дружби',rin:'Отримано',rout:'Надіслано',none:'Нічого не знайдено',empty:'Список друзів порожній',close:'Закрити',msg:'Написати',back:'Назад',
+        emptyIn:'Вхідних запитів немає',emptyOut:'Надісланих запитів немає',accept:'Прийняти',decline:'Відхилити',cancel:'Скасувати запит',ok1:'Запит прийнято',ok2:'Запит відхилено',ok3:'Запит скасовано',err:'Не вдалося виконати дію',
+        st:'Налаштування',lead:'Хто може надсилати вам запити в друзі',ev:'Усі',evd:'Будь-який користувач може надіслати вам запит',mu:'Друзі друзів',mud:'Користувачі, з якими у вас є спільні друзі',sm:'Учасники серверів',smd:'Люди зі спільних серверів',saveErr:'Не вдалося зберегти налаштування',loadErr:'Не вдалося завантажити налаштування'},
+    en:{title:'Friends',add:'Add friends',search:'Search',req:'Friend requests',rin:'Received',rout:'Sent',none:'Nothing found',empty:'Your friend list is empty',close:'Close',msg:'Message',back:'Back',
+        emptyIn:'No incoming requests',emptyOut:'No sent requests',accept:'Accept',decline:'Decline',cancel:'Cancel request',ok1:'Request accepted',ok2:'Request declined',ok3:'Request canceled',err:'Something went wrong',
+        st:'Settings',lead:'Who can send you friend requests',ev:'Everyone',evd:'Anyone can send you a request',mu:'Friends of friends',mud:'People who share friends with you',sm:'Server members',smd:'People from your shared servers',saveErr:'Couldn\u2019t save the setting',loadErr:'Couldn\u2019t load settings'}
+  };
+  var L=TX[LG]||TX.uk;
+  function T(k,fb){try{var v=window.AlexiHubI18n&&window.AlexiHubI18n.t&&window.AlexiHubI18n.t(k);return v&&v!==k?String(v):fb}catch(_){return fb}}
+  var $=function(id){return document.getElementById(id)};
+  function mk(tag,cls,txt){var n=document.createElement(tag);if(cls)n.className=cls;if(txt!=null)n.textContent=txt;return n}
+  var NS='http://www.w3.org/2000/svg';
+  function svg(paths){var s=document.createElementNS(NS,'svg');s.setAttribute('viewBox','0 0 24 24');s.setAttribute('aria-hidden','true');paths.forEach(function(d){var p=document.createElementNS(NS,'path');p.setAttribute('d',d);s.appendChild(p)});return s}
+  function cssUrl(u){return 'url('+JSON.stringify(String(u))+')'}
+  function okUrl(u){return !!u&&/^(https?:\/\/|\/(?!\/)|data:image\/)/i.test(u)}
+  var toastT=0;
+  function toast(t){toastEl.textContent=t;toastEl.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){toastEl.classList.remove('show')},2300)}
+
+  $('fr-title').textContent=T('ui.friends',L.title);
+  $('fr-add').textContent=L.add;$('fr-q').placeholder=L.search;$('fr-req-t').textContent=L.req;
+  [].forEach.call(root.querySelectorAll('.fr-x'),function(b){b.setAttribute('aria-label',L.close)});
+  $('rq-title').textContent=L.req;$('rq-tab-in').textContent=L.rin;$('rq-tab-out').textContent=L.rout;
+  $('rq-back').setAttribute('aria-label',L.back);$('rs-back').setAttribute('aria-label',L.back);$('rq-gear').setAttribute('aria-label',L.st);
+  $('rs-title').textContent=L.st;$('rs-lead').textContent=L.lead;
+  $('rs-e').textContent=L.ev;$('rs-ed').textContent=L.evd;$('rs-m').textContent=L.mu;$('rs-md').textContent=L.mud;$('rs-s').textContent=L.sm;$('rs-sd').textContent=L.smd;
+
+  /* ================= friends list ================= */
+  var coll=(window.Intl&&Intl.Collator)?new Intl.Collator([LG,'ru','uk','en'],{sensitivity:'base',numeric:true}):null;
+  function cmp(a,b){return coll?coll.compare(a,b):(a<b?-1:a>b?1:0)}
+  function nameOf(f){return String(f.d||f.u||'')}
+  function groupOf(f){
+    var ch=(nameOf(f).trim().charAt(0)||'').toUpperCase();
+    if(/[0-9]/.test(ch))return '0';
+    if(ch.toLowerCase()!==ch.toUpperCase())return ch;
+    return '!';
+  }
+  function expired(f){
+    if(!f.cx)return false;
+    var s=String(f.cx).replace(' ','T');if(!/[zZ]|[+-]\d\d:?\d\d$/.test(s))s+='Z';
+    var t=Date.parse(s);return !isNaN(t)&&t<Date.now();
+  }
+  function subOf(f){if(expired(f))return '';var t=(f.ct||'').trim(),e=(f.ce||'').trim();return (e?e+' ':'')+t}
+  var friends=[],groups=[];
+  function regroup(){
+    friends=(DATA.f||[]).slice().sort(function(a,b){return cmp(nameOf(a),nameOf(b))});
+    groups=[];var by={};
+    friends.forEach(function(f){var k=groupOf(f);if(!by[k]){by[k]={k:k,items:[]};groups.push(by[k])}by[k].items.push(f)});
+    var rank=function(k){return k==='!'?0:k==='0'?1:2};
+    groups.sort(function(a,b){return rank(a.k)-rank(b.k)||cmp(a.k,b.k)});
+  }
+  var MSG='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 3h15A2.5 2.5 0 0 1 22 5.5v9a2.5 2.5 0 0 1-2.5 2.5H11l-5 4v-4H4.5A2.5 2.5 0 0 1 2 14.5v-9A2.5 2.5 0 0 1 4.5 3Z"/></svg>';
+  var listEl=$('fr-list'),emptyEl=$('fr-empty'),rows=[];
+  function reqSub(){$('fr-req-s').textContent=L.rin+': '+REQ.in.length+' \u2022 '+L.rout+': '+REQ.out.length}
+  function build(){
+    listEl.textContent='';rows=[];
+    groups.forEach(function(g){
+      var wrap=document.createElement('section');wrap.className='fr-group';
+      var h=mk('div','fr-letter',g.k);wrap.appendChild(h);
+      var card=mk('div','fr-card');
+      g.items.forEach(function(f){
+        var row=mk('div','fr-row');row.setAttribute('role','button');row.tabIndex=0;
+        var av=mk('span','fr-av');
+        if(okUrl(f.a))av.style.backgroundImage=cssUrl(f.a);else av.textContent=(nameOf(f).trim().charAt(0)||'?').toUpperCase();
+        if(f.on){var st=document.createElement('i');st.className='fr-st';st.setAttribute('data-s',f.s||'online');av.appendChild(st)}
+        var main=mk('span','fr-main');main.appendChild(mk('span','fr-name',nameOf(f)));
+        var sub=subOf(f);if(sub)main.appendChild(mk('span','fr-sub',sub));
+        var msg=mk('button','fr-msg');msg.type='button';msg.setAttribute('aria-label',L.msg+' '+nameOf(f));msg.innerHTML=MSG;
+        row.appendChild(av);row.appendChild(main);row.appendChild(msg);
+        row.__f=f;card.appendChild(row);rows.push({row:row,group:wrap,key:(nameOf(f)+' '+(f.u||'')).toLowerCase()});
+      });
+      wrap.appendChild(card);listEl.appendChild(wrap);
+    });
+    reqSub();emptyEl.hidden=true;
+  }
+  function applyFilter(){
+    var q=$('fr-q').value.trim().toLowerCase(),shown=0,vis=new Set();
+    rows.forEach(function(r){var ok=!q||r.key.indexOf(q)!==-1;r.row.style.display=ok?'':'none';if(ok){shown++;vis.add(r.group)}});
+    [].forEach.call(listEl.children,function(g){g.style.display=vis.has(g)?'':'none'});
+    $('fr-req').style.display=q?'none':'';
+    emptyEl.textContent=friends.length?L.none:L.empty;emptyEl.hidden=shown>0;
+  }
+  function refreshFriends(){regroup();build();applyFilter()}
+  refreshFriends();
+
+  /* ================= navigation helpers ================= */
+  function closeDrawer(){try{if(window.ahMobileDrawer)window.ahMobileDrawer.close()}catch(e){}}
+  function go(url){try{if(typeof window.__ahGo==='function')window.__ahGo(url);else location.href=url}catch(e){location.href=url}}
+  function goFriends(tab){
+    closeAll();closeDrawer();
+    var onHome=location.pathname.replace(/\/+$/,'')==='/community';
+    if(onHome&&typeof window.switchHomeView==='function'){
+      try{window.switchHomeView('friends',document.querySelector('[data-home-view="friends"]'))}catch(e){}
+      setTimeout(function(){try{if(typeof window.showFriendTab==='function')window.showFriendTab(tab)}catch(e){}},60);
+    }else if(tab==='add'&&window.ahAddFriends&&window.ahAddFriends.open){
+      window.ahAddFriends.open();                      /* pages without the friends tab (e.g. a DM chat) open the Add-friends screen in place */
+    }else go('/community#friends');
+  }
+
+  /* ================= friend requests page ================= */
+  var rqTab='in',rqOpen=false,rsOpen=false;
+  function post(url,body){
+    var o={method:'POST',credentials:'same-origin'};
+    if(body){o.headers={'Content-Type':'application/json'};o.body=JSON.stringify(body)}
+    return fetch(url,o).then(function(r){if(!r.ok)throw new Error('http');return r});
+  }
+  function setTab(k){
+    rqTab=k;
+    ['in','out'].forEach(function(x){var b=$('rq-tab-'+x);b.setAttribute('aria-selected',x===k?'true':'false')});
+    renderReq();
+  }
+  function reqRow(p,kind){
+    var r=mk('div','rq-row');
+    var av=mk('span','rq-av');
+    if(okUrl(p.a))av.style.backgroundImage=cssUrl(p.a);else av.textContent=String(p.d||p.u||'?').trim().charAt(0).toUpperCase();
+    if(p.on){var st=document.createElement('i');st.className='fr-st';st.setAttribute('data-s','online');av.appendChild(st)}
+    var who=mk('span','rq-who');who.appendChild(mk('b','',p.d||p.u));who.appendChild(mk('span','',p.u));
+    var act=mk('span','rq-act');
+    function btn(cls,label,paths,accept){
+      var b=mk('button','rq-ab '+cls);b.type='button';b.setAttribute('aria-label',label+' '+(p.d||p.u));b.appendChild(svg(paths));
+      b.addEventListener('click',function(){decide(p,kind,accept,r)});act.appendChild(b);
+    }
+    if(kind==='in'){btn('yes',L.accept,['M5 12.5l4.5 4.5L19 7.5'],true);btn('no',L.decline,['M6 6l12 12','M18 6L6 18'],false)}
+    else btn('no',L.cancel,['M6 6l12 12','M18 6L6 18'],false);
+    r.appendChild(av);r.appendChild(who);r.appendChild(act);return r;
+  }
+  function renderReq(){
+    var box=$('rq-list'),list=REQ[rqTab];box.textContent='';
+    if(!list.length){
+      var e=mk('div','rq-empty');var i=document.createElement('i');i.appendChild(svg(['M2.01 21 23 12 2.01 3 2 10l15 2-15 2z']));e.appendChild(i);
+      e.appendChild(document.createTextNode(rqTab==='in'?L.emptyIn:L.emptyOut));box.appendChild(e);return;
+    }
+    var card=mk('div','rq-card');list.forEach(function(p){card.appendChild(reqRow(p,rqTab))});box.appendChild(card);
+  }
+  function decide(p,kind,accept,rowEl){
+    [].forEach.call(rowEl.querySelectorAll('button'),function(b){b.disabled=true});
+    var req=kind==='in'?post('/community/api/friends/respond/'+encodeURIComponent(p.fid),{accept:!!accept}):post('/community/api/friends/cancel/'+encodeURIComponent(p.fid));
+    req.then(function(){
+      var arr=REQ[kind],i=arr.indexOf(p);if(i>-1)arr.splice(i,1);
+      if(kind==='in'&&accept&&!(DATA.f||[]).some(function(f){return f.u===p.u})){
+        DATA.f=DATA.f||[];DATA.f.push({id:p.id||null,u:p.u,d:p.d,a:p.a,s:'online',on:!!p.on,ce:'',ct:'',cx:''});
+      }
+      reqSub();refreshFriends();
+      rowEl.classList.add('gone');
+      setTimeout(function(){if(rqOpen)renderReq()},210);
+      toast(kind==='in'?(accept?L.ok1:L.ok2):L.ok3);
+      try{document.dispatchEvent(new CustomEvent('ah-fr-req-done',{detail:{id:p.fid,kind:kind,accepted:!!(kind==='in'&&accept),person:{u:p.u,d:p.d,a:p.a,on:!!p.on},from:'rq'}}))}catch(_){}
+    }).catch(function(){[].forEach.call(rowEl.querySelectorAll('button'),function(b){b.disabled=false});toast(L.err)});
+  }
+  /* requests handled on the "Add friends" page keep this page in sync */
+  document.addEventListener('ah-fr-req-done',function(e){
+    var d=e&&e.detail;if(!d||d.from==='rq')return;
+    ['in','out'].forEach(function(k){REQ[k]=REQ[k].filter(function(p){return String(p.fid)!==String(d.id)})});
+    if(d.accepted&&d.person&&!(DATA.f||[]).some(function(f){return f.u===d.person.u})){
+      DATA.f=DATA.f||[];DATA.f.push({id:null,u:d.person.u,d:d.person.d,a:d.person.a,s:'online',on:false,ce:'',ct:'',cx:''});
+    }
+    reqSub();refreshFriends();if(rqOpen)renderReq();
+  });
+  document.addEventListener('ah-fr-req-new',function(e){
+    var d=e&&e.detail;if(!d||d.kind!=='out'||!d.person)return;
+    if(!REQ.out.some(function(p){return String(p.fid)===String(d.fid)}))REQ.out.push({fid:d.fid,id:null,u:d.person.u,d:d.person.d,a:d.person.a||'',on:false});
+    reqSub();if(rqOpen)renderReq();
+  });
+  function openRequests(){
+    if(rqOpen)return;rqOpen=true;
+    setTab(REQ.in.length||!REQ.out.length?'in':'out');
+    rqEl.classList.add('open');rqEl.setAttribute('aria-hidden','false');$('rq-scroll').scrollTop=0;
+  }
+  function closeRequests(){if(!rqOpen)return;rqOpen=false;rqEl.classList.remove('open');rqEl.setAttribute('aria-hidden','true');reqSub()}
+
+  /* ================= who can send me requests (settings page) ================= */
+  var rsRows=[].slice.call(rsEl.querySelectorAll('.rs-row'));
+  function loadPrivacy(){
+    rsRows.forEach(function(r){r.disabled=true});
+    fetch('/community/api/privacy',{credentials:'same-origin',headers:{Accept:'application/json'}})
+      .then(function(r){if(!r.ok)throw 0;return r.json()})
+      .then(function(d){var s=(d&&d.settings)||{};rsRows.forEach(function(r){r.setAttribute('aria-checked',s[r.getAttribute('data-f')]===false?'false':'true');r.disabled=false})})
+      .catch(function(){toast(L.loadErr)});
+  }
+  rsRows.forEach(function(r){
+    r.addEventListener('click',function(){
+      var field=r.getAttribute('data-f'),was=r.getAttribute('aria-checked')==='true',now=!was,body={};body[field]=now;
+      r.setAttribute('aria-checked',String(now));r.disabled=true;
+      fetch('/community/api/privacy',{method:'PATCH',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+        .then(function(res){if(!res.ok)throw 0})
+        .catch(function(){r.setAttribute('aria-checked',String(was));toast(L.saveErr)})
+        .then(function(){r.disabled=false});
+    });
+  });
+  function openSettings(){if(rsOpen)return;rsOpen=true;rsEl.classList.add('open');rsEl.setAttribute('aria-hidden','false');loadPrivacy()}
+  function closeSettings(){if(!rsOpen)return;rsOpen=false;rsEl.classList.remove('open');rsEl.setAttribute('aria-hidden','true')}
+
+  /* ================= open / close ================= */
+  var isOpen=false,lastFocus=null;
+  function open(){
+    if(isOpen)return;isOpen=true;lastFocus=document.activeElement;
+    $('fr-q').value='';applyFilter();reqSub();$('fr-scroll').scrollTop=0;
+    root.classList.add('open');root.setAttribute('aria-hidden','false');
+    var tt=root.querySelector('.fr-title'),ts=tt.style;
+    ts.setProperty('--fr-pl','0px');ts.setProperty('--fr-pr','0px');
+    var w=$('fr-add').offsetWidth,diff=w-44,free=tt.clientWidth-tt.scrollWidth;
+    if(Math.abs(diff)<=free){ts.setProperty('--fr-pl',Math.max(0,diff)+'px');ts.setProperty('--fr-pr',Math.max(0,-diff)+'px')}
+  }
+  function closeAll(){closeSettings();closeRequests();close()}
+  function close(){
+    if(!isOpen)return;isOpen=false;closeSettings();closeRequests();
+    root.classList.remove('open');root.setAttribute('aria-hidden','true');
+    try{$('fr-q').blur();if(lastFocus&&lastFocus.focus)lastFocus.focus()}catch(e){}
+  }
+  function escape(){if(rsOpen)closeSettings();else if(rqOpen)closeRequests();else if(isOpen)close()}
+
+  root.addEventListener('click',function(e){
+    var t=e.target;if(!t||!t.closest)return;
+    if(t.closest('[data-fr-close]')){close();return}
+    if(t.closest('#fr-add')){goFriends('add');return}
+    if(t.closest('#fr-req')){openRequests();return}
+    var row=t.closest('.fr-row');
+    if(row&&row.__f){close();go('/community/dm/'+encodeURIComponent(row.__f.u))}
+  });
+  root.addEventListener('keydown',function(e){
+    if(e.key==='Escape'){escape();return}
+    if((e.key==='Enter'||e.key===' ')&&e.target&&e.target.classList&&e.target.classList.contains('fr-row')){e.preventDefault();e.target.click()}
+  });
+  $('fr-q').addEventListener('input',applyFilter);
+  $('rq-back').addEventListener('click',closeRequests);
+  $('rq-gear').addEventListener('click',openSettings);
+  $('rs-back').addEventListener('click',closeSettings);
+  $('rq-tab-in').addEventListener('click',function(){setTab('in')});
+  $('rq-tab-out').addEventListener('click',function(){setTab('out')});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&(isOpen||rqOpen||rsOpen))escape()});
+  window.ahFriendsSheet={open:open,close:close,isOpen:function(){return isOpen},openRequests:openRequests};
+})();
+</script>
+<!-- AH-FRIENDS:END -->
 </body>
 </html>
