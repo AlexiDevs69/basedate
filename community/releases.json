@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.305.0",
+      "date": "2026-11-08",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: script to hash admin password using bcrypt."
+      ],
+      "source_sha": "4633dd467e51a66bcf9ceb6c59c248d06307cdef"
+    },
+    {
       "version": "1.304.4",
       "date": "2026-11-08",
       "title": "Виправлення та стабільність",
