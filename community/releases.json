@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.304.4",
+      "date": "2026-11-08",
+      "title": "Виправлення та стабільність",
+      "changes": [
+        "Enhance account deletion process and preserve fields."
+      ],
+      "source_sha": "6aaf14996b2a4a9271ee416fab0da02a4e9b6b75"
+    },
+    {
       "version": "1.304.3",
       "date": "2026-11-08",
       "title": "Виправлення та стабільність",
