@@ -385,6 +385,10 @@
         <div class="count">{{ total }} total</div>
       </div>
 
+      {% if error %}
+      <div role="alert" style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.45);color:#fca5a5;border-radius:10px;padding:.75rem 1rem;margin-bottom:1rem;font-size:.85rem;">{{ error }}</div>
+      {% endif %}
+
       <div class="table-wrap">
         <table class="data-table">
           <thead>
