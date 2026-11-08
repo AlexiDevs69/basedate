@@ -9,7 +9,7 @@ import json
 import re
 import secrets
 
-from sqlalchemy import and_, delete, func, or_, select, text
+from sqlalchemy import and_, delete, func, or_, select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import DBAPIError, IntegrityError
 from sqlalchemy.orm import aliased, selectinload
@@ -1208,11 +1208,23 @@ async def update_account_moderation(
     account.role_color_end = role_color_end or None
     account.is_banned = is_banned
 
-    account.name_effect = _normalize_name_effect(name_effect)
-    account.name_color_start = name_color_start or None
-    account.name_color_end = name_color_end or None
-    account.name_font = _normalize_name_font(name_font)
-    account.profile_card_bg_url = profile_card_bg_url or None
+    # The visual-identity fields below are optional: ``None`` means "the caller
+    # did not send this field -- keep what the user already has". Previously
+    # they were reset on every save, so any moderation edit (e.g. just
+    # toggling the verified badge) silently wiped the user's name effect,
+    # font, colours and profile-card background.
+    if name_effect is not None:
+        account.name_effect = _normalize_name_effect(name_effect)
+    if name_color_start is not None:
+        account.name_color_start = name_color_start.strip() or None
+    if name_color_end is not None:
+        account.name_color_end = name_color_end.strip() or None
+    if name_font is not None:
+        account.name_font = _normalize_name_font(name_font)
+    if profile_card_bg_url is not None:
+        # Same sanitising as user uploads: only http(s) / our own /static/uploads
+        # URLs, nothing with quotes (the value is rendered inside CSS url('...')).
+        account.profile_card_bg_url = clean_media_url(profile_card_bg_url, 512) or None
 
     await db.commit()
     await db.refresh(account)
@@ -1220,37 +1232,118 @@ async def update_account_moderation(
 
 
 async def delete_account(db: AsyncSession, account_id: int) -> bool:
+    """Delete an account and everything that points at it, atomically.
+
+    Everything happens in ONE transaction: on any error nothing is removed and
+    the exception propagates (the admin route rolls back and shows a message).
+    Tables whose foreign key to ``community_accounts`` is ``ON DELETE CASCADE``
+    / ``SET NULL`` (blocks, bans, event interests, muted users, inbox prefs,
+    profile board, DM/server pins, ...) are handled by Postgres itself; the
+    rows below have a plain foreign key and must be removed by hand first.
+    """
     account = await get_account_by_id(db, account_id)
     if not account:
         return False
 
-    # If the account owns servers, delete those servers and their content first.
-    owned_servers_result = await db.execute(
-        select(CommunityServer).where(CommunityServer.owner_id == account_id)
-    )
-    for server in owned_servers_result.scalars().all():
-        await delete_server(db, server.id)
+    # delete_server() lazily creates some tables. Do that before the first
+    # DELETE so a DDL step can never commit half of the deletion.
+    await ensure_server_moderation_tables(db)
+    await ensure_server_category_schema(db)
+    await ensure_server_event_schema(db)
 
-    # Server relations where this account is not the owner.
-    for model, clauses in [
-        (ServerMessage, [ServerMessage.author_id == account_id]),
-        (ServerInvite, [or_(ServerInvite.inviter_id == account_id, ServerInvite.invitee_id == account_id)]),
-        (ServerMember, [ServerMember.account_id == account_id]),
-    ]:
-        result = await db.execute(select(model).where(*clauses))
-        for row in result.scalars().all():
-            await db.delete(row)
+    try:
+        # Servers owned by the account go first, together with all their content.
+        owned_server_ids = (
+            await db.execute(select(CommunityServer.id).where(CommunityServer.owner_id == account_id))
+        ).scalars().all()
+        for server_id in owned_server_ids:
+            await delete_server(db, server_id, commit=False)
 
-    # Remove issued gifts first so the gift foreign key never blocks deleting
-    # a community account from the admin panel.
-    gift_instances_result = await db.execute(
-        select(GiftInstance).where(GiftInstance.recipient_id == account_id)
-    )
-    for gift_instance in gift_instances_result.scalars().all():
-        await db.delete(gift_instance)
+        # Server messages written by the account in other people's servers.
+        # Other messages may be replies to them (self-referencing FK), so
+        # detach those replies first.
+        own_server_msgs = select(ServerMessage.id).where(ServerMessage.author_id == account_id)
+        await db.execute(
+            update(ServerMessage)
+            .where(ServerMessage.reply_to_id.in_(own_server_msgs))
+            .values(reply_to_id=None)
+            .execution_options(synchronize_session=False)
+        )
+        await db.execute(
+            delete(ServerMessage)
+            .where(ServerMessage.author_id == account_id)
+            .execution_options(synchronize_session=False)
+        )
+        await db.execute(
+            delete(ServerInvite)
+            .where(or_(ServerInvite.inviter_id == account_id, ServerInvite.invitee_id == account_id))
+            .execution_options(synchronize_session=False)
+        )
+        await db.execute(
+            delete(ServerMember)
+            .where(ServerMember.account_id == account_id)
+            .execution_options(synchronize_session=False)
+        )
 
-    await db.delete(account)
-    await db.commit()
+        # Direct messages: every thread the account takes part in disappears
+        # for both sides (a DM thread cannot exist with only one participant).
+        thread_ids = select(DirectThread.id).where(
+            or_(DirectThread.user_low_id == account_id, DirectThread.user_high_id == account_id)
+        )
+        await db.execute(
+            delete(DirectMessage)
+            .where(DirectMessage.thread_id.in_(thread_ids))
+            .execution_options(synchronize_session=False)
+        )
+        await db.execute(
+            delete(DirectThread)
+            .where(or_(DirectThread.user_low_id == account_id, DirectThread.user_high_id == account_id))
+            .execution_options(synchronize_session=False)
+        )
+
+        # Forum: the account's posts (with all comments/likes on them), plus
+        # its own comments and likes on other people's posts.
+        own_posts = select(Post.id).where(Post.author_id == account_id)
+        await db.execute(
+            delete(Comment)
+            .where(or_(Comment.author_id == account_id, Comment.post_id.in_(own_posts)))
+            .execution_options(synchronize_session=False)
+        )
+        await db.execute(
+            delete(PostLike)
+            .where(or_(PostLike.account_id == account_id, PostLike.post_id.in_(own_posts)))
+            .execution_options(synchronize_session=False)
+        )
+        await db.execute(
+            delete(Post).where(Post.author_id == account_id).execution_options(synchronize_session=False)
+        )
+
+        # Friend requests / friendships in both directions.
+        await db.execute(
+            delete(Friendship)
+            .where(or_(Friendship.requester_id == account_id, Friendship.addressee_id == account_id))
+            .execution_options(synchronize_session=False)
+        )
+        await db.execute(
+            delete(UserBlock)
+            .where(or_(UserBlock.blocker_id == account_id, UserBlock.blocked_id == account_id))
+            .execution_options(synchronize_session=False)
+        )
+
+        # Gifts received (the Gift catalog itself stays).
+        await db.execute(
+            delete(GiftInstance)
+            .where(GiftInstance.recipient_id == account_id)
+            .execution_options(synchronize_session=False)
+        )
+
+        await db.execute(
+            delete(Account).where(Account.id == account_id).execution_options(synchronize_session=False)
+        )
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        raise
     return True
 
 
@@ -2457,7 +2550,7 @@ async def leave_server(db: AsyncSession, server_id: int, account_id: int) -> boo
     return True
 
 
-async def delete_server(db: AsyncSession, server_id: int) -> bool:
+async def delete_server(db: AsyncSession, server_id: int, *, commit: bool = True) -> bool:
     await ensure_server_moderation_tables(db)
     await ensure_server_category_schema(db)
     await ensure_server_event_schema(db)
@@ -2476,8 +2569,15 @@ async def delete_server(db: AsyncSession, server_id: int) -> bool:
         for row in interests.scalars().all():
             await db.delete(row)
 
+    # Messages go in a single bulk DELETE: they reference each other through
+    # reply_to_id, and per-row ORM deletes can hit that FK in the wrong order.
+    await db.execute(
+        delete(ServerMessage)
+        .where(ServerMessage.server_id == server_id)
+        .execution_options(synchronize_session=False)
+    )
+
     for model, column in [
-        (ServerMessage, ServerMessage.server_id),
         (ServerInvite, ServerInvite.server_id),
         (ServerBan, ServerBan.server_id),
         (ServerMember, ServerMember.server_id),
@@ -2490,7 +2590,8 @@ async def delete_server(db: AsyncSession, server_id: int) -> bool:
             await db.delete(row)
 
     await db.delete(server)
-    await db.commit()
+    if commit:
+        await db.commit()
     return True
 
 
