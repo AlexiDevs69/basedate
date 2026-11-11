@@ -18153,6 +18153,8 @@ html[data-theme="light"] .rs-sw{background:#b9bbbe}
     if(onHome&&typeof window.switchHomeView==='function'){
       try{window.switchHomeView('friends',document.querySelector('[data-home-view="friends"]'))}catch(e){}
       setTimeout(function(){try{if(typeof window.showFriendTab==='function')window.showFriendTab(tab)}catch(e){}},60);
+    }else if(tab==='add'&&window.ahAddFriends&&window.ahAddFriends.open){
+      window.ahAddFriends.open();                      /* pages without the friends tab (e.g. a DM chat) open the Add-friends screen in place */
     }else go('/community#friends');
   }
 
@@ -18291,5 +18293,100 @@ html[data-theme="light"] .rs-sw{background:#b9bbbe}
 })();
 </script>
 <!-- AH-FRIENDS:END -->
+<!-- AH-SETTINGS-M:BEGIN (phones: Settings list styled like the Discord app; sections and logic are unchanged) -->
+<style id="ah-settings-m-css">
+.ah-st-head,.ah-st-inj{display:none}
+@media (max-width:820px){
+html body .ah-settings-backdrop{--st-top:max(calc(env(safe-area-inset-top,0px) - 6px),10px);--st-bg:#25242a;--st-card:#2e2d33;--st-line:#38373d;--st-field:#201f25;--st-fline:#302f35;--st-text:#fff;--st-sub:#c0bfc5;--st-label:#c4c3c9;--st-ico:#fff;--st-chev:#9a999f;--st-search:%239a999f;background:rgba(0,0,0,.62)!important}
+html[data-theme="light"] body .ah-settings-backdrop{--st-bg:#f2f3f5;--st-card:#fff;--st-line:#e3e5e8;--st-field:#fff;--st-fline:#d4d7dc;--st-text:#1b1c20;--st-sub:#5d6068;--st-label:#4e5058;--st-ico:#2e3035;--st-chev:#80848e;--st-search:%236d6f78;background:rgba(0,0,0,.45)!important}
+
+/* the sheet: same geometry for the list and for a section page */
+html body .ah-settings-shell{margin-top:var(--st-top)!important;height:calc(var(--ah-vh,100dvh) - var(--st-top))!important;border-radius:22px 22px 0 0!important;background:var(--st-bg)!important;color:var(--st-text)!important}
+html body .ah-settings-main{background:var(--st-bg)!important}
+html body .ah-settings-shell .ah-settings-top{padding-top:0!important;height:52px;padding-left:10px;padding-right:10px;background:var(--st-bg)!important;border-bottom:1px solid var(--st-line)!important;backdrop-filter:none}
+html body .ah-settings-top h2{font-size:18px;font-weight:700}
+
+/* list */
+html body .ah-settings-sidebar{display:flex;flex-direction:column;background:var(--st-bg)!important;color:var(--st-text)!important;padding:0 16px calc(28px + env(safe-area-inset-bottom,0px))!important;overscroll-behavior:contain}
+html body .ah-settings-sidebar>*{order:3}
+html body .ah-settings-sidebar>.ah-st-head{order:0}
+html body .ah-st-head{display:flex;align-items:center;gap:6px;flex:0 0 auto;position:sticky;top:0;z-index:4;height:52px;margin:0 -16px;padding:0 10px;background:var(--st-bg);border-bottom:1px solid var(--st-line)}
+html body .ah-st-x{flex:0 0 44px;width:44px;height:44px;border:0;border-radius:50%;background:transparent;color:var(--st-text);display:grid;place-items:center;padding:0;cursor:pointer}
+html body .ah-st-x:active{background:rgba(127,127,127,.2)}
+html body .ah-st-x svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round}
+html body .ah-st-title{font-size:18px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html body .ah-h-set-close,html body .ah-m-set-close,html body .ah-s-set-close{display:none!important}
+
+html body .ah-settings-sidebar>.ah-settings-search{order:1;flex:0 0 auto;height:37px;margin:24px 0 0!important;padding:0 14px 0 42px!important;border:1px solid var(--st-fline)!important;border-radius:12px!important;color:var(--st-text)!important;font-size:16px!important;
+  background:var(--st-field) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239a999f' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E") no-repeat 14px 50%/18px!important}
+html[data-theme="light"] body .ah-settings-sidebar>.ah-settings-search{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236d6f78' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E")!important}
+html body .ah-settings-search::placeholder{color:var(--st-chev)}
+
+html body .ah-settings-sidebar>.ah-settings-profile-entry{order:2;flex:0 0 auto;position:relative;display:flex;align-items:center;gap:12px;width:100%;min-height:58px;margin:24px 0 0!important;padding:0 14px 0 12px!important;border:0!important;border-radius:14px!important;background:var(--st-card)!important;color:var(--st-text)!important}
+html body .ah-settings-profile-entry .ah-settings-avatar{flex:0 0 34px;width:34px;height:34px}
+html body .ah-settings-profile-entry>span{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px;text-align:left}
+html body .ah-settings-profile-entry strong{font-size:17px;font-weight:600;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html body .ah-settings-profile-entry small{font-size:13px;color:var(--st-sub);display:flex;align-items:center;gap:5px}
+
+html body .ah-settings-sidebar>.ah-settings-group{position:relative;display:flex;flex-direction:column;flex:0 0 auto;margin:24px 0 0!important;padding:0!important}
+html body .ah-settings-group::before{content:"";position:absolute;left:0;right:0;top:0;bottom:0;background:var(--st-card);border-radius:14px;z-index:0}
+html body .ah-settings-group:has(>.ah-settings-label)::before{top:38px}
+html body .ah-settings-group .ah-settings-label,html body .ah-st-inj{position:relative;z-index:1;display:flex;align-items:flex-end;height:38px;margin:0!important;padding:0 4px 8px!important;font-size:15px!important;font-weight:500!important;letter-spacing:0!important;text-transform:none!important;color:var(--st-label)!important}
+html body .ah-account-subnav{display:none!important}
+html body .ah-settings-divider{display:none!important}
+
+html body .ah-settings-nav{position:relative;z-index:1;display:flex;align-items:center;gap:14px!important;width:100%;height:53px!important;min-height:53px!important;margin:0!important;padding:0 14px 0 16px!important;border-radius:0!important;background:transparent!important;color:var(--st-text)!important;font-size:17px!important;font-weight:500!important;text-align:left}
+html body .ah-settings-nav:first-of-type{border-radius:14px 14px 0 0!important}
+html body .ah-settings-nav:last-of-type{border-radius:0 0 14px 14px!important}
+html body .ah-settings-nav.active{background:transparent!important}
+html body .ah-settings-nav:active,html body .ah-settings-sidebar>.ah-settings-profile-entry:active{background:rgba(127,127,127,.16)!important}
+html body .ah-settings-nav svg{flex:0 0 22px;width:22px;height:22px;color:var(--st-ico);fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+html body .ah-settings-nav>span{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html body .ah-settings-nav ~ .ah-settings-nav::before{content:"";position:absolute;left:52px;right:0;top:0;height:1px;background:var(--st-line)}
+html body .ah-settings-nav:not(.danger)::after,html body .ah-settings-profile-entry::after{content:"";flex:0 0 20px;width:20px;height:20px;margin-left:auto;background:var(--st-chev);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 5 7 7-7 7'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 5 7 7-7 7'/%3E%3C/svg%3E") center/contain no-repeat}
+html body .ah-settings-sidebar>.ah-settings-nav.danger{order:5;flex:0 0 auto;margin:24px 0 0!important;border-radius:14px!important;background:var(--st-card)!important;color:#f23f43!important;text-decoration:none}
+html body .ah-settings-sidebar>.ah-settings-nav.danger svg{color:#f23f43}
+html body .ah-settings-sidebar>.ah-settings-version{order:6;flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:2px;margin:20px 0 0;padding:0 8px;border:0;background:transparent;color:var(--st-sub);font-size:12px;line-height:1.5;text-align:center}
+html body .ah-settings-version-link{color:var(--st-sub)}
+html body .ah-st-empty{display:none!important}
+}
+</style>
+<script id="ah-settings-m-js">
+(function(){
+  'use strict';
+  if(window.__ahSettingsM)return;window.__ahSettingsM=true;
+  var side=document.querySelector('.ah-settings-sidebar');if(!side)return;
+  var LG=String(document.documentElement.lang||'uk').toLowerCase().slice(0,2);
+  var TT=({ru:{title:'Настройки',acc:'Настройки учётной записи',close:'Закрыть'},uk:{title:'Налаштування',acc:'Налаштування облікового запису',close:'Закрити'},en:{title:'Settings',acc:'Account settings',close:'Close'}})[LG]||{title:'Settings',acc:'Account settings',close:'Close'};
+  function T(k,fb){try{var v=window.AlexiHubI18n&&window.AlexiHubI18n.t&&window.AlexiHubI18n.t(k);return v&&v!==k?String(v):fb}catch(_){return fb}}
+
+  /* header: close + title (the old floating cross is hidden on phones) */
+  if(!side.querySelector('.ah-st-head')){
+    var head=document.createElement('div');head.className='ah-st-head';
+    var x=document.createElement('button');x.type='button';x.className='ah-st-x';x.setAttribute('aria-label',T('common.actions.close',TT.close));
+    x.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14M19 5 5 19"/></svg>';
+    x.addEventListener('click',function(){if(typeof window.closeUserSettings==='function')window.closeUserSettings()});
+    var ti=document.createElement('div');ti.className='ah-st-title';ti.textContent=T('common.aria.settings',TT.title);
+    head.appendChild(x);head.appendChild(ti);side.insertBefore(head,side.firstChild);
+  }
+  /* the first group has no heading in the desktop sidebar: add one (shown on phones only) */
+  var g1=side.querySelector('.ah-settings-group');
+  if(g1&&!g1.querySelector(':scope > .ah-settings-label')){
+    var lb=document.createElement('div');lb.className='ah-settings-label ah-st-inj';lb.textContent=TT.acc;g1.insertBefore(lb,g1.firstChild);
+  }
+  /* searching hides whole sections that have no match (heading and card included) */
+  var prev=window.ahSettingsFilter;
+  window.ahSettingsFilter=function(v){
+    if(typeof prev==='function')prev.apply(this,arguments);
+    [].forEach.call(side.querySelectorAll('.ah-settings-group'),function(g){
+      var any=[].some.call(g.querySelectorAll('.ah-settings-nav'),function(b){return b.style.display!=='none'});
+      g.classList.toggle('ah-st-empty',!any);
+    });
+  };
+})();
+</script>
+<!-- AH-SETTINGS-M:END -->
 </body>
 </html>
