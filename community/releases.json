@@ -2,6 +2,15 @@
   "channel": "stable",
   "releases": [
     {
+      "version": "1.308.0",
+      "date": "2026-11-12",
+      "title": "Нові можливості AlexiHub",
+      "changes": [
+        "Додано: settings UI with responsive design."
+      ],
+      "source_sha": "ed67efe6f4ef8437698099a8b19e55431429615e"
+    },
+    {
       "version": "1.307.2",
       "date": "2026-11-12",
       "title": "Виправлення та стабільність",
